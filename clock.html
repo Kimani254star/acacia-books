@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Clock</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f7fafc;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-lg">
+        <h1 class="text-2xl font-bold mb-4">Digital Clock</h1>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-blue-100 p-4 rounded text-center">
+                <h2 class="font-semibold">UTC</h2>
+                <div id="utc" class="text-xl font-mono"></div>
+            </div>
+            <div class="bg-red-100 p-4 rounded text-center">
+                <h2 class="font-semibold">EST</h2>
+                <div id="est" class="text-xl font-mono"></div>
+            </div>
+            <div class="bg-green-100 p-4 rounded text-center">
+                <h2 class="font-semibold">GMT</h2>
+                <div id="gmt" class="text-xl font-mono"></div>
+            </div>
+            <div class="bg-purple-100 p-4 rounded text-center">
+                <h2 class="font-semibold">IST</h2>
+                <div id="ist" class="text-xl font-mono"></div>
+            </div>
+            <div class="bg-orange-100 p-4 rounded text-center">
+                <h2 class="font-semibold">PST</h2>
+                <div id="pst" class="text-xl font-mono"></div>
+            </div>
+            <div class="bg-pink-100 p-4 rounded text-center">
+                <h2 class="font-semibold">JST</h2>
+                <div id="jst" class="text-xl font-mono"></div>
+            </div>
+            <div class="bg-teal-100 p-4 rounded text-center">
+                <h2 class="font-semibold">AEST</h2>
+                <div id="aest" class="text-xl font-mono"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function updateClocks() {
+            const now = new Date();
+            document.getElementById('utc').innerText = now.toUTCString().slice(17, 26);
+            document.getElementById('est').innerText = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' })).toLocaleTimeString();
+            document.getElementById('gmt').innerText = new Date(now.toLocaleString('en-GB', { timeZone: 'GMT' })).toLocaleTimeString();
+            document.getElementById('ist').innerText = new Date(now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })).toLocaleTimeString();
+            document.getElementById('pst').innerText = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })).toLocaleTimeString();
+            document.getElementById('jst').innerText = new Date(now.toLocaleString('en-JP', { timeZone: 'Asia/Tokyo' })).toLocaleTimeString();
+            document.getElementById('aest').innerText = new Date(now.toLocaleString('en-AU', { timeZone: 'Australia/Sydney' })).toLocaleTimeString();
+        }
+
+        setInterval(updateClocks, 1000);
+        updateClocks(); // Initial call to display immediately
+    </script>
+</body>
+</html>
