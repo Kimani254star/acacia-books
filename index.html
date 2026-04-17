@@ -5,6 +5,7 @@
   <title>Acacia Books</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -48,7 +49,6 @@
 </style>
 </head>
 <body id="appBody">
-
 <!-- 🌱 HOME  -->
 <div id="homeTab" class="bg-white text-gray-900">
 
@@ -226,7 +226,7 @@ document.getElementById('demoForm').addEventListener('submit', async function(e)
 });
 </script>
 <!-- 🎯 HERO SLIDESHOW -->
-<section id="hero" class="relative w-full h-[1000px] md:h-[600px] overflow-hidden">
+<section id="hero" class="relative w-full h-[1000px] overflow-hidden">
 
 
 <div id="slider" class="w-full h-full relative">
@@ -637,7 +637,7 @@ document.getElementById('demoForm').addEventListener('submit', async function(e)
 <div id="testimonial-list" class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-2">
 
   <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <img loading="lazy" src="https://randomuser.me/api/portraits/women/68.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
+    <img src="https://randomuser.me/api/portraits/women/68.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
     <p class="italic text-gray-600 mb-2">
       "The Free plan is perfect for getting started — all the basics you need without spending a dime!"
     </p>
@@ -648,7 +648,7 @@ document.getElementById('demoForm').addEventListener('submit', async function(e)
 
  
   <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <img loading="lazy" src="https://randomuser.me/api/portraits/men/34.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
+    <img src="https://randomuser.me/api/portraits/men/34.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
     <p class="italic text-gray-600 mb-2">
       "The Starter plan helped us manage our growing inventory and track sales seamlessly."
     </p>
@@ -659,7 +659,7 @@ document.getElementById('demoForm').addEventListener('submit', async function(e)
 
   
   <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <img loading="lazy" src="https://randomuser.me/api/portraits/men/85.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
+    <img src="https://randomuser.me/api/portraits/men/85.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
     <p class="italic text-gray-600 mb-2">
       "The Pro plan gave us advanced reporting tools that made scaling our business easy."
     </p>
@@ -670,7 +670,7 @@ document.getElementById('demoForm').addEventListener('submit', async function(e)
 
   
   <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <img loading="lazy" src="https://randomuser.me/api/portraits/women/12.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
+    <img src="https://randomuser.me/api/portraits/women/12.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
     <p class="italic text-gray-600 mb-2">
       "The Business plan helped our multi-store operations run smoothly with enhanced inventory and payroll management."
     </p>
@@ -681,7 +681,7 @@ document.getElementById('demoForm').addEventListener('submit', async function(e)
 
   
   <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <img loading="lazy" src="https://randomuser.me/api/portraits/men/42.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
+    <img src="https://randomuser.me/api/portraits/men/42.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
     <p class="italic text-gray-600 mb-2">
       "Enterprise gave us integrations, APIs, and support that fit our large-scale business perfectly."
     </p>
@@ -692,7 +692,7 @@ document.getElementById('demoForm').addEventListener('submit', async function(e)
 
 
   <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-   <img loading="lazy" src="https://randomuser.me/api/portraits/women/21.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
+    <img src="https://randomuser.me/api/portraits/women/21.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
     <p class="italic text-gray-600 mb-2">
       "All Access unlocked every feature we could imagine — a complete solution for our entire organization."
     </p>
@@ -1074,618 +1074,99 @@ function toggleFAQ(faqId) {
 
   </div>
 </section>
-<section id="about" class="py-28 bg-white px-6">
-  <div class="max-w-4xl mx-auto text-center mb-16">
-    <h2 class="text-4xl md:text-5xl font-bold text-blue-900 mb-6">Powering Smarter Business Operations</h2>
-    <p class="text-lg text-gray-600">
-      Acacia Books is an all-in-one cloud ERP platform built to simplify management, automate workflows, 
-      and help businesses grow faster with confidence.
-    </p>
-  </div>
 
-  <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-16 items-start">
-    <div>
-      <h3 class="text-2xl font-bold text-blue-900 mb-6">Everything Your Business Needs — In One Platform</h3>
-      <p class="text-gray-600 mb-6">
-        From inventory control to payroll automation, Acacia Books eliminates operational complexity by 
-        centralizing your core business processes into a single secure cloud system. Access real-time reports, 
-        reduce errors, and make data-driven decisions anytime, anywhere.
-      </p>
-
-      <div class="mb-6">
-        <div class="flex gap-4 mb-4">
-          <button class="tab-btn bg-blue-900 text-white px-4 py-2 rounded" data-tab="inventory">Inventory</button>
-          <button class="tab-btn bg-gray-200 text-gray-700 px-4 py-2 rounded" data-tab="sales">Sales</button>
-          <button class="tab-btn bg-gray-200 text-gray-700 px-4 py-2 rounded" data-tab="payroll">Payroll</button>
-          <button class="tab-btn bg-gray-200 text-gray-700 px-4 py-2 rounded" data-tab="reports">Reports</button>
-        </div>
-        <div id="inventory" class="tab-content p-4 bg-gray-50 rounded shadow">
-          <h4 class="font-semibold text-blue-900 mb-2">📦 Inventory Control</h4>
-          <p class="text-gray-600 text-sm">Track stock levels, automate reorders, prevent losses, and manage suppliers efficiently.</p>
-        </div>
-        <div id="sales" class="tab-content p-4 bg-gray-50 rounded shadow hidden">
-          <h4 class="font-semibold text-blue-900 mb-2">💳 Sales & Billing</h4>
-          <p class="text-gray-600 text-sm">Create custom invoices, track payments, generate bills, and manage customers effortlessly.</p>
-        </div>
-        <div id="payroll" class="tab-content p-4 bg-gray-50 rounded shadow hidden">
-          <h4 class="font-semibold text-blue-900 mb-2">👥 Payroll Automation</h4>
-          <p class="text-gray-600 text-sm">Automate salaries, deductions, and compliance reports for smooth HR operations.</p>
-        </div>
-        <div id="reports" class="tab-content p-4 bg-gray-50 rounded shadow hidden">
-          <h4 class="font-semibold text-blue-900 mb-2">📊 Real-Time Reports</h4>
-          <p class="text-gray-600 text-sm">Generate dashboards and analytics to make informed, data-driven decisions instantly.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-blue-900 text-white p-10 rounded-2xl shadow-xl">
-      <h3 class="text-2xl font-bold mb-6">Why Businesses Choose Acacia Books</h3>
-      <ul class="space-y-4 text-gray-200 mb-10">
-        <li>✔ 100% Cloud-Based & Secure</li>
-        <li>✔ Easy to Use & Quick Setup</li>
-        <li>✔ Scalable for Growing Businesses</li>
-        <li>✔ Dedicated Support Team</li>
-        <li>✔ Built for Modern Enterprises</li>
-      </ul>
-      <canvas id="lineGraph" class="bg-white rounded-xl p-4 shadow h-80"></canvas>
-    </div>
-  </div>
-
-  <div class="max-w-6xl mx-auto mt-20">
-    <h3 class="text-3xl font-bold text-center text-blue-900 mb-10">Our Achievements</h3>
-    <div class="grid md:grid-cols-4 gap-8 text-center">
-      <div class="p-6 bg-blue-50 rounded-lg shadow">
-        <h4 class="text-4xl font-bold text-blue-900 mb-2">
-          <span class="counter" data-min="1000" data-max="16000">0</span>+
-        </h4>
-        <p class="text-gray-700">Invoices Generated</p>
-      </div>
-      <div class="p-6 bg-green-50 rounded-lg shadow">
-        <h4 class="text-4xl font-bold text-green-900 mb-2">
-          <span class="counter" data-min="1000" data-max="12000">0</span>+
-        </h4>
-        <p class="text-gray-700">Customers Managed</p>
-      </div>
-      <div class="p-6 bg-purple-50 rounded-lg shadow">
-        <h4 class="text-4xl font-bold text-purple-900 mb-2">
-          <span class="counter" data-min="1000" data-max="15000">0</span>+
-        </h4>
-        <p class="text-gray-700">Products Tracked</p>
-      </div>
-      <div class="p-6 bg-yellow-50 rounded-lg shadow">
-        <h4 class="text-4xl font-bold text-yellow-900 mb-2">
-          <span class="counter" data-min="1000" data-max="20000">0</span>+
-        </h4>
-        <p class="text-gray-700">Hours Saved</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<script>
-const tabButtons=document.querySelectorAll(".tab-btn");
-const tabContents=document.querySelectorAll(".tab-content");
-tabButtons.forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    tabButtons.forEach(b=>{
-      b.classList.replace("bg-blue-900","bg-gray-200");
-      b.classList.replace("text-white","text-gray-700");
-    });
-    btn.classList.replace("bg-gray-200","bg-blue-900");
-    btn.classList.replace("text-gray-700","text-white");
-    tabContents.forEach(tc=>tc.classList.add("hidden"));
-    document.getElementById(btn.dataset.tab).classList.remove("hidden");
-  });
-});
-
-const counters=document.querySelectorAll(".counter");
-counters.forEach(counter=>{
-  const min=+counter.getAttribute('data-min');
-  const max=+counter.getAttribute('data-max');
-  const target=Math.floor(Math.random()*(max-min+1))+min;
-  const updateCount=()=>{
-    const count=+counter.innerText;
-    const increment=target/200;
-    if(count<target){
-      counter.innerText=Math.ceil(count+increment);
-      setTimeout(updateCount,20);
-    } else { counter.innerText=target; }
-  };
-  updateCount();
-});
-
-window.addEventListener('load',()=>{
-  const ctx=document.getElementById('lineGraph').getContext('2d');
-  const invoicesData=Array.from({length:6},()=>Math.floor(Math.random()*(16000-1000)+1000));
-  const customersData=Array.from({length:6},()=>Math.floor(Math.random()*(12000-1000)+1000));
-  const productsData=Array.from({length:6},()=>Math.floor(Math.random()*(15000-1000)+1000));
-  const hoursData=Array.from({length:6},()=>Math.floor(Math.random()*(20000-1000)+1000));
-
-  new Chart(ctx,{
-    type:'line',
-    data:{
-      labels:['Jan','Feb','Mar','Apr','May','Jun'],
-      datasets:[
-        {label:'Invoices Generated',data:invoicesData,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.2)',fill:true,tension:0.4},
-        {label:'Customers Managed',data:customersData,borderColor:'#10B981',backgroundColor:'rgba(16,185,129,0.2)',fill:true,tension:0.4},
-        {label:'Products Tracked',data:productsData,borderColor:'#8B5CF6',backgroundColor:'rgba(139,92,246,0.2)',fill:true,tension:0.4},
-        {label:'Hours Saved',data:hoursData,borderColor:'#F59E0B',backgroundColor:'rgba(245,158,11,0.2)',fill:true,tension:0.4}
-      ]
-    },
-    options:{responsive:true,plugins:{legend:{position:'bottom'}},animation:{duration:1500},scales:{y:{beginAtZero:true}}}
-  });
-});
-</script>
-<!-- 📰 BLOG SECTION -->
-<section id="blog" class="py-8 bg-gray-100 px-20">
-
-  <div class="max-w-4xl mx-auto text-center mb-16">
-    <h2 class="text-4xl md:text-5xl font-bold text-blue-900 mb-6">
-      Insights to Help You Grow
-    </h2>
-    <p class="text-lg text-gray-600">
-      Practical guides and system walkthroughs to help you master Acacia Books ERP.
-    </p>
-  </div>
-
-  <div class="max-w-10xl mx-auto relative">
-
-    <div id="blog-carousel" class="flex gap-8 overflow-x-auto snap-x snap-mandatory pb-4">
-
-      <!-- Inventory Management -->
-      <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal1">
-        <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/inventory.jpg');"></div>
-        <div class="p-8 text-left">
-          <span class="text-sm text-blue-700 font-semibold">Inventory Management</span>
-          <h3 class="font-bold text-xl mt-3 mb-3 text-blue-900">How to Manage Inventory Efficiently</h3>
-          <p class="text-gray-600 mb-4">
-            Learn how Acacia Books tracks stock levels in real time, updates quantities after every sale and purchase, and generates accurate inventory reports automatically.
-          </p>
-          <button class="font-semibold text-blue-700 hover:underline">Read More →</button>
-        </div>
-        <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
-      </div>
-
-      <!-- Sales Hub -->
-      <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal2">
-        <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/sales.jpg');"></div>
-        <div class="p-8 text-left">
-          <span class="text-sm text-blue-700 font-semibold">Sales Hub</span>
-          <h3 class="font-bold text-xl mt-3 mb-3 text-blue-900">How the Sales Hub Works</h3>
-          <p class="text-gray-600 mb-4">
-            Create quotations, convert them into invoices, record customer payments, and automatically update inventory and financial records from one centralized dashboard.
-          </p>
-          <button class="font-semibold text-blue-700 hover:underline">Read More →</button>
-        </div>
-        <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
-      </div>
-
-      <!-- Purchase Hub -->
-      <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal3">
-        <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/purchase.jpg');"></div>
-        <div class="p-8 text-left">
-          <span class="text-sm text-blue-700 font-semibold">Purchase Hub</span>
-          <h3 class="font-bold text-xl mt-3 mb-3 text-blue-900">How the Purchase Hub Works</h3>
-          <p class="text-gray-600 mb-4">
-            Generate purchase orders, receive goods into inventory, manage supplier balances, and track payments while keeping your accounting records updated automatically.
-          </p>
-          <button class="font-semibold text-blue-700 hover:underline">Read More →</button>
-        </div>
-        <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
-      </div>
-
-      <!-- Payroll & Compliance -->
-      <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal4">
-        <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/payroll.jpg');"></div>
-        <div class="p-8 text-left">
-          <span class="text-sm text-blue-700 font-semibold">Payroll & Compliance</span>
-          <h3 class="font-bold text-xl mt-3 mb-3 text-blue-900">Payroll Compliance Guide</h3>
-          <p class="text-gray-600 mb-4">
-            Process salaries, calculate deductions, generate payslips, and maintain compliance records with automated payroll management tools.
-          </p>
-          <button class="font-semibold text-blue-700 hover:underline">Read More →</button>
-        </div>
-        <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
-      </div>
-
-      <!-- Business Growth -->
-      <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal5">
-        <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/business.jpg');"></div>
-        <div class="p-8 text-left">
-          <span class="text-sm text-blue-700 font-semibold">Business Growth</span>
-          <h3 class="font-bold text-xl mt-3 mb-3 text-blue-900">Scaling Your Business with ERP</h3>
-          <p class="text-gray-600 mb-4">
-            Use dashboards, financial reports, and analytics to eliminate bottlenecks and confidently scale your operations.
-          </p>
-          <button class="font-semibold text-blue-700 hover:underline">Read More →</button>
-        </div>
-        <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
-      </div>
-<!-- Reports  -->
-<div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal6">
-  <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/reports.jpg');"></div>
-  <div class="p-8 text-left">
-    <span class="text-sm text-blue-700 font-semibold">Reports & Analytics</span>
-    <h3 class="font-bold text-xl mt-3 mb-3 text-blue-900">Financial Reports & Insights</h3>
-    <p class="text-gray-600 mb-4">
-      Generate detailed financial reports, track KPIs, visualize growth trends, and make data-driven decisions to optimize business performance.
-    </p>
-    <button class="font-semibold text-blue-700 hover:underline">Read More →</button>
-  </div>
-  <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
-</div>
-    </div>
-
-    <button id="prev" class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-blue-700 text-white px-3 py-2 rounded-full shadow-lg hover:bg-blue-800 z-10">‹</button>
-    <button id="next" class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-blue-700 text-white px-3 py-2 rounded-full shadow-lg hover:bg-blue-800 z-10">›</button>
-
-  </div>
-
-</section>
-
-<!-- Modal Templates -->
-<div id="modal1" class="blog-modal fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-xl max-w-2xl w-full p-6 relative">
-    <button class="absolute top-3 right-3 text-gray-600 text-xl font-bold modal-close">&times;</button>
-    <h2 class="text-2xl font-bold mb-4 text-blue-900">How to Manage Inventory Efficiently</h2>
-    <img src="images/inventory.jpg" alt="" class="w-full rounded mb-4">
-    <p class="text-gray-700 mb-4">Full article content for Inventory Management...</p>
-  </div>
-</div>
-
-<div id="modal2" class="blog-modal fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-xl max-w-2xl w-full p-6 relative">
-    <button class="absolute top-3 right-3 text-gray-600 text-xl font-bold modal-close">&times;</button>
-    <h2 class="text-2xl font-bold mb-4 text-blue-900">How the Sales Hub Works</h2>
-    <img src="images/sales.jpg" alt="" class="w-full rounded mb-4">
-    <p class="text-gray-700 mb-4">Full article content for Sales Hub...</p>
-  </div>
-</div>
-
-<div id="modal3" class="blog-modal fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-xl max-w-2xl w-full p-6 relative">
-    <button class="absolute top-3 right-3 text-gray-600 text-xl font-bold modal-close">&times;</button>
-    <h2 class="text-2xl font-bold mb-4 text-blue-900">How the Purchase Hub Works</h2>
-    <img src="images/purchase.jpg" alt="" class="w-full rounded mb-4">
-    <p class="text-gray-700 mb-4">Full article content for Purchase Hub...</p>
-  </div>
-</div>
-
-<div id="modal4" class="blog-modal fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-xl max-w-2xl w-full p-6 relative">
-    <button class="absolute top-3 right-3 text-gray-600 text-xl font-bold modal-close">&times;</button>
-    <h2 class="text-2xl font-bold mb-4 text-blue-900">Payroll Compliance Guide</h2>
-    <img src="images/payroll.jpg" alt="" class="w-full rounded mb-4">
-    <p class="text-gray-700 mb-4">Full article content for Payroll & Compliance...</p>
-  </div>
-</div>
-
-<div id="modal5" class="blog-modal fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-xl max-w-2xl w-full p-6 relative">
-    <button class="absolute top-3 right-3 text-gray-600 text-xl font-bold modal-close">&times;</button>
-    <h2 class="text-2xl font-bold mb-4 text-blue-900">Scaling Your Business with ERP</h2>
-    <img src="images/business.jpg" alt="" class="w-full rounded mb-4">
-    <p class="text-gray-700 mb-4">Full article content for Business Growth...</p>
-  </div>
-</div>
-
-<script>
-const carousel = document.getElementById('blog-carousel');
-const next = document.getElementById('next');
-const prev = document.getElementById('prev');
-const blogItems = document.querySelectorAll('.blog-item');
-const modals = document.querySelectorAll('.blog-modal');
-const modalCloses = document.querySelectorAll('.modal-close');
-
-next.addEventListener('click', () => { carousel.scrollBy({ left: 300, behavior: 'smooth' }); });
-prev.addEventListener('click', () => { carousel.scrollBy({ left: -300, behavior: 'smooth' }); });
-
-blogItems.forEach(item => {
-  item.addEventListener('click', () => {
-    const modal = document.getElementById(item.dataset.modal);
-    modal.classList.remove('hidden'); modal.classList.add('flex');
-  });
-});
-
-modalCloses.forEach(btn => {
-  btn.addEventListener('click', () => {
-    btn.closest('.blog-modal').classList.add('hidden'); btn.closest('.blog-modal').classList.remove('flex');
-  });
-});
-
-modals.forEach(modal => {
-  modal.addEventListener('click', e => {
-    if(e.target === modal){
-      modal.classList.add('hidden'); modal.classList.remove('flex');
-    }
-  });
-});
-</script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<script src="https://cdn.tailwindcss.com"></script>
-
-<section id="apps" class="py-15 bg-gray-50 text-center px-5 relative overflow-hidden">
-  <h2 class="text-3xl font-bold text-blue-900 mb-60">Our Apps</h2>
-  <div class="max-w-15xl mx-auto">
-    <p class="text-gray-600 mb-8">
-      Access your business tools بسهولة from anywhere.
-    </p>
-
-    <div class="grid md:grid-cols-4 gap-6">
-
-      <div onclick="openAuth('inventory')" class="relative bg-white p-6 rounded-lg shadow hover:shadow-lg transition cursor-pointer overflow-hidden">
-        <div class="absolute inset-0 slider opacity-20 blur-sm">
-          <div class="slide" style="background-image:url('https://source.unsplash.com/400x300/?business'); background-size:cover;"></div>
-          <div class="slide" style="background-image:url('https://source.unsplash.com/400x300/?warehouse'); background-size:cover;"></div>
-          <div class="slide" style="background-image:url('https://source.unsplash.com/400x300/?logistics'); background-size:cover;"></div>
-        </div>
-        <div class="relative z-10">
-          <i class="fa-solid fa-boxes-stacked text-3xl text-blue-700 mb-4"></i>
-          <h3 class="text-xl font-semibold text-blue-900">Inventory</h3>
-          <p class="text-gray-500 mt-2"> Track stock levels in real-time and avoid shortages or overstocking بسهولة. Automate reorders, manage suppliers, and keep your inventory organized for smoother daily operations. </p>
-          <div class="mt-4 w-full h-[100px]">
-            <canvas id="inventoryChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <div onclick="openAuth('expenses')" class="relative bg-white p-6 rounded-lg shadow hover:shadow-lg transition cursor-pointer overflow-hidden">
-        <div class="absolute inset-0 slider opacity-20 blur-sm">
-          <div class="slide" style="background-image:url('https://source.unsplash.com/400x300/?finance'); background-size:cover;"></div>
-          <div class="slide" style="background-image:url('https://source.unsplash.com/400x300/?money'); background-size:cover;"></div>
-          <div class="slide" style="background-image:url('https://source.unsplash.com/400x300/?accounting'); background-size:cover;"></div>
-        </div>
-        <div class="relative z-10">
-          <i class="fa-solid fa-receipt text-3xl text-green-600 mb-4"></i>
-          <h3 class="text-xl font-semibold text-blue-900">Expenses</h3>
-          <p class="text-gray-500 mt-2"> Monitor and control your business spending بكل سهولة. Categorize expenses, track transactions, and generate clear reports to stay on top of your financial health. </p>
-          <div class="mt-4 w-full h-[100px]">
-            <canvas id="expensesChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <div onclick="openAuth('payroll')" class="relative bg-white p-6 rounded-lg shadow hover:shadow-lg transition cursor-pointer overflow-hidden">
-        <div class="absolute inset-0 slider opacity-20 blur-sm">
-          <div class="slide" style="background-image:url('https://source.unsplash.com/400x300/?office'); background-size:cover;"></div>
-          <div class="slide" style="background-image:url('https://source.unsplash.com/400x300/?team'); background-size:cover;"></div>
-          <div class="slide" style="background-image:url('https://source.unsplash.com/400x300/?salary'); background-size:cover;"></div>
-        </div>
-        <div class="relative z-10">
-          <i class="fa-solid fa-money-check-dollar text-3xl text-purple-600 mb-4"></i>
-          <h3 class="text-xl font-semibold text-blue-900">Payroll</h3>
-          <p class="text-gray-500 mt-2"> Manage employee salaries, deductions, and payments بسهولة. Automate payroll processes and ensure compliance while reducing errors and saving valuable time. </p>
-          <div class="mt-4 w-full h-[100px]">
-            <canvas id="payrollChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <div onclick="openAuth('sales')" class="relative bg-white p-6 rounded-lg shadow hover:shadow-lg transition cursor-pointer overflow-hidden">
-        <div class="absolute inset-0 slider opacity-20 blur-sm">
-          <div class="slide" style="background-image:url('https://source.unsplash.com/400x300/?sales'); background-size:cover;"></div>
-          <div class="slide" style="background-image:url('https://source.unsplash.com/400x300/?invoice'); background-size:cover;"></div>
-          <div class="slide" style="background-image:url('https://source.unsplash.com/400x300/?growth'); background-size:cover;"></div>
-        </div>
-        <div class="relative z-10">
-          <i class="fa-solid fa-file-invoice-dollar text-3xl text-orange-600 mb-4"></i>
-          <h3 class="text-xl font-semibold text-blue-900">Sales & Billing</h3>
-          <p class="text-gray-500 mt-2"> Create invoices, manage customers, and track payments بسهولة. Get real-time insights into your sales performance and grow your business with confidence. </p>
-          <div class="mt-4 w-full h-[100px]">
-            <canvas id="salesChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<style>
-.slider {
-  display: flex;
-  width: 300%;
-  height: 100%;
-  animation: slide 15s infinite;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.slide {
-  flex: 0 0 33.3333%;
-  height: 100%;
-}
-
-@keyframes slide {
-  0%, 33% { transform: translateX(0%); }
-  34%, 66% { transform: translateX(-33.3333%); }
-  67%, 100% { transform: translateX(-66.6666%); }
-}
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-let selectedApp = "";
-
-function openAuth(app) {
-  selectedApp = app;
-}
-
-function createChart(id, data, color) {
-  new Chart(document.getElementById(id), {
-    type: 'line',
-    data: {
-      labels: ["Jan", "Feb", "Mar", "Apr", "May"],
-      datasets: [{
-        data: data,
-        borderColor: color,
-        backgroundColor: color + "33",
-        fill: true,
-        tension: 0.4
-      }]
-    },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: { x: { display: false }, y: { display: false } },
-      responsive: true,
-      maintainAspectRatio: false
-    }
-  });
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-  createChart("inventoryChart", [10, 15, 12, 18, 20], "#1d4ed8");
-  createChart("expensesChart", [5, 8, 6, 9, 7], "#16a34a");
-  createChart("payrollChart", [12, 12, 13, 14, 15], "#9333ea");
-  createChart("salesChart", [20, 25, 22, 30, 35], "#ea580c");
-});
-</script>
-<!-- 📞 CONTACT SECTION -->
-<section id="contact" class="py-20 bg-gray-50 text-center px-6">
-  <h2 class="text-3xl font-bold text-blue-900 mb-6">Contact Us</h2>
-
-  <div class="max-w-2xl mx-auto">
-    <p class="text-gray-600 mb-6">
-      Need help with your business, accounting, or system setup? 
-      Our team is ready to support you.
-    </p>
-
-    <!-- Contact Info Cards -->
-    <div class="grid md:grid-cols-3 gap-4 mb-8 text-left">
-
-      <div class="bg-white p-4 rounded shadow">
-        <p class="text-gray-500 text-sm">Email</p>
-        <p class="font-semibold text-blue-900">support@acaciabooks.com</p>
-      </div>
-
-      <div class="bg-white p-4 rounded shadow">
-        <p class="text-gray-500 text-sm">Phone</p>
-        <p class="font-semibold text-blue-900">+254 717 346 231</p>
-      </div>
-
-      <div class="bg-white p-4 rounded shadow">
-        <p class="text-gray-500 text-sm">Working Hours</p>
-        <p class="font-semibold text-blue-900">Mon – Fri, 8AM – 5PM</p>
-      </div>
-
-    </div>
-
-    <!-- Action Buttons -->
-    <div class="flex flex-col md:flex-row flex-wrap justify-center gap-4 mb-10">
-
-      <a href="tel:+254717346231"
-         class="bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition shadow">
-        <i class="fa-solid fa-phone mr-2"></i> Call Now
-      </a>
-
-      <a href="mailto:support@acaciabooks.com"
-         class="bg-gray-200 text-blue-900 px-6 py-3 rounded-lg hover:bg-gray-300 transition shadow">
-        <i class="fa-solid fa-envelope mr-2"></i> Send Email
-      </a>
-
-      <a href="https://wa.me/254717346231" target="_blank"
-         class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition shadow">
-        <i class="fa-brands fa-whatsapp mr-2"></i> WhatsApp
-      </a>
-
-      <a href="sms:+254717346231"
-         class="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 transition shadow">
-        <i class="fa-solid fa-comment-sms mr-2"></i> SMS
-      </a>
-
-    </div>
-
-    <!-- Social Buttons -->
-    <div class="flex justify-center flex-wrap gap-4 mb-8">
-
-      <a href="https://facebook.com/" target="_blank"
-         class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 transition">
-        <i class="fa-brands fa-facebook mr-2"></i> Facebook
-      </a>
-
-      <a href="https://twitter.com/" target="_blank"
-         class="bg-black text-white px-5 py-2 rounded hover:bg-gray-800 transition">
-        <i class="fa-brands fa-x-twitter mr-2"></i> X
-      </a>
-
-      <a href="https://linkedin.com/" target="_blank"
-         class="bg-blue-800 text-white px-5 py-2 rounded hover:bg-blue-900 transition">
-        <i class="fa-brands fa-linkedin mr-2"></i> LinkedIn
-      </a>
-
-    </div>
-
-    <!-- CTA -->
-    <p class="text-blue-900 font-semibold text-lg">
-      💼 Grow your business with better accounting & financial control
-    </p>
-
-  </div>
-</section>
+ 
 <footer class="bg-blue-900 text-white py-10 mt-12">
-  <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 px-6">
+  <div class="max-w-6xl mx-auto grid md:grid-cols-6 gap-8 px-6">
 
-    <!-- Quick Links -->
+   
+    <div class="md:col-span-2">
+      <h3 class="text-xl font-bold mb-3">Acacia Books</h3>
+      <p class="text-sm text-gray-200">
+        Cloud-based ERP to run, manage, and grow your business.
+      </p>
+      <div class="flex gap-4 mt-4 text-2xl">
+      <a href="https://facebook.com/acaciabooks" target="_blank" class="hover:text-gray-300"><i class="fab fa-facebook"></i></a>
+      <a href="https://twitter.com/acaciabooks" target="_blank" class="hover:text-gray-300"><i class="fab fa-twitter"></i></a>
+      <a href="https://linkedin.com/company/acaciabooks" target="_blank" class="hover:text-gray-300"><i class="fab fa-linkedin"></i></a>
+      <a href="https://instagram.com/acaciabooks" target="_blank" class="hover:text-gray-300"><i class="fab fa-instagram"></i></a>
+      <a href="https://tiktok.com/@acaciabooks" target="_blank" class="hover:text-gray-300"><i class="fab fa-tiktok"></i></a>
+    </div>
+    </div>
+
     <div>
       <h4 class="font-semibold mb-3">Quick Links</h4>
       <ul class="space-y-2 text-sm">
-        <li><a href="#hero" class="px-2 py-1 rounded hover:bg-blue-800">Home</a></li>
-        <li><a href="#features" class="px-2 py-1 rounded hover:bg-blue-800">Features</a></li>
-        <li><a href="#pricing" class="px-2 py-1 rounded hover:bg-blue-800">Pricing</a></li>
-        <li><a href="#customers" class="px-2 py-1 rounded hover:bg-blue-800">Customers</a></li>
-        <li><a href="#resources" class="px-2 py-1 rounded hover:bg-blue-800">Resources</a></li>
-        <li><a href="#about" class="px-2 py-1 rounded hover:bg-blue-800">About</a></li>
-        <li><a href="#blog" class="px-2 py-1 rounded hover:bg-blue-800">Blog</a></li>
-        <li><a href="#contact" class="px-2 py-1 rounded hover:bg-blue-800">Contact</a></li>
-        <li><a href="#support" class="px-2 py-1 rounded hover:bg-blue-800">Support</a></li>
+        <li><a href="#features" class="hover:underline">Features</a></li>
+        <li><a href="#pricing" class="hover:underline">Pricing</a></li>
+        <li><a href="#customers" class="hover:underline">Customers</a></li>
+        <li><a href="#resources" class="hover:underline">Resources</a></li>
+        
       </ul>
     </div>
 
-    <!-- Support -->
+   
     <div>
       <h4 class="font-semibold mb-3">Support</h4>
       <ul class="space-y-2 text-sm">
+    
+    <li>
+      <button onclick="toggleSection('termsContent')" class="hover:underline w-full text-left">
+        Terms of Service
+      </button>
+      <div id="termsContent" class="hidden mt-2 text-gray-300 text-xs leading-relaxed">
+        <p>📑 <b>Terms of Service</b> — Last updated Sept 2025.</p>
+        <p>By using Acacia Books ERP, you agree to our usage rules, limitations of liability, and compliance requirements.</p>
+        <a href="privacy-policy.html" target="_blank" style="color: blue; text-decoration: underline;">Read our full Privacy Policy</a>
+      </div>
+    </li>
 
-        <li>
-          <button onclick="toggleSection('termsContent')" class="hover:underline w-full text-left">
-            Terms of Service
-          </button>
-          <div id="termsContent" class="hidden mt-2 text-gray-300 text-xs leading-relaxed">
-            <p>📑 <b>Terms of Service</b> — Last updated Sept 2025.</p>
-            <p>By using Acacia Books ERP, you agree to our usage rules, limitations of liability, and compliance requirements.</p>
-            <a href="privacy-policy.html" target="_blank" style="color: blue; text-decoration: underline;">Read our full Privacy Policy</a>
-          </div>
-        </li>
+    <li>
+      <button onclick="toggleSection('privacyContent')" class="hover:underline w-full text-left">
+        Privacy Policy
+      </button>
+      <div id="privacyContent" class="hidden mt-2 text-gray-300 text-xs leading-relaxed">
+        <p>
+🔒 <b>Privacy Policy</b> — We collect only essential business data needed for ERP operations, store it securely, and never share your information without your explicit consent. We comply with data protection regulations such as GDPR to ensure your privacy is fully respected. 
+<a href="privacy-policy.html" target="_blank" style="color: blue; text-decoration: underline;">Read our full Privacy Policy</a>
+<br><small><i>Last updated: September 27, 2025</i></small>
+</p>
+      </div>
+    </li>
 
-        <li>
-          <button onclick="toggleSection('privacyContent')" class="hover:underline w-full text-left">
-            Privacy Policy
-          </button>
-          <div id="privacyContent" class="hidden mt-2 text-gray-300 text-xs leading-relaxed">
-            <p>
-            🔒 <b>Privacy Policy</b> — We collect only essential business data needed for ERP operations, store it securely, and never share your information without your explicit consent. We comply with data protection regulations such as GDPR to ensure your privacy is fully respected. 
-            <a href="privacy-policy.html" target="_blank" style="color: blue; text-decoration: underline;">Read our full Privacy Policy</a>
-            <br><small><i>Last updated: September 27, 2025</i></small>
-            </p>
-          </div>
-        </li>
-
-      </ul>
+    
+    <li>
+      <button onclick="toggleSection('blogContent')" class="hover:underline w-full text-left">
+        Blog
+      </button>
+      <div id="blogContent" class="hidden mt-2 text-gray-300 text-xs leading-relaxed">
+      <p>
+📰 <b>Acacia Blog</b> — Insights and updates across Inventory, Customers, Suppliers, Payroll, Accounting, and more — helping you streamline operations and grow smarter with your ERP.</p>
+      </div>
+    </li>
+  </ul>
     </div>
-
-    <script>
-      function toggleSection(id) {
-        const section = document.getElementById(id);
-        section.classList.toggle("hidden");
-      }
-    </script>
+<script>
+  function toggleSection(id) {
+    const section = document.getElementById(id);
+    section.classList.toggle("hidden");
+  }
+</script>
+  
+    <div class="md:col-span-2">
+      <h4 class="font-semibold mb-3">Stay Updated</h4>
+      <p class="text-sm text-gray-200 mb-2">Subscribe to our newsletter for product updates and tips.</p>
+      <form class="flex gap-2">
+        <input type="email" placeholder="Your email" class="p-2 rounded-l bg-white text-gray-900 flex-1" />
+        <button type="submit" class="bg-blue-600 px-4 py-2 rounded-r hover:bg-blue-700">Subscribe</button>
+      </form>
+    </div>
+  </div>
 
   <div class="mt-8 text-center text-sm text-gray-300">
     © <span id="year"></span> Acacia Books. All rights reserved.
   </div>
-</footer>
+  </footer>
 </div>
 <!-- LOGIN MODAL -->
 <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
