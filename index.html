@@ -1114,84 +1114,108 @@ function toggleFAQ(faqId) {
  
 <footer class="footer">
 
-<div class="footer-container">
+  <div class="footer-container">
 
-  <div class="footer-section">
-    <h3>🛒 Acacia Books</h3>
-    <p>Cloud-based ERP to run, manage, and grow your business.</p>
+    <!-- Company -->
+    <div class="footer-section">
+      <h3>🛒 Acacia Books</h3>
+      <p>Cloud-based ERP to run, manage, and grow your business.</p>
+    </div>
+
+    <!-- Contact -->
+    <div class="footer-section">
+      <h4>📞 Contact Us</h4>
+
+      <p>📱 Phone: +254 731 858 997</p>
+
+      <p>
+        💬 <a href="https://wa.me/254731858997" target="_blank" style="color:#25D366;">
+          WhatsApp Chat
+        </a>
+      </p>
+
+      <p>📍 Nairobi, Kenya</p>
+
+      <div style="margin-top:12px; font-size:22px; display:flex; gap:12px;">
+        <a href="https://wa.me/254731858997" target="_blank" style="color:#25D366;">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+
+        <a href="https://facebook.com" target="_blank" style="color:#1877F2;">
+          <i class="fab fa-facebook-f"></i>
+        </a>
+
+        <a href="https://instagram.com" target="_blank" style="color:#E4405F;">
+          <i class="fab fa-instagram"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Payment -->
+    <div class="footer-section">
+      <h4>💳 Payment Options</h4>
+
+      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; align-items:center;">
+
+        <div style="display:flex; align-items:center; gap:6px;">
+          <img src="https://img.icons8.com/color/48/mpesa.png" style="height:24px;">
+          <span style="font-size:12px;">M-PESA</span>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px;">
+          <img src="https://img.icons8.com/color/48/visa.png" style="height:22px;">
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px;">
+          <img src="https://img.icons8.com/color/48/mastercard-logo.png" style="height:22px;">
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px;">
+          <img src="https://img.icons8.com/color/48/bank-building.png" style="height:22px;">
+          <span style="font-size:12px;">Bank</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Legal -->
+    <div class="footer-section">
+      <h4>📜 Legal</h4>
+
+      <ul style="list-style:none; padding:0;">
+        <li>
+          <a href="terms.html" style="text-decoration:none; color:white;">
+            Terms of Service
+          </a>
+        </li>
+        <li style="margin-top:6px;">
+          <a href="privacy-policy.html" style="text-decoration:none; color:white;">
+            Privacy Policy
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Quote Button -->
+    <div class="footer-section">
+      <h4>📩 Request Quote</h4>
+
+      <button onclick="openQuoteModal()"
+        style="padding:10px 14px;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer;">
+        Get Quote
+      </button>
+    </div>
+
   </div>
 
-  <div class="footer-section">
-    <h4>📞 Contact Us</h4>
-
-    <p>📱 Phone: +254 731 858 997</p>
-
-    <p>
-      💬 <a href="https://wa.me/254731858997" target="_blank" style="color:#25D366;">
-        WhatsApp Chat
-      </a>
-    </p>
-
-    <p>📧 Email: support@smarttech.com</p>
-    <p>📍 Nairobi, Kenya</p>
-
-    <div style="margin-top:12px; font-size:22px; display:flex; gap:12px;">
-      
-      <a href="https://wa.me/254731858997" target="_blank" style="color:#25D366;">
-        <i class="fab fa-whatsapp"></i>
-      </a>
-
-      <a href="https://facebook.com" target="_blank" style="color:#1877F2;">
-        <i class="fab fa-facebook-f"></i>
-      </a>
-
-      <a href="https://instagram.com" target="_blank" style="color:#E4405F;">
-        <i class="fab fa-instagram"></i>
-      </a>
-
-    </div>
+  <div class="footer-bottom">
+    <p>© 2026 Acacia Books. All rights reserved.</p>
   </div>
 
-  <div class="footer-section">
-  <h4>💳 Payment Options</h4>
 
-  <div style="display:flex; flex-wrap:wrap; gap:20px; margin-top:20px; align-items:center;">
 
-    <div style="display:flex; align-items:center; gap:6px;">
-      <img src="https://img.icons8.com/color/48/mpesa.png" style="height:24px;" />
-      <span style="font-size:12px;">M-PESA</span>
-    </div>
-
-    <div style="display:flex; align-items:center; gap:6px;">
-      <img src="https://img.icons8.com/color/48/visa.png" style="height:22px;" />
-    </div>
-
-    <div style="display:flex; align-items:center; gap:6px;">
-      <img src="https://img.icons8.com/color/48/mastercard-logo.png" style="height:22px;" />
-    </div>
-
-    <div style="display:flex; align-items:center; gap:6px;">
-      <img src="https://img.icons8.com/color/48/bank-building.png" style="height:22px;" />
-      <span style="font-size:12px;">Bank</span>
-    </div>
-
-    <div style="display:flex; align-items:center; gap:6px;">
-      <img src="https://img.icons8.com/color/48/paypal.png" style="height:22px;" />
-      <span style="font-size:12px;">PesaPal</span>
-    </div>
-
-  </div>
-</div>
-
-<div class="footer-section">
-  <h4>📩 Request Quote</h4>
-
-  <button onclick="openQuoteModal()"
-    style="padding:10px 14px;background:#2563eb;color:white;border:none;border-radius:6px;cursor:pointer;">
-    Get Quote
-  </button>
-</div>
-<div id="quoteModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+<!-- MODAL -->
+<div id="quoteModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
 background:rgba(0,0,0,0.6); justify-content:center; align-items:center;">
 
   <div style="background:white; padding:20px; border-radius:10px; width:280px; text-align:center;">
@@ -1221,8 +1245,10 @@ background:rgba(0,0,0,0.6); justify-content:center; align-items:center;">
     </button>
 
   </div>
+  </footer>
 </div>
 
+<!-- SCRIPT -->
 <script>
 function openQuoteModal() {
   document.getElementById("quoteModal").style.display = "flex";
@@ -1232,30 +1258,6 @@ function closeQuoteModal() {
   document.getElementById("quoteModal").style.display = "none";
 }
 </script>
-
-  <div class="footer-section">
-    <h4>📜 Legal</h4>
-    <ul style="list-style:none; padding:0;">
-      <li>
-        <a href="terms.html" style="text-decoration:none; color:white;">
-          Terms of Service
-        </a>
-      </li>
-      <li style="margin-top:6px;">
-        <a href="privacy-policy.html" style="text-decoration:none; color:white;">
-          Privacy Policy
-        </a>
-      </li>
-    </ul>
-  </div>
-
-</div>
-
-<div class="footer-bottom">
-  <p>© 2026 Acacia Books. All rights reserved.</p>
-</div>
-
-</footer>
 <!-- LOGIN MODAL -->
 <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
   <div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 relative">
