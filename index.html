@@ -54156,7 +54156,7 @@ window.onload = function() {
       <input type="text" class="subName border p-2 rounded" placeholder="Subsidiary Name" />
       <input type="text" class="subLocation border p-2 rounded" placeholder="Location" />
       <input type="text" class="subType border p-2 rounded" placeholder="Type of Company" />
-      <input type="text" class="subWorth border p-2 rounded" placeholder="Worth (e.g., $500,000)" />
+      <input type="text" class="subWorth border p-2 rounded" placeholder="Worth (e.g., 500000)" />
       <input type="email" class="subEmail border p-2 rounded" placeholder="Email" />
       <input type="text" class="subPhone border p-2 rounded" placeholder="Phone Number" />
     </div>
@@ -54168,7 +54168,48 @@ window.onload = function() {
     + Add Another Subsidiary
   </button>
 </div>
-    
+
+<div class="space-y-4 mt-8">
+  <h3 class="text-lg font-semibold text-blue-900">Financial Overview</h3>
+
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+    <input id="shareValue" type="number" placeholder="Total Share Capital" class="border p-2 rounded" />
+    <input id="assetValue" type="number" placeholder="Total Assets" class="border p-2 rounded" oninput="calculateEquity()" />
+    <input id="liabilityValue" type="number" placeholder="Total Liabilities" class="border p-2 rounded" oninput="calculateEquity()" />
+    <input id="equityValue" type="number" placeholder="Equity" class="border p-2 rounded bg-gray-100" readonly />
+  </div>
+</div>
+
+<div class="space-y-4 mt-6">
+  <h3 class="text-lg font-semibold text-blue-900">Bank Accounts</h3>
+
+  <div id="bankFields" class="space-y-3">
+    <div class="grid grid-cols-3 gap-3 bank-field border rounded-lg p-3 bg-gray-50">
+      <input type="text" class="bankName border p-2 rounded" placeholder="Bank Name" />
+      <input type="number" class="bankBalance border p-2 rounded" placeholder="Balance" />
+      <select class="bankCurrency border p-2 rounded">
+        <option value="KES">KES</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+      </select>
+    </div>
+  </div>
+
+  <button type="button"
+          onclick="addBankField()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
+    + Add Another Bank
+  </button>
+</div>
+
+<div class="mt-8 bg-white p-6 rounded shadow">
+  <h3 class="text-lg font-semibold text-center text-blue-900 mb-4">
+    Financial Summary Chart
+  </h3>
+  <canvas id="financeChart" height="100"></canvas>
+</div>
+
     <div class="text-center">
       <button type="button" onclick="saveOrgInfo()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Save Organization Info
@@ -55808,7 +55849,6 @@ document.addEventListener("DOMContentLoaded", () => {
   </section>
 </div>
 <script>
-
 function addAdditionalField() {
   const container = document.getElementById('additionalFields');
   const fieldDiv = document.createElement('div');
@@ -55818,6 +55858,77 @@ function addAdditionalField() {
     <input type="text" class="labelValue border p-2 rounded" placeholder="Value" />
   `;
   container.appendChild(fieldDiv);
+}
+
+function addSubsidiaryField() {
+  const container = document.getElementById("subsidiaryFields");
+  const div = document.createElement("div");
+  div.className = "grid grid-cols-2 sm:grid-cols-3 gap-3 subsidiary-field border rounded-lg p-3 bg-gray-50";
+  div.innerHTML = `
+    <input type="text" class="subName border p-2 rounded" placeholder="Subsidiary Name" />
+    <input type="text" class="subLocation border p-2 rounded" placeholder="Location" />
+    <input type="text" class="subType border p-2 rounded" placeholder="Type of Company" />
+    <input type="text" class="subWorth border p-2 rounded" placeholder="Worth (e.g., 500000)" />
+    <input type="email" class="subEmail border p-2 rounded" placeholder="Email" />
+    <input type="text" class="subPhone border p-2 rounded" placeholder="Phone Number" />
+  `;
+  container.appendChild(div);
+}
+
+function addBankField() {
+  const container = document.getElementById("bankFields");
+  const div = document.createElement("div");
+  div.className = "grid grid-cols-3 gap-3 bank-field border rounded-lg p-3 bg-gray-50";
+  div.innerHTML = `
+    <input type="text" class="bankName border p-2 rounded" placeholder="Bank Name" />
+    <input type="number" class="bankBalance border p-2 rounded" placeholder="Balance" />
+    <select class="bankCurrency border p-2 rounded">
+      <option value="KES">KES</option>
+      <option value="USD">USD</option>
+      <option value="EUR">EUR</option>
+      <option value="GBP">GBP</option>
+    </select>
+  `;
+  container.appendChild(div);
+}
+
+function calculateEquity() {
+  const assets = parseFloat(document.getElementById("assetValue")?.value) || 0;
+  const liabilities = parseFloat(document.getElementById("liabilityValue")?.value) || 0;
+  const equity = assets - liabilities;
+  const equityField = document.getElementById("equityValue");
+  if (equityField) equityField.value = equity;
+  updateChart(assets, liabilities, equity);
+}
+
+let financeChart;
+
+function updateChart(assets, liabilities, equity) {
+  const canvas = document.getElementById("financeChart");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  if (financeChart) {
+    financeChart.destroy();
+  }
+
+  financeChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Assets", "Liabilities", "Equity"],
+      datasets: [{
+        data: [assets, liabilities, equity],
+        backgroundColor: ["#16a34a", "#dc2626", "#2563eb"]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
 }
 
 function saveOrgInfo() {
