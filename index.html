@@ -55429,6 +55429,33 @@ function addAdditionalField() {
     <input type="text" class="labelValue border p-2 rounded" placeholder="Value" />
   `;
   container.appendChild(fieldDiv);
+  saveAdditionalFields();
+}
+
+function saveAdditionalFields() {
+  const data = [];
+  document.querySelectorAll(".additional-field").forEach(div => {
+    data.push({
+      name: div.querySelector(".labelName")?.value || "",
+      value: div.querySelector(".labelValue")?.value || ""
+    });
+  });
+  localStorage.setItem("additionalFields", JSON.stringify(data));
+}
+
+function loadAdditionalFields() {
+  const container = document.getElementById("additionalFields");
+  const data = JSON.parse(localStorage.getItem("additionalFields") || "[]");
+  container.innerHTML = "";
+  data.forEach(item => {
+    const fieldDiv = document.createElement("div");
+    fieldDiv.className = 'grid grid-cols-2 gap-2 additional-field';
+    fieldDiv.innerHTML = `
+      <input type="text" class="labelName border p-2 rounded" value="${item.name}" />
+      <input type="text" class="labelValue border p-2 rounded" value="${item.value}" />
+    `;
+    container.appendChild(fieldDiv);
+  });
 }
 
 function addSubsidiaryField() {
@@ -55444,6 +55471,41 @@ function addSubsidiaryField() {
     <input type="text" class="subPhone border p-2 rounded" placeholder="Phone Number" />
   `;
   container.appendChild(div);
+  saveSubsidiaryFields();
+}
+
+function saveSubsidiaryFields() {
+  const data = [];
+  document.querySelectorAll(".subsidiary-field").forEach(div => {
+    data.push({
+      name: div.querySelector(".subName")?.value || "",
+      location: div.querySelector(".subLocation")?.value || "",
+      type: div.querySelector(".subType")?.value || "",
+      worth: div.querySelector(".subWorth")?.value || "",
+      email: div.querySelector(".subEmail")?.value || "",
+      phone: div.querySelector(".subPhone")?.value || ""
+    });
+  });
+  localStorage.setItem("subsidiaryFields", JSON.stringify(data));
+}
+
+function loadSubsidiaryFields() {
+  const container = document.getElementById("subsidiaryFields");
+  const data = JSON.parse(localStorage.getItem("subsidiaryFields") || "[]");
+  container.innerHTML = "";
+  data.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "grid grid-cols-2 sm:grid-cols-3 gap-3 subsidiary-field border rounded-lg p-3 bg-gray-50";
+    div.innerHTML = `
+      <input type="text" class="subName border p-2 rounded" value="${item.name}" />
+      <input type="text" class="subLocation border p-2 rounded" value="${item.location}" />
+      <input type="text" class="subType border p-2 rounded" value="${item.type}" />
+      <input type="text" class="subWorth border p-2 rounded" value="${item.worth}" />
+      <input type="email" class="subEmail border p-2 rounded" value="${item.email}" />
+      <input type="text" class="subPhone border p-2 rounded" value="${item.phone}" />
+    `;
+    container.appendChild(div);
+  });
 }
 
 function addBankField() {
@@ -55461,6 +55523,40 @@ function addBankField() {
     </select>
   `;
   container.appendChild(div);
+  saveBankFields();
+}
+
+function saveBankFields() {
+  const data = [];
+  document.querySelectorAll(".bank-field").forEach(div => {
+    data.push({
+      name: div.querySelector(".bankName")?.value || "",
+      balance: div.querySelector(".bankBalance")?.value || "",
+      currency: div.querySelector(".bankCurrency")?.value || ""
+    });
+  });
+  localStorage.setItem("bankFields", JSON.stringify(data));
+}
+
+function loadBankFields() {
+  const container = document.getElementById("bankFields");
+  const data = JSON.parse(localStorage.getItem("bankFields") || "[]");
+  container.innerHTML = "";
+  data.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "grid grid-cols-3 gap-3 bank-field border rounded-lg p-3 bg-gray-50";
+    div.innerHTML = `
+      <input type="text" class="bankName border p-2 rounded" value="${item.name}" />
+      <input type="number" class="bankBalance border p-2 rounded" value="${item.balance}" />
+      <select class="bankCurrency border p-2 rounded">
+        <option value="KES" ${item.currency === "KES" ? "selected" : ""}>KES</option>
+        <option value="USD" ${item.currency === "USD" ? "selected" : ""}>USD</option>
+        <option value="EUR" ${item.currency === "EUR" ? "selected" : ""}>EUR</option>
+        <option value="GBP" ${item.currency === "GBP" ? "selected" : ""}>GBP</option>
+      </select>
+    `;
+    container.appendChild(div);
+  });
 }
 
 function calculateEquity() {
@@ -55480,9 +55576,7 @@ function updateChart(assets, liabilities, equity) {
 
   const ctx = canvas.getContext("2d");
 
-  if (financeChart) {
-    financeChart.destroy();
-  }
+  if (financeChart) financeChart.destroy();
 
   financeChart = new Chart(ctx, {
     type: "bar",
@@ -55502,6 +55596,11 @@ function updateChart(assets, liabilities, equity) {
   });
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  loadAdditionalFields();
+  loadSubsidiaryFields();
+  loadBankFields();
+});
 function saveOrgInfo() {
   const additionalFields = [];
   document.querySelectorAll('.additional-field').forEach(div => {
@@ -55520,7 +55619,16 @@ function saveOrgInfo() {
   } else {
     finalizeSave(null);
   }
+  function saveLogo(url) {
+  localStorage.setItem("logo", url);
+}
 
+function loadLogo() {
+  const logo = localStorage.getItem("logo");
+  if (logo) {
+    document.getElementById("logoImg").src = logo;
+  }
+}
   function finalizeSave(logoBase64) {
     const orgInfo = {
       name: document.getElementById('orgName').value,
