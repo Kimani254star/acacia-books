@@ -46,41 +46,42 @@
   tbody tr:nth-child(even) {
     background-color: #fafafa;
   }
-  .footer{
-  background:#111;
-  color:white;
-  padding:40px 20px;
-  margin-top:40px;
+.footer {
+  background: #111;
+  color: white;
+  padding: 40px 40px;   
+  margin-top: 40px;
 }
 
-.footer-container{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:20px;
+.footer-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;  
 }
 
-.footer-section{
-  flex:1;
-  min-width:180px;
+.footer-section {
+  flex: 1;
+  min-width: 180px;
 }
 
 .footer-section h3,
-.footer-section h4{
-  margin-bottom:10px;
+.footer-section h4 {
+  margin-bottom: 10px;  
 }
 
-.footer-section p{
-  font-size:14px;
-  margin:5px 0;
+.footer-section p {
+  font-size: 14px;
+  margin: 8px 0;
 }
 
-.footer-bottom{
-  text-align:center;
-  margin-top:20px;
-  border-top:1px solid #444;
-  padding-top:10px;
-  font-size:13px;
+.footer-bottom {
+  text-align: center;
+  margin-top: 20px;  
+  border-top: 1px solid #444;
+  padding-top: 10px;
+  font-size: 13px;
 }
 </style>
 </head>
@@ -953,7 +954,7 @@ document.getElementById('demoForm').addEventListener('submit', async function(e)
     icon.textContent = module.classList.contains('hidden') ? '+' : '−';
   }
 </script>
-<!-- Video Tutorials Card with Toggle -->
+
 <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition max-w-md mx-auto">
   <h3 class="font-bold text-lg mb-4 text-blue-900">🎓 Video Tutorials</h3>
   <p class="text-gray-600 mb-4">
@@ -1055,17 +1056,16 @@ function toggleFAQ(faqId) {
 }
 </script>
 
-   
-<div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition max-w-md mx-auto">
-  <h3 class="font-bold text-lg mb-4 text-blue-900">🔗 Integrations</h3>
-  <p class="text-gray-600 mb-4">
+<div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition max-w-2xl mx-auto mb-10">
+  <h3 class="font-bold text-xl mb-4 text-blue-900">🔗 Integrations</h3>
+
+  <p class="text-gray-600 text-lg mb-4">
     Connect Acacia Books with your favorite apps and services to streamline your workflow.
   </p>
 
-  
   <div class="space-y-3">
     <div class="integration-item border-b pb-2">
-      <button class="integration-name w-full text-left font-semibold text-blue-900 focus:outline-none">
+      <button class="integration-name w-full text-left font-semibold text-blue-900">
         📧 Email Marketing (Mailchimp, SendGrid)
       </button>
       <div class="integration-details hidden text-gray-600 mt-1">
@@ -1074,7 +1074,7 @@ function toggleFAQ(faqId) {
     </div>
 
     <div class="integration-item border-b pb-2">
-      <button class="integration-name w-full text-left font-semibold text-blue-900 focus:outline-none">
+      <button class="integration-name w-full text-left font-semibold text-blue-900">
         💳 Payment Gateways (M-Pesa, Stripe, PayPal)
       </button>
       <div class="integration-details hidden text-gray-600 mt-1">
@@ -1083,7 +1083,7 @@ function toggleFAQ(faqId) {
     </div>
 
     <div class="integration-item border-b pb-2">
-      <button class="integration-name w-full text-left font-semibold text-blue-900 focus:outline-none">
+      <button class="integration-name w-full text-left font-semibold text-blue-900">
         📦 E-commerce Platforms (Shopify, WooCommerce)
       </button>
       <div class="integration-details hidden text-gray-600 mt-1">
@@ -1092,28 +1092,178 @@ function toggleFAQ(faqId) {
     </div>
   </div>
 
-  
   <div class="mt-4 text-center">
-    <a href="privacy-policy.html" target="_blank" class="inline-block bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">Connect Now</a>
+    <a href="#" class="inline-block bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
+      Connect Now
+    </a>
   </div>
 </div>
+<section id="resources" class="py-60 bg-gray-50 text-center">
 
-<script>
-  document.querySelectorAll('.integration-name').forEach(button => {
-    button.addEventListener('click', () => {
-      const details = button.nextElementSibling;
-      details.classList.toggle('hidden');
-      details.style.maxHeight = details.style.maxHeight ? null : details.scrollHeight + "px";
-    });
-  });
-</script>
+  <div class="max-w-50xl mx-auto mb-100">
+
+    <h2 class="text-2xl md:text-2xl font-bold text-blue-900 mb-4">
+      Powering Smarter Business Operations
+    </h2>
+
+    <p class="text-lg md:text-1xl text-gray-600 leading-relaxed">
+      Acacia Books is an all-in-one cloud ERP platform built to simplify management, automate workflows,
+      and help businesses grow faster with confidence.
+    </p>
 
   </div>
-<!-- 📰 BLOG SECTION -->
+
+  <div class="max-w-7xl mx-auto grid md:grid-cols-4 gap-6 px-6">
+
+    <div class="bg-white p-6 rounded-xl shadow hover:shadow-xl transition">
+      <h3 class="text-xl font-bold text-blue-900 mb-4">
+        Everything Your Business Needs — In One Platform
+      </h3>
+
+      <p class="text-gray-600 leading-relaxed">
+        From inventory control to payroll automation, Acacia Books centralizes your core business processes into a secure cloud system.
+      </p>
+    </div>
+
+    <div class="bg-blue-900 text-white p-6 rounded-xl shadow hover:scale-105 transition">
+      <h3 class="text-xl font-bold mb-4">Why Businesses Choose Acacia Books</h3>
+
+      <ul class="space-y-2 text-gray-200">
+        <li>✔ Cloud-Based & Secure</li>
+        <li>✔ Easy Setup</li>
+        <li>✔ Scalable</li>
+        <li>✔ Support Team</li>
+        <li>✔ Modern System</li>
+      </ul>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow hover:shadow-xl transition">
+      <h3 class="text-xl font-bold text-blue-900 mb-4">
+        Business Insights
+      </h3>
+
+      <p class="text-gray-600 leading-relaxed">
+        Track sales, inventory, and performance with real-time analytics and smart dashboards.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="max-w-6xl mx-auto mt-12 px-6">
+    <div class="grid md:grid-cols-4 gap-4 text-center">
+
+      <div class="p-4 bg-blue-50 rounded-lg shadow">
+        <h4 class="text-3xl font-bold text-blue-900">16K+</h4>
+        <p class="text-gray-700 text-sm">Invoices</p>
+      </div>
+
+      <div class="p-4 bg-green-50 rounded-lg shadow">
+        <h4 class="text-3xl font-bold text-green-900">12K+</h4>
+        <p class="text-gray-700 text-sm">Customers</p>
+      </div>
+
+      <div class="p-4 bg-purple-50 rounded-lg shadow">
+        <h4 class="text-3xl font-bold text-purple-900">15K+</h4>
+        <p class="text-gray-700 text-sm">Products</p>
+      </div>
+
+      <div class="p-4 bg-yellow-50 rounded-lg shadow">
+        <h4 class="text-3xl font-bold text-yellow-900">20K+</h4>
+        <p class="text-gray-700 text-sm">Hours Saved</p>
+      </div>
+
+    </div>
+  </div>
+
+</section>
+ </div>
+  <section id="apps" class="py-10 bg-gray-50 text-center px-10">
+
+  <h2 class="text-2xl font-bold text-blue-900 mb-4">Our Apps</h2>
+
+  <p class="text-xl md:text-1xl text-gray-600 leading-relaxed max-w-1xl mx-auto mb-10">
+    Access your business tools anywhere, automate workflows, and manage everything in real-time with ease.
+  </p>
+
+  <div class="max-w-7xl mx-auto grid md:grid-cols-4 gap-6">
+
+   
+    <a href="inventory.html"
+       class="group relative bg-white p-5 rounded-xl shadow-md hover:shadow-2xl transition transform hover:-translate-y-2 block overflow-hidden">
+
+      <div class="absolute inset-0 opacity-20 blur-sm group-hover:opacity-30 transition">
+        <div class="w-full h-full bg-cover"
+             style="background-image:url('https://source.unsplash.com/400x300/?warehouse');"></div>
+      </div>
+
+      <div class="relative z-10">
+        <i class="fa-solid fa-boxes-stacked text-3xl text-blue-700 mb-3"></i>
+        <h3 class="text-xl font-bold text-blue-900">Inventory</h3>
+        <p class="text-gray-500 text-base md:text-lg mt-2 leading-relaxed">
+          Track stock levels and manage inventory easily in real-time with smart automation and alerts.
+        </p>
+      </div>
+    </a>
+
+    <a href="expenses.html"
+       class="group relative bg-white p-5 rounded-xl shadow-md hover:shadow-2xl transition transform hover:-translate-y-2 block overflow-hidden">
+
+      <div class="absolute inset-0 opacity-20 blur-sm group-hover:opacity-30 transition">
+        <div class="w-full h-full bg-cover"
+             style="background-image:url('https://source.unsplash.com/400x300/?finance');"></div>
+      </div>
+
+      <div class="relative z-10">
+        <i class="fa-solid fa-receipt text-3xl text-green-600 mb-3"></i>
+        <h3 class="text-xl font-bold text-blue-900">Expenses</h3>
+        <p class="text-gray-500 text-base md:text-lg mt-2 leading-relaxed">
+          Monitor spending, categorize expenses, and get clear financial reports instantly.
+        </p>
+      </div>
+    </a>
+
+    <a href="payroll.html"
+       class="group relative bg-white p-5 rounded-xl shadow-md hover:shadow-2xl transition transform hover:-translate-y-2 block overflow-hidden">
+
+      <div class="absolute inset-0 opacity-20 blur-sm group-hover:opacity-30 transition">
+        <div class="w-full h-full bg-cover"
+             style="background-image:url('https://source.unsplash.com/400x300/?team');"></div>
+      </div>
+
+      <div class="relative z-10">
+        <i class="fa-solid fa-money-check-dollar text-3xl text-purple-600 mb-3"></i>
+        <h3 class="text-xl font-bold text-blue-900">Payroll</h3>
+        <p class="text-gray-500 text-base md:text-lg mt-2 leading-relaxed">
+          Automate salaries, deductions, and employee payments with full accuracy and speed.
+        </p>
+      </div>
+    </a>
+
+    <a href="sales.html"
+       class="group relative bg-white p-5 rounded-xl shadow-md hover:shadow-2xl transition transform hover:-translate-y-2 block overflow-hidden">
+
+      <div class="absolute inset-0 opacity-20 blur-sm group-hover:opacity-30 transition">
+        <div class="w-full h-full bg-cover"
+             style="background-image:url('https://source.unsplash.com/400x300/?sales');"></div>
+      </div>
+
+      <div class="relative z-10">
+        <i class="fa-solid fa-file-invoice-dollar text-3xl text-orange-600 mb-3"></i>
+        <h3 class="text-xl font-bold text-blue-900">Sales & Billing</h3>
+        <p class="text-gray-500 text-base md:text-lg mt-2 leading-relaxed">
+          Create invoices, manage customers, and track payments with real-time insights.
+        </p>
+      </div>
+    </a>
+
+  </div>
+</section>
+
 <section id="blog" class="py-8 bg-gray-100 px-20">
 
   <div class="max-w-4xl mx-auto text-center mb-16">
-    <h2 class="text-4xl md:text-5xl font-bold text-blue-900 mb-6">
+    <h2 class="text-1xl md:text-1xl font-bold text-blue-900 mb-6">
       Insights to Help You Grow
     </h2>
     <p class="text-lg text-gray-600">
@@ -1125,7 +1275,6 @@ function toggleFAQ(faqId) {
 
     <div id="blog-carousel" class="flex gap-8 overflow-x-auto snap-x snap-mandatory pb-4">
 
-      <!-- Inventory Management -->
       <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal1">
         <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/inventory.jpg');"></div>
         <div class="p-8 text-left">
@@ -1139,7 +1288,6 @@ function toggleFAQ(faqId) {
         <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
       </div>
 
-      <!-- Sales Hub -->
       <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal2">
         <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/sales.jpg');"></div>
         <div class="p-8 text-left">
@@ -1153,7 +1301,6 @@ function toggleFAQ(faqId) {
         <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
       </div>
 
-      <!-- Purchase Hub -->
       <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal3">
         <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/purchase.jpg');"></div>
         <div class="p-8 text-left">
@@ -1167,7 +1314,6 @@ function toggleFAQ(faqId) {
         <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
       </div>
 
-      <!-- Payroll & Compliance -->
       <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal4">
         <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/payroll.jpg');"></div>
         <div class="p-8 text-left">
@@ -1181,7 +1327,6 @@ function toggleFAQ(faqId) {
         <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
       </div>
 
-      <!-- Business Growth -->
       <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal5">
         <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/business.jpg');"></div>
         <div class="p-8 text-left">
@@ -1194,7 +1339,7 @@ function toggleFAQ(faqId) {
         </div>
         <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
       </div>
-<!-- Reports  -->
+
 <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal6">
   <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/reports.jpg');"></div>
   <div class="p-8 text-left">
@@ -1216,7 +1361,6 @@ function toggleFAQ(faqId) {
 
 </section>
 
-<!-- Modal Templates -->
 <div id="modal1" class="blog-modal fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
   <div class="bg-white rounded-xl max-w-2xl w-full p-6 relative">
     <button class="absolute top-3 right-3 text-gray-600 text-xl font-bold modal-close">&times;</button>
@@ -1300,13 +1444,12 @@ modals.forEach(modal => {
 
   <div class="footer-container">
 
-    <!-- Company -->
     <div class="footer-section">
       <h3>🛒 Acacia Books</h3>
-      <p>Cloud-based ERP to run, manage, and grow your business.</p>
+      <p> Acacia Books is an all-in-one cloud ERP platform built to simplify management, automate workflows,
+      and help businesses grow faster with confidence.</p>
     </div>
 
-    <!-- Contact -->
     <div class="footer-section">
       <h4>📞 Contact Us</h4>
 
@@ -1335,7 +1478,6 @@ modals.forEach(modal => {
       </div>
     </div>
 
-    <!-- Payment -->
     <div class="footer-section">
       <h4>💳 Payment Options</h4>
 
@@ -1362,7 +1504,6 @@ modals.forEach(modal => {
       </div>
     </div>
 
-    <!-- Legal -->
     <div class="footer-section">
       <h4>📜 Legal</h4>
 
@@ -1380,7 +1521,6 @@ modals.forEach(modal => {
       </ul>
     </div>
 
-    <!-- Quote Button -->
     <div class="footer-section">
       <h4>📩 Request Quote</h4>
 
@@ -1397,8 +1537,6 @@ modals.forEach(modal => {
   </div>
 
 
-
-<!-- MODAL -->
 <div id="quoteModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
 background:rgba(0,0,0,0.6); justify-content:center; align-items:center;">
 
@@ -1432,7 +1570,7 @@ background:rgba(0,0,0,0.6); justify-content:center; align-items:center;">
   </footer>
 </div>
 
-<!-- SCRIPT -->
+
 <script>
 function openQuoteModal() {
   document.getElementById("quoteModal").style.display = "flex";
