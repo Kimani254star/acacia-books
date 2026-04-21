@@ -14466,11 +14466,11 @@ function reversePayment(id) {
 
   const invoice = invoices[index];
 
-  const total = parseFloat(invoice.total) || 0;
+  const total = parseFloat(invoice.totalKES || invoice.total) || 0;
   const currentPaid = parseFloat(invoice.amountPaid) || 0;
 
   if (currentPaid <= 0) {
-    alert("No payment to reverse.");
+    alert("No payment to reverse or edit.");
     return;
   }
 
@@ -14490,15 +14490,6 @@ function reversePayment(id) {
     alert("Paid amount cannot exceed total.");
     return;
   }
-
-  invoice.amountPaid = newPaidAmount;
-
-  invoices[index] = invoice;
-  localStorage.setItem("invoices", JSON.stringify(invoices));
-
-  alert("Payment updated successfully.");
-  renderInvoices();
-}
 
   // ---------------- FIX: Recalculate from receipts ----------------
   const receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
