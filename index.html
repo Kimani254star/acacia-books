@@ -29221,7 +29221,9 @@ function manageCOAFiles(){
     <div>
       <input id="nonCurrentAssetName" placeholder="Asset Name" class="border p-2 rounded" style="width: 700px;"  />
     </div>
-
+    <div>
+  <input  id="nonCurrentAssetCode"  placeholder="Asset Code (Auto)"   class="border p-2 rounded bg-gray-100"  style="width: 700px;"  />
+</div>
     <div>
       <input id="nonCurrentAssetValue" type="number" placeholder="Value (KES)" class="border p-2 rounded" style="width: 700px;"  />
     </div>
@@ -29229,7 +29231,9 @@ function manageCOAFiles(){
     <div>
       <select id="nonCurrentAssetAccountSelect" class="border p-2 rounded" style="width: 700px;" ></select>
     </div>
-
+   <div>
+  <textarea  id="nonCurrentAssetDescription" placeholder="Asset Description (optional)"  class="border p-2 rounded" style="width: 700px; height: 120px;" ></textarea>
+</div>
     <div class="flex space-x-2">
       <button onclick="addNonCurrentAsset()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Add</button>
       <button id="cancelEditAssetBtn" onclick="cancelEditAsset()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Cancel</button>
@@ -29240,6 +29244,8 @@ function manageCOAFiles(){
     <thead class="bg-gray-100">
       <tr>
         <th class="p-2 border">Asset</th>
+        <th class="p-2 border">Asset Code</th>
+        <th class="p-1 border">Description</th>
         <th class="p-2 border text-right">Value (KES)</th>
         <th class="p-2 border">Account</th>
         <th class="p-2 border">Actions</th>
@@ -33667,21 +33673,59 @@ function populateAssetAccounts() {
       select.appendChild(opt);
     });
 }
+function generateAssetCode() {
+  const year = new Date().getFullYear();
 
+  const assets = balanceSheet.nonCurrentAssets || [];
+
+  const yearAssets = assets.filter(a =>
+    a.code && a.code.startsWith(year + "-A")
+  );
+
+  let lastNumber = 0;
+
+  yearAssets.forEach(a => {
+    const match = a.code.match(/A(\d+)/);
+    if (match) {
+      const num = parseInt(match[1]);
+      if (num > lastNumber) lastNumber = num;
+    }
+  });
+
+  const nextNumber = (lastNumber + 1).toString().padStart(3, "0");
+
+  return `${year}-A${nextNumber}`;
+}
 function addNonCurrentAsset() {
   const name = document.getElementById('nonCurrentAssetName').value.trim();
   const value = parseFloat(document.getElementById('nonCurrentAssetValue').value);
-  const account = document.getElementById("nonCurrentAssetAccountSelect").value; 
+  const account = document.getElementById("nonCurrentAssetAccountSelect").value;
+  const description = document.getElementById("nonCurrentAssetDescription").value.trim();
 
   if (!name || isNaN(value) || !account) {
     alert('Enter valid asset name, value, and select an account.');
     return;
   }
 
-  const depreciation = depreciationInfo[name] || { rate: 10, method: "Default", appreciates: false };
+  const code = generateAssetCode();
+
+  const depreciation = depreciationInfo[name] || {
+    rate: 10,
+    method: "Default",
+    appreciates: false
+  };
+
   const years = 1;
 
-  const asset = { name, value, depreciationRate: depreciation.rate, years, account }; 
+  const asset = {
+    name,
+    code,
+    description,
+    value,
+    depreciationRate: depreciation.rate,
+    years,
+    account
+  };
 
   if (editAssetIndex > -1) {
     balanceSheet.nonCurrentAssets[editAssetIndex] = asset;
@@ -33692,15 +33736,18 @@ function addNonCurrentAsset() {
   }
 
   localStorage.setItem('balanceSheet', JSON.stringify(balanceSheet));
+
   renderNonCurrentAssets();
   renderNonCurrentAssetsSummary();
   renderBalanceSheetAssets?.();
   renderReports?.();
   syncNonCurrentAssetsToOpeningBalances();
 
+  
   document.getElementById('nonCurrentAssetName').value = '';
   document.getElementById('nonCurrentAssetValue').value = '';
   document.getElementById('nonCurrentAssetAccountSelect').value = '';
+  document.getElementById('nonCurrentAssetDescription').value = '';
 }
 
 function cancelEditAsset() {
@@ -33713,9 +33760,16 @@ function cancelEditAsset() {
 
 function editNonCurrentAsset(index) {
   const asset = balanceSheet.nonCurrentAssets[index];
+  if (!asset) return;
+
   document.getElementById('nonCurrentAssetName').value = asset.name;
   document.getElementById('nonCurrentAssetValue').value = asset.value;
-  document.getElementById("nonCurrentAssetAccountSelect").value = asset.account || ''; 
+  document.getElementById("nonCurrentAssetAccountSelect").value = asset.account || '';
+
+  document.getElementById('nonCurrentAssetDescription').value = asset.description || '';
+
+  console.log("Editing Asset Code:", asset.code);
+
   editAssetIndex = index;
   document.getElementById('cancelEditAssetBtn').classList.remove('hidden');
 }
@@ -33799,54 +33853,90 @@ function renderNonCurrentAssets() {
   const tbody = document.getElementById('nonCurrentAssetsTableBody');
   tbody.innerHTML = '';
 
-  const formatKES = num => `KES ${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const formatKES = num =>
+    `KES ${num.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
 
   balanceSheet.nonCurrentAssets
-  .filter(asset => asset.status !== "sold" && asset.status !== "written_off")
-  .forEach((asset, index) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td class="p-2 border">${asset.name}</td>
-      <td class="p-2 border">${formatKES(asset.value)}</td>
-      <td class="p-2 border">${asset.account || ''}</td>
-      <td class="p-2 border space-x-2">
+    .filter(asset => asset.status !== "sold" && asset.status !== "written_off")
+    .forEach((asset, index) => {
 
-        <button onclick="editNonCurrentAsset(${index})"
-        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-        Edit</button>
+      const row = document.createElement('tr');
 
-        <button onclick="deleteNonCurrentAsset(${index})"
-        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-        Delete</button>
+      row.innerHTML = `
+        <td class="p-2 border">${asset.name || ''}</td>
+        <td class="p-2 border">${asset.code || ''}</td>
+        <td class="p-2 border">${asset.description || ''}</td>
+        <td class="p-2 border text-right">${formatKES(asset.value || 0)}</td>
+        <td class="p-2 border">${asset.account || ''}</td>
 
-        <button onclick="depreciateNonCurrentAsset(${index})"
-        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-        Depreciate</button>
+        <td class="p-2 border space-x-2">
 
-        <button onclick="sellNonCurrentAsset(${index})"
-        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-        Sell</button>
+          <button onclick="editNonCurrentAsset(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Edit
+          </button>
 
-        <button onclick="writeOffNonCurrentAsset(${index})"
-        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-        Write Off</button>
+          <button onclick="deleteNonCurrentAsset(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Delete
+          </button>
 
-        <button onclick="showDepreciationHistory(${index})"
-         class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-        Preview</button>
+          <button onclick="depreciateNonCurrentAsset(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Depreciate
+          </button>
 
-      </td>
-    `;
-    tbody.appendChild(row);
-  });
+          <!-- FIXED: proper index passing -->
+          <button onclick="sellNonCurrentAsset(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Sell
+          </button>
+
+          <button onclick="writeOffNonCurrentAsset(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Write Off
+          </button>
+
+          <button onclick="showDepreciationHistory(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Preview
+          </button>
+
+        </td>
+      `;
+
+      tbody.appendChild(row);
+    });
 
   renderDepreciationTable();
   syncNonCurrentAssetsToOpeningBalances();
 }
-
 let sellingAssetIndex = null;
 
 function sellNonCurrentAsset(index) {
+
+  index = Number(index); 
+
+  const asset = balanceSheet.nonCurrentAssets[index];
+
+  if (!asset) {
+    alert("Asset not found (index mismatch).");
+    return;
+  }
+
+  if (asset.status === "sold") {
+    alert("⚠️ This asset has already been sold.");
+    return;
+  }
+
+  if (asset.status === "written_off") {
+    alert("⚠️ This asset was written off and cannot be sold.");
+    return;
+  }
+
   sellingAssetIndex = index;
 
   const select = document.getElementById("sellAssetBank");
@@ -33862,9 +33952,51 @@ function sellNonCurrentAsset(index) {
   document.getElementById("sellAssetAmount").value = "";
   document.getElementById("sellAssetRef").value = "";
 
+  let infoBox = document.getElementById("sellAssetInfo");
+
+  if (!infoBox) {
+    infoBox = document.createElement("div");
+    infoBox.id = "sellAssetInfo";
+    infoBox.style.marginBottom = "10px";
+    infoBox.style.padding = "10px";
+    infoBox.style.background = "#f3f4f6";
+    infoBox.style.borderRadius = "6px";
+    infoBox.style.fontSize = "14px";
+
+    const modal = document.getElementById("sellAssetModal");
+    modal.prepend(infoBox);
+  }
+
+  infoBox.innerHTML = `
+    <div><strong>Asset:</strong> ${asset.name}</div>
+    <div><strong>Book Value:</strong> KES ${asset.value.toFixed(2)}</div>
+    <div id="liveProfitLoss" style="margin-top:6px; font-weight:bold;">
+      Profit/Loss: KES 0.00
+    </div>
+  `;
+
+  const amountInput = document.getElementById("sellAssetAmount");
+
+  amountInput.oninput = function () {
+
+    const salePrice = parseFloat(this.value) || 0;
+    const profitLoss = salePrice - asset.value;
+
+    const profitLossDiv = document.getElementById("liveProfitLoss");
+
+    if (!profitLossDiv) return;
+
+    profitLossDiv.textContent = `Profit/Loss: KES ${profitLoss.toFixed(2)}`;
+
+    profitLossDiv.style.color =
+      profitLoss > 0 ? "green" :
+      profitLoss < 0 ? "red" : "black";
+  };
+
   document.getElementById("sellAssetModal").classList.remove("hidden");
 }
 function confirmSellAsset() {
+
   const bankName = document.getElementById("sellAssetBank").value;
   const salePrice = parseFloat(document.getElementById("sellAssetAmount").value);
   const ref = document.getElementById("sellAssetRef").value;
@@ -33873,6 +34005,48 @@ function confirmSellAsset() {
     alert("Select bank and enter sale amount.");
     return;
   }
+
+  const asset = balanceSheet.nonCurrentAssets[sellingAssetIndex];
+
+  if (asset.status === "sold") {
+    alert("⚠️ This asset has already been sold.");
+    return;
+  }
+
+  const bookValue = asset.value;
+  const profitLoss = salePrice - bookValue;
+
+  const level1 = confirm(
+`LEVEL 1 APPROVAL (Accountant)
+
+Asset: ${asset.name}
+Book Value: KES ${bookValue.toFixed(2)}
+Sale Price: KES ${salePrice.toFixed(2)}
+
+Press OK to Approve`
+  );
+
+  if (!level1) {
+    alert("❌ Sale cancelled at Level 1.");
+    return;
+  }
+
+  const level2 = confirm(
+`LEVEL 2 APPROVAL (Manager)
+
+Profit/Loss: KES ${profitLoss.toFixed(2)}
+
+Press OK to Final Approve`
+  );
+
+  if (!level2) {
+    alert("❌ Sale cancelled at Level 2.");
+    return;
+  }
+
+  processAssetSale(bankName, salePrice, ref);
+}
+function processAssetSale(bankName, salePrice, ref) {
 
   const asset = balanceSheet.nonCurrentAssets[sellingAssetIndex];
   const bookValue = asset.value;
@@ -33885,9 +34059,6 @@ function confirmSellAsset() {
 
   const today = new Date().toISOString().split("T")[0];
 
-  // =========================
-  // 1. PROFIT / LOSS ENTRY
-  // =========================
   if (profitLoss > 0) {
     otherIncomes.push({
       date: today,
@@ -33904,48 +34075,35 @@ function confirmSellAsset() {
     });
   }
 
-  // =========================
-  // 2. BANK UPDATE (CASH IN)
-  // =========================
   const bank = banks.find(b => b.name === bankName);
   if (bank) bank.balance += salePrice;
 
-  // =========================
-  // 3. TRANSACTION LOG (AUDIT ONLY)
-  // =========================
-  const transaction = {
+  transactions.push({
     date: today,
     bank: bankName,
     type: "Asset Disposal",
     account: asset.account || "Asset Disposal",
     amount: salePrice,
     reference: ref || `Sale of ${asset.name}`
-  };
-
-  transactions.push(transaction);
+  });
 
   manualTransactions.push({
     bank: bankName,
     type: "Asset Disposal",
     account: asset.account || "Asset Disposal",
-    code: "",
     amount: salePrice,
     date: today,
     ref: ref || `Sale of ${asset.name}`,
     source: "asset_sale"
   });
 
-  // =========================
-  // 4. UPDATE ASSET RECORD
-  // =========================
   asset.status = "sold";
   asset.profitLoss = profitLoss;
   asset.salePrice = salePrice;
   asset.saleDate = new Date().toLocaleDateString();
+  asset.saleBank = bankName;
+  logAssetApproval(asset, salePrice, profitLoss);
 
-  // =========================
-  // 5. SAVE TO STORAGE
-  // =========================
   localStorage.setItem("otherIncomes", JSON.stringify(otherIncomes));
   localStorage.setItem("operationalCosts", JSON.stringify(operationalCosts));
   localStorage.setItem("transactions", JSON.stringify(transactions));
@@ -33953,52 +34111,155 @@ function confirmSellAsset() {
   localStorage.setItem("banks", JSON.stringify(banks));
   localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
 
-  // =========================
-  // 6. UI REFRESH
-  // =========================
   renderNonCurrentAssets();
   renderNonCurrentAssetsSummary();
   syncNonCurrentAssetsToOpeningBalances();
   renderBankTable();
   renderManualTransactions();
-  renderDepreciationSchedule();
-  renderReports();
+  renderDepreciationSchedule?.();
+  renderReports?.();
 
   closeSellAssetModal();
 
-  alert(
-`Asset Sold Successfully
-
-Asset: ${asset.name}
-Book Value: KES ${bookValue.toFixed(2)}
-Sale Price: KES ${salePrice.toFixed(2)}
-Profit/Loss: KES ${profitLoss.toFixed(2)}`
-  );
+  alert("✅ Asset sale approved and recorded successfully.");
 }
+function logAssetApproval(asset, salePrice, profitLoss) {
 
+  const approvalLogs = JSON.parse(localStorage.getItem("assetApprovalLogs") || "[]");
+
+  approvalLogs.push({
+    assetName: asset.name,
+    bookValue: asset.value,
+    salePrice: salePrice,
+    profitLoss: profitLoss,
+    approvedByLevel1: "Accountant",
+    approvedByLevel2: "Manager",
+    approvalDate: new Date().toLocaleString(),
+    status: "Approved"
+  });
+
+  localStorage.setItem("assetApprovalLogs", JSON.stringify(approvalLogs));
+}
+function reverseAssetSale(assetName) {
+
+  const asset = balanceSheet.nonCurrentAssets.find(a => a.name === assetName);
+
+  if (!asset || asset.status !== "sold") {
+    alert("No sold asset found to reverse.");
+    return;
+  }
+
+  if (!confirm(`Reverse sale of ${asset.name}?`)) return;
+
+  const bank = banks.find(b => b.name === asset.saleBank);
+
+  if (bank) {
+    bank.balance -= asset.salePrice;
+  }
+
+  asset.status = "";
+  asset.salePrice = null;
+  asset.profitLoss = null;
+  asset.saleDate = null;
+  asset.saleBank = null;
+
+  const approvalLogs = JSON.parse(localStorage.getItem("assetApprovalLogs") || "[]");
+
+  approvalLogs.push({
+    assetName: asset.name,
+    reversalDate: new Date().toLocaleString(),
+    status: "Reversed"
+  });
+
+  localStorage.setItem("assetApprovalLogs", JSON.stringify(approvalLogs));
+  localStorage.setItem("banks", JSON.stringify(banks));
+  localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
+
+  renderNonCurrentAssets();
+  renderNonCurrentAssetsSummary();
+  renderBankTable();
+
+  alert("♻️ Asset sale reversed successfully.");
+}
 function closeSellAssetModal(){
   document.getElementById("sellAssetModal").classList.add("hidden");
 }
 
 function writeOffNonCurrentAsset(index) {
+
   const asset = balanceSheet.nonCurrentAssets[index];
+
+  if (!asset) {
+    alert("Asset not found.");
+    return;
+  }
+
+  if (asset.status === "written_off") {
+    alert("⚠️ This asset is already written off.");
+    return;
+  }
+
   const loss = asset.value;
 
+  const level1 = confirm(
+`LEVEL 1 APPROVAL (Accountant)
+
+Asset: ${asset.name}
+Book Value: KES ${loss.toFixed(2)}
+
+Approve write-off?`
+  );
+
+  if (!level1) {
+    alert("❌ Write-off cancelled at Level 1.");
+    return;
+  }
+
+  const level2 = confirm(
+`LEVEL 2 APPROVAL (Manager)
+
+Confirm FINAL write-off of:
+
+Asset: ${asset.name}
+Loss: KES ${loss.toFixed(2)}
+
+Approve?`
+  );
+
+  if (!level2) {
+    alert("❌ Write-off cancelled at Level 2.");
+    return;
+  }
+
+  processAssetWriteOff(asset, loss);
+}
+function processAssetWriteOff(asset, loss) {
+
   const operationalCosts = JSON.parse(localStorage.getItem("operationalCosts") || "[]");
+  const notifications = JSON.parse(localStorage.getItem("notifications") || "[]");
+
+  const today = new Date().toISOString().split("T")[0];
 
   operationalCosts.push({
-    date: new Date().toISOString().split("T")[0],
+    date: today,
     description: `Asset written off ${asset.name}`,
     amount: loss,
     category: "Asset Write Off"
   });
 
-  localStorage.setItem("operationalCosts", JSON.stringify(operationalCosts));
-
   asset.status = "written_off";
   asset.writeOffValue = loss;
   asset.writeOffDate = new Date().toLocaleDateString();
 
+  notifications.push({
+    date: new Date().toLocaleString(),
+    type: "Asset Write-Off",
+    message: `${asset.name} written off at KES ${loss.toFixed(2)}`,
+    status: "unread"
+  });
+
+  localStorage.setItem("operationalCosts", JSON.stringify(operationalCosts));
+  localStorage.setItem("notifications", JSON.stringify(notifications));
   localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
 
   renderNonCurrentAssets();
@@ -34007,10 +34268,26 @@ function writeOffNonCurrentAsset(index) {
   syncNonCurrentAssetsToOpeningBalances();
   renderReports();
 
-  alert(`Asset Written Off
+  alert(`✅ Asset Write-Off Approved
 
 Asset: ${asset.name}
 Loss Recorded: KES ${loss.toFixed(2)}`);
+}
+
+function logWriteOffApproval(asset, loss) {
+  const logs = JSON.parse(localStorage.getItem("writeOffLogs") || "[]");
+
+  logs.push({
+    assetName: asset.name,
+    bookValue: asset.value,
+    loss: loss,
+    approvedByLevel1: "Accountant",
+    approvedByLevel2: "Manager",
+    date: new Date().toLocaleString(),
+    status: "Approved Write-Off"
+  });
+
+  localStorage.setItem("writeOffLogs", JSON.stringify(logs));
 }
 
 function calculateDepreciatedValue(initial, rate, years) {
