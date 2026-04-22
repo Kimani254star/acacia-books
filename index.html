@@ -1580,7 +1580,7 @@ function closeQuoteModal() {
   document.getElementById("quoteModal").style.display = "none";
 }
 </script>
-<!-- LOGIN MODAL -->
+
 <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
   <div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 relative">
    
@@ -9733,7 +9733,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <label for="invoiceNetDays" class="block font-semibold mb-1">Payment Terms:</label>
       <select id="invoiceNetDays" class="border p-2 rounded" style="width: 700px;">
         <option value="">Select Term</option>
-        <option value="15">On Receipt </option>
         <option value="15">On Receipt + 15 days</option>
         <option value="30">On Receipt + 30 days</option>
         <option value="45">On Receipt + 45 days</option>
@@ -10588,7 +10587,6 @@ button:hover {
       <label for="bulkInvoiceNetDays" class="block font-semibold mb-1">Payment Terms:</label>
       <select id="bulkInvoiceNetDays" class="border p-2 rounded" style="width:700px;">
         <option value="">Select Term</option>
-        <option value="15">On Receipt </option>
         <option value="15">On Receipt + 15 days</option>
         <option value="30">On Receipt + 30 days</option>
         <option value="45">On Receipt + 45 days</option>
@@ -19777,7 +19775,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <label for="billTermDays" class="block font-semibold mb-1">Payment Terms:</label>
       <select id="billTermDays" class="border p-2 rounded" style="width: 700px;">
         <option value="">Select Term</option>
-         <option value="9">On Receipt</option>
         <option value="9">On Receipt + 09 days</option>
         <option value="15">On Receipt + 15 days</option>
         <option value="30">On Receipt + 30 days</option>
@@ -19825,7 +19822,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <option value="16">VAT 16%</option>
         <option value="0">Zero Rated</option>
         <option value="exempt">Exempt</option>
-        <option value="other_8">8% (Other rates)</option>
       </select>
       </div><button type="button" id="addBillItemBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Add</button>
 
@@ -20125,8 +20121,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="mb-4">
       <label for="bulkBillTermDays" class="block font-semibold mb-1">Payment Terms:</label>
       <select id="bulkBillTermDays" class="border p-2 rounded" style="width:700px;">
-        <option value="">Select Term
-        </option><option value="15">On Receipt </option>
+        <option value="">Select Term</option>
         <option value="9">On Receipt + 09 days</option>
         <option value="15">On Receipt + 15 days</option>
         <option value="30">On Receipt + 30 days</option>
@@ -20268,7 +20263,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 </div>
 <!-- ✅ SUPPLIER PURCHASE ORDERS MODULE --> 
-<div id="supplierPurchaseOrdersTab" class="hidden ml-84 mr-7 p-2">
+<div id="supplierPurchaseOrdersTab" class="p-4">
   <h2 class="text-1xl font-bold mb-4 text-left">Purchase Orders</h2>
   <!-- 🔎 Purchase Orders Search -->
 <div class="relative mb-4">
@@ -21465,7 +21460,7 @@ function managePOFiles() {
  </div>
 
 <!-- ✅ GOODS RECEIVED NOTES MODULE -->
-<div id="grnTab" class="hidden ml-84 mr-7 p-2">
+<div id="grnTab" class="hidden p-1">
   <h2 class="text-1xl font-bold mb-4 text-left">📥 Goods Received Notes</h2>
 <!-- 🔎 GRN Search -->
 <div class="relative mb-4 mt-2">
@@ -33806,7 +33801,9 @@ function renderNonCurrentAssets() {
 
   const formatKES = num => `KES ${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  balanceSheet.nonCurrentAssets.forEach((asset, index) => {
+  balanceSheet.nonCurrentAssets
+  .filter(asset => asset.status !== "sold" && asset.status !== "written_off")
+  .forEach((asset, index) => {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td class="p-2 border">${asset.name}</td>
@@ -33881,33 +33878,45 @@ function confirmSellAsset() {
   const bookValue = asset.value;
   const profitLoss = salePrice - bookValue;
 
+  const otherIncomes = JSON.parse(localStorage.getItem("otherIncomes") || "[]");
+  const operationalCosts = JSON.parse(localStorage.getItem("operationalCosts") || "[]");
+  const manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+  const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+
+  const today = new Date().toISOString().split("T")[0];
+
+  // =========================
+  // 1. PROFIT / LOSS ENTRY
+  // =========================
   if (profitLoss > 0) {
-    const otherIncomes = JSON.parse(localStorage.getItem("otherIncomes") || "[]");
     otherIncomes.push({
-      date: new Date().toISOString().split("T")[0],
+      date: today,
       description: `Gain on sale of ${asset.name}`,
       amount: profitLoss,
-      type: "Asset Disposal"
+      type: "Asset Disposal Gain"
     });
-    localStorage.setItem("otherIncomes", JSON.stringify(otherIncomes));
   } else if (profitLoss < 0) {
-    const operationalCosts = JSON.parse(localStorage.getItem("operationalCosts") || "[]");
     operationalCosts.push({
-      date: new Date().toISOString().split("T")[0],
+      date: today,
       description: `Loss on sale of ${asset.name}`,
       amount: Math.abs(profitLoss),
       category: "Asset Disposal Loss"
     });
-    localStorage.setItem("operationalCosts", JSON.stringify(operationalCosts));
   }
 
+  // =========================
+  // 2. BANK UPDATE (CASH IN)
+  // =========================
   const bank = banks.find(b => b.name === bankName);
   if (bank) bank.balance += salePrice;
 
+  // =========================
+  // 3. TRANSACTION LOG (AUDIT ONLY)
+  // =========================
   const transaction = {
-    date: new Date().toISOString().split("T")[0],
+    date: today,
     bank: bankName,
-    type: "Other Income",
+    type: "Asset Disposal",
     account: asset.account || "Asset Disposal",
     amount: salePrice,
     reference: ref || `Sale of ${asset.name}`
@@ -33915,16 +33924,38 @@ function confirmSellAsset() {
 
   transactions.push(transaction);
 
-  localStorage.setItem("transactions", JSON.stringify(transactions));
-  localStorage.setItem("banks", JSON.stringify(banks));
+  manualTransactions.push({
+    bank: bankName,
+    type: "Asset Disposal",
+    account: asset.account || "Asset Disposal",
+    code: "",
+    amount: salePrice,
+    date: today,
+    ref: ref || `Sale of ${asset.name}`,
+    source: "asset_sale"
+  });
 
+  // =========================
+  // 4. UPDATE ASSET RECORD
+  // =========================
   asset.status = "sold";
   asset.profitLoss = profitLoss;
   asset.salePrice = salePrice;
   asset.saleDate = new Date().toLocaleDateString();
 
+  // =========================
+  // 5. SAVE TO STORAGE
+  // =========================
+  localStorage.setItem("otherIncomes", JSON.stringify(otherIncomes));
+  localStorage.setItem("operationalCosts", JSON.stringify(operationalCosts));
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+  localStorage.setItem("manualTransactions", JSON.stringify(manualTransactions));
+  localStorage.setItem("banks", JSON.stringify(banks));
   localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
 
+  // =========================
+  // 6. UI REFRESH
+  // =========================
   renderNonCurrentAssets();
   renderNonCurrentAssetsSummary();
   syncNonCurrentAssetsToOpeningBalances();
@@ -34064,7 +34095,9 @@ renderNonCurrentAssets();
 syncNonCurrentAssetsToOpeningBalances();
 
 function syncNonCurrentAssetsToOpeningBalances() {
-  const assets = balanceSheet.nonCurrentAssets || [];
+  const assets = (balanceSheet.nonCurrentAssets || [])
+    .filter(a => a.status !== "sold" && a.status !== "written_off");
+
   const tbody = document.querySelector("#openingBalancesTable tbody");
   if (!tbody) return;
 
@@ -34073,6 +34106,7 @@ function syncNonCurrentAssetsToOpeningBalances() {
   assets.forEach(asset => {
     const row = document.createElement("tr");
     row.setAttribute("data-type", "nonCurrentAsset");
+
     row.innerHTML = `
       <td class="p-2 border"><input type="text" class="w-full" value="${asset.name}" readonly></td>
       <td class="p-2 border"><input type="text" class="w-full" value="${asset.account || ''}" readonly></td>
@@ -34081,12 +34115,13 @@ function syncNonCurrentAssetsToOpeningBalances() {
           <option value="Asset" selected>Asset</option>
         </select>
       </td>
-      <td class="p-2 border text-right"><input type="number" class="w-full text-right" value="${asset.value.toFixed(2)}" data-type="debit" readonly></td>
-      <td class="p-2 border text-right"><input type="number" class="w-full text-right" value="0.00" data-type="credit" readonly></td>
+      <td class="p-2 border text-right"><input type="number" class="w-full text-right" value="${asset.value.toFixed(2)}" readonly></td>
+      <td class="p-2 border text-right"><input type="number" class="w-full text-right" value="0.00" readonly></td>
       <td class="p-2 border text-center">
-        <button onclick="removeNonCurrentAssetFromOpening('${asset.name}')" class="text-red-600 hover:text-red-800">✕</button>
+        <button onclick="removeNonCurrentAssetFromOpening('${asset.name}')">✕</button>
       </td>
     `;
+
     tbody.appendChild(row);
   });
 
@@ -35275,71 +35310,115 @@ balanceSheet.nonCurrentLiabilities = balanceSheet.nonCurrentLiabilities || [];
   const select = document.getElementById("nonCurrentLiabilityBankSelect");
   if (!select) return;
 
+  const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+
   select.innerHTML = `<option value="">-- Select Bank --</option>`;
+
   banks.forEach(bank => {
+    const currency = bank.currency || "KES";
+
     const opt = document.createElement("option");
     opt.value = bank.name;
-    opt.textContent = `${bank.name} (Balance: KES ${bank.balance.toFixed(2)})`;
+
+    opt.textContent = `${bank.name} (Balance: ${currency} ${bank.balance.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })})`;
+
     select.appendChild(opt);
   });
 }
- window.addNonCurrentLiability = function () {
+window.addNonCurrentLiability = async function () {
+
     console.log("🟦 Add button clicked");
 
     const name = document.getElementById("nonCurrentLiabilityName").value.trim();
     const principal = parseFloat(document.getElementById("nonCurrentLiabilityValue").value);
     const interestRate = parseFloat(document.getElementById("nonCurrentLiabilityInterest").value || "0");
     const accountCode = document.getElementById("liabilityAccountSelect").value;
-    const bankName = document.getElementById("nonCurrentLiabilityBankSelect")?.value || ""; 
+    const bankName = document.getElementById("nonCurrentLiabilityBankSelect")?.value || "";
+    const currency = document.getElementById("liabilityCurrency")?.value || "KES";
 
     if (!name || isNaN(principal) || !accountCode) {
-        alert("⚠️ Enter valid name, principal, and select an account.");
+        alert("⚠️ Enter valid name, principal, and account");
         return;
     }
 
-    const amount = principal + (principal * (interestRate || 0) / 100);
-    const liability = { name, principal, interestRate, amount, accountCode, payments: [], bankName: bankName || null };
+    const amount = principal + (principal * interestRate / 100);
 
-   if (editLiabilityIndex > -1) {
+    const liability = {
+        name,
+        principal,
+        interestRate,
+        amount,
+        accountCode,
+        currency,
+        payments: [],
+        bankName: bankName || null
+    };
 
-    const oldLiability = balanceSheet.nonCurrentLiabilities[editLiabilityIndex];
-    const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+    let balanceSheet = JSON.parse(localStorage.getItem("balanceSheet") || "{}");
+    balanceSheet.nonCurrentLiabilities = balanceSheet.nonCurrentLiabilities || [];
 
-    if (oldLiability.bankName) {
-        const oldBank = banks.find(b => b.name === oldLiability.bankName);
-        if (oldBank) oldBank.balance -= oldLiability.principal;
+    let banks = JSON.parse(localStorage.getItem("banks") || "[]");
+
+    if (editLiabilityIndex > -1) {
+
+        const oldLiability = balanceSheet.nonCurrentLiabilities[editLiabilityIndex];
+
+        if (oldLiability.bankName) {
+            const oldBank = banks.find(b => b.name === oldLiability.bankName);
+            if (oldBank) oldBank.balance -= oldLiability.principal;
+        }
+
+        if (bankName) {
+            const bank = banks.find(b => b.name === bankName);
+
+            if (bank) {
+                const converted = await convertAmount(
+                    principal,
+                    currency,
+                    bank.currency || "KES"
+                );
+
+                bank.balance += converted;
+            }
+        }
+
+        liability.payments = oldLiability.payments || [];
+        balanceSheet.nonCurrentLiabilities[editLiabilityIndex] = liability;
+
+        editLiabilityIndex = -1;
+        document.getElementById("cancelEditLiabilityBtn").classList.add("hidden");
+
     }
 
-    if (bankName) {
-        const newBank = banks.find(b => b.name === bankName);
-        if (newBank) newBank.balance += principal;
+    else {
+
+        if (bankName) {
+            const bank = banks.find(b => b.name === bankName);
+
+            if (bank) {
+                const converted = await convertAmount(
+                    principal,
+                    currency,
+                    bank.currency || "KES"
+                );
+
+                bank.balance += converted;
+            }
+        }
+
+        balanceSheet.nonCurrentLiabilities.push(liability);
     }
 
     localStorage.setItem("banks", JSON.stringify(banks));
-
-    liability.payments = oldLiability.payments || [];
-    balanceSheet.nonCurrentLiabilities[editLiabilityIndex] = liability;
-
-    editLiabilityIndex = -1;
-    document.getElementById("cancelEditLiabilityBtn").classList.add("hidden");
-
-} else {
-
-    if (bankName) {
-        const banks = JSON.parse(localStorage.getItem("banks") || "[]");
-        const bank = banks.find(b => b.name === bankName);
-        if (bank) bank.balance += principal;
-        localStorage.setItem("banks", JSON.stringify(banks));
-    }
-
-    balanceSheet.nonCurrentLiabilities.push(liability);
-}
-
     localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
+
     renderNonCurrentLiabilities();
     renderNonCurrentLiabilitiesSummary();
     syncNonCurrentLiabilitiesToOpeningBalances();
-    buildLoanAndInterestData(); 
+    buildLoanAndInterestData();
     renderLoanSchedule(loanSchedules);
     renderInterestExpense(interestExpenses);
     clearInputs();
@@ -35347,9 +35426,10 @@ balanceSheet.nonCurrentLiabilities = balanceSheet.nonCurrentLiabilities || [];
     try {
         renderReports();
     } catch {
-        console.warn("⚠️ renderReports() not defined, skipping...");
+        console.warn("⚠️ renderReports() not defined");
     }
 };
+
   function renderNonCurrentLiabilities() {
   const tbody = document.getElementById("nonCurrentLiabilitiesTableBody");
   if (!tbody) return;
@@ -35385,6 +35465,7 @@ balanceSheet.nonCurrentLiabilities = balanceSheet.nonCurrentLiabilities || [];
           <button onclick="editNonCurrentLiability(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
           <button onclick="deleteNonCurrentLiability(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
           <button onclick="payNonCurrentLiability(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Pay</button>
+          <button onclick="increaseNonCurrentLiability(${index})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Increase</button>
           <button onclick="togglePaymentHistory(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">History</button>
         </div>
         <div id="paymentHistory-${index}" class="hidden mt-1 text-xs"></div>
@@ -35482,29 +35563,24 @@ window.payNonCurrentLiability = function(index) {
       <h3 class="font-bold mb-2">Pay Liability: ${liability.name}</h3>
 
       <label>Mode</label>
-     <select id="paymentMode" class="w-full mb-2 border p-1">
-  <option value="Bank Transfer">Bank Transfer</option>
-  <option value="Cheque">Cheque</option>
-  <option value="Cash">Cash</option>
-  <option value="M-Pesa">M-Pesa</option>
-  <option value="Airtel Money">Airtel Money</option>
-  <option value="T-Kash">T-Kash</option>
-  <option value="RTGS / SWIFT Transfer">RTGS / SWIFT Transfer</option>
-  <option value="EFT (Electronic Funds Transfer)">EFT (Electronic Funds Transfer)</option>
-  <option value="Standing Order">Standing Order</option>
-  <option value="Direct Debit">Direct Debit</option>
-  <option value="Bank Remittance">Bank Remittance</option>
-  <option value="Debit Card">Debit Card</option>
-  <option value="Credit Card">Credit Card</option>
-  <option value="Online Payment Gateway">Online Payment Gateway</option>
-  <option value="Mobile Banking">Mobile Banking</option>
-  <option value="Cash on Delivery">Cash on Delivery</option>
-</select>
+      <select id="paymentMode" class="w-full mb-2 border p-1">
+        <option value="Bank Transfer">Bank Transfer</option>
+        <option value="Cheque">Cheque</option>
+        <option value="Cash">Cash</option>
+        <option value="M-Pesa">M-Pesa</option>
+        <option value="Airtel Money">Airtel Money</option>
+        <option value="T-Kash">T-Kash</option>
+      </select>
 
       <label>Bank</label>
       <select id="bankSelect" class="w-full border p-1 mb-2">
         <option value="">-- Select Bank --</option>
-        ${banks.map(b => `<option value="${b.name}">${b.name} (KES ${b.balance.toFixed(2)})</option>`).join("")}
+        ${banks.map(b => {
+          const currency = b.currency || "KES";
+          return `<option value="${b.name}">
+            ${b.name} (${currency} ${b.balance.toLocaleString()})
+          </option>`;
+        }).join("")}
       </select>
 
       <label>Amount</label>
@@ -35522,7 +35598,8 @@ window.payNonCurrentLiability = function(index) {
 
   document.getElementById("cancelBtn").onclick = () => modal.remove();
 
-  document.getElementById("payBtn").onclick = () => {
+  document.getElementById("payBtn").onclick = async () => {
+
     const paymentMode = document.getElementById("paymentMode").value;
     const bankName = document.getElementById("bankSelect").value;
     const amount = parseFloat(document.getElementById("amount").value);
@@ -35538,7 +35615,16 @@ window.payNonCurrentLiability = function(index) {
       return alert("Select bank");
     }
 
-    if (bank && amount > bank.balance) {
+    let debitAmount = amount;
+
+    if (bank) {
+      const fromCurrency = liability.currency || "KES";
+      const toCurrency = bank.currency || "KES";
+
+      debitAmount = await convertAmount(amount, fromCurrency, toCurrency);
+    }
+
+    if (bank && debitAmount > bank.balance) {
       return alert("Insufficient bank balance");
     }
 
@@ -35551,7 +35637,7 @@ window.payNonCurrentLiability = function(index) {
     const paymentId = crypto.randomUUID();
     const paymentDate = new Date().toISOString().split("T")[0];
 
-    if (bank) bank.balance -= amount;
+    if (bank) bank.balance -= debitAmount;
 
     liability.payments = liability.payments || [];
 
@@ -35664,59 +35750,342 @@ function addAuditLog(action, data) {
   localStorage.setItem("auditLogs", JSON.stringify(logs));
 }
 window.togglePaymentHistory = function (index) {
+
   const div = document.getElementById(`paymentHistory-${index}`);
   const l = balanceSheet.nonCurrentLiabilities[index];
-  if (!div) return;
+  if (!div || !l) return;
 
   if (!div.classList.contains("hidden")) {
     div.classList.add("hidden");
     div.innerHTML = "";
-  } else {
-    div.classList.remove("hidden");
-
-    const paid = getTotalPaid(l).toFixed(2);
-    const balance = getOutstandingBalance(l).toFixed(2);
-
-    let paymentsHTML = "";
-    if (l.payments && l.payments.length > 0) {
-      paymentsHTML = l.payments.map((p, pi) => `
-        • ${p.date}: KES ${p.amount} from ${p.bank} 
-        <button onclick="editPayment(${index}, ${pi})" class="px-1 py-1 bg-blue-900 text-white font-bold rounded ml-1 hover:bg-blue-800">Edit</button>
-        <button onclick="deletePayment(${index}, ${pi})" class="px-1 py-1 bg-blue-900 text-white font-bold rounded ml-1 hover:bg-blue-800">Delete</button>
-      `).join("<br/>");
-    } else {
-      paymentsHTML = "<em>No payments yet</em>";
-    }
-
-    div.innerHTML = `
-  <strong>Paid:</strong> KES ${paid}<br/>
-  <strong>Balance:</strong> KES ${balance}<br/><br/>
-
-  ${paymentsHTML}<br/><br/>
-
-  <button onclick="exportPaymentHistoryExcel(${index})"
-    class="px-1 py-1 bg-blue-900 text-white font-bold rounded ml-1 hover:bg-blue-800">
-    Excel
-  </button>
-
-  <button onclick="exportPaymentHistoryPDF(${index})"
-    class="px-1 py-1 bg-blue-900 text-white font-bold rounded ml-1 hover:bg-blue-800">
-    PDF
-  </button>
-
-  <button onclick="showJournalEntries()"
-    class="px-1 py-1 bg-blue-900 text-white font-bold rounded ml-1 hover:bg-blue-800">
-    Journal
-  </button>
-
-  <button onclick="showAuditLogs()"
-    class="px-1 py-1 bg-blue-900 text-white font-bold rounded ml-1 hover:bg-blue-800">
-    Audit
-  </button>
-`;
+    return;
   }
+
+  div.classList.remove("hidden");
+
+  const paid = getTotalPaid(l).toFixed(2);
+  const balance = getOutstandingBalance(l).toFixed(2);
+
+  let paymentsHTML = "";
+
+  if (l.payments && l.payments.length > 0) {
+    paymentsHTML = l.payments.map((p, pi) => `
+      <div class="mb-1">
+        • ${p.date}: KES ${p.amount} from ${p.bank}
+        <button onclick="editPayment(${index}, ${pi})"
+          class="px-1 py-1 bg-blue-900 text-white rounded ml-1 hover:bg-blue-800">
+          Edit
+        </button>
+        <button onclick="deletePayment(${index}, ${pi})"
+          class="px-1 py-1 bg-red-700 text-white rounded ml-1 hover:bg-red-600">
+          Delete
+        </button>
+      </div>
+    `).join("");
+  } else {
+    paymentsHTML = "<em>No payments yet</em>";
+  }
+
+  let increasesHTML = "";
+
+  if (l.increases && l.increases.length > 0) {
+    increasesHTML = l.increases.map((inc, ii) => `
+      <div class="mb-1">
+        • ${inc.date}: KES ${inc.amount} to ${inc.bank}
+        ${inc.reference ? `(Ref: ${inc.reference})` : ""}
+        <button onclick="editIncrease(${index}, ${ii})"
+          class="px-1 py-1 bg-green-700 text-white rounded ml-1 hover:bg-green-600">
+          Edit
+        </button>
+        <button onclick="deleteIncrease(${index}, ${ii})"
+          class="px-1 py-1 bg-red-700 text-white rounded ml-1 hover:bg-red-600">
+          Delete
+        </button>
+      </div>
+    `).join("");
+  } else {
+    increasesHTML = "<em>No increases yet</em>";
+  }
+
+  
+  div.innerHTML = `
+    <div class="bg-gray-50 p-3 rounded border mt-2">
+
+      <strong>Total Paid:</strong> KES ${paid}<br/>
+      <strong>Outstanding Balance:</strong> KES ${balance}<br/><br/>
+
+      <hr class="my-2"/>
+
+      <strong>Payments</strong><br/>
+      ${paymentsHTML}
+
+      <hr class="my-2"/>
+
+      <strong>Increases</strong><br/>
+      ${increasesHTML}
+
+      <hr class="my-2"/>
+
+      <div class="mt-2">
+        <button onclick="showJournalEntries()"
+          class="px-2 py-1 bg-blue-900 text-white rounded hover:bg-blue-800 mr-2">
+          Journal
+        </button>
+
+        <button onclick="showAuditLogs()"
+          class="px-2 py-1 bg-gray-700 text-white rounded hover:bg-gray-600">
+          Audit Logs
+        </button>
+      </div>
+
+    </div>
+  `;
 };
 
+window.toggleActionsMenu = function (index) {
+  const menu = document.getElementById(`actionsMenu-${index}`);
+  if (!menu) return;
+
+  document.querySelectorAll('[id^="actionsMenu-"]').forEach(m => {
+    if (m !== menu) m.classList.add("hidden");
+  });
+
+  menu.classList.toggle("hidden");
+};
+window.increaseNonCurrentLiability = function(index) {
+
+  const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+  let balanceSheet = JSON.parse(localStorage.getItem("balanceSheet") || "{}");
+  balanceSheet.nonCurrentLiabilities = balanceSheet.nonCurrentLiabilities || [];
+
+  const liability = balanceSheet.nonCurrentLiabilities[index];
+  if (!liability) return alert("⚠️ Liability not found.");
+
+  if (banks.length === 0) return alert("⚠️ No bank accounts available.");
+
+  const modal = document.createElement("div");
+  modal.className = "fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50";
+
+  modal.innerHTML = `
+    <div class="bg-white p-4 rounded shadow w-80">
+      <h3 class="font-bold mb-2">Increase Loan: ${liability.name}</h3>
+
+      <label>Bank</label>
+      <select id="increaseBank" class="w-full border p-1 mb-2">
+        <option value="">-- Select Bank --</option>
+        ${banks.map(b => {
+  const currency = b.currency || "KES";
+  return `<option value="${b.name}">
+    ${b.name} (${currency} ${b.balance.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })})
+  </option>`;
+}).join("")}
+      </select>
+
+      <label>Amount</label>
+      <input id="increaseAmount" type="number" class="w-full border p-1 mb-2"/>
+
+      <label>Reference</label>
+      <input id="increaseRef" class="w-full border p-1 mb-2"/>
+
+      <div class="flex justify-end gap-2">
+        <button id="cancelIncrease" class="px-2 py-1 bg-gray-500 text-white rounded">Cancel</button>
+        <button id="confirmIncrease" class="px-2 py-1 bg-blue-900 text-white rounded">Increase</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  document.getElementById("cancelIncrease").onclick = () => modal.remove();
+
+  document.getElementById("confirmIncrease").onclick = () => {
+
+    const bankName = document.getElementById("increaseBank").value;
+    const amount = parseFloat(document.getElementById("increaseAmount").value);
+    const reference = document.getElementById("increaseRef").value.trim();
+
+    const bank = banks.find(b => b.name === bankName);
+
+    if (!bank) return alert("Select bank");
+    if (isNaN(amount) || amount <= 0) return alert("Enter valid amount");
+
+    const increaseId = crypto.randomUUID();
+    const date = new Date().toISOString().split("T")[0];
+
+    liability.principal += amount;
+
+    bank.balance += amount;
+
+    liability.increases = liability.increases || [];
+    liability.increases.push({
+      id: increaseId,
+      amount,
+      date,
+      bank: bankName,
+      reference
+    });
+
+    const journal = JSON.parse(localStorage.getItem("journalEntries") || "[]");
+
+    journal.push({
+      id: increaseId,
+      date,
+      description: `Loan Increase - ${liability.name}`,
+      entries: [
+        { account: bankName, debit: amount, credit: 0 },
+        { account: liability.name, debit: 0, credit: amount }
+      ]
+    });
+
+    localStorage.setItem("journalEntries", JSON.stringify(journal));
+
+    const manual = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+
+    manual.push({
+      id: increaseId,
+      bank: bankName,
+      type: "Liability Increase",
+      account: liability.name,
+      amount,
+      date,
+      ref: reference,
+      direction: "Deposit"
+    });
+
+    localStorage.setItem("manualTransactions", JSON.stringify(manual));
+    localStorage.setItem("banks", JSON.stringify(banks));
+    localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
+
+    addAuditLog("INCREASE_LIABILITY", {
+      liability: liability.name,
+      amount,
+      bank: bankName,
+      reference
+    });
+
+    modal.remove();
+
+    renderNonCurrentLiabilities();
+    renderNonCurrentLiabilitiesSummary();
+    syncNonCurrentLiabilitiesToOpeningBalances();
+    buildLoanAndInterestData();
+    renderLoanSchedule(loanSchedules);
+    renderInterestExpense(interestExpenses);
+
+    alert("✅ Loan increased successfully.");
+  };
+};
+window.editIncrease = function (liabilityIndex, increaseIndex) {
+
+  const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+  let balanceSheet = JSON.parse(localStorage.getItem("balanceSheet") || "{}");
+  balanceSheet.nonCurrentLiabilities = balanceSheet.nonCurrentLiabilities || [];
+
+  let journal = JSON.parse(localStorage.getItem("journalEntries") || "[]");
+  let manual = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+
+  const liability = balanceSheet.nonCurrentLiabilities[liabilityIndex];
+  const increase = liability?.increases?.[increaseIndex];
+
+  if (!liability || !increase) return alert("Record not found");
+
+  const oldBank = banks.find(b => b.name === increase.bank);
+
+  if (oldBank) oldBank.balance -= increase.amount;
+  liability.principal -= increase.amount;
+
+  const newAmount = parseFloat(prompt("Enter new amount:", increase.amount));
+  if (isNaN(newAmount) || newAmount <= 0) {
+    
+    if (oldBank) oldBank.balance += increase.amount;
+    liability.principal += increase.amount;
+    return alert("Invalid amount");
+  }
+
+  const newBankName = prompt("Enter bank name:", increase.bank);
+  const newBank = banks.find(b => b.name === newBankName);
+
+  if (!newBank) {
+    if (oldBank) oldBank.balance += increase.amount;
+    liability.principal += increase.amount;
+    return alert("Bank not found");
+  }
+
+  newBank.balance += newAmount;
+  liability.principal += newAmount;
+
+  increase.amount = newAmount;
+  increase.bank = newBankName;
+
+  journal = journal.map(j => {
+    if (j.id === increase.id) {
+      j.entries = [
+        { account: newBankName, debit: newAmount, credit: 0 },
+        { account: liability.name, debit: 0, credit: newAmount }
+      ];
+    }
+    return j;
+  });
+
+  manual = manual.map(m => {
+    if (m.id === increase.id) {
+      m.bank = newBankName;
+      m.amount = newAmount;
+    }
+    return m;
+  });
+
+  localStorage.setItem("banks", JSON.stringify(banks));
+  localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
+  localStorage.setItem("journalEntries", JSON.stringify(journal));
+  localStorage.setItem("manualTransactions", JSON.stringify(manual));
+
+  renderNonCurrentLiabilities();
+  renderNonCurrentLiabilitiesSummary();
+  togglePaymentHistory(liabilityIndex);
+
+  alert("✅ Increase updated successfully");
+};
+window.deleteIncrease = function (liabilityIndex, increaseIndex) {
+
+  const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+  let balanceSheet = JSON.parse(localStorage.getItem("balanceSheet") || "{}");
+  balanceSheet.nonCurrentLiabilities = balanceSheet.nonCurrentLiabilities || [];
+
+  let journal = JSON.parse(localStorage.getItem("journalEntries") || "[]");
+  let manual = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+
+  const liability = balanceSheet.nonCurrentLiabilities[liabilityIndex];
+  const increase = liability?.increases?.[increaseIndex];
+
+  if (!liability || !increase) return alert("Record not found");
+
+  if (!confirm(`Delete increase of KES ${increase.amount}?`)) return;
+
+  const bank = banks.find(b => b.name === increase.bank);
+
+  if (bank) bank.balance -= increase.amount;
+  liability.principal -= increase.amount;
+
+  journal = journal.filter(j => j.id !== increase.id);
+  manual = manual.filter(m => m.id !== increase.id);
+
+  liability.increases.splice(increaseIndex, 1);
+
+  localStorage.setItem("banks", JSON.stringify(banks));
+  localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
+  localStorage.setItem("journalEntries", JSON.stringify(journal));
+  localStorage.setItem("manualTransactions", JSON.stringify(manual));
+
+  renderNonCurrentLiabilities();
+  renderNonCurrentLiabilitiesSummary();
+  togglePaymentHistory(liabilityIndex);
+
+  alert("🗑️ Increase deleted successfully");
+};
 function exportPaymentHistoryExcel(index) {
   const l = balanceSheet.nonCurrentLiabilities[index];
   if (!l || !l.payments.length) return alert("No payments to export!");
@@ -38781,7 +39150,7 @@ function renderEmployees() {
         <td class="p-2 border">${emp.email}</td>
         <td class="p-2 border">${emp.phone}</td>
         <td class="p-2 border">${emp.joinDate}</td>
-        <td class="p-2 border">KES ${emp.salary.toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
+        <td class="p-2 border">KES ${emp.salary.toFixed(2)}</td>
         <td class="p-2 border text-center space-x-2">
           <button onclick="previewEmployee(${index})"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
           <button onclick="editEmployee(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
@@ -39158,14 +39527,15 @@ function renderEarnings() {
 
     tbody.innerHTML += `
       <tr>
-       <td class="p-2 border">${e.empID}</td>
-      <td class="p-2 border">KES ${Number(e.basicPay).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-     <td class="p-2 border">KES ${Number(e.houseAllowance).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-     <td class="p-2 border">KES ${Number(e.transportAllowance).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-     <td class="p-2 border">KES ${Number(e.overtimePay).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-     <td class="p-2 border">KES ${Number(e.bonusPay).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-     <td class="p-2 border">KES ${Number(e.otherBenefits).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-      <td class="p-2 border font-bold">KES ${Number(e.grossPay).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
+        <td class="p-2 border">${e.empID}</td>
+        <td class="p-2 border">KES ${e.basicPay.toFixed(2)}</td>
+        <td class="p-2 border">KES ${e.houseAllowance.toFixed(2)}</td>
+        <td class="p-2 border">KES ${e.transportAllowance.toFixed(2)}</td>
+        <td class="p-2 border">KES ${e.overtimePay.toFixed(2)}</td>
+        <td class="p-2 border">KES ${e.bonusPay.toFixed(2)}</td>
+        <td class="p-2 border">KES ${e.otherBenefits.toFixed(2)}</td>
+        <td class="p-2 border font-bold">KES ${e.grossPay.toFixed(2)}</td>
+
         <td class="p-2 border text-center space-x-1">
           <button onclick="previewEarning(${i})"
             class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
@@ -39192,14 +39562,14 @@ function renderEarnings() {
 
 document.querySelector("#earningsTable").insertAdjacentHTML("beforeend", `
   <tr class="bg-gray-200 text-black">
-<td class="p-2 border"><strong>TOTAL</strong></td>
-<td class="p-2 border"><strong>KES ${Number(totalBasic).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</strong></td>
-<td class="p-2 border"><strong>KES ${Number(totalHouse).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</strong></td>
-<td class="p-2 border"><strong>KES ${Number(totalTransport).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</strong></td>
-<td class="p-2 border"><strong>KES ${Number(totalOvertime).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</strong></td>
-<td class="p-2 border"><strong>KES ${Number(totalBonus).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</strong></td>
-<td class="p-2 border"><strong>KES ${Number(totalOther).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</strong></td>
-<td class="p-2 border text-blue-900"><strong>KES ${Number(totalGross).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</strong></td>
+    <td class="p-2 border"><strong>TOTAL</strong></td>
+    <td class="p-2 border"><strong>KES ${totalBasic.toFixed(2)}</strong></td>
+    <td class="p-2 border"><strong>KES ${totalHouse.toFixed(2)}</strong></td>
+    <td class="p-2 border"><strong>KES ${totalTransport.toFixed(2)}</strong></td>
+    <td class="p-2 border"><strong>KES ${totalOvertime.toFixed(2)}</strong></td>
+    <td class="p-2 border"><strong>KES ${totalBonus.toFixed(2)}</strong></td>
+    <td class="p-2 border"><strong>KES ${totalOther.toFixed(2)}</strong></td>
+    <td class="p-2 border text-blue-900"><strong>KES ${totalGross.toFixed(2)}</strong></td>
     <td class="p-2 border"></td>
   </tr>
 `);
@@ -39276,12 +39646,12 @@ function previewEarning(index) {
       <h2>Earnings Preview</h2>
       <table>
         <tr><td>Employee ID</td><td>${e.empID}</td></tr>
-        <tr><td>Basic Pay</td><td>KES ${Number(e.basicPay).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td></tr>
-        <tr><td>House Allowance</td><td>KES ${Number(e.houseAllowance).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td></tr>
-        <tr><td>Transport Allowance</td><td>KES ${Number(e.transportAllowance).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td></tr>
-        <tr><td>Overtime Pay</td><td>KES ${Number(e.overtimePay).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td></tr>
-        <tr><td>Bonus</td><td>KES ${Number(e.bonusPay).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td></tr>
-        <tr><td>Other Benefits</td><td>KES ${Number(e.otherBenefits).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td></tr>
+        <tr><td>Basic Pay</td><td>KES ${e.basicPay.toFixed(2)}</td></tr>
+        <tr><td>House Allowance</td><td>KES ${e.houseAllowance.toFixed(2)}</td></tr>
+        <tr><td>Transport Allowance</td><td>KES ${e.transportAllowance.toFixed(2)}</td></tr>
+        <tr><td>Overtime Pay</td><td>KES ${e.overtimePay.toFixed(2)}</td></tr>
+        <tr><td>Bonus</td><td>KES ${e.bonusPay.toFixed(2)}</td></tr>
+        <tr><td>Other Benefits</td><td>KES ${e.otherBenefits.toFixed(2)}</td></tr>
         <tr>
           <td class="bold">Gross Pay</td>
           <td class="bold">KES ${e.grossPay.toFixed(2)}</td>
@@ -39958,13 +40328,13 @@ function renderGrossPayroll() {
           <td class="p-2 border">${p.account || "-"}</td>
           <td class="p-2 border">${p.month}</td>
           <td class="p-2 border">${p.country || "-"} KES ${parseFloat(p.gross).toFixed(2)}</td>
-          <td class="p-2 border">KES ${Number(p.paye).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-          <td class="p-2 border">KES ${Number(p.shif).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-          <td class="p-2 border">KES ${Number(p.nssf).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-          <td class="p-2 border">KES ${Number(p.housing).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-          <td class="p-2 border">KES ${Number(p.nita).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-          <td class="p-2 border font-semibold text-blue-900">KES ${Number(p.deductions).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-          <td class="p-2 border font-semibold text-blue-900">KES ${Number(p.net).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
+          <td class="p-2 border">KES ${parseFloat(p.paye).toFixed(2)}</td>
+          <td class="p-2 border">KES ${parseFloat(p.shif).toFixed(2)}</td>
+          <td class="p-2 border">KES ${parseFloat(p.nssf).toFixed(2)}</td>
+          <td class="p-2 border">KES ${parseFloat(p.housing).toFixed(2)}</td>
+          <td class="p-2 border">KES ${parseFloat(p.nita).toFixed(2)}</td>
+          <td class="p-2 border font-semibold text-blue-900">KES ${parseFloat(p.deductions).toFixed(2)}</td>
+          <td class="p-2 border font-semibold text-blue-900">KES ${parseFloat(p.net).toFixed(2)}</td>
           <td class="p-2 border text-center">
             <button onclick="deletePayrollRecord(${p.id})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Delete</button>
           </td>
@@ -39976,14 +40346,14 @@ function renderGrossPayroll() {
 <tr class="bg-gray-100">
   <td colspan="4" class="p-2 border text-right font-bold">TOTAL (${month}):</td>
 
-<td class="p-2 border font-bold">KES ${Number(totals.gross).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-<td class="p-2 border font-bold">KES ${Number(totals.paye).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-<td class="p-2 border font-bold">KES ${Number(totals.shif).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-<td class="p-2 border font-bold">KES ${Number(totals.nssf).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-<td class="p-2 border font-bold">KES ${Number(totals.housing).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-<td class="p-2 border font-bold">KES ${Number(totals.nita).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-<td class="p-2 border font-bold">KES ${Number(totals.deductions).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-<td class="p-2 border font-bold text-blue-900">KES ${Number(totals.net).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
+  <td class="p-2 border font-bold">KES ${totals.gross.toFixed(2)}</td>
+  <td class="p-2 border font-bold">KES ${totals.paye.toFixed(2)}</td>
+  <td class="p-2 border font-bold">KES ${totals.shif.toFixed(2)}</td>
+  <td class="p-2 border font-bold">KES ${totals.nssf.toFixed(2)}</td>
+  <td class="p-2 border font-bold">KES ${totals.housing.toFixed(2)}</td>
+  <td class="p-2 border font-bold">KES ${totals.nita.toFixed(2)}</td>
+  <td class="p-2 border font-bold">KES ${totals.deductions.toFixed(2)}</td>
+  <td class="p-2 border font-bold text-blue-900">KES ${totals.net.toFixed(2)}</td>
 
   <td class="p-2 border"></td>
 </tr>
@@ -48024,7 +48394,7 @@ function renderPayrollSummary() {
 </script>
 
 <script>
-// -------------------- Non-Current Assets Summary --------------------
+
 function renderNonCurrentAssetsSummary() {
   const tbody = document.getElementById('nonCurrentAssetsSummary');
   if (!tbody) return;
@@ -54051,7 +54421,7 @@ window.onload = function() {
       <input type="text" class="subName border p-2 rounded" placeholder="Subsidiary Name" />
       <input type="text" class="subLocation border p-2 rounded" placeholder="Location" />
       <input type="text" class="subType border p-2 rounded" placeholder="Type of Company" />
-      <input type="text" class="subWorth border p-2 rounded" placeholder="Worth (e.g., 500000)" />
+      <input type="text" class="subWorth border p-2 rounded" placeholder="Worth (e.g., $500,000)" />
       <input type="email" class="subEmail border p-2 rounded" placeholder="Email" />
       <input type="text" class="subPhone border p-2 rounded" placeholder="Phone Number" />
     </div>
@@ -54063,48 +54433,7 @@ window.onload = function() {
     + Add Another Subsidiary
   </button>
 </div>
-
-<div class="space-y-4 mt-8">
-  <h3 class="text-lg font-semibold text-blue-900">Financial Overview</h3>
-
-  <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-    <input id="shareValue" type="number" placeholder="Total Share Capital" class="border p-2 rounded" />
-    <input id="assetValue" type="number" placeholder="Total Assets" class="border p-2 rounded" oninput="calculateEquity()" />
-    <input id="liabilityValue" type="number" placeholder="Total Liabilities" class="border p-2 rounded" oninput="calculateEquity()" />
-    <input id="equityValue" type="number" placeholder="Equity" class="border p-2 rounded bg-gray-100" readonly />
-  </div>
-</div>
-
-<div class="space-y-4 mt-6">
-  <h3 class="text-lg font-semibold text-blue-900">Bank Accounts</h3>
-
-  <div id="bankFields" class="space-y-3">
-    <div class="grid grid-cols-3 gap-3 bank-field border rounded-lg p-3 bg-gray-50">
-      <input type="text" class="bankName border p-2 rounded" placeholder="Bank Name" />
-      <input type="number" class="bankBalance border p-2 rounded" placeholder="Balance" />
-      <select class="bankCurrency border p-2 rounded">
-        <option value="KES">KES</option>
-        <option value="USD">USD</option>
-        <option value="EUR">EUR</option>
-        <option value="GBP">GBP</option>
-      </select>
-    </div>
-  </div>
-
-  <button type="button"
-          onclick="addBankField()"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
-    + Add Another Bank
-  </button>
-</div>
-
-<div class="mt-8 bg-white p-6 rounded shadow">
-  <h3 class="text-lg font-semibold text-center text-blue-900 mb-4">
-    Financial Summary Chart
-  </h3>
-  <canvas id="financeChart" height="100"></canvas>
-</div>
-
+    
     <div class="text-center">
       <button type="button" onclick="saveOrgInfo()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Save Organization Info
@@ -55744,6 +56073,7 @@ document.addEventListener("DOMContentLoaded", () => {
   </section>
 </div>
 <script>
+
 function addAdditionalField() {
   const container = document.getElementById('additionalFields');
   const fieldDiv = document.createElement('div');
@@ -55753,178 +56083,8 @@ function addAdditionalField() {
     <input type="text" class="labelValue border p-2 rounded" placeholder="Value" />
   `;
   container.appendChild(fieldDiv);
-  saveAdditionalFields();
 }
 
-function saveAdditionalFields() {
-  const data = [];
-  document.querySelectorAll(".additional-field").forEach(div => {
-    data.push({
-      name: div.querySelector(".labelName")?.value || "",
-      value: div.querySelector(".labelValue")?.value || ""
-    });
-  });
-  localStorage.setItem("additionalFields", JSON.stringify(data));
-}
-
-function loadAdditionalFields() {
-  const container = document.getElementById("additionalFields");
-  const data = JSON.parse(localStorage.getItem("additionalFields") || "[]");
-  container.innerHTML = "";
-  data.forEach(item => {
-    const fieldDiv = document.createElement("div");
-    fieldDiv.className = 'grid grid-cols-2 gap-2 additional-field';
-    fieldDiv.innerHTML = `
-      <input type="text" class="labelName border p-2 rounded" value="${item.name}" />
-      <input type="text" class="labelValue border p-2 rounded" value="${item.value}" />
-    `;
-    container.appendChild(fieldDiv);
-  });
-}
-
-function addSubsidiaryField() {
-  const container = document.getElementById("subsidiaryFields");
-  const div = document.createElement("div");
-  div.className = "grid grid-cols-2 sm:grid-cols-3 gap-3 subsidiary-field border rounded-lg p-3 bg-gray-50";
-  div.innerHTML = `
-    <input type="text" class="subName border p-2 rounded" placeholder="Subsidiary Name" />
-    <input type="text" class="subLocation border p-2 rounded" placeholder="Location" />
-    <input type="text" class="subType border p-2 rounded" placeholder="Type of Company" />
-    <input type="text" class="subWorth border p-2 rounded" placeholder="Worth (e.g., 500000)" />
-    <input type="email" class="subEmail border p-2 rounded" placeholder="Email" />
-    <input type="text" class="subPhone border p-2 rounded" placeholder="Phone Number" />
-  `;
-  container.appendChild(div);
-  saveSubsidiaryFields();
-}
-
-function saveSubsidiaryFields() {
-  const data = [];
-  document.querySelectorAll(".subsidiary-field").forEach(div => {
-    data.push({
-      name: div.querySelector(".subName")?.value || "",
-      location: div.querySelector(".subLocation")?.value || "",
-      type: div.querySelector(".subType")?.value || "",
-      worth: div.querySelector(".subWorth")?.value || "",
-      email: div.querySelector(".subEmail")?.value || "",
-      phone: div.querySelector(".subPhone")?.value || ""
-    });
-  });
-  localStorage.setItem("subsidiaryFields", JSON.stringify(data));
-}
-
-function loadSubsidiaryFields() {
-  const container = document.getElementById("subsidiaryFields");
-  const data = JSON.parse(localStorage.getItem("subsidiaryFields") || "[]");
-  container.innerHTML = "";
-  data.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "grid grid-cols-2 sm:grid-cols-3 gap-3 subsidiary-field border rounded-lg p-3 bg-gray-50";
-    div.innerHTML = `
-      <input type="text" class="subName border p-2 rounded" value="${item.name}" />
-      <input type="text" class="subLocation border p-2 rounded" value="${item.location}" />
-      <input type="text" class="subType border p-2 rounded" value="${item.type}" />
-      <input type="text" class="subWorth border p-2 rounded" value="${item.worth}" />
-      <input type="email" class="subEmail border p-2 rounded" value="${item.email}" />
-      <input type="text" class="subPhone border p-2 rounded" value="${item.phone}" />
-    `;
-    container.appendChild(div);
-  });
-}
-
-function addBankField() {
-  const container = document.getElementById("bankFields");
-  const div = document.createElement("div");
-  div.className = "grid grid-cols-3 gap-3 bank-field border rounded-lg p-3 bg-gray-50";
-  div.innerHTML = `
-    <input type="text" class="bankName border p-2 rounded" placeholder="Bank Name" />
-    <input type="number" class="bankBalance border p-2 rounded" placeholder="Balance" />
-    <select class="bankCurrency border p-2 rounded">
-      <option value="KES">KES</option>
-      <option value="USD">USD</option>
-      <option value="EUR">EUR</option>
-      <option value="GBP">GBP</option>
-    </select>
-  `;
-  container.appendChild(div);
-  saveBankFields();
-}
-
-function saveBankFields() {
-  const data = [];
-  document.querySelectorAll(".bank-field").forEach(div => {
-    data.push({
-      name: div.querySelector(".bankName")?.value || "",
-      balance: div.querySelector(".bankBalance")?.value || "",
-      currency: div.querySelector(".bankCurrency")?.value || ""
-    });
-  });
-  localStorage.setItem("bankFields", JSON.stringify(data));
-}
-
-function loadBankFields() {
-  const container = document.getElementById("bankFields");
-  const data = JSON.parse(localStorage.getItem("bankFields") || "[]");
-  container.innerHTML = "";
-  data.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "grid grid-cols-3 gap-3 bank-field border rounded-lg p-3 bg-gray-50";
-    div.innerHTML = `
-      <input type="text" class="bankName border p-2 rounded" value="${item.name}" />
-      <input type="number" class="bankBalance border p-2 rounded" value="${item.balance}" />
-      <select class="bankCurrency border p-2 rounded">
-        <option value="KES" ${item.currency === "KES" ? "selected" : ""}>KES</option>
-        <option value="USD" ${item.currency === "USD" ? "selected" : ""}>USD</option>
-        <option value="EUR" ${item.currency === "EUR" ? "selected" : ""}>EUR</option>
-        <option value="GBP" ${item.currency === "GBP" ? "selected" : ""}>GBP</option>
-      </select>
-    `;
-    container.appendChild(div);
-  });
-}
-
-function calculateEquity() {
-  const assets = parseFloat(document.getElementById("assetValue")?.value) || 0;
-  const liabilities = parseFloat(document.getElementById("liabilityValue")?.value) || 0;
-  const equity = assets - liabilities;
-  const equityField = document.getElementById("equityValue");
-  if (equityField) equityField.value = equity;
-  updateChart(assets, liabilities, equity);
-}
-
-let financeChart;
-
-function updateChart(assets, liabilities, equity) {
-  const canvas = document.getElementById("financeChart");
-  if (!canvas) return;
-
-  const ctx = canvas.getContext("2d");
-
-  if (financeChart) financeChart.destroy();
-
-  financeChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: ["Assets", "Liabilities", "Equity"],
-      datasets: [{
-        data: [assets, liabilities, equity],
-        backgroundColor: ["#16a34a", "#dc2626", "#2563eb"]
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false }
-      }
-    }
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  loadAdditionalFields();
-  loadSubsidiaryFields();
-  loadBankFields();
-});
 function saveOrgInfo() {
   const additionalFields = [];
   document.querySelectorAll('.additional-field').forEach(div => {
@@ -55943,16 +56103,7 @@ function saveOrgInfo() {
   } else {
     finalizeSave(null);
   }
-  function saveLogo(url) {
-  localStorage.setItem("logo", url);
-}
 
-function loadLogo() {
-  const logo = localStorage.getItem("logo");
-  if (logo) {
-    document.getElementById("logoImg").src = logo;
-  }
-}
   function finalizeSave(logoBase64) {
     const orgInfo = {
       name: document.getElementById('orgName').value,
