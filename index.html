@@ -33868,7 +33868,7 @@ function renderNonCurrentAssets() {
       row.innerHTML = `
         <td class="p-2 border">${asset.name || ''}</td>
         <td class="p-2 border">${asset.code || ''}</td>
-        <td class="p-2 border">${asset.description || ''}</td>
+        <td class="p-1 border text-sm max-w-xs leading-tight break-words"> ${asset.description || ''}</td>
         <td class="p-2 border text-right">${formatKES(asset.value || 0)}</td>
         <td class="p-2 border">${asset.account || ''}</td>
 
