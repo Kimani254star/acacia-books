@@ -9543,10 +9543,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   <div class="bg-white p-1 rounded shadow">
     <h2 class="text-lg font-semibold mb-4">Customer List</h2>
-
+    
+  <div class="mb-3">
+    <button onclick="bulkDeleteCustomers()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800"> 🗑 Bulk Delete</button>
+    <button onclick="bulkUpdateStatementDate()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">📅 Bulk Statement Date</button>
+  </div>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
+          <th> <input type="checkbox" id="selectAllCustomers" onclick="toggleSelectAllCustomers()"></th>
           <th class="p-2 text-left">Salutation</th>
           <th class="p-2 text-left">Name</th>
           <th class="p-2 text-left">Primary Email</th>
@@ -12717,6 +12722,7 @@ function addCustomer() {
   let customers = JSON.parse(localStorage.getItem("customers") || "[]");
 
   const customerData = {
+     id: crypto.randomUUID(),
     salutation,
     name,
     primaryEmail,
@@ -12768,15 +12774,34 @@ function resetForm() {
   document.getElementById("statementDate").value = "";
   document.getElementById("customerBtn").textContent = "Save Customer";
 }
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+
+  const parts = dateStr.split("/");
+
+  if (parts.length !== 3) return dateStr;
+
+  const [day, month, year] = parts;
+
+  const date = new Date(`${year}-${month}-${day}`);
+
+  if (isNaN(date.getTime())) return dateStr;
+
+  return date.toLocaleDateString();
+}
 
 function renderCustomers() {
   const customers = JSON.parse(localStorage.getItem("customers") || "[]");
   const table = document.getElementById("customerTable");
   table.innerHTML = "";
-
+  
   customers.forEach((c, index) => {
     const row = document.createElement("tr");
-    row.innerHTML = `
+    
+      row.innerHTML = `
+      <td class="p-2 border">
+        <input type="checkbox" class="customerCheck" data-id="${c.id}">
+      </td>
       <td class="p-2 border">${c.salutation || ""}</td>
       <td class="p-2 border">${c.name}</td>
       <td class="p-2 border">${c.primaryEmail}</td>
@@ -12791,7 +12816,7 @@ function renderCustomers() {
       <td class="p-2 border">
         <button onclick="editCustomer(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
         <button onclick="deleteCustomer(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-      </td>
+        <button onclick="viewCustomer(${index})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">View</button></td>
     `;
     table.appendChild(row);
   });
@@ -12834,6 +12859,7 @@ function editCustomer(index) {
   editingCustomerIndex = index;
   document.getElementById("customerBtn").textContent = "✔️ Update Customer";
 }
+
 function deleteCustomer(index) {
   const customers = JSON.parse(localStorage.getItem("customers") || "[]");
   const customer = customers[index];
@@ -12851,22 +12877,104 @@ function deleteCustomer(index) {
   renderCustomers();
   alert("♻️ Customer moved to Recycle Bin.");
 }
+function getSelectedCustomerIds() {
+  return [...document.querySelectorAll(".customerCheck:checked")]
+    .map(cb => cb.dataset.id);
+}
+
+function bulkDeleteCustomers() {
+  let customers = JSON.parse(localStorage.getItem("customers") || "[]");
+
+  const indexes = getSelectedCustomerIndexes();
+
+  if (indexes.length === 0) {
+    alert("No customers selected");
+    return;
+  }
+
+  if (!confirm(`⚠️ Delete ${indexes.length} customers permanently?`)) return;
+
+  indexes.sort((a, b) => b - a).forEach(index => {
+    const customer = customers[index];
+
+    if (customer) {
+      if (!customer.id) customer.id = crypto.randomUUID();
+      moveToRecycle(customer, "File", "Customers");
+
+      customers.splice(index, 1);
+    }
+  });
+
+  localStorage.setItem("customers", JSON.stringify(customers));
+  renderCustomers();
+
+  document.getElementById("selectAllCustomers").checked = false;
+}
+
+function bulkUpdateStatementDate() {
+  const selectedIds = getSelectedCustomerIds();
+
+  if (selectedIds.length === 0) {
+    alert("No customers selected");
+    return;
+  }
+
+  const newDate = prompt("Enter statement date (DD/MM/YYYY):");
+
+  const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+
+  if (!newDate || !regex.test(newDate)) {
+    alert("Invalid date format. Use DD/MM/YYYY");
+    return;
+  }
+
+  let customers = JSON.parse(localStorage.getItem("customers") || "[]");
+
+  customers = customers.map(c => {
+    if (selectedIds.includes(c.id)) {
+      return { ...c, statementDate: newDate };
+    }
+    return c;
+  });
+
+  localStorage.setItem("customers", JSON.stringify(customers));
+
+  renderCustomers();
+
+  document.getElementById("selectAllCustomers").checked = false;
+}
+function toggleSelectAllCustomers() {
+  const checked = document.getElementById("selectAllCustomers").checked;
+
+  document.querySelectorAll(".customerCheck").forEach(cb => {
+    cb.checked = checked;
+  });
+}
 function sendStatementsAutomatically() {
   const customers = JSON.parse(localStorage.getItem("customers") || "[]");
   const today = new Date();
-  const currentDay = today.getDate();     
-  const currentMonth = today.getMonth();   
+
+  const currentDay = today.getDate();
+  const currentMonth = today.getMonth() + 1;
 
   let updated = false;
 
   customers.forEach(customer => {
-    if (parseInt(customer.statementDate) === currentDay) {
-    
-      if (!customer.lastStatementMonth || customer.lastStatementMonth != currentMonth) {
-      
+    if (!customer.statementDate) return;
+
+    const parts = customer.statementDate.split("/");
+    if (parts.length !== 3) return;
+
+    const day = parseInt(parts[0]);
+    const month = parseInt(parts[1]);
+
+    if (day === currentDay && month === currentMonth) {
+
+      if (!customer.lastStatementMonth || customer.lastStatementMonth !== today.getMonth()) {
+
         console.log(`📧 Sending statement to ${customer.name} (${customer.primaryEmail})`);
 
-        customer.lastStatementMonth = currentMonth;
+        customer.lastStatementMonth = today.getMonth();
         updated = true;
       }
     }
@@ -12874,10 +12982,9 @@ function sendStatementsAutomatically() {
 
   if (updated) {
     localStorage.setItem("customers", JSON.stringify(customers));
-    renderCustomers(); 
+    renderCustomers();
   }
 }
-
 setInterval(sendStatementsAutomatically, 1000 * 60 * 60); 
 sendStatementsAutomatically();
 
@@ -12936,7 +13043,206 @@ function applyCurrency() {
     if (dropdown) dropdown.classList.add("hidden");
   });
 });
+function viewCustomer(index) {
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  const c = customers[index];
+  if (!c) return;
 
+  const old = document.getElementById("customerPopup");
+  if (old) old.remove();
+
+  const popup = document.createElement("div");
+  popup.id = "customerPopup";
+
+  Object.assign(popup.style, {
+    position: "fixed",
+    top: "0",
+    left: "0",
+    width: "100%",
+    height: "100%",
+    background: "rgba(0,0,0,0.6)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: "99999"
+  });
+
+  const box = document.createElement("div");
+
+  Object.assign(box.style, {
+    width: "80%",
+    height: "90%",
+    background: "#fff",
+    borderRadius: "10px",
+    display: "flex",
+    overflow: "hidden",
+    position: "relative"
+  });
+
+  const left = document.createElement("div");
+  Object.assign(left.style, {
+    width: "30%",
+    borderRight: "1px solid #ddd",
+    padding: "15px"
+  });
+
+ left.innerHTML = `
+  <h3>Customer Details</h3>
+
+  <p><b>Name:</b> ${c.name || "-"}</p>
+  <p><b>Salutation:</b> ${c.salutation || "-"}</p>
+  <p><b>Primary Email:</b> ${c.primaryEmail || "-"}</p>
+  <p><b>Secondary Email:</b> ${c.secondaryEmail || "-"}</p>
+  <p><b>Phone:</b> ${c.phone || "-"}</p>
+
+  <hr>
+
+  <p><b>Billing Address:</b><br> ${c.billingAddress || "-"}</p>
+  <p><b>Shipping Address:</b><br> ${c.shippingAddress || "-"}</p>
+
+  <hr>
+
+  <p><b>KRA PIN:</b> ${c.kraPin || "-"}</p>
+  <p><b>Credit Limit:</b> ${formatCurrency(c.creditLimit || 0)}</p>
+  <p><b>Receivables:</b> ${formatCurrency(c.receivables || 0)}</p>
+  <p><b>Statement Day:</b> ${c.statementDate || "-"}</p>
+
+  <hr>
+
+  <h3>Transactions</h3>
+`;
+
+  const right = document.createElement("div");
+  right.id = "txnBox";
+  Object.assign(right.style, {
+    width: "70%",
+    padding: "15px",
+    overflow: "auto"
+  });
+
+  right.innerHTML = `<p style="color:#888;">Select a transaction</p>`;
+
+  const types = [
+  { key: "invoices", label: "Invoices" },
+  { key: "quotes", label: "Quotes" },
+  { key: "creditNotes", label: "Credit Notes" },
+  { key: "payments", label: "Payments" },
+  { key: "salesReturns", label: "Sales Return" },
+  { key: "deliveryNotes", label: "Delivery" }
+];
+
+  types.forEach(t => {
+    const btn = document.createElement("div");
+    btn.innerText = t.label;
+
+    Object.assign(btn.style, {
+      padding: "8px",
+      cursor: "pointer",
+      borderRadius: "5px"
+    });
+
+    btn.onclick = () => loadPopupTransactions(t.key, index, btn);
+
+    left.appendChild(btn);
+  });
+
+  const close = document.createElement("button");
+close.innerText = "X";
+
+Object.assign(close.style, {
+  position: "absolute",
+  top: "10px",
+  right: "10px",
+  background: "#1e3a8a",
+  color: "#fff",
+  border: "none",
+  padding: "4px 8px",
+  cursor: "pointer",
+  borderRadius: "4px",
+  fontSize: "12px"
+});
+
+close.onmouseover = () => close.style.background = "#1e40af";
+close.onmouseout = () => close.style.background = "#1e3a8a";
+close.onclick = () => popup.remove();
+
+box.appendChild(left);
+box.appendChild(right);
+
+popup.appendChild(box);
+popup.appendChild(close);
+document.body.appendChild(popup);
+
+window.activeCustomerIndex = index;
+}
+
+function loadPopupTransactions(type, index, element) {
+
+  const parent = element.parentElement;
+  [...parent.children].forEach(el => {
+    el.style.background = "";
+    el.style.color = "";
+    el.style.fontWeight = "";
+  });
+
+  element.style.background = "#e6f0ff";
+  element.style.color = "#0b57d0";
+  element.style.fontWeight = "bold";
+
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  const c = customers[index];
+  if (!c) return;
+
+  const data = c[type] || [];
+
+  const box = document.getElementById("txnBox");
+  box.innerHTML = "";
+
+  const title = document.createElement("h3");
+  title.innerText = type.toUpperCase();
+  box.appendChild(title);
+
+  if (!data.length) {
+    const empty = document.createElement("p");
+    empty.innerText = "No records found";
+    empty.style.color = "#888";
+    box.appendChild(empty);
+    return;
+  }
+
+  data.forEach(item => {
+    const row = document.createElement("div");
+
+    row.innerHTML = `<b>${item.number || item.id}</b> - ${item.amount || ""}`;
+
+    Object.assign(row.style, {
+      padding: "8px",
+      borderBottom: "1px solid #eee",
+      cursor: "pointer"
+    });
+
+    row.onclick = () => openTransaction(type, item.id);
+
+    box.appendChild(row);
+  });
+}
+function openTransaction(type, id) {
+  if (type === "invoices") {
+    window.location.href = `/invoice/${id}`;
+  }
+
+  if (type === "quotes") {
+    window.location.href = `/quote/${id}`;
+  }
+
+  if (type === "creditNotes") {
+    window.location.href = `/credit-note/${id}`;
+  }
+
+  if (type === "payments") {
+    window.location.href = `/payment/${id}`;
+  }
+}
 function sortCustomersBy(field) {
   let customers = JSON.parse(localStorage.getItem("customers") || "[]");
 
@@ -13027,6 +13333,7 @@ function importCustomers(event) {
 
   reader.readAsText(file);
 }
+
 </script>
 <script>
 let invoices = JSON.parse(localStorage.getItem("invoices")) || [];
@@ -14489,37 +14796,40 @@ function reversePayment(id) {
     return;
   }
 
-  // ---------------- FIX: Recalculate from receipts ----------------
   const receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
 
   const paidFromReceipts = receipts
-    .filter(r => r.invoiceId === invoice.id)
+    .filter(r =>
+  r.invoiceId === invoice.id ||
+  r.reference === `Invoice ${invoice.id}`
+)
     .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
 
-  // If reducing payment → update receipts safely
   const difference = paidFromReceipts - newPaidAmount;
 
   if (difference > 0) {
     let remaining = difference;
 
     for (let i = receipts.length - 1; i >= 0 && remaining > 0; i--) {
-      if (receipts[i].invoiceId === invoice.id) {
-        const amt = parseFloat(receipts[i].amount) || 0;
+  if (
+    receipts[i].invoiceId === invoice.id ||
+    receipts[i].reference === `Invoice ${invoice.id}`
+  ) {
+    const amt = parseFloat(receipts[i].amount) || 0;
 
-        if (amt <= remaining) {
-          remaining -= amt;
-          receipts.splice(i, 1);
-        } else {
-          receipts[i].amount = amt - remaining;
-          remaining = 0;
-        }
-      }
+    if (amt <= remaining) {
+      remaining -= amt;
+      receipts.splice(i, 1);
+    } else {
+      receipts[i].amount = amt - remaining;
+      remaining = 0;
     }
+  }
+}
 
     localStorage.setItem("receipts", JSON.stringify(receipts));
   }
 
-  // ---------------- Update Invoice ----------------
   invoice.amountPaid = newPaidAmount;
   invoice.balance = total - newPaidAmount;
 
@@ -14538,7 +14848,7 @@ function reversePayment(id) {
   invoices[index] = invoice;
   localStorage.setItem("invoices", JSON.stringify(invoices));
 
-  // ---------------- FIX: sync customer payments ----------------
+ 
   const customerPayments = JSON.parse(localStorage.getItem("customerPayments") || "[]");
 
   const updatedCustomerPayments = customerPayments.filter(
@@ -14547,24 +14857,29 @@ function reversePayment(id) {
 
   localStorage.setItem("customerPayments", JSON.stringify(updatedCustomerPayments));
 
-  // ---------------- FIX: sync transactions ----------------
   const manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
 
   const updatedTx = manualTransactions.filter(
-    t => !(t.ref === invoice.invoiceNumber && t.type === "Customer Payment")
-  );
+  t => !(
+    t.type === "Customer Payment" &&
+    (t.ref === invoice.invoiceNumber || t.ref === `Invoice ${invoice.id}`)
+  )
+);
 
   localStorage.setItem("manualTransactions", JSON.stringify(updatedTx));
 
   const allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
 
   const updatedAllTx = allTx.filter(
-    t => !(t.ref === invoice.invoiceNumber && t.type === "Customer Payment")
-  );
+  t => !(
+    t.type === "Customer Payment" &&
+    (t.ref === invoice.invoiceNumber || t.ref === `Invoice ${invoice.id}`)
+  )
+);
 
   localStorage.setItem("transactions", JSON.stringify(updatedAllTx));
 
-  // ---------------- Refresh UI ----------------
+
   syncInvoiceReceipt(invoice);
   renderInvoices();
   updateDashboardTotals();
@@ -59824,54 +60139,85 @@ function emptyRecycleBin() {
 document.addEventListener("DOMContentLoaded", renderRecycleBin);
 </script>
 <script>
-  let currentPage = 1;
-let itemsPerPage = 25;
+function createPaginatedTable(config) {
+  const state = config.state || (config.state = {
+    currentPage: 1,
+    itemsPerPage: 25
+  });
 
-function renderPaginatedTable({
-  data = [],
-  tableId,
-  totalCountId,
-  pageInfoId,
-  prevBtnId,
-  nextBtnId,
-  itemsPerPageSelectId,
-  renderRow
-}) {
-  const table = document.getElementById(tableId);
-  const totalCountSpan = document.getElementById(totalCountId);
-  const pageInfo = document.getElementById(pageInfoId);
-  const prevBtn = document.getElementById(prevBtnId);
-  const nextBtn = document.getElementById(nextBtnId);
-  const itemsPerPageSelect = document.getElementById(itemsPerPageSelectId);
+  const table = document.getElementById(config.tableId);
+  const totalCountSpan = document.getElementById(config.totalCountId);
+  const pageInfo = document.getElementById(config.pageInfoId);
+  const prevBtn = document.getElementById(config.prevBtnId);
+  const nextBtn = document.getElementById(config.nextBtnId);
+  const itemsPerPageSelect = document.getElementById(config.itemsPerPageSelectId);
+
+  const data = config.data || [];
 
   if (itemsPerPageSelect) {
-    itemsPerPage = parseInt(itemsPerPageSelect.value, 10);
-    itemsPerPageSelect.onchange = () => { currentPage = 1; renderPaginatedTable(arguments[0]); };
+    itemsPerPageSelect.value = state.itemsPerPage;
+
+    itemsPerPageSelect.onchange = () => {
+      state.itemsPerPage = parseInt(itemsPerPageSelect.value);
+      state.currentPage = 1;
+      render();
+    };
   }
 
-  totalCountSpan.textContent = data.length;
+  function render() {
+    const total = data.length;
+    const start = (state.currentPage - 1) * state.itemsPerPage;
+    const end = start + state.itemsPerPage;
 
-  const start = (currentPage - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  const pagedData = data.slice(start, end);
+    const paginated = data.slice(start, end);
 
-  if (!renderRow) {
-    table.innerHTML = pagedData.length === 0
-      ? `<tr><td colspan="100%" class="p-2 text-center text-gray-500">No data</td></tr>`
-      : pagedData.map(item => `<tr>${Object.values(item).map(v => `<td class="p-2">${v}</td>`).join("")}</tr>`).join("");
-  } else {
-    table.innerHTML = pagedData.map((item, idx) => renderRow(item, start + idx)).join("");
+    table.innerHTML = "";
+
+    if (config.renderRow) {
+      paginated.forEach((item, i) => {
+        table.innerHTML += config.renderRow(item, start + i);
+      });
+    } else {
+      table.innerHTML = paginated.length
+        ? paginated.map(item =>
+            `<tr>${Object.values(item).map(v => `<td class="p-2 border">${v}</td>`).join("")}</tr>`
+          ).join("")
+        : `<tr><td colspan="100%" class="p-2 text-center">No data</td></tr>`;
+    }
+
+    if (totalCountSpan) {
+      totalCountSpan.textContent = total;
+    }
+
+    const from = total === 0 ? 0 : start + 1;
+    const to = Math.min(end, total);
+
+    if (pageInfo) {
+      pageInfo.textContent = `${from} - ${to} of ${total}`;
+    }
+
+    if (prevBtn) {
+      prevBtn.disabled = state.currentPage === 1;
+      prevBtn.onclick = () => {
+        if (state.currentPage > 1) {
+          state.currentPage--;
+          render();
+        }
+      };
+    }
+
+    if (nextBtn) {
+      nextBtn.disabled = end >= total;
+      nextBtn.onclick = () => {
+        if (end < total) {
+          state.currentPage++;
+          render();
+        }
+      };
+    }
   }
 
-  const showingFrom = data.length === 0 ? 0 : start + 1;
-  const showingTo = end > data.length ? data.length : end;
-  pageInfo.textContent = `${showingFrom} - ${showingTo} of ${data.length}`;
-
-  prevBtn.disabled = currentPage === 1;
-  nextBtn.disabled = end >= data.length;
-
-  prevBtn.onclick = () => { currentPage--; renderPaginatedTable(arguments[0]); };
-  nextBtn.onclick = () => { currentPage++; renderPaginatedTable(arguments[0]); };
+  render();
 }
 </script>
 <script>
