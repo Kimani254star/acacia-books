@@ -2060,6 +2060,7 @@ function login(email, password) {
 <li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li>
 <li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li>
 <li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li>
+<li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li>
 <li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li>
 <li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li>
 </ul>
@@ -9769,8 +9770,20 @@ document.addEventListener("DOMContentLoaded", () => {
     <select id="invoiceCurrency" class="border p-2 rounded" style="width: 700px;" onchange="toggleExchangeRateField()">
       <option value="KES" selected>KES (Kenya Shilling)</option>
       <option value="USD">USD (US Dollar)</option>
-      <option value="EUR">EUR (Euro)</option>
-      <option value="GBP">GBP (British Pound)</option>
+<option value="EUR">EUR (Euro)</option>
+<option value="GBP">GBP (British Pound)</option>
+
+<option value="NGN">NGN (Nigerian Naira)</option>
+<option value="ZAR">ZAR (South African Rand)</option>
+<option value="UGX">UGX (Ugandan Shilling)</option>
+<option value="TZS">TZS (Tanzanian Shilling)</option>
+<option value="GHS">GHS (Ghanaian Cedi)</option>
+
+<option value="CAD">CAD (Canadian Dollar)</option>
+<option value="AUD">AUD (Australian Dollar)</option>
+<option value="JPY">JPY (Japanese Yen)</option>
+<option value="CNY">CNY (Chinese Yuan)</option>
+<option value="INR">INR (Indian Rupee)</option>
     </select>
   </div>
 
@@ -9782,14 +9795,25 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </div>
 
-      <div>
-        <label for="billItemType" class="block font-semibold mb-1">Item Type:</label>
-        <select id="billItemType" class="border p-2 rounded" style="width: 700px;" title="Select item type" required>
-          <option value="">Select Item Type</option>
-          <option value="product">Product</option>
-          <option value="service">Service</option>
-        </select>
-      </div>
+     <div>
+  <label for="invoiceItemType" class="block font-semibold mb-1">Item Type:</label>
+  <select id="invoiceItemType" class="border p-2 rounded" style="width: 700px;" title="Select invoice item type" required>
+    <option value="">Select Item Type</option>
+<option value="product">Product</option>
+<option value="service">Service</option>
+<option value="consultation">Consultation</option>
+<option value="subscription">Subscription</option>
+<option value="software">Software</option>
+<option value="maintenance">Maintenance</option>
+<option value="delivery">Delivery</option>
+<option value="installation">Installation</option>
+<option value="rental">Rental</option>
+<option value="training">Training</option>
+<option value="support">Support</option>
+<option value="license">License</option>
+<option value="fee">Fee</option>
+  </select>
+</div>
     
    <div>
   <label for="salePerson" class="block font-semibold mb-1">Sales Person:</label>
@@ -9841,12 +9865,13 @@ document.addEventListener("DOMContentLoaded", () => {
   <button id="saveInvoiceBtn" onclick="saveInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">save Invoice</button>
   </div>
 
-
+<button onclick="bulkDeleteInvoices()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">🗑 Bulk Delete</button>
 <div class="bg-white p-6 rounded shadow">
   <h2 class="text-lg font-semibold mb-4">Invoice List</h2>
   <table class="w-full text-sm border">
     <thead class="bg-gray-100">
       <tr>
+        <th class="p-2"> <input type="checkbox" onclick="toggleAllInvoices(this)"></th>
         <th class="p-2">Invoice #</th>
         <th class="p-2">Date</th>
         <th class="p-2">Customer</th>
@@ -11127,9 +11152,11 @@ button:hover {
 
   <div class="bg-white p-6 rounded shadow">
     <h3 class="text-xl font-semibold mb-4">Quotes List</h3>
+    <button onclick="bulkDeleteQuotes()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Bulk Delete</button>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2"><input type="checkbox" onclick="toggleQuoteSelectAll(this)"></th>
           <th class="p-2">Quote #</th>
           <th class="p-2">Date</th>
           <th class="p-2">Customer</th>
@@ -11143,26 +11170,6 @@ button:hover {
     </table>
   </div>
 
-<div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600">
-  <div>
-    Total Count: <span id="totalCount">0</span>
-  </div>
-  <div>
-    Show 
-    <select id="itemsPerPageSelect" class="border rounded px-1">
-      <option value="25">25</option>
-      <option value="50">50</option>
-      <option value="100">100</option>
-      <option value="200">200</option>
-    </select> 
-    per page
-  </div>
-  <div>
-    <button id="prevPageBtn" class="px-1 py-1 border rounded disabled:opacity-50" disabled>Prev</button>
-    <span id="pageInfo">1 - 0</span>
-    <button id="nextPageBtn" class="px-1 py-1 border rounded disabled:opacity-50" disabled>Next</button>
-  </div>
-</div>
 <div id="quotePreviewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
   <div class="bg-white p-6 rounded-lg w-11/12 max-w-3xl shadow-lg">
     <div class="flex justify-between items-center mb-4">
@@ -11288,6 +11295,27 @@ button:hover {
   <p class="mt-4 text-sm text-center text-gray-700">
   Thank you for doing business with us.
 </p>
+  </div>
+</div>
+
+<div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600">
+  <div>
+    Total Count: <span id="totalCount">0</span>
+  </div>
+  <div>
+    Show 
+    <select id="itemsPerPageSelect" class="border rounded px-1">
+      <option value="25">25</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+      <option value="200">200</option>
+    </select> 
+    per page
+  </div>
+  <div>
+    <button id="prevPageBtn" class="px-1 py-1 border rounded disabled:opacity-50" disabled>Prev</button>
+    <span id="pageInfo">1 - 0</span>
+    <button id="nextPageBtn" class="px-1 py-1 border rounded disabled:opacity-50" disabled>Next</button>
   </div>
 </div>
 </div>
@@ -11507,7 +11535,7 @@ button:hover {
 </style>
 <!-- ✅ CUSTOMER CREDIT NOTES MODULE -->
 <div id="creditNoteTab" class="hidden ml-84 mr-7 p-2">
-  <h2 class="text-2xl font-bold mb-6 text-left">🧾 Customer Credit Notes</h2>
+  <h2 class="text-2xl font-bold mb-6 text-left">Credit Notes</h2>
  <div class="relative mb-3">
   <input 
     type="text" 
@@ -11691,14 +11719,17 @@ button:hover {
     </div>
 
 
-    <button onclick="saveCreditNote()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Credit Note</button>
+    <button onclick="saveCreditNote()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Credit</button>
   </div>
 
   <div class="bg-white p-1 rounded shadow">
     <h3 class="text-lg font-semibold mb-4">Credit Notes List</h3>
+    <div class="mb-2"><button onclick="bulkDeleteCreditNotes()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Bulk Delete</button>
+</div>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2 text-left"><input type="checkbox" id="selectAllCredits" onclick="toggleAllCredits()"></th>
           <th class="p-2 text-left">Credit Note #</th>
           <th class="p-2 text-left">Date</th>
           <th class="p-2 text-left">Customer</th>
@@ -11976,9 +12007,11 @@ button:hover {
 
 <div class="bg-white p-2 rounded shadow">
   <h3 class="text-lg font-semibold mb-4">Sales Return List</h3>
+  <button onclick="bulkDeleteSalesReturns()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900"> Bulk Delete</button>
   <table class="w-full text-sm border">
     <thead class="bg-gray-100">
       <tr>
+        <th><input type="checkbox" id="selectAllSalesReturns" onclick="toggleAllSalesReturns()"></th>
         <th class="p-2">Date</th>
         <th class="p-2">Customer</th>
         <th class="p-2">Account</th>
@@ -12174,9 +12207,11 @@ button:hover {
 
   <div class="bg-white p-1 rounded shadow">
     <h3 class="text-lg font-semibold mb-4">Receipts List</h3>
+    <button onclick="bulkDeleteReceipts()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Bulk Delete</button>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2 text-left"> <input type="checkbox" id="selectAllReceipts" onclick="toggleSelectAllReceipts()" /> </th>
           <th class="p-2 text-left">Date</th>
           <th class="p-2 text-left">Customer</th>
           <th class="p-2 text-left">Amount</th>
@@ -12491,9 +12526,11 @@ button:hover {
 
 <div class="bg-white p-4 rounded shadow">
   <h3 class="text-lg font-semibold mb-2">Delivery History</h3>
+  <button onclick="bulkDeleteDeliveries()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Bulk Delete</button>
   <table class="w-full border text-sm">
     <thead class="bg-gray-100">
       <tr>
+        <th class="p-2 text-left"><input type="checkbox" id="selectAllDeliveries" onclick="toggleSelectAllDeliveries()" /></th>
         <th class="p-2 text-left">Delivery No.</th>
         <th class="p-2 text-left">Customer</th>
         <th class="p-2 text-left">Item</th>
@@ -12591,6 +12628,311 @@ button:hover {
 </p>
   </div>
 </div>
+</div>
+<!-- ✅ RECURRING INVOICE MODULE -->
+<div id="recurringInvoicesTab" class="hidden ml-84 mr-7 p-2">
+
+<div class="relative mb-3">
+  <input 
+    type="text" 
+    id="recurringInvoiceSearch"
+    placeholder="Search Recurring Invoices (/)" 
+    class="border rounded-md pl-8 pr-3 py-1 text-sm w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-400"
+    oninput="searchRecurringInvoices()"
+  />
+  <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="11" cy="11" r="8"></circle>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</div>
+
+<div class="mb-2 relative inline-block text-right">
+  <button id="recurringInvoiceOptionsBtn" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-9 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+    Recurring Invoice Options
+  </button>
+
+  <div id="recurringInvoiceSortDropdown" class="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white hidden z-10">
+    <div class="py-1">
+
+      <button onclick="sortRecurringInvoicesBy('recurringInvoiceNumber')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+        Recurring Invoice Number
+      </button>
+
+      <button onclick="sortRecurringInvoicesBy('recurringCustomer')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+        Customer
+      </button>
+
+      <button onclick="sortRecurringInvoicesBy('amount')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+        Amount
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<div class="relative inline-block text-left">
+  <button id="recurringLeftMenuBtn" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-6 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+    File / Sort Options
+  </button>
+
+  <div id="recurringLeftMenuDropdown" class="absolute left-0 mt-2 w-64 bg-white rounded-md shadow hidden z-10">
+    <div class="py-1">
+
+      <button onclick="sortRecurringInvoicesBy('date')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+        Sort by Date
+      </button>
+
+      <button onclick="importRecurringInvoices()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+        Import Recurring Invoices
+      </button>
+
+      <button onclick="exportRecurringInvoices()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+        Export Recurring Invoices
+      </button>
+
+      <button onclick="cloneRecurringInvoices()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+        Clone Recurring Invoices
+      </button>
+
+      <button onclick="resetRecurringInvoiceColumnWidths()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+        Reset Column Width
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<div class="bg-white p-6 rounded shadow mb-6">
+  <h2 class="text-xl font-bold mb-4">Add Recurring Invoice</h2>
+
+  <input id="recurringInvoiceDate" type="date" class="border p-2 rounded w-full mb-3" />
+
+  <select id="recurringInvoiceRecurrenceType" class="border p-2 rounded w-full mb-2" onchange="toggleRecurrenceFields()">
+    <option value="none">No Recurrence</option>
+    <option value="daily">Daily</option>
+    <option value="weekly">Weekly</option>
+    <option value="monthly">Monthly</option>
+    <option value="yearly">Yearly</option>
+    <option value="custom">Custom Days</option>
+  </select>
+
+  <input id="recurringInvoiceRecurrenceDays" type="number" placeholder="Repeat every X days" class="border p-2 rounded w-full mb-2 hidden" />
+
+  <input id="recurringInvoiceNextDate" type="date" class="border p-2 rounded w-full mb-3" />
+
+  <select id="recurringInvoiceCustomer" class="border p-2 rounded w-full mb-3">
+    <option value="">Select Customer</option>
+  </select>
+
+  <select id="recurringInvoiceNetDays" class="border p-2 rounded w-full mb-3">
+  <option value="">Select Term</option>
+  <option value="0">Due on Receipt</option>
+  <option value="7">7 Days</option>
+  <option value="15">15 Days</option>
+  <option value="30">30 Days</option>
+  <option value="45">45 Days</option>
+  <option value="60">60 Days</option>
+  <option value="90">90 Days</option>
+  <option value="120">120 Days</option>
+  </select>
+
+  <select id="recurringChartAccountSelect" class="border p-2 rounded w-full mb-3">
+    <option value="">Select Account</option>
+  </select>
+
+  <input id="recurringInvoiceNumber" type="text" class="border bg-gray-100 p-2 rounded w-full mb-3" readonly />
+
+  <select id="recurringInvoiceCurrency" class="border p-2 rounded" style="width: 700px;">
+    <option value="KES">KES</option>
+    <option value="USD">USD</option>
+    <option value="EUR">EUR</option>
+    <option value="GBP">GBP</option>
+    <option value="CAD">CAD</option>
+    <option value="AUD">AUD</option>
+    <option value="ZAR">ZAR</option>
+    <option value="NGN">NGN</option>
+    <option value="UGX">UGX</option>
+    <option value="TZS">TZS</option>
+  </select>
+  <div class="mb-3">
+  <label for="recurringInvoiceItemType" class="block font-semibold mb-1">Item Type:</label>
+  <select id="recurringInvoiceItemType" class="border p-2 rounded" style="width: 700px;" title="Select recurring invoice item type" required>
+    <option value="">Select Item Type</option>
+    <option value="product">Product</option>
+    <option value="service">Service</option>
+    <option value="subscription">Subscription</option>
+    <option value="license">License</option>
+    <option value="consulting">Consulting</option>
+    <option value="maintenance">Maintenance</option>
+    <option value="rent">Rent</option>
+    <option value="utility">Utility</option>
+    <option value="support">Support</option>
+    <option value="other">Other</option>
+  </select>
+</div>
+
+  <div class="grid grid-cols-6 gap-2 mb-3">
+    <select id="recurringInvoiceProductSelect" class="border p-2 rounded">
+      <option value="">Select Product</option>
+    </select>
+    <input id="recurringInvoiceItemQty" type="number" placeholder="Qty" class="border p-2 rounded">
+    <input id="recurringInvoiceItemPrice" type="number" placeholder="Price" class="border p-2 rounded">
+    <input id="recurringInvoiceItemDiscount" type="number" placeholder="Disc %" class="border p-2 rounded">
+    <select id="recurringInvoiceItemTax" class="border p-2 rounded">
+      <option value="16">VAT 16%</option>
+      <option value="8">8%</option>
+      <option value="0">Zero Rated</option>
+      <option value="exempt">Exempt</option>
+    </select>
+    <button onclick="addRecurringInvoiceItem()" class="bg-blue-900 text-white px-2 rounded">Add</button>
+  </div>
+
+  <table class="w-full text-sm border mb-3">
+    <thead class="bg-gray-100">
+      <tr>
+        <th>Description</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>VAT</th>
+        <th>Total</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="recurringInvoiceItemTableBody"></tbody>
+  </table>
+
+  <button onclick="saveRecurringInvoice('draft')" class="bg-blue-900 text-white px-3 py-1 rounded">Save Draft</button>
+  <button onclick="saveRecurringInvoice()" class="bg-blue-900 text-white px-3 py-1 rounded">Save Recurring Invoice</button>
+</div>
+
+<button onclick="bulkDeleteRecurringInvoices()" class="bg-blue-900 text-white px-3 py-1 rounded mb-3">Bulk Delete</button>
+
+<div class="bg-white p-6 rounded shadow">
+  <h2 class="text-lg font-semibold mb-4">Recurring Invoice List</h2>
+  <table class="w-full text-sm border">
+    <thead class="bg-gray-100">
+      <tr>
+        <th><input type="checkbox" onclick="toggleAllRecurringInvoices(this)"></th>
+        <th>Recurring Invoice #</th>
+        <th>Date</th>
+        <th>Customer</th>
+        <th>Frequency</th>
+        <th>Next Run</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="recurringInvoiceTable"></tbody>
+  </table>
+</div>
+</div>
+<div id="recurringInvoicePreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded shadow w-full max-w-3xl relative overflow-y-auto max-h-[90vh]">
+    
+    <h3 class="text-xl font-semibold mb-4 text-center">📄 Recurring Invoice Preview</h3>
+
+    <div class="mb-3 flex justify-between items-center">
+      <div>
+        <label for="recurringTemplateSelect" class="font-semibold">Choose Template:</label>
+        <select id="recurringTemplateSelect" onchange="changeRecurringTemplate(this.value)" class="border p-1 rounded">
+          <option value="template-default">Default</option>
+          <option value="template-minimal">Minimal</option>
+          <option value="template-modern">Modern</option>
+          <option value="template-elegant">Elegant</option>
+          <option value="template-bold">Bold</option>
+          <option value="template-corporate">Corporate</option>
+          <option value="template-creative">Creative</option>
+        </select>
+      </div>
+      <div class="space-x-3">
+        <button onclick="printRecurringPreview()" class="px-1 py-1 bg-blue-900 text-white rounded">Print</button>
+        <button onclick="downloadRecurringInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded">Download</button>
+        <button onclick="emailRecurringInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded">Email</button>
+        <button onclick="closeRecurringPreview()" class="px-1 py-1 bg-blue-900 text-white rounded">Close</button>
+      </div>
+    </div>
+
+    <div id="recurringInvoiceTemplateWrapper" class="template-default">
+
+      <div class="flex justify-between mb-4">
+        <div><strong>Recurring Invoice Number:</strong> <span id="previewRecurringInvoiceNumber"></span></div>
+        <div><strong>Date:</strong> <span id="previewRecurringInvoiceDate"></span></div>
+      </div>
+
+      <div class="mb-4">
+        <div class="text-right">
+          <h4 class="font-semibold">Company</h4>
+          <p id="previewRecurringInvoiceCompanyName">My Company Ltd</p>
+          <p>PIN: <span id="previewRecurringInvoiceCompanyPIN">P00000000</span></p>
+          <p>Address: <span id="previewRecurringInvoiceCompanyAddress">123 Business Rd, Nairobi</span></p>
+        </div>
+        
+        <div class="text-left mb-4">
+          <h4 class="font-semibold">Customer</h4>
+          <p id="previewRecurringInvoiceCustomerName"></p>
+          <p>Billing Address: <span id="previewRecurringInvoiceCustomerAddress"></span></p>
+          <p>Phone Number: <span id="previewRecurringInvoiceCustomerPhone"></span></p>
+          <p>PIN: <span id="previewRecurringInvoiceCustomerPIN"></span></p>
+        </div>
+      </div>
+
+      <table class="w-full text-sm border mt-4 border-collapse">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="p-2 border">#</th>
+            <th class="p-2 border">Item Name</th>
+            <th class="p-2 border">Qty</th>
+            <th class="p-2 border">Price (Before VAT)</th>
+            <th class="p-2 border">VAT</th>
+            <th class="p-2 border">Total</th>
+          </tr>
+        </thead>
+        <tbody id="previewRecurringInvoiceItems"></tbody>
+      </table>
+
+      <div class="mt-2 text-right text-sm font-semibold">
+        <p>Amount (Before VAT): <span id="previewRecurringInvoiceSubtotal">KES 0.00</span></p>
+        <p>VAT: <span id="previewRecurringInvoiceVAT">KES 0.00</span></p>
+        <p>Total Amount: <span id="previewRecurringInvoiceTotal">KES 0.00</span></p>
+        <p>Payment Made: <span id="previewRecurringInvoicePaymentMade">KES 0.00</span></p>
+        <p>Balance Due: <span id="previewRecurringInvoiceBalance">KES 0.00</span></p>
+        <p>Status: <span id="previewRecurringInvoicePaymentStatus" class="text-blue-600">Pending</span></p>
+      </div>
+
+      <table class="bank-details">
+        <thead>
+          <tr>
+            <th>BANK NAME</th>
+            <th>BRANCH</th>
+            <th>SWIFT CODE</th>
+            <th>KSH ACC</th>
+            <th>USD ACC</th>
+            <th>EURO ACC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div id="recurringInvoiceQRCode" class="mt-4 text-center">
+        <canvas></canvas>
+        <p id="qrRecurringPlaceholder" class="text-xs text-gray-500 text-center hidden">
+          QR will be generated after ETIMS submission
+        </p>
+      </div>
+
+    </div>
+  </div>
 </div>
 <!-- ✅ CUSTOMER STATEMENT MODULE -->
 <div id="customerStatementTab" class="hidden ml-84 mr-7 p-2">
@@ -12861,11 +13203,38 @@ function editCustomer(index) {
 }
 
 function deleteCustomer(index) {
-  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  let customers = JSON.parse(localStorage.getItem("customers") || "[]");
   const customer = customers[index];
   if (!customer) return;
 
-  if (!confirm("⚠️ Are you sure you want to delete this customer?")) return;
+  const name = customer.name;
+
+  const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+  const creditNotes = JSON.parse(localStorage.getItem("creditNotes") || "[]");
+  const salesReturns = JSON.parse(localStorage.getItem("salesReturns") || "[]");
+
+  const hasInvoices = invoices.some(inv => inv.customer === name);
+  const hasPayments = payments.some(p => p.customer === name);
+  const hasCredits = creditNotes.some(cn => cn.customer === name);
+  const hasReturns = salesReturns.some(sr => sr.customer === name);
+
+  if (hasInvoices || hasPayments || hasCredits || hasReturns) {
+    alert(
+`❌ Cannot delete "${name}"
+
+This customer has existing transactions.
+
+👉 Please delete ALL related records first:
+• Invoices
+• Payments
+• Credit Notes
+• Sales Returns`
+    );
+    return;
+  }
+
+  if (!confirm(`⚠️ Are you sure you want to delete "${name}"?`)) return;
 
   if (!customer.id) customer.id = crypto.randomUUID();
 
@@ -12875,6 +13244,7 @@ function deleteCustomer(index) {
   localStorage.setItem("customers", JSON.stringify(customers));
 
   renderCustomers();
+
   alert("♻️ Customer moved to Recycle Bin.");
 }
 function getSelectedCustomerIds() {
@@ -12998,7 +13368,8 @@ function populateCustomerDropdowns() {
   "#creditCustomer",          
   "#receiptCustomer",        
   "#deliveryCustomer",        
-  "#statementCustomer",      
+  "#statementCustomer", 
+  "#recurringInvoiceCustomer",     
   ".customerDropdown"         
 ];
     dropdownSelectors.forEach(selector => {
@@ -13193,14 +13564,85 @@ function loadPopupTransactions(type, index, element) {
   const c = customers[index];
   if (!c) return;
 
-  const data = c[type] || [];
+  let data = [];
+
+if (type === "invoices") {
+  const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  data = invoices.filter(inv => inv.customer === c.name);
+}
+
+else if (type === "payments") {
+  const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+  data = payments.filter(p => p.customer === c.name);
+}
+
+else if (type === "creditNotes") {
+  const creditNotes = JSON.parse(localStorage.getItem("creditNotes") || "[]");
+  data = creditNotes.filter(cn => cn.customer === c.name);
+}
+
+else if (type === "salesReturns") {
+  const returns = JSON.parse(localStorage.getItem("salesReturns") || "[]");
+  data = returns.filter(r => r.customer === c.name);
+}
+
+else if (type === "quotes") {
+  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+  data = quotes.filter(q => q.customer === c.name);
+}
+else {
+  data = c[type] || [];
+}
 
   const box = document.getElementById("txnBox");
   box.innerHTML = "";
 
-  const title = document.createElement("h3");
-  title.innerText = type.toUpperCase();
-  box.appendChild(title);
+const title = document.createElement("h3");
+
+const titles = {
+  invoices: "Invoices",
+  quotes: "Quotes",
+  payments: "Payments",
+  creditNotes: "Credit Notes",
+  salesReturns: "Sales Returns",
+  deliveryNotes: "Delivery Notes"
+};
+
+title.innerText = titles[type] || type;
+
+box.appendChild(title);
+
+const table = document.createElement("table");
+table.style.width = "100%";
+table.style.borderCollapse = "collapse";
+table.style.marginTop = "10px";
+
+let refLabel = "Reference";
+
+if (type === "invoices") refLabel = "Invoice";
+if (type === "quotes") refLabel = "Quote";
+if (type === "payments") refLabel = "Payment";
+if (type === "creditNotes") refLabel = "Credit Note";
+if (type === "salesReturns") refLabel = "Return";
+if (type === "deliveryNotes") refLabel = "Delivery";
+
+table.innerHTML = `
+<thead>
+  <tr style="background:#f3f4f6;">
+    <th style="padding:8px;border:1px solid #ddd;">${refLabel}</th>
+    <th style="padding:8px;border:1px solid #ddd;">Date</th>
+    <th style="padding:8px;border:1px solid #ddd;">Item</th>
+    <th style="padding:8px;border:1px solid #ddd;">Days Left</th>
+    <th style="padding:8px;border:1px solid #ddd;">Before Tax</th>
+    <th style="padding:8px;border:1px solid #ddd;">Total</th>
+  </tr>
+</thead>
+<tbody id="txnTableBody"></tbody>
+`;
+
+box.appendChild(table);
+
+const tbody = document.getElementById("txnTableBody");
 
   if (!data.length) {
     const empty = document.createElement("p");
@@ -13210,21 +13652,69 @@ function loadPopupTransactions(type, index, element) {
     return;
   }
 
-  data.forEach(item => {
-    const row = document.createElement("div");
+data.forEach(item => {
 
-    row.innerHTML = `<b>${item.number || item.id}</b> - ${item.amount || ""}`;
+  const dueDate = item.dueDate || "";
+  const vat = parseFloat(item.vat || 0);
+  const total = parseFloat(item.total || item.amount || 0);
 
-    Object.assign(row.style, {
-      padding: "8px",
-      borderBottom: "1px solid #eee",
-      cursor: "pointer"
-    });
+  let daysLeft = "-";
 
-    row.onclick = () => openTransaction(type, item.id);
+if (dueDate) {
+  const diff = Math.ceil(
+    (new Date(dueDate) - new Date()) / (1000 * 60 * 60 * 24)
+  );
 
-    box.appendChild(row);
-  });
+  if (diff < 0) {
+    daysLeft = "Overdue " + Math.abs(diff);
+  } else {
+    daysLeft = diff;
+  }
+}
+  const beforeTax = total - vat;
+
+  const itemName = item.items?.[0]?.desc || "-";
+
+  const tr = document.createElement("tr");
+
+  tr.innerHTML = `
+    <td style="padding:8px;border:1px solid #ddd;">
+      ${item.invoiceNumber || item.number || item.id}
+    </td>
+
+    <td style="padding:8px;border:1px solid #ddd;">
+      ${item.date || "-"}
+    </td>
+
+    <td style="padding:8px;border:1px solid #ddd;">
+      ${itemName}
+    </td>
+
+    <td style="padding:8px;border:1px solid #ddd;">
+      ${daysLeft}
+    </td>
+
+    <td style="padding:8px;border:1px solid #ddd;">
+      ${formatCurrency(beforeTax)}
+    </td>
+
+    <td style="padding:8px;border:1px solid #ddd; font-weight:bold;">
+      ${formatCurrency(total)}
+    </td>
+  `;
+
+  tr.style.cursor = "pointer";
+
+  tr.onclick = () => {
+    if (type === "invoices") {
+      previewInvoice(item.id);
+    } else {
+      openTransaction(type, item.id);
+    }
+  };
+
+  tbody.appendChild(tr);
+});
 }
 function openTransaction(type, id) {
   if (type === "invoices") {
@@ -13861,6 +14351,7 @@ function renderInvoices() {
 
         tbody.innerHTML += `
             <tr>
+                <td class="p-2 border"> <input type="checkbox" class="invoiceCheckbox" value="${inv.id}"></td>
                 <td class="p-2 border">${displayInvoiceNumber}</td>
                 <td class="p-2 border">${inv.date || "N/A"}</td>
                 <td class="p-2 border">${inv.customer || "N/A"}</td>
@@ -13886,7 +14377,6 @@ function renderInvoices() {
     });
 }
 
-// Render invoices on page load
 document.addEventListener("DOMContentLoaded", () => {
     renderInvoices();
 });
@@ -13903,7 +14393,52 @@ function getNextControlInvoiceNo(controlUnitNo) {
 
     return String(current).padStart(3, "0");
 }
+function toggleAllInvoices(source) {
+    const checkboxes = document.querySelectorAll(".invoiceCheckbox");
+    checkboxes.forEach(cb => cb.checked = source.checked);
+}
+function bulkDeleteInvoices() {
+    let invoices = JSON.parse(localStorage.getItem("invoices")) || [];
 
+    const selected = Array.from(document.querySelectorAll(".invoiceCheckbox:checked"))
+        .map(cb => parseInt(cb.value));
+
+    if (selected.length === 0) {
+        showNotification("⚠️ No invoices selected.", "warning");
+        return;
+    }
+
+    const firstConfirm = confirm(`You are about to delete ${selected.length} invoice(s).\n\nDo you want to continue?`);
+    if (!firstConfirm) return;
+
+    const secondConfirm = confirm("⚠️ This action is PERMANENT and cannot be undone.\n\nAre you absolutely sure?");
+    if (!secondConfirm) return;
+
+    invoices = invoices.filter(inv => !selected.includes(inv.id));
+
+    localStorage.setItem("invoices", JSON.stringify(invoices));
+
+    renderInvoices();
+
+    showNotification(`✅ ${selected.length} invoice(s) deleted successfully.`, "success");
+}
+function showNotification(message, type = "info") {
+    const div = document.createElement("div");
+
+    let bgColor = "bg-blue-600";
+    if (type === "success") bgColor = "bg-green-600";
+    if (type === "error") bgColor = "bg-red-600";
+    if (type === "warning") bgColor = "bg-yellow-500";
+
+    div.className = `${bgColor} text-white px-4 py-2 rounded shadow fixed top-4 right-4 z-50`;
+    div.innerText = message;
+
+    document.body.appendChild(div);
+
+    setTimeout(() => {
+        div.remove();
+    }, 3000);
+}
 function pushInvoiceToETIMS(invoiceId) {
     const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
     const index = invoices.findIndex(i => i.id === invoiceId);
@@ -15252,6 +15787,597 @@ function resetInvoiceColumnWidths() {
 }
 
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+let quoteItems = [];
+let editingQuoteIndex = null;
+function searchQuotes() {
+  const input = document.getElementById('quoteSearch').value.toLowerCase();
+  const table = document.getElementById('quotesTable'); // tbody
+  const rows = table.querySelectorAll('tr');
+
+  rows.forEach(row => {
+    const text = row.innerText.toLowerCase();
+    row.style.display = text.includes(input) ? '' : 'none';
+  });
+
+  updateQuotePlaceholder();
+}
+
+function updateQuotePlaceholder() {
+  const tbody = document.getElementById('quotesTable');
+  const visibleRows = [...tbody.children].filter(row => row.style.display !== 'none');
+
+  const oldPlaceholder = tbody.querySelector('.placeholder');
+  if (oldPlaceholder) oldPlaceholder.remove();
+
+  if (visibleRows.length === 0) {
+    const placeholder = document.createElement('tr');
+    placeholder.classList.add('placeholder');
+    placeholder.innerHTML = `<td colspan="8" class="text-center text-gray-500 p-2">No quotes found</td>`;
+    tbody.appendChild(placeholder);
+  }
+}
+function loadQuoteCustomers() {
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  const dropdown = document.getElementById("quoteCustomer");
+  dropdown.innerHTML = '<option value="">Select Customer</option>';
+  customers.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.name;
+    opt.textContent = c.name;
+    dropdown.appendChild(opt);
+  });
+}
+
+function populateChartOfAccountDropdown() {
+  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+  const select = document.getElementById("quoteChartAccount");
+
+  select.innerHTML = '<option value="">Select Account</option>';
+
+  const allowedTypes = [
+    "Income", "Sales", "Other Income", "Interest Income", "Commission Income",
+    "Asset", "Other Asset", "Other Current Asset", "Fixed Assets", "Stock",
+    "Cash", "Banks", "Accounts Receivable", "Investment Property"
+  ];
+
+  accounts
+    .filter(acc => allowedTypes.includes(acc.type)) 
+    .forEach(acc => {
+      const option = document.createElement("option");
+      option.value = acc.name; 
+      option.textContent = `${acc.name} (${acc.code})`;
+      select.appendChild(option);
+    });
+}
+
+document.addEventListener("DOMContentLoaded", populateChartOfAccountDropdown);
+
+function populateQuoteProductDropdown() {
+  const productSelect = document.getElementById("quoteProductSelect");
+  if (!productSelect) return;
+
+  productSelect.innerHTML = '<option value="">Select Product</option>';
+
+ 
+  const allInventory = getAllInventories();
+
+  allInventory.forEach(item => {
+    const option = document.createElement("option");
+    option.value = JSON.stringify({ name: item.name, warehouse: item.warehouse });
+    option.textContent = `${item.name} — ${item.warehouse} (Qty: ${item.qty}) - ${formatCurrency(item.sellPrice)}`;
+    option.dataset.price = item.sellPrice || 0;
+    option.dataset.qty = item.qty || 0;
+    productSelect.appendChild(option);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const productSelect = document.getElementById("quoteProductSelect");
+  if (productSelect) {
+    productSelect.addEventListener("change", function() {
+      const selected = this.selectedOptions[0];
+      if (selected && selected.dataset.price) {
+        document.getElementById("quoteItemPrice").value = parseFloat(selected.dataset.price).toFixed(2);
+        document.getElementById("quoteItemQty").value = 1;
+      } else {
+        document.getElementById("quoteItemPrice").value = "";
+        document.getElementById("quoteItemQty").value = "";
+      }
+    });
+  }
+
+  loadQuoteCustomers();
+  populateChartOfAccountDropdown();
+  populateQuoteProductDropdown();
+  renderQuotes();
+  renderCustomerQuotesReport();
+  generateQuoteNumber();
+});
+
+
+function generateQuoteNumber() {
+  let quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+  let lastNumber = 0;
+  if (quotes.length > 0) {
+    const lastQuote = quotes[quotes.length - 1];
+    const match = lastQuote.quoteNumber?.match(/QU(\d+)/);
+    if (match) lastNumber = parseInt(match[1]);
+  }
+  const newNumber = lastNumber + 1;
+  const formattedNumber = `QU${newNumber.toString().padStart(4, '0')}`;
+  document.getElementById("quoteNumber").value = formattedNumber;
+  return formattedNumber;
+}
+
+function addQuoteItem() {
+  const productSelect = document.getElementById("quoteProductSelect");
+  const selected = productSelect.options[productSelect.selectedIndex];
+  if (!selected || !selected.value) return alert("Select a product.");
+
+  const productData = JSON.parse(selected.value);
+
+  const qty = parseFloat(document.getElementById("quoteItemQty").value);
+  const price = parseFloat(document.getElementById("quoteItemPrice").value);
+  const discount = parseFloat(document.getElementById("quoteItemDiscount").value) || 0;
+  const vatRate = parseFloat(document.getElementById("quoteItemTax").value) || 0;
+
+  if (!qty || !price) return alert("Enter quantity & price.");
+
+  const subtotal = qty * price * (1 - discount/100);
+  const vat = subtotal * (vatRate/100);
+
+  quoteItems.push({ 
+    desc: productData.name, 
+    warehouse: productData.warehouse, 
+    qty, price, discount, subtotal, vat 
+  });
+
+  renderQuoteItems();
+
+  productSelect.value = "";
+  document.getElementById("quoteItemQty").value = "";
+  document.getElementById("quoteItemPrice").value = "";
+  document.getElementById("quoteItemDiscount").value = "";
+  document.getElementById("quoteItemTax").value = "";
+}
+
+function renderQuoteItems() {
+  const tbody = document.querySelector("#quoteItemsTable tbody");
+  tbody.innerHTML = "";
+
+  quoteItems.forEach((item, index) => {
+    const row = `
+      <tr>
+        <td class="p-2">${item.desc} (${item.warehouse})</td>
+        <td class="p-2">${item.qty}</td>
+        <td class="p-2">${formatCurrency(item.price)}</td>
+        <td class="p-2">${item.discount || 0}%</td>
+        <td class="p-2">${formatCurrency(item.vat)}</td>
+        <td class="p-2">${formatCurrency(item.subtotal)}</td>
+        <td class="p-2 space-x-2">
+          <button 
+            onclick="editQuoteItem(${index})" 
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+            Edit
+          </button>
+
+          <button 
+            onclick="removeQuoteItem(${index})" 
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+            Remove
+          </button>
+        </td>
+      </tr>`;
+    tbody.innerHTML += row;
+  });
+
+  const totalVAT = quoteItems.reduce((sum, i) => sum + i.vat, 0);
+  const totalAmount = quoteItems.reduce((sum, i) => sum + i.subtotal + i.vat, 0);
+
+  document.getElementById("quoteVAT").value = totalVAT;
+  document.getElementById("quoteTotal").value = totalAmount;
+
+  document.getElementById("quoteVAT").setAttribute("data-amount", totalVAT);
+  document.getElementById("quoteTotal").setAttribute("data-amount", totalAmount);
+
+  applyCurrency();
+}
+
+function removeQuoteItem(index) {
+  quoteItems.splice(index, 1);
+  renderQuoteItems();
+}
+function editQuoteItem(index) {
+  const item = quoteItems[index];
+
+  editingIndex = index;
+
+  document.getElementById("itemDesc").value = item.desc;
+  document.getElementById("itemWarehouse").value = item.warehouse;
+  document.getElementById("itemQty").value = item.qty;
+  document.getElementById("itemPrice").value = item.price;
+  document.getElementById("itemDiscount").value = item.discount || 0;
+}
+function saveQuote() {
+  const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || "{}");
+  const role = loggedInUser.role || "";
+
+  if (!editingQuoteIndex && role !== "admin" && role !== "sales") {
+    return alert("🚫 Only admins and sales can create quotes.");
+  }
+
+  const quoteNumber = document.getElementById("quoteNumber").value || generateQuoteNumber();
+  const date = document.getElementById("quoteDate").value;
+  const customer = document.getElementById("quoteCustomer").value;
+  const account = document.getElementById("quoteChartAccount").value;
+  const validity = document.getElementById("quoteValidity") ? document.getElementById("quoteValidity").value : "";
+  const vat = parseFloat(document.getElementById("quoteVAT").value) || 0;
+  const notesField = document.getElementById("quoteNotes");
+  const notes = notesField ? notesField.value : "";
+
+  if (!date || !customer || !account || quoteItems.length === 0) {
+    return alert("Fill all required fields.");
+  }
+
+
+  if (editingQuoteIndex !== null && role !== "admin") {
+    return alert("🚫 Only admins can edit quotes.");
+  }
+
+  const total = quoteItems.reduce((sum, i) => sum + i.subtotal + i.vat, 0);
+  const quote = { quoteNumber, date, customer, account, validity, vat, notes, items: [...quoteItems], total };
+
+  let quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+
+  if (editingQuoteIndex !== null) {
+    quotes[editingQuoteIndex] = quote;
+    editingQuoteIndex = null;
+  } else {
+    quotes.push(quote);
+  }
+
+  localStorage.setItem("quotes", JSON.stringify(quotes));
+  quoteItems = [];
+  renderQuoteItems();
+  renderQuotes();
+  renderCustomerQuotesReport();
+
+  document.getElementById("quoteDate").value = "";
+  document.getElementById("quoteCustomer").value = "";
+  document.getElementById("quoteChartAccount").value = "";
+  if (document.getElementById("quoteValidity")) document.getElementById("quoteValidity").value = "";
+  if (notesField) notesField.value = "";
+  document.getElementById("quoteItemDiscount").value = "";
+  document.getElementById("quoteItemTax").value = "";
+  generateQuoteNumber();
+
+  const saveBtn = document.querySelector('button[onclick="saveQuote()"]');
+  if (saveBtn) saveBtn.textContent = "Save Quote";
+}
+function renderCustomerQuotesReport() {
+  const tbody = document.getElementById("customerQuotesBody");
+  if (!tbody) return;
+
+  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+  tbody.innerHTML = "";
+
+  quotes.forEach(q => {
+    const totalAmount = q.items.reduce((sum, i) => sum + i.subtotal + i.vat, 0);
+    tbody.innerHTML += `
+      <tr>
+        <td class="p-2">${q.quoteNumber}</td>
+        <td class="p-2">${q.customer}</td>
+        <td class="p-2">${q.items.map(i => i.desc).join(", ")}</td>
+        <td class="p-2">${q.items.reduce((sum, i) => sum + i.qty, 0)}</td>
+        <td class="p-2">${formatCurrency(q.items.reduce((sum, i) => sum + i.price, 0))}</td>
+        <td class="p-2">${formatCurrency(totalAmount)}</td>
+        <td class="p-2">${q.date}</td>
+        <td class="p-2">${q.validity || ""}</td>
+        <td class="p-2">${q.status || "Pending"}</td>
+      </tr>
+    `;
+  });
+}
+function editQuote(index) {
+  const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || "{}");
+  const role = loggedInUser.role || "";
+
+  if (role !== "admin") {
+    return alert("🚫 Only admins can edit quotes.");
+  }
+
+  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+  const q = quotes[index];
+  if (!q) return;
+
+  editingQuoteIndex = index;
+
+  document.getElementById("quoteNumber").value = q.quoteNumber || "";
+  document.getElementById("quoteDate").value = q.date || "";
+  document.getElementById("quoteCustomer").value = q.customer || "";
+  document.getElementById("quoteChartAccount").value = q.account || "";
+  if (document.getElementById("quoteValidity")) document.getElementById("quoteValidity").value = q.validity || "";
+  if (document.getElementById("quoteNotes")) document.getElementById("quoteNotes").value = q.notes || "";
+
+  quoteItems = Array.isArray(q.items) ? q.items : [];
+  renderQuoteItems();
+
+  const saveBtn = document.querySelector('button[onclick="saveQuote()"]');
+  if (saveBtn) saveBtn.textContent = "Update Quote";
+
+  const tab = document.getElementById("quotesTab");
+  if (tab && tab.scrollIntoView) tab.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function deleteQuote(index) {
+  const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || "{}");
+  const role = loggedInUser.role || "";
+
+  if (role !== "admin") {
+    return alert("🚫 Only admins can delete quotes.");
+  }
+
+  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+  const q = quotes[index];
+  if (!q) return;
+
+  if (!confirm(`Delete quote ${q.quoteNumber}?`)) return;
+
+  if (!q.id) q.id = crypto.randomUUID();
+
+  moveToRecycle(q, "File", "Quotes");
+
+  quotes.splice(index, 1);
+  localStorage.setItem("quotes", JSON.stringify(quotes));
+
+  renderQuotes();
+
+  if (editingQuoteIndex === index) {
+    editingQuoteIndex = null;
+    quoteItems = [];
+    renderQuoteItems();
+    generateQuoteNumber();
+    renderCustomerQuotesReport();
+    const saveBtn = document.querySelector('button[onclick="saveQuote()"]');
+    if (saveBtn) saveBtn.textContent = "Save Quote";
+  }
+
+  alert("♻️ Quote moved to Recycle Bin.");
+}
+
+function renderQuotes() {
+  const tbody = document.getElementById("quoteTable");
+  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+
+  tbody.innerHTML = "";
+  quotes.forEach((q, index) => {
+    const row = `
+      <tr>
+        <td class="p-2">
+      <input type="checkbox" class="quoteCheck" data-index="${index}">
+    </td>
+        <td class="p-2">${q.quoteNumber}</td>
+        <td class="p-2">${q.date}</td>
+        <td class="p-2">${q.customer}</td>
+        <td class="p-2">${q.validity || ""}</td>
+        <td class="p-2">${formatCurrency(q.total || 0)}</td>
+        <td class="p-2">${formatCurrency(q.vat || 0)}</td>
+        <td class="p-2 space-x-2">
+          <button onclick="previewQuote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Preview</button>
+          <button onclick="editQuote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Edit</button>
+          <button onclick="deleteQuote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Delete</button>
+          <button onclick="convertQuote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Convert</button>
+          <button onclick="shareQuote(${index})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Share</button>
+          <button onclick="emailQuote(${index})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button>
+        </td>
+      </tr>`;
+    tbody.innerHTML += row;
+  });
+}
+function toggleQuoteSelectAll(master) {
+  document.querySelectorAll(".quoteCheck")
+    .forEach(cb => cb.checked = master.checked);
+}
+function bulkDeleteQuotes() {
+  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+  const checked = document.querySelectorAll(".quoteCheck:checked");
+
+  if (checked.length === 0) {
+    alert("No quotes selected");
+    return;
+  }
+
+  const step1 = confirm(`⚠️ You are about to delete ${checked.length} quotes. Continue?`);
+  if (!step1) return;
+
+  const typed = prompt(`Type DELETE to confirm permanent removal of ${checked.length} quotes:`);
+
+  if (typed !== "DELETE") {
+    alert("❌ Action cancelled. You did not type DELETE correctly.");
+    return;
+  }
+
+  const indexes = [...checked].map(cb => parseInt(cb.dataset.index));
+
+  indexes.sort((a, b) => b - a).forEach(i => {
+    quotes.splice(i, 1);
+  });
+
+  localStorage.setItem("quotes", JSON.stringify(quotes));
+  renderQuotes();
+
+  alert("✅ Selected quotes deleted successfully.");
+}
+function convertQuote(index) {
+  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+  const quote = quotes[index];
+  if (!quote) return alert("Quote not found.");
+
+  localStorage.setItem("quoteToInvoice", JSON.stringify(quote));
+  showTab("invoicesTab");
+
+  setTimeout(loadQuoteIntoInvoice, 150);
+}
+function previewQuote(index) {
+  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+  const quote = quotes[index];
+  if (!quote) return alert("Quote not found!");
+
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  const customer = customers.find(c => c.name === quote.customer) || {};
+
+  const orgInfo = JSON.parse(localStorage.getItem("orgInfo") || "{}");
+
+  // Header info
+  document.getElementById("previewQuoteNumber").textContent = quote.quoteNumber || "N/A";
+  document.getElementById("previewQuoteDate").textContent = quote.date || "N/A";
+  document.getElementById("previewQuoteCompanyName").textContent = orgInfo.name || "My Company Ltd";
+  document.getElementById("previewQuoteCompanyPIN").textContent = orgInfo.kraPin || "P00000000";
+  document.getElementById("previewQuoteCompanyAddress").textContent = orgInfo.address || "123 Business Rd, Nairobi";
+
+  document.getElementById("previewQuoteCustomerName").textContent = customer.name || quote.customer;
+  document.getElementById("previewQuoteCustomerPIN").textContent = customer.kraPin || "";
+  document.getElementById("previewQuoteCustomerAddress").textContent = customer.address || "";
+
+  // Items table
+  const tbody = document.getElementById("previewQuoteItems");
+  tbody.innerHTML = "";
+
+  let subtotal = 0;
+  let totalVAT = 0;
+
+  if (Array.isArray(quote.items)) {
+    quote.items.forEach(item => {
+      const qty = parseFloat(item.qty) || 0;
+      const price = parseFloat(item.price) || 0;
+      const vat = parseFloat(item.vat) || 0;
+      const total = qty * price + vat;
+
+      subtotal += qty * price;
+      totalVAT += vat;
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td class="p-2 border">${item.desc || "-"}</td>
+        <td class="p-2 border">${qty}</td>
+        <td class="p-2 border">${formatCurrency(price)}</td>
+        <td class="p-2 border">${formatCurrency(vat)}</td>
+        <td class="p-2 border">${formatCurrency(total)}</td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  const grandTotal = subtotal + totalVAT;
+
+  document.getElementById("previewQuoteSubtotal").textContent = formatCurrency(subtotal);
+  document.getElementById("previewQuoteVAT").textContent = formatCurrency(totalVAT);
+  document.getElementById("previewQuoteTotal").textContent = formatCurrency(grandTotal);
+
+  // QR code SAFE (prevents crash)
+  const qrData = `Quote: ${quote.quoteNumber}
+Total: ${formatCurrency(grandTotal)}
+Company: ${orgInfo.name || "My Company Ltd"}`;
+
+  try {
+    const qrCanvas = document.getElementById("quoteQRCode");
+    if (window.QRCode && qrCanvas) {
+      QRCode.toCanvas(qrCanvas, qrData, { width: 120 });
+    }
+  } catch (e) {
+    console.log("QR generation failed but preview still works", e);
+  }
+
+  // ALWAYS open modal last
+  const modal = document.getElementById("quotePreviewModal");
+  if (modal) {
+    modal.classList.remove("hidden");
+  } else {
+    console.error("Quote preview modal not found");
+  }
+}
+function closeQuotePreview() {
+  document.getElementById("quotePreviewModal").classList.add("hidden");
+}
+
+function printQuotePreview() {
+  const modalContent = document.querySelector("#quotePreviewModal > div").innerHTML;
+  const printWindow = window.open("", "", "width=800,height=600");
+  printWindow.document.write(`<html><head><title>Print Quote</title></head><body>${modalContent}</body></html>`);
+  printWindow.document.close();
+  printWindow.print();
+}
+function shareQuote(index) {
+  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+  const quote = quotes[index];
+  if (!quote) return alert("Quote not found.");
+
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  const customer = customers.find(c => c.name === quote.customer);
+  if (!customer || !customer.phone) {
+    return alert("Customer phone number not found.");
+  }
+
+  let phone = customer.phone.replace(/\D/g, "");
+
+  if (phone.startsWith("07")) {
+    phone = "254" + phone.substring(1);
+  }
+
+  const quoteNumber = quote.quoteNumber || `QT-${index + 1}`;
+  const total = Number(quote.total) || 0;
+
+  const message =
+`Hello ${customer.name},
+
+Your Quotation ${quoteNumber}
+Date: ${quote.date}
+Total: ${formatCurrency(total, quote.currency)}
+
+Please review and let us know if you would like to proceed.`;
+
+  const whatsappURL =
+    `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+  window.open(whatsappURL, "_blank");
+}
+function emailQuote(index) {
+  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+  const quote = quotes[index];
+  if (!quote) return alert("Quote not found.");
+
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  const customer = customers.find(c => c.name === quote.customer);
+  if (!customer || !customer.primaryEmail) {
+    return alert("Customer email not found.");
+  }
+
+  const quoteNumber = quote.quoteNumber || `QT-${index + 1}`;
+  const total = Number(quote.total) || 0;
+
+  const subject = `Quotation ${quoteNumber}`;
+  const body =
+`Hello ${customer.name},
+
+Please find your quotation details below:
+
+Quote Number: ${quoteNumber}
+Quote Date: ${quote.date}
+Total Amount: ${formatCurrency(total, quote.currency)}
+
+We look forward to doing business with you.
+
+${JSON.parse(localStorage.getItem("orgInfo") || "{}").name || ""}
+`;
+
+  const mailtoLink =
+    `mailto:${customer.primaryEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  window.location.href = mailtoLink;
+}
+</script>
 <script>
 
 let bulkInvoiceItems = [];
@@ -15877,543 +17003,7 @@ window.addEventListener("orgSettingsChanged", () => {
   renderBulkInvoices();
 });
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script>
-let quoteItems = [];
-let editingQuoteIndex = null;
-function searchQuotes() {
-  const input = document.getElementById('quoteSearch').value.toLowerCase();
-  const table = document.getElementById('quotesTable'); // tbody
-  const rows = table.querySelectorAll('tr');
 
-  rows.forEach(row => {
-    const text = row.innerText.toLowerCase();
-    row.style.display = text.includes(input) ? '' : 'none';
-  });
-
-  updateQuotePlaceholder();
-}
-
-function updateQuotePlaceholder() {
-  const tbody = document.getElementById('quotesTable');
-  const visibleRows = [...tbody.children].filter(row => row.style.display !== 'none');
-
-  const oldPlaceholder = tbody.querySelector('.placeholder');
-  if (oldPlaceholder) oldPlaceholder.remove();
-
-  if (visibleRows.length === 0) {
-    const placeholder = document.createElement('tr');
-    placeholder.classList.add('placeholder');
-    placeholder.innerHTML = `<td colspan="8" class="text-center text-gray-500 p-2">No quotes found</td>`;
-    tbody.appendChild(placeholder);
-  }
-}
-function loadQuoteCustomers() {
-  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-  const dropdown = document.getElementById("quoteCustomer");
-  dropdown.innerHTML = '<option value="">Select Customer</option>';
-  customers.forEach(c => {
-    const opt = document.createElement("option");
-    opt.value = c.name;
-    opt.textContent = c.name;
-    dropdown.appendChild(opt);
-  });
-}
-
-function populateChartOfAccountDropdown() {
-  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
-  const select = document.getElementById("quoteChartAccount");
-
-  select.innerHTML = '<option value="">Select Account</option>';
-
-  const allowedTypes = [
-    "Income", "Sales", "Other Income", "Interest Income", "Commission Income",
-    "Asset", "Other Asset", "Other Current Asset", "Fixed Assets", "Stock",
-    "Cash", "Banks", "Accounts Receivable", "Investment Property"
-  ];
-
-  accounts
-    .filter(acc => allowedTypes.includes(acc.type)) 
-    .forEach(acc => {
-      const option = document.createElement("option");
-      option.value = acc.name; 
-      option.textContent = `${acc.name} (${acc.code})`;
-      select.appendChild(option);
-    });
-}
-
-document.addEventListener("DOMContentLoaded", populateChartOfAccountDropdown);
-
-function populateQuoteProductDropdown() {
-  const productSelect = document.getElementById("quoteProductSelect");
-  if (!productSelect) return;
-
-  productSelect.innerHTML = '<option value="">Select Product</option>';
-
- 
-  const allInventory = getAllInventories();
-
-  allInventory.forEach(item => {
-    const option = document.createElement("option");
-    option.value = JSON.stringify({ name: item.name, warehouse: item.warehouse });
-    option.textContent = `${item.name} — ${item.warehouse} (Qty: ${item.qty}) - ${formatCurrency(item.sellPrice)}`;
-    option.dataset.price = item.sellPrice || 0;
-    option.dataset.qty = item.qty || 0;
-    productSelect.appendChild(option);
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const productSelect = document.getElementById("quoteProductSelect");
-  if (productSelect) {
-    productSelect.addEventListener("change", function() {
-      const selected = this.selectedOptions[0];
-      if (selected && selected.dataset.price) {
-        document.getElementById("quoteItemPrice").value = parseFloat(selected.dataset.price).toFixed(2);
-        document.getElementById("quoteItemQty").value = 1;
-      } else {
-        document.getElementById("quoteItemPrice").value = "";
-        document.getElementById("quoteItemQty").value = "";
-      }
-    });
-  }
-
-  loadQuoteCustomers();
-  populateChartOfAccountDropdown();
-  populateQuoteProductDropdown();
-  renderQuotes();
-  renderCustomerQuotesReport();
-  generateQuoteNumber();
-});
-
-
-function generateQuoteNumber() {
-  let quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-  let lastNumber = 0;
-  if (quotes.length > 0) {
-    const lastQuote = quotes[quotes.length - 1];
-    const match = lastQuote.quoteNumber?.match(/QU(\d+)/);
-    if (match) lastNumber = parseInt(match[1]);
-  }
-  const newNumber = lastNumber + 1;
-  const formattedNumber = `QU${newNumber.toString().padStart(4, '0')}`;
-  document.getElementById("quoteNumber").value = formattedNumber;
-  return formattedNumber;
-}
-
-function addQuoteItem() {
-  const productSelect = document.getElementById("quoteProductSelect");
-  const selected = productSelect.options[productSelect.selectedIndex];
-  if (!selected || !selected.value) return alert("Select a product.");
-
-  const productData = JSON.parse(selected.value);
-
-  const qty = parseFloat(document.getElementById("quoteItemQty").value);
-  const price = parseFloat(document.getElementById("quoteItemPrice").value);
-  const discount = parseFloat(document.getElementById("quoteItemDiscount").value) || 0;
-  const vatRate = parseFloat(document.getElementById("quoteItemTax").value) || 0;
-
-  if (!qty || !price) return alert("Enter quantity & price.");
-
-  const subtotal = qty * price * (1 - discount/100);
-  const vat = subtotal * (vatRate/100);
-
-  quoteItems.push({ 
-    desc: productData.name, 
-    warehouse: productData.warehouse, 
-    qty, price, discount, subtotal, vat 
-  });
-
-  renderQuoteItems();
-
-  productSelect.value = "";
-  document.getElementById("quoteItemQty").value = "";
-  document.getElementById("quoteItemPrice").value = "";
-  document.getElementById("quoteItemDiscount").value = "";
-  document.getElementById("quoteItemTax").value = "";
-}
-
-function renderQuoteItems() {
-  const tbody = document.querySelector("#quoteItemsTable tbody");
-  tbody.innerHTML = "";
-
-  quoteItems.forEach((item, index) => {
-    const row = `
-      <tr>
-        <td class="p-2">${item.desc} (${item.warehouse})</td>
-        <td class="p-2">${item.qty}</td>
-        <td class="p-2">${formatCurrency(item.price)}</td>
-        <td class="p-2">${item.discount || 0}%</td>
-        <td class="p-2">${formatCurrency(item.vat)}</td>
-        <td class="p-2">${formatCurrency(item.subtotal)}</td>
-        <td class="p-2 space-x-2">
-          <button 
-            onclick="editQuoteItem(${index})" 
-            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
-            Edit
-          </button>
-
-          <button 
-            onclick="removeQuoteItem(${index})" 
-            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
-            Remove
-          </button>
-        </td>
-      </tr>`;
-    tbody.innerHTML += row;
-  });
-
-  const totalVAT = quoteItems.reduce((sum, i) => sum + i.vat, 0);
-  const totalAmount = quoteItems.reduce((sum, i) => sum + i.subtotal + i.vat, 0);
-
-  document.getElementById("quoteVAT").value = totalVAT;
-  document.getElementById("quoteTotal").value = totalAmount;
-
-  document.getElementById("quoteVAT").setAttribute("data-amount", totalVAT);
-  document.getElementById("quoteTotal").setAttribute("data-amount", totalAmount);
-
-  applyCurrency();
-}
-
-function removeQuoteItem(index) {
-  quoteItems.splice(index, 1);
-  renderQuoteItems();
-}
-function editQuoteItem(index) {
-  const item = quoteItems[index];
-
-  editingIndex = index;
-
-  document.getElementById("itemDesc").value = item.desc;
-  document.getElementById("itemWarehouse").value = item.warehouse;
-  document.getElementById("itemQty").value = item.qty;
-  document.getElementById("itemPrice").value = item.price;
-  document.getElementById("itemDiscount").value = item.discount || 0;
-}
-function saveQuote() {
-  const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || "{}");
-  const role = loggedInUser.role || "";
-
-  if (!editingQuoteIndex && role !== "admin" && role !== "sales") {
-    return alert("🚫 Only admins and sales can create quotes.");
-  }
-
-  const quoteNumber = document.getElementById("quoteNumber").value || generateQuoteNumber();
-  const date = document.getElementById("quoteDate").value;
-  const customer = document.getElementById("quoteCustomer").value;
-  const account = document.getElementById("quoteChartAccount").value;
-  const validity = document.getElementById("quoteValidity") ? document.getElementById("quoteValidity").value : "";
-  const vat = parseFloat(document.getElementById("quoteVAT").value) || 0;
-  const notesField = document.getElementById("quoteNotes");
-  const notes = notesField ? notesField.value : "";
-
-  if (!date || !customer || !account || quoteItems.length === 0) {
-    return alert("Fill all required fields.");
-  }
-
-
-  if (editingQuoteIndex !== null && role !== "admin") {
-    return alert("🚫 Only admins can edit quotes.");
-  }
-
-  const total = quoteItems.reduce((sum, i) => sum + i.subtotal + i.vat, 0);
-  const quote = { quoteNumber, date, customer, account, validity, vat, notes, items: [...quoteItems], total };
-
-  let quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-
-  if (editingQuoteIndex !== null) {
-    quotes[editingQuoteIndex] = quote;
-    editingQuoteIndex = null;
-  } else {
-    quotes.push(quote);
-  }
-
-  localStorage.setItem("quotes", JSON.stringify(quotes));
-  quoteItems = [];
-  renderQuoteItems();
-  renderQuotes();
-  renderCustomerQuotesReport();
-
-  document.getElementById("quoteDate").value = "";
-  document.getElementById("quoteCustomer").value = "";
-  document.getElementById("quoteChartAccount").value = "";
-  if (document.getElementById("quoteValidity")) document.getElementById("quoteValidity").value = "";
-  if (notesField) notesField.value = "";
-  document.getElementById("quoteItemDiscount").value = "";
-  document.getElementById("quoteItemTax").value = "";
-  generateQuoteNumber();
-
-  const saveBtn = document.querySelector('button[onclick="saveQuote()"]');
-  if (saveBtn) saveBtn.textContent = "Save Quote";
-}
-function renderCustomerQuotesReport() {
-  const tbody = document.getElementById("customerQuotesBody");
-  if (!tbody) return;
-
-  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-  tbody.innerHTML = "";
-
-  quotes.forEach(q => {
-    const totalAmount = q.items.reduce((sum, i) => sum + i.subtotal + i.vat, 0);
-    tbody.innerHTML += `
-      <tr>
-        <td class="p-2">${q.quoteNumber}</td>
-        <td class="p-2">${q.customer}</td>
-        <td class="p-2">${q.items.map(i => i.desc).join(", ")}</td>
-        <td class="p-2">${q.items.reduce((sum, i) => sum + i.qty, 0)}</td>
-        <td class="p-2">${formatCurrency(q.items.reduce((sum, i) => sum + i.price, 0))}</td>
-        <td class="p-2">${formatCurrency(totalAmount)}</td>
-        <td class="p-2">${q.date}</td>
-        <td class="p-2">${q.validity || ""}</td>
-        <td class="p-2">${q.status || "Pending"}</td>
-      </tr>
-    `;
-  });
-}
-function editQuote(index) {
-  const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || "{}");
-  const role = loggedInUser.role || "";
-
-  if (role !== "admin") {
-    return alert("🚫 Only admins can edit quotes.");
-  }
-
-  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-  const q = quotes[index];
-  if (!q) return;
-
-  editingQuoteIndex = index;
-
-  document.getElementById("quoteNumber").value = q.quoteNumber || "";
-  document.getElementById("quoteDate").value = q.date || "";
-  document.getElementById("quoteCustomer").value = q.customer || "";
-  document.getElementById("quoteChartAccount").value = q.account || "";
-  if (document.getElementById("quoteValidity")) document.getElementById("quoteValidity").value = q.validity || "";
-  if (document.getElementById("quoteNotes")) document.getElementById("quoteNotes").value = q.notes || "";
-
-  quoteItems = Array.isArray(q.items) ? q.items : [];
-  renderQuoteItems();
-
-  const saveBtn = document.querySelector('button[onclick="saveQuote()"]');
-  if (saveBtn) saveBtn.textContent = "Update Quote";
-
-  const tab = document.getElementById("quotesTab");
-  if (tab && tab.scrollIntoView) tab.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function deleteQuote(index) {
-  const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || "{}");
-  const role = loggedInUser.role || "";
-
-  if (role !== "admin") {
-    return alert("🚫 Only admins can delete quotes.");
-  }
-
-  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-  const q = quotes[index];
-  if (!q) return;
-
-  if (!confirm(`Delete quote ${q.quoteNumber}?`)) return;
-
-  if (!q.id) q.id = crypto.randomUUID();
-
-  moveToRecycle(q, "File", "Quotes");
-
-  quotes.splice(index, 1);
-  localStorage.setItem("quotes", JSON.stringify(quotes));
-
-  renderQuotes();
-
-  if (editingQuoteIndex === index) {
-    editingQuoteIndex = null;
-    quoteItems = [];
-    renderQuoteItems();
-    generateQuoteNumber();
-    renderCustomerQuotesReport();
-    const saveBtn = document.querySelector('button[onclick="saveQuote()"]');
-    if (saveBtn) saveBtn.textContent = "Save Quote";
-  }
-
-  alert("♻️ Quote moved to Recycle Bin.");
-}
-
-function renderQuotes() {
-  const tbody = document.getElementById("quoteTable");
-  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-
-  tbody.innerHTML = "";
-  quotes.forEach((q, index) => {
-    const row = `
-      <tr>
-        <td class="p-2">${q.quoteNumber}</td>
-        <td class="p-2">${q.date}</td>
-        <td class="p-2">${q.customer}</td>
-        <td class="p-2">${q.validity || ""}</td>
-        <td class="p-2">${formatCurrency(q.total || 0)}</td>
-        <td class="p-2">${formatCurrency(q.vat || 0)}</td>
-        <td class="p-2 space-x-2">
-          <button onclick="previewQuote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Preview</button>
-          <button onclick="editQuote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Edit</button>
-          <button onclick="deleteQuote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Delete</button>
-          <button onclick="convertQuote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Convert</button>
-          <button onclick="shareQuote(${index})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Share</button>
-          <button onclick="emailQuote(${index})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button>
-        </td>
-      </tr>`;
-    tbody.innerHTML += row;
-  });
-}
-function convertQuote(index) {
-  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-  const quote = quotes[index];
-  if (!quote) return alert("Quote not found.");
-
-  localStorage.setItem("quoteToInvoice", JSON.stringify(quote));
-  showTab("invoicesTab");
-
-  setTimeout(loadQuoteIntoInvoice, 150);
-}
-function previewQuote(id) {
-  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-  const quote = quotes[id];
-  if (!quote) return alert("Quote not found!");
-
-  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-  const customer = customers.find(c => c.name === quote.customer) || {};
-
-  const orgInfo = JSON.parse(localStorage.getItem("orgInfo") || "{}");
-
-  document.getElementById("previewQuoteNumber").textContent = quote.quoteNumber || "N/A";
-  document.getElementById("previewQuoteDate").textContent = quote.date || "N/A";
-  document.getElementById("previewQuoteCompanyName").textContent = orgInfo.name || "My Company Ltd";
-  document.getElementById("previewQuoteCompanyPIN").textContent = orgInfo.kraPin || "P00000000";
-  document.getElementById("previewQuoteCompanyAddress").textContent = orgInfo.address || "123 Business Rd, Nairobi";
-
-  document.getElementById("previewQuoteCustomerName").textContent = customer.name || quote.customer;
-  document.getElementById("previewQuoteCustomerPIN").textContent = customer.kraPin || "";
-  document.getElementById("previewQuoteCustomerAddress").textContent = customer.address || "";
-
-  const tbody = document.getElementById("previewQuoteItems");
-  tbody.innerHTML = "";
-
-  let subtotal = 0;
-  let totalVAT = 0;
-
-  quote.items.forEach(item => {
-    const qty = parseFloat(item.qty) || 0;
-    const price = parseFloat(item.price) || 0;
-    const vat = parseFloat(item.vat) || 0;
-    const total = qty * price + vat;
-
-    subtotal += qty * price;
-    totalVAT += vat;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td class="p-2 border">${item.desc}</td>
-      <td class="p-2 border">${qty}</td>
-      <td class="p-2 border">${formatCurrency(price)}</td>
-      <td class="p-2 border">${formatCurrency(vat)}</td>
-      <td class="p-2 border">${formatCurrency(total)}</td>
-    `;
-    tbody.appendChild(row);
-  });
-
-  const grandTotal = subtotal + totalVAT;
-
-  document.getElementById("previewQuoteSubtotal").textContent = formatCurrency(subtotal);
-  document.getElementById("previewQuoteVAT").textContent = formatCurrency(totalVAT);
-  document.getElementById("previewQuoteTotal").textContent = formatCurrency(grandTotal);
-
-  const qrData = `Quote: ${quote.quoteNumber}
-Total: ${formatCurrency(grandTotal)}
-Company: ${orgInfo.name || "My Company Ltd"}`;
-
-  QRCode.toCanvas(document.getElementById('quoteQRCode'), qrData, { width: 120 });
-
-  document.getElementById("quotePreviewModal").classList.remove("hidden");
-}
-
-function closeQuotePreview() {
-  document.getElementById("quotePreviewModal").classList.add("hidden");
-}
-
-function printQuotePreview() {
-  const modalContent = document.querySelector("#quotePreviewModal > div").innerHTML;
-  const printWindow = window.open("", "", "width=800,height=600");
-  printWindow.document.write(`<html><head><title>Print Quote</title></head><body>${modalContent}</body></html>`);
-  printWindow.document.close();
-  printWindow.print();
-}
-function shareQuote(index) {
-  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-  const quote = quotes[index];
-  if (!quote) return alert("Quote not found.");
-
-  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-  const customer = customers.find(c => c.name === quote.customer);
-  if (!customer || !customer.phone) {
-    return alert("Customer phone number not found.");
-  }
-
-  let phone = customer.phone.replace(/\D/g, "");
-
-  if (phone.startsWith("07")) {
-    phone = "254" + phone.substring(1);
-  }
-
-  const quoteNumber = quote.quoteNumber || `QT-${index + 1}`;
-  const total = Number(quote.total) || 0;
-
-  const message =
-`Hello ${customer.name},
-
-Your Quotation ${quoteNumber}
-Date: ${quote.date}
-Total: ${formatCurrency(total, quote.currency)}
-
-Please review and let us know if you would like to proceed.`;
-
-  const whatsappURL =
-    `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-
-  window.open(whatsappURL, "_blank");
-}
-function emailQuote(index) {
-  const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-  const quote = quotes[index];
-  if (!quote) return alert("Quote not found.");
-
-  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-  const customer = customers.find(c => c.name === quote.customer);
-  if (!customer || !customer.primaryEmail) {
-    return alert("Customer email not found.");
-  }
-
-  const quoteNumber = quote.quoteNumber || `QT-${index + 1}`;
-  const total = Number(quote.total) || 0;
-
-  const subject = `Quotation ${quoteNumber}`;
-  const body =
-`Hello ${customer.name},
-
-Please find your quotation details below:
-
-Quote Number: ${quoteNumber}
-Quote Date: ${quote.date}
-Total Amount: ${formatCurrency(total, quote.currency)}
-
-We look forward to doing business with you.
-
-${JSON.parse(localStorage.getItem("orgInfo") || "{}").name || ""}
-`;
-
-  const mailtoLink =
-    `mailto:${customer.primaryEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-  window.location.href = mailtoLink;
-}
-</script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
@@ -16750,6 +17340,7 @@ function renderCreditNotes() {
     const accountDisplay = coa ? `${coa.name} (${coa.code})` : (note.account || "Sales Returns");
 
     tableBody.innerHTML += `<tr>
+      <td><input type="checkbox" class="creditCheck" data-id="${note.id}"></td>
       <td>${note.number}</td>
       <td>${note.date}</td>
       <td>${note.customer}</td>
@@ -16793,7 +17384,45 @@ function pushSingleToETIMS(noteId) {
   alert(`Credit Note ${note.number} pushed to ETIMS successfully.`);
   console.log("ETIMS_CREDIT_NOTES:", window.ETIMS_CREDIT_NOTES);
 }
+function toggleAllCredits() {
+  const checked = document.getElementById("selectAllCredits").checked;
 
+  document.querySelectorAll(".creditCheck").forEach(cb => {
+    cb.checked = checked;
+  });
+}
+function bulkDeleteCreditNotes() {
+  let notes = JSON.parse(localStorage.getItem("creditNotes") || "[]");
+
+  const ids = getSelectedCreditIds();
+
+  if (ids.length === 0) {
+    alert("No credit notes selected");
+    return;
+  }
+
+  const firstConfirm = confirm(`⚠️ You are about to delete ${ids.length} credit notes.\n\nContinue?`);
+  if (!firstConfirm) return;
+
+  const check = prompt(
+    `Type DELETE to confirm permanent removal of ${ids.length} credit notes:`
+  );
+
+  if (check !== "DELETE") {
+    alert("❌ Action cancelled. You must type DELETE exactly.");
+    return;
+  }
+
+  notes = notes.filter(n => !ids.includes(n.id));
+
+  localStorage.setItem("creditNotes", JSON.stringify(notes));
+
+  renderCreditNotes();
+
+  document.getElementById("selectAllCredits").checked = false;
+
+  alert("✅ Credit notes deleted successfully.");
+}
 function editCreditNote(id) {
   const notes = JSON.parse(localStorage.getItem("creditNotes") || "[]");
   const note = notes.find(n => n.id === id);
@@ -17714,6 +18343,7 @@ function renderSalesReturnList() {
     const itemsList = r.items.map(item => `${item.qty}`).join(", ");
 
     row.innerHTML = `
+      <td class="p-2"><input type="checkbox" class="salesReturnCheck" data-index="${index}"></td>
       <td class="p-2">${r.date}</td>
       <td class="p-2">${r.customer}</td>
       <td class="p-2">${r.account}</td>
@@ -17760,6 +18390,45 @@ function editSalesReturn(index) {
   renderSalesReturnList();
 
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function getSelectedSalesReturnIndexes() {
+  return [...document.querySelectorAll(".salesReturnCheck:checked")]
+    .map(cb => Number(cb.dataset.index));
+}
+
+function bulkDeleteSalesReturns() {
+  let returns = JSON.parse(localStorage.getItem("salesReturns")) || [];
+
+  const indexes = getSelectedSalesReturnIndexes();
+
+  if (indexes.length === 0) {
+    alert("No sales returns selected");
+    return;
+  }
+
+  if (!confirm(`Delete ${indexes.length} sales returns?`)) return;
+
+  const check = prompt("Type DELETE to confirm:");
+  if (check !== "DELETE") {
+    alert("Cancelled");
+    return;
+  }
+
+  indexes.sort((a, b) => b - a).forEach(i => {
+    returns.splice(i, 1);
+  });
+
+  localStorage.setItem("salesReturns", JSON.stringify(returns));
+
+  renderSalesReturnList();
+}
+
+function toggleAllSalesReturns() {
+  const checked = document.getElementById("selectAllSalesReturns").checked;
+
+  document.querySelectorAll(".salesReturnCheck").forEach(cb => {
+    cb.checked = checked;
+  });
 }
 function convertToCreditNote(index) {
    const salesReturns = JSON.parse(localStorage.getItem("salesReturns") || "[]");
@@ -18500,6 +19169,9 @@ function renderReceipts() {
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
+    <td class="p-2">
+        <input type="checkbox" class="receiptCheck" data-id="${receipt.id}">
+      </td>
       <td class="p-2">${receipt.date}</td>
       <td class="p-2">${receipt.customer}</td>
       <td class="p-2">KES ${receipt.amount.toFixed(2)}</td>
@@ -18601,6 +19273,35 @@ function editReceipt(id) {
 
   alert("✅ Receipt updated successfully");
 }
+function getSelectedReceiptIds() {
+  return [...document.querySelectorAll(".receiptCheck:checked")]
+    .map(cb => cb.dataset.id);
+}
+
+function bulkDeleteReceipts() {
+  let receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
+
+  const selectedIds = [...document.querySelectorAll(".receiptCheck:checked")]
+    .map(cb => cb.dataset.id);
+
+  if (selectedIds.length === 0) {
+    alert("No receipts selected");
+    return;
+  }
+
+  if (!confirm(`Delete ${selectedIds.length} receipts?`)) return;
+
+  if (!confirm("⚠️ This action cannot be undone. Are you sure?")) return;
+
+  receipts = receipts.filter(r => !selectedIds.includes(String(r.id)));
+
+  localStorage.setItem("receipts", JSON.stringify(receipts));
+
+  renderReceipts();
+
+  document.getElementById("selectAllReceipts").checked = false;
+}
+
 function deleteReceipt(id) {
   if (!confirm("Are you sure you want to delete this receipt?")) return;
 
@@ -18846,6 +19547,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAccountsReceivable?.();
 });
 </script>
+
 <script>
 function searchDeliveries() {
   const input = document.getElementById('deliverySearch').value.toLowerCase();
@@ -18991,6 +19693,7 @@ function renderDeliveryTable() {
   .join(", ");
     const row = document.createElement("tr");
     row.innerHTML = `
+  <td class="p-2 border-t"> <input type="checkbox" class="deliveryCheck" data-id="${delivery.id || index}"></td>
   <td class="p-2 border-t">${delivery.dn}</td>
   <td class="p-2 border-t">${delivery.customer}</td>
   <td class="p-2 border-t">${itemsList}</td>
@@ -19033,6 +19736,39 @@ function editDelivery(index) {
     renderDeliveryTable();
     resetDeliveryForm();
   };
+}
+function bulkDeleteDeliveries() {
+  let deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
+
+  const selectedIds = [...document.querySelectorAll(".deliveryCheck:checked")]
+    .map(cb => cb.dataset.id);
+
+  if (selectedIds.length === 0) {
+    alert("No deliveries selected");
+    return;
+  }
+
+  if (!confirm(`Delete ${selectedIds.length} deliveries?`)) return;
+
+  if (!confirm("⚠️ This action cannot be undone. Continue?")) return;
+
+  deliveries = deliveries.filter((d, i) =>
+    !selectedIds.includes(String(d.id || i))
+  );
+
+  localStorage.setItem("deliveries", JSON.stringify(deliveries));
+
+  renderDeliveryTable();
+
+  document.getElementById("selectAllDeliveries").checked = false;
+}
+
+function toggleSelectAllDeliveries() {
+  const checked = document.getElementById("selectAllDeliveries").checked;
+
+  document.querySelectorAll(".deliveryCheck").forEach(cb => {
+    cb.checked = checked;
+  });
 }
 function deleteDelivery(index) {
   if (!confirm("Are you sure you want to delete this delivery?")) return;
@@ -19332,6 +20068,563 @@ document.addEventListener("DOMContentLoaded", () => {
   renderDeliveryTable();
   generateNextTrackNumber();
 });
+</script>
+<script>
+let editingRecurringInvoiceItemIndex = null;
+let editingRecurringInvoiceIndex = null;
+let recurringInvoices = JSON.parse(localStorage.getItem("recurringInvoices") || "[]");
+let recurringInvoiceItems = [];
+
+function generateRecurringInvoiceNumber() {
+  const count = recurringInvoices.length + 1;
+  return "RINV-" + String(count).padStart(5, "0");
+}
+
+function toggleRecurrenceFields() {
+  const type = document.getElementById("recurringInvoiceRecurrenceType").value;
+  const daysInput = document.getElementById("recurringInvoiceRecurrenceDays");
+  if (type === "custom") daysInput.classList.remove("hidden");
+  else daysInput.classList.add("hidden");
+}
+
+function loadRecurringCustomers() {
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  const select = document.getElementById("recurringInvoiceCustomer");
+  if (!select) return;
+  select.innerHTML = `<option value="">Select Customer</option>`;
+  customers.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.name;
+    select.appendChild(opt);
+  });
+}
+
+function loadRecurringProducts() {
+  const select = document.getElementById("recurringInvoiceProductSelect");
+  if (!select) return;
+
+  let items = [];
+  if (typeof getAllInventories === "function") {
+    items = getAllInventories();
+  }
+
+  select.innerHTML = `<option value="">Select Item</option>`;
+
+  items.forEach(item => {
+    const opt = document.createElement("option");
+    opt.value = item.sku;
+    opt.textContent = `${item.name} (${item.sku}) | Qty: ${item.qty} | Price: ${item.sellPrice}`;
+    opt.dataset.price = item.sellPrice || 0;
+    opt.dataset.qty = item.qty || 0;
+    select.appendChild(opt);
+  });
+
+  select.addEventListener("change", () => {
+    const selected = select.options[select.selectedIndex];
+
+    document.getElementById("recurringInvoiceItemPrice").value = selected.dataset.price || 0;
+
+    const qtyInput = document.getElementById("recurringInvoiceItemQty");
+    if (qtyInput && !qtyInput.value) {
+      qtyInput.value = selected.dataset.qty || 1;
+    }
+  });
+}
+function loadRecurringAccounts() {
+  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+  const select = document.getElementById("recurringChartAccountSelect");
+  if (!select) return;
+  select.innerHTML = `<option value="">Select Account</option>`;
+  accounts.forEach(acc => {
+    const opt = document.createElement("option");
+    opt.value = acc.code;
+    opt.textContent = `${acc.name} (${acc.code})`;
+    select.appendChild(opt);
+  });
+}
+
+function addRecurringInvoiceItem() {
+  const productSelect = document.getElementById("recurringInvoiceProductSelect");
+  const selectedOption = productSelect.options[productSelect.selectedIndex];
+
+  const desc = selectedOption.textContent;
+  const sku = selectedOption.value;
+  const qty = parseFloat(document.getElementById("recurringInvoiceItemQty").value) || 0;
+  const price = parseFloat(document.getElementById("recurringInvoiceItemPrice").value) || 0;
+  const discount = parseFloat(document.getElementById("recurringInvoiceItemDiscount").value) || 0;
+  const tax = document.getElementById("recurringInvoiceItemTax").value;
+
+  if (!sku || qty <= 0 || price <= 0) {
+    alert("Fill item details");
+    return;
+  }
+
+  let subtotal = qty * price;
+  let discountAmount = subtotal * (discount / 100);
+  let afterDiscount = subtotal - discountAmount;
+
+  let vat = 0;
+  if (tax !== "exempt") vat = afterDiscount * (parseFloat(tax) / 100);
+
+  let total = afterDiscount + vat;
+
+  const itemData = { sku, desc, qty, price, discount, tax, vat, total };
+
+  if (editingRecurringInvoiceItemIndex !== null) {
+    recurringInvoiceItems[editingRecurringInvoiceItemIndex] = itemData;
+    editingRecurringInvoiceItemIndex = null;
+  } else {
+    recurringInvoiceItems.push(itemData);
+  }
+
+  renderRecurringInvoiceItems();
+
+  document.getElementById("recurringInvoiceItemQty").value = "";
+  document.getElementById("recurringInvoiceItemDiscount").value = "";
+}
+
+function renderRecurringInvoiceItems() {
+  const tbody = document.getElementById("recurringInvoiceItemTableBody");
+  tbody.innerHTML = "";
+
+  recurringInvoiceItems.forEach((item, index) => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${item.desc}</td>
+      <td>${item.qty}</td>
+      <td>${item.price}</td>
+      <td>${item.tax}</td>
+      <td>${item.total.toFixed(2)}</td>
+      <td>
+        <button onclick="editRecurringInvoiceItem(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="removeRecurringInvoiceItem(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+function editRecurringInvoiceItem(index) {
+  const item = recurringInvoiceItems[index];
+  if (!item) return;
+
+  document.getElementById("recurringInvoiceItemQty").value = item.qty;
+  document.getElementById("recurringInvoiceItemPrice").value = item.price;
+  document.getElementById("recurringInvoiceItemDiscount").value = item.discount || 0;
+  document.getElementById("recurringInvoiceItemTax").value = item.tax;
+
+  document.getElementById("recurringInvoiceProductSelect").value = item.sku;
+
+  editingRecurringInvoiceItemIndex = index;
+}
+
+function removeRecurringInvoiceItem(index) {
+  if (editingRecurringInvoiceItemIndex === index) {
+    editingRecurringInvoiceItemIndex = null;
+  }
+
+  recurringInvoiceItems.splice(index, 1);
+  renderRecurringInvoiceItems();
+}
+function deductStockFromInvoice(items) {
+  let inventory = JSON.parse(localStorage.getItem("inventories") || "[]");
+
+  console.log("🔍 BEFORE STOCK:", inventory);
+
+  items.forEach(item => {
+    const product = inventory.find(p => String(p.sku) === String(item.sku));
+
+    if (product) {
+      console.log(`✔ Deducting ${item.qty} from ${product.sku}`);
+
+      product.qty = (parseFloat(product.qty) || 0) - (parseFloat(item.qty) || 0);
+
+      if (product.qty < 0) {
+        console.warn(`⚠ Stock below zero for ${product.sku}, resetting to 0`);
+        product.qty = 0;
+      }
+    } else {
+      console.warn("❌ SKU NOT FOUND:", item.sku);
+    }
+  });
+
+  console.log("✅ AFTER STOCK:", inventory);
+
+  localStorage.setItem("inventories", JSON.stringify(inventory));
+}
+function saveRecurringInvoice(status = "active") {
+  const date = document.getElementById("recurringInvoiceDate").value;
+  const nextDate = document.getElementById("recurringInvoiceNextDate").value;
+  const recurrenceType = document.getElementById("recurringInvoiceRecurrenceType").value;
+  const recurrenceDays = document.getElementById("recurringInvoiceRecurrenceDays").value;
+  const customerId = document.getElementById("recurringInvoiceCustomer").value;
+  const accountCode = document.getElementById("recurringChartAccountSelect").value;
+  const currency = document.getElementById("recurringInvoiceCurrency").value;
+  const number = document.getElementById("recurringInvoiceNumber").value || generateRecurringInvoiceNumber();
+
+  if (!date || !customerId || recurringInvoiceItems.length === 0) {
+    return alert("Missing required fields");
+  }
+
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+
+  const customer = customers.find(c =>
+    String(c.id) === String(customerId) ||
+    String(c.code) === String(customerId) ||
+    String(c.customerId) === String(customerId)
+  );
+
+  let subtotal = recurringInvoiceItems.reduce((s, i) => s + (i.qty * i.price), 0);
+  let vat = recurringInvoiceItems.reduce((s, i) => s + i.vat, 0);
+  let total = subtotal + vat;
+
+  const invoice = {
+    id: crypto.randomUUID(),
+    number,
+    date,
+    nextDate,
+    recurrenceType,
+    recurrenceDays,
+    customerId,
+    customerName: customer?.name || customer?.customerName || "Unknown Customer",
+    accountCode,
+    currency,
+    items: recurringInvoiceItems,
+    subtotal,
+    vat,
+    total,
+    status
+  };
+
+  recurringInvoices.push(invoice);
+  localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
+
+  if (status === "active") {
+    deductStockFromInvoice(invoice.items);
+  }
+
+  recurringInvoiceItems = [];
+  renderRecurringInvoiceItems();
+  renderRecurringInvoices();
+
+  document.getElementById("recurringInvoiceNumber").value = generateRecurringInvoiceNumber();
+
+  console.log("📄 Invoice saved:", invoice);
+}
+
+function renderRecurringInvoices() {
+  const tbody = document.getElementById("recurringInvoiceTable");
+  tbody.innerHTML = "";
+
+  recurringInvoices.forEach((inv, index) => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td><input type="checkbox" class="recurringCheck" data-index="${index}"></td>
+      <td>${inv.number}</td>
+      <td>${inv.date}</td>
+      <td>${inv.customerName}</td>
+      <td>${inv.recurrenceType}</td>
+      <td>${inv.nextDate || "-"}</td>
+      <td>${inv.total.toFixed(2)}</td>
+      <td>${inv.status}</td>
+      <td>
+        <button onclick="previewRecurring(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
+        <button onclick="deleteRecurring(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
+        <button onclick="editRecurring(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
+        <button onclick="recordRecurringPayment(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Record Payment</button>
+        <button onclick="reverseRecurringPayment(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Reverse Payment</button>
+        <button onclick="pushRecurringToETIMS(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Push to ETIMS</button>
+        <button onclick="shareRecurringEmail(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Share Email</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function restoreStockFromInvoice(items) {
+  let inventory = JSON.parse(localStorage.getItem("inventories") || "[]");
+
+  items.forEach(item => {
+    const product = inventory.find(p => p.sku === item.sku);
+
+    if (product) {
+      product.qty = (parseFloat(product.qty) || 0) + parseFloat(item.qty);
+    }
+  });
+
+  localStorage.setItem("inventories", JSON.stringify(inventory));
+}
+
+function deleteRecurring(index) {
+  if (!confirm("Are you sure you want to delete this recurring invoice?")) return;
+
+  const confirm2 = prompt("Type DELETE to confirm:");
+
+  if (confirm2 !== "DELETE") {
+    alert("Deletion cancelled.");
+    return;
+  }
+
+  const inv = recurringInvoices[index];
+  if (inv) {
+    restoreStockFromInvoice(inv.items);
+  }
+
+  recurringInvoices.splice(index, 1);
+  localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
+  renderRecurringInvoices();
+
+  alert("Recurring invoice deleted successfully.");
+}
+
+function editRecurring(index) {
+  const inv = recurringInvoices[index];
+  if (!inv) return;
+
+  restoreStockFromInvoice(inv.items);
+
+  document.getElementById("recurringInvoiceNumber").value = inv.number;
+  document.getElementById("recurringInvoiceDate").value = inv.date;
+  document.getElementById("recurringInvoiceNextDate").value = inv.nextDate || "";
+  document.getElementById("recurringInvoiceRecurrenceType").value = inv.recurrenceType;
+  document.getElementById("recurringInvoiceRecurrenceDays").value = inv.recurrenceDays || "";
+  document.getElementById("recurringInvoiceCustomer").value = inv.customerId;
+  document.getElementById("recurringChartAccountSelect").value = inv.accountCode;
+  document.getElementById("recurringInvoiceCurrency").value = inv.currency;
+
+  recurringInvoiceItems = inv.items || [];
+  renderRecurringInvoiceItems();
+
+  recurringInvoices.splice(index, 1);
+  localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
+
+  renderRecurringInvoices();
+}
+function previewRecurring(index) {
+  const inv = recurringInvoices[index];
+  if (!inv) return;
+
+  document.getElementById("previewRecurringInvoiceNumber").textContent = inv.number;
+  document.getElementById("previewRecurringInvoiceDate").textContent = inv.date;
+  document.getElementById("previewRecurringInvoiceCustomerName").textContent = inv.customerName;
+
+  const tbody = document.getElementById("previewRecurringInvoiceItems");
+  tbody.innerHTML = "";
+
+  inv.items.forEach((item, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${item.desc}</td>
+      <td>${item.qty}</td>
+      <td>${item.price}</td>
+      <td>${item.vat.toFixed(2)}</td>
+      <td>${item.total.toFixed(2)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("previewRecurringInvoiceSubtotal").textContent = inv.subtotal.toFixed(2);
+  document.getElementById("previewRecurringInvoiceVAT").textContent = inv.vat.toFixed(2);
+  document.getElementById("previewRecurringInvoiceTotal").textContent = inv.total.toFixed(2);
+  document.getElementById("previewRecurringInvoiceBalance").textContent = inv.total.toFixed(2);
+
+  document.getElementById("recurringInvoicePreviewModal").classList.remove("hidden");
+}
+
+function closeRecurringPreview() {
+  document.getElementById("recurringInvoicePreviewModal").classList.add("hidden");
+}
+
+function toggleAllRecurringInvoices(source) {
+  document.querySelectorAll(".recurringCheck").forEach(cb => cb.checked = source.checked);
+}
+
+function recordRecurringPayment(index) {
+  const inv = recurringInvoices[index];
+  if (!inv) return;
+
+  const amount = prompt("Enter payment amount:", inv.total);
+  if (!amount) return;
+
+  const payment = {
+    id: crypto.randomUUID(),
+    invoiceNumber: inv.number,
+    customerId: inv.customerId,
+    amount: parseFloat(amount),
+    date: new Date().toISOString().split("T")[0],
+    type: "Recurring Invoice Payment"
+  };
+
+  let payments = JSON.parse(localStorage.getItem("recurringPayments") || "[]");
+  payments.push(payment);
+  localStorage.setItem("recurringPayments", JSON.stringify(payments));
+
+  inv.paid = (inv.paid || 0) + parseFloat(amount);
+  inv.balance = inv.total - inv.paid;
+
+  if (inv.balance <= 0) inv.status = "Paid";
+
+  localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
+  renderRecurringInvoices();
+}
+function reverseRecurringPayment(index) {
+  const inv = recurringInvoices[index];
+  if (!inv) return;
+
+  let payments = JSON.parse(localStorage.getItem("recurringPayments") || "[]");
+
+  const related = payments.filter(p => p.invoiceNumber === inv.number);
+  if (related.length === 0) return alert("No payment found");
+
+  if (!confirm("Reverse last payment?")) return;
+
+  const last = related[related.length - 1];
+
+  payments = payments.filter(p => p.id !== last.id);
+  localStorage.setItem("recurringPayments", JSON.stringify(payments));
+
+  inv.paid = Math.max(0, (inv.paid || 0) - last.amount);
+  inv.balance = inv.total - inv.paid;
+
+  if (inv.balance > 0) inv.status = "Active";
+
+  localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
+  renderRecurringInvoices();
+}
+function pushRecurringToETIMS(index) {
+  const inv = recurringInvoices[index];
+  if (!inv) return;
+
+  if (!window.ETIMS_RECURRING) window.ETIMS_RECURRING = [];
+
+  window.ETIMS_RECURRING.push(inv);
+
+  alert("Pushed to ETIMS successfully");
+  console.log("ETIMS:", window.ETIMS_RECURRING);
+}
+function shareRecurringEmail(index) {
+  const inv = recurringInvoices[index];
+  if (!inv) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(14);
+  doc.text("Recurring Invoice", 10, 10);
+  doc.text(`Invoice: ${inv.number}`, 10, 20);
+  doc.text(`Customer: ${inv.customerName}`, 10, 30);
+  doc.text(`Date: ${inv.date}`, 10, 40);
+  doc.text(`Total: ${inv.total}`, 10, 50);
+
+  let y = 60;
+
+  inv.items.forEach((item, i) => {
+    doc.text(
+      `${i + 1}. ${item.desc} | Qty: ${item.qty} | Price: ${item.price} | Total: ${item.total}`,
+      10,
+      y
+    );
+    y += 10;
+  });
+
+  const pdfBlob = doc.output("blob");
+  const pdfURL = URL.createObjectURL(pdfBlob);
+
+  const subject = `Recurring Invoice ${inv.number}`;
+  const body = `
+Invoice PDF generated.
+
+Download PDF:
+${pdfURL}
+
+Customer: ${inv.customerName}
+Total: ${inv.total}
+  `;
+
+  window.open(
+    `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+    "_blank"
+  );
+
+  const a = document.createElement("a");
+  a.href = pdfURL;
+  a.download = `${inv.number}.pdf`;
+  a.click();
+}
+function bulkDeleteRecurringInvoices() {
+  const checks = document.querySelectorAll(".recurringCheck:checked");
+
+  if (checks.length === 0) {
+    alert("Please select invoices to delete.");
+    return;
+  }
+
+  const confirm1 = confirm(`You are about to delete ${checks.length} invoice(s). Continue?`);
+  if (!confirm1) return;
+
+  const confirm2 = prompt("Type DELETE to confirm this action:");
+
+  if (confirm2 !== "DELETE") {
+    alert("Action cancelled.");
+    return;
+  }
+
+  const indexes = Array.from(checks).map(cb => parseInt(cb.dataset.index));
+
+  indexes
+    .sort((a, b) => b - a)
+    .forEach(i => recurringInvoices.splice(i, 1));
+
+  localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
+  renderRecurringInvoices();
+
+  alert("Selected invoices deleted successfully.");
+}
+
+function searchRecurringInvoices() {
+  const q = document.getElementById("recurringInvoiceSearch").value.toLowerCase();
+  const rows = document.querySelectorAll("#recurringInvoiceTable tr");
+
+  rows.forEach(row => {
+    row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
+  });
+}
+
+function sortRecurringInvoicesBy(field) {
+  recurringInvoices.sort((a, b) => {
+    if (field === "amount") return b.total - a.total;
+    return (a[field] || "").toString().localeCompare((b[field] || "").toString());
+  });
+  localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
+  renderRecurringInvoices();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("recurringInvoiceNumber").value = generateRecurringInvoiceNumber();
+  loadRecurringCustomers();
+  loadRecurringProducts();
+  loadRecurringAccounts();
+  renderRecurringInvoices();
+});
+window.recordRecurringPayment = recordRecurringPayment;
+window.reverseRecurringPayment = reverseRecurringPayment;
+window.pushRecurringToETIMS = pushRecurringToETIMS;
+window.shareRecurringEmail = shareRecurringEmail;
+window.toggleAllRecurringInvoices = toggleAllRecurringInvoices;
+window.deleteRecurring = deleteRecurring;
+window.editRecurring = editRecurring;
+window.previewRecurring = previewRecurring;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -25170,7 +26463,7 @@ function manageDebitFiles(){
 </script>
 
 <script>
-// ---------------------- GLOBAL VARS ----------------------
+
 let poItems = [];
 let editingPOIndex = null;
 
@@ -25184,15 +26477,12 @@ function searchPOs() {
   });
 }
 
-// Populate Supplier Dropdown from suppliers data (assuming you have it in localStorage)
 function populateSupplierDropdown() {
   const supplierSelect = document.getElementById("poSupplier");
   if (!supplierSelect) return;
 
-  // Clear existing options
   supplierSelect.innerHTML = '<option value="">Select Supplier</option>';
 
-  // Assuming suppliers are stored in localStorage
   const suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
   suppliers.forEach(supplier => {
     const option = document.createElement('option');
@@ -25202,15 +26492,12 @@ function populateSupplierDropdown() {
   });
 }
 
-// Populate Chart of Account Dropdown
 function populateChartOfAccountDropdown() {
   const accountSelect = document.getElementById("poChartAccount");
   if (!accountSelect) return;
 
-  // Clear existing options
   accountSelect.innerHTML = '<option value="">Select Account</option>';
 
-  // Assuming chart of accounts are stored in localStorage
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   accounts.forEach(account => {
     const option = document.createElement('option');
@@ -25219,35 +26506,50 @@ function populateChartOfAccountDropdown() {
     accountSelect.appendChild(option);
   });
 }
-// Populate Product Dropdown with Inventory Data from All Warehouses
-
 function populateProductDropdown() {
   const productSelect = document.getElementById("poProductSelect");
   if (!productSelect) return;
 
-  // Clear existing options
   productSelect.innerHTML = '<option value="">Select Product</option>';
 
-  // Get all combined inventory data from all warehouses
-  const inventories = getAllInventories();
+  let allItems = [];
 
-  inventories.forEach(item => {
-    // Create option for each unique product (SKU)
-    const option = document.createElement('option');
-    option.value = JSON.stringify({ 
-      name: item.name, 
-      price: item.buyPrice, 
-      sku: item.sku, 
-      qty: item.qty 
+  if (typeof WAREHOUSES !== "undefined" && WAREHOUSES.length > 0) {
+    WAREHOUSES.forEach(w => {
+      const inv = JSON.parse(localStorage.getItem(`inventory_${w}`) || "[]");
+      allItems = allItems.concat(inv);
+    });
+  }
+
+  const uniqueItems = [];
+  const seen = new Set();
+
+  allItems.forEach(item => {
+    if (!item || !item.sku) return;
+
+    if (!seen.has(item.sku)) {
+      seen.add(item.sku);
+      uniqueItems.push(item);
+    }
+  });
+
+  uniqueItems.forEach(item => {
+    const option = document.createElement("option");
+
+    option.value = JSON.stringify({
+      name: item.name,
+      price: item.buyPrice || 0,
+      sku: item.sku || "",
+      qty: item.qty || 0
     });
 
-    // Option text showing product name, price, and SKU
-    option.textContent = `${item.name} (Price: KES ${item.buyPrice} SKU: ${item.sku})`;
+    option.textContent = `${item.name} (KES ${item.buyPrice || 0}) SKU: ${item.sku || "-"}`;
+
     productSelect.appendChild(option);
   });
-}
 
-// Auto-fill price when a product is selected
+  console.log("✅ PO Products Loaded:", uniqueItems.length);
+}
 function autoFillPrice() {
   const productSelect = document.getElementById("poProductSelect");
   const priceInput = document.getElementById("poItemPrice");
@@ -25257,7 +26559,7 @@ function autoFillPrice() {
     priceInput.value = selectedItem ? selectedItem.price.toFixed(2) : '';
   });
 }
-// ---------------------- AUTO-GENERATE PO NUMBER ----------------------
+
 function generatePONumber() {
   const poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
   const lastNumber = poList.length ? parseInt(poList[poList.length - 1].poNumber.replace("PO", "")) : 0;
@@ -25269,7 +26571,6 @@ function setAutoPONumber() {
   document.getElementById("poNumber").value = generatePONumber();
 }
 
-// ---------------------- ADD PURCHASE ORDER ITEM ----------------------
 function addPOItem() {
   const productSelect = document.getElementById("poProductSelect");
   const itemQty = document.getElementById("poItemQty");
@@ -25300,7 +26601,7 @@ function addPOItem() {
   clearPOItemForm();
 }
 
-// ---------------------- RENDER PURCHASE ORDER ITEMS ----------------------
+
 function renderPOItems() {
   const tbody = document.querySelector("#poItemsTable tbody");
   tbody.innerHTML = poItems.length
@@ -25343,7 +26644,7 @@ function removePOItem(index) {
   renderPOItems();
 }
 
-// Clear PO Item Form
+
 function clearPOItemForm() {
   document.getElementById("poProductSelect").value = "";
   document.getElementById("poItemQty").value = "";
@@ -25364,7 +26665,7 @@ function savePurchaseOrder() {
   const poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
 
   if (editingPOIndex !== null) {
-    // Update existing PO
+  
     poList[editingPOIndex] = {
       ...poList[editingPOIndex],
       date,
@@ -25375,7 +26676,7 @@ function savePurchaseOrder() {
     editingPOIndex = null;
     alert("✅ Purchase Order updated.");
   } else {
-    // Add new PO
+   
     const poNumber = generatePONumber();
     const newPO = {
       poNumber,
@@ -25395,7 +26696,6 @@ function savePurchaseOrder() {
   renderPurchaseOrders();
 }
 
-// ---------------------- CLEAR FORM ----------------------
 function clearPOForm() {
   document.getElementById("poDate").value = "";
   document.getElementById("poSupplier").value = "";
@@ -25410,7 +26710,6 @@ function clearPOForm() {
   editingPOIndex = null;
 }
 
-// ---------------------- RENDER PURCHASE ORDERS ----------------------
 function renderPurchaseOrders() {
   const poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
   const table = document.getElementById("supplierPOsTable");
@@ -25469,7 +26768,7 @@ function editPurchaseOrder(poNumber) {
   const saveBtn = document.getElementById("savePOBtn");
   if (saveBtn) saveBtn.textContent = "Update PO";
 }
-// ---------------------- INIT ----------------------
+
 document.addEventListener("DOMContentLoaded", () => {
   populateSupplierDropdown();
   populateChartOfAccountDropdown();
@@ -25485,7 +26784,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script>
-// ---------------------- GLOBAL VARS ----------------------
+
 let purchaseReturnItems = [];
 let editingReturnIndex = null;
 
