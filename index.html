@@ -92,7 +92,6 @@
  <nav class="flex justify-between items-center px-2 py-1 shadow-md bg-blue-900 sticky top-0 z-50">
   <h1 class="text-2xl font-bold text-white">Acacia Books</h1>
 
-  <!-- Nav links -->
  <ul class="flex gap-6 text-white font-medium">
   <li><a href="#hero" class="px-2 py-1 rounded hover:bg-blue-800">Home</a></li>
   <li><a href="#features" class="px-2 py-1 rounded hover:bg-blue-800">Features</a></li>
@@ -105,7 +104,7 @@
   <li><a href="#apps" class="px-2 py-1 rounded hover:bg-blue-800">Apps</a> </li>
   <li><a href="#support" class="px-2 py-1 rounded hover:bg-blue-800">Support</a></li>
 </ul>
-  <!-- Buttons -->
+  
   <div class="flex gap-6">
     <button onclick="openLogin()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
       Sign In
@@ -115,7 +114,7 @@
     </button>
   </div>
 </nav>
-<!-- 🌟 Request Demo Modal -->
+<!-- Request Demo  -->
 <div id="demoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300">
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-8 relative transform scale-95 transition-transform duration-300" id="demoContent">
     
@@ -191,7 +190,7 @@
 
       <textarea placeholder="Your Message (optional)" class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-900"></textarea>
 
-      <!-- Submit -->
+      
       <button type="submit" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-semibold shadow-lg flex items-center justify-center space-x-2">
         <span>📩 Submit Request</span>
       </button>
@@ -2056,6 +2055,7 @@ function login(email, password) {
 <li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li>
 <li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li>
 <li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li>
+<li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li>
 <li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li>
 <li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li>
 <li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li>
@@ -2138,7 +2138,7 @@ function login(email, password) {
 <li id="mailLink" class="hidden"><a href="20251127 accaciamail Vol 03.HTML" target="_blank" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💬Acacia Mail Hub</a></li>
 <li id="crmLink"><a href="20251127 accaia bookks crm Vol 03.html?from=books" target="_blank" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🏢CRM Portal Hub </a></li>
 <li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li>
-<!-- ✅ Right Sidebar -->
+
 <div id="rightSidebar" class="fixed top-4 right-0 h-half w-8 bg-black  text-white flex flex-col items-center py-1 space-y-1 shadow-lg z-10">
   
   <!-- 📔 Acacia Notebook -->
@@ -4339,7 +4339,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div id="inventoryTab" class="hidden ml-84 mr-7 p-2">
    <h2 class="text-2xl font-bold">Inventory</h2>
 
-  <!-- Right: Search -->
+ 
   <div class="relative">
     <input 
       type="text" 
@@ -4348,7 +4348,7 @@ window.addEventListener('DOMContentLoaded', () => {
       class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
       oninput="searchInventory()"
     />
-    <!-- Icon -->
+   
     <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <circle cx="11" cy="11" r="8"></circle>
       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -4524,7 +4524,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div id="movementTab" class="hidden ml-84 mr-7 p-2">
    <h2 class="text-1xl font-bold">Inventory Movement</h2>
 
-  <!-- Right: Search -->
+ 
   <div class="relative">
     <input 
       type="text" 
@@ -4533,7 +4533,7 @@ window.addEventListener('DOMContentLoaded', () => {
       class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
       oninput="searchMovement()"
     />
-    <!-- Icon -->
+   
     <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <circle cx="11" cy="11" r="8"></circle>
       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -4669,7 +4669,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div id="Amenend" class="hidden ml-84 mr-7 p-2">
    <h2 class="text-1xl font-bold">Adjustments</h2>
 
-  <!-- Right: Search -->
+  
   <div class="relative">
     <input 
       type="text" 
@@ -4678,7 +4678,7 @@ window.addEventListener('DOMContentLoaded', () => {
       class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
       oninput="searchAmendments()"
     />
-    <!-- Icon -->
+    
     <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <circle cx="11" cy="11" r="8"></circle>
       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -4813,7 +4813,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <div id="priceListTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-2xl font-bold">Price List Management</h2>
 
-  <!-- Right: Search -->
+  
   <div class="relative">
     <input 
       type="text" 
@@ -4822,7 +4822,7 @@ window.addEventListener('DOMContentLoaded', () => {
       class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
       oninput="searchPriceList()"
     />
-    <!-- Icon -->
+    
     <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <circle cx="11" cy="11" r="8"></circle>
       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -4958,10 +4958,11 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 </div>
+<!-- ADJUSTMENTS-->
 <div id="Amenend" class="hidden ml-84 mr-7 p-2">
-  <h2 class="text-2xl font-bold">Amendments & Adjustments</h2>
+  <h2 class="text-2xl font-bold">Adjustments</h2>
 
-  <!-- Right: Search -->
+  
   <div class="relative">
     <input 
       type="text" 
@@ -4970,7 +4971,7 @@ window.addEventListener('DOMContentLoaded', () => {
       class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
       oninput="searchAmendments()"
     />
-    <!-- Icon -->
+   
     <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <circle cx="11" cy="11" r="8"></circle>
       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -5100,9 +5101,9 @@ window.addEventListener('DOMContentLoaded', () => {
 </div>
 <!-- 📊 BULK ADJUSTMENT MODULE -->
 <div id="BulkAdjustment" class="hidden ml-84 mr-7 p-2">
-  <h2 class="text-2xl font-bold">Bulk Stock Adjustment</h2>
+  <h2 class="text-2xl font-bold">Bulk  Adjustment</h2>
 
-  <!-- Right: Search -->
+  
   <div class="relative">
     <input 
       type="text" 
@@ -5111,7 +5112,7 @@ window.addEventListener('DOMContentLoaded', () => {
       class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
       oninput="searchBulkAdjustment()"
     />
-    <!-- Icon -->
+    
     <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <circle cx="11" cy="11" r="8"></circle>
       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -7449,9 +7450,9 @@ window.addEventListener('click',function(e){
   </div>
 
   <div id="bankDetailsSection" class="hidden">
-
+<!-- BANK MANUAL TRANSCTIONS -->
 <div class="bg-white p-2 rounded shadow mb-6">
-  <h3 class="text-lg font-semibold mb-4">Add Manual Transaction</h3>
+  <h3 class="text-lg font-semibold mb-4">Add Transaction</h3>
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
 
     <select id="manualBank" class="border p-2 rounded">
@@ -7611,7 +7612,7 @@ window.addEventListener('click',function(e){
     <tbody id="manualTransactionLogTable"></tbody>
   </table>
 </div>
-
+<!-- BANK TRNASFER-->
 <div class="bg-white p-2 rounded shadow mb-6">
   <h3 class="text-lg font-semibold mb-4">Transfer Between Accounts</h3>
 
@@ -7719,9 +7720,9 @@ window.addEventListener('click',function(e){
     </table>
   </div>
 </div>
-
+<!-- BANK RECONCILE-->
 <div class="bg-white p-4 rounded shadow mb-6">
-  <h3 class="text-lg font-semibold mb-4">Reconcile Bank Account</h3>
+  <h3 class="text-lg font-semibold mb-4">Reconcile </h3>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
     <select id="reconcileBank" class="border p-2 rounded">
@@ -7782,9 +7783,9 @@ window.addEventListener('click',function(e){
     </table>
   </div>
 </div>
-<!-- Bank Mapping & Configuration -->
+<!-- BANK MAPPING -->
 <div class="bg-white p-2 rounded shadow mb-6">
-  <h3 class="text-lg font-semibold mb-4">Bank Mapping & Configuration</h3>
+  <h3 class="text-lg font-semibold mb-4">Bank Mapping</h3>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
     
@@ -9908,7 +9909,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <button id="nextPageBtn" class="px-1 py-1 border rounded disabled:opacity-50" disabled>Next</button>
   </div>
 </div>
-<!-- 🧾 Invoice Preview Modal -->
+
 <div id="invoicePreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
   <div class="bg-white p-6 rounded shadow w-full max-w-3xl relative overflow-y-auto max-h-[90vh]">
     
@@ -10419,6 +10420,337 @@ button:hover {
 }
 </style>
 </div>
+<!-- ✅ ORDER MODULE -->
+<div id="ordersTab" class="hidden ml-84 mr-7 p-2">
+
+<div class="relative mb-3">
+  <input 
+    type="text" 
+    id="orderSearch"
+    placeholder="Search Orders (/)" 
+    class="border rounded-md pl-8 pr-3 py-1 text-sm w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-400"
+    oninput="searchOrders()"
+  />
+</div>
+
+<div class="mb-2 relative inline-block text-right">
+  <button id="orderOptionsBtn" class="inline-flex px-9 py-1 bg-white border rounded-md text-sm">
+    Order Options
+  </button>
+
+  <div id="orderSortDropdown" class="absolute left-0 mt-2 w-64 bg-white hidden z-10">
+    <button onclick="sortOrdersBy('orderNumber')" class="w-full text-left px-4 py-2 hover:bg-gray-100">Order Number</button>
+    <button onclick="sortOrdersBy('customer')" class="w-full text-left px-4 py-2 hover:bg-gray-100">Customer</button>
+
+    <div class="relative group">
+      <button class="w-full text-left px-4 py-2 hover:bg-gray-100">Order Status</button>
+      <div class="absolute left-full top-0 w-48 bg-white hidden group-hover:block">
+        <button onclick="filterOrdersByStatus('pending')" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Pending</button>
+        <button onclick="filterOrdersByStatus('completed')" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Completed</button>
+        <button onclick="filterOrdersByStatus('cancelled')" class="block w-full text-left px-4 py-2 hover:bg-gray-100">Cancelled</button>
+      </div>
+    </div>
+
+    <button onclick="sortOrdersBy('amount')" class="w-full text-left px-4 py-2 hover:bg-gray-100">Amount</button>
+  </div>
+</div>
+
+<div class="relative inline-block text-left">
+  <button id="orderMenuBtn" class="inline-flex px-6 py-1 bg-white border rounded-md text-sm">
+    File / Sort Options
+  </button>
+
+  <div id="orderMenuDropdown" class="absolute left-0 mt-2 w-64 bg-white hidden z-10">
+    <button onclick="sortOrdersBy('date')" class="w-full text-left px-4 py-2 hover:bg-gray-100">Sort by Date</button>
+    <button onclick="importOrders()" class="w-full text-left px-4 py-2 hover:bg-gray-100">Import Orders</button>
+    <button onclick="exportOrders()" class="w-full text-left px-4 py-2 hover:bg-gray-100">Export Orders</button>
+    <button onclick="cloneOrders()" class="w-full text-left px-4 py-2 hover:bg-gray-100">Clone Orders</button>
+    <button onclick="resetOrderColumnWidths()" class="w-full text-left px-4 py-2 hover:bg-gray-100">Reset Column Width</button>
+    <button onclick="manageCustomFiles()" class="w-full text-left px-4 py-2 hover:bg-gray-100">Manage Custom Files</button>
+  </div>
+</div>
+
+<div class="bg-white p-6 rounded shadow mb-6">
+  <h2 class="text-xl font-bold mb-4">Add Order</h2>
+
+  <div class="mb-4">
+    <input id="orderDate" type="date" class="border p-2 rounded w-[700px]" />
+  </div>
+
+  <div class="mb-4">
+    <select id="orderCustomer" class="border p-2 rounded w-[700px]">
+      <option value="">Select Customer</option>
+    </select>
+  </div>
+  <div class="mb-4">
+  <label for="orderNetDays" class="block font-semibold mb-1">Payment Terms:</label>
+  <select id="orderNetDays" class="border p-2 rounded" style="width:700px;">
+    <option value="">Select Term</option>
+    <option value="0">Due on Receipt</option>
+    <option value="15">15 Days</option>
+    <option value="30">30 Days</option>
+    <option value="45">45 Days</option>
+    <option value="60">60 Days</option>
+    <option value="90">90 Days</option>
+    <option value="120">120 Days</option>
+  </select>
+</div>
+  <div class="mb-4">
+    <select id="orderChartAccountSelect" class="border p-2 rounded w-[700px]">
+      <option value="">Select Account</option>
+    </select>
+  </div>
+
+  <div class="mb-4">
+    <input id="orderNumber" type="text" class="border bg-gray-100 p-2 rounded w-[700px]" readonly />
+  </div>
+
+  <div class="mb-4">
+  <select id="orderSalesPerson" class="border p-2 rounded w-[700px]">
+    <option value="">Sales Person</option>
+  </select>
+</div>
+
+<div class="mb-4">
+  <select id="orderCurrency" class="border p-2 rounded w-[700px]" onchange="toggleOrderExchangeRateField()">
+    <option value="KES">KES - Kenya Shilling</option>
+<option value="USD">USD - US Dollar</option>
+<option value="EUR">EUR - Euro</option>
+<option value="GBP">GBP - British Pound</option>
+
+<option value="NGN">NGN - Nigerian Naira</option>
+<option value="ZAR">ZAR - South African Rand</option>
+<option value="UGX">UGX - Ugandan Shilling</option>
+<option value="TZS">TZS - Tanzanian Shilling</option>
+<option value="GHS">GHS - Ghanaian Cedi</option>
+<option value="EGP">EGP - Egyptian Pound</option>
+
+<option value="CAD">CAD - Canadian Dollar</option>
+<option value="AUD">AUD - Australian Dollar</option>
+<option value="NZD">NZD - New Zealand Dollar</option>
+
+<option value="JPY">JPY - Japanese Yen</option>
+<option value="CNY">CNY - Chinese Yuan</option>
+<option value="INR">INR - Indian Rupee</option>
+<option value="AED">AED - UAE Dirham</option>
+<option value="SAR">SAR - Saudi Riyal</option>
+
+<option value="CHF">CHF - Swiss Franc</option>
+<option value="SEK">SEK - Swedish Krona</option>
+<option value="NOK">NOK - Norwegian Krone</option>
+<option value="DKK">DKK - Danish Krone</option>
+
+<option value="BRL">BRL - Brazilian Real</option>
+<option value="MXN">MXN - Mexican Peso</option>
+<option value="ARS">ARS - Argentine Peso</option>
+  </select>
+</div>
+
+<div id="orderExchangeRateContainer" class="hidden mb-4">
+  <input id="orderExchangeRate" type="number" class="border p-2 rounded w-[700px]" />
+</div>
+
+<div class="mb-4">
+  <select id="orderItemType" class="border p-2 rounded w-[700px]">
+    <option value="">Select Item Type</option>
+    <option value="product">Product</option>
+    <option value="service">Service</option>
+    <option value="consultation">Consultation</option>
+    <option value="subscription">Subscription</option>
+    <option value="software">Software</option>
+    <option value="maintenance">Maintenance</option>
+    <option value="delivery">Delivery</option>
+    <option value="installation">Installation</option>
+    <option value="rental">Rental</option>
+    <option value="training">Training</option>
+    <option value="support">Support</option>
+    <option value="license">License</option>
+    <option value="fee">Fee</option>
+  </select>
+</div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4">
+    <select id="orderProductSelect" class="border p-2 rounded">
+      <option value="">Select Product</option>
+    </select>
+    <input id="orderItemQty" type="number" placeholder="Qty" class="border p-2 rounded" />
+    <input id="orderItemPrice" type="number" placeholder="Unit Price" class="border p-2 rounded" />
+    <input id="orderItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded" />
+    <select id="orderItemTax" class="border p-2 rounded">
+      <option value="16">VAT 16%</option>
+      <option value="0">Zero Rated</option>
+      <option value="8">Other Rates 8%</option>
+      <option value="exempt">Exempt</option>
+    </select>
+    <button onclick="addOrderItem()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded">Add</button>
+  </div>
+
+  <div class="overflow-x-auto mb-4">
+    <table class="w-full text-sm border">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2">Description</th>
+          <th class="p-2">Qty</th>
+          <th class="p-2">Unit Price</th>
+          <th class="p-2">Discount</th>
+          <th class="p-2">VAT</th>
+          <th class="p-2">Subtotal</th>
+          <th class="p-2">Action</th>
+        </tr>
+      </thead>
+      <tbody id="orderItemTableBody"></tbody>
+    </table>
+  </div>
+
+
+  <button onclick="saveOrder('draft')" class="bg-blue-900 text-white px-2 py-1 rounded">Save Draft</button>
+  <button onclick="saveOrder()" class="bg-blue-900 text-white px-2 py-1 rounded">Save Order</button>
+</div>
+
+<button onclick="bulkDeleteOrders()" class="bg-blue-900 text-white px-2 py-1 rounded mb-2">Bulk Delete</button>
+
+<div class="bg-white p-6 rounded shadow">
+  <h2 class="text-lg font-semibold mb-4">Order List</h2>
+
+  <table class="w-full text-sm border">
+    <thead class="bg-gray-100">
+      <tr>
+        <th><input type="checkbox" onclick="toggleAllOrders(this)"></th>
+        <th>Order #</th>
+        <th>Date</th>
+        <th>Customer</th>
+        <th>Terms</th>
+        <th>Due Date</th>
+        <th>Total</th>
+        <th>VAT</th>
+        <th>Paid</th>
+        <th>Due</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="orderTable"></tbody>
+  </table>
+</div>
+
+<div class="flex justify-between mt-2 text-sm">
+  <div>Total Count: <span id="orderTotalCount">0</span></div>
+
+  <div>
+    Show 
+    <select id="ordersPerPage">
+      <option>25</option>
+      <option>50</option>
+      <option>100</option>
+    </select>
+  </div>
+
+  <div>
+    <button id="orderPrev">Prev</button>
+    <span id="orderPageInfo"></span>
+    <button id="orderNext">Next</button>
+  </div>
+</div>
+</div>
+
+<div id="orderPreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded shadow w-full max-w-3xl relative overflow-y-auto max-h-[90vh]">
+
+    <h3 class="text-xl font-semibold mb-4 text-center">📦 Order Preview</h3>
+
+    <div class="mb-3 flex justify-between items-center">
+      <div>
+        <label for="orderTemplateSelect" class="font-semibold">Choose Template:</label>
+        <select id="orderTemplateSelect" onchange="changeOrderTemplate(this.value)" class="border p-1 rounded">
+          <option value="template-default">Default</option>
+          <option value="template-minimal">Minimal</option>
+          <option value="template-modern">Modern</option>
+          <option value="template-elegant">Elegant</option>
+        </select>
+      </div>
+
+      <div class="space-x-3">
+        <button onclick="printOrderPreview()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">Print</button>
+        <button onclick="downloadOrder()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">Download</button>
+        <button onclick="emailOrder()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">Email</button>
+        <button onclick="closeOrderPreview()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Close</button>
+      </div>
+    </div>
+
+    <div id="orderTemplateWrapper" class="template-default">
+
+      <div class="flex justify-between mb-4">
+        <div><strong>Order Number:</strong> <span id="previewOrderNumber"></span></div>
+        <div><strong>Date:</strong> <span id="previewOrderDate"></span></div>
+      </div>
+
+      <div class="mb-4">
+        <div class="text-right">
+          <h4 class="font-semibold">Company</h4>
+          <p id="previewOrderCompanyName">My Company Ltd</p>
+          <p>PIN: <span id="previewOrderCompanyPIN">P00000000</span></p>
+          <p>Address: <span id="previewOrderCompanyAddress">123 Business Rd, Nairobi</span></p>
+        </div>
+
+        <div class="text-left mb-4">
+          <h4 class="font-semibold">Customer</h4>
+          <p id="previewOrderCustomerName"></p>
+          <p>Address: <span id="previewOrderCustomerAddress"></span></p>
+          <p>Phone: <span id="previewOrderCustomerPhone"></span></p>
+          <p>PIN: <span id="previewOrderCustomerPIN"></span></p>
+        </div>
+      </div>
+
+      <table class="w-full text-sm border mt-4 border-collapse">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="p-2 border">#</th>
+            <th class="p-2 border">Item Name</th>
+            <th class="p-2 border">Qty</th>
+            <th class="p-2 border">Price</th>
+            <th class="p-2 border">Discount</th>
+            <th class="p-2 border">VAT</th>
+            <th class="p-2 border">Total</th>
+          </tr>
+        </thead>
+        <tbody id="orderPreviewItems"></tbody>
+      </table>
+
+      <div class="mt-2 text-right text-sm font-semibold">
+        <p>Subtotal: <span id="previewOrderSubtotal">KES 0.00</span></p>
+        <p>VAT: <span id="previewOrderVAT">KES 0.00</span></p>
+        <p>Total: <span id="previewOrderTotal">KES 0.00</span></p>
+        <p>Paid: <span id="previewOrderPaid">KES 0.00</span></p>
+        <p>Balance: <span id="previewOrderBalance">KES 0.00</span></p>
+        <p>Status: <span id="previewOrderStatus" class="text-blue-600">Pending</span></p>
+      </div>
+
+      <table class="bank-details mt-4 w-full text-sm border">
+        <thead>
+          <tr>
+            <th>BANK NAME</th>
+            <th>BRANCH</th>
+            <th>SWIFT</th>
+            <th>KSH ACC</th>
+            <th>USD ACC</th>
+            <th>EUR ACC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div id="orderQRCode" class="mt-4 text-center">
+        <canvas></canvas>
+        <p class="text-xs text-gray-500 hidden">QR will be generated after submission</p>
+      </div>
+
+    </div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <!-- ======= BULK INVOICE MODULE ======= -->
 <div id="bulkInvoicesTab" class="hidden ml-84 mr-7 p-2">
@@ -10430,7 +10762,7 @@ button:hover {
     class="border rounded-md pl-8 pr-3 py-1 text-sm w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-400"
     oninput="searchBulkInvoices()"
   />
-  <!-- Icon -->
+
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -10702,17 +11034,17 @@ button:hover {
       </table>
     </div>
 
-    <!-- Totals -->
+   
     <div class="grid grid-cols-2 gap-4 mb-4">
       <input id="bulkInvoiceVAT" type="number" placeholder="Total VAT" class="border p-2 rounded bg-gray-100" readonly />
       <input id="bulkInvoiceTotal" type="number" placeholder="Total Amount" class="border p-2 rounded bg-gray-100" readonly />
     </div>
 
-    <!-- Save Button -->
+    
     <button id="saveBulkInvoiceBtn" onclick="saveBulkInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Save Bulk Invoice</button>
   </div>
 
-  <!-- Bulk Invoice List -->
+  
   <div class="bg-white p-6 rounded shadow">
     <h2 class="text-lg font-semibold mb-4">Bulk Invoice List</h2>
     <table class="w-full text-sm border">
@@ -10754,7 +11086,7 @@ button:hover {
     <button id="nextPageBtn" class="px-1 py-1 border rounded disabled:opacity-50" disabled>Next</button>
   </div>
 </div>
-<!-- Bulk Invoice Preview Modal -->
+
 <div id="bulkInvoicePreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
   <div class="bg-white p-6 rounded shadow w-full max-w-3xl relative overflow-y-auto max-h-[90vh]">
     
@@ -11859,7 +12191,7 @@ button:hover {
 </div>
   </div>
 </div>
-<!-- SALES RETURNS MODULE (Simplified with Chart of Account) -->
+<!-- SALES RETURNS -->
 <div id="salesReturnTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-2xl font-bold mb-6 text-left">Sales Returns</h2>
  <div class="relative mb-3">
@@ -12705,86 +13037,115 @@ button:hover {
 <div class="bg-white p-6 rounded shadow mb-6">
   <h2 class="text-xl font-bold mb-4">Add Recurring Invoice</h2>
 
-  <input id="recurringInvoiceDate" type="date" class="border p-2 rounded w-full mb-3" />
-
-  <select id="recurringInvoiceRecurrenceType" class="border p-2 rounded w-full mb-2" onchange="toggleRecurrenceFields()">
-    <option value="none">No Recurrence</option>
-    <option value="daily">Daily</option>
-    <option value="weekly">Weekly</option>
-    <option value="monthly">Monthly</option>
-    <option value="yearly">Yearly</option>
-    <option value="custom">Custom Days</option>
-  </select>
-
-  <input id="recurringInvoiceRecurrenceDays" type="number" placeholder="Repeat every X days" class="border p-2 rounded w-full mb-2 hidden" />
-
-  <input id="recurringInvoiceNextDate" type="date" class="border p-2 rounded w-full mb-3" />
-
-  <select id="recurringInvoiceCustomer" class="border p-2 rounded w-full mb-3">
-    <option value="">Select Customer</option>
-  </select>
-
-  <select id="recurringInvoiceNetDays" class="border p-2 rounded w-full mb-3">
-  <option value="">Select Term</option>
-  <option value="0">Due on Receipt</option>
-  <option value="7">7 Days</option>
-  <option value="15">15 Days</option>
-  <option value="30">30 Days</option>
-  <option value="45">45 Days</option>
-  <option value="60">60 Days</option>
-  <option value="90">90 Days</option>
-  <option value="120">120 Days</option>
-  </select>
-
-  <select id="recurringChartAccountSelect" class="border p-2 rounded w-full mb-3">
-    <option value="">Select Account</option>
-  </select>
-
-  <input id="recurringInvoiceNumber" type="text" class="border bg-gray-100 p-2 rounded w-full mb-3" readonly />
-
-  <select id="recurringInvoiceCurrency" class="border p-2 rounded" style="width: 700px;">
-    <option value="KES">KES</option>
-    <option value="USD">USD</option>
-    <option value="EUR">EUR</option>
-    <option value="GBP">GBP</option>
-    <option value="CAD">CAD</option>
-    <option value="AUD">AUD</option>
-    <option value="ZAR">ZAR</option>
-    <option value="NGN">NGN</option>
-    <option value="UGX">UGX</option>
-    <option value="TZS">TZS</option>
-  </select>
   <div class="mb-3">
-  <label for="recurringInvoiceItemType" class="block font-semibold mb-1">Item Type:</label>
-  <select id="recurringInvoiceItemType" class="border p-2 rounded" style="width: 700px;" title="Select recurring invoice item type" required>
-    <option value="">Select Item Type</option>
-    <option value="product">Product</option>
-    <option value="service">Service</option>
-    <option value="subscription">Subscription</option>
-    <option value="license">License</option>
-    <option value="consulting">Consulting</option>
-    <option value="maintenance">Maintenance</option>
-    <option value="rent">Rent</option>
-    <option value="utility">Utility</option>
-    <option value="support">Support</option>
-    <option value="other">Other</option>
+    <input id="recurringInvoiceDate" type="date" class="border p-2 rounded w-[700px]" />
+  </div>
+
+  <div class="mb-3">
+    <select id="recurringInvoiceRecurrenceType" class="border p-2 rounded w-[700px]" onchange="toggleRecurrenceFields()">
+      <option value="none">No Recurrence</option>
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly">Monthly</option>
+      <option value="yearly">Yearly</option>
+      <option value="custom">Custom Days</option>
+    </select>
+  </div>
+
+  <div id="recurringInvoiceRecurrenceDaysContainer" class="mb-3 hidden">
+    <input id="recurringInvoiceRecurrenceDays" type="number" placeholder="Repeat every X days" class="border p-2 rounded w-[700px]" />
+  </div>
+
+  <div class="mb-3">
+    <input id="recurringInvoiceNextDate" type="date" class="border p-2 rounded w-[700px]" />
+  </div>
+
+  <div class="mb-3">
+    <select id="recurringInvoiceCustomer" class="border p-2 rounded w-[700px]">
+      <option value="">Select Customer</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <select id="recurringInvoiceNetDays" class="border p-2 rounded w-[700px]">
+      <option value="">Select Term</option>
+      <option value="0">Due on Receipt</option>
+      <option value="7">7 Days</option>
+      <option value="15">15 Days</option>
+      <option value="30">30 Days</option>
+      <option value="45">45 Days</option>
+      <option value="60">60 Days</option>
+      <option value="90">90 Days</option>
+      <option value="120">120 Days</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <select id="recurringChartAccountSelect" class="border p-2 rounded w-[700px]">
+      <option value="">Select Account</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <input id="recurringInvoiceNumber" type="text" class="border bg-gray-100 p-2 rounded w-[700px]" readonly />
+  </div>
+
+  <div class="mb-3">
+    <select id="recurringInvoiceCurrency" class="border p-2 rounded w-[700px]">
+      <option value="KES">KES</option>
+      <option value="USD">USD</option>
+      <option value="EUR">EUR</option>
+      <option value="GBP">GBP</option>
+      <option value="CAD">CAD</option>
+      <option value="AUD">AUD</option>
+      <option value="ZAR">ZAR</option>
+      <option value="NGN">NGN</option>
+      <option value="UGX">UGX</option>
+      <option value="TZS">TZS</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <select id="recurringInvoiceItemType" class="border p-2 rounded w-[700px]">
+      <option value="">Select Item Type</option>
+      <option value="product">Product</option>
+      <option value="service">Service</option>
+      <option value="subscription">Subscription</option>
+      <option value="license">License</option>
+      <option value="consulting">Consulting</option>
+      <option value="maintenance">Maintenance</option>
+      <option value="rent">Rent</option>
+      <option value="utility">Utility</option>
+      <option value="support">Support</option>
+      <option value="other">Other</option>
+    </select>
+  </div>
+
+ <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-3">
+
+  <select id="recurringInvoiceProductSelect" class="border p-2 rounded w-full">
+    <option value="">Select Product</option>
   </select>
+
+  <input id="recurringInvoiceItemQty" type="number" placeholder="Qty" class="border p-2 rounded w-full">
+
+  <input id="recurringInvoiceItemPrice" type="number" placeholder="Price" class="border p-2 rounded w-full">
+
+  <input id="recurringInvoiceItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded w-full">
+
+  <select id="recurringInvoiceItemTax" class="border p-2 rounded w-full">
+    <option value="16">VAT 16%</option>
+    <option value="8">8%</option>
+    <option value="0">Zero Rated</option>
+    <option value="exempt">Exempt</option>
+  </select>
+
 </div>
 
-  <div class="grid grid-cols-6 gap-2 mb-3">
-    <select id="recurringInvoiceProductSelect" class="border p-2 rounded">
-      <option value="">Select Product</option>
-    </select>
-    <input id="recurringInvoiceItemQty" type="number" placeholder="Qty" class="border p-2 rounded">
-    <input id="recurringInvoiceItemPrice" type="number" placeholder="Price" class="border p-2 rounded">
-    <input id="recurringInvoiceItemDiscount" type="number" placeholder="Disc %" class="border p-2 rounded">
-    <select id="recurringInvoiceItemTax" class="border p-2 rounded">
-      <option value="16">VAT 16%</option>
-      <option value="8">8%</option>
-      <option value="0">Zero Rated</option>
-      <option value="exempt">Exempt</option>
-    </select>
-    <button onclick="addRecurringInvoiceItem()" class="bg-blue-900 text-white px-2 rounded">Add</button>
+  <div class="mb-3">
+    <button onclick="addRecurringInvoiceItem()" class="bg-blue-900 text-white px-1 py-1 rounded">
+      Add
+    </button>
   </div>
 
   <table class="w-full text-sm border mb-3">
@@ -13923,13 +14284,34 @@ function populateInvoiceProductSelect() {
   allInventory.forEach(item => {
     const option = document.createElement('option');
     option.value = item.name;
-    option.textContent = `${item.name} — ${item.warehouse} (Qty: ${item.qty}) - ${formatCurrency(item.sellPrice)}`;
+
+    const isOutOfStock = Number(item.qty) <= 0;
+
+    option.textContent =
+      `${item.name} — ${item.warehouse} (Qty: ${item.qty}) - ${formatCurrency(item.sellPrice)}`;
+
     option.dataset.price = item.sellPrice;
     option.dataset.qty = item.qty;
     option.dataset.tax = item.buyVat || "exempt";
+
+    if (isOutOfStock) {
+      option.disabled = true;
+      option.textContent += " ❌ OUT OF STOCK";
+    }
+
     select.appendChild(option);
   });
 }
+
+document.getElementById('invoiceProductSelect')?.addEventListener('change', function () {
+  const selected = this.options[this.selectedIndex];
+  const qty = Number(selected.dataset.qty || 0);
+
+  if (qty <= 0) {
+    alert("⚠️ This product is out of stock and cannot be selected.");
+    this.value = "";
+  }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   const productSelect = document.getElementById('invoiceProductSelect');
@@ -14163,7 +14545,7 @@ function saveInvoice() {
     let recalculatedDiscount = 0;
     let salesGeneral = 0, salesOther = 0, salesZero = 0, salesExempt = 0;
 
-    // Recalculate totals
+    
     invoiceItems.forEach(item => {
         const price = parseFloat(item.price);
         const qty = parseFloat(item.qty);
@@ -14197,7 +14579,7 @@ function saveInvoice() {
     const convertedTotalKES = parseFloat((recalculatedTotal * exchangeRate).toFixed(2));
     const convertedVATKES = parseFloat((recalculatedVAT * exchangeRate).toFixed(2));
 
-// --- Credit Limit Check ---
+
 let customers = JSON.parse(localStorage.getItem("customers") || "[]");
 const customerIndex = customers.findIndex(c => c.name === customer);
 if (customerIndex !== -1) {
@@ -14213,7 +14595,7 @@ if (customerIndex !== -1) {
     }
 }
 
-    // Build invoice object
+    
     const invoiceData = {
         id: editingInvoiceId || Date.now(),
         invoiceNumber: invoiceNumberField.value || generateInvoiceNumber(),
@@ -14238,7 +14620,7 @@ if (customerIndex !== -1) {
         status: "Unpaid"
     };
 
-    // Deduct stock
+    
     const notFound = [];
     invoiceItems.forEach(item => {
         const ok = findAndDeductStock((item.desc || "").trim(), parseFloat(item.qty) || 0, item.sku || "");
@@ -14246,12 +14628,12 @@ if (customerIndex !== -1) {
     });
     if (notFound.length > 0) console.warn("⚠ Items not found in inventory:", notFound);
 
-    // Save to invoices array
+    
     if (editingInvoiceId) {
         const index = invoices.findIndex(inv => inv.id === editingInvoiceId);
         if (index !== -1) {
             const oldInvoice = invoices[index];
-            // Subtract old total from receivables
+            
             updateCustomerReceivables(oldInvoice.customer, -parseFloat(oldInvoice.totalKES || 0));
             invoices[index] = invoiceData;
             updateCustomerReceivables(customer, convertedTotalKES);
@@ -14265,10 +14647,10 @@ if (customerIndex !== -1) {
         showToast("✅ Invoice saved successfully!");
     }
 
-    // Save to localStorage
+    
     localStorage.setItem("invoices", JSON.stringify(invoices));
 
-    // Render UI
+    
     renderInvoices();
     renderSalesByCustomerReport(); 
     renderSalesByItem(); 
@@ -14279,7 +14661,7 @@ if (customerIndex !== -1) {
     if (typeof renderPaymentsReceived === "function") renderPaymentsReceived();
 
     renderDebitControlPanel();
-    // Reset form
+  
     invoiceItems = [];
     invoiceNumberField.value = generateInvoiceNumber();
     document.getElementById("invoiceDate").value = "";
@@ -14293,7 +14675,7 @@ if (customerIndex !== -1) {
     showTab("invoicesTab");
 }
 
-// Deduct stock helper
+
 function findAndDeductStock(productName, qty, sku) {
     const keys = Object.keys(localStorage).filter(k => k === "inventory" || k.startsWith("inventory_"));
     const nameToFind = (productName || "").trim().toLowerCase();
@@ -14312,14 +14694,14 @@ function findAndDeductStock(productName, qty, sku) {
     return false;
 }
 
-// Calculate due date
+
 function calculateDueDate(date, netDays) {
     let d = new Date(date);
     d.setDate(d.getDate() + parseInt(netDays || 0));
     return d.toISOString().split("T")[0];
 }
 
-// Render invoices table
+
 function renderInvoices() {
     const tbody = document.getElementById("invoiceTable");
     if (!tbody) return;
@@ -15787,6 +16169,610 @@ function resetInvoiceColumnWidths() {
 }
 
 </script>
+<script>
+let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+let orderItems = [];
+let editingOrderItemIndex = null;
+
+function generateOrderNumber() {
+  return "ORD-" + String(orders.length + 1).padStart(5, "0");
+}
+const orderOptionsBtn = document.getElementById("orderOptionsBtn");
+const orderSortDropdown = document.getElementById("orderSortDropdown");
+
+const orderMenuBtn = document.getElementById("orderMenuBtn");
+const orderMenuDropdown = document.getElementById("orderMenuDropdown");
+
+let orderDropdownTimer = null;
+
+function toggleDropdown(dropdown) {
+  const isHidden = dropdown.classList.contains("hidden");
+
+  closeAllDropdowns();
+
+  if (isHidden) {
+    dropdown.classList.remove("hidden");
+
+    orderDropdownTimer = setTimeout(() => {
+      dropdown.classList.add("hidden");
+    }, 3000);
+  }
+}
+
+function closeAllDropdowns() {
+  orderSortDropdown.classList.add("hidden");
+  orderMenuDropdown.classList.add("hidden");
+
+  if (orderDropdownTimer) clearTimeout(orderDropdownTimer);
+}
+
+orderOptionsBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleDropdown(orderSortDropdown);
+});
+
+orderMenuBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleDropdown(orderMenuDropdown);
+});
+
+document.addEventListener("click", closeAllDropdowns);
+
+orderSortDropdown.addEventListener("mouseenter", () => clearTimeout(orderDropdownTimer));
+orderSortDropdown.addEventListener("mouseleave", () => {
+  orderDropdownTimer = setTimeout(closeAllDropdowns, 2000);
+});
+
+orderMenuDropdown.addEventListener("mouseenter", () => clearTimeout(orderDropdownTimer));
+orderMenuDropdown.addEventListener("mouseleave", () => {
+  orderDropdownTimer = setTimeout(closeAllDropdowns, 2000);
+});
+function loadOrderCustomers() {
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  const select = document.getElementById("orderCustomer");
+  select.innerHTML = `<option value="">Select Customer</option>`;
+  customers.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.name;
+    select.appendChild(opt);
+  });
+}
+
+function loadOrderProducts() {
+  const select = document.getElementById("orderProductSelect");
+  if (!select) return;
+
+  const warehouse = document.getElementById("warehouseSelect")?.value;
+
+  let inventory = [];
+
+  if (warehouse) {
+    inventory = JSON.parse(localStorage.getItem(`inventory_${warehouse}`) || "[]");
+  } else {
+    inventory = getAllInventories();
+  }
+
+  select.innerHTML = `<option value="">Select Product</option>`;
+
+  inventory
+    .filter(item => item.active !== false)
+    .forEach(item => {
+      const opt = document.createElement("option");
+      opt.value = item.sku;
+      opt.textContent = `${item.name} (${item.sku}) | Qty: ${item.qty} | Price: ${item.sellPrice}`;
+      opt.dataset.price = item.sellPrice || 0;
+      opt.dataset.qty = item.qty || 0;
+      opt.dataset.vat = item.sellVat || 16;
+      select.appendChild(opt);
+    });
+
+  select.onchange = () => {
+    const selected = select.options[select.selectedIndex];
+
+    document.getElementById("orderItemPrice").value = selected.dataset.price || 0;
+    document.getElementById("orderItemTax").value = selected.dataset.vat || 16;
+
+    const qtyAvailable = parseFloat(selected.dataset.qty || 0);
+    if (qtyAvailable <= 0) {
+      alert("⚠️ This item is out of stock");
+    }
+  };
+}
+
+function loadOrderAccounts() {
+  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+  const select = document.getElementById("orderChartAccountSelect");
+
+  select.innerHTML = `<option value="">Select Account</option>`;
+  accounts.forEach(acc => {
+    const opt = document.createElement("option");
+    opt.value = acc.code;
+    opt.textContent = `${acc.name} (${acc.code})`;
+    select.appendChild(opt);
+  });
+}
+
+function addOrderItem() {
+  const select = document.getElementById("orderProductSelect");
+  const selected = select.options[select.selectedIndex];
+
+  const sku = selected.value;
+  const desc = selected.textContent;
+  const qty = parseFloat(document.getElementById("orderItemQty").value) || 0;
+  const price = parseFloat(document.getElementById("orderItemPrice").value) || 0;
+  const discount = parseFloat(document.getElementById("orderItemDiscount").value) || 0;
+  const tax = document.getElementById("orderItemTax").value;
+
+  if (!sku || qty <= 0 || price <= 0) return alert("Fill item");
+
+  let subtotal = qty * price;
+  let discountAmount = subtotal * (discount / 100);
+  let afterDiscount = subtotal - discountAmount;
+
+  let vat = 0;
+  if (tax !== "exempt") vat = afterDiscount * (parseFloat(tax) / 100);
+
+  let total = afterDiscount + vat;
+
+  const item = { sku, desc, qty, price, discount, tax, vat, total };
+
+  if (editingOrderItemIndex !== null) {
+    orderItems[editingOrderItemIndex] = item;
+    editingOrderItemIndex = null;
+  } else {
+    orderItems.push(item);
+  }
+
+  renderOrderItems();
+}
+
+function renderOrderItems() {
+  const tbody = document.getElementById("orderItemTableBody");
+  tbody.innerHTML = "";
+
+  orderItems.forEach((item, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${item.desc}</td>
+      <td>${item.qty}</td>
+      <td>${item.price}</td>
+      <td>${item.discount}</td>
+      <td>${item.vat.toFixed(2)}</td>
+      <td>${item.total.toFixed(2)}</td>
+      <td>
+        <button onclick="editOrderItem(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Edit</button>
+        <button onclick="removeOrderItem(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function editOrderItem(i) {
+  const item = orderItems[i];
+  document.getElementById("orderItemQty").value = item.qty;
+  document.getElementById("orderItemPrice").value = item.price;
+  document.getElementById("orderItemDiscount").value = item.discount;
+  document.getElementById("orderItemTax").value = item.tax;
+  document.getElementById("orderProductSelect").value = item.sku;
+  editingOrderItemIndex = i;
+}
+
+function removeOrderItem(i) {
+  orderItems.splice(i, 1);
+  renderOrderItems();
+}
+
+function checkStock(items) {
+  let inventory = JSON.parse(localStorage.getItem("inventories") || "[]");
+
+  for (let item of items) {
+    const product = inventory.find(p => p.sku === item.sku);
+    if (product && item.qty > product.qty) {
+      alert(`Not enough stock for ${product.name}`);
+      return false;
+    }
+  }
+  return true;
+}
+
+function deductStock(items) {
+  let inventory = JSON.parse(localStorage.getItem("inventories") || "[]");
+
+  items.forEach(item => {
+    const product = inventory.find(p => p.sku === item.sku);
+    if (product) {
+      product.qty = (parseFloat(product.qty) || 0) - parseFloat(item.qty);
+      if (product.qty < 0) product.qty = 0;
+    }
+  });
+
+  localStorage.setItem("inventories", JSON.stringify(inventory));
+}
+
+function saveOrder(status = "active") {
+  const date = document.getElementById("orderDate").value;
+  const customerId = document.getElementById("orderCustomer").value;
+  const number = document.getElementById("orderNumber").value || generateOrderNumber();
+  const terms = document.getElementById("orderTerms")?.value || "";
+  const dueDate = document.getElementById("orderDueDate")?.value || "";
+
+  if (!date || !customerId || orderItems.length === 0) {
+    return alert("Missing fields");
+  }
+
+  if (!checkStock(orderItems)) return;
+
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  const customer = customers.find(c => String(c.id) === String(customerId));
+
+  let subtotal = orderItems.reduce((s, i) => s + (i.qty * i.price), 0);
+  let vat = orderItems.reduce((s, i) => s + i.vat, 0);
+  let total = subtotal + vat;
+
+  const order = {
+    id: crypto.randomUUID(),
+    number,
+    date,
+    customerId,
+    customerName: customer?.name || "Unknown",
+    items: orderItems,
+    subtotal,
+    vat,
+    total,
+    status,
+    terms,
+    dueDate
+  };
+
+  orders.push(order);
+  localStorage.setItem("orders", JSON.stringify(orders));
+
+  deductStock(order.items);
+
+  orderItems = [];
+  renderOrderItems();
+  renderOrders();
+
+  document.getElementById("orderNumber").value = generateOrderNumber();
+}
+function renderOrders(data = null) {
+  const tbody = document.getElementById("orderTable");
+  const orders = data || JSON.parse(localStorage.getItem("orders") || "[]");
+
+  if (!tbody) return;
+
+  if (orders.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="12" class="text-center p-4 text-gray-500">No orders found</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = orders.map((o, i) => `
+  <tr class="border-b">
+    <td><input type="checkbox"></td>
+    <td>${o.number}</td>
+    <td>${o.date}</td>
+    <td>${o.customerName}</td>
+    <td>${o.terms || "-"}</td>
+    <td>${o.dueDate || "-"}</td>
+    <td>${o.total}</td>
+    <td>${o.vat}</td>
+    <td>${o.paid || 0}</td>
+    <td>${(o.total || 0) - (o.paid || 0)}</td>
+    <td>${o.status}</td>
+    <td>
+        <button onclick="editOrder(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Edit</button>
+        <button onclick="emailOrder(${i})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button>
+        <button onclick="convertOrder(${i})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Convert</button>
+        <button onclick="deleteOrder(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Delete</button>
+        </td>
+    </tr>
+  `).join("");
+}
+let editingOrderIndex = null;
+
+function editOrder(index) {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const o = orders[index];
+  if (!o) return;
+
+  document.getElementById("orderDate").value = o.date || "";
+  document.getElementById("orderCustomer").value = o.customerId || "";
+  document.getElementById("orderNumber").value = o.number || "";
+  document.getElementById("orderTerms").value = o.terms || "";
+  document.getElementById("orderDueDate").value = o.dueDate || "";
+
+  orderItems = o.items ? [...o.items] : [];
+  renderOrderItems();
+
+  editingOrderIndex = index;
+}
+function deleteOrder(index) {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const recycleBin = JSON.parse(localStorage.getItem("recycle_orders") || "[]");
+  const o = orders[index];
+  if (!o) return;
+
+  if (!confirm("Are you sure you want to delete this order?")) return;
+
+  const confirmText = prompt(`Type DELETE ${o.number} to confirm`);
+  if (confirmText !== `DELETE ${o.number}`) {
+    alert("Verification failed");
+    return;
+  }
+
+  recycleBin.push({
+    ...o,
+    deletedAt: new Date().toISOString()
+  });
+
+  orders.splice(index, 1);
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+  localStorage.setItem("recycle_orders", JSON.stringify(recycleBin));
+
+  renderOrders();
+}
+function convertOrder(index) {
+  const confirm1 = confirm("Convert this order to invoice?");
+  if (!confirm1) return;
+
+  const confirm2 = confirm("Approve conversion? This cannot be undone.");
+  if (!confirm2) return;
+
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+
+  const order = orders[index];
+  if (!order) return;
+
+  const exists = invoices.find(i => i.sourceOrderId === order.id);
+  if (exists) {
+    alert("Already converted");
+    return;
+  }
+
+  const invoice = {
+    id: crypto.randomUUID(),
+    sourceOrderId: order.id,
+    number: "INV-" + order.number,
+    date: new Date().toISOString().split("T")[0],
+    customerId: order.customerId,
+    customerName: order.customerName,
+    items: order.items || [],
+    subtotal: order.subtotal || 0,
+    vat: order.vat || 0,
+    total: order.total || 0,
+    status: "approved",
+    createdFrom: "order"
+  };
+
+  invoices.push(invoice);
+  localStorage.setItem("invoices", JSON.stringify(invoices));
+
+  order.status = "approved";
+  orders[index] = order;
+  localStorage.setItem("orders", JSON.stringify(orders));
+
+  renderOrders();
+  window.location.href = "invoice.html";
+}
+
+function previewOrder(id) {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const order = orders.find(o => o.id == id);
+  if (!order) return alert("Order not found!");
+
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  const customer = customers.find(c => c.id == order.customerId) || {};
+  const orgInfo = JSON.parse(localStorage.getItem("orgInfo") || "{}");
+
+  document.getElementById("previewOrderCompanyName").textContent = orgInfo.name || "My Company Ltd";
+  document.getElementById("previewOrderCompanyAddress").textContent = orgInfo.address || "";
+  document.getElementById("previewOrderCompanyPhone").textContent = orgInfo.phone || "";
+  document.getElementById("previewOrderNumber").textContent = order.number || "";
+
+  const orderDate = order.date
+    ? new Date(order.date).toLocaleDateString("en-GB")
+    : new Date().toLocaleDateString("en-GB");
+
+  document.getElementById("previewOrderDate").textContent = orderDate;
+
+  document.getElementById("previewOrderCustomerName").textContent = customer.name || order.customerName || "N/A";
+  document.getElementById("previewOrderCustomerPhone").textContent = customer.phone || "";
+  document.getElementById("previewOrderCustomerAddress").textContent = customer.billingAddress || "";
+
+  const tbody = document.getElementById("previewOrderItems");
+  tbody.innerHTML = "";
+
+  let subtotal = 0;
+  let totalVAT = 0;
+
+  order.items.forEach((item, index) => {
+    const qty = parseFloat(item.qty) || 0;
+    const price = parseFloat(item.price) || 0;
+    const vat = parseFloat(item.vat) || 0;
+
+    const lineTotal = qty * price;
+    subtotal += lineTotal;
+    totalVAT += vat;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2 border text-center">${index + 1}</td>
+      <td class="p-2 border">${item.desc}</td>
+      <td class="p-2 border text-center">${qty}</td>
+      <td class="p-2 border text-right">${price}</td>
+      <td class="p-2 border text-right">${vat}</td>
+      <td class="p-2 border text-right">${lineTotal + vat}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const grandTotal = subtotal + totalVAT;
+
+  document.getElementById("previewOrderSubtotal").textContent = subtotal;
+  document.getElementById("previewOrderVAT").textContent = totalVAT;
+  document.getElementById("previewOrderTotal").textContent = grandTotal;
+
+  document.getElementById("orderPreviewModal").classList.remove("hidden");
+}
+
+function closeOrderPreview() {
+  document.getElementById("orderPreviewModal").classList.add("hidden");
+}
+
+function bulkDeleteOrders() {
+  const checks = document.querySelectorAll(".orderCheck:checked");
+  const indexes = Array.from(checks).map(c => parseInt(c.dataset.index));
+
+  if (indexes.length === 0) {
+    alert("No orders selected");
+    return;
+  }
+
+  const confirm1 = confirm(`Delete ${indexes.length} selected orders?`);
+  if (!confirm1) return;
+
+  const confirm2 = prompt(`Type DELETE ${indexes.length} to confirm`);
+  if (confirm2 !== `DELETE ${indexes.length}`) {
+    alert("Verification failed");
+    return;
+  }
+
+  let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  let recycle = JSON.parse(localStorage.getItem("recycle_orders") || "[]");
+
+  indexes.sort((a, b) => b - a).forEach(i => {
+    if (orders[i]) {
+      recycle.push({
+        ...orders[i],
+        deletedAt: new Date().toISOString()
+      });
+      orders.splice(i, 1);
+    }
+  });
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+  localStorage.setItem("recycle_orders", JSON.stringify(recycle));
+
+  renderOrders();
+}
+
+function searchOrders() {
+  const q = document.getElementById("orderSearch").value.toLowerCase();
+  const rows = document.querySelectorAll("#orderTable tr");
+
+  rows.forEach(r => {
+    r.style.display = r.innerText.toLowerCase().includes(q) ? "" : "none";
+  });
+}
+
+function sortOrdersBy(field) {
+  orders.sort((a, b) => {
+    if (field === "amount") return b.total - a.total;
+    return (a[field] || "").toString().localeCompare((b[field] || "").toString());
+  });
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+  renderOrders();
+}
+function sortOrdersBy(field) {
+  let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
+  orders.sort((a, b) => {
+    let A = a[field];
+    let B = b[field];
+
+    if (field === "amount") {
+      A = parseFloat(a.total || 0);
+      B = parseFloat(b.total || 0);
+    }
+
+    if (field === "customer") {
+      A = (a.customerName || "").toLowerCase();
+      B = (b.customerName || "").toLowerCase();
+    }
+
+    if (field === "date") {
+      return new Date(a.date) - new Date(b.date);
+    }
+
+    if (typeof A === "string") A = A.toLowerCase();
+    if (typeof B === "string") B = B.toLowerCase();
+
+    if (A < B) return -1;
+    if (A > B) return 1;
+    return 0;
+  });
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+  renderOrders();
+}
+
+function filterOrdersByStatus(status) {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
+  const filtered = orders.filter(o => (o.status || "").toLowerCase() === status);
+
+  renderOrders(filtered);
+}
+
+function resetOrderView() {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  renderOrders(orders);
+}
+
+function importOrders() {
+  alert("📥 Import Orders coming soon");
+}
+
+function exportOrders() {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
+  const blob = new Blob([JSON.stringify(orders, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "orders.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function cloneOrders() {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
+  const cloned = orders.map(o => ({
+    ...o,
+    id: crypto.randomUUID(),
+    orderNumber: "CLONE-" + o.orderNumber
+  }));
+
+  localStorage.setItem("orders", JSON.stringify([...orders, ...cloned]));
+  renderOrders();
+
+  alert("✅ Orders cloned");
+}
+
+function resetOrderColumnWidths() {
+  alert("🔄 Column widths reset");
+}
+
+function manageCustomFiles() {
+  alert("🗂️ Manage Custom Files");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("orderNumber").value = generateOrderNumber();
+  loadOrderCustomers();
+  loadOrderProducts();
+  loadOrderAccounts();
+  renderOrders();
+});
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 let quoteItems = [];
@@ -16230,7 +17216,7 @@ function previewQuote(index) {
 
   const orgInfo = JSON.parse(localStorage.getItem("orgInfo") || "{}");
 
-  // Header info
+  
   document.getElementById("previewQuoteNumber").textContent = quote.quoteNumber || "N/A";
   document.getElementById("previewQuoteDate").textContent = quote.date || "N/A";
   document.getElementById("previewQuoteCompanyName").textContent = orgInfo.name || "My Company Ltd";
@@ -16241,7 +17227,7 @@ function previewQuote(index) {
   document.getElementById("previewQuoteCustomerPIN").textContent = customer.kraPin || "";
   document.getElementById("previewQuoteCustomerAddress").textContent = customer.address || "";
 
-  // Items table
+ 
   const tbody = document.getElementById("previewQuoteItems");
   tbody.innerHTML = "";
 
@@ -16276,7 +17262,7 @@ function previewQuote(index) {
   document.getElementById("previewQuoteVAT").textContent = formatCurrency(totalVAT);
   document.getElementById("previewQuoteTotal").textContent = formatCurrency(grandTotal);
 
-  // QR code SAFE (prevents crash)
+  
   const qrData = `Quote: ${quote.quoteNumber}
 Total: ${formatCurrency(grandTotal)}
 Company: ${orgInfo.name || "My Company Ltd"}`;
@@ -16290,7 +17276,7 @@ Company: ${orgInfo.name || "My Company Ltd"}`;
     console.log("QR generation failed but preview still works", e);
   }
 
-  // ALWAYS open modal last
+  
   const modal = document.getElementById("quotePreviewModal");
   if (modal) {
     modal.classList.remove("hidden");
@@ -16384,7 +17370,7 @@ let bulkInvoiceItems = [];
 
 function searchBulkInvoices() {
   const input = document.getElementById('bulkInvoiceSearch').value.toLowerCase();
-  const table = document.getElementById('bulkInvoiceTable'); // tbody
+  const table = document.getElementById('bulkInvoiceTable'); 
   const rows = table.querySelectorAll('tr');
 
   rows.forEach(row => {
@@ -17772,7 +18758,7 @@ async function downloadCreditNote() {
 
   const options = {
     margin: [10, 10, 10, 10],
-    filename: `${noteNumber}.pdf`, //
+    filename: `${noteNumber}.pdf`, 
     image: { type: "jpeg", quality: 0.98 },
     html2canvas: { scale: 3, useCORS: true, scrollY: 0 },
     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
@@ -18030,7 +19016,7 @@ function updateReturnItemsPlaceholder() {
     if (placeholder) placeholder.remove();
   }
 }
-// --- Populate Customers ---
+
 function populateReturnCustomerDropdown() {
   const customers = JSON.parse(localStorage.getItem("customers")) || [];
   const dropdown = document.getElementById("returnCustomer");
@@ -18043,20 +19029,20 @@ function populateReturnCustomerDropdown() {
   });
 }
 
-// --- Populate Chart of Accounts (Return Accounts only from Assets) ---
+
 function populateReturnAccountDropdown() {
   const dropdown = document.getElementById("returnAccount");
   dropdown.innerHTML = '<option value="">Select Account</option>';
 
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts")) || [];
 
-  // Allowed Asset types
+  
   const allowedTypes = [
     "Asset", "Other Asset", "Other Current Asset", "Fixed Assets", "Stock",
     "Cash", "Banks", "Accounts Receivable", "Investment Property"
   ];
 
-  // Add only matching Asset accounts
+ 
   accounts
     .filter(acc => allowedTypes.includes(acc.type)) 
     .forEach(acc => {
@@ -18067,7 +19053,6 @@ function populateReturnAccountDropdown() {
     });
 }
 
-// Populate the Return Items dropdown from all warehouses combined
 function populateReturnItemsFromInvoice(invoiceId) {
   const select = document.getElementById("returnProduct");
   select.innerHTML = '<option value="">Select Product</option>';
@@ -18101,7 +19086,7 @@ function populateReturnItemsFromInvoice(invoiceId) {
   });
 }
 
-// --- Render Return Items into Table ---
+
 function renderReturnItems() {
   const tbody = document.querySelector("#returnItemsTable tbody");
   tbody.innerHTML = "";
@@ -18136,7 +19121,7 @@ function renderReturnItems() {
   });
 }
 
-// --- Add or Update Return Item ---
+
 function addReturnItem() {
   const productSelect = document.getElementById("returnProduct");
   const qtyInput = document.getElementById("returnItemQty");
@@ -18197,7 +19182,7 @@ function removeReturnItem(index) {
   renderReturnItems();
 }
 
-// --- Add Return Item ---
+
 function addReturnItem() {
   const productSelect = document.getElementById("returnProduct");
   const qty = parseFloat(document.getElementById("returnItemQty").value);
@@ -18216,7 +19201,7 @@ function addReturnItem() {
   const subtotal = qty * price;
   const vatAmount = subtotal * (taxRate / 100);
 
-  // ✅ PUSH INTO returnItems
+ 
   returnItems.push({
     product,
     desc: product.name,
@@ -18229,11 +19214,11 @@ function addReturnItem() {
 
   renderReturnItems();
 
-  // Reset inputs
+  
   productSelect.value = "";
   document.getElementById("returnItemQty").value = "";
 }
-// --- Remove Item ---
+
 function removeReturnItem(index) {
   returnItems.splice(index, 1);
   renderReturnItems();
@@ -18255,12 +19240,12 @@ function populateReturnInvoiceDropdown(customerName) {
 
   customerInvoices.forEach(inv => {
     const opt = document.createElement("option");
-    opt.value = inv.id; // store invoice ID
+    opt.value = inv.id; 
     opt.textContent = `${inv.invoiceNumber} — ${inv.date} — ${inv.currency || "KES"} ${Number(inv.total).toFixed(2)}`;
     dropdown.appendChild(opt);
   });
 }
-// --- Save Sales Return ---
+
 function saveSalesReturn() {
   const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || "{}");
   const role = loggedInUser.role || "";
@@ -18384,7 +19369,6 @@ function editSalesReturn(index) {
   returnItems = [...r.items];
   renderReturnItems();
 
-  // Remove old record so it will be replaced on save
   returns.splice(index, 1);
   localStorage.setItem("salesReturns", JSON.stringify(returns));
   renderSalesReturnList();
@@ -18490,25 +19474,25 @@ function deleteSalesReturn(index) {
 
   if (!confirm("Delete this sales return?")) return;
 
-  // ✅ Ensure ID for recycle restore
+  
   if (!saleReturn.id) saleReturn.id = crypto.randomUUID();
 
-  // ✅ Move to recycle bin
+ 
   moveToRecycle(saleReturn, "File", "SalesReturns");
 
-  // ✅ Reverse stock that was added during return
+ 
   if (saleReturn.items) {
     saleReturn.items.forEach(item => {
       const name = (item.desc || "").trim();
       const qty = parseFloat(item.qty) || 0;
       const sku = item.sku || "";
 
-      // Subtract the stock that was added by this return
+     
       reduceStock(name, qty, sku); 
     });
   }
 
-  // ✅ Remove from storage
+ 
   returns.splice(index, 1);
   localStorage.setItem("salesReturns", JSON.stringify(returns));
 
@@ -19788,23 +20772,22 @@ function deleteDelivery(index) {
 
   alert("♻️ Delivery moved to Recycle Bin.");
 }
-// ✅ Reset form back to normal "Add Delivery"
+
 function resetDeliveryForm() {
   document.getElementById("deliveryCustomer").value = "";
   document.getElementById("deliveryDate").value = "";
   document.getElementById("deliveryNote").value = "";
   document.getElementById("customerInvoiceSelect").value = "";
 
-  // Restore Add button
   document.getElementById("addDeliveryBtn").onclick = addDelivery;
 }
-// ✅ Email Delivery
+
 function emailDelivery(index) {
   const deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
   const d = deliveries[index];
   if (!d) return alert("❌ Delivery not found.");
 
-  // Build subject + body
+ 
   const subject = `Delivery Note ${d.dn} for ${d.customer}`;
   const body = 
     `Hello ${d.customer},\n\n` +
@@ -19816,7 +20799,7 @@ function emailDelivery(index) {
     `Items:\n${d.items.map(i => `- ${i.desc} (x${i.qty})`).join("\n")}\n\n` +
     `Best regards,\nYour Company`;
 
-  // Ask for recipient email
+  
   const email = prompt("Enter the recipient email for this delivery note:", d.customerEmail || "");
   if (!email) return alert("❌ No email address entered.");
 
@@ -19876,7 +20859,6 @@ async function downloadDelivery(index) {
   document.body.removeChild(container);
 }
 
-  // Load current Acacia Mail storage
   let inbox = JSON.parse(localStorage.getItem("demo_inbox") || "[]");
   let sent = JSON.parse(localStorage.getItem("demo_sent") || "[]");
 
@@ -19891,27 +20873,24 @@ async function downloadDelivery(index) {
   alert(`✅ Delivery note emailed to ${email}`);
 }
 
-// ✅ Delivery Preview
 function previewDelivery(index) {
   const deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
   const d = deliveries[index];
   if (!d) return;
 
-  // ✅ Load organization info
+  
   const org = JSON.parse(localStorage.getItem("orgInfo") || "{}");
 
-  // ✅ Load customer info
+  
   const customers = JSON.parse(localStorage.getItem("customers") || "[]");
   const customer = customers.find(c => c.name === d.customer) || {};
 
-  // Populate company fields
   document.getElementById("deliveryCpName").textContent = org.name || "";
   document.getElementById("deliveryCpAddress").textContent = org.address || "";
   document.getElementById("deliveryCpEmail").textContent = org.email || "";
   document.getElementById("deliveryCpPhone").textContent = org.phone || "";
   document.getElementById("deliveryCpPIN").textContent = org.pin || "";
   
-  // Extra custom fields
   const extraFieldsContainer = document.getElementById("deliveryCpExtraFields");
   extraFieldsContainer.innerHTML = "";
   if (org.additionalFields && org.additionalFields.length > 0) {
@@ -19922,7 +20901,6 @@ function previewDelivery(index) {
     });
   }
 
-  // Logo
   const logoEl = document.getElementById("deliveryCpLogo");
   if (org.logo) {
     logoEl.src = org.logo;
@@ -19931,13 +20909,11 @@ function previewDelivery(index) {
     logoEl.classList.add("hidden");
   }
 
-  // Populate customer fields
   document.getElementById("deliveryCustomerName").textContent = customer.name || d.customer || "";
   document.getElementById("deliveryCustomerEmail").textContent = customer.email || "";
   document.getElementById("deliveryCustomerPhone").textContent = customer.phone || "";
   document.getElementById("deliveryCustomerAddress").textContent = customer.address || "";
 
-  // Build table rows
   const tbody = document.getElementById("deliveryPreviewTableBody");
   tbody.innerHTML = "";
   d.items.forEach((i, idx) => {
@@ -19955,16 +20931,14 @@ function previewDelivery(index) {
   `;
   tbody.appendChild(row);
 });
-  // Show modal
+ 
   document.getElementById("deliveryPreviewModal").classList.remove("hidden");
 }
 
-// ✅ Close preview
 function closeDeliveryPreview() {
   document.getElementById("deliveryPreviewModal").classList.add("hidden");
 }
 
-// ✅ Print delivery
 function printDeliveryFromPreview() {
   const content = document.getElementById("deliveryPreviewContentWrapper").innerHTML;
   const w = window.open("", "", "width=800,height=600");
@@ -19973,7 +20947,7 @@ function printDeliveryFromPreview() {
   w.print();
 }
 
-// ✅ Email delivery
+
 function emailDelivery() {
   const deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
   const d = deliveries[0]; 
@@ -20112,18 +21086,24 @@ function loadRecurringProducts() {
   select.innerHTML = `<option value="">Select Item</option>`;
 
   items.forEach(item => {
+    const qty = Number(item.qty || 0);
+
+    if (qty <= 0) return;
+
     const opt = document.createElement("option");
     opt.value = item.sku;
-    opt.textContent = `${item.name} (${item.sku}) | Qty: ${item.qty} | Price: ${item.sellPrice}`;
+    opt.textContent = `${item.name} (${item.sku}) | Qty: ${qty} | Price: ${item.sellPrice}`;
     opt.dataset.price = item.sellPrice || 0;
-    opt.dataset.qty = item.qty || 0;
+    opt.dataset.qty = qty;
+
     select.appendChild(opt);
   });
 
   select.addEventListener("change", () => {
     const selected = select.options[select.selectedIndex];
 
-    document.getElementById("recurringInvoiceItemPrice").value = selected.dataset.price || 0;
+    document.getElementById("recurringInvoiceItemPrice").value =
+      selected.dataset.price || 0;
 
     const qtyInput = document.getElementById("recurringInvoiceItemQty");
     if (qtyInput && !qtyInput.value) {
@@ -20305,7 +21285,13 @@ function saveRecurringInvoice(status = "active") {
     status
   };
 
-  recurringInvoices.push(invoice);
+  if (editingRecurringInvoiceIndex !== null) {
+    recurringInvoices[editingRecurringInvoiceIndex] = invoice;
+    editingRecurringInvoiceIndex = null;
+  } else {
+    recurringInvoices.push(invoice);
+  }
+
   localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
 
   if (status === "active") {
@@ -20320,7 +21306,6 @@ function saveRecurringInvoice(status = "active") {
 
   console.log("📄 Invoice saved:", invoice);
 }
-
 function renderRecurringInvoices() {
   const tbody = document.getElementById("recurringInvoiceTable");
   tbody.innerHTML = "";
@@ -20338,7 +21323,7 @@ function renderRecurringInvoices() {
       <td>${inv.total.toFixed(2)}</td>
       <td>${inv.status}</td>
       <td>
-        <button onclick="previewRecurring(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
+        <button onclick="previewRecurring('${inv.id}')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
         <button onclick="deleteRecurring(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
         <button onclick="editRecurring(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
         <button onclick="recordRecurringPayment(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Record Payment</button>
@@ -20364,34 +21349,11 @@ function restoreStockFromInvoice(items) {
 
   localStorage.setItem("inventories", JSON.stringify(inventory));
 }
-
-function deleteRecurring(index) {
-  if (!confirm("Are you sure you want to delete this recurring invoice?")) return;
-
-  const confirm2 = prompt("Type DELETE to confirm:");
-
-  if (confirm2 !== "DELETE") {
-    alert("Deletion cancelled.");
-    return;
-  }
-
-  const inv = recurringInvoices[index];
-  if (inv) {
-    restoreStockFromInvoice(inv.items);
-  }
-
-  recurringInvoices.splice(index, 1);
-  localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
-  renderRecurringInvoices();
-
-  alert("Recurring invoice deleted successfully.");
-}
-
 function editRecurring(index) {
   const inv = recurringInvoices[index];
   if (!inv) return;
 
-  restoreStockFromInvoice(inv.items);
+  editingRecurringInvoiceIndex = index;
 
   document.getElementById("recurringInvoiceNumber").value = inv.number;
   document.getElementById("recurringInvoiceDate").value = inv.date;
@@ -20402,17 +21364,42 @@ function editRecurring(index) {
   document.getElementById("recurringChartAccountSelect").value = inv.accountCode;
   document.getElementById("recurringInvoiceCurrency").value = inv.currency;
 
-  recurringInvoiceItems = inv.items || [];
-  renderRecurringInvoiceItems();
+  recurringInvoiceItems = inv.items ? JSON.parse(JSON.stringify(inv.items)) : [];
 
-  recurringInvoices.splice(index, 1);
+  renderRecurringInvoiceItems();
+}
+function deleteRecurring(index) {
+  const inv = recurringInvoices[index];
+  if (!inv) return alert("Invoice not found");
+
+  if (!confirm("Are you sure you want to delete this recurring invoice?")) return;
+
+  const confirm2 = prompt("Type DELETE to confirm:");
+  if (confirm2 !== "DELETE") {
+    alert("Deletion cancelled.");
+    return;
+  }
+
+  const realIndex = recurringInvoices.findIndex(i => i.id === inv.id);
+  if (realIndex === -1) return alert("Invoice already removed or not found");
+
+  restoreStockFromInvoice(recurringInvoices[realIndex].items);
+
+  recurringInvoices.splice(realIndex, 1);
   localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
 
+  editingRecurringInvoiceIndex = null;
+
   renderRecurringInvoices();
+
+  alert("Recurring invoice deleted successfully.");
 }
-function previewRecurring(index) {
-  const inv = recurringInvoices[index];
-  if (!inv) return;
+function previewRecurring(id) {
+  const inv = recurringInvoices.find(i => i.id === id);
+  if (!inv) {
+    alert("Entry not found");
+    return;
+  }
 
   document.getElementById("previewRecurringInvoiceNumber").textContent = inv.number;
   document.getElementById("previewRecurringInvoiceDate").textContent = inv.date;
@@ -20601,14 +21588,128 @@ function searchRecurringInvoices() {
   });
 }
 
+const recurringOptionsBtn = document.getElementById("recurringInvoiceOptionsBtn");
+const recurringSortDropdown = document.getElementById("recurringInvoiceSortDropdown");
+
+const recurringMenuBtn = document.getElementById("recurringLeftMenuBtn");
+const recurringMenuDropdown = document.getElementById("recurringLeftMenuDropdown");
+
+let recurringDropdownTimer = null;
+
+function toggleRecurringDropdown(dropdown) {
+  const isHidden = dropdown.classList.contains("hidden");
+
+  closeRecurringDropdowns();
+
+  if (isHidden) {
+    dropdown.classList.remove("hidden");
+
+    recurringDropdownTimer = setTimeout(() => {
+      dropdown.classList.add("hidden");
+    }, 3000);
+  }
+}
+
+function closeRecurringDropdowns() {
+  recurringSortDropdown.classList.add("hidden");
+  recurringMenuDropdown.classList.add("hidden");
+
+  if (recurringDropdownTimer) clearTimeout(recurringDropdownTimer);
+}
+
+recurringOptionsBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleRecurringDropdown(recurringSortDropdown);
+});
+
+recurringMenuBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleRecurringDropdown(recurringMenuDropdown);
+});
+
+document.addEventListener("click", closeRecurringDropdowns);
+
+recurringSortDropdown.addEventListener("mouseenter", () => clearTimeout(recurringDropdownTimer));
+recurringSortDropdown.addEventListener("mouseleave", () => {
+  recurringDropdownTimer = setTimeout(closeRecurringDropdowns, 2000);
+});
+
+recurringMenuDropdown.addEventListener("mouseenter", () => clearTimeout(recurringDropdownTimer));
+recurringMenuDropdown.addEventListener("mouseleave", () => {
+  recurringDropdownTimer = setTimeout(closeRecurringDropdowns, 2000);
+});
+
 function sortRecurringInvoicesBy(field) {
-  recurringInvoices.sort((a, b) => {
-    if (field === "amount") return b.total - a.total;
-    return (a[field] || "").toString().localeCompare((b[field] || "").toString());
+  let invoices = JSON.parse(localStorage.getItem("recurringInvoices") || "[]");
+
+  invoices.sort((a, b) => {
+    let A, B;
+
+    if (field === "amount") {
+      A = parseFloat(a.total || 0);
+      B = parseFloat(b.total || 0);
+    } else if (field === "recurringCustomer") {
+      A = (a.customerName || "").toLowerCase();
+      B = (b.customerName || "").toLowerCase();
+    } else if (field === "date") {
+      return new Date(a.date) - new Date(b.date);
+    } else if (field === "recurringInvoiceNumber") {
+      A = (a.number || "").toLowerCase();
+      B = (b.number || "").toLowerCase();
+    } else {
+      A = a[field];
+      B = b[field];
+    }
+
+    if (typeof A === "string") A = A.toLowerCase();
+    if (typeof B === "string") B = B.toLowerCase();
+
+    if (A < B) return -1;
+    if (A > B) return 1;
+    return 0;
   });
-  localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
+
+  localStorage.setItem("recurringInvoices", JSON.stringify(invoices));
   renderRecurringInvoices();
 }
+
+function importRecurringInvoices() {
+  alert("📥 Import Recurring Invoices coming soon");
+}
+
+function exportRecurringInvoices() {
+  const invoices = JSON.parse(localStorage.getItem("recurringInvoices") || "[]");
+
+  const blob = new Blob([JSON.stringify(invoices, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "recurring_invoices.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function cloneRecurringInvoices() {
+  const invoices = JSON.parse(localStorage.getItem("recurringInvoices") || "[]");
+
+  const cloned = invoices.map(inv => ({
+    ...inv,
+    id: crypto.randomUUID(),
+    number: "CLONE-" + inv.number
+  }));
+
+  localStorage.setItem("recurringInvoices", JSON.stringify([...invoices, ...cloned]));
+  renderRecurringInvoices();
+
+  alert("✅ Recurring invoices cloned");
+}
+
+function resetRecurringInvoiceColumnWidths() {
+  alert("🔄 Column widths reset");
+}
+
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("recurringInvoiceNumber").value = generateRecurringInvoiceNumber();
@@ -20999,44 +22100,44 @@ document.addEventListener("DOMContentLoaded", () => {
       <input id="supplierName" type="text" placeholder="Supplier Name" class="border p-2 rounded w-[700px]" />
     </div>
 
-    <!-- Emails -->
+    
     <div class="mb-4 grid grid-cols-2 gap-4">
       <input id="supplierEmailPrimary" type="email" placeholder="Primary Email" class="border p-2 rounded" />
       <input id="supplierEmailSecondary" type="email" placeholder="Secondary Email" class="border p-2 rounded" />
     </div>
 
-    <!-- Phone -->
+    
     <div class="mb-4">
       <input id="supplierPhone" type="text" placeholder="Phone" class="border p-2 rounded w-[700px]" />
     </div>
 
-    <!-- KRA PIN -->
+    
     <div class="mb-4">
       <input id="supplierKraPin" type="text" placeholder="KRA PIN" class="border p-2 rounded w-[700px]" />
     </div>
 
-    <!-- Debit Limit & Statement Date -->
+    
    <div class="mb-4 grid grid-cols-2 gap-4">
   <input id="supplierDebitLimit" type="number" placeholder="Debit Limit" class="border p-2 rounded" />
   <input id="supplierStatementDate" type="date" class="border p-2 rounded" />
    </div>
 
-    <!-- Billing Address -->
+    
     <div class="mb-4">
       <textarea id="supplierBillingAddress" placeholder="Billing Address" class="border p-2 rounded w-[700px]" rows="2"></textarea>
     </div>
 
-    <!-- Shipping Address -->
+    
     <div class="mb-4">
       <textarea id="supplierShippingAddress" placeholder="Shipping Address" class="border p-2 rounded w-[700px]" rows="2"></textarea>
     </div>
-<!-- Save Button -->
+
     <button id="supplierBtn" onclick="addSupplier()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
       Save Supplier
     </button>
   </div>
  
-  <!-- Supplier Table -->
+  
   <div class="bg-white p-6 rounded shadow">
     <h3 class="text-lg font-semibold mb-4">Supplier List</h3>
     <table class="w-full text-sm border">
@@ -21092,17 +22193,17 @@ document.addEventListener("DOMContentLoaded", () => {
     class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
     oninput="searchSupplierPayments()"
   />
-  <!-- Icon -->
+  
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
   </svg>
 </div>
-  <!-- Add Supplier Payment Form -->
+  
   <div class="bg-white p-6 rounded shadow mb-6">
     <h3 class="text-lg font-semibold mb-4">Add Payment</h3>
     
-    <!-- Fields stacked vertically -->
+    
     <div class="mb-4">
       <label for="paymentDate" class="block font-medium mb-1">Date</label>
       <input id="paymentDate" type="date" class="border p-2 rounded" style="width: 700px;" />
@@ -21120,7 +22221,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <option value="">Select Bill (optional)</option>
   </select>
 </div>
- <!-- Payment Method -->
+ 
 <div class="mb-4 sm:col-span-2">
   <label for="paymentMode" class="block font-semibold mb-1">Mode of Payment:</label>
   <select id="paymentMode" class="border p-2 rounded" style="width: 700px;">
@@ -21170,13 +22271,13 @@ document.addEventListener("DOMContentLoaded", () => {
       </select>
     </div>
 
-    <!-- Save Button with ID for edit/update -->
+    
     <button id="paymentSubmitBtn" onclick="addSupplierPayment()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Save Payment
     </button>
   </div>
 
-  <!-- Supplier Payments Table -->
+ 
 <div class="bg-white p-6 rounded shadow">
   <h3 class="text-lg font-semibold mb-4">Payments List</h3>
   <table class="w-full text-sm border">
@@ -21219,7 +22320,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- ======= SUPPLIER BILL MODULE  ======= -->
 <div id="supplierBillsTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-1xl font-bold mb-4 text-left">Bills</h2>
- <!-- Supplier Bills Search -->
+ 
 <div class="relative mb-4">
   <input 
     type="text" 
@@ -21228,7 +22329,7 @@ document.addEventListener("DOMContentLoaded", () => {
     class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
     oninput="searchSupplierBills()"
   />
-  <!-- Icon -->
+  
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -21245,7 +22346,7 @@ document.addEventListener("DOMContentLoaded", () => {
   <div id="billDropdown" class="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
     <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="billOptionsBtn">
 
-      <!-- Sort Buttons for Each Column -->
+      
       <button onclick="sortBillsBy('billNumber')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">Bill #</button>
       <button onclick="sortBillsBy('date')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">Date</button>
       <button onclick="sortBillsBy('supplier')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">Supplier</button>
@@ -21256,7 +22357,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <button onclick="sortBillsBy('paid')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">Paid</button>
       <button onclick="sortBillsBy('due')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">Due</button>
 
-      <!-- Status Submenu -->
+      
       <div class="relative group">
         <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between">
           Status
@@ -21286,7 +22387,7 @@ document.addEventListener("DOMContentLoaded", () => {
   <div id="billFileDropdown" class="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
     <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="billFileBtn">
 
-      <!-- Export / File Actions -->
+      
       <button onclick="exportBills()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">Export Bills</button>
       <button onclick="resetBillColumns()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">Reset Column Width</button>
       <button onclick="manageBillFiles()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">Manage Custom Files</button>
@@ -21362,23 +22463,23 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Opening supplier bill custom files manager...");
   }
 </script>
-  <!-- 🧾 Add Supplier Bill Form -->
+  
   <div class="bg-white p-6 rounded shadow mb-6">
-    <h2 class="text-xl font-bold mb-4">Add Supplier Bill</h2>
+    <h2 class="text-xl font-bold mb-4">Add  Bill</h2>
 
-    <!-- Row 1: Date -->
+   
     <div class="mb-4">
       <input id="billDate" type="date" class="border  p-2 rounded" style="width: 700px;"/>
     </div>
 
-    <!-- Row 2: Supplier -->
+   
     <div class="mb-4">
       <select id="billSupplier" class="border p-2 rounded" style="width: 700px;">
         <option value="">Select Supplier</option>
       </select>
     </div>
 
-    <!-- Row 3: Payment Terms (Net Days) -->
+    
     <div class="mb-4">
       <label for="billTermDays" class="block font-semibold mb-1">Payment Terms:</label>
       <select id="billTermDays" class="border p-2 rounded" style="width: 700px;">
@@ -21393,7 +22494,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </select>
     </div>
 
-    <!-- Row 4: Chart of Account -->
+    
     <div class="mb-4">
       <label for="billChartOfAccount" class="block font-semibold mb-1">Chart of Account:</label>
       <select id="billChartOfAccount" class="border p-2 rounded" style="width: 700px;">
@@ -21401,7 +22502,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </select>
     </div>
 
-    <!-- Row 5: Bill Number + Item Type -->
+    
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
       <div>
         <label for="billNumber" class="block font-semibold mb-1">Bill Number:</label>
@@ -21418,7 +22519,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     </div>
 
-    <!-- Row 6: Item Entry (matches invoice layout) -->
+    
     <div class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4">
       <select id="billItemDesc" class="border p-2 rounded">
         <option value="">Select Item</option>
@@ -21433,7 +22534,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </select>
       </div><button type="button" id="addBillItemBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Add</button>
 
-    <!-- 🧾 Item Table -->
+    
     <div class="overflow-x-auto mb-4">
       <table class="w-full text-sm border">
         <thead class="bg-gray-100">
@@ -21453,17 +22554,16 @@ document.addEventListener("DOMContentLoaded", () => {
       </table>
     </div>
 
-    <!-- Totals -->
+   
     <div class="grid grid-cols-2 gap-4 mb-4">
       <input id="billVATTotal" type="number" placeholder="Total VAT" class="border p-2 rounded bg-gray-100" readonly />
       <input id="billTotalAmount" type="number" placeholder="Total Amount" class="border p-2 rounded bg-gray-100" readonly />
     </div>
 
-    <!-- Save Button -->
+    
    <button type="button" id="saveBillBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Save Bill</button>
   </div>
 
-  <!-- 📋 Supplier Bills List -->
   <div class="bg-white p-6 rounded shadow">
     <h2 class="text-lg font-semibold mb-4">Supplier Bills List</h2>
     <table class="w-full text-sm border">
@@ -21506,20 +22606,20 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </div>
 
-<!-- 🧾 Supplier Bill Preview Modal -->
+
 <div id="supplierBillPreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
   <div class="bg-white p-6 rounded shadow w-full max-w-3xl relative">
     <button onclick="closeSupplierPreview()" class="absolute top-2 right-2 text-gray-600 hover:text-black text-xl">&times;</button>
     
     <h3 class="text-xl font-semibold mb-4 text-center">📋 Supplier Bill Preview</h3>
 
-    <!-- Bill Number and Date -->
+    
     <div class="flex justify-between mb-4">
       <div><strong>Bill Number:</strong> <span id="previewBillNumber"></span></div>
       <div><strong>Date:</strong> <span id="previewBillDate"></span></div>
     </div>
 
-    <!-- Company Info -->
+    
     <div class="text-right mb-4">
       <h4 class="font-semibold">Company</h4>
       <p id="previewBillCompanyName">My Company Ltd</p>
@@ -21527,7 +22627,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <p>Address: <span id="previewBillCompanyAddress">123 Business Rd, Nairobi</span></p>
     </div>
 
-    <!-- Supplier Info -->
+   
     <div class="text-left mb-4">
       <h4 class="font-semibold">Supplier</h4>
       <p id="previewBillSupplierName"></p>
@@ -21535,7 +22635,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <p>Address: <span id="previewBillSupplierAddress"></span></p>
     </div>
 
-    <!-- Bill Items Table -->
+   
     <table class="w-full text-sm border mt-4">
       <thead class="bg-gray-100">
         <tr>
@@ -21572,10 +22672,10 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </div>
 </div>
-<!-- ======= BULK BILLING MODULE (matches Supplier Bill layout exactly) ======= -->
+<!-- ======= BULK BILLING MODULE  -->
 <div id="bulkBillingTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-1xl font-bold mb-4 text-left">Bulk bills</h2>
-<!-- Bulk Bills Search -->
+
 <div class="relative mb-4">
   <input 
     type="text" 
@@ -21584,7 +22684,7 @@ document.addEventListener("DOMContentLoaded", () => {
     class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
     oninput="searchBulkBills()"
   />
-  <!-- Icon -->
+  
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -21708,24 +22808,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 </script>
 
-  <!-- 🧾 Add Bulk Bill Form -->
+  
   <div class="bg-white p-6 rounded shadow mb-6">
     <h2 class="text-xl font-bold mb-4">Add Bulk Bill</h2>
 
-    <!-- Row 1: Date -->
+    
     <div class="mb-4">
       <input id="bulkBillDate" type="date" class="border p-2 rounded" style="width:700px;" />
     </div>
 
-    <!-- Row 2: Supplier Selection (multi-select) -->
+    
     <div class="mb-4">
       <label for="bulkBillingSupplier" class="block font-semibold mb-1">Select Supplier(s):</label>
       <select id="bulkBillingSupplier" class="border p-2 rounded" style="width:700px;" multiple>
-        <!-- Options populated via JS -->
+        
       </select>
     </div>
 
-    <!-- Row 3: Payment Terms -->
+    
     <div class="mb-4">
       <label for="bulkBillTermDays" class="block font-semibold mb-1">Payment Terms:</label>
       <select id="bulkBillTermDays" class="border p-2 rounded" style="width:700px;">
@@ -21740,7 +22840,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </select>
     </div>
 
-    <!-- Row 4: Chart of Account -->
+    
     <div class="mb-4">
       <label for="bulkBillChartOfAccount" class="block font-semibold mb-1">Chart of Account:</label>
       <select id="bulkBillChartOfAccount" class="border p-2 rounded" style="width:700px;">
@@ -21748,7 +22848,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </select>
     </div>
 
-    <!-- Row 5: Bill Number + Item Type -->
+    
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
       <div>
         <label for="bulkBillNumber" class="block font-semibold mb-1">Bill Number:</label>
@@ -21765,7 +22865,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     </div>
 
-    <!-- Row 6: Currency -->
+    
     <div class="grid grid-cols-2 gap-4 mb-4">
       <div>
         <label for="bulkBillCurrency" class="block font-semibold mb-1">Currency:</label>
@@ -21782,7 +22882,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     </div>
 
-    <!-- Row 7: Item Entry -->
+    
     <div class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4">
       <select id="bulkBillItemDesc" class="border p-2 rounded">
         <option value="">Select Item</option>
@@ -21798,7 +22898,7 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
     <button type="button" id="addBulkBillItemBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Add</button>
 
-    <!-- Item Table -->
+    
     <div class="overflow-x-auto mb-4">
       <table class="w-full text-sm border">
         <thead class="bg-gray-100">
@@ -21818,17 +22918,17 @@ document.addEventListener("DOMContentLoaded", () => {
       </table>
     </div>
 
-    <!-- Totals -->
+    
     <div class="grid grid-cols-2 gap-4 mb-4">
       <input id="bulkBillVATTotal" type="number" placeholder="Total VAT" class="border p-2 rounded bg-gray-100" readonly />
       <input id="bulkBillTotalAmount" type="number" placeholder="Total Amount" class="border p-2 rounded bg-gray-100" readonly />
     </div>
 
-    <!-- Save Button -->
+    
     <button type="button" id="saveBulkBillBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Save Bulk Bill</button>
   </div>
 
-  <!-- Bulk Bills List -->
+  
   <div class="bg-white p-6 rounded shadow">
     <h2 class="text-lg font-semibold mb-4">Bulk Bills List</h2>
     <table class="w-full text-sm border">
@@ -21873,7 +22973,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- ✅ SUPPLIER PURCHASE ORDERS MODULE --> 
 <div id="supplierPurchaseOrdersTab" class="p-4">
   <h2 class="text-1xl font-bold mb-4 text-left">Purchase Orders</h2>
-  <!-- 🔎 Purchase Orders Search -->
+ 
 <div class="relative mb-4">
   <input 
     type="text" 
@@ -21882,7 +22982,7 @@ document.addEventListener("DOMContentLoaded", () => {
     class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
     oninput="searchPOs()"
   />
-  <!-- Search Icon -->
+ 
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -22009,23 +23109,23 @@ function managePOFiles() {
     alert('Open PO file management modal or page here!');
 }
 </script>
-  <!-- 🧾 Add Purchase Order Form -->
+  
   <div class="bg-white p-6 rounded shadow mb-6">
     <h3 class="text-xl font-semibold mb-4">Add New Purchase Order</h3>
   
-    <!-- Row 1: Date -->
+   
     <div class="mb-4">
       <label for="poDate" class="block font-semibold mb-1">Date</label>
       <input id="poDate" type="date" class="border p-2 rounded" style="width: 700px;" />
     </div>
 
-    <!-- Row 2: PO Number -->
+    
     <div class="mb-4">
       <label for="poNumber" class="block font-semibold mb-1">PO Number</label>
       <input id="poNumber" type="text" class="border p-2 rounded w-half bg-gray-100" readonly />
     </div>
 
-    <!-- Row 3: Select Supplier -->
+    
     <div class="mb-4">
       <label for="poSupplier" class="block font-semibold mb-1">Select Supplier</label>
       <select id="poSupplier" class="border p-2 rounded" style="width: 700px;">
@@ -22033,7 +23133,7 @@ function managePOFiles() {
       </select>
     </div>
 
-    <!-- Row 4: Payment Terms / Validity -->
+    
     <div class="mb-4">
       <label for="poValidity" class="block font-semibold mb-1">Payment Terms (Days)</label>
       <select id="poValidity" class="border p-2 rounded" style="width: 700px;">
@@ -22047,7 +23147,7 @@ function managePOFiles() {
       </select>
     </div>
 
-    <!-- Row 5: Chart of Account -->
+    
     <div class="mb-4">
       <label for="poChartAccount" class="block font-semibold mb-1">Chart of Account</label>
       <select id="poChartAccount" class="border p-2 rounded" style="width: 700px;">
@@ -22055,7 +23155,7 @@ function managePOFiles() {
       </select>
     </div>
 
-    <!-- Row 6: Item Type -->
+    
     <div class="mb-4">
       <label for="poItemType" class="block font-semibold mb-1">Item Type</label>
       <select id="poItemType" class="border p-2 rounded" style="width: 700px;"required>
@@ -22065,7 +23165,7 @@ function managePOFiles() {
       </select>
     </div>
 
-    <!-- Row 7: Product Entry -->
+    
     <div class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4">
       <select id="poProductSelect" class="border p-2 rounded">
         <option value="">Select Product</option>
@@ -22081,7 +23181,7 @@ function managePOFiles() {
       <button onclick="addPOItem()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-900">Add Item</button>
     </div>
 
-    <!-- PO Items Table -->
+    
     <table class="w-full text-sm border mb-4" id="poItemsTable">
       <thead class="bg-gray-100">
         <tr>
@@ -22099,13 +23199,13 @@ function managePOFiles() {
       </tbody>
     </table>
 
-    <!-- Save Button -->
+   
     <button type="button" id="savePOBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
       Save PO
     </button>
   </div>
 
-  <!-- PO Items Table -->
+  
     <div class="overflow-x-auto mb-4">
       <table class="w-full text-sm border" id="poItemsTable">
         <thead class="bg-gray-100">
@@ -22142,7 +23242,7 @@ function managePOFiles() {
     <button id="nextPageBtn" class="px-1 py-1 border rounded disabled:opacity-50" disabled>Next</button>
   </div>
 </div>
-<!-- ✅ Purchase Order Preview Modal -->
+
 <div id="poPreviewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
   <div class="bg-white rounded-lg shadow-lg w-11/12 max-w-3xl p-6 relative">
     <button onclick="closePOPreview()" class="absolute top-2 right-2 text-gray-500 hover:text-black">✖</button>
@@ -22199,7 +23299,7 @@ function managePOFiles() {
 <!-- ✅ SUPPLIER DEBIT NOTES MODULE -->
 <div id="supplierDebitNotesTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-1xl font-bold mb-4 text-left"> Debit Notes</h2>
-  <!-- 🔎 Debit Notes Search -->
+  
 <div class="relative mb-4">
   <input 
     type="text" 
@@ -22209,7 +23309,7 @@ function managePOFiles() {
     oninput="searchDebitNotes()"
   />
   
-  <!-- Search Icon -->
+  
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -22538,7 +23638,7 @@ function managePOFiles() {
 <div id="taxPaymentsTab" class="hidden ml-84 mr-7 p-2">
 
   <h2 class="text-1xl font-bold mb-6 text-left">Tax Payments</h2>
-  <!-- 🔎 Search Bar -->
+  
   <div class="relative mb-4">
     <input 
       type="text" 
@@ -22555,7 +23655,6 @@ function managePOFiles() {
     </svg>
   </div>
 
-  <!-- Toggle Buttons -->
   <div class="mb-4 flex space-x-2">
     <button id="singleTaxBtn"
             onclick="showSingleTax()"
@@ -22569,7 +23668,7 @@ function managePOFiles() {
       Bulk Add Payments
     </button>
   </div>
-  <!-- Taxes Import/Export/Sort Menu -->
+ 
 <div class="mb-2 relative inline-block text-right">
   <button id="sortOptionsBtn" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-9 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50" aria-haspopup="true" aria-expanded="true">
     Options
@@ -22581,7 +23680,7 @@ function managePOFiles() {
   <div id="sortDropdown" class="origin-top-left absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
     <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="sortOptionsBtn">
 
-      <!-- Date -->
+      
       <button onclick="sortBy('date')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M8 7V3m8 4V3m-9 8h10M5 21h14M12 17v4"/>
@@ -22589,7 +23688,6 @@ function managePOFiles() {
         Date
       </button>
 
-      <!-- Tax Type -->
       <button onclick="sortBy('taxType')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M3 6h18M3 12h18M3 18h18"/>
@@ -22597,7 +23695,7 @@ function managePOFiles() {
         Tax Type
       </button>
 
-      <!-- Account -->
+      
       <button onclick="sortBy('account')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M3 10h18M3 14h18M3 6h18"/>
@@ -22605,7 +23703,6 @@ function managePOFiles() {
         Account
       </button>
 
-      <!-- Paid Through -->
       <button onclick="sortBy('paidThrough')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M12 8v8m-4-4h8"/>
@@ -22613,7 +23710,7 @@ function managePOFiles() {
         Paid Through
       </button>
 
-      <!-- Amount -->
+      
       <button onclick="sortBy('amount')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M12 8v8m-4-4h8"/>
@@ -22621,7 +23718,7 @@ function managePOFiles() {
         Amount
       </button>
 
-      <!-- Import Tax Payments -->
+      
       <button onclick="importTaxPayments()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M12 5v14m7-7H5"/>
@@ -22629,7 +23726,7 @@ function managePOFiles() {
         Import Tax Payments
       </button>
 
-      <!-- Export Tax Payments -->
+     
       <button onclick="exportTaxPayments()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M4 12h16"/>
@@ -22637,7 +23734,7 @@ function managePOFiles() {
         Export Tax Payments
       </button>
 
-      <!-- Reset Column Width -->
+      
       <button onclick="resetColumnWidths()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M6 6h12M6 12h12M6 18h12"/>
@@ -22648,13 +23745,13 @@ function managePOFiles() {
     </div>
   </div>
 </div>
-  <!-- ================= SINGLE TAX SECTION ================= -->
+  <!--  SINGLE TAX SECTION  -->
   <div id="singleTaxSection">
 
     <div class="bg-white p-6 rounded shadow mb-6">
       <h3 class="text-lg font-semibold mb-4">Log Tax Payment</h3>
 
-      <!-- Date -->
+      
       <div class="mb-4">
         <label for="taxDate" class="block font-medium mb-1">Date</label>
         <input id="taxDate" type="date"
@@ -22662,7 +23759,7 @@ function managePOFiles() {
                style="width: 700px;" />
       </div>
 
-      <!-- Chart of Accounts -->
+      
       <div class="mb-4">
         <label for="taxType" class="block font-medium mb-1">Chart of Accounts</label>
         <select id="taxType"
@@ -22672,7 +23769,7 @@ function managePOFiles() {
         </select>
       </div>
 
-      <!-- Mode of Payment -->
+      
       <div class="mb-4">
         <label for="taxPaymentMode" class="block font-medium mb-1">Mode of Payment</label>
         <select id="taxPaymentMode"
@@ -22723,7 +23820,7 @@ function managePOFiles() {
         </select>
       </div>
 
-      <!-- Amount -->
+      
       <div class="mb-4">
         <label for="taxAmount" class="block font-medium mb-1">Amount</label>
         <input id="taxAmount" type="number"
@@ -22732,7 +23829,7 @@ function managePOFiles() {
                style="width: 700px;" />
       </div>
 
-      <!-- Reference -->
+      
       <div class="mb-4">
         <label for="taxRef" class="block font-medium mb-1">Reference</label>
         <input id="taxRef" type="text"
@@ -22749,7 +23846,7 @@ function managePOFiles() {
 
   </div>
 
-  <!-- ================= BULK TAX SECTION ================= -->
+  <!--  BULK TAX SECTION  -->
 <div id="bulkTaxSection" class="hidden">
 
   <div class="bg-white p-6 rounded shadow mb-6">
@@ -22768,7 +23865,7 @@ function managePOFiles() {
         </tr>
       </thead>
       <tbody id="bulkTaxBody">
-        <!-- Rows will be added dynamically -->
+        
       </tbody>
     </table>
 
@@ -22785,7 +23882,6 @@ function managePOFiles() {
 
 </div>
 
-  <!-- ================= TAX PAYMENT HISTORY ================= -->
   <div class="bg-white p-6 rounded shadow">
     <h3 class="text-lg font-semibold mb-4">Tax Payment History</h3>
     <table class="w-full text-sm border">
@@ -22829,7 +23925,7 @@ function managePOFiles() {
 <div id="OperationalCostsTab" class="ml-84 p-1">
 
   <h2 class="text-1xl font-bold mb-4 text-left">Operational Costs</h2>
-  <!-- 🔎 Search -->
+  
   <div class="relative mb-4">
     <input 
       type="text" 
@@ -22846,7 +23942,7 @@ function managePOFiles() {
     </svg>
   </div>
 
-  <!-- Toggle Buttons -->
+ 
 <div class="mb-4 flex space-x-2">
   <button id="singleTabBtn" onclick="showSingleExpense()" class="px-1 py-1 bg-blue-900 text-white rounded"> Record Expense
   </button>
@@ -22854,7 +23950,7 @@ function managePOFiles() {
   <button id="bulkTabBtn" onclick="showBulkExpense()" class="px-1 py-1 bg-blue-900 text-white rounded"> Bulk Add Expenses
   </button>
 </div>
-<!-- ADD IMPORT/EXPORT/SORT MENU HERE -->
+
 <div class="mb-2 relative inline-block text-right">
   <button id="menuButton" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-9 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50" aria-haspopup="true" aria-expanded="true" onclick="toggleMenu()">
    Options
@@ -22866,7 +23962,7 @@ function managePOFiles() {
   <div id="menuDropdown" class="origin-top-left absolute left -0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
     <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="menuButton">
 
-      <!-- Import Expenses -->
+     
       <button onclick="importExpenses()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M12 5v14m7-7H5"/>
@@ -22874,7 +23970,7 @@ function managePOFiles() {
         Import Expenses
       </button>
 
-      <!-- Export Expenses -->
+      
       <button onclick="exportExpenses()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M4 12h16"/>
@@ -22890,7 +23986,7 @@ function managePOFiles() {
         Sort by Category
       </button>
 
-      <!-- Sort by Date -->
+      
       <button onclick="sortByDate()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M8 7V3m8 4V3m-9 8h10M5 21h14M12 17v4"/>
@@ -22898,7 +23994,7 @@ function managePOFiles() {
         Sort by Date
       </button>
 
-      <!-- Sort by Bank -->
+      
       <button onclick="sortByBank()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M3 10h18M3 14h18M3 6h18"/>
@@ -22906,7 +24002,7 @@ function managePOFiles() {
         Sort by Bank
       </button>
 
-      <!-- Sort by Amount -->
+     
       <button onclick="sortByAmount()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M12 8v8m-4-4h8"/>
@@ -22914,7 +24010,7 @@ function managePOFiles() {
         Sort by Amount
       </button>
 
-      <!-- Reset Column Width -->
+      
       <button onclick="resetColumnWidth()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M6 6h12M6 12h12M6 18h12"/>
@@ -22926,7 +24022,7 @@ function managePOFiles() {
   </div>
 </div>
 
-  <!-- ================= SINGLE EXPENSE SECTION ================= -->
+  <!-- SINGLE EXPENSE  -->
   <div id="singleExpenseSection">
 
     <div class="bg-white p-6 rounded shadow mb-6">
@@ -23070,7 +24166,7 @@ function managePOFiles() {
 <!-- ✅ GOODS RECEIVED NOTES MODULE -->
 <div id="grnTab" class="hidden p-1">
   <h2 class="text-1xl font-bold mb-4 text-left">📥 Goods Received Notes</h2>
-<!-- 🔎 GRN Search -->
+
 <div class="relative mb-4 mt-2">
   <input 
     type="text" 
@@ -23080,13 +24176,13 @@ function managePOFiles() {
     oninput="searchGRNs()"
   />
   
-  <!-- Search Icon -->
+ 
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
   </svg>
 </div>
-<!-- GRN IMPORT/EXPORT/SORT MENU -->
+
 <div class="mb-2 relative inline-block text-right">
   <button id="grnMenuButton" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-9 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50" aria-haspopup="true" aria-expanded="true" onclick="toggleGRNMenu()">
    Options
@@ -23098,7 +24194,7 @@ function managePOFiles() {
   <div id="grnMenuDropdown" class="origin-top-left absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
     <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="grnMenuButton">
 
-      <!-- Import GRNs -->
+      
       <button onclick="importGRNs()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M12 5v14m7-7H5"/>
@@ -23106,7 +24202,7 @@ function managePOFiles() {
         Import GRNs
       </button>
 
-      <!-- Export GRNs -->
+      
       <button onclick="exportGRNs()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M4 12h16"/>
@@ -23114,7 +24210,7 @@ function managePOFiles() {
         Export GRNs
       </button>
 
-      <!-- Sort by Date -->
+     
       <button onclick="sortGRNsByDate()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M8 7V3m8 4V3m-9 8h10M5 21h14M12 17v4"/>
@@ -23122,7 +24218,7 @@ function managePOFiles() {
         Sort by Date
       </button>
 
-      <!-- Sort by Supplier -->
+      
       <button onclick="sortGRNsBySupplier()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M3 6h18M3 12h18M3 18h18"/>
@@ -23130,7 +24226,7 @@ function managePOFiles() {
         Sort by Supplier
       </button>
 
-      <!-- Sort by Bill -->
+      
       <button onclick="sortGRNsByBill()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M3 6h18M3 12h18M3 18h18"/>
@@ -23138,7 +24234,6 @@ function managePOFiles() {
         Sort by Bill
       </button>
 
-      <!-- Sort by Item -->
       <button onclick="sortGRNsByItem()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M3 6h18M3 12h18M3 18h18"/>
@@ -23146,7 +24241,7 @@ function managePOFiles() {
         Sort by Item
       </button>
 
-      <!-- Sort by Quantity -->
+     
       <button onclick="sortGRNsByQty()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M12 8v8m-4-4h8"/>
@@ -23154,7 +24249,6 @@ function managePOFiles() {
         Sort by Quantity
       </button>
 
-      <!-- Reset Column Width -->
       <button onclick="resetGRNColumnWidth()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M6 6h12M6 12h12M6 18h12"/>
@@ -23166,11 +24260,10 @@ function managePOFiles() {
   </div>
 </div>
 
- <!-- Add New GRN -->
+ 
 <div class="bg-white p-4 rounded shadow mb-6">
   <h3 class="text-lg font-semibold mb-4">Add GRN</h3>
 
-  <!-- Row 1: Supplier -->
   <div class="mb-4">
     <label for="grnSupplier" class="block text-sm font-medium mb-1">Supplier</label>
     <select id="grnSupplier" onchange="showSupplierBills()" class="border p-2 rounded" style="width: 700px;">
@@ -23178,13 +24271,11 @@ function managePOFiles() {
     </select>
   </div>
 
-  <!-- Row 2: GRN Date -->
   <div class="mb-4">
     <label for="grnDate" class="block text-sm font-medium mb-1">GRN Date</label>
     <input type="date" id="grnDate" class="border p-2 rounded" style="width: 700px;">
   </div>
 
-  <!-- Row 3: Bill -->
   <div class="mb-4">
     <label for="grnBillSelect" class="block text-sm font-medium mb-1">Bill</label>
     <select id="grnBillSelect" onchange="populateGRNItems()" class="border p-2 rounded" style="width: 700px;">
@@ -23192,37 +24283,31 @@ function managePOFiles() {
     </select>
   </div>
 
-  <!-- Row 4: GRN Number (auto) -->
   <div class="mb-4">
     <label for="grnNumber" class="block text-sm font-medium mb-1">GRN No.</label>
     <input type="text" id="grnNumber" class="border bg-gray-100 p-2 rounded" style="width: 700px;" readonly>
   </div>
 
-  <!-- Row 5: Item Description -->
   <div class="mb-4">
     <label for="grnDescription" class="block text-sm font-medium mb-1">Description</label>
     <input type="text" id="grnDescription" placeholder="Item Description" class="border p-2 rounded" style="width: 700px;">
   </div>
 
-  <!-- Row 6: Receiving Location -->
   <div class="mb-4">
     <label for="grnLocation" class="block text-sm font-medium mb-1">Receiving Location</label>
     <input type="text" id="grnLocation" placeholder="Warehouse / Location" class="border p-2 rounded" style="width: 700px;">
   </div>
 
-  <!-- Row 7: Reference Number -->
   <div class="mb-4">
     <label for="grnReferenceNumber" class="block text-sm font-medium mb-1">Reference Number</label>
     <input type="text" id="grnReferenceNumber" placeholder="Bill / Reference No." class="border p-2 rounded" style="width: 700px;">
   </div>
 
-  <!-- Row 8: Received By -->
   <div class="mb-4">
     <label for="grnReceiver" class="block text-sm font-medium mb-1">Received By</label>
     <input type="text" id="grnReceiver" placeholder="Receiver Name" class="border p-2 rounded" style="width: 700px;">
   </div>
 
-  <!-- Row 9: GRN Tracking Number -->
   <div class="mb-4">
     <label for="grnTrackNumber" class="block text-sm font-medium mb-1">GRN Track Number</label>
     <input type="text" id="grnTrackNumber" placeholder="Tracking Number / Reference" class="border p-2 rounded" style="width: 700px;">
@@ -23232,7 +24317,6 @@ function managePOFiles() {
   <h3 class="text-lg font-semibold mb-4">Add GRN</h3>
   
   <form id="grnForm">
-    <!-- All your input fields here -->
     
     <div class="text-right">
       <button type="button" onclick="addGRN()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
@@ -23243,7 +24327,6 @@ function managePOFiles() {
 </div>
 </div>
 
-<!-- GRN List Table -->
 <div class="bg-white p-4 rounded shadow">
   <h3 class="text-lg font-semibold mb-2">GRN History</h3>
   <table class="w-full border text-sm">
@@ -23285,14 +24368,14 @@ function managePOFiles() {
   </div>
 </div>
  
-<!-- GRN Preview Modal -->
+
 <div id="grnPreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
   <div id="grnPreviewContentWrapper" class="bg-white rounded shadow max-w-2xl w-full p-6 relative">
 
-    <!-- Close Button Top Right -->
+  
     <button onclick="closeGRNPreview()" class="absolute top-3 right-3 border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">X</button>
 
-    <!-- ROW 1: Company (Left) + Logo (Center) -->
+  
     <div class="flex justify-between items-center border-b pb-3 mb-3">
       <div class="w-1/2">
         <h3 class="font-semibold mb-1">Company</h3>
@@ -23309,7 +24392,6 @@ function managePOFiles() {
       </div>
     </div>
 
-    <!-- ROW 2: Supplier Info (Right) -->
     <div class="flex justify-end items-start border-b pb-3 mb-3">
       <div class="w-1/3 text-right">
         <h3 class="font-semibold mb-1">Supplier</h3>
@@ -23320,7 +24402,6 @@ function managePOFiles() {
       </div>
     </div>
 
-    <!-- GRN Details Table -->
     <div class="mb-3 overflow-x-auto">
       <table class="w-full border text-sm">
         <thead class="bg-gray-100">
@@ -23340,7 +24421,7 @@ function managePOFiles() {
       </table>
     </div>
 
-    <!-- Buttons Inline -->
+  
     <div id="grnPreviewButtons" class="mt-3 flex justify-between gap-2">
   <button onclick="closeGRNPreview()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800 flex-1">Close</button>
   <button onclick="printGRNFromPreview()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800 flex-1">Print</button>
@@ -23358,13 +24439,11 @@ function managePOFiles() {
 <div id="supplierStatementTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-1xl font-bold mb-4 text-left">📑  Statement</h2>
 
-  <!-- Supplier Dropdown -->
   <label for="supplierStatementSelect" class="block mb-2 font-medium">Select Supplier:</label>
   <select id="supplierStatementSelect" onchange="loadSupplierStatement(this.value, document.getElementById('statementFromDate').value, document.getElementById('statementToDate').value)" class="p-2 border rounded w-full mb-4">
     <option value="">-- Choose Supplier --</option>
   </select>
 
-  <!-- Date Range Filters -->
   <div class="flex gap-2 mb-4">
     <div class="flex flex-col">
       <label for="statementFromDate" class="text-sm font-medium">From:</label>
@@ -23376,7 +24455,7 @@ function managePOFiles() {
     </div>
   </div>
 
-  <!-- Action Buttons -->
+
   <div class="flex flex-wrap gap-2 mb-4">
     <button onclick="printSupplierStatement()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">🖨️ Print</button>
     <button onclick="downloadSupplierStatementPDF()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">⬇️ Download PDF</button>
@@ -23384,12 +24463,10 @@ function managePOFiles() {
     <button onclick="sendSupplierStatementEmail()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">📧 Send Email</button>
   </div>
 
-  <!-- Company & Supplier Profiles -->
   <div id="supplierStatementProfiles" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 border p-3 rounded bg-gray-50">
-    <!-- Company & Supplier profiles will be injected here -->
+   
   </div>
 
-  <!-- Statement Table -->
   <div id="supplierStatementContent" class="overflow-auto mb-4">
     <table class="w-full border text-sm">
       <thead class="bg-gray-100">
@@ -23426,8 +24503,7 @@ function managePOFiles() {
     <button id="nextPageBtn" class="px-1 py-1 border rounded disabled:opacity-50" disabled>Next</button>
   </div>
 </div>
- 
-  <!-- Modal Preview -->
+
   <div id="supplierStatementPreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
     <div class="bg-white p-4 w-[95%] max-w-4xl max-h-[90vh] overflow-auto rounded shadow-lg">
       <div class="flex justify-between items-center mb-2">
@@ -23821,7 +24897,7 @@ function searchSupplierPayments() {
     }
   });
 }
-// ---------------------- ADD / UPDATE PAYMENT ----------------------
+
 function addSupplierPayment() {
   const date = document.getElementById("paymentDate").value;
   const supplier = document.getElementById("paymentSupplierName").value.trim();
@@ -23829,7 +24905,7 @@ function addSupplierPayment() {
   const mode = document.getElementById("paymentMode").value.trim();     
   const bank = document.getElementById("paymentMethod").value.trim();   
 
-  // Validate required fields
+  
   if (!date || !supplier || isNaN(amount) || !mode || !bank) {
     alert("Please fill in all required fields.");
     return;
@@ -23847,7 +24923,7 @@ function addSupplierPayment() {
   let manualTx = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
 
   if (editingPaymentIndex === null) {
-    // ------------------ ADD NEW PAYMENT ------------------
+    
     if (banks[bankIndex].balance < amount) { 
       alert("Insufficient funds in selected bank."); 
       return; 
@@ -23856,7 +24932,7 @@ function addSupplierPayment() {
     banks[bankIndex].balance -= amount;
     payments.push({ date, supplier, amount, mode, bank });
 
-    // Add to transactions
+    
     const newTx = {
       bank,
       type: "Vendor Payment",
@@ -23872,24 +24948,24 @@ function addSupplierPayment() {
     manualTx.push(newTx);
 
   } else {
-    // ------------------ EDIT PAYMENT ------------------
+    
     const oldPayment = payments[editingPaymentIndex];
 
-    // Refund old bank
+    
     const oldBankIndex = banks.findIndex(b => b.name === oldPayment.bank);
     if (oldBankIndex !== -1) banks[oldBankIndex].balance += parseFloat(oldPayment.amount);
 
-    // Deduct from new bank
+    
     if (banks[bankIndex].balance < amount) { 
       alert("Insufficient funds in selected bank."); 
       return; 
     }
     banks[bankIndex].balance -= amount;
 
-    // Update payment record
+    
     payments[editingPaymentIndex] = { date, supplier, amount, mode, bank };
 
-    // Update transactions and manualTransactions
+    
     const filterFn = t =>
       !(t.date === oldPayment.date &&
         t.bank === oldPayment.bank &&
@@ -23918,13 +24994,13 @@ function addSupplierPayment() {
     document.getElementById("paymentSubmitBtn").textContent = "Save Payment";
   }
 
-  // Save updates to localStorage
+  
   localStorage.setItem("billPayments", JSON.stringify(payments));
   localStorage.setItem("banks", JSON.stringify(banks));
   localStorage.setItem("transactions", JSON.stringify(transactions));
   localStorage.setItem("manualTransactions", JSON.stringify(manualTx));
 
-  // Refresh UI
+  
   renderSupplierPayments();
   renderManualTransactions?.();
   renderReconciliationTransactions?.();
@@ -23935,7 +25011,7 @@ function addSupplierPayment() {
   loadDashboard?.();
 }
 
-// ---------------------- RENDER PAYMENTS ----------------------
+
 function renderSupplierPayments() {
   const payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
   const table = document.getElementById("supplierPaymentsTable");
@@ -23962,7 +25038,7 @@ function renderSupplierPayments() {
     table.appendChild(row);
   });
 
-  // Optional: show total at the bottom
+ 
   const totalRow = document.createElement("tr");
   totalRow.innerHTML = `
     <td class="p-2 font-bold" colspan="2">Total</td>
@@ -24074,7 +25150,7 @@ function closeSupplierPreviewRow() {
   const existing = document.getElementById('previewRow');
   if (existing) existing.remove();
 }
-// ---------------------- EDIT PAYMENT ----------------------
+
 function editSupplierPayment(index) {
   const payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
   const payment = payments[index];
@@ -24089,7 +25165,7 @@ function editSupplierPayment(index) {
   document.getElementById("paymentSubmitBtn").textContent = "Update Payment";
 }
 
-// ---------------------- DELETE PAYMENT ----------------------
+
 function deleteSupplierPayment(index) {
   if (!confirm("Are you sure you want to delete this payment?")) return;
 
@@ -24145,7 +25221,7 @@ function deleteSupplierPayment(index) {
   alert("♻️ Supplier payment moved to Recycle Bin & accounts rolled back.");
 }
 
-// ---------------------- CLEAR FORM ----------------------
+
 function clearPaymentForm() {
   document.getElementById("paymentDate").value = "";
   document.getElementById("paymentSupplierName").value = "";
@@ -24155,7 +25231,7 @@ function clearPaymentForm() {
   document.getElementById("paymentSubmitBtn").textContent = "Save Payment";
 }
 
-// ---------------------- DROPDOWNS ----------------------
+
 function populateSupplierDropdownById(id) {
   const dropdown = document.getElementById(id);
   dropdown.innerHTML = '<option value="">Select Supplier</option>';
@@ -24180,7 +25256,7 @@ function populateBankDropdown() {
   });
 }
 
-// ---------------------- INIT ----------------------
+
 document.addEventListener("DOMContentLoaded", () => {
   populateSupplierDropdownById("paymentSupplierName");
   populateBankDropdown();
@@ -24188,7 +25264,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 <script>
-// ---------------------- GLOBAL VARS ----------------------
+
 let billItems = [];
 let editIndex = -1;
 let currentEditingBillIndex = null;
@@ -24207,7 +25283,7 @@ function searchSupplierBills() {
   });
 }
 
-// ---------------------- INVENTORY FUNCTIONS ----------------------
+
 function getInventory(warehouse) {
   return JSON.parse(localStorage.getItem('inventory_' + warehouse) || '[]');
 }
@@ -24226,7 +25302,7 @@ function getAllInventories() {
     });
 }
 
-// ---------------------- BILL CHART OF ACCOUNTS ----------------------
+
 function populateBillChartOfAccountDropdown() {
   const select = document.getElementById("billChartOfAccount");
   if (!select) return; 
@@ -24234,32 +25310,32 @@ function populateBillChartOfAccountDropdown() {
  
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
 
-  // Allowed types: Expenses + Liabilities
+  
   const allowedTypes = [
-    // 🔹 Expenses
+    
     "Expense", "Cost of Goods Sold", "Other Expense", "Depreciation",
     "Personnel Costs", "Marketing Expense", "Finance Costs",
     "Repairs & Maintenance", "Insurance Costs",
 
-    // 🔹 Liabilities
+    
     "Liability", "Other Current Liability", "Accounts Payable",
     "Non Current Liability", "Other Liability", "Credit Card"
   ];
 
-  // Filter by allowed types
+  
   const filteredAccounts = accounts.filter(acc => allowedTypes.includes(acc.type));
 
-  // Sort filtered accounts by code (numeric sort if possible)
+  
   filteredAccounts.sort((a, b) => {
     const codeA = a.code || "";
     const codeB = b.code || "";
     return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: "base" });
   });
 
-  // Clear existing options
+  
   select.innerHTML = '<option value="">Select Account</option>';
 
-  // Populate dropdown
+  
   filteredAccounts.forEach(acc => {
     const option = document.createElement("option");
     option.value = acc.name; 
@@ -24268,8 +25344,7 @@ function populateBillChartOfAccountDropdown() {
   });
 }
 
-// ---------------------- CALL POPULATE ----------------------
-// 1️⃣ When page loads
+
 document.addEventListener("DOMContentLoaded", populateBillChartOfAccountDropdown);
 
 function addAccount() {
@@ -24277,7 +25352,7 @@ function addAccount() {
   populateBillChartOfAccountDropdown();
 }
 
-// ---------------------- SUPPLIER DROPDOWN ----------------------
+
 function populateSupplierDropdownById(id) {
   const dropdown = document.getElementById(id);
   if (!dropdown) return;
@@ -24345,13 +25420,13 @@ document.getElementById('billItemDesc')?.addEventListener('change', () => {
   }
 });
 
-// ---------------------- BILL NUMBER ----------------------
+
 function generateBillNumber() {
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
   return `BIL-${String(bills.length + 1).padStart(4, '0')}`;
 }
 
-// ---------------------- BILL ITEMS ----------------------
+
 function addBillItem() {
   const selVal = document.getElementById('billItemDesc').value;
   if (!selVal) { 
@@ -24418,7 +25493,7 @@ function addBillItem() {
   clearBillItemForm();
 }
 
-// ---------------------- RENDER BILL ITEMS ----------------------
+
 function renderBillItems() {
   const tbody = document.getElementById('billItemsTableBody');
   tbody.innerHTML = '';
@@ -24459,7 +25534,7 @@ function renderBillItems() {
   document.getElementById('billTotalAmount').value = totalAmount.toFixed(2);
 }
 
-// ---------------------- EDIT / REMOVE ----------------------
+
 function editBillItem(index) {
   const item = billItems[index];
   editIndex = index;
@@ -24474,7 +25549,7 @@ function removeBillItem(index) {
   renderBillItems();
 }
 
-// ---------------------- CLEAR FORM ----------------------
+
 function clearBillItemForm() {
   document.getElementById('billItemDesc').value = '';
   document.getElementById('billItemQty').value = '';
@@ -24483,7 +25558,7 @@ function clearBillItemForm() {
   document.getElementById('billItemTax').value = '16';
 }
 
-// ---------------------- SAVE BILL ----------------------
+
 function saveSupplierBill() {
   const date = document.getElementById('billDate').value;
   const supplier = document.getElementById('billSupplier').value;
@@ -24496,7 +25571,7 @@ function saveSupplierBill() {
     return;
   }
 
-  // ------------------ NORMALIZE ITEMS ------------------
+  
   billItems = billItems.map(item => ({
     ...item,
     sku: (item.sku || "").trim(),
@@ -24508,7 +25583,7 @@ function saveSupplierBill() {
     vat: parseFloat(item.vat) || 0
   }));
 
-  // ------------------ MERGE DUPLICATES ------------------
+  
   const mergedItems = [];
   billItems.forEach(item => {
     const existing = mergedItems.find(i =>
@@ -24526,7 +25601,7 @@ function saveSupplierBill() {
     }
   });
 
-  // ------------------ DUE DATE ------------------
+  
   let due = '';
   if (date) {
     const dueDate = new Date(date);
@@ -24534,12 +25609,12 @@ function saveSupplierBill() {
     due = dueDate.toISOString().split('T')[0];
   }
 
-  // ------------------ TOTALS ------------------
+  
   const subtotal = mergedItems.reduce((sum, i) => sum + i.subtotal, 0);
   const vat = mergedItems.reduce((sum, i) => sum + i.vat, 0);
   const total = subtotal + vat;
 
-  // ------------------ TAX GROUPING ------------------
+  
   let purchasesGeneral = 0, purchasesOther = 0, purchasesZero = 0, purchasesExempt = 0;
 
   mergedItems.forEach(item => {
@@ -24556,7 +25631,7 @@ function saveSupplierBill() {
     }
   });
 
-  // ------------------ BILL OBJECT ------------------
+  
   const bill = {
     billNumber,
     date,
@@ -24577,13 +25652,13 @@ function saveSupplierBill() {
 
   let bills = JSON.parse(localStorage.getItem('bills') || '[]');
 
-  // ------------------ EDIT MODE FIX ------------------
+  
   if (typeof currentEditingBillIndex === 'number' && currentEditingBillIndex > -1) {
     const oldBill = bills[currentEditingBillIndex];
 
     updateSupplierBalance(oldBill.supplier, -oldBill.total);
 
-    // Reverse old inventory (grouped)
+    
     const reverseMap = {};
 
     oldBill.items.forEach(item => {
@@ -24623,7 +25698,7 @@ function saveSupplierBill() {
   updateAccountsPayable();
   renderAccountsPayable?.();
 
-  // ------------------ BALANCE SHEET ------------------
+  
   let balanceSheet = JSON.parse(localStorage.getItem("balanceSheet") || '{}');
 
   if (!balanceSheet.currentAssets) balanceSheet.currentAssets = {};
@@ -24639,7 +25714,7 @@ function saveSupplierBill() {
   if (typeof renderInventorySummary === 'function') renderInventorySummary();
   if (typeof renderInventoryTable === 'function') renderInventoryTable();
 
-  // ------------------ UPDATE INVENTORY (FIXED) ------------------
+  
   const warehouseMap = {};
 
   mergedItems.forEach(item => {
@@ -24656,7 +25731,7 @@ function saveSupplierBill() {
       (p.name || "").trim().toLowerCase() === item.desc
     );
 
-    // Extra fallback by SKU only
+    
     if (!product && item.sku) {
       product = inventory.find(p => (p.sku || "").trim() === item.sku);
     }
@@ -24695,12 +25770,12 @@ function saveSupplierBill() {
     }
   });
 
-  // ✅ SAVE ONCE PER WAREHOUSE (CRITICAL FIX)
+  
   Object.keys(warehouseMap).forEach(wh => {
     saveInventory(wh, warehouseMap[wh]);
   });
 
-  // ------------------ RESET UI ------------------
+  
   billItems = [];
   renderBillItems();
   clearBillItemForm();
@@ -24742,12 +25817,12 @@ function updateSupplierBalance(supplierName, amountChange) {
 
   localStorage.setItem("suppliers", JSON.stringify(suppliers));
 
-  // Refresh supplier table if open
+  
   if (typeof renderSuppliers === "function") {
     renderSuppliers();
   }
 }
-// ---------------------- LOAD BILLS ----------------------
+
 function loadSupplierBills() {
   const tbody = document.getElementById('supplierBillsList');
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
@@ -24845,7 +25920,7 @@ function deleteBill(index) {
 
   alert("♻️ Bill moved to Recycle Bin & inventory/supplier rolled back.");
 }
-// ✏️ Edit Supplier Bill — Anyone with edit rights
+
 function editSupplierBill(index) {
   guardAction('canEdit', () => {
     const bills = JSON.parse(localStorage.getItem('bills') || '[]');
@@ -24878,7 +25953,7 @@ function recordPayment(index) {
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   let supplierAcc = accounts.find(a => a.name === "Supplier Payments");
 
-  // Auto-create Supplier Payments account if missing
+  
   if (!supplierAcc) {
     supplierAcc = {
       name: "Supplier Payments",
@@ -24890,7 +25965,7 @@ function recordPayment(index) {
     localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
   }
 
-  // Create modal
+  
   const modal = document.createElement("div");
   modal.style.position = "fixed";
   modal.style.top = 0;
@@ -24909,7 +25984,7 @@ function recordPayment(index) {
   content.style.borderRadius = "8px";
   content.style.width = "400px";
 
-  // Build bank options
+  
   const bankOptions = banks.map(b => `<option value="${b.name}">${b.name} (${b.currency} ${b.balance.toFixed(2)})</option>`).join("");
 
   content.innerHTML = `
@@ -24935,12 +26010,12 @@ function recordPayment(index) {
   modal.appendChild(content);
   document.body.appendChild(modal);
 
-  // Cancel button
+  
   document.getElementById("cancelPaymentBtn").onclick = () => {
     document.body.removeChild(modal);
   };
 
-  // Save button
+  
   document.getElementById("savePaymentBtn").onclick = () => {
     let inputAmount = parseFloat(document.getElementById("paymentAmountInput").value);
     if (isNaN(inputAmount) || inputAmount < 0 || inputAmount > bill.total) {
@@ -24959,14 +26034,14 @@ function recordPayment(index) {
     const paymentInBankCurrency = inputAmount / exchangeRate;
     if (bank.balance < paymentInBankCurrency) return alert("Insufficient funds in selected bank");
 
-    // Deduct from bank
+    
     bank.balance -= paymentInBankCurrency;
 
-    // Update bill
+    
     bill.paidAmount = inputAmount;
     bills[index] = bill;
 
-    // Supplier Payments record
+    
     let payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
     const existingPaymentIndex = payments.findIndex(p => p.billNumber === bill.billNumber);
     const paymentRecord = {
@@ -24981,7 +26056,7 @@ function recordPayment(index) {
     if (existingPaymentIndex !== -1) payments[existingPaymentIndex] = paymentRecord;
     else payments.push(paymentRecord);
 
-    // Manual transactions
+    
     let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
     let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
     const tx = {
@@ -25000,10 +26075,10 @@ function recordPayment(index) {
     manualTransactions.push(tx);
     allTx.push(tx);
 
-    // Update Supplier Payments account
+    
     supplierAcc.amount = (supplierAcc.amount || 0) - inputAmount;
 
-    // Save all
+    
     localStorage.setItem('bills', JSON.stringify(bills));
     localStorage.setItem("billPayments", JSON.stringify(payments));
     localStorage.setItem('banks', JSON.stringify(banks));
@@ -25011,7 +26086,7 @@ function recordPayment(index) {
     localStorage.setItem("transactions", JSON.stringify(allTx));
     localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
-    // Refresh UI
+    
     loadSupplierBills();
     renderSupplierPayments();
     renderManualTransactions?.();
@@ -25039,29 +26114,29 @@ function reversePayment(index) {
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   const supplierAcc = accounts.find(a => a.name === "Supplier Payments");
 
-  // Restore bank balance
+  
   const paymentInBankCurrency = bill.paidAmount / (exchangeRates[bank.currency] || 1);
   bank.balance += paymentInBankCurrency;
 
-  // Restore Supplier Payments account
+  
   if (supplierAcc) supplierAcc.amount = (supplierAcc.amount || 0) + bill.paidAmount;
 
-  // Remove associated payment record
+  
   let payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
   payments = payments.filter(p => p.billNumber !== bill.billNumber);
 
-  // Remove manual transaction(s)
+  
   let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
   let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
 
   manualTransactions = manualTransactions.filter(t => t.ref !== bill.billNumber);
   allTx = allTx.filter(t => t.ref !== bill.billNumber);
 
-  // Reset bill
+  
   bill.paidAmount = 0;
   bills[index] = bill;
 
-  // Save updates
+  
   localStorage.setItem('bills', JSON.stringify(bills));
   localStorage.setItem("billPayments", JSON.stringify(payments));
   localStorage.setItem('banks', JSON.stringify(banks));
@@ -25069,7 +26144,7 @@ function reversePayment(index) {
   localStorage.setItem("transactions", JSON.stringify(allTx));
   localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
-  // Refresh UI
+  
   loadSupplierBills();
   renderSupplierPayments();
   renderManualTransactions?.();
@@ -25079,37 +26154,37 @@ function reversePayment(index) {
 
   alert(`Payment for Bill ${bill.billNumber} has been reversed and synced.`);
 }
-// ---------------------- PREVIEW ----------------------
+
 function previewBill(index) {
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
   const bill = bills[index];
   if (!bill) return;
 
-  // Company info
+  
   const orgInfo = JSON.parse(localStorage.getItem('orgInfo') || '{}');
 
-  // Supplier info
+  
   const suppliers = JSON.parse(localStorage.getItem('suppliers') || '[]');
   const supplier = suppliers.find(s => s.name === bill.supplier) || {};
 
-  // Populate bill header
+  
   document.getElementById('previewBillNumber').textContent = bill.billNumber || '';
   document.getElementById('previewBillDate').textContent = bill.date || '';
 
-  // Company info
+  
   document.getElementById('previewBillCompanyName').textContent = orgInfo.name || 'My Company Ltd';
   document.getElementById('previewBillCompanyPIN').textContent = orgInfo.pin || 'P00000000';
   document.getElementById('previewBillCompanyAddress').textContent = orgInfo.address || '123 Business Rd, Nairobi';
 
-  // Supplier info
+  
   document.getElementById('previewBillSupplierName').textContent = supplier.name || bill.supplier;
   document.getElementById('previewBillSupplierPIN').textContent = supplier.krapin || '';
   document.getElementById('previewBillSupplierAddress').textContent = supplier.address || '';
 
-  // Build items table
+  
 let itemsHTML = '';
 bill.items.forEach((item, idx) => {
-  // ✅ Proper tax label mapping
+  
   let taxLabel = '';
   if (item.taxRate === "16") taxLabel = "16%";
   else if (item.taxRate === "8") taxLabel = "8%";
@@ -25129,7 +26204,7 @@ bill.items.forEach((item, idx) => {
 });
 document.getElementById('previewBillItems').innerHTML = itemsHTML;
 
-  // Totals
+  
   const subtotal = bill.items.reduce((sum, i) => sum + i.subtotal, 0);
   const totalVAT = bill.items.reduce((sum, i) => sum + i.vat, 0);
   const totalAmount = subtotal + totalVAT;
@@ -25138,11 +26213,11 @@ document.getElementById('previewBillItems').innerHTML = itemsHTML;
   document.getElementById('previewBillVAT').textContent = `KES ${totalVAT.toFixed(2)}`;
   document.getElementById('previewBillTotal').textContent = `KES ${totalAmount.toFixed(2)}`;
 
-  // Show modal
+  
   document.getElementById('supplierBillPreviewModal').classList.remove('hidden');
 }
 
-// Close modal
+
 function closeSupplierPreview() {
   document.getElementById("supplierBillPreviewModal").classList.add("hidden");
 }
@@ -25150,7 +26225,7 @@ function downloadSupplierBillCSV() {
   const billNumber = document.getElementById('previewBillNumber').textContent || "Unknown";
   let csvContent = "Description,Quantity,Unit Price,VAT,Total\n";
 
-  // Loop through rows
+  
   document.querySelectorAll('#previewBillItems tr').forEach(tr => {
     const row = Array.from(tr.querySelectorAll('td'))
       .map(td => td.textContent.replace(/KES\s*/g, "").replace(/,/g, "").trim()) // Remove KES and commas
@@ -25158,7 +26233,7 @@ function downloadSupplierBillCSV() {
     csvContent += row + "\n";
   });
 
-  // Add totals
+  
   const subtotal = document.getElementById('previewBillSubtotal').textContent.replace(/KES\s*/g, "").trim();
   const vat = document.getElementById('previewBillVAT').textContent.replace(/KES\s*/g, "").trim();
   const total = document.getElementById('previewBillTotal').textContent.replace(/KES\s*/g, "").trim();
@@ -25223,7 +26298,7 @@ function postBillJournal(bill) {
   const today = bill.date || new Date().toISOString().split("T")[0];
   const desc = `Auto Journal for Bill ${bill.billNumber}`;
 
-  // ✅ Journal with Debit = Credit
+  
   const journal = {
     id: Date.now(),
     date: today,
@@ -25274,7 +26349,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 <script>
-// ---------------------- GLOBAL VARS ----------------------
+
 let bulkBillItems = [];
 let bulkEditIndex = -1;
 let currentBulkEditingIndex = null;
@@ -25295,7 +26370,6 @@ function searchBulkBills() {
   });
 }
 
-// ---------------------- POPULATE SUPPLIERS ----------------------
 function populateBulkSupplierDropdown() {
   const dropdown = document.getElementById('bulkBillingSupplier');
   if (!dropdown) return;
@@ -25333,7 +26407,7 @@ document.getElementById('bulkBillItemDesc')?.addEventListener('change', function
     }
 });
 
-// ---------------------- POPULATE CHART OF ACCOUNTS ----------------------
+
 function populateBulkBillChartOfAccountDropdown() {
   const select = document.getElementById("bulkBillChartOfAccount");
   if (!select) return;
@@ -25355,7 +26429,7 @@ function populateBulkBillChartOfAccountDropdown() {
   });
 }
 
-// ---------------------- POPULATE PRODUCT DROPDOWN ----------------------
+
 function getAllInventories() {
   return Object.keys(localStorage)
     .filter(k => k.startsWith('inventory_'))
@@ -25379,13 +26453,13 @@ function populateBulkBillProductDropdown() {
   });
 }
 
-// ---------------------- BILL NUMBER ----------------------
+
 function generateBulkBillNumber() {
   const bills = JSON.parse(localStorage.getItem('bulkBills') || '[]');
   return `BB-${String(bills.length+1).padStart(4,'0')}`;
 }
 
-// ---------------------- ADD BULK BILL ITEM ----------------------
+
 function addBulkBillItem() {
   const selVal = document.getElementById('bulkBillItemDesc').value;
   if (!selVal) { alert('Select a product'); return; }
@@ -25427,7 +26501,7 @@ function addBulkBillItem() {
   clearBulkBillItemForm();
 }
 
-// ---------------------- RENDER ITEMS ----------------------
+
 function renderBulkBillItems() {
   const tbody = document.getElementById('bulkBillItemsTableBody');
   tbody.innerHTML='';
@@ -25465,7 +26539,7 @@ function renderBulkBillItems() {
   document.getElementById('bulkBillTotalAmount').value=convertedTotal.toFixed(2);
 }
 
-// ---------------------- EDIT / REMOVE ----------------------
+
 function editBulkBillItem(index){
   const item=bulkBillItems[index];
   bulkEditIndex=index;
@@ -25481,7 +26555,7 @@ function removeBulkBillItem(index){
   renderBulkBillItems();
 }
 
-// ---------------------- CLEAR FORM ----------------------
+
 function clearBulkBillItemForm(){
   document.getElementById('bulkBillItemDesc').value='';
   document.getElementById('bulkBillItemQty').value='';
@@ -25490,7 +26564,7 @@ function clearBulkBillItemForm(){
   document.getElementById('bulkBillItemTax').value='16';
 }
 
-// ---------------------- SAVE BULK BILL ----------------------
+
 function saveBulkBill(){
   const date=document.getElementById('bulkBillDate').value;
   const suppliers=[...document.getElementById('bulkBillingSupplier').selectedOptions].map(opt=>opt.value);
@@ -25523,7 +26597,7 @@ function saveBulkBill(){
   }
   localStorage.setItem('bulkBills',JSON.stringify(bulkBills));
 
-  // reset form
+  
   bulkBillItems=[];
   renderBulkBillItems();
   document.getElementById('bulkBillDate').value='';
@@ -25536,7 +26610,7 @@ function saveBulkBill(){
   alert('Bulk Bill saved ✅');
 }
 
-// ---------------------- LOAD BULK BILLS ----------------------
+
 function loadBulkBills(){
   const tbody=document.getElementById('bulkBillsList');
   const bills=JSON.parse(localStorage.getItem('bulkBills')||'[]');
@@ -25560,7 +26634,7 @@ function loadBulkBills(){
   }).join('');
 }
 
-// ---------------------- EDIT / DELETE / PREVIEW ----------------------
+
 function editBulkBill(index){
   const bills=JSON.parse(localStorage.getItem('bulkBills')||'[]');
   const bill=bills[index];
@@ -25603,7 +26677,7 @@ function previewBulkBill(index){
   alert(`Preview Bulk Bill: ${bill.billNumber} for ${bill.suppliers.join(', ')} Total: ${bill.total.toFixed(2)} ${bill.currency}`);
 }
 
-// ---------------------- PUSH TO ETIMS / ETR ----------------------
+
 function pushBulkBillETR(index){
   const bills=JSON.parse(localStorage.getItem('bulkBills')||'[]');
   const bill=bills[index];
@@ -25612,7 +26686,7 @@ function pushBulkBillETR(index){
   alert(`Bulk Bill ${bill.billNumber} pushed to ETIMS/ETR ✅`);
 }
 
-// ---------------------- INIT ----------------------
+
 document.addEventListener('DOMContentLoaded',()=>{
   populateBulkSupplierDropdown();
   populateBulkBillChartOfAccountDropdown();
@@ -26046,7 +27120,7 @@ function downloadDebitNote(index) {
   doc.text(`Date: ${note.date}`, 40, 120);
   doc.text(`Reference: ${note.reference || "-"}`, 40, 140);
 
-  // Table headers
+ 
   doc.text("Account", 40, 180);
   doc.text("Subtotal", 200, 180);
   doc.text("VAT", 300, 180);
@@ -26798,16 +27872,13 @@ function searchPurchaseReturns() {
   });
 }
 
-// ---------------------- HELPERS ----------------------
-
-// Generate next PR number
 function generatePurchaseReturnNumber() {
   const returns = JSON.parse(localStorage.getItem("purchaseReturns") || "[]");
   const next = returns.length + 1;
   return "PR-" + next.toString().padStart(3, "0");
 }
 
-// Get all inventory
+
 function getAllInventories() {
   return Object.keys(localStorage)
     .filter(k => k.startsWith("inventory_"))
@@ -26818,7 +27889,7 @@ function getAllInventories() {
     });
 }
 
-// Populate supplier dropdown
+
 function populateSupplierDropdownById(id) {
   const suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
   const dropdown = document.getElementById(id);
@@ -26832,7 +27903,7 @@ function populateSupplierDropdownById(id) {
   });
 }
 
-// Populate item dropdown
+
 function populatePurchaseReturnItemDropdown() {
   const sel = document.getElementById("purchaseReturnItemSelect");
   if (!sel) return;
@@ -26858,7 +27929,7 @@ itemSelect.addEventListener("change", () => {
     priceInput.value = price.toFixed(2);
 });
 
-// ---------------------- ITEM FUNCTIONS ----------------------
+
 function addPurchaseReturnItem() {
   const selVal = document.getElementById("purchaseReturnItemSelect").value;
   if (!selVal) { alert("Select an item"); return; }
@@ -26928,7 +27999,7 @@ function clearPurchaseReturnItemForm() {
   document.getElementById("purchaseReturnTax").value = "16";
 }
 
-// ---------------------- SAVE FUNCTIONS ----------------------
+
 function savePurchaseReturn() {
   const number = document.getElementById("purchaseReturnNumber").value;
   const date = document.getElementById("purchaseReturnDate").value;
@@ -26964,7 +28035,7 @@ function clearPurchaseReturnForm() {
   renderPurchaseReturnItems();
 }
 
-// ---------------------- RENDER RETURNS ----------------------
+
 function renderPurchaseReturns() {
     const returns = JSON.parse(localStorage.getItem("purchaseReturns") || "[]");
     const table = document.getElementById("purchaseReturnsTable");
@@ -27048,7 +28119,7 @@ function deletePurchaseReturn(index) {
   alert("♻️ Purchase return moved to Recycle Bin.");
 }
 
-// ---------------------- INIT ----------------------
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("purchaseReturnNumber").value = generatePurchaseReturnNumber();
   populateSupplierDropdownById("purchaseReturnSupplier");
@@ -27112,11 +28183,11 @@ function importPurchaseReturns() {
 
             if (!rows.length) { alert("No data found in file"); return; }
 
-            // Clear existing purchase returns
+            
             const existing = JSON.parse(localStorage.getItem("purchaseReturns") || "[]");
 
             rows.forEach(row => {
-                // Check if PR number exists
+                
                 let pr = existing.find(r => r.number === row["PR Number"]);
                 if (!pr) {
                     pr = {
@@ -27181,7 +28252,7 @@ function previewPurchaseReturn(index) {
 
     html += `</tbody></table>`;
 
-    // Show in modal
+    
     const modal = document.createElement("div");
     modal.id = "previewModal";
     modal.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
@@ -27419,7 +28490,7 @@ function importTaxPayments() {
         localStorage.setItem('manualTransactions', JSON.stringify(manualTransactions));
         localStorage.setItem('transactions', JSON.stringify(allTransactions));
 
-        // Refresh UI
+        
         renderTaxPayments();
         updateTaxesCard();
         renderTaxesReport();
@@ -27453,7 +28524,7 @@ function resetColumnWidths() {
   showAlert("✅ Column widths have been reset.", "success");
   sortDropdown.classList.add('hidden');
 }
-// -------------------- Populate bank dropdown for tax --------------------
+
 function populateTaxBanks() {
   const bankSelect = document.getElementById('taxBank');
   bankSelect.innerHTML = '<option value="">Select Bank</option>';
@@ -27466,7 +28537,7 @@ function populateTaxBanks() {
   });
 }
 
-// ---------------------- TAX TYPE DROPDOWN ----------------------
+
 function populateTaxTypeFromChartOfAccounts() {
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   const dropdown = document.getElementById("taxType");
@@ -27492,7 +28563,7 @@ function populateTaxTypeFromChartOfAccounts() {
   });
 }
 
-// -------------------- Add or Update Tax Payment --------------------
+
 function addTaxPayment() {
   const date = document.getElementById('taxDate').value;
   const type = document.getElementById('taxType').value;
@@ -27506,7 +28577,7 @@ function addTaxPayment() {
     return;
   }
 
-  // Use correct fallback strings
+  
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   const taxAccount = accounts.find(acc => acc.name === type);
   if (!taxAccount) {
@@ -27526,7 +28597,7 @@ function addTaxPayment() {
   let allTransactions = JSON.parse(localStorage.getItem('transactions') || "[]");
 
   if (editingTaxPaymentIndex !== null) {
-    // Edit existing
+    
     const oldPayment = taxPayments[editingTaxPaymentIndex];
     const oldBank = banks[oldPayment.bankIndex];
     if (oldBank) oldBank.balance += oldPayment.amount;
@@ -27534,7 +28605,7 @@ function addTaxPayment() {
 
     const refText = reference || `Tax Payment (${taxAccount.name}) via ${method}`;
 
-    // Update manual transaction
+    
     const txIndex = manualTransactions.findIndex(tx => tx.taxPaymentId === oldPayment.id);
     const txData = {
       date,
@@ -27552,7 +28623,7 @@ function addTaxPayment() {
     if (txIndex !== -1) manualTransactions[txIndex] = txData;
     else manualTransactions.push(txData);
 
-    // Update unified transaction
+    
     const allTxIndex = allTransactions.findIndex(tx => tx.taxPaymentId === oldPayment.id);
     const allTxData = {
       id: `TXN-${Date.now()}`,
@@ -27578,7 +28649,7 @@ function addTaxPayment() {
     editingTaxPaymentIndex = null;
 
   } else {
-    // New Payment
+    
     const paymentId = Date.now();
     const refText = reference || `Tax Payment (${taxAccount.name}) via ${method}`;
 
@@ -27610,13 +28681,13 @@ function addTaxPayment() {
     });
   }
 
-  // Save everything back
+  
   localStorage.setItem('taxPayments', JSON.stringify(taxPayments));
   localStorage.setItem('manualTransactions', JSON.stringify(manualTransactions));
   localStorage.setItem('transactions', JSON.stringify(allTransactions));
   localStorage.setItem('banks', JSON.stringify(banks));
 
-  // Refresh UI
+ 
   renderTaxPayments?.();
   renderManualTransactions?.();
   renderReconciliationTransactions?.();
@@ -27627,7 +28698,7 @@ function addTaxPayment() {
   alert("✅ Tax payment recorded successfully!");
 }
 
-// -------------------- Render Tax Payments --------------------
+
 function renderTaxPayments() {
   const payments = JSON.parse(localStorage.getItem('taxPayments') || []);
   const banks = JSON.parse(localStorage.getItem('banks') || []);
@@ -27756,7 +28827,7 @@ function closeTaxPreviewRow() {
   const existing = document.getElementById('previewRow');
   if (existing) existing.remove();
 }
-// -------------------- Edit Tax Payment --------------------
+
 function editTaxPayment(index) {
   const payments = JSON.parse(localStorage.getItem('taxPayments') || []);
   const payment = payments[index];
@@ -30786,7 +31857,7 @@ function manageCOAFiles(){
 <!-- 🏢 Non-Current Assets Tab -->
 <div id="nonCurrentAssetsTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-1xl font-bold mb-4 text-left">Non-Current Assets</h2>
-  <!-- 🔎 Non-Current Assets Search -->
+ 
 <div class="relative mb-4 mt-2">
   <input 
     type="text" 
@@ -30796,7 +31867,6 @@ function manageCOAFiles(){
     oninput="searchNonCurrentAssets()"
   />
   
-  <!-- Search Icon -->
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -30971,7 +32041,7 @@ Confirm Sale
 <!-- 🏦 Non-Current Liabilities Tab -->
 <div id="nonCurrentLiabilitiesTab" class="p-4">
   <h2 class="text-1xl font-bold mb-4 text-left">Non-Current Liabilities</h2>
-  <!-- 🔎 Non-Current Liabilities Search -->
+ 
 <div class="relative mb-4 mt-2">
   <input 
     type="text" 
@@ -30981,7 +32051,6 @@ Confirm Sale
     oninput="searchNonCurrentLiabilities()"
   />
   
-  <!-- Search Icon -->
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -31098,7 +32167,7 @@ Liability Actions
 <!-- ⚖️ Equity Tab -->
 <div id="equityTab" class="p-1 hidden">
   <h2 class="text-1xl font-bold mb-4 text-left">Equity</h2>
- <!-- 🔎 Equity Search -->
+ 
 <div class="relative mb-4 mt-2">
   <input 
     type="text" 
@@ -31108,7 +32177,6 @@ Liability Actions
     oninput="searchEquity()"
   />
   
-  <!-- Search Icon -->
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -31236,7 +32304,7 @@ Equity Actions
 <!-- 🏦 Current Accounts Tab -->
 <div id="currentAccountsTab" class="p-1 hidden">
   <h2 class="text-1xl font-bold mb-4 text-left">Current Accounts</h2>
-  <!-- 🔎 Current Accounts Search -->
+  
 <div class="relative mb-4 mt-2">
   <input 
     type="text" 
@@ -31245,8 +32313,7 @@ Equity Actions
     class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
     oninput="searchCurrentAccounts()"
   />
-  
-  <!-- Search Icon -->
+ 
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -31369,7 +32436,7 @@ Equity Actions
 <!-- 📒 CURRENT ACCOUNT TRANSACTIONS TAB -->
 <div id="currentAccTransactionsTab" class="p-1 hidden">
   <h2 id="currentAccTransTitle" class="text-1xl font-bold mb-4 text-center">Account Transactions</h2>
-  <!-- 🔎 Current Account Transactions Search -->
+ 
 <div class="relative mb-4 mt-2">
   <input 
     type="text" 
@@ -31379,7 +32446,6 @@ Equity Actions
     oninput="searchCurrentAccTransactions()"
   />
   
-  <!-- Search Icon -->
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -31545,7 +32611,7 @@ Equity Actions
 <!-- 💼 Budgeting Module -->
 <div id="budgetsTab" class="p-1">
   <h2 class="text-1xl font-bold mb-4 text-left">Budget Management</h2>
-  <!-- 🔎 Budget Search -->
+ 
 <div class="relative mb-4 mt-2 max-w-3xl">
   <input 
     type="text" 
@@ -31555,7 +32621,7 @@ Equity Actions
     oninput="searchBudgets()"
   />
   
-  <!-- Search Icon -->
+ 
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -31586,13 +32652,13 @@ Equity Actions
 
   <div class="space-y-4">
 
-    <!-- Row 1: Account -->
+   
     <input  id="budgetAccount" placeholder="Account (e.g. Sales, Salaries)" class="border p-2 rounded w-full">
 
-    <!-- Row 2: Department -->
+   
     <input  id="budgetDepartment"  placeholder="Department/Project"  class="border p-2 rounded w-full">
 
-    <!-- Row 3: Period -->
+   
     <div>
       <label class="block mb-1 font-medium">Period</label>
       <select 
@@ -31604,7 +32670,7 @@ Equity Actions
       </select>
     </div>
 
-    <!-- Row 4: Month/Quarter/Year + Amount + Add button -->
+   
     <div class="flex flex-wrap gap-2 items-center">
       
       <select id="budgetMonth" class="border p-2 rounded">
@@ -31632,7 +32698,6 @@ Equity Actions
       </button>
     </div>
 
-    <!-- Row 5: Add Plan button -->
     <button 
       onclick="addPlannedBudget()" 
       class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded w-full hover:bg-blue-800">Add Plan</button>
@@ -31642,19 +32707,16 @@ Equity Actions
   <div id="monthValuesPreview" class="text-xs text-gray-700 mt-3"></div>
   <div id="budgetPlansList" class="mt-4 text-sm text-gray-700"></div>
 </div>
- <!-- 2. Manual Actuals Entry -->
+
 <div class="bg-white p-4 rounded shadow mb-6 max-w-3xl">
   <h3 class="text-lg font-semibold mb-3">Enter Actuals (Manual)</h3>
 
   <div class="space-y-4">
 
-    <!-- Row 1: Account -->
     <input  id="actualAccount"  placeholder="Account (match plan)"  class="border p-2 rounded w-full">
 
-    <!-- Row 2: Department -->
     <input  id="actualDepartment"  placeholder="Department/Project"  class="border p-2 rounded w-full">
 
-    <!-- Row 3: Period -->
     <div>
       <label class="block mb-1 font-medium">Period</label>
       <select 
@@ -31666,7 +32728,6 @@ Equity Actions
       </select>
     </div>
 
-    <!-- Row 4: Month/Quarter/Year + Amount + Add button -->
     <div class="flex flex-wrap gap-2 items-center">
       
       <select id="actualMonth" class="border p-2 rounded">
@@ -31689,21 +32750,19 @@ Equity Actions
 
       <button  onclick="addActualMonthValue()" class="bg-gray-600 text-white px-1 py-1 rounded">Add</button></div>
 
-    <!-- Row 5: Add Actuals button -->
     <button onclick="addActuals()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded w-full hover:bg-blue-800">Add Actuals</button>
 
   </div>
 
-  <!-- Preview -->
   <div id="actualMonthPreview" class="text-xs text-gray-700 mt-3"></div>
   <div id="actualsList" class="mt-2 text-xs text-gray-600"></div>
 </div>
 
-  <!-- 3. Budget vs Actual Comparison -->
+
   <div class="bg-white p-4 rounded shadow mb-6">
     <h3 class="text-lg font-semibold mb-3">Budget vs Actual</h3>
 
-    <!-- Revision Dropdown -->
+   
     <div class="mb-3">
       <label class="block text-sm font-medium">Revision:</label>
       <select id="revisionSelect" class="border p-2 rounded">
@@ -31713,17 +32772,16 @@ Equity Actions
       </select>
     </div>
 
-    <!-- Period Filter -->
+  
     <div class="mb-3">
       <select id="periodFilter" class="border p-2 rounded">
         <option value="">All Periods</option>
       </select>
     </div>
 
-    <!-- Comparison Table -->
     <div id="budgetComparisonTable" class="overflow-x-auto text-sm mb-4"></div>
 
-    <!-- Graphs -->
+  
     <h4 class="text-md font-semibold mb-2">Graphs</h4>
     <div class="mb-6">
       <h5 class="font-medium mb-2">Actual vs Budget (Per Account / Department)</h5>
@@ -31734,20 +32792,16 @@ Equity Actions
       <canvas id="totalChart" height="120"></canvas>
     </div>
   </div>
-
  
-<!-- 4. Budget Revisions -->
 <div class="bg-white p-4 rounded shadow mb-6 max-w-3xl">
   <h3 class="text-lg font-semibold mb-3">Budget & Actual Revisions</h3>
   <div class="space-y-4">
 
-    <!-- Row 1: Account -->
     <div>
       <label class="block text-sm font-medium mb-1">Account</label>
       <select id="revisionAccount" class="border p-2 rounded w-full"></select>
     </div>
 
-    <!-- Row 2: Type -->
     <div>
       <label class="block text-sm font-medium mb-1">Type</label>
       <select id="revisionType" class="border p-2 rounded w-full">
@@ -31756,7 +32810,6 @@ Equity Actions
       </select>
     </div>
 
-    <!-- Row 3: Period -->
     <div>
       <label class="block text-sm font-medium mb-1">Period</label>
       <select id="revisionPeriod" class="border p-2 rounded w-full" onchange="toggleRevisionPeriodInputs()">
@@ -31791,19 +32844,16 @@ Equity Actions
       <input type="number" id="revisionYear" class="border p-2 rounded w-full" min="2000" max="2100" value="2025" />
     </div>
 
-    <!-- Row 4: Value -->
     <div>
       <label class="block text-sm font-medium mb-1">New Value</label>
       <input id="revisedValue" type="number" placeholder="KES" class="border p-2 rounded w-full">
     </div>
 
-    <!-- Row 5: Revision Note -->
     <div>
       <label class="block text-sm font-medium mb-1">Revision Note</label>
       <input id="revisionNote" placeholder="Reason / Note" class="border p-2 rounded w-full">
     </div>
 
-    <!-- Row 6: Revise button -->
     <div>
       <button onclick="reviseBudget()" class="bg-blue-900 text-white px-3 py-2 rounded w-full">Revise </button></div>
 
@@ -31812,7 +32862,6 @@ Equity Actions
   <div id="revisionHistory" class="text-xs text-gray-600 mt-4"></div>
 </div>
 
- <!-- 5. Budget Controls -->
 <div class="bg-white p-4 rounded shadow mb-6">
   <h3 class="text-lg font-semibold mb-3">Budget Controls</h3>
 
@@ -31855,13 +32904,11 @@ Equity Actions
   </div>
 </div>
 
-  <!-- 6. Department Summary -->
   <div class="bg-white p-4 rounded shadow mb-6">
     <h3 class="text-lg font-semibold mb-3">Budgets by Department / Project</h3>
     <div id="departmentBudgetSummary" class="text-sm space-y-1"></div>
   </div>
 
-  <!-- 7. Permissions -->
   <div class="bg-white p-4 rounded shadow mb-6">
     <h3 class="text-lg font-semibold mb-3">Permissions & Locking</h3>
     <label class="flex items-center gap-2">
@@ -31869,7 +32916,6 @@ Equity Actions
     </label>
   </div>
 
-  <!-- 8. Import/Export -->
   <div class="bg-white p-4 rounded shadow mb-6">
     <h3 class="text-lg font-semibold mb-3">Import / Export</h3>
     <input type="file" id="importBudgetCSV" class="block mb-2">
@@ -31877,7 +32923,6 @@ Equity Actions
     <button onclick="exportBudgetData()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Export</button>
   </div>
 
-  <!-- 9. Forecasting -->
   <div class="bg-white p-4 rounded shadow mb-6">
   <h3 class="text-lg font-semibold mb-3">Advanced: Forecasting</h3>
   <button onclick="generateForecast()" class="bg-blue-900 text-white px-1 py-1 rounded">Generate Forecast</button>
@@ -31889,7 +32934,7 @@ Equity Actions
 <!-- 🔒 Transaction Locking Tab -->
 <div id="transactionLockingTab" class="hidden ml-84 mr-7 p-2">
 <h2 class="text-1xl font-bold mb-4 text-left">Transaction Locking</h2>
-<!-- 🔎 Locked Modules Search -->
+
 <div class="relative mb-2 mt-2 max-w-3xl">
   <input 
     type="text" 
@@ -31899,7 +32944,6 @@ Equity Actions
     oninput="searchLockedModules()"
   />
   
-  <!-- Search Icon -->
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -48788,7 +49832,7 @@ const closingCash = openingCash + netChange;
     }
   };
 
-  // ✅ Update displayed values
+  
   setVal("cfProfitBeforeTax", netProfit); 
   setVal("cfDepreciation", depreciation);
   setVal("cfCurrencyAdjustment", currencyAdjustment);
@@ -49445,7 +50489,7 @@ function renderJournalReport() {
 window.addEventListener("load", renderJournalReport);
 </script>
 <script>
-// -------------------- Operational Costs tables --------------------
+
 const operationalCostsTable = document.getElementById('operationalCosts');
 
 if (operationalCostsTable) {
@@ -49759,7 +50803,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 <script>
-// -------------------- General Ledger (Full Upgrade) --------------------
+
 function renderGeneralLedger() {
  
   const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
@@ -50200,7 +51244,7 @@ function renderGeneralLedgerDetailed() {
 document.addEventListener("DOMContentLoaded", renderGeneralLedgerDetailed);
 </script>
 <script>
-// -------------------- Non-Current Liabilities Summary --------------------
+
 const liabilitySummaryTable = document.getElementById('nonCurrentLiabilitiesSummary');
 if (liabilitySummaryTable) {
   liabilitySummaryTable.innerHTML = '';
@@ -50239,7 +51283,7 @@ if (liabilitySummaryTable) {
 }
 </script>
 <script>
-// -------------------- Payroll Summary --------------------
+
 function renderPayrollSummary() {
   const payroll = JSON.parse(localStorage.getItem('payrollPayments') || '[]');
   const payrollTable = document.getElementById('payrollSummary');
@@ -50524,7 +51568,7 @@ function renderPlansReport() {
       .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
 
     const ownerships = planOwnerships
-      .filter(o => o.planTitle === plan.title); // Make sure ownership logs have planTitle
+      .filter(o => o.planTitle === plan.title); 
 
     const ownersList = ownerships.map(o => o.owner).join(", ") || "";
     const teamList = ownerships.flatMap(o => o.team).join(", ") || "";
@@ -50882,7 +51926,7 @@ function renderSalesByCustomerReport() {
 }
 </script>
 <script>
-// -------------------- Render Current Account Report with Opening Balances --------------------
+
 function renderCurrentAccount() {
   const tbody = document.getElementById("currentAccount");
   if (!tbody) return;
@@ -51800,7 +52844,7 @@ function exportNonCurrentAssetsCSV() {
 renderNonCurrentAssetsSummary();
 </script>
 <script>
-  // -------------------- Budget Summary --------------------
+  
 let budgetData = budgetData || [];   
 let expenses = expenses || [];       
 
@@ -52568,7 +53612,7 @@ function exportFilteredTableToCSV(tableBodyId, filename = 'report', monthInputId
       }
 
       itemTotals[itemName].qty += qty;
-      itemTotals[itemName].price += price * qty; // total purchase price
+      itemTotals[itemName].price += price * qty; 
       itemTotals[itemName].subtotal += subtotal;
       itemTotals[itemName].vat += vat;
       itemTotals[itemName].amountWithVAT += amountWithVAT;
@@ -52610,7 +53654,7 @@ function exportFilteredTableToCSV(tableBodyId, filename = 'report', monthInputId
   document.getElementById('totalAmountWithDiscount').textContent = `KES ${totalWithDiscount.toFixed(2)}`;
 }
 
-// Export CSV helper (reusable)
+
 function exportFilteredTableToCSV(tableBodyId, filename = 'report') {
   const tbody = document.getElementById(tableBodyId);
   if (!tbody) return;
@@ -52766,7 +53810,7 @@ function renderSalesReturnReport(filterCustomer, filterStart, filterEnd) {
 
   let returns = JSON.parse(localStorage.getItem("salesReturns") || "[]");
 
-  // Apply filters
+  
   if (filterCustomer) {
     returns = returns.filter(r => r.customer.toLowerCase().includes(filterCustomer.toLowerCase()));
   }
