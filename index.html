@@ -2067,12 +2067,13 @@ function login(email, password) {
 <li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li>
 <ul id="supplierSubmenu" class="ml-4 hidden space-y-1">
 <li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li>
+<li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li>
 <li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li>
 <li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li>
 <li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li>
 <li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li>
+<li><button onclick="showTab('supplierQuotationsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotations</button></li>
 <li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li>
-<li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li>
 <li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li>
 <li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li>
 <li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li>
@@ -9536,11 +9537,8 @@ document.addEventListener("DOMContentLoaded", () => {
       <textarea id="shippingAddress" placeholder="Shipping Address"
         class="border p-2 rounded w-[700px]" rows="2"></textarea>
     </div>
-
-    <button id="customerBtn" onclick="addCustomer()"
-      class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
-      Save Customer
-    </button>
+     <button id="draftBtn" onclick="saveDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
+    <button id="customerBtn" onclick="addCustomer()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save Customer</button>
   </div>
 
   <div class="bg-white p-1 rounded shadow">
@@ -10517,29 +10515,24 @@ button:hover {
 <option value="USD">USD - US Dollar</option>
 <option value="EUR">EUR - Euro</option>
 <option value="GBP">GBP - British Pound</option>
-
 <option value="NGN">NGN - Nigerian Naira</option>
 <option value="ZAR">ZAR - South African Rand</option>
 <option value="UGX">UGX - Ugandan Shilling</option>
 <option value="TZS">TZS - Tanzanian Shilling</option>
 <option value="GHS">GHS - Ghanaian Cedi</option>
 <option value="EGP">EGP - Egyptian Pound</option>
-
 <option value="CAD">CAD - Canadian Dollar</option>
 <option value="AUD">AUD - Australian Dollar</option>
 <option value="NZD">NZD - New Zealand Dollar</option>
-
 <option value="JPY">JPY - Japanese Yen</option>
 <option value="CNY">CNY - Chinese Yuan</option>
 <option value="INR">INR - Indian Rupee</option>
 <option value="AED">AED - UAE Dirham</option>
 <option value="SAR">SAR - Saudi Riyal</option>
-
 <option value="CHF">CHF - Swiss Franc</option>
 <option value="SEK">SEK - Swedish Krona</option>
 <option value="NOK">NOK - Norwegian Krone</option>
 <option value="DKK">DKK - Danish Krone</option>
-
 <option value="BRL">BRL - Brazilian Real</option>
 <option value="MXN">MXN - Mexican Peso</option>
 <option value="ARS">ARS - Argentine Peso</option>
@@ -10578,9 +10571,10 @@ button:hover {
     <input id="orderItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded" />
     <select id="orderItemTax" class="border p-2 rounded">
       <option value="16">VAT 16%</option>
+      <option value="8">VAT 8%</option>
       <option value="0">Zero Rated</option>
-      <option value="8">Other Rates 8%</option>
       <option value="exempt">Exempt</option>
+      <option value="export">Export</option>
     </select>
     <button onclick="addOrderItem()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded">Add</button>
   </div>
@@ -10601,7 +10595,6 @@ button:hover {
       <tbody id="orderItemTableBody"></tbody>
     </table>
   </div>
-
 
   <button onclick="saveOrder('draft')" class="bg-blue-900 text-white px-2 py-1 rounded">Save Draft</button>
   <button onclick="saveOrder()" class="bg-blue-900 text-white px-2 py-1 rounded">Save Order</button>
@@ -10974,9 +10967,17 @@ button:hover {
       <div>
         <label for="bulkItemType" class="block font-semibold mb-1">Item Type:</label>
         <select id="bulkItemType" class="border p-2 rounded" style="width:700px;">
-          <option value="">Select Item Type</option>
-          <option value="product">Product</option>
-          <option value="service">Service</option>
+         <option value="">Select Item Type</option>
+         <option value="product">Product</option>
+         <option value="service">Service</option>
+         <option value="subscription">Subscription</option>
+         <option value="digital">Digital Product</option>
+         <option value="physical">Physical Product</option>
+         <option value="consultation">Consultation</option>
+         <option value="rental">Rental</option>
+         <option value="package">Package</option>
+         <option value="membership">Membership</option>
+         <option value="other">Other</option>
         </select>
       </div>
     </div>
@@ -10989,6 +10990,12 @@ button:hover {
           <option value="USD">USD</option>
           <option value="EUR">EUR</option>
           <option value="GBP">GBP</option>
+          <option value="CAD">CAD</option>
+          <option value="AUD">AUD</option>
+          <option value="ZAR">ZAR</option>
+          <option value="NGN">NGN</option>
+          <option value="UGX">UGX</option>
+          <option value="TZS">TZS</option>
         </select>
       </div>
 
@@ -11007,8 +11014,10 @@ button:hover {
       <input id="bulkInvoiceItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded" />
       <select id="bulkInvoiceItemTax" class="border p-2 rounded">
         <option value="16">VAT 16%</option>
+        <option value="8">VAT 8%</option>
         <option value="0">Zero Rated</option>
         <option value="exempt">Exempt</option>
+        <option value="export">Export</option>
       </select>
     </div>
 
@@ -11040,8 +11049,8 @@ button:hover {
       <input id="bulkInvoiceTotal" type="number" placeholder="Total Amount" class="border p-2 rounded bg-gray-100" readonly />
     </div>
 
-    
-    <button id="saveBulkInvoiceBtn" onclick="saveBulkInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Save Bulk Invoice</button>
+    <button id="saveDraftBtn" onclick="saveDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
+    <button id="saveBulkInvoiceBtn" onclick="saveBulkInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save Bulk Invoice</button>
   </div>
 
   
@@ -11410,7 +11419,26 @@ button:hover {
         <option value="">Select Customer</option>
       </select>
     </div>
+    <div class="mb-3 flex gap-4 items-center">
 
+  <select id="quoteCurrency" class="border p-2 rounded w-[350px]">
+    <option value="KES">KES</option>
+    <option value="USD">USD</option>
+    <option value="EUR">EUR</option>
+    <option value="GBP">GBP</option>
+    <option value="CAD">CAD</option>
+    <option value="AUD">AUD</option>
+    <option value="ZAR">ZAR</option>
+    <option value="NGN">NGN</option>
+    <option value="UGX">UGX</option>
+    <option value="TZS">TZS</option>
+  </select>
+
+  <input 
+    type="number" 
+    id="quoteRate" 
+    class="border p-2 rounded w-[300px]" placeholder="Exchange Rate"  step="0.01"  value="1" >
+</div>
     <div class="mb-4">
       <label for="quoteValidity" class="block font-semibold mb-1">Validity (Days)</label>
       <select id="quoteValidity" class="border p-2 rounded" style="width: 700px;">
@@ -11423,7 +11451,7 @@ button:hover {
         <option value="120">On Receipt + 120 days</option>
       </select>
     </div>
-
+     
     <div class="mb-4">
       <label for="quoteChartAccount" class="block font-semibold mb-1">Chart of Account</label>
       <select id="quoteChartAccount" class="border p-2 rounded" style="width: 700px;">
@@ -11437,6 +11465,14 @@ button:hover {
         <option value="">Select Item Type</option>
         <option value="product">Product</option>
         <option value="service">Service</option>
+        <option value="subscription">Subscription</option>
+        <option value="digital">Digital Product</option>
+        <option value="physical">Physical Product</option>
+        <option value="consultation">Consultation</option>
+        <option value="rental">Rental</option>
+        <option value="package">Package</option>
+        <option value="membership">Membership</option>
+        <option value="other">Other</option>
       </select>
     </div>
 
@@ -11449,8 +11485,10 @@ button:hover {
       <input id="quoteItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded" />
       <select id="quoteItemTax" class="border p-2 rounded">
         <option value="16">VAT 16%</option>
+        <option value="8">VAT 8%</option>
         <option value="0">Zero Rated</option>
         <option value="exempt">Exempt</option>
+        <option value="export">Export</option>
       </select>
       <button onclick="addQuoteItem()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Add Item</button>
     </div>
@@ -11478,6 +11516,7 @@ button:hover {
     </div>
 
     <div class="flex justify-end gap-2">
+      <button id="draftBtn" onclick="saveDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
       <button onclick="saveQuote()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Quote</button>
     </div>
   </div>
@@ -11995,13 +12034,40 @@ button:hover {
         <option value="">Select Account</option>
       </select>
     </div>
+    <div class="mb-3 flex gap-4 items-center">
 
+  <select id="creditNoteCurrency" class="border p-2 rounded w-[350px]">
+    <option value="KES">KES</option>
+    <option value="USD">USD</option>
+    <option value="EUR">EUR</option>
+    <option value="GBP">GBP</option>
+    <option value="CAD">CAD</option>
+    <option value="AUD">AUD</option>
+    <option value="ZAR">ZAR</option>
+    <option value="NGN">NGN</option>
+    <option value="UGX">UGX</option>
+    <option value="TZS">TZS</option>
+  </select>
+
+  <input 
+    type="number" 
+    id="creditNoteRate" 
+    class="border p-2 rounded w-[350px]"  placeholder="Exchange Rate" step="0.01"  value="1" >
+</div>
     <div class="mb-4">
       <label for="creditItemType" class="block font-semibold mb-1">Item Type</label>
       <select id="creditItemType" class="border p-2 rounded" style="width: 700px;" required>
         <option value="">Select Item Type</option>
         <option value="product">Product</option>
         <option value="service">Service</option>
+        <option value="subscription">Subscription</option>
+        <option value="digital">Digital Product</option>
+        <option value="physical">Physical Product</option>
+        <option value="consultation">Consultation</option>
+        <option value="rental">Rental</option>
+        <option value="package">Package</option>
+        <option value="membership">Membership</option>
+        <option value="other">Other</option>
       </select>
     </div>
     
@@ -12021,8 +12087,10 @@ button:hover {
   <input id="creditItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded" />
   <select id="creditItemTax" class="border p-2 rounded">
     <option value="16">VAT 16%</option>
+    <option value="8">VAT 8%</option>
     <option value="0">Zero Rated</option>
     <option value="exempt">Exempt</option>
+    <option value="export">Export</option>
   </select>
   <button onclick="addCreditItem()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Add Item</button>
 </div>
@@ -12050,7 +12118,7 @@ button:hover {
       <p><strong>Total: <span id="creditTotal">0.00</span></strong></p>
     </div>
 
-
+    <button onclick="saveDraft()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900"> Save as Draft</button>
     <button onclick="saveCreditNote()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Credit</button>
   </div>
 
@@ -12292,7 +12360,7 @@ button:hover {
         <option value="">Select Customer</option>
       </select>
     </div>
-
+    
     
     <div class="mb-4">
       <label class="block font-semibold">Chart of Account</label>
@@ -12850,6 +12918,7 @@ button:hover {
 
 
 <div class="text-right">
+  <button id="draftBtn" onclick="saveDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
   <button onclick="addDelivery()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
     ➕ Add Delivery
   </button>
@@ -13090,20 +13159,26 @@ button:hover {
     <input id="recurringInvoiceNumber" type="text" class="border bg-gray-100 p-2 rounded w-[700px]" readonly />
   </div>
 
-  <div class="mb-3">
-    <select id="recurringInvoiceCurrency" class="border p-2 rounded w-[700px]">
-      <option value="KES">KES</option>
-      <option value="USD">USD</option>
-      <option value="EUR">EUR</option>
-      <option value="GBP">GBP</option>
-      <option value="CAD">CAD</option>
-      <option value="AUD">AUD</option>
-      <option value="ZAR">ZAR</option>
-      <option value="NGN">NGN</option>
-      <option value="UGX">UGX</option>
-      <option value="TZS">TZS</option>
-    </select>
-  </div>
+  <div class="mb-3 flex gap-4 items-center">
+
+  <select id="recurringInvoiceCurrency" class="border p-2 rounded w-[350px]">
+    <option value="KES">KES</option>
+    <option value="USD">USD</option>
+    <option value="EUR">EUR</option>
+    <option value="GBP">GBP</option>
+    <option value="CAD">CAD</option>
+    <option value="AUD">AUD</option>
+    <option value="ZAR">ZAR</option>
+    <option value="NGN">NGN</option>
+    <option value="UGX">UGX</option>
+    <option value="TZS">TZS</option>
+  </select>
+
+  <input 
+    type="number" 
+    id="recurringInvoiceRate" 
+    class="border p-2 rounded w-[300px]"  placeholder="Exchange Rate" step="0.01" value="1">
+</div>
 
   <div class="mb-3">
     <select id="recurringInvoiceItemType" class="border p-2 rounded w-[700px]">
@@ -13135,15 +13210,16 @@ button:hover {
 
   <select id="recurringInvoiceItemTax" class="border p-2 rounded w-full">
     <option value="16">VAT 16%</option>
-    <option value="8">8%</option>
+    <option value="8">VAT 8%</option>
     <option value="0">Zero Rated</option>
     <option value="exempt">Exempt</option>
+    <option value="export">Export</option>
   </select>
 
 </div>
 
   <div class="mb-3">
-    <button onclick="addRecurringInvoiceItem()" class="bg-blue-900 text-white px-1 py-1 rounded">
+    <button onclick="addRecurringInvoiceItem()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
       Add
     </button>
   </div>
@@ -13162,11 +13238,11 @@ button:hover {
     <tbody id="recurringInvoiceItemTableBody"></tbody>
   </table>
 
-  <button onclick="saveRecurringInvoice('draft')" class="bg-blue-900 text-white px-3 py-1 rounded">Save Draft</button>
-  <button onclick="saveRecurringInvoice()" class="bg-blue-900 text-white px-3 py-1 rounded">Save Recurring Invoice</button>
+  <button onclick="saveRecurringInvoice('draft')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Draft</button>
+  <button onclick="saveRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Recurring Invoice</button>
 </div>
 
-<button onclick="bulkDeleteRecurringInvoices()" class="bg-blue-900 text-white px-3 py-1 rounded mb-3">Bulk Delete</button>
+<button onclick="bulkDeleteRecurringInvoices()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Bulk Delete</button>
 
 <div class="bg-white p-6 rounded shadow">
   <h2 class="text-lg font-semibold mb-4">Recurring Invoice List</h2>
@@ -13207,10 +13283,10 @@ button:hover {
         </select>
       </div>
       <div class="space-x-3">
-        <button onclick="printRecurringPreview()" class="px-1 py-1 bg-blue-900 text-white rounded">Print</button>
-        <button onclick="downloadRecurringInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded">Download</button>
-        <button onclick="emailRecurringInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded">Email</button>
-        <button onclick="closeRecurringPreview()" class="px-1 py-1 bg-blue-900 text-white rounded">Close</button>
+        <button onclick="printRecurringPreview()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Print</button>
+        <button onclick="downloadRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Download</button>
+        <button onclick="emailRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button>
+        <button onclick="closeRecurringPreview()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Close</button>
       </div>
     </div>
 
@@ -16280,6 +16356,22 @@ function loadOrderProducts() {
   };
 }
 
+function loadOrderSalesPersons() {
+  const employees = JSON.parse(localStorage.getItem("employees") || "[]");
+  const select = document.getElementById("orderSalesPerson");
+
+  if (!select) return;
+
+  select.innerHTML = `<option value="">Sales Person</option>`;
+
+  employees.forEach(emp => {
+    const opt = document.createElement("option");
+    opt.value = emp.id;
+    opt.textContent = `${emp.name} (${emp.id})`;
+    select.appendChild(opt);
+  });
+}
+
 function loadOrderAccounts() {
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   const select = document.getElementById("orderChartAccountSelect");
@@ -16460,14 +16552,14 @@ function renderOrders(data = null) {
     <td>${o.vat}</td>
     <td>${o.paid || 0}</td>
     <td>${(o.total || 0) - (o.paid || 0)}</td>
-    <td>${o.status}</td>
+    <td>${o.converted ? "Converted ✅" : (o.status || "active")}</td>
     <td>
-        <button onclick="editOrder(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Edit</button>
-        <button onclick="emailOrder(${i})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button>
-        <button onclick="convertOrder(${i})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Convert</button>
-        <button onclick="deleteOrder(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Delete</button>
-        </td>
-    </tr>
+        <button onclick="editOrder(${i})" ${o.converted ? "disabled style='opacity:0.5;cursor:not-allowed'" : ""} class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Edit</button>
+        <button onclick="emailOrder(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button>
+        <button onclick="convertOrder(${i})" ${o.converted ? "disabled style='opacity:0.5;cursor:not-allowed'" : ""} class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Convert</button>
+        <button onclick="deleteOrder(${i})" ${o.converted ? "disabled style='opacity:0.5;cursor:not-allowed'" : ""} class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Delete</button>
+    </td>
+  </tr>
   `).join("");
 }
 let editingOrderIndex = null;
@@ -16476,6 +16568,11 @@ function editOrder(index) {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
   const o = orders[index];
   if (!o) return;
+
+  if (o.converted) {
+    alert("Converted orders cannot be edited");
+    return;
+  }
 
   document.getElementById("orderDate").value = o.date || "";
   document.getElementById("orderCustomer").value = o.customerId || "";
@@ -16488,11 +16585,17 @@ function editOrder(index) {
 
   editingOrderIndex = index;
 }
+
 function deleteOrder(index) {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
   const recycleBin = JSON.parse(localStorage.getItem("recycle_orders") || "[]");
   const o = orders[index];
   if (!o) return;
+
+  if (o.converted) {
+    alert("❌ Converted orders cannot be deleted");
+    return;
+  }
 
   if (!confirm("Are you sure you want to delete this order?")) return;
 
@@ -16522,40 +16625,53 @@ function convertOrder(index) {
   if (!confirm2) return;
 
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-
   const order = orders[index];
   if (!order) return;
 
+  if (order.converted) {
+    alert("Already converted");
+    return;
+  }
+
+  const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
   const exists = invoices.find(i => i.sourceOrderId === order.id);
   if (exists) {
     alert("Already converted");
     return;
   }
 
-  const invoice = {
-    id: crypto.randomUUID(),
-    sourceOrderId: order.id,
-    number: "INV-" + order.number,
-    date: new Date().toISOString().split("T")[0],
-    customerId: order.customerId,
+  const convertedItems = (order.items || []).map(item => ({
+    desc: item.desc || item.name,
+    warehouse: item.warehouse || "Main",
+    qty: item.qty,
+    price: item.price,
+    discount: item.discount || 0,
+    vatRate: item.vatRate || 0,
+    category: item.category || "General",
+    subtotal: item.subtotal || 0,
+    vat: item.vat || 0,
+    totalWithVat: item.totalWithVat || item.total || 0
+  }));
+
+  const tempInvoice = {
+    invoiceNumber: "INV-" + order.number,
     customerName: order.customerName,
-    items: order.items || [],
-    subtotal: order.subtotal || 0,
-    vat: order.vat || 0,
     total: order.total || 0,
-    status: "approved",
-    createdFrom: "order"
+    vat: order.vat || 0,
+    items: convertedItems,
+    sourceOrderId: order.id
   };
 
-  invoices.push(invoice);
-  localStorage.setItem("invoices", JSON.stringify(invoices));
+  localStorage.setItem("currentInvoice", JSON.stringify(tempInvoice));
 
-  order.status = "approved";
+  order.status = "converted";
+  order.converted = true;
+
   orders[index] = order;
   localStorage.setItem("orders", JSON.stringify(orders));
 
   renderOrders();
+
   window.location.href = "invoice.html";
 }
 
@@ -16770,6 +16886,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadOrderCustomers();
   loadOrderProducts();
   loadOrderAccounts();
+  loadOrderSalesPersons();
   renderOrders();
 });
 </script>
@@ -22131,18 +22248,20 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="mb-4">
       <textarea id="supplierShippingAddress" placeholder="Shipping Address" class="border p-2 rounded w-[700px]" rows="2"></textarea>
     </div>
-
-    <button id="supplierBtn" onclick="addSupplier()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
-      Save Supplier
-    </button>
+    <button id="draftBtn" onclick="saveDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
+    <button id="supplierBtn" onclick="addSupplier()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Save Supplier</button>
   </div>
- 
-  
+ <div>
+  <button onclick="deleteSelectedSuppliers()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+ Bulk Delete 
+</button>
+  </div>
   <div class="bg-white p-6 rounded shadow">
     <h3 class="text-lg font-semibold mb-4">Supplier List</h3>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2 text-left"> <input type="checkbox" id="selectAllSuppliers" onclick="toggleSelectAllSuppliers(this)" /></th>
           <th class="p-2 text-left">Salutation</th>
           <th class="p-2 text-left">Name</th>
           <th class="p-2 text-left">Primary Email</th>
@@ -22515,10 +22634,45 @@ document.addEventListener("DOMContentLoaded", () => {
           <option value="">Select Item Type</option>
           <option value="product">Product</option>
           <option value="service">Service</option>
+          <option value="asset">Asset</option>
+          <option value="inventory">Inventory Item</option>
+          <option value="noninventory">Non-Inventory Item</option>
+          <option value="expense">Expense</option>
+          <option value="labour">Labour</option>
+          <option value="consulting">Consulting</option>
+          <option value="import">Imported Item</option>
+          
         </select>
       </div>
     </div>
-
+    <div class="grid grid-cols-2 gap-4 mb-4">
+  <div>
+    <label for="billCurrency" class="block font-semibold mb-1">Currency:</label>
+    <select id="billCurrency" class="border p-2 rounded">
+      <option value="KES">KES (Base Currency)</option>
+      <option value="USD">USD (US Dollar)</option>
+      <option value="EUR">EUR (Euro)</option>
+      <option value="GBP">GBP (British Pound)</option>
+      <option value="TZS">TZS (Tanzanian Shilling)</option>
+      <option value="UGX">UGX (Ugandan Shilling)</option>
+      <option value="RWF">RWF (Rwandan Franc)</option>
+      <option value="ETB">ETB (Ethiopian Birr)</option>
+      <option value="NGN">NGN (Nigerian Naira)</option>
+      <option value="ZAR">ZAR (South African Rand)</option>
+      <option value="CNY">CNY (Chinese Yuan)</option>
+      <option value="INR">INR (Indian Rupee)</option>
+      <option value="JPY">JPY (Japanese Yen)</option>
+      <option value="CAD">CAD (Canadian Dollar)</option>
+      <option value="AUD">AUD (Australian Dollar)</option>
+      <option value="CHF">CHF (Swiss Franc)</option>
+      <option value="AED">AED (UAE Dirham)</option>
+    </select>
+  </div>
+  <div>
+    <label for="billCurrencyRate" class="block font-semibold mb-1">Exchange Rate:</label>
+    <input id="billCurrencyRate" type="number" class="border p-2 rounded" value="1" step="0.01" />
+  </div>
+</div>
     
     <div class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4">
       <select id="billItemDesc" class="border p-2 rounded">
@@ -22529,10 +22683,13 @@ document.addEventListener("DOMContentLoaded", () => {
       <input id="billItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded" />
       <select id="billItemTax" class="border p-2 rounded">
         <option value="16">VAT 16%</option>
+        <option value="8">VAT 8%</option>
         <option value="0">Zero Rated</option>
         <option value="exempt">Exempt</option>
+        <option value="import">Imports</option>
       </select>
-      </div><button type="button" id="addBillItemBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Add</button>
+      <button type="button" id="addBillItemBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Add</button>
+      </div>
 
     
     <div class="overflow-x-auto mb-4">
@@ -22560,8 +22717,8 @@ document.addEventListener("DOMContentLoaded", () => {
       <input id="billTotalAmount" type="number" placeholder="Total Amount" class="border p-2 rounded bg-gray-100" readonly />
     </div>
 
-    
-   <button type="button" id="saveBillBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Save Bill</button>
+    <button type="button" id="saveDraftBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
+   <button type="button" id="saveBillBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save Bill</button>
   </div>
 
   <div class="bg-white p-6 rounded shadow">
@@ -22861,6 +23018,13 @@ document.addEventListener("DOMContentLoaded", () => {
           <option value="">Select Item Type</option>
           <option value="product">Product</option>
           <option value="service">Service</option>
+          <option value="asset">Asset</option>
+          <option value="inventory">Inventory Item</option>
+          <option value="noninventory">Non-Inventory Item</option>
+          <option value="expense">Expense</option>
+          <option value="labour">Labour</option>
+          <option value="consulting">Consulting</option>
+          <option value="import">Imported Item</option>
         </select>
       </div>
     </div>
@@ -22871,9 +23035,22 @@ document.addEventListener("DOMContentLoaded", () => {
         <label for="bulkBillCurrency" class="block font-semibold mb-1">Currency:</label>
         <select id="bulkBillCurrency" class="border p-2 rounded">
           <option value="KES">KES (Base Currency)</option>
-          <option value="USD">USD</option>
-          <option value="EUR">EUR</option>
-          <option value="GBP">GBP</option>
+          <option value="USD">USD (US Dollar)</option>
+          <option value="EUR">EUR (Euro)</option>
+          <option value="GBP">GBP (British Pound)</option>
+          <option value="TZS">TZS (Tanzanian Shilling)</option>
+          <option value="UGX">UGX (Ugandan Shilling)</option>
+          <option value="RWF">RWF (Rwandan Franc)</option>
+          <option value="ETB">ETB (Ethiopian Birr)</option>
+          <option value="NGN">NGN (Nigerian Naira)</option>
+          <option value="ZAR">ZAR (South African Rand)</option>
+          <option value="CNY">CNY (Chinese Yuan)</option>
+          <option value="INR">INR (Indian Rupee)</option>
+          <option value="JPY">JPY (Japanese Yen)</option>
+          <option value="CAD">CAD (Canadian Dollar)</option>
+          <option value="AUD">AUD (Australian Dollar)</option>
+          <option value="CHF">CHF (Swiss Franc)</option>
+          <option value="AED">AED (UAE Dirham)</option>
         </select>
       </div>
       <div>
@@ -22892,8 +23069,10 @@ document.addEventListener("DOMContentLoaded", () => {
       <input id="bulkBillItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded" />
       <select id="bulkBillItemTax" class="border p-2 rounded">
         <option value="16">VAT 16%</option>
+        <option value="8">VAT 8%</option>
         <option value="0">Zero Rated</option>
         <option value="exempt">Exempt</option>
+        <option value="import">Imports</option>
       </select>
     </div>
     <button type="button" id="addBulkBillItemBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Add</button>
@@ -22924,8 +23103,8 @@ document.addEventListener("DOMContentLoaded", () => {
       <input id="bulkBillTotalAmount" type="number" placeholder="Total Amount" class="border p-2 rounded bg-gray-100" readonly />
     </div>
 
-    
-    <button type="button" id="saveBulkBillBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Save Bulk Bill</button>
+    <button type="button" id="saveBulkDraftBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Save Bulk Draft</button>
+    <button type="button" id="saveBulkBillBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save Bulk Bill</button>
   </div>
 
   
@@ -22969,6 +23148,219 @@ document.addEventListener("DOMContentLoaded", () => {
     <button id="nextPageBtn" class="px-1 py-1 border rounded disabled:opacity-50" disabled>Next</button>
   </div>
 </div>
+</div>
+<!-- ✅ SUPPLIER QUOTATIONS MODULE -->
+<div id="supplierQuotationsTab" class="p-4">
+
+  <h2 class="text-1xl font-bold mb-4 text-left">Quotations</h2>
+
+  <div class="relative mb-4">
+    <input 
+      type="text" 
+      id="quoteSearch"
+      placeholder="Search Quotations (/)"
+      class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+      oninput="searchQuotes()"
+    />
+  </div>
+
+  <div class="mb-2 relative inline-block text-right">
+
+    <button id="quoteMasterBtn"
+      class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-9 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+      Quote Actions
+      <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+
+    <div id="quoteMasterDropdown"
+      class="absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white hidden z-10">
+
+      <div class="py-1">
+
+        <button onclick="sortQuotesBy('quoteNumber')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+          Quote #
+        </button>
+
+        <button onclick="sortQuotesBy('date')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+          Date
+        </button>
+
+        <button onclick="sortQuotesBy('supplier')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+          Supplier
+        </button>
+
+        <hr class="my-1 border-gray-200">
+
+        <button onclick="importQuotes()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+          Import Quotes
+        </button>
+
+        <button onclick="exportQuotes()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+          Export Quotes
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white p-6 rounded shadow mb-6">
+
+    <h3 class="text-xl font-semibold mb-4">Add New Quotation</h3>
+
+    <div class="mb-4">
+      <label class="block font-semibold mb-1">Date</label>
+      <input id="quoteDate" type="date" class="border p-2 rounded" style="width: 700px;" />
+    </div>
+
+    <div class="mb-4">
+      <label class="block font-semibold mb-1">Quote Number</label>
+      <input id="quoteNumber" type="text" class="border p-2 rounded bg-gray-100" readonly style="width: 700px;" />
+    </div>
+
+    <div class="mb-4">
+      <label class="block font-semibold mb-1">Select Supplier</label>
+      <select id="quoteSupplier" class="border p-2 rounded" style="width: 700px;">
+        <option value="">Select Supplier</option>
+      </select>
+    </div>
+   <div class="grid grid-cols-2 gap-4 mb-4">
+  <div>
+    <label for="quoteCurrency" class="block font-semibold mb-1">Currency:</label>
+    <select id="quoteCurrency" class="border p-2 rounded">
+      <option value="KES">KES (Base Currency)</option>
+      <option value="USD">USD (US Dollar)</option>
+      <option value="EUR">EUR (Euro)</option>
+      <option value="GBP">GBP (British Pound)</option>
+      <option value="TZS">TZS (Tanzanian Shilling)</option>
+      <option value="UGX">UGX (Ugandan Shilling)</option>
+      <option value="RWF">RWF (Rwandan Franc)</option>
+      <option value="ETB">ETB (Ethiopian Birr)</option>
+      <option value="NGN">NGN (Nigerian Naira)</option>
+      <option value="ZAR">ZAR (South African Rand)</option>
+      <option value="CNY">CNY (Chinese Yuan)</option>
+      <option value="INR">INR (Indian Rupee)</option>
+      <option value="JPY">JPY (Japanese Yen)</option>
+      <option value="CAD">CAD (Canadian Dollar)</option>
+      <option value="AUD">AUD (Australian Dollar)</option>
+      <option value="CHF">CHF (Swiss Franc)</option>
+      <option value="AED">AED (UAE Dirham)</option>
+    </select>
+  </div>
+  <div>
+    <label for="quoteCurrencyRate" class="block font-semibold mb-1">Exchange Rate:</label>
+    <input id="quoteCurrencyRate" type="number" class="border p-2 rounded" value="1" step="0.01" />
+  </div>
+</div>
+ 
+   <div class="mb-4">
+   <label class="block font-semibold mb-1">Terms (Days)</label>
+   <select id="quoteTermsDays" class="border p-2 rounded" style="width: 700px;">
+    <option value="0">Due on Receipt</option>
+    <option value="7">7 Days</option>
+    <option value="14">14 Days</option>
+    <option value="30">30 Days</option>
+    <option value="45">45 Days</option>
+    <option value="60">60 Days</option>
+    <option value="90">90 Days</option>
+   </select>
+    </div>
+    <div class="mb-4">
+  <label for="supplierQuoteItemType" class="block font-semibold mb-1">Item Type</label>
+
+  <select id="supplierQuoteItemType" class="border p-2 rounded" style="width: 700px;" required>
+    <option value="">Select Item Type</option>
+    <option value="product">Product</option>
+    <option value="service">Service</option>
+    <option value="asset">Asset</option>
+    <option value="inventory">Inventory Item</option>
+    <option value="noninventory">Non-Inventory Item</option>
+    <option value="expense">Expense</option>
+    <option value="labour">Labour</option>
+    <option value="consulting">Consulting</option>
+    <option value="import">Imported Item</option>
+  </select>
+</div>
+    <div class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4">
+
+      <select id="quoteProductSelect" class="border p-2 rounded">
+        <option value="">Select Product</option>
+      </select>
+
+      <input id="quoteItemQty" type="number" placeholder="Qty" class="border p-2 rounded" />
+
+      <input id="quoteItemPrice" type="number" placeholder="Unit Price" class="border p-2 rounded" />
+
+      <input id="quoteItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded" />
+
+      <select id="quoteItemTax" class="border p-2 rounded">
+        <option value="16">VAT 16%</option>
+        <option value="8">VAT 8%</option>
+        <option value="0">Zero Rated</option>
+        <option value="exempt">Exempt</option>
+        <option value="import">Imports</option>
+      </select>
+
+      <button onclick="addQuoteItem()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
+        Add Item
+      </button>
+
+    </div>
+
+    <table class="w-full text-sm border mb-4" id="quoteItemsTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2">Item</th>
+          <th class="p-2">Qty</th>
+          <th class="p-2">Unit Price</th>
+          <th class="p-2">VAT</th>
+          <th class="p-2">Terms (Days)</th>
+          <th class="p-2">Subtotal</th>
+          <th class="p-2">Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td colspan="6" class="p-2 text-center text-gray-500">No items</td>
+        </tr>
+      </tbody>
+
+    </table>
+
+    <button type="button" id="saveQuoteBtn"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      Save Quote
+    </button>
+
+  </div>
+
+  <div id="quotePaginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600">
+
+    <div>
+      Total Count: <span id="quoteTotalCount">0</span>
+    </div>
+
+    <div>
+      Show 
+      <select id="quoteItemsPerPageSelect" class="border rounded px-1">
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+      per page
+    </div>
+
+    <div>
+      <button id="quotePrevPageBtn" class="px-2 py-1 border rounded disabled:opacity-50" disabled>Prev</button>
+      <span id="quotePageInfo">1 - 0</span>
+      <button id="quoteNextPageBtn" class="px-2 py-1 border rounded disabled:opacity-50" disabled>Next</button>
+    </div>
+
+  </div>
 </div>
 <!-- ✅ SUPPLIER PURCHASE ORDERS MODULE --> 
 <div id="supplierPurchaseOrdersTab" class="p-4">
@@ -23124,7 +23516,34 @@ function managePOFiles() {
       <label for="poNumber" class="block font-semibold mb-1">PO Number</label>
       <input id="poNumber" type="text" class="border p-2 rounded w-half bg-gray-100" readonly />
     </div>
-
+    <div class="grid grid-cols-2 gap-4 mb-4">
+  <div>
+    <label for="purchaseOrderCurrency" class="block font-semibold mb-1">Currency:</label>
+    <select id="purchaseOrderCurrency" class="border p-2 rounded">
+      <option value="KES">KES (Base Currency)</option>
+      <option value="USD">USD (US Dollar)</option>
+      <option value="EUR">EUR (Euro)</option>
+      <option value="GBP">GBP (British Pound)</option>
+      <option value="TZS">TZS (Tanzanian Shilling)</option>
+      <option value="UGX">UGX (Ugandan Shilling)</option>
+      <option value="RWF">RWF (Rwandan Franc)</option>
+      <option value="ETB">ETB (Ethiopian Birr)</option>
+      <option value="NGN">NGN (Nigerian Naira)</option>
+      <option value="ZAR">ZAR (South African Rand)</option>
+      <option value="CNY">CNY (Chinese Yuan)</option>
+      <option value="INR">INR (Indian Rupee)</option>
+      <option value="JPY">JPY (Japanese Yen)</option>
+      <option value="CAD">CAD (Canadian Dollar)</option>
+      <option value="AUD">AUD (Australian Dollar)</option>
+      <option value="CHF">CHF (Swiss Franc)</option>
+      <option value="AED">AED (UAE Dirham)</option>
+    </select>
+  </div>
+  <div>
+    <label for="purchaseOrderCurrencyRate" class="block font-semibold mb-1">Exchange Rate:</label>
+    <input id="purchaseOrderCurrencyRate" type="number" class="border p-2 rounded" value="1" step="0.01" />
+    </div>
+    </div>
     
     <div class="mb-4">
       <label for="poSupplier" class="block font-semibold mb-1">Select Supplier</label>
@@ -23162,6 +23581,13 @@ function managePOFiles() {
         <option value="">Select Item Type</option>
         <option value="product">Product</option>
         <option value="service">Service</option>
+        <option value="asset">Asset</option>
+        <option value="inventory">Inventory Item</option>
+        <option value="noninventory">Non-Inventory Item</option>
+        <option value="expense">Expense</option>
+        <option value="labour">Labour</option>
+        <option value="consulting">Consulting</option>
+        <option value="import">Imported Item</option>
       </select>
     </div>
 
@@ -23175,8 +23601,10 @@ function managePOFiles() {
       <input id="poItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded" />
       <select id="poItemTax" class="border p-2 rounded">
         <option value="16">VAT 16%</option>
+        <option value="8">VAT 8%</option>
         <option value="0">Zero Rated</option>
         <option value="exempt">Exempt</option>
+        <option value="import">Imports</option>
       </select>
       <button onclick="addPOItem()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-900">Add Item</button>
     </div>
@@ -23351,11 +23779,46 @@ function managePOFiles() {
     <div class="mb-4">
       <label for="debitItemType" class="block font-semibold mb-1">Item Type</label>
       <select id="debitItemType" class="border p-2 rounded" style="width: 700px;">
+        <option value="">Select Item Type</option>
         <option value="product">Product</option>
         <option value="service">Service</option>
+        <option value="asset">Asset</option>
+        <option value="inventory">Inventory Item</option>
+        <option value="noninventory">Non-Inventory Item</option>
+        <option value="expense">Expense</option>
+        <option value="labour">Labour</option>
+        <option value="consulting">Consulting</option>
+        <option value="import">Imported Item</option>
       </select>
     </div>
-
+    <div class="grid grid-cols-2 gap-4 mb-4">
+  <div>
+    <label for="purchaseOrderCurrency" class="block font-semibold mb-1">Currency:</label>
+    <select id="purchaseOrderCurrency" class="border p-2 rounded">
+      <option value="KES">KES (Base Currency)</option>
+      <option value="USD">USD (US Dollar)</option>
+      <option value="EUR">EUR (Euro)</option>
+      <option value="GBP">GBP (British Pound)</option>
+      <option value="TZS">TZS (Tanzanian Shilling)</option>
+      <option value="UGX">UGX (Ugandan Shilling)</option>
+      <option value="RWF">RWF (Rwandan Franc)</option>
+      <option value="ETB">ETB (Ethiopian Birr)</option>
+      <option value="NGN">NGN (Nigerian Naira)</option>
+      <option value="ZAR">ZAR (South African Rand)</option>
+      <option value="CNY">CNY (Chinese Yuan)</option>
+      <option value="INR">INR (Indian Rupee)</option>
+      <option value="JPY">JPY (Japanese Yen)</option>
+      <option value="CAD">CAD (Canadian Dollar)</option>
+      <option value="AUD">AUD (Australian Dollar)</option>
+      <option value="CHF">CHF (Swiss Franc)</option>
+      <option value="AED">AED (UAE Dirham)</option>
+    </select>
+  </div>
+  <div>
+    <label for="purchaseOrderCurrencyRate" class="block font-semibold mb-1">Exchange Rate:</label>
+    <input id="purchaseOrderCurrencyRate" type="number" class="border p-2 rounded" value="1" step="0.01" />
+    </div>
+    </div>
     <div class="mb-4">
       <label for="debitAccountSelect" class="block font-semibold mb-1">Account</label>
       <select id="debitAccountSelect" class="border p-2 rounded" style="width: 700px;">
@@ -23374,9 +23837,11 @@ function managePOFiles() {
       <input id="debitItemPrice" type="number" placeholder="Unit Price" class="border p-2 rounded" />
 
       <select id="debitItemTax" class="border p-2 rounded">
-        <option value="16">16% VAT</option>
+        <option value="16">VAT 16%</option>
+        <option value="8">VAT 8%</option>
         <option value="0">Zero Rated</option>
         <option value="exempt">Exempt</option>
+        <option value="import">Imports</option>
       </select>
 
       <button type="button" id="addDebitItemBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
@@ -23554,7 +24019,49 @@ function managePOFiles() {
       <label for="purchaseReturnReason" class="block font-semibold mb-1">Reason</label>
       <input id="purchaseReturnReason" type="text" placeholder="Reason" class="border p-2 rounded" style="width: 700px;" />
     </div>
-
+    <div class="mb-4">
+  <label for="purchaseReturnItemType" class="block font-semibold mb-1">Item Type</label>
+  <select id="purchaseReturnItemType" class="border p-2 rounded" style="width: 700px;" required>
+    <option value="">Select Item Type</option>
+    <option value="product">Product</option>
+    <option value="service">Service</option>
+    <option value="asset">Asset</option>
+    <option value="inventory">Inventory Item</option>
+    <option value="noninventory">Non-Inventory Item</option>
+    <option value="expense">Expense</option>
+    <option value="labour">Labour</option>
+    <option value="consulting">Consulting</option>
+    <option value="import">Imported Item</option>
+    </select>
+    </div>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+  <div>
+    <label for="purchaseReturnCurrency" class="block font-semibold mb-1">Currency:</label>
+    <select id="purchaseReturnCurrency" class="border p-2 rounded">
+      <option value="KES">KES (Base Currency)</option>
+      <option value="USD">USD (US Dollar)</option>
+      <option value="EUR">EUR (Euro)</option>
+      <option value="GBP">GBP (British Pound)</option>
+      <option value="TZS">TZS (Tanzanian Shilling)</option>
+      <option value="UGX">UGX (Ugandan Shilling)</option>
+      <option value="RWF">RWF (Rwandan Franc)</option>
+      <option value="ETB">ETB (Ethiopian Birr)</option>
+      <option value="NGN">NGN (Nigerian Naira)</option>
+      <option value="ZAR">ZAR (South African Rand)</option>
+      <option value="CNY">CNY (Chinese Yuan)</option>
+      <option value="INR">INR (Indian Rupee)</option>
+      <option value="JPY">JPY (Japanese Yen)</option>
+      <option value="CAD">CAD (Canadian Dollar)</option>
+      <option value="AUD">AUD (Australian Dollar)</option>
+      <option value="CHF">CHF (Swiss Franc)</option>
+      <option value="AED">AED (UAE Dirham)</option>
+    </select>
+  </div>
+  <div>
+    <label for="purchaseReturnCurrencyRate" class="block font-semibold mb-1">Exchange Rate:</label>
+    <input id="purchaseReturnCurrencyRate" type="number" class="border p-2 rounded" value="1" step="0.01" />
+    </div>
+    </div>
     <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-4">
       
       <select id="purchaseReturnItemSelect" class="border p-2 rounded">
@@ -23567,8 +24074,10 @@ function managePOFiles() {
 
       <select id="purchaseReturnTax" class="border p-2 rounded">
         <option value="16">VAT 16%</option>
+        <option value="8">VAT 8%</option>
         <option value="0">Zero Rated</option>
         <option value="exempt">Exempt</option>
+        <option value="import">Imports</option>
       </select>
 
       <button id="addPurchaseReturnItemBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
@@ -23656,17 +24165,10 @@ function managePOFiles() {
   </div>
 
   <div class="mb-4 flex space-x-2">
-    <button id="singleTaxBtn"
-            onclick="showSingleTax()"
-            class="px-1 py-1 bg-blue-900 text-white rounded">
-      Record Payment
-    </button>
+    
+    <button id="singleTaxBtn" onclick="showSingleTax()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Payment </button>
 
-    <button id="bulkTaxBtn"
-            onclick="showBulkTax()"
-            class="px-1 py-1 bg-blue-900 text-white rounded">
-      Bulk Add Payments
-    </button>
+    <button id="bulkTaxBtn"onclick="showBulkTax()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Add Payments</button>
   </div>
  
 <div class="mb-2 relative inline-block text-right">
@@ -23837,11 +24339,8 @@ function managePOFiles() {
                class="border p-2 rounded"
                style="width: 700px;" />
       </div>
-
-      <button onclick="addTaxPayment()"
-              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-        Record Payment
-      </button>
+      <button id="draftBtn" onclick="saveDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
+      <button onclick="addTaxPayment()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Record Payment</button>
     </div>
 
   </div>
@@ -23869,15 +24368,9 @@ function managePOFiles() {
       </tbody>
     </table>
 
-    <button onclick="addBulkTaxRow()"
-            class="bg-blue-900 text-white px-2 py-1 rounded ml-2">
-      Add Row
-    </button>
-
-    <button onclick="saveBulkTaxPayments()"
-            class="bg-blue-900 text-white px-2 py-1 rounded ml-2">
-      Save All
-    </button>
+    <button onclick="addBulkTaxRow()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Add Row</button>
+     <button id="draftBtn" onclick="saveDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
+    <button onclick="saveBulkTaxPayments()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Save All</button>
   </div>
 
 </div>
@@ -24045,7 +24538,7 @@ function managePOFiles() {
           <option value="">Select Category</option>
         </select>
       </div>
-
+      
       <div class="mb-4">
         <label for="costPaymentMode" class="block font-medium mb-1">Mode of Payment</label>
         <select id="costPaymentMode" class="border p-2 rounded" style="width: 700px;">
@@ -24641,6 +25134,7 @@ function renderSuppliers() {
 
     const row = document.createElement("tr");
     row.innerHTML = `
+       <td class="p-2"><input type="checkbox" class="supplier-checkbox" value="${index}" /></td>
       <td class="p-2 border">${s.salutation || ""}</td>
       <td class="p-2 border">${s.name}</td>
       <td class="p-2 border">${s.primaryEmail}</td>
@@ -24655,6 +25149,7 @@ function renderSuppliers() {
       <td class="p-2 border">
         <button onclick="editSupplier(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Edit</button>
         <button onclick="deleteSupplier(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Delete</button>
+         <button onclick="viewSupplier(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">View</button>
       </td>
     `;
     table.appendChild(row);
@@ -24717,7 +25212,33 @@ function clearSupplierForm() {
   document.getElementById("supplierBtn").textContent = "Save Supplier";
   editingSupplierIndex = null;
 }
+function deleteSelectedSuppliers() {
+  let suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
 
+  const selected = Array.from(document.querySelectorAll(".supplier-checkbox:checked"))
+    .map(cb => parseInt(cb.value));
+
+  if (selected.length === 0) {
+    alert("No suppliers selected");
+    return;
+  }
+
+  if (!confirm(`You selected ${selected.length} supplier(s). Proceed?`)) return;
+
+  if (!confirm("This action cannot be undone. Confirm delete?")) return;
+
+  selected.sort((a, b) => b - a).forEach(index => {
+    suppliers.splice(index, 1);
+  });
+
+  localStorage.setItem("suppliers", JSON.stringify(suppliers));
+  renderSuppliers();
+}
+
+function toggleSelectAllSuppliers(source) {
+  const checkboxes = document.querySelectorAll(".supplier-checkbox");
+  checkboxes.forEach(cb => cb.checked = source.checked);
+}
 function sendSupplierStatements() {
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0]; 
@@ -24776,7 +25297,195 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
 });
+function viewSupplier(index) {
+  const suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
+  const s = suppliers[index];
+  if (!s) return;
 
+  const old = document.getElementById("supplierPopup");
+  if (old) old.remove();
+
+  const popup = document.createElement("div");
+  popup.id = "supplierPopup";
+
+  Object.assign(popup.style, {
+    position: "fixed",
+    top: "0",
+    left: "0",
+    width: "100%",
+    height: "100%",
+    background: "rgba(0,0,0,0.6)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: "99999"
+  });
+
+  const box = document.createElement("div");
+
+  Object.assign(box.style, {
+    width: "80%",
+    height: "90%",
+    background: "#fff",
+    borderRadius: "10px",
+    display: "flex",
+    overflow: "hidden",
+    position: "relative"
+  });
+
+  const left = document.createElement("div");
+  Object.assign(left.style, {
+    width: "30%",
+    borderRight: "1px solid #ddd",
+    padding: "15px"
+  });
+
+  left.innerHTML = `
+    <h3>Supplier Details</h3>
+
+    <p><b>Name:</b> ${s.name || "-"}</p>
+    <p><b>Email:</b> ${s.primaryEmail || "-"}</p>
+    <p><b>Phone:</b> ${s.phone || "-"}</p>
+
+    <hr>
+
+    <p><b>Billing Address:</b><br>${s.billingAddress || "-"}</p>
+    <p><b>Shipping Address:</b><br>${s.shippingAddress || "-"}</p>
+
+    <hr>
+
+    <p><b>KRA PIN:</b> ${s.krapin || "-"}</p>
+    <p><b>Debit Limit:</b> ${formatCurrency(s.debitLimit || 0)}</p>
+    <p><b>Balance:</b> ${formatCurrency(s.balance || 0)}</p>
+
+    <hr>
+
+    <h3>Transactions</h3>
+  `;
+
+  const right = document.createElement("div");
+  right.id = "supplierTxnBox";
+
+  Object.assign(right.style, {
+    width: "70%",
+    padding: "15px",
+    overflow: "auto"
+  });
+
+  right.innerHTML = `<p style="color:#888;">Select a transaction</p>`;
+
+  const types = [
+    { key: "bills", label: "Bills" },
+    { key: "purchaseOrders", label: "PO" },
+    { key: "debitNotes", label: "Debit Notes" },
+    { key: "goodsReceived", label: "Goods Received" },
+    { key: "payments", label: "Payments" }
+  ];
+
+  types.forEach(t => {
+    const btn = document.createElement("div");
+    btn.innerText = t.label;
+
+    Object.assign(btn.style, {
+      padding: "8px",
+      cursor: "pointer",
+      borderRadius: "5px"
+    });
+
+    btn.onclick = () => loadSupplierTransactions(t.key, index, btn);
+
+    left.appendChild(btn);
+  });
+
+  const close = document.createElement("button");
+  close.innerText = "X";
+
+  Object.assign(close.style, {
+    position: "absolute",
+    top: "10px",
+    right: "10px",
+    background: "#1e3a8a",
+    color: "#fff",
+    border: "none",
+    padding: "4px 8px",
+    cursor: "pointer",
+    borderRadius: "4px"
+  });
+
+  close.onclick = () => popup.remove();
+
+  box.appendChild(left);
+  box.appendChild(right);
+  popup.appendChild(box);
+  popup.appendChild(close);
+
+  document.body.appendChild(popup);
+}
+
+function loadSupplierTransactions(type, index, element) {
+
+  const parent = element.parentElement;
+  [...parent.children].forEach(el => {
+    el.style.background = "";
+    el.style.fontWeight = "";
+  });
+
+  element.style.background = "#e6f0ff";
+  element.style.fontWeight = "bold";
+
+  const suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
+  const s = suppliers[index];
+  if (!s) return;
+
+  let data = [];
+
+  if (type === "bills") {
+    const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+    data = bills.filter(b => b.supplier === s.name);
+  }
+
+  else if (type === "purchaseOrders") {
+    const po = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
+    data = po.filter(p => p.supplier === s.name);
+  }
+
+  else if (type === "debitNotes") {
+    const dn = JSON.parse(localStorage.getItem("debitNotes") || "[]");
+    data = dn.filter(d => d.supplier === s.name);
+  }
+
+  else if (type === "goodsReceived") {
+    const grn = JSON.parse(localStorage.getItem("goodsReceived") || "[]");
+    data = grn.filter(g => g.supplier === s.name);
+  }
+
+  else if (type === "payments") {
+    const pay = JSON.parse(localStorage.getItem("payments") || "[]");
+    data = pay.filter(p => p.supplier === s.name);
+  }
+
+  const box = document.getElementById("supplierTxnBox");
+  box.innerHTML = `<h3>${type}</h3>`;
+
+  if (!data.length) {
+    box.innerHTML += `<p style="color:#888;">No records found</p>`;
+    return;
+  }
+
+  data.forEach(item => {
+    const div = document.createElement("div");
+    div.style.borderBottom = "1px solid #ddd";
+    div.style.padding = "8px";
+
+    div.innerHTML = `
+      <b>${item.number || item.id}</b><br>
+      Date: ${item.date || "-"}<br>
+      Total: ${formatCurrency(item.total || 0)}
+    `;
+
+    box.appendChild(div);
+  });
+}
 function sortSuppliersBy(field) {
 
   let suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
@@ -25264,7 +25973,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 <script>
-
+// ---------------------- GLOBAL VARS ----------------------
 let billItems = [];
 let editIndex = -1;
 let currentEditingBillIndex = null;
@@ -25283,7 +25992,7 @@ function searchSupplierBills() {
   });
 }
 
-
+// ---------------------- INVENTORY FUNCTIONS ----------------------
 function getInventory(warehouse) {
   return JSON.parse(localStorage.getItem('inventory_' + warehouse) || '[]');
 }
@@ -25302,7 +26011,7 @@ function getAllInventories() {
     });
 }
 
-
+// ---------------------- BILL CHART OF ACCOUNTS ----------------------
 function populateBillChartOfAccountDropdown() {
   const select = document.getElementById("billChartOfAccount");
   if (!select) return; 
@@ -25310,32 +26019,32 @@ function populateBillChartOfAccountDropdown() {
  
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
 
-  
+  // Allowed types: Expenses + Liabilities
   const allowedTypes = [
-    
+    // 🔹 Expenses
     "Expense", "Cost of Goods Sold", "Other Expense", "Depreciation",
     "Personnel Costs", "Marketing Expense", "Finance Costs",
     "Repairs & Maintenance", "Insurance Costs",
 
-    
+    // 🔹 Liabilities
     "Liability", "Other Current Liability", "Accounts Payable",
     "Non Current Liability", "Other Liability", "Credit Card"
   ];
 
-  
+  // Filter by allowed types
   const filteredAccounts = accounts.filter(acc => allowedTypes.includes(acc.type));
 
-  
+  // Sort filtered accounts by code (numeric sort if possible)
   filteredAccounts.sort((a, b) => {
     const codeA = a.code || "";
     const codeB = b.code || "";
     return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: "base" });
   });
 
-  
+  // Clear existing options
   select.innerHTML = '<option value="">Select Account</option>';
 
-  
+  // Populate dropdown
   filteredAccounts.forEach(acc => {
     const option = document.createElement("option");
     option.value = acc.name; 
@@ -25344,7 +26053,8 @@ function populateBillChartOfAccountDropdown() {
   });
 }
 
-
+// ---------------------- CALL POPULATE ----------------------
+// 1️⃣ When page loads
 document.addEventListener("DOMContentLoaded", populateBillChartOfAccountDropdown);
 
 function addAccount() {
@@ -25352,7 +26062,7 @@ function addAccount() {
   populateBillChartOfAccountDropdown();
 }
 
-
+// ---------------------- SUPPLIER DROPDOWN ----------------------
 function populateSupplierDropdownById(id) {
   const dropdown = document.getElementById(id);
   if (!dropdown) return;
@@ -25420,13 +26130,13 @@ document.getElementById('billItemDesc')?.addEventListener('change', () => {
   }
 });
 
-
+// ---------------------- BILL NUMBER ----------------------
 function generateBillNumber() {
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
   return `BIL-${String(bills.length + 1).padStart(4, '0')}`;
 }
 
-
+// ---------------------- BILL ITEMS ----------------------
 function addBillItem() {
   const selVal = document.getElementById('billItemDesc').value;
   if (!selVal) { 
@@ -25493,7 +26203,7 @@ function addBillItem() {
   clearBillItemForm();
 }
 
-
+// ---------------------- RENDER BILL ITEMS ----------------------
 function renderBillItems() {
   const tbody = document.getElementById('billItemsTableBody');
   tbody.innerHTML = '';
@@ -25534,7 +26244,7 @@ function renderBillItems() {
   document.getElementById('billTotalAmount').value = totalAmount.toFixed(2);
 }
 
-
+// ---------------------- EDIT / REMOVE ----------------------
 function editBillItem(index) {
   const item = billItems[index];
   editIndex = index;
@@ -25549,7 +26259,7 @@ function removeBillItem(index) {
   renderBillItems();
 }
 
-
+// ---------------------- CLEAR FORM ----------------------
 function clearBillItemForm() {
   document.getElementById('billItemDesc').value = '';
   document.getElementById('billItemQty').value = '';
@@ -25558,7 +26268,7 @@ function clearBillItemForm() {
   document.getElementById('billItemTax').value = '16';
 }
 
-
+// ---------------------- SAVE BILL ----------------------
 function saveSupplierBill() {
   const date = document.getElementById('billDate').value;
   const supplier = document.getElementById('billSupplier').value;
@@ -25571,7 +26281,7 @@ function saveSupplierBill() {
     return;
   }
 
-  
+  // ------------------ NORMALIZE ITEMS ------------------
   billItems = billItems.map(item => ({
     ...item,
     sku: (item.sku || "").trim(),
@@ -25583,7 +26293,7 @@ function saveSupplierBill() {
     vat: parseFloat(item.vat) || 0
   }));
 
-  
+  // ------------------ MERGE DUPLICATES ------------------
   const mergedItems = [];
   billItems.forEach(item => {
     const existing = mergedItems.find(i =>
@@ -25601,7 +26311,7 @@ function saveSupplierBill() {
     }
   });
 
-  
+  // ------------------ DUE DATE ------------------
   let due = '';
   if (date) {
     const dueDate = new Date(date);
@@ -25609,12 +26319,12 @@ function saveSupplierBill() {
     due = dueDate.toISOString().split('T')[0];
   }
 
-  
+  // ------------------ TOTALS ------------------
   const subtotal = mergedItems.reduce((sum, i) => sum + i.subtotal, 0);
   const vat = mergedItems.reduce((sum, i) => sum + i.vat, 0);
   const total = subtotal + vat;
 
-  
+  // ------------------ TAX GROUPING ------------------
   let purchasesGeneral = 0, purchasesOther = 0, purchasesZero = 0, purchasesExempt = 0;
 
   mergedItems.forEach(item => {
@@ -25631,7 +26341,7 @@ function saveSupplierBill() {
     }
   });
 
-  
+  // ------------------ BILL OBJECT ------------------
   const bill = {
     billNumber,
     date,
@@ -25652,13 +26362,13 @@ function saveSupplierBill() {
 
   let bills = JSON.parse(localStorage.getItem('bills') || '[]');
 
-  
+  // ------------------ EDIT MODE FIX ------------------
   if (typeof currentEditingBillIndex === 'number' && currentEditingBillIndex > -1) {
     const oldBill = bills[currentEditingBillIndex];
 
     updateSupplierBalance(oldBill.supplier, -oldBill.total);
 
-    
+    // Reverse old inventory (grouped)
     const reverseMap = {};
 
     oldBill.items.forEach(item => {
@@ -25698,7 +26408,7 @@ function saveSupplierBill() {
   updateAccountsPayable();
   renderAccountsPayable?.();
 
-  
+  // ------------------ BALANCE SHEET ------------------
   let balanceSheet = JSON.parse(localStorage.getItem("balanceSheet") || '{}');
 
   if (!balanceSheet.currentAssets) balanceSheet.currentAssets = {};
@@ -25714,7 +26424,7 @@ function saveSupplierBill() {
   if (typeof renderInventorySummary === 'function') renderInventorySummary();
   if (typeof renderInventoryTable === 'function') renderInventoryTable();
 
-  
+  // ------------------ UPDATE INVENTORY (FIXED) ------------------
   const warehouseMap = {};
 
   mergedItems.forEach(item => {
@@ -25731,7 +26441,7 @@ function saveSupplierBill() {
       (p.name || "").trim().toLowerCase() === item.desc
     );
 
-    
+    // Extra fallback by SKU only
     if (!product && item.sku) {
       product = inventory.find(p => (p.sku || "").trim() === item.sku);
     }
@@ -25770,12 +26480,12 @@ function saveSupplierBill() {
     }
   });
 
-  
+  // ✅ SAVE ONCE PER WAREHOUSE (CRITICAL FIX)
   Object.keys(warehouseMap).forEach(wh => {
     saveInventory(wh, warehouseMap[wh]);
   });
 
-  
+  // ------------------ RESET UI ------------------
   billItems = [];
   renderBillItems();
   clearBillItemForm();
@@ -25817,12 +26527,12 @@ function updateSupplierBalance(supplierName, amountChange) {
 
   localStorage.setItem("suppliers", JSON.stringify(suppliers));
 
-  
+  // Refresh supplier table if open
   if (typeof renderSuppliers === "function") {
     renderSuppliers();
   }
 }
-
+// ---------------------- LOAD BILLS ----------------------
 function loadSupplierBills() {
   const tbody = document.getElementById('supplierBillsList');
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
@@ -25920,7 +26630,7 @@ function deleteBill(index) {
 
   alert("♻️ Bill moved to Recycle Bin & inventory/supplier rolled back.");
 }
-
+// ✏️ Edit Supplier Bill — Anyone with edit rights
 function editSupplierBill(index) {
   guardAction('canEdit', () => {
     const bills = JSON.parse(localStorage.getItem('bills') || '[]');
@@ -25953,7 +26663,7 @@ function recordPayment(index) {
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   let supplierAcc = accounts.find(a => a.name === "Supplier Payments");
 
-  
+  // Auto-create Supplier Payments account if missing
   if (!supplierAcc) {
     supplierAcc = {
       name: "Supplier Payments",
@@ -25965,7 +26675,7 @@ function recordPayment(index) {
     localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
   }
 
-  
+  // Create modal
   const modal = document.createElement("div");
   modal.style.position = "fixed";
   modal.style.top = 0;
@@ -25984,7 +26694,7 @@ function recordPayment(index) {
   content.style.borderRadius = "8px";
   content.style.width = "400px";
 
-  
+  // Build bank options
   const bankOptions = banks.map(b => `<option value="${b.name}">${b.name} (${b.currency} ${b.balance.toFixed(2)})</option>`).join("");
 
   content.innerHTML = `
@@ -26010,12 +26720,12 @@ function recordPayment(index) {
   modal.appendChild(content);
   document.body.appendChild(modal);
 
-  
+  // Cancel button
   document.getElementById("cancelPaymentBtn").onclick = () => {
     document.body.removeChild(modal);
   };
 
-  
+  // Save button
   document.getElementById("savePaymentBtn").onclick = () => {
     let inputAmount = parseFloat(document.getElementById("paymentAmountInput").value);
     if (isNaN(inputAmount) || inputAmount < 0 || inputAmount > bill.total) {
@@ -26034,14 +26744,14 @@ function recordPayment(index) {
     const paymentInBankCurrency = inputAmount / exchangeRate;
     if (bank.balance < paymentInBankCurrency) return alert("Insufficient funds in selected bank");
 
-    
+    // Deduct from bank
     bank.balance -= paymentInBankCurrency;
 
-    
+    // Update bill
     bill.paidAmount = inputAmount;
     bills[index] = bill;
 
-    
+    // Supplier Payments record
     let payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
     const existingPaymentIndex = payments.findIndex(p => p.billNumber === bill.billNumber);
     const paymentRecord = {
@@ -26056,7 +26766,7 @@ function recordPayment(index) {
     if (existingPaymentIndex !== -1) payments[existingPaymentIndex] = paymentRecord;
     else payments.push(paymentRecord);
 
-    
+    // Manual transactions
     let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
     let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
     const tx = {
@@ -26075,10 +26785,10 @@ function recordPayment(index) {
     manualTransactions.push(tx);
     allTx.push(tx);
 
-    
+    // Update Supplier Payments account
     supplierAcc.amount = (supplierAcc.amount || 0) - inputAmount;
 
-    
+    // Save all
     localStorage.setItem('bills', JSON.stringify(bills));
     localStorage.setItem("billPayments", JSON.stringify(payments));
     localStorage.setItem('banks', JSON.stringify(banks));
@@ -26086,7 +26796,7 @@ function recordPayment(index) {
     localStorage.setItem("transactions", JSON.stringify(allTx));
     localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
-    
+    // Refresh UI
     loadSupplierBills();
     renderSupplierPayments();
     renderManualTransactions?.();
@@ -26114,29 +26824,29 @@ function reversePayment(index) {
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   const supplierAcc = accounts.find(a => a.name === "Supplier Payments");
 
-  
+  // Restore bank balance
   const paymentInBankCurrency = bill.paidAmount / (exchangeRates[bank.currency] || 1);
   bank.balance += paymentInBankCurrency;
 
-  
+  // Restore Supplier Payments account
   if (supplierAcc) supplierAcc.amount = (supplierAcc.amount || 0) + bill.paidAmount;
 
-  
+  // Remove associated payment record
   let payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
   payments = payments.filter(p => p.billNumber !== bill.billNumber);
 
-  
+  // Remove manual transaction(s)
   let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
   let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
 
   manualTransactions = manualTransactions.filter(t => t.ref !== bill.billNumber);
   allTx = allTx.filter(t => t.ref !== bill.billNumber);
 
-  
+  // Reset bill
   bill.paidAmount = 0;
   bills[index] = bill;
 
-  
+  // Save updates
   localStorage.setItem('bills', JSON.stringify(bills));
   localStorage.setItem("billPayments", JSON.stringify(payments));
   localStorage.setItem('banks', JSON.stringify(banks));
@@ -26144,7 +26854,7 @@ function reversePayment(index) {
   localStorage.setItem("transactions", JSON.stringify(allTx));
   localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
-  
+  // Refresh UI
   loadSupplierBills();
   renderSupplierPayments();
   renderManualTransactions?.();
@@ -26154,37 +26864,37 @@ function reversePayment(index) {
 
   alert(`Payment for Bill ${bill.billNumber} has been reversed and synced.`);
 }
-
+// ---------------------- PREVIEW ----------------------
 function previewBill(index) {
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
   const bill = bills[index];
   if (!bill) return;
 
-  
+  // Company info
   const orgInfo = JSON.parse(localStorage.getItem('orgInfo') || '{}');
 
-  
+  // Supplier info
   const suppliers = JSON.parse(localStorage.getItem('suppliers') || '[]');
   const supplier = suppliers.find(s => s.name === bill.supplier) || {};
 
-  
+  // Populate bill header
   document.getElementById('previewBillNumber').textContent = bill.billNumber || '';
   document.getElementById('previewBillDate').textContent = bill.date || '';
 
-  
+  // Company info
   document.getElementById('previewBillCompanyName').textContent = orgInfo.name || 'My Company Ltd';
   document.getElementById('previewBillCompanyPIN').textContent = orgInfo.pin || 'P00000000';
   document.getElementById('previewBillCompanyAddress').textContent = orgInfo.address || '123 Business Rd, Nairobi';
 
-  
+  // Supplier info
   document.getElementById('previewBillSupplierName').textContent = supplier.name || bill.supplier;
   document.getElementById('previewBillSupplierPIN').textContent = supplier.krapin || '';
   document.getElementById('previewBillSupplierAddress').textContent = supplier.address || '';
 
-  
+  // Build items table
 let itemsHTML = '';
 bill.items.forEach((item, idx) => {
-  
+  // ✅ Proper tax label mapping
   let taxLabel = '';
   if (item.taxRate === "16") taxLabel = "16%";
   else if (item.taxRate === "8") taxLabel = "8%";
@@ -26204,7 +26914,7 @@ bill.items.forEach((item, idx) => {
 });
 document.getElementById('previewBillItems').innerHTML = itemsHTML;
 
-  
+  // Totals
   const subtotal = bill.items.reduce((sum, i) => sum + i.subtotal, 0);
   const totalVAT = bill.items.reduce((sum, i) => sum + i.vat, 0);
   const totalAmount = subtotal + totalVAT;
@@ -26213,11 +26923,11 @@ document.getElementById('previewBillItems').innerHTML = itemsHTML;
   document.getElementById('previewBillVAT').textContent = `KES ${totalVAT.toFixed(2)}`;
   document.getElementById('previewBillTotal').textContent = `KES ${totalAmount.toFixed(2)}`;
 
-  
+  // Show modal
   document.getElementById('supplierBillPreviewModal').classList.remove('hidden');
 }
 
-
+// Close modal
 function closeSupplierPreview() {
   document.getElementById("supplierBillPreviewModal").classList.add("hidden");
 }
@@ -26225,7 +26935,7 @@ function downloadSupplierBillCSV() {
   const billNumber = document.getElementById('previewBillNumber').textContent || "Unknown";
   let csvContent = "Description,Quantity,Unit Price,VAT,Total\n";
 
-  
+  // Loop through rows
   document.querySelectorAll('#previewBillItems tr').forEach(tr => {
     const row = Array.from(tr.querySelectorAll('td'))
       .map(td => td.textContent.replace(/KES\s*/g, "").replace(/,/g, "").trim()) // Remove KES and commas
@@ -26233,7 +26943,7 @@ function downloadSupplierBillCSV() {
     csvContent += row + "\n";
   });
 
-  
+  // Add totals
   const subtotal = document.getElementById('previewBillSubtotal').textContent.replace(/KES\s*/g, "").trim();
   const vat = document.getElementById('previewBillVAT').textContent.replace(/KES\s*/g, "").trim();
   const total = document.getElementById('previewBillTotal').textContent.replace(/KES\s*/g, "").trim();
@@ -26298,7 +27008,7 @@ function postBillJournal(bill) {
   const today = bill.date || new Date().toISOString().split("T")[0];
   const desc = `Auto Journal for Bill ${bill.billNumber}`;
 
-  
+  // ✅ Journal with Debit = Credit
   const journal = {
     id: Date.now(),
     date: today,
@@ -27535,253 +28245,138 @@ function manageDebitFiles(){
     alert('Open Debit Note file management modal or page here!');
 }
 </script>
-
 <script>
 
-let poItems = [];
-let editingPOIndex = null;
-
-function searchPOs() {
-  const input = document.getElementById("poSearch").value.toLowerCase();
-  const rows = document.querySelectorAll("#poList tr");
-
-  rows.forEach(row => {
-    const rowText = row.innerText.toLowerCase();
-    row.style.display = rowText.includes(input) ? "" : "none";
-  });
-}
+let supplierQuoteItems = [];
+let editingSupplierQuoteIndex = null;
 
 function populateSupplierDropdown() {
-  const supplierSelect = document.getElementById("poSupplier");
-  if (!supplierSelect) return;
-
-  supplierSelect.innerHTML = '<option value="">Select Supplier</option>';
+  const select = document.getElementById("quoteSupplier");
+  if (!select) return;
 
   const suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
-  suppliers.forEach(supplier => {
-    const option = document.createElement('option');
-    option.value = supplier.name;
-    option.textContent = supplier.name;
-    supplierSelect.appendChild(option);
+  select.innerHTML = '<option value="">Select Supplier</option>';
+
+  suppliers.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.name;
+    opt.textContent = s.name;
+    select.appendChild(opt);
   });
 }
 
-function populateChartOfAccountDropdown() {
-  const accountSelect = document.getElementById("poChartAccount");
-  if (!accountSelect) return;
+function populateSupplierQuoteProductDropdown() {
+  const select = document.getElementById("quoteItemName");
+  if (!select) return;
 
-  accountSelect.innerHTML = '<option value="">Select Account</option>';
+  select.innerHTML = '<option value="">Select Item</option>';
 
-  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
-  accounts.forEach(account => {
-    const option = document.createElement('option');
-    option.value = account.name;
-    option.textContent = account.name;
-    accountSelect.appendChild(option);
-  });
-}
-function populateProductDropdown() {
-  const productSelect = document.getElementById("poProductSelect");
-  if (!productSelect) return;
+  let items = [];
 
-  productSelect.innerHTML = '<option value="">Select Product</option>';
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
 
-  let allItems = [];
-
-  if (typeof WAREHOUSES !== "undefined" && WAREHOUSES.length > 0) {
-    WAREHOUSES.forEach(w => {
-      const inv = JSON.parse(localStorage.getItem(`inventory_${w}`) || "[]");
-      allItems = allItems.concat(inv);
-    });
+    if (key && key.startsWith("inventory_")) {
+      try {
+        const data = JSON.parse(localStorage.getItem(key) || "[]");
+        if (Array.isArray(data)) {
+          items = items.concat(data);
+        }
+      } catch (e) {}
+    }
   }
 
-  const uniqueItems = [];
-  const seen = new Set();
+  const unique = new Map();
 
-  allItems.forEach(item => {
-    if (!item || !item.sku) return;
-
-    if (!seen.has(item.sku)) {
-      seen.add(item.sku);
-      uniqueItems.push(item);
+  items.forEach(item => {
+    if (item && item.name) {
+      unique.set(item.sku || item.name, item);
     }
   });
 
-  uniqueItems.forEach(item => {
-    const option = document.createElement("option");
-
-    option.value = JSON.stringify({
-      name: item.name,
-      price: item.buyPrice || 0,
-      sku: item.sku || "",
-      qty: item.qty || 0
-    });
-
-    option.textContent = `${item.name} (KES ${item.buyPrice || 0}) SKU: ${item.sku || "-"}`;
-
-    productSelect.appendChild(option);
-  });
-
-  console.log("✅ PO Products Loaded:", uniqueItems.length);
-}
-function autoFillPrice() {
-  const productSelect = document.getElementById("poProductSelect");
-  const priceInput = document.getElementById("poItemPrice");
-
-  productSelect.addEventListener('change', () => {
-    const selectedItem = productSelect.value ? JSON.parse(productSelect.value) : null;
-    priceInput.value = selectedItem ? selectedItem.price.toFixed(2) : '';
+  unique.forEach(item => {
+    const opt = document.createElement("option");
+    opt.value = item.name;
+    opt.textContent = `${item.name} (${item.sku || "No SKU"})`;
+    select.appendChild(opt);
   });
 }
+function addSupplierQuoteItem() {
+  const name = document.getElementById("quoteItemName").value;
+  const qty = parseFloat(document.getElementById("quoteItemQty").value);
+  const price = parseFloat(document.getElementById("quoteItemPrice").value);
 
-function generatePONumber() {
-  const poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
-  const lastNumber = poList.length ? parseInt(poList[poList.length - 1].poNumber.replace("PO", "")) : 0;
-  const nextNumber = lastNumber + 1;
-  return "PO" + nextNumber.toString().padStart(4, "0");
-}
+  if (!name || isNaN(qty) || isNaN(price)) return;
 
-function setAutoPONumber() {
-  document.getElementById("poNumber").value = generatePONumber();
-}
-
-function addPOItem() {
-  const productSelect = document.getElementById("poProductSelect");
-  const itemQty = document.getElementById("poItemQty");
-  const itemPrice = document.getElementById("poItemPrice");
-  const itemDiscount = document.getElementById("poItemDiscount");
-  const itemTax = document.getElementById("poItemTax");
-
-  if (!productSelect.value || !itemQty.value || !itemPrice.value) {
-    alert("Please fill in all fields.");
-    return;
-  }
-
-  const { name, price } = JSON.parse(productSelect.value);
-  const qty = parseFloat(itemQty.value);
-  const unitPrice = parseFloat(itemPrice.value);
-  const discount = parseFloat(itemDiscount.value) || 0;
-  const vatRule = itemTax.value;
-  
-  const subtotal = qty * unitPrice;
-  let vat = 0;
-  if (vatRule !== "exempt") {
-    vat = subtotal * (parseFloat(vatRule) / 100);
-  }
-
-  poItems.push({ name, qty, price: unitPrice, discount, vatRule, vat, subtotal });
-
-  renderPOItems();
-  clearPOItemForm();
-}
-
-
-function renderPOItems() {
-  const tbody = document.querySelector("#poItemsTable tbody");
-  tbody.innerHTML = poItems.length
-    ? ''
-    : `<tr><td colspan="7" class="p-2 text-center text-gray-500">No items</td></tr>`;
-
-  poItems.forEach((item, idx) => {
-    tbody.innerHTML += `
-      <tr>
-        <td class="p-2">${item.name}</td>
-        <td class="p-2">${item.qty}</td>
-        <td class="p-2">KES ${item.price.toFixed(2)}</td>
-        <td class="p-2">${item.discount}%</td>
-        <td class="p-2">${item.vatRule === "exempt" ? "Exempt" : item.vatRule + "%"}</td>
-        <td class="p-2">KES ${(item.subtotal + item.vat).toFixed(2)}</td>
-        <td class="p-2 space-x-1">
-        <button onclick="editPOItem(${idx})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Edit</button>
-        <button onclick="removePOItem(${idx})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Remove</button>
-        </td>
-      </tr>`;
+  supplierQuoteItems.push({
+    name,
+    qty,
+    price,
+    total: qty * price
   });
+
+  renderSupplierQuoteItems();
+  clearSupplierQuoteItemForm();
 }
 
-function editPOItem(index) {
-  const item = poItems[index];
+function renderSupplierQuoteItems() {
+  const tbody = document.getElementById("supplierQuotesTable");
+  if (!tbody) return;
 
-  document.getElementById("itemName").value = item.name;
-  document.getElementById("itemQty").value = item.qty;
-  document.getElementById("itemPrice").value = item.price;
-  document.getElementById("itemDiscount").value = item.discount;
-  document.getElementById("itemVatRule").value = item.vatRule;
-
-
-  poItems.splice(index, 1);
-  renderPOItems();
+  tbody.innerHTML = supplierQuoteItems.map((i, index) => `
+    <tr>
+      <td>${i.name}</td>
+      <td>${i.qty}</td>
+      <td>${i.price}</td>
+      <td>${i.total}</td>
+      <td>
+        <button onclick="removeSupplierQuoteItem(${index})">Remove</button>
+      </td>
+    </tr>
+  `).join("");
 }
 
-function removePOItem(index) {
-  poItems.splice(index, 1);
-  renderPOItems();
+function removeSupplierQuoteItem(index) {
+  supplierQuoteItems.splice(index, 1);
+  renderSupplierQuoteItems();
 }
 
-
-function clearPOItemForm() {
-  document.getElementById("poProductSelect").value = "";
-  document.getElementById("poItemQty").value = "";
-  document.getElementById("poItemPrice").value = "";
-  document.getElementById("poItemDiscount").value = "";
-  document.getElementById("poItemTax").value = "16";
+function clearSupplierQuoteItemForm() {
+  document.getElementById("quoteItemName").value = "";
+  document.getElementById("quoteItemQty").value = "";
+  document.getElementById("quoteItemPrice").value = "";
 }
-function savePurchaseOrder() {
-  const date = document.getElementById("poDate").value;
-  const supplier = document.getElementById("poSupplier").value;
-  const chartOfAccount = document.getElementById("poChartAccount").value;
 
-  if (!date || !supplier || !chartOfAccount || poItems.length === 0) {
-    alert("Please fill all fields.");
-    return;
-  }
+function saveSupplierQuote() {
+  const supplier = document.getElementById("quoteSupplier").value;
+  const date = document.getElementById("quoteDate").value;
 
-  const poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
+  if (!supplier || !date || supplierQuoteItems.length === 0) return;
 
-  if (editingPOIndex !== null) {
-  
-    poList[editingPOIndex] = {
-      ...poList[editingPOIndex],
-      date,
-      supplier,
-      chartOfAccount,
-      items: [...poItems]
-    };
-    editingPOIndex = null;
-    alert("✅ Purchase Order updated.");
+  let quotes = JSON.parse(localStorage.getItem("supplierQuotes") || "[]");
+
+  const total = supplierQuoteItems.reduce((s, i) => s + i.total, 0);
+
+  const data = {
+    supplier,
+    date,
+    items: supplierQuoteItems,
+    total,
+    status: "Pending"
+  };
+
+  if (editingSupplierQuoteIndex !== null) {
+    quotes[editingSupplierQuoteIndex] = data;
+    editingSupplierQuoteIndex = null;
   } else {
-   
-    const poNumber = generatePONumber();
-    const newPO = {
-      poNumber,
-      date,
-      supplier,
-      chartOfAccount,
-      items: [...poItems],
-      approved: false
-    };
-    poList.push(newPO);
-    alert("✅ Purchase Order saved.");
+    quotes.push(data);
   }
 
-  localStorage.setItem("purchaseOrders", JSON.stringify(poList));
+  localStorage.setItem("supplierQuotes", JSON.stringify(quotes));
 
-  clearPOForm();
-  renderPurchaseOrders();
-}
-
-function clearPOForm() {
-  document.getElementById("poDate").value = "";
-  document.getElementById("poSupplier").value = "";
-  document.getElementById("poChartAccount").value = "";
-  poItems = [];
-  renderPOItems();
-  setAutoPONumber();
-
-  const saveBtn = document.getElementById("savePOBtn");
-  if (saveBtn) saveBtn.textContent = "Save PO";
-
-  editingPOIndex = null;
+  supplierQuoteItems = [];
+  renderSupplierQuotes();
+  clearSupplierQuoteForm();
 }
 
 function renderPurchaseOrders() {
@@ -27843,18 +28438,79 @@ function editPurchaseOrder(poNumber) {
   if (saveBtn) saveBtn.textContent = "Update PO";
 }
 
+function clearSupplierQuoteForm() {
+  document.getElementById("quoteSupplier").value = "";
+  document.getElementById("quoteDate").value = "";
+  supplierQuoteItems = [];
+  renderSupplierQuoteItems();
+}
+
+function viewSupplierQuote(index) {
+  const quotes = JSON.parse(localStorage.getItem("supplierQuotes") || "[]");
+  const q = quotes[index];
+  if (!q) return;
+
+  const old = document.getElementById("quotePopup");
+  if (old) old.remove();
+
+  const popup = document.createElement("div");
+
+  popup.style = `
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:99999;
+  `;
+
+  popup.innerHTML = `
+    <div style="background:#fff;padding:20px;width:70%;height:80%;overflow:auto;">
+      <h3>Supplier Quote</h3>
+      <p><b>Supplier:</b> ${q.supplier}</p>
+      <p><b>Date:</b> ${q.date}</p>
+      <p><b>Total:</b> ${q.total}</p>
+      <table border="1" width="100%">
+        <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
+        ${q.items.map(i => `
+          <tr>
+            <td>${i.name}</td>
+            <td>${i.qty}</td>
+            <td>${i.price}</td>
+            <td>${i.total}</td>
+          </tr>
+        `).join("")}
+      </table>
+      <button onclick="document.getElementById('quotePopup').remove()">Close</button>
+    </div>
+  `;
+
+  popup.id = "quotePopup";
+  document.body.appendChild(popup);
+}
+
+function getAllInventories() {
+  let all = [];
+  const warehouses = JSON.parse(localStorage.getItem("warehouses") || "[]");
+
+  warehouses.forEach(w => {
+    const items = JSON.parse(localStorage.getItem(`inventory_${w}`) || "[]");
+    items.forEach(i => all.push(i));
+  });
+
+  return all;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   populateSupplierDropdown();
-  populateChartOfAccountDropdown();
-  populateProductDropdown();
-  autoFillPrice();
-
-  document.getElementById("addPOItemBtn").addEventListener("click", addPOItem);
-  document.getElementById("savePOBtn").addEventListener("click", savePurchaseOrder);
-
-  setAutoPONumber();
-  renderPurchaseOrders();
+  populateSupplierQuoteProductDropdown();
+  renderSupplierQuotes();
 });
+
 </script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script>
@@ -41668,7 +42324,7 @@ function resetAttendance() {
 
   </div>
 </div>
-
+<!-- statutoryDeductionsTab -->
 <div id="statutoryDeductionsTab" class="p-1">
   <h2 class="text-2xl font-bold mb-6 text-center">Statutory Deductions</h2>
   <div class="bg-white p-6 rounded shadow">
@@ -44246,6 +44902,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <li onclick="showReport('accountsReceivablePanel', this)">📁Accounts Receivable</li>
         <li onclick="showReport('invoiceSummaryReport', this)">📁Invoice Summary</li>
         <li onclick="showReport('salesByItemPanel', this)">📁Sales by Item</li>
+        <li onclick="showReport('customerOrdersPanel', this)">📁customer Orders</li>
         <li onclick="showReport('salesByPersonPanel', this)">📁Sales by Salesperson</li>
         <li onclick="showReport('salesByCustomerPanel', this)">📁Sales by Customer</li>
         <li onclick="showReport('creditNotesReport', this)">📁Credit Notes</li>
@@ -44254,10 +44911,11 @@ document.addEventListener("DOMContentLoaded", () => {
         <li onclick="showReport('accountsPayablePanel', this)">📁Accounts Payable</li>
         <li onclick="showReport('billSummaryReport', this)">📁Bill Summary</li>
         <li onclick="showReport('debitNotesReport', this)">📁Debit Notes</li>
+        <li onclick="showReport('supplierQuotationsPanel', this)">📁 Supplier Quotations</li>
         <li onclick="showReport('operationalCostsPanel', this)">📁Operational Costs</li>
         <li onclick="showReport('payrollPanel', this)">📁Payroll</li>
         <li onclick="showReport('taxesPanel', this)">📁Taxes Report</li>
-       <li onclick="showReport('bankSummaryReport', this)">📁Bank Summary</li>
+        <li onclick="showReport('bankSummaryReport', this)">📁Bank Summary</li>
         <li onclick="showReport('bankReconciliationPanel', this)">📁Bank Reconciliation</li>
         <li onclick="showReport('journalEntriesReport', this)">📁Journal Entries</li>
         <li onclick="showReport('inventorySummaryReport', this)">📁Inventory Summary</li>
@@ -44726,7 +45384,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ✅ Apply Filter
   </button>
   
-  <button onclick="exportFilteredTableToCSV('pnlTable', 'Profit and Loss')" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">
+  <button onclick="exportFilteredTableToCSV('pnlTable', 'Profit and Loss')" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">
     ⬇️ Export CSV
   </button>
 </div>
@@ -44740,7 +45398,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </tr>
           </thead>
           <tbody>
-
+    
             <tr>
               <td class="border px-2 py-1">Sales Revenue</td>
               <td></td>
@@ -45302,6 +45960,13 @@ document.addEventListener("DOMContentLoaded", () => {
         <td class="border px-2 py-1 text-right">-</td>
         <td class="border px-2 py-1 text-right">-</td>
       </tr>
+      <tr>
+       <td class="border px-2 py-1">5</td>
+       <td class="border px-2 py-1">Exports</td>
+       <td class="border px-2 py-1 text-right" id="exports">0.00</td>
+       <td class="border px-2 py-1 text-right">0</td>
+       <td class="border px-2 py-1 text-right">0.00</td>
+      </tr>
       <tr class="font-semibold">
         <td class="border px-2 py-1" colspan="2">Total Sales</td>
         <td class="border px-2 py-1 text-right" id="totalSales">0.00</td>
@@ -45350,6 +46015,13 @@ document.addEventListener("DOMContentLoaded", () => {
         <td class="border px-2 py-1 text-right" id="purchasesExempt">0.00</td>
         <td class="border px-2 py-1 text-right">-</td>
         <td class="border px-2 py-1 text-right">-</td>
+      </tr>
+      <tr>
+      <td class="border px-2 py-1">6</td>
+      <td class="border px-2 py-1">Taxable Imports (Other Rate)</td>
+      <td class="border px-2 py-1 text-right" id="importsOther">0.00</td>
+      <td class="border px-2 py-1 text-right">8</td>
+      <td class="border px-2 py-1 text-right" id="vatImportsOther">0.00</td>
       </tr>
       <tr class="font-semibold">
         <td class="border px-2 py-1" colspan="2">Total Purchases</td>
@@ -47359,7 +48031,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       ⬇️ Export CSV
     </button>
   </div>
-
+   
   <div class="overflow-x-auto">
     <table class="w-full border border-gray-300 text-sm border-collapse">
       <thead class="bg-gray-100">
@@ -47871,6 +48543,118 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       </tr>
     </thead>
     <tbody id="purchaseOrdersBody"></tbody>
+  </table>
+
+</div>
+<div id="supplierQuotationsPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t">
+
+  <p class="font-semibold mb-3 text-lg">Supplier Quotations Report</p>
+
+  <div class="flex flex-wrap gap-3 mb-2 items-end">
+
+    <div>
+      <label class="text-xs font-semibold">Start Date</label>
+      <input type="date" id="sqStartDate" class="border p-1 rounded text-sm">
+    </div>
+
+    <div>
+      <label class="text-xs font-semibold">End Date</label>
+      <input type="date" id="sqEndDate" class="border p-1 rounded text-sm">
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-3">
+
+    <button onclick="applySQFilter()"
+      class="bg-blue-900 text-white font-bold px-4 py-1 rounded hover:bg-blue-800">
+      ✅ Apply Filter
+    </button>
+
+    <button onclick="clearSQFilter()"
+      class="bg-gray-300 text-black font-bold px-4 py-1 rounded hover:bg-gray-400">
+      ❌ Clear Filter
+    </button>
+
+    <button onclick="exportSQCSV()"
+      class="border border-blue-900 text-blue-900 bg-blue-100 font-bold px-3 py-1 rounded hover:bg-blue-200 ml-2">
+      ⬇️ Export CSV
+    </button>
+
+  </div>
+
+  <table class="w-full border text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-2">Quotation No.</th>
+        <th class="p-2">Supplier</th>
+        <th class="p-2">Item</th>
+        <th class="p-2">Quantity</th>
+        <th class="p-2">Unit Price</th>
+        <th class="p-2">Total Amount</th>
+        <th class="p-2">Date</th>
+        <th class="p-2">Status</th>
+        <th class="p-2">Reference No.</th>
+      </tr>
+    </thead>
+    <tbody id="supplierQuotationsBody"></tbody>
+  </table>
+
+</div>
+<div id="customerOrdersPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t">
+
+  <p class="font-semibold mb-3 text-lg">Customer Orders Report</p>
+
+  <div class="flex flex-wrap gap-3 mb-2 items-end">
+
+    <div>
+      <label class="text-xs font-semibold">Start Date</label>
+      <input type="date" id="orderStartDate" class="border p-1 rounded text-sm">
+    </div>
+
+    <div>
+      <label class="text-xs font-semibold">End Date</label>
+      <input type="date" id="orderEndDate" class="border p-1 rounded text-sm">
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-3">
+
+    <button onclick="applyOrderFilter()"
+      class="bg-blue-900 text-white font-bold px-4 py-1 rounded hover:bg-blue-800">
+      ✅ Apply Filter
+    </button>
+
+    <button onclick="clearOrderFilter()"
+      class="bg-gray-300 text-black font-bold px-4 py-1 rounded hover:bg-gray-400">
+      ❌ Clear Filter
+    </button>
+
+    <button onclick="exportOrderCSV()"
+      class="border border-blue-900 text-blue-900 bg-blue-100 font-bold px-3 py-1 rounded hover:bg-blue-200 ml-2">
+      ⬇️ Export CSV
+    </button>
+
+  </div>
+
+  <table class="w-full border text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-2">Order No.</th>
+        <th class="p-2">Customer</th>
+        <th class="p-2">Item</th>
+        <th class="p-2">Quantity</th>
+        <th class="p-2">Unit Price</th>
+        <th class="p-2">Total Amount</th>
+        <th class="p-2">Date</th>
+        <th class="p-2">Delivery Status</th>
+        <th class="p-2">Payment Status</th>
+      </tr>
+    </thead>
+
+    <tbody id="customerOrdersBody"></tbody>
+
   </table>
 
 </div>
