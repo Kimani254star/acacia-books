@@ -8555,7 +8555,7 @@ window.addEventListener('click',function(e){
       </thead>
 
       <tbody id="bankMappingTableBody">
-        <!-- Rows will be inserted dynamically -->
+       
         <tr>
           <td class="border px-3 py-2 text-gray-500" colspan="5">
             No mappings available
@@ -10205,6 +10205,151 @@ function saveBankMapping() {
 document.addEventListener("DOMContentLoaded", () => {
   loadMappingBanks();
   loadMappingAccounts();
+});
+
+function renderBankMappings() {
+  const tableBody = document.getElementById("bankMappingTableBody");
+  const totalCountEl = document.getElementById("totalCount");
+  const pageInfo = document.getElementById("pageInfo");
+  const prevBtn = document.getElementById("prevPageBtn");
+  const nextBtn = document.getElementById("nextPageBtn");
+
+  let mappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
+
+  totalCountEl.textContent = mappings.length;
+
+  if (mappings.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="border px-3 py-2 text-center text-gray-500">
+          No mappings available
+        </td>
+      </tr>`;
+    return;
+  }
+
+  const start = (currentPage - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  const paginated = mappings.slice(start, end);
+
+  tableBody.innerHTML = paginated.map((m, index) => {
+    const realIndex = start + index;
+
+    return `
+      <tr>
+        <td class="border px-3 py-2">${m.bank}</td>
+        <td class="border px-3 py-2">${m.account}</td>
+        <td class="border px-3 py-2">${m.autoReconcile}</td>
+        <td class="border px-3 py-2">${m.mappingRulesFile || '-'}</td>
+        <td class="border px-3 py-2 space-x-1">
+          <button onclick="viewMapping(${realIndex})" class="bg-gray-500 text-white px-1 py-1 rounded">View</button>
+          <button onclick="editMapping(${realIndex})" class="bg-yellow-500 text-white px-1 py-1 rounded">Edit</button>
+          <button onclick="deleteMapping(${realIndex})" class="bg-red-600 text-white px-1 py-1 rounded">Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  pageInfo.textContent = `${start + 1} - ${Math.min(end, mappings.length)}`;
+
+  prevBtn.disabled = currentPage === 1;
+  nextBtn.disabled = end >= mappings.length;
+}
+
+function viewMapping(index) {
+  const mappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
+  const m = mappings[index];
+
+  alert(`
+Bank: ${m.bank}
+Account: ${m.account}
+Auto Reconcile: ${m.autoReconcile}
+Rules File: ${m.mappingRulesFile || "None"}
+  `);
+}
+
+function editMapping(index) {
+  const mappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
+  const m = mappings[index];
+
+  document.getElementById("mappingBank").value = m.bank;
+  document.getElementById("mappingAccount").value = m.account;
+  document.getElementById("autoReconcile").value = m.autoReconcile;
+
+  editingIndex = index;
+}
+
+function saveBankMapping() {
+  const bankName = document.getElementById("mappingBank").value;
+  const accountCode = document.getElementById("mappingAccount").value;
+  const autoReconcile = document.getElementById("autoReconcile").value;
+  const mappingRulesInput = document.getElementById("mappingRules");
+  const mappingRulesFile = mappingRulesInput.files[0] ? mappingRulesInput.files[0].name : "";
+
+  if (!bankName || !accountCode) {
+    alert("⚠️ Please select both Bank and Ledger Account.");
+    return;
+  }
+
+  let bankMappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
+
+  const mappingObj = {
+    bank: bankName,
+    account: accountCode,
+    autoReconcile,
+    mappingRulesFile
+  };
+
+  if (editingIndex !== null) {
+    bankMappings[editingIndex] = mappingObj;
+    editingIndex = null;
+  } else {
+    const exists = bankMappings.findIndex(m => m.bank === bankName);
+    if (exists !== -1) {
+      bankMappings[exists] = mappingObj;
+    } else {
+      bankMappings.push(mappingObj);
+    }
+  }
+
+  localStorage.setItem("bankMappings", JSON.stringify(bankMappings));
+
+  renderBankMappings();
+}
+
+function deleteMapping(index) {
+  if (!confirm("Delete this mapping?")) return;
+
+  let mappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
+  mappings.splice(index, 1);
+
+  localStorage.setItem("bankMappings", JSON.stringify(mappings));
+
+  renderBankMappings();
+}
+
+document.getElementById("itemsPerPageSelect").addEventListener("change", function () {
+  itemsPerPage = parseInt(this.value);
+  currentPage = 1;
+  renderBankMappings();
+});
+
+document.getElementById("prevPageBtn").addEventListener("click", () => {
+  if (currentPage > 1) {
+    currentPage--;
+    renderBankMappings();
+  }
+});
+
+document.getElementById("nextPageBtn").addEventListener("click", () => {
+  currentPage++;
+  renderBankMappings();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadMappingBanks();
+  loadMappingAccounts();
+  renderBankMappings();
 });
 </script>
 <!-- ✅ SALES HUB -->
