@@ -10141,9 +10141,12 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 <script>
 
+let currentPage = 1;
+let itemsPerPage = 25;
+
 function loadMappingBanks() {
   const select = document.getElementById("mappingBank");
-  if(!select) return;
+  if (!select) return;
 
   const banks = JSON.parse(localStorage.getItem("banks") || "[]");
   select.innerHTML = '<option value="">Select Bank</option>';
@@ -10158,7 +10161,7 @@ function loadMappingBanks() {
 
 function loadMappingAccounts() {
   const select = document.getElementById("mappingAccount");
-  if(!select) return;
+  if (!select) return;
 
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   select.innerHTML = '<option value="">Select Account</option>';
@@ -10175,40 +10178,39 @@ function saveBankMapping() {
   const bankName = document.getElementById("mappingBank").value;
   const accountCode = document.getElementById("mappingAccount").value;
   const autoReconcile = document.getElementById("autoReconcile").value;
-  const mappingRulesInput = document.getElementById("mappingRules");
-  const mappingRulesFile = mappingRulesInput.files[0] ? mappingRulesInput.files[0].name : "";
+  const fileInput = document.getElementById("mappingRules");
+  const fileName = fileInput.files[0]?.name || "";
 
-  if(!bankName || !accountCode) {
-    alert("⚠️ Please select both Bank and Ledger Account.");
+  if (!bankName || !accountCode) {
+    alert("⚠️ Select Bank & Account");
     return;
   }
 
-  let bankMappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
+  let mappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
 
-  const existingIndex = bankMappings.findIndex(m => m.bank === bankName);
-  const mappingObj = {
+  const obj = {
     bank: bankName,
     account: accountCode,
     autoReconcile,
-    mappingRulesFile
+    mappingRulesFile: fileName
   };
 
-  if(existingIndex !== -1) {
-    bankMappings[existingIndex] = mappingObj;
+  if (editingIndex !== null) {
+    mappings[editingIndex] = obj;
+    editingIndex = null;
   } else {
-    bankMappings.push(mappingObj);
+    mappings.push(obj);
   }
 
-  localStorage.setItem("bankMappings", JSON.stringify(bankMappings));
-  alert("✅ Bank mapping configuration saved.");
+  localStorage.setItem("bankMappings", JSON.stringify(mappings));
+
+  renderBankMappings();
 }
-document.addEventListener("DOMContentLoaded", () => {
-  loadMappingBanks();
-  loadMappingAccounts();
-});
 
 function renderBankMappings() {
-  const tableBody = document.getElementById("bankMappingTableBody");
+  const table = document.getElementById("bankMappingTableBody");
+  if (!table) return;
+
   const totalCountEl = document.getElementById("totalCount");
   const pageInfo = document.getElementById("pageInfo");
   const prevBtn = document.getElementById("prevPageBtn");
@@ -10219,32 +10221,31 @@ function renderBankMappings() {
   totalCountEl.textContent = mappings.length;
 
   if (mappings.length === 0) {
-    tableBody.innerHTML = `
+    table.innerHTML = `
       <tr>
-        <td colspan="5" class="border px-3 py-2 text-center text-gray-500">
-          No mappings available
-        </td>
+        <td colspan="5" class="text-center text-gray-500">No mappings available</td>
       </tr>`;
     return;
   }
 
   const start = (currentPage - 1) * itemsPerPage;
   const end = start + itemsPerPage;
-  const paginated = mappings.slice(start, end);
 
-  tableBody.innerHTML = paginated.map((m, index) => {
-    const realIndex = start + index;
+  const pageData = mappings.slice(start, end);
+
+  table.innerHTML = pageData.map((m, i) => {
+    const index = start + i;
 
     return `
       <tr>
-        <td class="border px-3 py-2">${m.bank}</td>
-        <td class="border px-3 py-2">${m.account}</td>
-        <td class="border px-3 py-2">${m.autoReconcile}</td>
-        <td class="border px-3 py-2">${m.mappingRulesFile || '-'}</td>
-        <td class="border px-3 py-2 space-x-1">
-          <button onclick="viewMapping(${realIndex})" class="bg-gray-500 text-white px-1 py-1 rounded">View</button>
-          <button onclick="editMapping(${realIndex})" class="bg-yellow-500 text-white px-1 py-1 rounded">Edit</button>
-          <button onclick="deleteMapping(${realIndex})" class="bg-red-600 text-white px-1 py-1 rounded">Delete</button>
+        <td class="border px-2">${m.bank}</td>
+        <td class="border px-2">${m.account}</td>
+        <td class="border px-2">${m.autoReconcile}</td>
+        <td class="border px-2">${m.mappingRulesFile || '-'}</td>
+        <td class="border px-2">
+          <button onclick="viewMapping(${index})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800"> View </button>
+          <button onclick="editMapping(${index})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800"> Edit</button>
+          <button onclick="deleteMapping(${index})"class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Delete</button>
         </td>
       </tr>
     `;
@@ -10256,100 +10257,52 @@ function renderBankMappings() {
   nextBtn.disabled = end >= mappings.length;
 }
 
-function viewMapping(index) {
-  const mappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
-  const m = mappings[index];
-
-  alert(`
-Bank: ${m.bank}
-Account: ${m.account}
-Auto Reconcile: ${m.autoReconcile}
-Rules File: ${m.mappingRulesFile || "None"}
-  `);
+function viewMapping(i) {
+  const m = JSON.parse(localStorage.getItem("bankMappings"))[i];
+  alert(`Bank: ${m.bank}\nAccount: ${m.account}`);
 }
 
-function editMapping(index) {
-  const mappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
-  const m = mappings[index];
+function editMapping(i) {
+  const m = JSON.parse(localStorage.getItem("bankMappings"))[i];
 
   document.getElementById("mappingBank").value = m.bank;
   document.getElementById("mappingAccount").value = m.account;
   document.getElementById("autoReconcile").value = m.autoReconcile;
 
-  editingIndex = index;
+  editingIndex = i;
 }
 
-function saveBankMapping() {
-  const bankName = document.getElementById("mappingBank").value;
-  const accountCode = document.getElementById("mappingAccount").value;
-  const autoReconcile = document.getElementById("autoReconcile").value;
-  const mappingRulesInput = document.getElementById("mappingRules");
-  const mappingRulesFile = mappingRulesInput.files[0] ? mappingRulesInput.files[0].name : "";
+function deleteMapping(i) {
+  if (!confirm("Delete mapping?")) return;
 
-  if (!bankName || !accountCode) {
-    alert("⚠️ Please select both Bank and Ledger Account.");
-    return;
-  }
-
-  let bankMappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
-
-  const mappingObj = {
-    bank: bankName,
-    account: accountCode,
-    autoReconcile,
-    mappingRulesFile
-  };
-
-  if (editingIndex !== null) {
-    bankMappings[editingIndex] = mappingObj;
-    editingIndex = null;
-  } else {
-    const exists = bankMappings.findIndex(m => m.bank === bankName);
-    if (exists !== -1) {
-      bankMappings[exists] = mappingObj;
-    } else {
-      bankMappings.push(mappingObj);
-    }
-  }
-
-  localStorage.setItem("bankMappings", JSON.stringify(bankMappings));
-
-  renderBankMappings();
-}
-
-function deleteMapping(index) {
-  if (!confirm("Delete this mapping?")) return;
-
-  let mappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
-  mappings.splice(index, 1);
+  let mappings = JSON.parse(localStorage.getItem("bankMappings"));
+  mappings.splice(i, 1);
 
   localStorage.setItem("bankMappings", JSON.stringify(mappings));
 
   renderBankMappings();
 }
 
-document.getElementById("itemsPerPageSelect").addEventListener("change", function () {
-  itemsPerPage = parseInt(this.value);
-  currentPage = 1;
-  renderBankMappings();
-});
-
-document.getElementById("prevPageBtn").addEventListener("click", () => {
-  if (currentPage > 1) {
-    currentPage--;
-    renderBankMappings();
-  }
-});
-
-document.getElementById("nextPageBtn").addEventListener("click", () => {
-  currentPage++;
-  renderBankMappings();
-});
-
 document.addEventListener("DOMContentLoaded", () => {
   loadMappingBanks();
   loadMappingAccounts();
   renderBankMappings();
+
+  document.getElementById("itemsPerPageSelect").addEventListener("change", function () {
+    itemsPerPage = parseInt(this.value);
+    currentPage = 1;
+    renderBankMappings();
+  });
+
+  document.getElementById("prevPageBtn").addEventListener("click", () => {
+    currentPage--;
+    renderBankMappings();
+  });
+
+  document.getElementById("nextPageBtn").addEventListener("click", () => {
+    currentPage++;
+    renderBankMappings();
+  });
 });
 </script>
 <!-- ✅ SALES HUB -->
