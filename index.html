@@ -2044,6 +2044,7 @@ function login(email, password) {
 <li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li>
 <li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li>
 <li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li>
+<li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li>
 <li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li>
 </ul>
 <li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li>
@@ -4366,7 +4367,7 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
 
 <div id="addItemForm" class="bg-blue-100 p-4 rounded shadow mb-6 hidden">
-  <h3 class="text-lg font-semibold mb-4">Add/Edit Item to <span id="warehouseNameDisplay"></span></h3>
+  <h3 class="text-lg font-semibold mb-4">Add Item  <span id="warehouseNameDisplay"></span></h3>
 
   <div class="grid grid-cols-3 gap-4 mb-6">
     <input id="itemName" type="text" placeholder="Item Name" class="border p-2 rounded" />
@@ -4410,6 +4411,7 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
 
   <input type="hidden" id="editIndex" value="">
+  <button onclick="saveDraft()"  class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900 mt-6">Save as Draft</button>
   <button onclick="saveItem()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900 mt-6">Save Item</button>
 </div>
 <div id="importExportSection" class="hidden mb-4 flex justify-end">
@@ -4480,11 +4482,15 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
  
-  <div class="bg-blue-100 p-2 rounded shadow mb-6">
+ <div class="bg-blue-100 p-2 rounded shadow mb-6">
     <h3 class="text-lg font-semibold mb-4">Inventory List</h3>
+      <div class="mb-3 flex items-center gap-2">
+    <button  id="bulkDeleteBtn" onclick="bulkDeleteInventory()" class="hidden bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800" >Bulk Delete </button>
+  </div>
     <table class="min-w-full border text-sm">
       <thead>
         <tr class="bg-gray-100">
+          <th class="p-2"><input type="checkbox" onclick="toggleSelectAll(this)"></th>
           <th class="p-2">Product</th>
           <th class="p-2">SKU</th>
           <th class="p-2">Qty</th>
@@ -4564,7 +4570,8 @@ window.addEventListener('DOMContentLoaded', () => {
       <input id="transferDate" type="date" class="border p-2 rounded" style="width: 700px;" />
     </div>
     <div>
-      <button onclick="saveTransfer()" class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">Transfer Stock</button>
+      <button onclick="saveTransferDraft()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800"> Save as Draft</button>
+      <button onclick="saveTransfer()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Transfer Stock</button>
     </div>
   </div>
 
@@ -4628,22 +4635,25 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
 
   <div class="mt-6 bg-blue-100 p-4 rounded shadow">
-    <h3 class="text-xl font-semibold mb-4">Movement History</h3>
-    <table class="w-full border-collapse border border-gray-300">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="border p-2 text-left">Item</th>
-          <th class="border p-2 text-left">From</th>
-          <th class="border p-2 text-left">To</th>
-          <th class="border p-2 text-left">Quantity</th>
-          <th class="border p-2 text-left">Date</th>
-          <th class="border p-2 text-left">Action</th>
-        </tr>
-      </thead>
-      <tbody id="movementTableBody">
-      </tbody>
-    </table>
-  </div>
+  <h3 class="text-xl font-semibold mb-4">Movement Tab</h3>
+  <button id="bulkDeleteMovementBtn" onclick="bulkDeleteMovement()" class="bg-blue-900 text-white px-2 py-1 rounded"> Bulk Delete </button>
+  <table class="w-full border-collapse border border-gray-300">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="border p-2">
+          <input type="checkbox" onclick="toggleSelectAllMovements(this)"></th>
+        <th class="border p-2 text-left">Item</th>
+        <th class="border p-2 text-left">From</th>
+        <th class="border p-2 text-left">To</th>
+        <th class="border p-2 text-left">Quantity</th>
+        <th class="border p-2 text-left">Date</th>
+        <th class="border p-2 text-left">Action</th>
+      </tr>
+    </thead>
+
+    <tbody id="movementTableBody"></tbody>
+  </table>
+</div>
   <div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600">
   <div>
     Total Count: <span id="totalCount">0</span>
@@ -4702,13 +4712,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
       <input id="adjustType" type="text" placeholder="Adjustment Type (e.g. Correction, Loss, Damage)" class="border p-2 rounded" style="width: 700px;"/>
       <input id="adjustQty" type="number" placeholder="Quantity Adjustment (+/-)" class="border p-2 rounded" style="width: 700px;"/>
-      <input id="adjustReason" type="text" placeholder="Reason for Adjustment" class="border p-2 rounded" style="width: 700px;" />
+      <input id="adjustReason" type="text"laceholder="Reason for Adjustment"class="border p-2 rounded"="width: 700px; max-width: none;" />
     </div>
 
     <div class="text-right">
-      <button onclick="submitAdjustment()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">
-        Submit Adjustment
-      </button>
+      <button onclick="saveAdjustmentDraft()"  class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
+      <button onclick="submitAdjustment()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Submit Adjustment</button>
     </div>
 
     <div id="amendExpertSection" class="mb-4 flex justify-end">
@@ -4772,12 +4781,14 @@ window.addEventListener('DOMContentLoaded', () => {
     </div>
 
     <div class="mt-6">
-      <h3 class="text-xl font-bold mb-2">Amendments History</h3>
+      <h3 class="text-xl font-bold mb-2"> Amendments</h3>
+      <button id="bulkDeleteAmendBtn"onclick="bulkDeleteAmendments()"class="bg-blue-900 text-white px-1 py-1 rounded disabled:opacity-50"disabled>Bulk Delete</button>
       <table class="w-full border">
         <thead>
           <tr class="bg-gray-200">
+            <th class="border p-2"><input type="checkbox" onclick="toggleSelectAllAmendments(this)"></th>
             <th class="border p-2">Item</th>
-            <th class="border p-2">Adjustment Type</th>
+            <th class="border p-2">Amendment Type</th>
             <th class="border p-2">Quantity</th>
             <th class="border p-2">Reason</th>
             <th class="border p-2">Date</th>
@@ -4850,9 +4861,8 @@ window.addEventListener('DOMContentLoaded', () => {
     </div>
 
     <div class="text-right">
-      <button onclick="updatePrice()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">
-        Save Price
-      </button>
+      <button onclick="savePriceDraft()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
+      <button onclick="updatePrice()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800"> Save Price</button>
     </div>
   </div>
   <div id="priceExpertSection" class="mb-4 flex justify-end">
@@ -4925,9 +4935,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
   <div class="mt-2 bg-blue-100 p-4 rounded shadow">
     <h3 class="text-xl font-semibold mb-4">Price List</h3>
+    <button id="bulkDeletePriceBtn"onclick="bulkDeletePriceList()"class="bg-blue-900 text-white px-1 py-1 rounded mb-2">Bulk Delete</button>
     <table class="w-full border-collapse border border-gray-300">
       <thead class="bg-gray-100">
         <tr>
+          <th class="border p-2"><input type="checkbox" onclick="toggleSelectAllPriceList(this)"></th>
           <th class="border p-2">Item</th>
           <th class="border p-2">Selling Price (KES)</th>
           <th class="border p-2">Cost Price (KES)</th>
@@ -4959,146 +4971,189 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 </div>
-<!-- ADJUSTMENTS-->
-<div id="Amenend" class="hidden ml-84 mr-7 p-2">
-  <h2 class="text-2xl font-bold">Adjustments</h2>
+<!-- 📊 BUNDLE ITEM -->
+ <div id="BundleItems" class="hidden ml-84 mr-7 p-2">
 
-  
-  <div class="relative">
+  <h2 class="text-2xl font-bold">Bundle Items</h2>
+
+  <div class="relative mt-2">
     <input 
       type="text" 
-      id="amendSearch"
-      placeholder="Search in Amendments (/)" 
+      id="bundleSearch"
+      placeholder="Search bundle items (/)" 
       class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-      oninput="searchAmendments()"
     />
-   
+
     <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <circle cx="11" cy="11" r="8"></circle>
       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
     </svg>
   </div>
-  <div class="bg-blue-100 p-6 rounded shadow space-y-6">
+<div id="bundleExpertSection" class="mb-4 flex justify-end">
+  <div class="relative inline-block text-left">
+    <button id="bundleExpertBtn" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+      Options
+      <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
 
-    <div class="mb-4">
-      <label for="warehouseSelect" class="block font-semibold mb-2">Select Warehouse</label>
-      <select id="warehouseSelect" class="border p-2 rounded" style="width: 700px;" onchange="populateAmendmentsDropdown(this.value); renderAmendmentsTable();">
-        <option value="">Select Warehouse</option>
-      </select>
+    <div id="bundleDropdown" class="origin-top-right absolute right-0 mt-2 w-72 rounded-md shadow-lg bg-white hidden z-10">
+      <div class="py-1">
+
+        <button onclick="bulkDeleteBundles()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100">
+          Bulk Delete
+        </button>
+
+        <div class="border-t my-1"></div>
+
+        <button onclick="exportBundles()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+          Export Bundles
+        </button>
+
+        <label class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer">
+          Import Bundles
+          <input type="file" onchange="importBundles(event)" class="hidden">
+        </label>
+
+        <button onclick="resetBundleTable()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
+          Reset Table
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>
+  <div class="bg-blue-100 p-6 rounded shadow space-y-6 mt-4">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <div>
+        <label class="block font-semibold mb-2">Item 1 Warehouse</label>
+        <select id="bundleFromWarehouse1" class="border p-2 rounded w-full">
+          <option value="">Select Warehouse</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">Item 1</label>
+        <select id="bundleItem1" class="border p-2 rounded w-full">
+          <option value="">Select Item</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">Item 2 Warehouse</label>
+        <select id="bundleFromWarehouse2" class="border p-2 rounded w-full">
+          <option value="">Select Warehouse</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">Item 2</label>
+        <select id="bundleItem2" class="border p-2 rounded w-full">
+          <option value="">Select Item</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">Item 3 Warehouse</label>
+        <select id="bundleFromWarehouse3" class="border p-2 rounded w-full">
+          <option value="">Select Warehouse</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">Item 3</label>
+        <select id="bundleItem3" class="border p-2 rounded w-full">
+          <option value="">Select Item</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">Bundle Destination Warehouse</label>
+        <select id="bundleToWarehouse" class="border p-2 rounded w-full">
+          <option value="">Select Warehouse</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">Bundle Name</label>
+        <input id="bundleFinalName" type="text" class="border p-2 rounded w-full" placeholder="Bundle Name">
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">Quantity</label>
+        <input id="bundleQty" type="number" class="border p-2 rounded w-full" placeholder="Bundle Qty">
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">Buy Price</label>
+        <input id="bundleBuyPrice" type="number" class="border p-2 rounded w-full">
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">Sell Price</label>
+        <input id="bundleSellPrice" type="number" class="border p-2 rounded w-full">
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">Buy VAT Rule</label>
+        <select id="bundleBuyVAT" class="border p-2 rounded w-full">
+          <option value="">Select</option>
+          <option value="0%">0%</option>
+          <option value="8%">8%</option>
+          <option value="16%">16%</option>
+          <option value="Exempt">Exempt</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-semibold mb-2">Sell VAT Rule</label>
+        <select id="bundleSellVAT" class="border p-2 rounded w-full">
+          <option value="">Select</option>
+          <option value="0%">0%</option>
+          <option value="8%">8%</option>
+          <option value="16%">16%</option>
+          <option value="Exempt">Exempt</option>
+        </select>
+      </div>
+
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <select id="adjustItem" class="border p-2 rounded" style="width: 700px;">
-        <option value="">Select Item</option>
-      </select>
-      <input id="adjustType" type="text" placeholder="Adjustment Type (e.g. Correction, Loss, Damage)" class="border p-2 rounded" style="width: 700px;" />
-      <input id="adjustQty" type="number" placeholder="Quantity Adjustment (+/-)" class="border p-2 rounded" style="width: 700px;" />
-      <input id="adjustReason" type="text" placeholder="Reason for Adjustment" class="border p-2 rounded" style="width: 700px;"/>
+
+      <textarea id="bundleBuyDesc" class="border p-2 rounded w-full" rows="2" placeholder="Buying Description"></textarea>
+
+      <textarea id="bundleSellDesc" class="border p-2 rounded w-full" rows="2" placeholder="Selling Description"></textarea>
+
     </div>
 
     <div class="text-right">
-      <button onclick="submitAdjustment()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">
-        Submit Adjustment
-      </button>
+      <button onclick="saveBundleItemDraft()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
+      <button onclick="createBundleItem()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Create Bundle Item</button>
     </div>
 
-    <div id="amendExpertSection" class="mb-4 flex justify-end">
-      <div class="relative inline-block text-left">
-        <button id="amendExpertBtn" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50" aria-haspopup="true" aria-expanded="false">
-         Options
-          <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-
-        <div id="amendDropdown" class="origin-top-right absolute right-0 mt-2 w-72 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
-          <div class="py-1">
-
-            <button onclick="exportAmendmentsPDF()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-              Export Amendments
-            </button>
-
-            <label class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center cursor-pointer">
-              Import Amendments
-              <input type="file" id="importAmendFile" accept=".xlsx" onchange="importAmendmentsExcel(event)" class="hidden">
-            </label>
-
-            <button onclick="resetAmendmentsTable()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-              Reset Table
-            </button>
-
-            <button onclick="manageAmendFiles()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-              Manage Files
-            </button>
-
-            <div class="border-t my-1"></div>
-
-            <button onclick="toggleAmendSortSubmenu('item')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">Sort by Item</button>
-            <div id="sort-amend-item-submenu" class="hidden pl-6 space-y-1">
-              <button onclick="sortAmendments('item','asc')" class="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-50">Ascending</button>
-              <button onclick="sortAmendments('item','desc')" class="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-50">Descending</button>
-            </div>
-
-            <button onclick="toggleAmendSortSubmenu('type')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">Sort by Adjustment Type</button>
-            <div id="sort-amend-type-submenu" class="hidden pl-6 space-y-1">
-              <button onclick="sortAmendments('type','asc')" class="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-50">Ascending</button>
-              <button onclick="sortAmendments('type','desc')" class="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-50">Descending</button>
-            </div>
-
-            <button onclick="toggleAmendSortSubmenu('qty')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">Sort by Quantity</button>
-            <div id="sort-amend-qty-submenu" class="hidden pl-6 space-y-1">
-              <button onclick="sortAmendments('qty','asc')" class="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-50">Ascending</button>
-              <button onclick="sortAmendments('qty','desc')" class="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-50">Descending</button>
-            </div>
-
-            <button onclick="toggleAmendSortSubmenu('date')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">Sort by Date</button>
-            <div id="sort-amend-date-submenu" class="hidden pl-6 space-y-1">
-              <button onclick="sortAmendments('date','asc')" class="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-50">Ascending</button>
-              <button onclick="sortAmendments('date','desc')" class="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-50">Descending</button>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-6">
-      <h3 class="text-xl font-bold mb-2">Amendments History</h3>
-      <table class="w-full border">
-        <thead>
-          <tr class="bg-blue-100">
-            <th class="border p-2">Item</th>
-            <th class="border p-2">Adjustment Type</th>
-            <th class="border p-2">Quantity</th>
-            <th class="border p-2">Reason</th>
-            <th class="border p-2">Date</th>
-            <th class="border p-2">Action</th>
-          </tr>
-        </thead>
-        <tbody id="amendmentsTable"></tbody>
-      </table>
-    </div>
-    <div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600">
-  <div>
-    Total Count: <span id="totalCount">0</span>
   </div>
-  <div>
-    Show 
-    <select id="itemsPerPageSelect" class="border rounded px-1">
-      <option value="25">25</option>
-      <option value="50">50</option>
-      <option value="100">100</option>
-      <option value="200">200</option>
-    </select> 
-    per page
-  </div>
-  <div>
-    <button id="prevPageBtn" class="px-1 py-1 border rounded disabled:opacity-50" disabled>Prev</button>
-    <span id="pageInfo">1 - 0</span>
-    <button id="nextPageBtn" class="px-1 py-1 border rounded disabled:opacity-50" disabled>Next</button>
-  </div>
+
+<div class="mt-6">
+  <h3 class="text-xl font-bold mb-2">Bundle Items</h3>
+  <button onclick="bulkDeleteBundles()" class="bg-blue-900 text-white px-1 py-1 rounded mb-2">Bulk Delete</button>
+  <table class="w-full border">
+    <thead>
+      <tr class="bg-blue-100">
+        <th class="border p-2"> <input type="checkbox" onclick="toggleSelectAllBundles(this)"></th>
+        <th class="border p-2">Bundle</th>
+        <th class="border p-2">Items</th>
+        <th class="border p-2">Qty</th>
+        <th class="border p-2">Buy</th>
+        <th class="border p-2">Sell</th>
+        <th class="border p-2">Action</th>
+      </tr>
+    </thead>
+    <tbody id="bundleTableBody"></tbody>
+  </table>
 </div>
-  </div>
 </div>
 <!-- 📊 BULK ADJUSTMENT MODULE -->
 <div id="BulkAdjustment" class="hidden ml-84 mr-7 p-2">
@@ -5142,7 +5197,7 @@ window.addEventListener('DOMContentLoaded', () => {
       </tbody>
     </table>
   </div>
-
+  <button id="saveBAAdjustmentsDraftBtn" type="button" onclick="saveBAAdjustmentsDraft()"class="bg-blue-900 text-white font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
   <button id="applyBAAdjustmentsBtn" type="button" class="bg-blue-900 text-white font-bold px-1 py-1 rounded hover:bg-blue-900">Apply Adjustments</button>
   
   <div id="bulkExpertSection" class="mb-4 flex justify-end">
@@ -5205,10 +5260,12 @@ window.addEventListener('DOMContentLoaded', () => {
     </div>
   </div>
   <div class="bg-blue-100 p-4 rounded shadow mt-6">
-    <h3 class="font-bold mb-2">Adjustment Log</h3>
+    <h3 class="font-bold mb-2"> bulk Adjustment Log</h3>
+    <button id="bulkDeleteMovementBtn"class="bg-blue-900 text-white px-1 py-1 rounded">Bulk Delete</button>
     <table class="w-full border">
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2"><input type="checkbox" onclick="toggleSelectAllMovements(this)"></th>
           <th class="p-2">Date</th>
           <th class="p-2">Warehouse</th>
           <th class="p-2">Product</th>
@@ -5353,6 +5410,9 @@ function toggleAddItemForm() {
   const warehouse = document.getElementById('warehouseSelect').value;
   const form = document.getElementById('addItemForm');
   const warehouseNameDisplay = document.getElementById('warehouseNameDisplay');
+  const bulkBtn = document.getElementById("bulkDeleteBtn");
+
+  const items = warehouse ? getInventory(warehouse) : [];
 
   if (warehouse) {
     form.classList.remove('hidden');
@@ -5363,6 +5423,12 @@ function toggleAddItemForm() {
     form.classList.add('hidden');
     warehouseNameDisplay.textContent = '';
     clearInventoryTable();
+  }
+
+  if (warehouse && items.length > 0) {
+    bulkBtn.classList.remove("hidden");
+  } else {
+    bulkBtn.classList.add("hidden");
   }
 }
 
@@ -5497,6 +5563,7 @@ function renderInventoryTable() {
 
     return `
       <tr class="border-b ${item.qty < 5 ? "bg-red-100 text-red-700 font-semibold" : ""}">
+        <td class="p-2"><input type="checkbox" class="itemCheckbox" data-index="${index}"></td>
         <td class="p-2">${item.name}</td>
         <td class="p-2">${item.sku || "-"}</td>
         <td class="p-2">${item.qty}</td>
@@ -5695,6 +5762,60 @@ function deleteItem(index) {
       alert('♻️ Item moved to Recycle Bin.');
     }
   }, "🚫 Only Admin or Account can delete items.");
+}
+
+function bulkDeleteInventory() {
+  const checkedBoxes = document.querySelectorAll(".itemCheckbox:checked");
+
+  if (checkedBoxes.length === 0) {
+    showNotification("No items selected", "error");
+    return;
+  }
+
+  const step1 = confirm(`You are about to delete ${checkedBoxes.length} items. Continue?`);
+  if (!step1) return;
+
+  const step2 = confirm("This action cannot be undone. Confirm final delete?");
+  if (!step2) return;
+
+  let inventory = JSON.parse(localStorage.getItem("inventory") || "[]");
+
+  const indexesToDelete = Array.from(checkedBoxes).map(cb => parseInt(cb.dataset.index));
+
+  inventory = inventory.filter((_, i) => !indexesToDelete.includes(i));
+
+  localStorage.setItem("inventory", JSON.stringify(inventory));
+
+  renderInventoryTable();
+  showNotification("Items deleted successfully", "success");
+}
+
+function showNotification(message, type = "info") {
+  const div = document.createElement("div");
+  div.textContent = message;
+
+  div.style.position = "fixed";
+  div.style.bottom = "20px";
+  div.style.right = "20px";
+  div.style.padding = "10px 15px";
+  div.style.borderRadius = "6px";
+  div.style.color = "#fff";
+  div.style.zIndex = "9999";
+
+  div.style.background =
+    type === "success" ? "#16a34a" :
+    type === "error" ? "#dc2626" :
+    "#2563eb";
+
+  document.body.appendChild(div);
+
+  setTimeout(() => div.remove(), 3000);
+}
+
+function toggleSelectAll(source) {
+  document.querySelectorAll(".itemCheckbox").forEach(cb => {
+    cb.checked = source.checked;
+  });
 }
 function calculateTotalPrice() {
   const qty = parseFloat(document.getElementById('itemQty').value);
@@ -6188,6 +6309,7 @@ function renderMovementTable() {
 
   tbody.innerHTML = movements.map((move, index) => `
     <tr>
+      <td><input type="checkbox" class="movementCheckbox" data-index="${index}"></td>
       <td class="border p-2">${move.item}</td>
       <td class="border p-2">${move.from}</td>
       <td class="border p-2">${move.to}</td>
@@ -6243,6 +6365,52 @@ function deleteMovement(index) {
   alert("♻️ Record moved to Recycle Bin.");
 }
 
+function bulkDeleteAdjustments() {
+  const checked = document.querySelectorAll(".baCheckbox:checked");
+
+  if (checked.length === 0) {
+    alert("Select adjustments first");
+    return;
+  }
+
+  if (!confirm(`Delete ${checked.length} selected adjustments?`)) return;
+  if (!confirm("This action cannot be undone. Continue?")) return;
+
+  let adjustmentLog = JSON.parse(localStorage.getItem("baLog") || "[]");
+
+  const indexes = Array.from(checked).map(cb => parseInt(cb.dataset.index));
+
+  const remaining = [];
+  const deleted = [];
+
+  adjustmentLog.forEach((entry, i) => {
+    if (indexes.includes(i)) {
+      moveToRecycle(entry, "File", "BulkAdjustments");
+      deleted.push(entry);
+    } else {
+      remaining.push(entry);
+    }
+  });
+
+  localStorage.setItem("baLog", JSON.stringify(remaining));
+
+  renderBALog();
+
+  if (typeof renderInventoryTable === "function") renderInventoryTable();
+  if (typeof renderBalanceSheet === "function") renderBalanceSheet();
+  if (typeof renderInventorySummary === "function") renderInventorySummary();
+  if (typeof renderStockValuation === "function") renderStockValuation();
+
+  alert(`♻️ ${deleted.length} adjustments deleted successfully.`);
+}
+
+function toggleSelectAllMovements(source) {
+  document.querySelectorAll(".movementCheckbox").forEach(cb => {
+    cb.checked = source.checked;
+  });
+
+  toggleMovementBulkButton();
+}
 document.addEventListener("DOMContentLoaded", () => {
   populateMovementWarehouses();
   populateMovementItems();
@@ -6513,6 +6681,7 @@ function renderPriceListTable() {
 
   tbody.innerHTML = filtered.map((entry, index) => `
     <tr>
+      <td class="border p-2"><input type="checkbox" class="priceCheckbox" onchange="togglePriceBulkButton()"></td>
       <td>${entry.item}</td>
       <td>KSh ${entry.sellingPrice.toFixed(2)}</td>
       <td>KSh ${entry.costPrice.toFixed(2)}</td>
@@ -6568,6 +6737,46 @@ function deletePrice(index, warehouse) {
   }
 
   alert("Price deleted and inventory updated.");
+}
+function togglePriceBulkButton() {
+  const checked = document.querySelectorAll(".priceCheckbox:checked");
+  const btn = document.getElementById("bulkDeletePriceBtn");
+
+  if (!btn) return;
+
+  btn.disabled = checked.length === 0;
+}
+
+function toggleSelectAllPriceList(source) {
+  const checkboxes = document.querySelectorAll(".priceCheckbox");
+  checkboxes.forEach(cb => cb.checked = source.checked);
+
+  togglePriceBulkButton();
+}
+
+function bulkDeletePriceList() {
+  let priceList = JSON.parse(localStorage.getItem("priceList") || "[]");
+
+  const checked = document.querySelectorAll(".priceCheckbox:checked");
+
+  if (checked.length === 0) {
+    alert("No items selected");
+    return;
+  }
+
+  if (!confirm(`Delete ${checked.length} price entries?`)) return;
+
+  const indexes = Array.from(checked).map(cb =>
+    Array.from(cb.closest("tr").parentNode.children).indexOf(cb.closest("tr"))
+  );
+
+  priceList = priceList.filter((_, i) => !indexes.includes(i));
+
+  localStorage.setItem("priceList", JSON.stringify(priceList));
+
+  renderPriceListTable();
+
+  alert("✔ Price list updated successfully");
 }
 function previewPrice(index, warehouse) {
   const priceList = JSON.parse(localStorage.getItem(PRICE_LIST_KEY) || '[]');
@@ -6813,6 +7022,7 @@ function renderAmendmentsTable() {
 
   tbody.innerHTML = filtered.map((entry, index) => `
     <tr>
+      <td class="border p-2"> <input type="checkbox" class="amendCheckbox" onchange="toggleAmendBulkButton()"></td>
       <td class="border p-2">${entry.item} (${entry.sku || "No SKU"})</td>
       <td class="border p-2">${entry.adjustmentType}</td>
       <td class="border p-2">${entry.quantity}</td>
@@ -6856,6 +7066,44 @@ function deleteAmendment(index, warehouse) {
   renderAmendedWarehouseMovement();
 
   alert("♻️ Amendment moved to Recycle Bin.");
+}
+function toggleSelectAllAmendments(source) {
+  const checkboxes = document.querySelectorAll(".amendCheckbox");
+  checkboxes.forEach(cb => cb.checked = source.checked);
+
+  toggleAmendBulkButton();
+}
+function toggleAmendBulkButton() {
+  const checked = document.querySelectorAll(".amendCheckbox:checked");
+  const btn = document.getElementById("bulkDeleteAmendBtn");
+
+  if (!btn) return;
+
+  btn.disabled = checked.length === 0;
+}
+function bulkDeleteAmendments() {
+  let data = JSON.parse(localStorage.getItem("amendments") || "[]");
+
+  const checked = document.querySelectorAll(".amendCheckbox:checked");
+
+  if (checked.length === 0) {
+    alert("No amendments selected");
+    return;
+  }
+
+  if (!confirm(`Are you sure you want to delete ${checked.length} amendment(s)?`)) return;
+
+  const indexes = Array.from(checked).map(cb =>
+    Array.from(cb.closest("tr").parentNode.children).indexOf(cb.closest("tr"))
+  );
+
+  data = data.filter((_, i) => !indexes.includes(i));
+
+  localStorage.setItem("amendments", JSON.stringify(data));
+
+  renderAmendmentsTable();
+
+  alert("✔ Amendments deleted successfully");
 }
 
 function editAmendment(index, warehouse) {
@@ -6971,6 +7219,430 @@ window.addEventListener('click',function(e){
     dropdown.classList.add('hidden');
   }
 });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+function getWarehouses() {
+  let w = JSON.parse(localStorage.getItem("warehouses") || "[]");
+  if (!Array.isArray(w) || w.length === 0) {
+    w = (typeof WAREHOUSES !== "undefined" ? WAREHOUSES : []).filter(x => x);
+  }
+  return w;
+}
+
+function populateBundleWarehouses() {
+  const ids = [
+    "bundleFromWarehouse1",
+    "bundleFromWarehouse2",
+    "bundleFromWarehouse3",
+    "bundleToWarehouse"
+  ];
+
+  const warehouses = getWarehouses();
+
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.innerHTML = '<option value="">Select Warehouse</option>';
+
+    warehouses.forEach(w => {
+      const opt = document.createElement("option");
+      opt.value = w;
+      opt.textContent = w;
+      el.appendChild(opt);
+    });
+  });
+}
+
+function populateBundleItems(warehouseId, itemId) {
+  const warehouse = document.getElementById(warehouseId).value;
+  const select = document.getElementById(itemId);
+  if (!select) return;
+
+  select.innerHTML = '<option value="">Select Item</option>';
+  if (!warehouse) return;
+
+  const items = getInventory(warehouse);
+
+  items.forEach(i => {
+    const opt = document.createElement("option");
+    opt.value = i.sku || i.name;
+    opt.textContent = i.name + " (Qty: " + i.qty + ")";
+    select.appendChild(opt);
+  });
+}
+
+function initBundleEvents() {
+  ["1","2","3"].forEach(n => {
+    document.getElementById("bundleFromWarehouse"+n)
+      .addEventListener("change", () => {
+        populateBundleItems("bundleFromWarehouse"+n,"bundleItem"+n);
+      });
+  });
+}
+
+function createBundleItem() {
+  const bundle = {
+    name: document.getElementById("bundleFinalName").value,
+    qty: parseFloat(document.getElementById("bundleQty").value) || 0,
+    buyPrice: parseFloat(document.getElementById("bundleBuyPrice").value) || 0,
+    sellPrice: parseFloat(document.getElementById("bundleSellPrice").value) || 0,
+    buyVAT: document.getElementById("bundleBuyVAT").value,
+    sellVAT: document.getElementById("bundleSellVAT").value,
+    toWarehouse: document.getElementById("bundleToWarehouse").value,
+    items: [
+      {
+        warehouse: document.getElementById("bundleFromWarehouse1").value,
+        item: document.getElementById("bundleItem1").value
+      },
+      {
+        warehouse: document.getElementById("bundleFromWarehouse2").value,
+        item: document.getElementById("bundleItem2").value
+      },
+      {
+        warehouse: document.getElementById("bundleFromWarehouse3").value,
+        item: document.getElementById("bundleItem3").value
+      }
+    ].filter(i => i.item)
+  };
+
+  if (!bundle.name || !bundle.toWarehouse || bundle.items.length === 0) {
+    alert("Fill required fields");
+    return;
+  }
+
+  const bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
+  bundles.push(bundle);
+  localStorage.setItem("bundles", JSON.stringify(bundles));
+
+  renderBundles();
+}
+
+function saveBundleItemDraft() {
+  const drafts = JSON.parse(localStorage.getItem("bundleDrafts") || "[]");
+
+  drafts.push({
+    name: document.getElementById("bundleFinalName").value,
+    date: new Date().toISOString()
+  });
+
+  localStorage.setItem("bundleDrafts", JSON.stringify(drafts));
+}
+
+function renderBundles() {
+  const tbody = document.getElementById("bundleTableBody");
+  if (!tbody) return;
+
+  const bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
+
+  if (bundles.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center">No Bundles</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = bundles.map((b,i)=>`
+    <tr>
+      <td><input type="checkbox" class="bundleCheck" data-i="${i}"></td>
+      <td>${b.name}</td>
+      <td>${b.items.map(x=>x.item).join(", ")}</td>
+      <td>${b.qty}</td>
+      <td>${money(b.buyPrice)}</td>
+      <td>${money(b.sellPrice)}</td>
+      <td>
+        <button onclick="editBundle(${i})"  class="bg-blue-900 text-white px-1 py-1 rounded">Edit</button>
+        <button onclick="previewBundle(${i})"class="bg-blue-900 text-white px-1 py-1 rounded">Preview</button>
+        <button onclick="pushBundle(${i})" class="bg-blue-900 text-white px-1 py-1 rounded">Push</button>
+        <button onclick="emailBundle(${i})" class="bg-blue-900 text-white px-1 py-1 rounded">Email</button>
+        <button onclick="deleteBundle(${i})" class="bg-blue-900 text-white px-1 py-1 rounded">Delete</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function deleteBundle(i) {
+  let bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
+  bundles.splice(i,1);
+  localStorage.setItem("bundles", JSON.stringify(bundles));
+  renderBundles();
+}
+function editBundle(i) {
+  const bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
+  const b = bundles[i];
+
+  const name = prompt("Edit name:", b.name);
+  if (name === null) return;
+
+  const qty = prompt("Edit quantity:", b.qty);
+  if (qty === null) return;
+
+  const buyPrice = prompt("Edit buy price:", b.buyPrice);
+  if (buyPrice === null) return;
+
+  const sellPrice = prompt("Edit sell price:", b.sellPrice);
+  if (sellPrice === null) return;
+
+  b.name = name;
+  b.qty = qty;
+  b.buyPrice = buyPrice;
+  b.sellPrice = sellPrice;
+
+  bundles[i] = b;
+  localStorage.setItem("bundles", JSON.stringify(bundles));
+  renderBundles();
+}
+
+function previewBundle(i) {
+  const bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
+  const b = bundles[i];
+
+  alert(
+    "Name: " + b.name + "\n" +
+    "Items: " + b.items.map(x=>x.item).join(", ") + "\n" +
+    "Qty: " + b.qty + "\n" +
+    "Buy: " + b.buyPrice + "\n" +
+    "Sell: " + b.sellPrice
+  );
+}
+
+function pushBundle(i) {
+  const bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
+  const b = bundles[i];
+
+  let pushed = JSON.parse(localStorage.getItem("pushedBundles") || "[]");
+  pushed.push(b);
+
+  localStorage.setItem("pushedBundles", JSON.stringify(pushed));
+  alert("Bundle pushed");
+}
+
+function emailBundle(i) {
+  const bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
+  const b = bundles[i];
+
+  const subject = encodeURIComponent("Bundle: " + b.name);
+  const body = encodeURIComponent(
+    "Name: " + b.name + "\n" +
+    "Items: " + b.items.map(x=>x.item).join(", ") + "\n" +
+    "Qty: " + b.qty + "\n" +
+    "Buy: " + b.buyPrice + "\n" +
+    "Sell: " + b.sellPrice
+  );
+
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+function bulkDeleteBundles() {
+  let bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
+  const checks = document.querySelectorAll(".bundleCheck:checked");
+
+  const indexes = Array.from(checks).map(c => parseInt(c.dataset.i));
+  bundles = bundles.filter((_,i)=>!indexes.includes(i));
+
+  localStorage.setItem("bundles", JSON.stringify(bundles));
+  renderBundles();
+}
+
+function toggleSelectAllBundles(master) {
+  document.querySelectorAll(".bundleCheck").forEach(c => {
+    c.checked = master.checked;
+  });
+}
+
+function exportBundles() {
+  const data = localStorage.getItem("bundles");
+  const blob = new Blob([data], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "bundles.json";
+  a.click();
+}
+
+function importBundles(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    localStorage.setItem("bundles", ev.target.result);
+    renderBundles();
+  };
+  reader.readAsText(file);
+}
+
+function resetBundleTable() {
+  localStorage.removeItem("bundles");
+  renderBundles();
+}
+
+function searchBundles() {
+  const val = document.getElementById("bundleSearch").value.toLowerCase();
+  const rows = document.querySelectorAll("#bundleTableBody tr");
+
+  rows.forEach(r => {
+    r.style.display = r.innerText.toLowerCase().includes(val) ? "" : "none";
+  });
+}
+
+document.getElementById("bundleSearch").addEventListener("input", searchBundles);
+
+document.getElementById("bundleExpertBtn").onclick = () => {
+  document.getElementById("bundleDropdown").classList.toggle("hidden");
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  populateBundleWarehouses();
+  initBundleEvents();
+  renderBundles();
+});
+
+function searchBundles() {
+  const value = document.getElementById("bundleSearch").value.toLowerCase();
+  const rows = document.querySelectorAll("#bundleTableBody tr");
+
+  rows.forEach(row => {
+    const text = row.innerText.toLowerCase();
+    row.style.display = text.includes(value) ? "" : "none";
+  });
+}
+
+document.getElementById("bundleSearch")
+  .addEventListener("input", searchBundles);
+
+function bulkDeleteBundles() {
+  let bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
+
+  const checked = document.querySelectorAll(".bundleCheck:checked");
+
+  if (checked.length === 0) {
+    alert("Select bundles to delete");
+    return;
+  }
+
+  const indexes = Array.from(checked).map(c => parseInt(c.dataset.i));
+
+  bundles = bundles.filter((_, index) => !indexes.includes(index));
+
+  localStorage.setItem("bundles", JSON.stringify(bundles));
+  renderBundles();
+}
+
+function toggleSelectAllBundles(master) {
+  document.querySelectorAll(".bundleCheck").forEach(cb => {
+    cb.checked = master.checked;
+  });
+}
+
+const bundleBtn = document.getElementById("bundleExpertBtn");
+const bundleMenu = document.getElementById("bundleDropdown");
+
+bundleBtn?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  bundleMenu.classList.toggle("hidden");
+});
+
+document.addEventListener("click", () => {
+  bundleMenu?.classList.add("hidden");
+});
+
+bundleMenu?.addEventListener("click", (e) => e.stopPropagation());
+
+function getBundles() {
+  return JSON.parse(localStorage.getItem("bundles") || "[]");
+}
+
+function exportBundlesExcel() {
+  const data = getBundles();
+  if (!data.length) return alert("No bundles to export");
+
+  const formatted = data.map(b => ({
+    Name: b.name,
+    Quantity: b.qty,
+    BuyPrice: b.buyPrice,
+    SellPrice: b.sellPrice,
+    Items: b.items.map(i => i.item).join(", "),
+    Warehouse: b.toWarehouse
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(formatted);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Bundles");
+
+  XLSX.writeFile(wb, "bundles.xlsx");
+}
+
+function exportBundlesPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const data = getBundles();
+  if (!data.length) return alert("No bundles to export");
+
+  let y = 10;
+
+  doc.setFontSize(14);
+  doc.text("Bundle Report", 10, y);
+  y += 10;
+
+  data.forEach((b, i) => {
+    doc.setFontSize(10);
+    doc.text(`${i + 1}. ${b.name} | Qty: ${b.qty}`, 10, y);
+    y += 6;
+
+    doc.text(`Buy: ${b.buyPrice} | Sell: ${b.sellPrice}`, 10, y);
+    y += 6;
+
+    doc.text(`Items: ${b.items.map(x => x.item).join(", ")}`, 10, y);
+    y += 10;
+
+    if (y > 270) {
+      doc.addPage();
+      y = 10;
+    }
+  });
+
+  doc.save("bundles.pdf");
+}
+
+function importBundles(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet);
+
+      const bundles = json.map(row => ({
+        name: row.Name,
+        qty: row.Quantity,
+        buyPrice: row.BuyPrice,
+        sellPrice: row.SellPrice,
+        toWarehouse: row.Warehouse,
+        items: (row.Items || "").split(",").map(i => ({ item: i.trim() }))
+      }));
+
+      localStorage.setItem("bundles", JSON.stringify(bundles));
+      renderBundles();
+
+      alert("Excel imported successfully");
+    } catch (err) {
+      alert("Invalid Excel file");
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+function resetBundleTable() {
+  localStorage.removeItem("bundles");
+  renderBundles();
+}
 </script>
 <script>
 
@@ -7135,6 +7807,7 @@ function renderBALog() {
 
   logBody.innerHTML = adjustmentLog.map((entry, index) => `
     <tr>
+      <td><input type="checkbox"class="movementCheckbox"data-index="${index}"onchange="toggleMovementBulkButton()"></td>
       <td>${new Date(entry.date).toLocaleString()}</td>
       <td>${entry.warehouse}</td>
       <td>${entry.product}</td>
@@ -7182,6 +7855,47 @@ function deleteBALog(index) {
   renderAmendedWarehouseMovement();
 
   alert("♻️ BA Log entry moved to Recycle Bin.");
+}
+function toggleMovementBulkButton() {
+  const btn = document.getElementById("bulkDeleteMovementBtn");
+  const checked = document.querySelectorAll(".movementCheckbox:checked").length;
+
+  btn.style.display = checked > 0 ? "inline-block" : "none";
+}
+
+function bulkDeleteMovements() {
+  const checked = document.querySelectorAll(".movementCheckbox:checked");
+
+  if (checked.length === 0) {
+    alert("Select items first");
+    return;
+  }
+
+  if (!confirm(`Delete ${checked.length} selected movements?`)) return;
+  if (!confirm("This action cannot be undone. Continue?")) return;
+
+  let movements = JSON.parse(localStorage.getItem("movements") || "[]");
+
+  const indexes = Array.from(checked).map(cb => parseInt(cb.dataset.index));
+
+  const remaining = [];
+  const deleted = [];
+
+  movements.forEach((m, i) => {
+    if (indexes.includes(i)) {
+      moveToRecycle(m, "File", "Movements");
+      deleted.push(m);
+    } else {
+      remaining.push(m);
+    }
+  });
+
+  localStorage.setItem("movements", JSON.stringify(remaining));
+
+  renderMovementTable();
+  toggleMovementBulkButton();
+
+  alert(`♻️ ${deleted.length} items moved to recycle bin.`);
 }
 function editBALog(index) {
   let adjustmentLog = JSON.parse(localStorage.getItem("baLog") || "[]");
@@ -7598,9 +8312,11 @@ window.addEventListener('click',function(e){
 
 <div class="bg-white p-2 rounded shadow mb-6">
   <h3 class="text-lg font-semibold mb-4">Manual Transactions</h3>
+  <button onclick="bulkDeleteManualTransactions()" class="bg-blue-900 hover:bg-red-700 text-white px-1 py-1 rounded text-sm">Bulk Delete</button>
   <table class="w-full text-sm border">
     <thead class="bg-gray-200">
       <tr>
+        <th class="px-2 py-1"><input type="checkbox" id="selectAllManual" onclick="toggleSelectAllManual(this)"></th>
         <th class="px-2 py-1">Date</th>
         <th class="px-2 py-1">Bank</th>
         <th class="px-2 py-1">Type</th>
@@ -7763,24 +8479,26 @@ window.addEventListener('click',function(e){
     <button onclick="exportReconciliationReport()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Export Reconciled (CSV)</button>
   </div>
 </div>
-
 <div class="bg-white p-4 rounded shadow mt-4">
   <h4 class="text-md font-semibold mb-2">Reconciled Transactions</h4>
+
+  <button onclick="bulkDeleteTransactions()" class="bg-Blue-900 text-white px-1 py-1 rounded mb-2">Bulk Delete</button>
+
   <div class="overflow-x-auto">
     <table class="w-full border-collapse border text-sm">
       <thead>
         <tr class="bg-gray-100">
+          <th class="border px-1 py-1"><input type="checkbox" id="selectAllTx"></th>
           <th class="border px-1 py-1">Date</th>
           <th class="border px-1 py-1">Bank</th>
           <th class="border px-1 py-1">Type</th>
           <th class="border px-1 py-1">Debit</th>
           <th class="border px-1 py-1">Credit</th>
-          <th class="border px-1 py-1">Reference</th>
+          <th class="border px-1 py-1">Actions</th>
         </tr>
       </thead>
-      <tbody id="reconciledTransactionTableBody">
-    
-      </tbody>
+
+      <tbody id="reconciledTransactionTableBody"></tbody>
     </table>
   </div>
 </div>
@@ -7821,6 +8539,32 @@ window.addEventListener('click',function(e){
   <button onclick="saveBankMapping()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">
     Save Configuration
   </button>
+  <div class="bg-white p-2 rounded shadow mb-6 mt-4">
+  <h3 class="text-lg font-semibold mb-4">Mapped Banks</h3>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full border border-gray-200 text-sm">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="border px-3 py-2 text-left">Bank</th>
+          <th class="border px-3 py-2 text-left">Ledger Account</th>
+          <th class="border px-3 py-2 text-left">Auto Reconciliation</th>
+          <th class="border px-3 py-2 text-left">Import Rules</th>
+          <th class="border px-3 py-2 text-left">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="bankMappingTableBody">
+        <!-- Rows will be inserted dynamically -->
+        <tr>
+          <td class="border px-3 py-2 text-gray-500" colspan="5">
+            No mappings available
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 </div>
 </div> 
 <div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600">
@@ -8407,6 +9151,7 @@ function renderManualTransactions() {
   transactions.forEach((tx, index) => {
     const row = document.createElement("tr");
     row.innerHTML = `
+      <td class="px-2 py-1"><input type="checkbox" class="manual-checkbox" data-index="${index}"></td>
       <td class="px-2 py-1">${tx.date}</td>
       <td class="px-2 py-1">${tx.bank}</td>
       <td class="px-2 py-1">${tx.type}</td>
@@ -8736,7 +9481,36 @@ function showCustomerUnpaid(name) {
 
   console.log("Unpaid invoices:", list);
 }
+function toggleSelectAll(source) {
+  const checkboxes = document.querySelectorAll(".manual-checkbox");
+  checkboxes.forEach(cb => {
+    cb.checked = source.checked;
+  });
+}
+function bulkDeleteManualTransactions() {
+  let transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
 
+  const selected = document.querySelectorAll(".manual-checkbox:checked");
+
+  if (selected.length === 0) {
+    alert("Please select at least one transaction.");
+    return;
+  }
+
+  if (!confirm(`Delete ${selected.length} selected transactions?`)) {
+    return;
+  }
+
+  const indexes = Array.from(selected).map(cb => parseInt(cb.dataset.index));
+
+  indexes.sort((a, b) => b - a).forEach(i => {
+    transactions.splice(i, 1);
+  });
+
+  localStorage.setItem("manualTransactions", JSON.stringify(transactions));
+
+  renderManualTransactions();
+}
 function showVendorUnpaid(name) {
   const bills = JSON.parse(localStorage.getItem("bills") || "[]");
 
@@ -9037,6 +9811,7 @@ function renderReconciliationTransactions() {
 
     const row = document.createElement("tr");
     row.innerHTML = `
+      
       <td class="border px-1 py-1 text-center">${tx.date}</td>
       <td class="border px-1 py-1 text-center">${typeLabel}</td>
       <td class="border px-1 py-1 text-right">
@@ -9132,6 +9907,7 @@ const id = tx.ref || tx.date;
 
 const row = document.createElement("tr");
 row.innerHTML = `
+  <td class="border px-1 py-1 text-center"><input type="checkbox" class="txCheck" data-id="${id}"></td>
   <td class="border px-1 py-1 text-center">${tx.reconcileDate}</td>
   <td class="border px-1 py-1 text-center">${bankLabel}</td>
   <td class="border px-1 py-1 text-center">${typeLabel}</td>
@@ -9140,29 +9916,13 @@ row.innerHTML = `
 
   <td class="border px-1 py-1 text-center space-x-1">
 
-    <button class="bg-blue-900 text-white px-1 py-1 rounded"
-      data-id="${id}">
-      Open
-    </button>
-
-    <button onclick="editTransaction('${id}')"
-      class="bg-blue-900 text-white px-1 py-1 rounded">
-      Edit
-    </button>
-
-    <button onclick="attachTransaction('${id}')"
-      class="bg-blue-900 text-white px-1 py-1 rounded">
-      Attach
-    </button>
-
-    <button onclick="deleteTransaction('${id}')"
-      class="bg-blue-900 text-white px-1 py-1 rounded">
-      Delete
-    </button>
+    <button class="bg-blue-900 text-white px-1 py-1 rounded" data-id="${id}">Open</button>
+    <button onclick="editTransaction('${id}')"class="bg-blue-900 text-white px-1 py-1 rounded">Edit</button>
+    <button onclick="attachTransaction('${id}')"class="bg-blue-900 text-white px-1 py-1 rounded">Attach</button>
+    <button onclick="deleteTransaction('${id}')"class="bg-blue-900 text-white px-1 py-1 rounded">Delete </button>
 
   </td>
 `;
-
 tbody.appendChild(row);
   });
 
@@ -9346,6 +10106,27 @@ function deleteTransaction(txId) {
   localStorage.setItem("transfers", JSON.stringify(transfers));
 
   render();
+}
+document.addEventListener("change", function (e) {
+  if (e.target.id === "selectAllTx") {
+    const checks = document.querySelectorAll(".txCheck");
+    checks.forEach(c => c.checked = e.target.checked);
+  }
+});
+function bulkDeleteTransactions() {
+  let txs = getAllTransactions();
+  const checks = document.querySelectorAll(".txCheck:checked");
+
+  const idsToDelete = Array.from(checks).map(c => c.dataset.id);
+
+  txs = txs.filter(tx => {
+    const id = tx.ref || tx.date;
+    return !idsToDelete.includes(id);
+  });
+
+  localStorage.setItem("transactions", JSON.stringify(txs));
+
+  renderReconciledTransactions();
 }
 document.addEventListener("DOMContentLoaded", () => {
   populateReconcileBankDropdown();
