@@ -7317,7 +7317,37 @@ function createBundleItem() {
   bundles.push(bundle);
   localStorage.setItem("bundles", JSON.stringify(bundles));
 
+  const target = bundle.toWarehouse;
+
+  if (target) {
+    let inv = getInventory(target);
+
+    bundle.items.forEach(i => {
+      let item = inv.find(x => (x.sku || x.name) === i.item);
+
+      if (item) {
+        item.qty = (item.qty || 0) - bundle.qty;
+      }
+    });
+
+    saveInventory(target, inv);
+
+    inv.push({
+      name: bundle.name,
+      sku: "BUNDLE-" + Date.now(),
+      qty: bundle.qty,
+      buyPrice: bundle.buyPrice,
+      sellPrice: bundle.sellPrice,
+      buyVat: bundle.buyVAT,
+      sellVat: bundle.sellVAT,
+      isBundle: true
+    });
+
+    saveInventory(target, inv);
+  }
+
   renderBundles();
+  renderInventoryTable();
 }
 
 function saveBundleItemDraft() {
@@ -7363,49 +7393,256 @@ function renderBundles() {
 
 function deleteBundle(i) {
   let bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
-  bundles.splice(i,1);
+  const b = bundles[i];
+
+
+  const target = b.toWarehouse;
+
+  if (target) {
+    let inv = getInventory(target);
+
+    b.items.forEach(it => {
+      let item = inv.find(x => (x.sku || x.name) === it.item);
+      if (item) {
+        item.qty = (item.qty || 0) + b.qty; 
+      }
+    });
+
+    saveInventory(target, inv);
+  }
+
+  bundles.splice(i, 1);
   localStorage.setItem("bundles", JSON.stringify(bundles));
+
   renderBundles();
+  renderInventoryTable();
 }
 function editBundle(i) {
   const bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
-  const b = bundles[i];
+  const old = bundles[i];
 
-  const name = prompt("Edit name:", b.name);
+  const target = old.toWarehouse;
+  if (target) {
+    let inv = getInventory(target);
+
+    old.items.forEach(it => {
+      let item = inv.find(x => (x.sku || x.name) === it.item);
+      if (item) item.qty += old.qty;
+    });
+
+    saveInventory(target, inv);
+  }
+
+  const name = prompt("Edit name:", old.name);
   if (name === null) return;
 
-  const qty = prompt("Edit quantity:", b.qty);
+  const qty = prompt("Edit quantity:", old.qty);
   if (qty === null) return;
 
-  const buyPrice = prompt("Edit buy price:", b.buyPrice);
+  const buyPrice = prompt("Edit buy price:", old.buyPrice);
   if (buyPrice === null) return;
 
-  const sellPrice = prompt("Edit sell price:", b.sellPrice);
+  const sellPrice = prompt("Edit sell price:", old.sellPrice);
   if (sellPrice === null) return;
 
-  b.name = name;
-  b.qty = qty;
-  b.buyPrice = buyPrice;
-  b.sellPrice = sellPrice;
+  old.name = name;
+  old.qty = parseFloat(qty);
+  old.buyPrice = parseFloat(buyPrice);
+  old.sellPrice = parseFloat(sellPrice);
 
-  bundles[i] = b;
+  bundles[i] = old;
   localStorage.setItem("bundles", JSON.stringify(bundles));
+
   renderBundles();
+  renderInventoryTable();
 }
 
 function previewBundle(i) {
   const bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
+  const org = JSON.parse(localStorage.getItem("orgInfo") || "{}");
   const b = bundles[i];
 
-  alert(
-    "Name: " + b.name + "\n" +
-    "Items: " + b.items.map(x=>x.item).join(", ") + "\n" +
-    "Qty: " + b.qty + "\n" +
-    "Buy: " + b.buyPrice + "\n" +
-    "Sell: " + b.sellPrice
-  );
-}
+  if (!b) {
+    alert("Bundle not found");
+    return;
+  }
 
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Bundle Preview</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          padding: 20px;
+          color: #111;
+        }
+
+        .header {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          border-bottom: 2px solid #1e3a8a;
+          padding-bottom: 10px;
+        }
+
+        .logo {
+          width: 80px;
+          height: 80px;
+          object-fit: contain;
+        }
+
+        .company h1 {
+          margin: 0;
+          font-size: 20px;
+        }
+
+        .company small {
+          display: block;
+          color: gray;
+        }
+
+        .section {
+          margin-top: 20px;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 10px;
+        }
+
+        th, td {
+          border: 1px solid #ddd;
+          padding: 8px;
+          font-size: 13px;
+        }
+
+        th {
+          background: #1e3a8a;
+          color: white;
+        }
+
+        .tag {
+          display: inline-block;
+          padding: 3px 8px;
+          background: #e5e7eb;
+          border-radius: 4px;
+          font-size: 12px;
+        }
+
+        .btn {
+          margin-top: 20px;
+          padding: 10px 15px;
+          background: #1e3a8a;
+          color: white;
+          border: none;
+          cursor: pointer;
+          border-radius: 5px;
+        }
+
+        .btn:hover {
+          background: #1e40af;
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <!-- HEADER -->
+      <div class="header">
+        ${org.logo ? `<img class="logo" src="${org.logo}" />` : ""}
+        <div class="company">
+          <h1>${org.name || "Company Name"}</h1>
+          <small>${org.email || ""}</small>
+          <small>${org.phone || ""}</small>
+          <small>${org.address || ""}</small>
+        </div>
+      </div>
+
+      <!-- BUNDLE INFO -->
+      <div class="section">
+        <h2>Bundle Report</h2>
+
+        <p><b>Name:</b> ${b.name}</p>
+        <p><b>Quantity:</b> ${b.qty}</p>
+        <p><b>Buy Price:</b> ${b.buyPrice}</p>
+        <p><b>Sell Price:</b> ${b.sellPrice}</p>
+        <p><b>Destination Warehouse:</b> <span class="tag">${b.toWarehouse}</span></p>
+      </div>
+
+      <!-- ITEMS -->
+      <div class="section">
+        <h3>Items (Warehouse Source Tracking)</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>SKU</th>
+              <th>Source Warehouse</th>
+              <th>Stock Qty</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${b.items.map(item => {
+              const warehouse = item.warehouse || "Unknown";
+              const inv = getInventory(warehouse);
+              const stock = inv.find(x => (x.sku === item.item || x.name === item.item));
+
+              return `
+                <tr>
+                  <td>${item.item}</td>
+                  <td>${stock?.sku || "-"}</td>
+                  <td><span class="tag">${warehouse}</span></td>
+                  <td>${stock?.qty ?? "N/A"}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+
+    <div style="margin-top:20px; display:flex; gap:10px;">
+
+  <button class="btn" onclick="window.print()"> Print </button>
+  <button class="btn" onclick="downloadPDF()"> Download PDF</button>
+
+</div>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(14);
+  doc.text("Bundle Report", 10, 10);
+
+  doc.setFontSize(10);
+  doc.text("Name: ${b.name}", 10, 20);
+  doc.text("Qty: ${b.qty}", 10, 30);
+  doc.text("Buy: ${b.buyPrice}", 10, 40);
+  doc.text("Sell: ${b.sellPrice}", 10, 50);
+
+  let y = 60;
+  doc.text("Items:", 10, y);
+  y += 10;
+
+  {b.items.map(item => `
+    doc.text("- ${item.item} (${item.warehouse})", 10, y);
+    y += 10;
+  `).join("")}
+
+  doc.save("${b.name}_bundle.pdf");
+}
 function pushBundle(i) {
   const bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
   const b = bundles[i];
