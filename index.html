@@ -51188,27 +51188,119 @@ function parseFloatSafe(val) {
   return parseFloat(val) || 0;
 }
 
-function applyDateFilter(data, dateField, prefix) {
-  const month = document.getElementById(prefix + "Month")?.value;
-  const start = document.getElementById(prefix + "StartDate")?.value;
-  const end = document.getElementById(prefix + "EndDate")?.value;
-
+function applyReportFilter(data, options) {
+  const month = document.getElementById(options.monthId)?.value;
+  const start = document.getElementById(options.startDateId)?.value;
+  const end = document.getElementById(options.endDateId)?.value;
   return data.filter(item => {
-    if (!item[dateField]) return false;
-    const d = new Date(item[dateField]);
-
+    if (!item[options.dateField]) return false;
+    const d = new Date(item[options.dateField]);
     if (month) {
       const [y, m] = month.split("-");
       return d.getFullYear() == y && (d.getMonth() + 1) == parseInt(m);
     }
-
-    if (start && end) {
-      return d >= new Date(start) && d <= new Date(end);
-    }
-
-    return true; 
+    if (start && end) return d >= new Date(start) && d <= new Date(end);
+    return true;
   });
 }
+
+function clearReportFilter(prefix) {
+  const monthEl = document.getElementById(prefix + "SummaryMonth");
+  const startEl = document.getElementById(prefix + "StartDate");
+  const endEl = document.getElementById(prefix + "EndDate");
+  if (monthEl) monthEl.value = "";
+  if (startEl) startEl.value = "";
+  if (endEl) endEl.value = "";
+  switch (prefix) {
+    case "pnl": renderProfitLoss(); break;
+    case "bs": renderBalanceSheet(); break;
+    case "cf": renderCashFlow(); break;
+    case "vat": renderVatSummary(); break;
+  }
+}
+
+function renderProfitLoss() {
+  const filtered = applyReportFilter(pnlData, {
+    dateField: "date",
+    monthId: "pnlSummaryMonth",
+    startDateId: "pnlStartDate",
+    endDateId: "pnlEndDate"
+  });
+  const tbody = document.getElementById("pnlTable").querySelector("tbody");
+  tbody.innerHTML = "";
+  filtered.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="border px-2 py-1">${row.item}</td>
+      <td class="border px-2 py-1 text-right">${row.amount.toFixed(2)}</td>
+      <td class="border px-2 py-1 text-right">${row.total.toFixed(2)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderBalanceSheet() {
+  const filtered = applyReportFilter(bsData, {
+    dateField: "date",
+    monthId: "bsSummaryMonth",
+    startDateId: "bsStartDate",
+    endDateId: "bsEndDate"
+  });
+  const tbody = document.getElementById("balanceSheetTable").querySelector("tbody");
+  tbody.innerHTML = "";
+  filtered.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="border px-2 py-1">${row.item}</td>
+      <td class="border px-2 py-1 text-right">${row.amount.toFixed(2)}</td>
+      <td class="border px-2 py-1 text-right">${row.total.toFixed(2)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderCashFlow() {
+  const filtered = applyReportFilter(cfData, {
+    dateField: "date",
+    monthId: "cfSummaryMonth",
+    startDateId: "cfStartDate",
+    endDateId: "cfEndDate"
+  });
+  const tbody = document.getElementById("cashFlowTable").querySelector("tbody");
+  tbody.innerHTML = "";
+  filtered.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="border px-2 py-1">${row.item}</td>
+      <td class="border px-2 py-1 text-right">${row.amount.toFixed(2)}</td>
+      <td class="border px-2 py-1 text-right">${row.total.toFixed(2)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderVatSummary() {
+  const filtered = applyReportFilter(vatData, {
+    dateField: "date",
+    monthId: "vatSummaryMonth",
+    startDateId: "vatStartDate",
+    endDateId: "vatEndDate"
+  });
+  const salesBody = document.getElementById("vatSalesTable").querySelector("tbody");
+  salesBody.innerHTML = "";
+  filtered.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="border px-2 py-1">${row.box}</td>
+      <td class="border px-2 py-1">${row.details}</td>
+      <td class="border px-2 py-1 text-right">${row.amount.toFixed(2)}</td>
+      <td class="border px-2 py-1 text-right">${row.rate}</td>
+      <td class="border px-2 py-1 text-right">${row.outputVAT.toFixed(2)}</td>
+    `;
+    salesBody.appendChild(tr);
+  });
+}
+
 function renderReports() {
   const month = document.getElementById('pnlSummaryMonth')?.value;
   const startDate = document.getElementById('pnlStartDate')?.value;
