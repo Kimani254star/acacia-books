@@ -46413,121 +46413,142 @@ document.addEventListener("DOMContentLoaded", () => {
               <th class="border px-2 py-1 text-left">Item</th>
               <th class="border px-2 py-1 text-right">Amount</th>
               <th class="border px-2 py-1 text-right">Total</th>
+              <th class="border px-2 py-1 text-right">Closing Balance</th>
+              
+              
             </tr>
           </thead>
           <tbody>
     
             <tr>
-              <td class="border px-2 py-1">Sales Revenue</td>
-              <td></td>
-              <td class="border px-2 py-1 text-right" id="pnlRevenue">0.00</td>
-            </tr>
+  <td class="border px-2 py-1">Sales Revenue</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlRevenue">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingRevenue">0.00</td>
+</tr>
 
-            <tr>
-              <td class="border px-2 py-1">Other Incomes</td>
-              <td></td>
-              <td class="border px-2 py-1 text-right" id="pnlOtherIncomes">0.00</td>
-            </tr>
+<tr>
+  <td class="border px-2 py-1">Other Incomes</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlOtherIncomes">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingOtherIncomes">0.00</td>
+</tr>
 
-            <tr>
-              <td class="border px-2 py-1">Discounts</td>
-              <td></td>
-              <td class="border px-2 py-1 text-right" id="pnlDiscount">0.00</td>
-            </tr>
+<tr>
+  <td class="border px-2 py-1">Discounts</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlDiscount">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingDiscount">0.00</td>
+</tr>
 
-            <tr>
-              <td class="border px-2 py-1">Cost of Goods Sold (COGS)</td>
-              <td></td>
-              <td class="border px-2 py-1 text-right" id="pnlCogs">0.00</td>
-            </tr>
+<tr>
+  <td class="border px-2 py-1">Cost of Goods Sold (COGS)</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlCogs">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCogs">0.00</td>
+</tr>
 
-            <tr>
-              <td class="border px-2 py-1">Provision for Bad Debts</td>
-              <td></td>
-              <td class="border px-2 py-1 text-right" id="pnlBadDebts">0.00</td>
-            </tr>
+<tr>
+  <td class="border px-2 py-1">Provision for Bad Debts</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlBadDebts">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBadDebts">0.00</td>
+</tr>
 
-            <tr class="font-semibold">
-              <td class="border px-2 py-1">Gross Profit</td>
-              <td></td>
-              <td class="border px-2 py-1 text-right" id="pnlGrossProfit">0.00</td>
-            </tr>
+<tr class="font-semibold">
+  <td class="border px-2 py-1">Gross Profit</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlGrossProfit">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingGrossProfit">0.00</td>
+</tr>
 
-            <tr>
-              <td class="border px-2 py-1">Bills</td>
-              <td></td>
-              <td class="border px-2 py-1 text-right" id="pnlBills">0.00</td>
-            </tr>
+<tr>
+  <td class="border px-2 py-1">Bills</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlBills">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBills">0.00</td>
+</tr>
 
-            <tr class="bg-gray-50 font-semibold">
-              <td class="border px-2 py-1">Operational Costs</td>
-              <td></td>
-              <td></td>
-            </tr>
+<tr class="bg-gray-50 font-semibold">
+  <td class="border px-2 py-1">Operational Costs</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
 
-          <tbody id="pnlOperationalCostsBreakdown"></tbody>
+<tbody id="pnlOperationalCostsBreakdown"></tbody>
 
-          <tr class="font-semibold">
-            <td class="border px-2 py-1">Total Operational Costs</td>
-            <td></td>
-            <td class="border px-2 py-1 text-right" id="pnlExpenses">0.00</td>
-          </tr>
+<tr class="font-semibold">
+  <td class="border px-2 py-1">Total Operational Costs</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlExpenses">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingExpenses">0.00</td>
+</tr>
 
-          <tr>
-            <td class="border px-2 py-1">Depreciation</td>
-            <td></td>
-            <td class="border px-2 py-1 text-right" id="pnlDepreciation">0.00</td>
-          </tr>
+<tr>
+  <td class="border px-2 py-1">Depreciation</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlDepreciation">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingDepreciation">0.00</td>
+</tr>
 
-          <tr>
-            <td class="border px-2 py-1">Interest Paid on Loan</td>
-            <td></td>
-            <td class="border px-2 py-1 text-right" id="pnlInterest">0.00</td>
-          </tr>
+<tr>
+  <td class="border px-2 py-1">Interest Paid on Loan</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlInterest">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingInterest">0.00</td>
+</tr>
 
-          <tr>
-            <td class="border px-2 py-1">Payroll</td>
-            <td></td>
-            <td class="border px-2 py-1 text-right" id="pnlPayroll">0.00</td>
-          </tr>
+<tr>
+  <td class="border px-2 py-1">Payroll</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlPayroll">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingPayroll">0.00</td>
+</tr>
 
-          <tr>
-            <td class="border px-2 py-1">Currency Adjustment</td>
-            <td></td>
-            <td class="border px-2 py-1 text-right" id="pnlCurrencyAdjustment">0.00</td>
-          </tr>
+<tr>
+  <td class="border px-2 py-1">Currency Adjustment</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlCurrencyAdjustment">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCurrencyAdjustment">0.00</td>
+</tr>
 
-          <tr class="bg-gray-50 font-semibold">
-            <td class="border px-2 py-1">Taxes</td>
-            <td></td>
-            <td></td>
-          </tr>
+<tr class="bg-gray-50 font-semibold">
+  <td class="border px-2 py-1">Taxes</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
 
-          <tbody id="pnlTaxesBreakdown"></tbody>
+<tbody id="pnlTaxesBreakdown"></tbody>
 
-          <tr class="font-semibold">
-            <td class="border px-2 py-1">Total Taxes</td>
-            <td></td>
-            <td class="border px-2 py-1 text-right" id="pnlTaxes">0.00</td>
-          </tr>
+<tr class="font-semibold">
+  <td class="border px-2 py-1">Total Taxes</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlTaxes">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingTaxes">0.00</td>
+</tr>
 
-          <tr class="font-semibold text-blue-700">
-            <td class="border px-2 py-1">Profit Before Tax</td>
-            <td></td>
-            <td class="border px-2 py-1 text-right" id="pnlProfitBeforeTax">0.00</td>
-          </tr>
+<tr class="font-semibold text-blue-700">
+  <td class="border px-2 py-1">Profit Before Tax</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlProfitBeforeTax">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingProfitBeforeTax">0.00</td>
+</tr>
 
-          <tr class="bg-gray-50 font-semibold">
-            <td class="border px-2 py-1">Income Tax (30%)</td>
-            <td></td>
-            <td class="border px-2 py-1 text-right" id="pnlIncomeTax">0.00</td>
-          </tr>
+<tr class="bg-gray-50 font-semibold">
+  <td class="border px-2 py-1">Income Tax (30%)</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlIncomeTax">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingIncomeTax">0.00</td>
+</tr>
 
-          <tr class="font-bold text-green-800">
-            <td class="border px-2 py-1">Net Profit After Tax</td>
-            <td></td>
-            <td class="border px-2 py-1 text-right" id="pnlProfit">0.00</td>
-          </tr>
+<tr class="font-bold text-green-800">
+  <td class="border px-2 py-1">Net Profit After Tax</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="pnlProfit">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingProfit">0.00</td>
+</tr>
 
           </tbody>
         </table>
@@ -46576,182 +46597,208 @@ document.addEventListener("DOMContentLoaded", () => {
       <th class="border px-2 py-1 text-left">Item</th>
       <th class="border px-2 py-1 text-right">Amount</th>
       <th class="border px-2 py-1 text-right">Total</th>
+      <th class="border px-2 py-1 text-right">Closing Balance</th>
     </tr>
   </thead>
 
   <tbody>
 
-    <tr class="font-semibold bg-gray-50">
-      <td class="border px-2 py-1">Current Assets</td>
-      <td></td>
-      <td></td>
-    </tr>
+<tr class="font-semibold bg-gray-50">
+  <td class="border px-2 py-1">Current Assets</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
 
-    <tr>
-      <td class="border px-2 py-1 pl-4">Accounts Receivable</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsRevenue">0.00</td>
-    </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">Accounts Receivable</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsRevenue">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsRevenue">0.00</td>
+</tr>
 
-    <tr class="bg-gray-50 font-semibold">
-      <td class="border px-2 py-1">Banks</td>
-      <td></td>
-      <td></td>
-    </tr>
+<tr class="bg-gray-50 font-semibold">
+  <td class="border px-2 py-1">Banks</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
 
-  </tbody>
+</tbody>
 
-  <tbody id="bsBanksBreakdown"></tbody>
+<tbody id="bsBanksBreakdown"></tbody>
 
-  <tbody>
-    <tr class="font-semibold">
-      <td class="border px-2 py-1 pl-4">Total Banks</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsBanks">0.00</td>
-    </tr>
+<tbody>
+<tr class="font-semibold">
+  <td class="border px-2 py-1 pl-4">Total Banks</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsBanks">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsBanks">0.00</td>
+</tr>
 
-    <tr>
-      <td class="border px-2 py-1 pl-4">Provision for Bad Debts</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsBadDebts">0.00</td>
-    </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">Provision for Bad Debts</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsBadDebts">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsBadDebts">0.00</td>
+</tr>
 
-    <tr>
-      <td class="border px-2 py-1 pl-4">Inventory</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsInventory">0.00</td>
-    </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">Inventory</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsInventory">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsInventory">0.00</td>
+</tr>
 
-    <tr class="font-bold">
-      <td class="border px-2 py-1 pl-4">Total Current Assets</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsCurrentAssets">0.00</td>
-    </tr>
+<tr class="font-bold">
+  <td class="border px-2 py-1 pl-4">Total Current Assets</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsCurrentAssets">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsCurrentAssets">0.00</td>
+</tr>
 
-    <tr class="bg-gray-50 font-semibold">
-      <td class="border px-2 py-1">Non-Current Assets</td>
-      <td></td>
-      <td></td>
-    </tr>
+<tr class="bg-gray-50 font-semibold">
+  <td class="border px-2 py-1">Non-Current Assets</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
 
-  </tbody>
+</tbody>
 
-  <tbody id="bsNonCurrentAssetsBreakdown"></tbody>
+<tbody id="bsNonCurrentAssetsBreakdown"></tbody>
 
-  <tbody>
-    <tr class="font-semibold">
-      <td class="border px-2 py-1 pl-4">Total Non-Current Assets</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsNonCurrentAssetsTotal">0.00</td>
-    </tr>
+<tbody>
+<tr class="font-semibold">
+  <td class="border px-2 py-1 pl-4">Total Non-Current Assets</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsNonCurrentAssetsTotal">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsNonCurrentAssetsTotal">0.00</td>
+</tr>
 
-    <tr>
-      <td class="border px-2 py-1 pl-4">Depreciation</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsDepreciation">0.00</td>
-    </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">Depreciation</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsDepreciation">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsDepreciation">0.00</td>
+</tr>
 
-    <tr class="font-bold text-blue-700">
-      <td class="border px-2 py-1 pl-4">Total Assets</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsTotalAssets">0.00</td>
-    </tr>
+<tr class="font-bold text-blue-700">
+  <td class="border px-2 py-1 pl-4">Total Assets</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsTotalAssets">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsTotalAssets">0.00</td>
+</tr>
 
-    <tr class="bg-gray-50 font-semibold">
-      <td class="border px-2 py-1">Current Liabilities</td>
-      <td></td>
-      <td></td>
-    </tr>
+<tr class="bg-gray-50 font-semibold">
+  <td class="border px-2 py-1">Current Liabilities</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
 
-    <tr>
-      <td class="border px-2 py-1 pl-4">Accounts Payable</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsBills">0.00</td>
-    </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">Accounts Payable</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsBills">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsBills">0.00</td>
+</tr>
 
-    <tr>
-      <td class="border px-2 py-1 pl-4">Operational Costs</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsExpenses">0.00</td>
-    </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">Operational Costs</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsExpenses">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsExpenses">0.00</td>
+</tr>
 
-    <tr>
-      <td class="border px-2 py-1 pl-4">Payroll</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsPayroll">0.00</td>
-    </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">Payroll</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsPayroll">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsPayroll">0.00</td>
+</tr>
 
-    <tr>
-      <td class="border px-2 py-1 pl-4">Taxes</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsTaxes">0.00</td>
-    </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">Taxes</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsTaxes">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsTaxes">0.00</td>
+</tr>
 
-    <tr class="font-bold">
-      <td class="border px-2 py-1 pl-4">Total Current Liabilities</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsCurrentLiabilities">0.00</td>
-    </tr>
+<tr class="font-bold">
+  <td class="border px-2 py-1 pl-4">Total Current Liabilities</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsCurrentLiabilities">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsCurrentLiabilities">0.00</td>
+</tr>
 
-    <tr class="bg-gray-50 font-semibold">
-      <td class="border px-2 py-1">Non-Current Liabilities</td>
-      <td></td>
-      <td></td>
-    </tr>
+<tr class="bg-gray-50 font-semibold">
+  <td class="border px-2 py-1">Non-Current Liabilities</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
 
-  </tbody>
+</tbody>
 
-  <tbody id="bsNonCurrentLiabilitiesBreakdown"></tbody>
+<tbody id="bsNonCurrentLiabilitiesBreakdown"></tbody>
 
-  <tbody>
-    <tr class="font-semibold">
-      <td class="border px-2 py-1 pl-4">Total Non-Current Liabilities</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsNonCurrentLiabilitiesTotal">0.00</td>
-    </tr>
+<tbody>
+<tr class="font-semibold">
+  <td class="border px-2 py-1 pl-4">Total Non-Current Liabilities</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsNonCurrentLiabilitiesTotal">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsNonCurrentLiabilitiesTotal">0.00</td>
+</tr>
 
-    <tr class="font-bold text-red-700">
-      <td class="border px-2 py-1 pl-4">Total Liabilities</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsTotalLiabilities">0.00</td>
-    </tr>
+<tr class="font-bold text-red-700">
+  <td class="border px-2 py-1 pl-4">Total Liabilities</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsTotalLiabilities">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsTotalLiabilities">0.00</td>
+</tr>
 
-    <tr class="bg-gray-50 font-semibold">
-      <td class="border px-2 py-1">Equity</td>
-      <td></td>
-      <td></td>
-    </tr>
+<tr class="bg-gray-50 font-semibold">
+  <td class="border px-2 py-1">Equity</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
 
-    <tr>
-      <td class="border px-2 py-1 pl-4">Profit / Loss</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsEquityProfit">0.00</td>
-    </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">Profit / Loss</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsEquityProfit">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsEquityProfit">0.00</td>
+</tr>
 
-    <tr class="font-bold">
-      <td class="border px-2 py-1 pl-4">Shareholder Equity</td>
-      <td></td>
-      <td></td>
-    </tr>
+<tr class="font-bold">
+  <td class="border px-2 py-1 pl-4">Shareholder Equity</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
 
-  </tbody>
+</tbody>
 
-  <tbody id="bsEquityBreakdown"></tbody>
+<tbody id="bsEquityBreakdown"></tbody>
 
-  <tbody>
-    <tr class="font-bold">
-      <td class="border px-2 py-1 pl-4">Total Equity</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsEquity">0.00</td>
-    </tr>
+<tbody>
+<tr class="font-bold">
+  <td class="border px-2 py-1 pl-4">Total Equity</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsEquity">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsEquity">0.00</td>
+</tr>
 
-    <tr class="font-bold text-purple-700">
-      <td class="border px-2 py-1 pl-4">Total Liabilities & Equity</td>
-      <td></td>
-      <td class="border px-2 py-1 text-right" id="bsTotalLiabilitiesEquity">0.00</td>
-    </tr>
+<tr class="font-bold text-purple-700">
+  <td class="border px-2 py-1 pl-4">Total Liabilities & Equity</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="bsTotalLiabilitiesEquity">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingBsTotalLiabilitiesEquity">0.00</td>
+</tr>
 
-  </tbody>
+</tbody>
 </table>
 
 </div>
@@ -46792,119 +46839,159 @@ document.addEventListener("DOMContentLoaded", () => {
         <th class="border px-2 py-1 text-left">Item</th>
         <th class="border px-2 py-1 text-right">Amount</th>
         <th class="border px-2 py-1 text-right">Total</th>
+        <th class="border px-2 py-1 text-right">Closing Balance</th>
       </tr>
     </thead>
     <tbody>
-      <tr class="font-semibold bg-gray-50">
-        <td class="border px-2 py-1">Cash Flow from Operating Activities</td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Profit Before Tax</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfProfitBeforeTax">0.00</td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Depreciation</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfDepreciation">0.00</td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Currency Adjustment</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfCurrencyAdjustment">0.00</td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Operational Costs</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfOperationalCosts">0.00</td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Payroll</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfPayroll">0.00</td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Interest Paid</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfInterestPaid">0.00</td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Taxes Paid</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfTaxesPaid">0.00</td>
-      </tr>
-      <tr class="font-bold bg-gray-50">
-        <td class="border px-2 py-1 pl-4 text-blue-700">Net Cash from Operating Activities</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfOperatingTotal">0.00</td>
-      </tr>
 
-      <tr class="font-semibold bg-gray-50 mt-2">
-        <td class="border px-2 py-1">Cash Flow from Investing Activities</td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Purchase of Assets</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfAssetPurchase">0.00</td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Sale of Assets</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfAssetSale">0.00</td>
-      </tr>
-      <tr class="font-bold bg-gray-50">
-        <td class="border px-2 py-1 pl-4 text-blue-700">Net Cash from Investing Activities</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfInvestingTotal">0.00</td>
-      </tr>
+<tr class="font-semibold bg-gray-50">
+  <td class="border px-2 py-1">Cash Flow from Operating Activities</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
 
-      <tr class="font-semibold bg-gray-50 mt-2">
-        <td class="border px-2 py-1">Cash Flow from Financing Activities</td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Owner's Contribution</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfOwnersContribution">0.00</td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Loan Proceeds</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfLoanProceeds">0.00</td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Loan Repayments</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfLoanRepayments">0.00</td>
-      </tr>
-      <tr class="font-bold bg-gray-50">
-        <td class="border px-2 py-1 pl-4 text-blue-700">Net Cash from Financing Activities</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfFinancingTotal">0.00</td>
-      </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">Profit Before Tax</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfProfitBeforeTax">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfProfitBeforeTax">0.00</td>
+</tr>
 
-      <tr class="font-bold text-gray-800">
-        <td class="border px-2 py-1 pl-4">Net Change in Cash</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfNetChange">0.00</td>
-      </tr>
-      <tr>
-        <td class="border px-2 py-1 pl-4">Opening Cash Balance</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfOpeningCash">0.00</td>
-      </tr>
-      <tr class="font-bold text-green-700">
-        <td class="border px-2 py-1 pl-4">Closing Cash Balance</td>
-        <td></td>
-        <td class="border px-2 py-1 text-right" id="cfClosingCash">0.00</td>
-      </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">Depreciation</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfDepreciation">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfDepreciation">0.00</td>
+</tr>
 
-    </tbody>
+<tr>
+  <td class="border px-2 py-1 pl-4">Currency Adjustment</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfCurrencyAdjustment">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfCurrencyAdjustment">0.00</td>
+</tr>
+
+<tr>
+  <td class="border px-2 py-1 pl-4">Operational Costs</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfOperationalCosts">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfOperationalCosts">0.00</td>
+</tr>
+
+<tr>
+  <td class="border px-2 py-1 pl-4">Payroll</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfPayroll">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfPayroll">0.00</td>
+</tr>
+
+<tr>
+  <td class="border px-2 py-1 pl-4">Interest Paid</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfInterestPaid">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfInterestPaid">0.00</td>
+</tr>
+
+<tr>
+  <td class="border px-2 py-1 pl-4">Taxes Paid</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfTaxesPaid">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfTaxesPaid">0.00</td>
+</tr>
+
+<tr class="font-bold bg-gray-50">
+  <td class="border px-2 py-1 pl-4 text-blue-700">Net Cash from Operating Activities</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfOperatingTotal">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfOperatingTotal">0.00</td>
+</tr>
+
+<tr class="font-semibold bg-gray-50 mt-2">
+  <td class="border px-2 py-1">Cash Flow from Investing Activities</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+
+<tr>
+  <td class="border px-2 py-1 pl-4">Purchase of Assets</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfAssetPurchase">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfAssetPurchase">0.00</td>
+</tr>
+
+<tr>
+  <td class="border px-2 py-1 pl-4">Sale of Assets</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfAssetSale">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfAssetSale">0.00</td>
+</tr>
+
+<tr class="font-bold bg-gray-50">
+  <td class="border px-2 py-1 pl-4 text-blue-700">Net Cash from Investing Activities</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfInvestingTotal">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfInvestingTotal">0.00</td>
+</tr>
+
+<tr class="font-semibold bg-gray-50 mt-2">
+  <td class="border px-2 py-1">Cash Flow from Financing Activities</td>
+  <td></td>
+  <td></td>
+  <td></td>
+</tr>
+
+<tr>
+  <td class="border px-2 py-1 pl-4">Owner's Contribution</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfOwnersContribution">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfOwnersContribution">0.00</td>
+</tr>
+
+<tr>
+  <td class="border px-2 py-1 pl-4">Loan Proceeds</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfLoanProceeds">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfLoanProceeds">0.00</td>
+</tr>
+
+<tr>
+  <td class="border px-2 py-1 pl-4">Loan Repayments</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfLoanRepayments">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfLoanRepayments">0.00</td>
+</tr>
+
+<tr class="font-bold bg-gray-50">
+  <td class="border px-2 py-1 pl-4 text-blue-700">Net Cash from Financing Activities</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfFinancingTotal">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfFinancingTotal">0.00</td>
+</tr>
+
+<tr class="font-bold text-gray-800">
+  <td class="border px-2 py-1 pl-4">Net Change in Cash</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfNetChange">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfNetChange">0.00</td>
+</tr>
+
+<tr>
+  <td class="border px-2 py-1 pl-4">Opening Cash Balance</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfOpeningCash">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfOpeningCash">0.00</td>
+</tr>
+
+<tr class="font-bold text-green-700">
+  <td class="border px-2 py-1 pl-4">Closing Cash Balance</td>
+  <td></td>
+  <td class="border px-2 py-1 text-right" id="cfClosingCash">0.00</td>
+  <td class="border px-2 py-1 text-right" id="closingCfClosingCash">0.00</td>
+</tr>
+
+</tbody>
   </table>
 
 </div>
@@ -47157,99 +47244,116 @@ document.addEventListener("DOMContentLoaded", () => {
           <th class="border px-2 py-1 text-left">Particulars</th>
           <th class="border px-2 py-1 text-right">Amount (KSh)</th>
           <th class="border px-2 py-1 text-right">Total</th>
+          <th class="border px-2 py-1 text-right">Closing Balance</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td class="border px-2 py-1">A. Accounting Profit as per Financial Statements</td>
-          <td class="border px-2 py-1 text-right" id="taxAccountingProfit"></td>
-          <td class="border px-2 py-1 text-right"></td>
-        </tr>
 
-        <tr class="bg-gray-50 font-semibold">
-          <td class="border px-2 py-1">Add: Non-Deductible Expenses</td>
-          <td class="border px-2 py-1"></td>
-          <td class="border px-2 py-1"></td>
-        </tr>
+<tr>
+  <td class="border px-2 py-1">A. Accounting Profit as per Financial Statements</td>
+  <td class="border px-2 py-1 text-right" id="taxAccountingProfit"></td>
+  <td class="border px-2 py-1 text-right"></td>
+  <td class="border px-2 py-1 text-right" id="closingTaxAccountingProfit"></td>
+</tr>
 
-        <tr>
-          <td class="border px-2 py-1 pl-4">– Entertainment expenses</td>
-          <td class="border px-2 py-1 text-right" id="taxEntertainment"></td>
-          <td class="border px-2 py-1 text-right"></td>
-        </tr>
+<tr class="bg-gray-50 font-semibold">
+  <td class="border px-2 py-1">Add: Non-Deductible Expenses</td>
+  <td class="border px-2 py-1"></td>
+  <td class="border px-2 py-1"></td>
+  <td></td>
+</tr>
 
-        <tr>
-          <td class="border px-2 py-1 pl-4">– Fines and penalties</td>
-          <td class="border px-2 py-1 text-right" id="taxFines"></td>
-          <td class="border px-2 py-1 text-right"></td>
-        </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">– Entertainment expenses</td>
+  <td class="border px-2 py-1 text-right" id="taxEntertainment"></td>
+  <td class="border px-2 py-1 text-right"></td>
+  <td class="border px-2 py-1 text-right" id="closingTaxEntertainment"></td>
+</tr>
 
-        <tr>
-          <td class="border px-2 py-1 pl-4">– Depreciation (per books)</td>
-          <td class="border px-2 py-1 text-right" id="taxDepreciation"></td>
-          <td class="border px-2 py-1 text-right"></td>
-        </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">– Fines and penalties</td>
+  <td class="border px-2 py-1 text-right" id="taxFines"></td>
+  <td class="border px-2 py-1 text-right"></td>
+  <td class="border px-2 py-1 text-right" id="closingTaxFines"></td>
+</tr>
 
-        <tr class="font-semibold">
-          <td class="border px-2 py-1 pl-4">Subtotal (Additions)</td>
-          <td class="border px-2 py-1"></td>
-          <td class="border px-2 py-1 text-right" id="taxAdditions"></td>
-        </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">– Depreciation (per books)</td>
+  <td class="border px-2 py-1 text-right" id="taxDepreciation"></td>
+  <td class="border px-2 py-1 text-right"></td>
+  <td class="border px-2 py-1 text-right" id="closingTaxDepreciation"></td>
+</tr>
 
-        <tr class="bg-gray-50 font-semibold">
-          <td class="border px-2 py-1">Less: Tax Allowances / Deductions</td>
-          <td class="border px-2 py-1"></td>
-          <td class="border px-2 py-1"></td>
-        </tr>
+<tr class="font-semibold">
+  <td class="border px-2 py-1 pl-4">Subtotal (Additions)</td>
+  <td class="border px-2 py-1"></td>
+  <td class="border px-2 py-1 text-right" id="taxAdditions"></td>
+  <td class="border px-2 py-1 text-right" id="closingTaxAdditions"></td>
+</tr>
 
-        <tr>
-          <td class="border px-2 py-1 pl-4">– Capital allowance (per tax rules)</td>
-          <td class="border px-2 py-1 text-right" id="taxCapitalAllowance"></td>
-          <td class="border px-2 py-1 text-right"></td>
-        </tr>
+<tr class="bg-gray-50 font-semibold">
+  <td class="border px-2 py-1">Less: Tax Allowances / Deductions</td>
+  <td class="border px-2 py-1"></td>
+  <td class="border px-2 py-1"></td>
+  <td></td>
+</tr>
 
-        <tr>
-          <td class="border px-2 py-1 pl-4">– Approved donations</td>
-          <td class="border px-2 py-1 text-right" id="taxDonations"></td>
-          <td class="border px-2 py-1 text-right"></td>
-        </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">– Capital allowance (per tax rules)</td>
+  <td class="border px-2 py-1 text-right" id="taxCapitalAllowance"></td>
+  <td class="border px-2 py-1 text-right"></td>
+  <td class="border px-2 py-1 text-right" id="closingTaxCapitalAllowance"></td>
+</tr>
 
-        <tr class="font-semibold">
-          <td class="border px-2 py-1 pl-4">Subtotal (Deductions)</td>
-          <td class="border px-2 py-1"></td>
-          <td class="border px-2 py-1 text-right" id="taxDeductions"></td>
-        </tr>
+<tr>
+  <td class="border px-2 py-1 pl-4">– Approved donations</td>
+  <td class="border px-2 py-1 text-right" id="taxDonations"></td>
+  <td class="border px-2 py-1 text-right"></td>
+  <td class="border px-2 py-1 text-right" id="closingTaxDonations"></td>
+</tr>
 
-        <tr class="font-bold bg-gray-50">
-          <td class="border px-2 py-1">B. Adjusted (Taxable) Profit</td>
-          <td class="border px-2 py-1"></td>
-          <td class="border px-2 py-1 text-right" id="taxAdjustedProfit"></td>
-        </tr>
+<tr class="font-semibold">
+  <td class="border px-2 py-1 pl-4">Subtotal (Deductions)</td>
+  <td class="border px-2 py-1"></td>
+  <td class="border px-2 py-1 text-right" id="taxDeductions"></td>
+  <td class="border px-2 py-1 text-right" id="closingTaxDeductions"></td>
+</tr>
 
-        <tr>
-          <td class="border px-2 py-1">C. Tax Rate (Corporate Tax @ 30%)</td>
-          <td class="border px-2 py-1 text-right">30%</td>
-          <td class="border px-2 py-1 text-right"></td>
-        </tr>
+<tr class="font-bold bg-gray-50">
+  <td class="border px-2 py-1">B. Adjusted (Taxable) Profit</td>
+  <td class="border px-2 py-1"></td>
+  <td class="border px-2 py-1 text-right" id="taxAdjustedProfit"></td>
+  <td class="border px-2 py-1 text-right" id="closingTaxAdjustedProfit"></td>
+</tr>
 
-        <tr class="font-semibold">
-          <td class="border px-2 py-1">D. Income Tax Payable</td>
-          <td class="border px-2 py-1 text-right" id="taxPayable"></td>
-          <td class="border px-2 py-1 text-right"></td>
-        </tr>
+<tr>
+  <td class="border px-2 py-1">C. Tax Rate (Corporate Tax @ 30%)</td>
+  <td class="border px-2 py-1 text-right">30%</td>
+  <td class="border px-2 py-1 text-right"></td>
+  <td></td>
+</tr>
 
-        <tr>
-          <td class="border px-2 py-1">E. Less: Advance Tax Paid / Withholding Tax</td>
-          <td class="border px-2 py-1 text-right" id="taxAdvance"></td>
-          <td class="border px-2 py-1 text-right"></td>
-        </tr>
+<tr class="font-semibold">
+  <td class="border px-2 py-1">D. Income Tax Payable</td>
+  <td class="border px-2 py-1 text-right" id="taxPayable"></td>
+  <td class="border px-2 py-1 text-right"></td>
+  <td class="border px-2 py-1 text-right" id="closingTaxPayable"></td>
+</tr>
 
-        <tr class="font-bold text-blue-700">
-          <td class="border px-2 py-1">F. Balance Tax Payable / (Refund Due)</td>
-          <td class="border px-2 py-1 text-right"></td>
-          <td class="border px-2 py-1 text-right" id="taxBalance"></td>
-        </tr>
-      </tbody>
+<tr>
+  <td class="border px-2 py-1">E. Less: Advance Tax Paid / Withholding Tax</td>
+  <td class="border px-2 py-1 text-right" id="taxAdvance"></td>
+  <td class="border px-2 py-1 text-right"></td>
+  <td class="border px-2 py-1 text-right" id="closingTaxAdvance"></td>
+</tr>
+
+<tr class="font-bold text-blue-700">
+  <td class="border px-2 py-1">F. Balance Tax Payable / (Refund Due)</td>
+  <td class="border px-2 py-1 text-right"></td>
+  <td class="border px-2 py-1 text-right" id="taxBalance"></td>
+  <td class="border px-2 py-1 text-right" id="closingTaxBalance"></td>
+</tr>
+</tbody>
     </table>
   </div>
 </div>
