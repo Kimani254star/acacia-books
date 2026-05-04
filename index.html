@@ -1170,11 +1170,10 @@ function toggleFAQ(faqId) {
         <p class="text-gray-700 text-sm">Hours Saved</p>
       </div>
 
-    </div>
-  </div>
+
 
 </section>
- </div>
+
   <section id="apps" class="py-10 bg-gray-50 text-center px-10">
 
   <h2 class="text-2xl font-bold text-blue-900 mb-4">Our Apps</h2>
@@ -4956,7 +4955,7 @@ window.addEventListener('DOMContentLoaded', () => {
           <th class="border p-2"><input type="checkbox" onclick="toggleSelectAllPriceList(this)"></th>
           <th class="border p-2">Item</th>
           <th class="border p-2">Selling Price (KES)</th>
-          <th class="border p-2">Cost Price (KES)</th>
+          <th class="border p-2">Buying  Price (KES)</th>
           <th class="border p-2">Effective Date</th>
           <th class="border p-2">Actions</th>
         </tr>
@@ -6684,73 +6683,154 @@ function updatePrice() {
 function renderPriceListTable() {
   const tbody = document.getElementById('priceListTableBody');
   const warehouse = document.getElementById('priceListWarehouseSelect').value;
+
   const priceList = JSON.parse(localStorage.getItem(PRICE_LIST_KEY) || '[]');
 
-  const filtered = warehouse ? priceList.filter(e => e.warehouse === warehouse) : priceList;
+  let inventoryItems = warehouse ? getInventory(warehouse) : getAllInventories();
 
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-500">No price list entries.</td></tr>`;
+  const merged = inventoryItems.map(item => {
+    const key = item.sku || item.name;
+
+    const priceEntry = priceList.find(p =>
+      p.item === key &&
+      p.warehouse === warehouse
+    );
+
+    return {
+      warehouse,
+      item: key,
+      name: item.name,
+      sellingPrice: priceEntry ? priceEntry.sellingPrice : item.sellPrice || 0,
+      costPrice: priceEntry ? priceEntry.costPrice : item.buyPrice || 0,
+      effectiveDate: priceEntry ? priceEntry.effectiveDate : "",
+      history: priceEntry?.history || []
+    };
+  });
+
+  if (merged.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-gray-500">No items found.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map((entry, index) => `
+  tbody.innerHTML = merged.map((entry, index) => `
     <tr>
-      <td class="border p-2"><input type="checkbox" class="priceCheckbox" onchange="togglePriceBulkButton()"></td>
-      <td>${entry.item}</td>
+      <td><input type="checkbox" class="priceCheckbox"></td>
+      <td>${entry.name}</td>
       <td>KSh ${entry.sellingPrice.toFixed(2)}</td>
       <td>KSh ${entry.costPrice.toFixed(2)}</td>
-      <td>${new Date(entry.effectiveDate).toLocaleDateString()}</td>
+      <td>${entry.effectiveDate ? new Date(entry.effectiveDate).toLocaleDateString() : "-"}</td>
       <td>
-        <button onclick="editPrice(${index}, '${entry.warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-1">Edit</button>
-        <button onclick="deletePrice(${index}, '${entry.warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-1">Delete</button>
-        <button onclick="previewPrice(${index}, '${entry.warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-1">Preview</button>
+        <button onclick="editPriceMerged('${entry.item}', '${entry.warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-1">Edit</button>
+        <button onclick="deletePriceMerged('${entry.item}', '${entry.warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-1">Delete</button>
+        <button onclick="togglePriceHistory('${entry.item}', '${entry.warehouse}', ${index})" class="bg-blue-900 text-white px-1 py-1 rounded">History</button>
       </td>
+    </tr>
+
+    <!-- ✅ THIS IS THE MISSING HISTORY ROW -->
+    <tr id="priceHistoryRow-${entry.item}-${index}" style="display:none">
+      <td colspan="6"></td>
     </tr>
   `).join('');
 }
 
-function editPrice(index, warehouse) {
+function editPriceMerged(itemKey, warehouse) {
   const priceList = JSON.parse(localStorage.getItem(PRICE_LIST_KEY) || '[]');
-  const filtered = priceList.filter(e => e.warehouse === warehouse);
-  const entry = filtered[index];
-  if (!entry) return;
+  const entry = priceList.find(e => e.item === itemKey && e.warehouse === warehouse);
 
   document.getElementById('priceListWarehouseSelect').value = warehouse;
-  document.getElementById('priceItem').value = entry.item;
-  document.getElementById('newSellingPrice').value = entry.sellingPrice;
-  document.getElementById('newCostPrice').value = entry.costPrice;
-  document.getElementById('effectiveDate').value = entry.effectiveDate;
+  document.getElementById('priceItem').value = itemKey;
 
-  renderPriceListTable();
+  if (entry) {
+    document.getElementById('newSellingPrice').value = entry.sellingPrice;
+    document.getElementById('newCostPrice').value = entry.costPrice;
+    document.getElementById('effectiveDate').value = entry.effectiveDate;
+  } else {
+
+    const inventory = getInventory(warehouse);
+    const item = inventory.find(i => i.sku === itemKey || i.name === itemKey);
+
+    if (item) {
+      document.getElementById('newSellingPrice').value = item.sellPrice || 0;
+      document.getElementById('newCostPrice').value = item.buyPrice || 0;
+    }
+
+    document.getElementById('effectiveDate').value = "";
+  }
 }
-function deletePrice(index, warehouse) {
+function deletePriceMerged(itemKey, warehouse) {
   let priceList = JSON.parse(localStorage.getItem(PRICE_LIST_KEY) || '[]');
-  const filtered = priceList.filter(e => e.warehouse === warehouse);
-  const entry = filtered[index];
-  if (!entry) return;
 
-  if (!confirm(`Delete price for "${entry.item}" in ${warehouse}?`)) return;
+  const exists = priceList.some(e => e.item === itemKey && e.warehouse === warehouse);
 
+  if (!exists) {
+    alert("No price record to delete.");
+    return;
+  }
+
+  if (!confirm(`Delete price for "${itemKey}" in ${warehouse}?`)) return;
+
+  priceList = priceList.filter(e => !(e.item === itemKey && e.warehouse === warehouse));
+  localStorage.setItem(PRICE_LIST_KEY, JSON.stringify(priceList));
+
+ 
   let inventory = getInventory(warehouse);
-  const itemIndex = inventory.findIndex(i => i.sku === entry.item || i.name === entry.item);
+  const index = inventory.findIndex(i => i.sku === itemKey || i.name === itemKey);
 
-  if (itemIndex !== -1) {
-    inventory[itemIndex].sellPrice = 0;
-    inventory[itemIndex].buyPrice = 0;
+  if (index !== -1) {
+    inventory[index].sellPrice = 0;
+    inventory[index].buyPrice = 0;
     localStorage.setItem(`inventory_${warehouse}`, JSON.stringify(inventory));
   }
 
-  priceList = priceList.filter(e => !(e.warehouse === warehouse && e.item === entry.item));
-  localStorage.setItem(PRICE_LIST_KEY, JSON.stringify(priceList));
-
-  populatePriceListItemDropdown(warehouse);
   renderPriceListTable();
+  renderInventoryTable();
 
-  if (typeof renderInventoryTable === "function") {
-    renderInventoryTable();
+  alert("Price deleted successfully.");
+}
+function togglePriceHistory(itemKey, warehouse, index) {
+  const row = document.getElementById(`priceHistoryRow-${itemKey}-${index}`);
+  if (!row) return;
+
+  const isHidden = row.style.display === "none";
+
+  document.querySelectorAll("[id^='priceHistoryRow']").forEach(r => r.style.display = "none");
+
+  if (!isHidden) return;
+
+  row.style.display = "table-row";
+
+  const priceList = JSON.parse(localStorage.getItem(PRICE_LIST_KEY) || '[]');
+  const entry = priceList.find(e => e.item === itemKey && e.warehouse === warehouse);
+
+  if (!entry || !entry.history || entry.history.length === 0) {
+    row.querySelector("td").innerHTML = `<p class="text-center p-2 text-gray-500">No price history.</p>`;
+    return;
   }
 
-  alert("Price deleted and inventory updated.");
+  const historyHtml = `
+    <table class="w-full border mt-2">
+      <thead>
+        <tr class="bg-gray-200 border-b">
+          <th class="p-2">Date</th>
+          <th class="p-2">Selling Price</th>
+          <th class="p-2">Cost Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${entry.history
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .map(h => `
+            <tr class="border-b">
+              <td class="p-2">${new Date(h.date).toLocaleDateString()}</td>
+              <td class="p-2">KSh ${h.sellingPrice.toFixed(2)}</td>
+              <td class="p-2">KSh ${h.costPrice.toFixed(2)}</td>
+            </tr>
+          `).join('')}
+      </tbody>
+    </table>
+  `;
+
+  row.querySelector("td").innerHTML = historyHtml;
 }
 function togglePriceBulkButton() {
   const checked = document.querySelectorAll(".priceCheckbox:checked");
