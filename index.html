@@ -12,7 +12,7 @@
 <style>
 
   * {
-    font-family: 'Cambria', serif !important;
+    font-family: 'Comic Sans MS', serif !important;
     font-style: normal !important;
     font-weight: normal !important;
   }
@@ -22,7 +22,7 @@
   }
 
   input, select, textarea, button, ::placeholder {
-    font-family: 'Cambria', serif !important;
+    font-family: 'Comic Sans MS', serif !important;
   }
   
   body {
@@ -5317,6 +5317,8 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
 </div> 
 </div>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>const WAREHOUSES = [""];
 
 function searchInventory() {
@@ -5919,39 +5921,121 @@ function toggleInventoryDropdownVisibility() {
 }
 
 function exportInventoryExcel() {
-  const warehouse = document.getElementById('warehouseSelect').value;
-  if (!warehouse) return alert('Please select a warehouse first.');
-  const items = getInventory(warehouse);
-  if (!items || items.length === 0) return alert('No items to export.');
-  const worksheet = XLSX.utils.json_to_sheet(items);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, warehouse);
-  XLSX.writeFile(workbook, `${warehouse}_inventory.xlsx`);
-  alert('✅ Excel file exported successfully!');
-}
+  try {
+    console.log("Export started...");
 
+    const warehouse = document.getElementById('warehouseSelect').value;
+    console.log("Warehouse:", warehouse);
+
+    if (!warehouse) return alert('Please select a warehouse first.');
+
+    const items = getInventory(warehouse);
+    console.log("Items:", items);
+
+    if (!items || items.length === 0) return alert('No items to export.');
+
+    if (typeof XLSX === "undefined") {
+      return alert("❌ XLSX library not loaded");
+    }
+
+    const cleanItems = items.map(item => ({
+      name: item.name || "",
+      sku: item.sku || "",
+      qty: Number(item.qty || 0),
+      buyPrice: Number(item.buyPrice || 0),
+      sellPrice: Number(item.sellPrice || 0),
+      buyVat: item.buyVat || "",
+      sellVat: item.sellVat || ""
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(cleanItems);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, warehouse);
+
+    XLSX.writeFile(workbook, `${warehouse}_inventory.xlsx`);
+
+    alert('✅ Excel file exported successfully!');
+  } catch (err) {
+    console.error("EXPORT ERROR:", err);
+    alert("❌ Export failed. Check console.");
+  }
+}
 function importInventoryExcel(event) {
   const warehouse = document.getElementById('warehouseSelect').value;
   if (!warehouse) return alert('Please select a warehouse first.');
+
   const file = event.target.files[0];
   if (!file) return;
+
+  console.log("File:", file.name, file.size);
+
   const reader = new FileReader();
-  reader.onload = function(e) {
+
+  reader.onload = function (e) {
     try {
       const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const items = XLSX.utils.sheet_to_json(firstSheet);
-      if (!Array.isArray(items)) return alert('Invalid Excel format.');
+
+      const workbook = XLSX.read(data, {
+        type: "array",
+        cellDates: true,
+        WTF: true
+      });
+
+      console.log("Workbook:", workbook);
+
+      if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+        throw new Error("No sheets found in Excel file");
+      }
+
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+
+      if (!sheet) {
+        throw new Error("Sheet is empty or unreadable");
+      }
+
+      let items = XLSX.utils.sheet_to_json(sheet, {
+        defval: ""
+      });
+
+      console.log("Parsed items:", items);
+
+      if (!items.length) {
+        throw new Error("No data found in sheet");
+      }
+
+      items = items.map(i => ({
+        name: i.name || "",
+        sku: i.sku || "",
+        qty: Number(i.qty || 0),
+        buyPrice: Number(i.buyPrice || 0),
+        sellPrice: Number(i.sellPrice || 0),
+        buyVat: i.buyVat || "",
+        sellVat: i.sellVat || "",
+        active: true,
+        history: []
+      }));
+
       saveInventory(warehouse, items);
       renderInventoryTable();
-      alert('✅ Excel data imported successfully!');
+
+      alert("✅ Import successful!");
     } catch (err) {
-      console.error(err);
-      alert('❌ Error reading Excel file.');
+      console.error("FULL IMPORT ERROR:", err);
+      alert("❌ Import failed. Check console for details.");
     }
   };
+
+  reader.onerror = function () {
+    console.error("FileReader error");
+    alert("❌ Could not read file.");
+  };
+
   reader.readAsArrayBuffer(file);
+}
+function saveInventory(warehouse, items) {
+  localStorage.setItem(`inventory_${warehouse}`, JSON.stringify(items));
 }
 
 function resetInventoryTable() { renderInventoryTable(); }
@@ -8357,7 +8441,35 @@ window.addEventListener('click',function(e){
  <!-- BANK MODULE -->
 <div id="fundsTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-2xl font-bold mb-3 text-left">Bank Accounts</h2>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
 
+  <div class="bg-blue-50 p-4 rounded shadow">
+    <p class="text-sm text-gray-500">Total Balance</p>
+    <h3 id="totalBankBalance" class="text-xl font-bold">KES 0.00</h3>
+  </div>
+
+  <div class="bg-green-50 p-4 rounded shadow">
+    <p class="text-sm text-gray-500">Total Inflow</p>
+    <h3 id="totalInflow" class="text-xl font-bold">KES 0.00</h3>
+  </div>
+
+  <div class="bg-red-50 p-4 rounded shadow">
+    <p class="text-sm text-gray-500">Total Outflow</p>
+    <h3 id="totalOutflow" class="text-xl font-bold">KES 0.00</h3>
+  </div>
+
+  <div class="bg-yellow-50 p-4 rounded shadow">
+    <p class="text-sm text-gray-500">Net Position</p>
+    <h3 id="netPosition" class="text-xl font-bold">KES 0.00</h3>
+  </div>
+</div>
+<div class="bg-white p-2 rounded shadow mb-4">
+  <h3 class="text-sm font-semibold mb-2">Bank Balance Overview</h3>
+
+  <div style="height:360px;">
+    <canvas id="bankChart"></canvas>
+  </div>
+</div>
 <div class="bg-white p-2 rounded shadow mb-3">
 
   <div class="mb-4">
@@ -8479,6 +8591,7 @@ window.addEventListener('click',function(e){
       <tbody id="draftTable"></tbody>
     </table>
   </div>
+ 
   <div class="bg-white p-1 rounded shadow mb-6">
     <h3 class="text-lg font-semibold mb-4">Bank List</h3>
     <table class="w-full text-sm border">
@@ -8644,6 +8757,17 @@ window.addEventListener('click',function(e){
 <div class="bg-white p-2 rounded shadow mb-6">
   <h3 class="text-lg font-semibold mb-4">Manual Transactions</h3>
   <button onclick="bulkDeleteManualTransactions()" class="bg-blue-900 hover:bg-red-700 text-white px-1 py-1 rounded text-sm">Bulk Delete</button>
+   <div class="flex gap-2 mb-2">
+   
+    <button onclick="document.getElementById('manualImportFile').click()" class="bg-blue-900 hover:bg-green-800 text-white px-2 py-1 rounded text-sm">
+      Import CSV
+    </button>
+
+    <button onclick="exportManualTransactions()" class="bg-blue-900 hover:bg-blue-800 text-white px-2 py-1 rounded text-sm">
+      Export CSV
+    </button>
+  </div>
+
   <table class="w-full text-sm border">
     <thead class="bg-gray-200">
       <tr>
@@ -8660,202 +8784,686 @@ window.addEventListener('click',function(e){
     <tbody id="manualTransactionLogTable"></tbody>
   </table>
 </div>
+<input
+  type="file"
+  id="manualImportFile"
+  accept=".csv"
+  class="hidden"
+/>
 <!-- BANK TRNASFER-->
-<div class="bg-white p-2 rounded shadow mb-6">
-  <h3 class="text-lg font-semibold mb-4">Transfer Between Accounts</h3>
+<div class="bg-white p-6 rounded-xl shadow mb-6">
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-
-    <div>
-      <label for="fromBankDropdown" class="block font-semibold mb-1">From Bank</label>
-      <select id="fromBankDropdown" class="border p-2 rounded" style="width: 100%;" onchange="checkExchangeRateVisibility()">
-        <option value="">Select From Bank</option>
-      </select>
-    </div>
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 
     <div>
-      <label for="toBankDropdown" class="block font-semibold mb-1">To Bank</label>
-      <select id="toBankDropdown" class="border p-2 rounded" style="width: 100%;" onchange="checkExchangeRateVisibility()">
-        <option value="">Select To Bank</option>
-      </select>
-    </div>
+      <h3 class="text-2xl font-bold text-gray-800">
+        Transfer Between Accounts
+      </h3>
 
-    <div class="sm:col-span-2">
-      <label for="transferAccountDropdown" class="block font-semibold mb-1">Chart of Account</label>
-      <select id="transferAccountDropdown" class="border p-2 rounded" style="width: 100%;">
-        <option value="">Select Account</option>
-      </select>
-    </div>
-    <div id="customerSelectBox" class="hidden mb-4">
-  <label class="block font-semibold mb-1">Select Customer</label>
-  <select id="customerSelect" class="border p-2 rounded w-full"></select>
-</div>
-
-<div id="vendorSelectBox" class="hidden mb-4">
-  <label class="block font-semibold mb-1">Select Vendor</label>
-  <select id="vendorSelect" class="border p-2 rounded w-full"></select>
-</div>
-    <div>
-      <label for="transferDate" class="block font-semibold mb-1">Transfer Date</label>
-      <input id="transferDate" type="date" class="border p-2 rounded" style="width: 100%;" />
-    </div>
-    <div>
-      <label for="transferRef" class="block font-semibold mb-1">Reference</label>
-      <input id="transferRef" type="text" placeholder="Reference" class="border p-2 rounded" style="width: 100%;" />
-    </div>
-
-    <div class="sm:col-span-2">
-      <input id="transferAmount" type="number" placeholder="Amount" class="border p-2 rounded" style="width: 100%;" />
-    </div>
-
-    <div class="sm:col-span-2">
-      <label for="paymentMode" class="block font-semibold mb-1">Mode of Payment:</label>
-      <select id="paymentMode" class="border p-2 rounded" style="width: 100%;">
-        <option value="Bank Remittance">Bank Remittance</option>
-        <option value="Bank Transfer">Bank Transfer</option>
-        <option value="Cash">Cash</option>
-        <option value="Cheque">Cheque</option>
-        <option value="Credit Card">Credit Card</option>
-        <option value="Debit Card">Debit Card</option>
-        <option value="M-Pesa">M-Pesa</option>
-        <option value="Airtel Money">Airtel Money</option>
-        <option value="T-Kash">T-Kash</option>
-        <option value="Online Payment / Payment Gateway">Online Payment / Payment Gateway</option>
-        <option value="Standing Order">Standing Order</option>
-        <option value="Direct Debit">Direct Debit</option>
-        <option value="Withholding Tax">Withholding Tax</option>
-        <option value="Withholding VAT">Withholding VAT</option>
-        <option value="Write-off">Write-off</option>
-        <option value="Mobile Banking">Mobile Banking</option>
-        <option value="Demand Draft">Demand Draft</option>
-        <option value="Electronic Funds Transfer (EFT)">Electronic Funds Transfer (EFT)</option>
-        <option value="RTGS / SWIFT Transfer">RTGS / SWIFT Transfer</option>
-        <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
-      </select>
-    </div>
-
-    <div id="exchangeRateContainer" class="sm:col-span-2 hidden">
-      <label for="exchangeRate" class="block font-semibold mb-1">Exchange Rate:</label>
-      <input id="exchangeRate" type="number" step="0.0001" placeholder="Enter exchange rate" class="border p-2 rounded" style="width: 100%;" />
-      <p class="text-xs text-gray-500 mt-1">
-        * Only required when transferring between banks with different currencies.
+      <p class="text-sm text-gray-500">
+        Move funds between bank and cash accounts
       </p>
     </div>
 
+    <div class="flex gap-2">
+
+      <button
+        type="button"
+        onclick="document.getElementById('transferImportFile').click()"
+        class="bg-blue-900 text-white px-1 py-1 rounded-lg hover:bg-green-800"
+      >
+        Import Transfers
+      </button>
+
+      <button
+        type="button"
+        onclick="exportTransferLog()"
+        class="bg-blue-900 text-white px-1 py-1 rounded-lg hover:bg-green-800"
+      >
+        Export CSV
+      </button>
+
+    </div>
+
   </div>
 
-  <button type="button" onclick="transferBetweenBanks()" class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">Transfer</button>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+    <div>
+
+      <label class="block text-sm font-semibold text-gray-700 mb-1">
+        From Bank
+      </label>
+
+      <select
+        id="fromBankDropdown"
+        class="w-full border rounded-lg p-2.5"
+        onchange="checkExchangeRateVisibility()"
+      >
+        <option value="">Select From Bank</option>
+      </select>
+
+    </div>
+
+    <div>
+
+      <label class="block text-sm font-semibold text-gray-700 mb-1">
+        To Bank
+      </label>
+
+      <select
+        id="toBankDropdown"
+        class="w-full border rounded-lg p-2.5"
+        onchange="checkExchangeRateVisibility()"
+      >
+        <option value="">Select To Bank</option>
+      </select>
+
+    </div>
+
+    <div class="md:col-span-2">
+
+      <label class="block text-sm font-semibold text-gray-700 mb-1">
+        Chart Of Account
+      </label>
+
+      <select
+        id="transferAccountDropdown"
+        class="w-full border rounded-lg p-2.5"
+      >
+        <option value="">Select Account</option>
+      </select>
+
+    </div>
+
+    <div>
+
+      <label class="block text-sm font-semibold text-gray-700 mb-1">
+        Transfer Date
+      </label>
+
+      <input
+        id="transferDate"
+        type="date"
+        class="w-full border rounded-lg p-2.5"
+      />
+
+    </div>
+
+    <div>
+
+      <label class="block text-sm font-semibold text-gray-700 mb-1">
+        Reference
+      </label>
+
+      <input
+        id="transferRef"
+        type="text"
+        placeholder="Transfer reference"
+        class="w-full border rounded-lg p-2.5"
+      />
+
+    </div>
+
+    <div>
+
+      <label class="block text-sm font-semibold text-gray-700 mb-1">
+        Amount
+      </label>
+
+      <input
+        id="transferAmount"
+        type="number"
+        placeholder="0.00"
+        class="w-full border rounded-lg p-2.5"
+      />
+
+    </div>
+
+    <div>
+
+      <label class="block text-sm font-semibold text-gray-700 mb-1">
+        Payment Mode
+      </label>
+
+      <select
+        id="paymentMode"
+        class="w-full border rounded-lg p-2.5"
+      >
+
+        <option value="Bank Transfer">
+          Bank Transfer
+        </option>
+
+        <option value="Bank Remittance">
+          Bank Remittance
+        </option>
+
+        <option value="Cash">
+          Cash
+        </option>
+
+        <option value="Cheque">
+          Cheque
+        </option>
+
+        <option value="Credit Card">
+          Credit Card
+        </option>
+
+        <option value="Debit Card">
+          Debit Card
+        </option>
+
+        <option value="M-Pesa">
+          M-Pesa
+        </option>
+
+        <option value="Airtel Money">
+          Airtel Money
+        </option>
+
+        <option value="RTGS / SWIFT Transfer">
+          RTGS / SWIFT Transfer
+        </option>
+
+        <option value="Electronic Funds Transfer (EFT)">
+          Electronic Funds Transfer (EFT)
+        </option>
+
+      </select>
+
+    </div>
+
+    <div
+      id="exchangeRateContainer"
+      class="md:col-span-2 hidden"
+    >
+
+      <label class="block text-sm font-semibold text-gray-700 mb-1">
+        Exchange Rate
+      </label>
+
+      <input
+        id="exchangeRate"
+        type="number"
+        step="0.0001"
+        placeholder="Enter exchange rate"
+        class="w-full border rounded-lg p-2.5"
+      />
+
+      <p class="text-xs text-gray-500 mt-1">
+        Required when transferring between different currencies
+      </p>
+
+    </div>
+
+    <div
+      id="customerSelectBox"
+      class="hidden md:col-span-2"
+    >
+
+      <label class="block text-sm font-semibold text-gray-700 mb-1">
+        Customer
+      </label>
+
+      <select
+        id="customerSelect"
+        class="w-full border rounded-lg p-2.5"
+      ></select>
+
+    </div>
+
+    <div
+      id="vendorSelectBox"
+      class="hidden md:col-span-2"
+    >
+
+      <label class="block text-sm font-semibold text-gray-700 mb-1">
+        Vendor
+      </label>
+
+      <select
+        id="vendorSelect"
+        class="w-full border rounded-lg p-2.5"
+      ></select>
+
+    </div>
+
+  </div>
+
+  <div class="flex flex-wrap gap-3 mt-6">
+
+    <button
+      type="button"
+      onclick="transferBetweenBanks()"
+      class="bg-blue-900 text-white px-5 py-2.5 rounded-lg hover:bg-blue-800"
+    >
+      Save Transfer
+    </button>
+
+    <button
+      type="button"
+      onclick="clearTransferForm()"
+      class="bg-gray-500 text-white px-5 py-2.5 rounded-lg hover:bg-gray-600"
+    >
+      Clear
+    </button>
+
+  </div>
+
 </div>
 
-<div class="bg-white p-2 rounded shadow">
-  <h3 class="text-lg font-semibold mb-4">Transfer Log</h3>
+<div class="bg-white p-6 rounded-xl shadow">
+
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+
+    <div>
+
+      <h3 class="text-xl font-bold text-gray-800">
+        Transfer Log
+      </h3>
+
+      <p class="text-sm text-gray-500">
+        History of all account transfers
+      </p>
+
+    </div>
+
+    <div class="flex gap-2">
+
+      <input
+        id="transferSearch"
+        type="text"
+        placeholder="Search transfer..."
+        class="border rounded-lg px-3 py-2 text-sm"
+      />
+
+    </div>
+
+  </div>
 
   <div class="overflow-x-auto">
-    <table class="min-w-full border border-gray-300 text-sm">
+
+    <table class="min-w-full border-collapse text-sm">
+
       <thead class="bg-gray-100">
+
         <tr>
-          <th class="px-2 py-1 border">Date</th>
-          <th class="px-2 py-1 border">From Bank</th>
-          <th class="px-2 py-1 border">To Bank</th>
-          <th class="px-2 py-1 border">Account</th>
-          <th class="px-2 py-1 border text-right">Amount</th>
-          <th class="px-2 py-1 border">Reference</th>
-          <th class="px-2 py-1 border">Exchange Rate</th>
-          <th class="px-2 py-1 border text-center">Actions</th>
+
+          <th class="border px-3 py-3 text-left">
+            Date
+          </th>
+
+          <th class="border px-3 py-3 text-left">
+            From Bank
+          </th>
+
+          <th class="border px-3 py-3 text-left">
+            To Bank
+          </th>
+
+          <th class="border px-3 py-3 text-left">
+            Account
+          </th>
+
+          <th class="border px-3 py-3 text-right">
+            Amount
+          </th>
+
+          <th class="border px-3 py-3 text-left">
+            Reference
+          </th>
+
+          <th class="border px-3 py-3 text-right">
+            Exchange Rate
+          </th>
+
+          <th class="border px-3 py-3 text-center">
+            Status
+          </th>
+
+          <th class="border px-3 py-3 text-center">
+            Actions
+          </th>
+
         </tr>
+
       </thead>
+
       <tbody id="transferLogTable"></tbody>
+
     </table>
+
   </div>
+
 </div>
+
+<input
+  type="file"
+  id="transferImportFile"
+  accept=".csv"
+  class="hidden"
+/>
 <!-- BANK RECONCILE-->
-<div class="bg-white p-4 rounded shadow mb-6">
-  <h3 class="text-lg font-semibold mb-4">Reconcile </h3>
+<div class="bg-white p-6 rounded-xl shadow mb-6">
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-    <select id="reconcileBank" class="border p-2 rounded">
-      <option value="">Select Bank</option>
-    </select>
-    <input id="statementBalance" type="number" placeholder="Statement Balance" class="border p-2 rounded" />
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+    <div>
+      <h3 class="text-2xl font-bold text-gray-800">Bank Reconciliation</h3>
+      <p class="text-sm text-gray-500">Match your book transactions with bank statement records</p>
+    </div>
+
+    <div class="flex gap-2">
+      <button class="bg-blue-900 text-white px-1 py-1 rounded-lg hover:bg-blue-800">
+        Import Statement
+      </button>
+
+      <button class="bg-gray-200 text-gray-700 px-1 py-1 rounded-lg hover:bg-gray-300">
+        Refresh
+      </button>
+    </div>
   </div>
 
-  <div class="mb-4">
-    <input id="reconcileDate" type="date" class="border p-2 rounded" style="width: 700px;" />
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        Bank Account
+      </label>
+
+      <select id="reconcileBank" class="w-full border rounded-lg p-2.5">
+        <option value="">Select Bank</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        Statement Date
+      </label>
+
+      <input
+        id="reconcileDate"
+        type="date"
+        class="w-full border rounded-lg p-2.5"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        Statement Balance
+      </label>
+
+      <input
+        id="statementBalance"
+        type="number"
+        placeholder="0.00"
+        class="w-full border rounded-lg p-2.5"
+      />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        Filter
+      </label>
+
+      <select id="filterStatus" class="w-full border rounded-lg p-2.5">
+        <option value="all">All Transactions</option>
+        <option value="matched">Matched</option>
+        <option value="unmatched">Unmatched</option>
+        <option value="reconciled">Reconciled</option>
+      </select>
+    </div>
+
   </div>
 
-  <div class="overflow-x-auto mb-4" style="font-family: 'Times New Roman', Times, serif;">
-    <table class="w-full border-collapse border">
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="border px-1 py-1">Date</th>
-          <th class="border px-1 py-1">Type</th>
-          <th class="border px-1 py-1">Debit</th>
-          <th class="border px-1 py-1">Credit</th>
-          <th class="border px-1 py-1">Select</th>
-        </tr>
-      </thead>
-      <tbody id="reconciliationTableBody"></tbody>
-    </table>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+
+    <div class="bg-blue-50 p-4 rounded-xl border">
+      <p class="text-sm text-gray-500 mb-1">Bank Balance</p>
+      <h4 id="bankBalance" class="text-xl font-bold text-blue-900">
+        KES 0.00
+      </h4>
+    </div>
+
+    <div class="bg-green-50 p-4 rounded-xl border">
+      <p class="text-sm text-gray-500 mb-1">Calculated Balance</p>
+      <h4 id="calculatedBalance" class="text-xl font-bold text-green-700">
+        KES 0.00
+      </h4>
+    </div>
+
+    <div class="bg-red-50 p-4 rounded-xl border">
+      <p class="text-sm text-gray-500 mb-1">Difference</p>
+      <h4 id="balanceDifference" class="text-xl font-bold text-red-700">
+        KES 0.00
+      </h4>
+    </div>
+
+    <div class="bg-yellow-50 p-4 rounded-xl border">
+      <p class="text-sm text-gray-500 mb-1">Selected Transactions</p>
+      <h4 id="selectedCount" class="text-xl font-bold text-yellow-700">
+        0
+      </h4>
+    </div>
+
   </div>
-  
-<div class="mb-4 text-sm grid grid-cols-1 gap-1">
-  <p><strong>Bank Balance:</strong> <span id="bankBalance">KES 0.00</span></p>
-  <p><strong>Calculated Balance:</strong> <span id="calculatedBalance">KES 0.00</span></p>
-  <p><strong>Difference:</strong> <span id="balanceDifference">KES 0.00</span></p>
+
+  <div class="bg-gray-50 border rounded-xl overflow-hidden mb-6">
+
+    <div class="flex items-center justify-between px-4 py-3 border-b bg-white">
+      <h4 class="font-semibold text-gray-700">
+        Transactions
+      </h4>
+
+      <div class="flex gap-2">
+        <input
+          id="searchTransactions"
+          type="text"
+          placeholder="Search transaction..."
+          class="border rounded-lg px-3 py-2 text-sm"
+        />
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+
+      <table class="w-full text-sm border-collapse">
+
+        <thead class="bg-gray-100 text-gray-700">
+
+          <tr>
+
+            <th class="border px-3 py-3 text-center">
+              <input type="checkbox" id="selectAllTransactions">
+            </th>
+
+            <th class="border px-3 py-3 text-left">
+              Date
+            </th>
+
+            <th class="border px-3 py-3 text-left">
+              Reference
+            </th>
+
+            <th class="border px-3 py-3 text-left">
+              Description
+            </th>
+
+            <th class="border px-3 py-3 text-left">
+              Type
+            </th>
+
+            <th class="border px-3 py-3 text-right">
+              Debit
+            </th>
+
+            <th class="border px-3 py-3 text-right">
+              Credit
+            </th>
+
+            <th class="border px-3 py-3 text-right">
+              Running Balance
+            </th>
+
+            <th class="border px-3 py-3 text-center">
+              Status
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="reconciliationTableBody" class="bg-white"></tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+  <div class="flex flex-wrap gap-3">
+
+    <button
+      onclick="reconcileBankAccount()"
+      class="bg-blue-900 text-white px-1 py-1 rounded-lg hover:bg-blue-800"
+    >
+      Reconcile
+    </button>
+
+    <button
+      onclick="saveReconcileLater()"
+      class="bg-blue-900 text-white px-1 py-1 rounded-lg hover:bg-blue-800"
+    >
+      Save For Later
+    </button>
+
+    <button
+      onclick="undoReconciliation()"
+      class="bg-blue-900 text-white px-1 py-1 rounded-lg hover:bg-blue-800"
+    >
+      Undo
+    </button>
+
+    <button
+      onclick="exportReconciliationReport()"
+      class="bg-blue-900 text-white px-1 py-1 rounded-lg hover:bg-blue-800"
+    >
+      Export CSV
+    </button>
+
+  </div>
+
 </div>
 
-  <div class="flex flex-wrap gap-2">
-    <button onclick="reconcileBankAccount()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Reconcile</button>
-    <button onclick="saveReconcileLater()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Save & Reconcile Later</button>
-    <button onclick="exportReconciliationReport()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Export Reconciled (CSV)</button>
-  </div>
-</div>
-<div class="bg-white p-4 rounded shadow mt-4">
-  <h4 class="text-md font-semibold mb-2">Reconciled Transactions</h4>
+<div class="bg-white p-6 rounded-xl shadow">
 
-  <button onclick="bulkDeleteTransactions()" class="bg-Blue-900 text-white px-1 py-1 rounded mb-2">Bulk Delete</button>
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+
+    <div>
+      <h4 class="text-xl font-bold text-gray-800">
+        Reconciled Transactions
+      </h4>
+
+      <p class="text-sm text-gray-500">
+        Transactions already reconciled
+      </p>
+    </div>
+
+    <div class="flex gap-2">
+
+      <button
+        onclick="bulkDeleteTransactions()"
+        class="bg-blue-900 text-white px-1 py-1 rounded-lg hover:bg-blue-800"
+      >
+        bulk delete
+      </button>
+
+    </div>
+
+  </div>
 
   <div class="overflow-x-auto">
-    <table class="w-full border-collapse border text-sm">
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="border px-1 py-1"><input type="checkbox" id="selectAllTx"></th>
-          <th class="border px-1 py-1">Date</th>
-          <th class="border px-1 py-1">Bank</th>
-          <th class="border px-1 py-1">Type</th>
-          <th class="border px-1 py-1">Debit</th>
-          <th class="border px-1 py-1">Credit</th>
-          <th class="border px-1 py-1">Actions</th>
+
+    <table class="w-full text-sm border-collapse">
+
+      <thead class="bg-gray-100">
+
+        <tr>
+
+          <th class="border px-3 py-3 text-center">
+            <input type="checkbox" id="selectAllTx">
+          </th>
+
+          <th class="border px-3 py-3 text-left">
+            Reconcile Date
+          </th>
+
+          <th class="border px-3 py-3 text-left">
+            Bank
+          </th>
+
+          <th class="border px-3 py-3 text-left">
+            Reference
+          </th>
+
+          <th class="border px-3 py-3 text-left">
+            Type
+          </th>
+
+          <th class="border px-3 py-3 text-right">
+            Debit
+          </th>
+
+          <th class="border px-3 py-3 text-right">
+            Credit
+          </th>
+
+          <th class="border px-3 py-3 text-center">
+            Actions
+          </th>
+
         </tr>
+
       </thead>
 
       <tbody id="reconciledTransactionTableBody"></tbody>
+
     </table>
+
   </div>
+
 </div>
+
+<input
+  type="file"
+  id="statementUpload"
+  accept=".csv"
+  class="hidden"
+/>
 <!-- BANK MAPPING -->
 <div class="bg-white p-2 rounded shadow mb-6">
   <h3 class="text-lg font-semibold mb-4">Bank Mapping</h3>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-    
+
     <div>
       <label for="mappingBank" class="block font-semibold mb-1">Select Bank:</label>
-      <select id="mappingBank" class="border p-2 rounded" style="width: 700px;">
+      <select id="mappingBank" class="border p-2 rounded w-full">
         <option value="">Select Bank</option>
       </select>
     </div>
 
     <div>
       <label for="mappingAccount" class="block font-semibold mb-1">Map to Ledger Account:</label>
-      <select id="mappingAccount" class="border p-2 rounded" style="width: 700px;">
+      <select id="mappingAccount" class="border p-2 rounded w-full">
         <option value="">Select Account</option>
       </select>
     </div>
 
     <div>
       <label for="autoReconcile" class="block font-semibold mb-1">Auto Reconciliation:</label>
-      <select id="autoReconcile" class="border p-2 rounded" style="width: 700px;">
+      <select id="autoReconcile" class="border p-2 rounded w-full">
         <option value="enabled">Enabled</option>
         <option value="disabled">Disabled</option>
       </select>
@@ -8863,8 +9471,65 @@ window.addEventListener('click',function(e){
 
     <div>
       <label for="mappingRules" class="block font-semibold mb-1">Import Mapping Rules:</label>
-      <input id="mappingRules" type="file" accept=".csv,.xls,.xlsx" class="border p-2 rounded" style="width: 700px;" />
+      <input id="mappingRules" type="file" accept=".csv,.xls,.xlsx"
+             class="border p-2 rounded w-full" />
     </div>
+
+    <div>
+      <label for="transactionDateFormat" class="block font-semibold mb-1">Transaction Date Format:</label>
+      <select id="transactionDateFormat" class="border p-2 rounded w-full">
+        <option value="dd/mm/yyyy">DD/MM/YYYY</option>
+        <option value="mm/dd/yyyy">MM/DD/YYYY</option>
+        <option value="yyyy-mm-dd">YYYY-MM-DD</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="currency" class="block font-semibold mb-1">Default Currency:</label>
+      <select id="currency" class="border p-2 rounded w-full">
+        <option value="KES">KES - Kenyan Shilling</option>
+        <option value="USD">USD - US Dollar</option>
+        <option value="EUR">EUR - Euro</option>
+        <option value="GBP">GBP - British Pound</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="statementFormat" class="block font-semibold mb-1">Bank Statement Format:</label>
+      <select id="statementFormat" class="border p-2 rounded w-full">
+        <option value="csv">CSV</option>
+        <option value="excel">Excel (XLS/XLSX)</option>
+        <option value="pdf">PDF</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="duplicateHandling" class="block font-semibold mb-1">Duplicate Transaction Handling:</label>
+      <select id="duplicateHandling" class="border p-2 rounded w-full">
+        <option value="ignore">Ignore Duplicates</option>
+        <option value="flag">Flag as Warning</option>
+        <option value="allow">Allow Duplicates</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="referencePrefix" class="block font-semibold mb-1">Transaction Reference Prefix:</label>
+      <input id="referencePrefix" type="text"
+             class="border p-2 rounded w-full"
+             placeholder="e.g. BANK-" />
+    </div>
+
+    <div>
+      <label for="lastSync" class="block font-semibold mb-1">Last Sync Date:</label>
+      <input id="lastSync" type="datetime-local"
+             class="border p-2 rounded w-full" />
+    </div>
+
+    <div class="sm:col-span-2">
+      <label for="notes" class="block font-semibold mb-1">Mapping Notes:</label>
+      <textarea id="notes" class="border p-2 rounded w-full" rows="3"></textarea>
+    </div>
+
   </div>
 
   <button onclick="saveBankMapping()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">
@@ -8921,10 +9586,106 @@ window.addEventListener('click',function(e){
 </div>
 <script>
 let banks = JSON.parse(localStorage.getItem("banks")) || [];
+function ensureUndepositedFundsAccount() {
+
+  const exists = banks.some(
+    bank => bank.name === "Undeposited Funds"
+  );
+
+  if (!exists) {
+
+    banks.push({
+      id: "system-undeposited-funds",
+      name: "Undeposited Funds",
+      accountNumber: "SYSTEM",
+      balance: 0,
+      currency: "KES",
+      chartAccount: "Undeposited Funds",
+      system: true
+    });
+
+    localStorage.setItem("banks", JSON.stringify(banks));
+  }
+}
 let exchangeRates = JSON.parse(localStorage.getItem("exchangeRates")) || { USD: 1, EUR: 1 };
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
 let bankDrafts = JSON.parse(localStorage.getItem("bankDrafts")) || [];
+let bankChart;
 
+function renderBankChart() {
+
+  const ctx = document.getElementById("bankChart");
+
+  if (!ctx) return;
+
+  const labels = banks.map(bank => bank.name);
+
+  const balances = banks.map(bank =>
+    parseFloat(bank.balance || 0)
+  );
+
+  if (bankChart) {
+    bankChart.destroy();
+  }
+
+  bankChart = new Chart(ctx, {
+    type: "line",
+
+    data: {
+      labels: labels,
+
+      datasets: [{
+        label: "Bank Balances",
+
+        data: balances,
+
+        borderColor: "#1E3A8A",
+        backgroundColor: "rgba(37,99,235,0.2)",
+
+        fill: true,
+
+        tension: 0.4,
+
+        pointBackgroundColor: "#1E3A8A",
+        pointRadius: 3,
+
+        borderWidth: 2
+      }]
+    },
+
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+
+      scales: {
+
+        x: {
+          ticks: {
+            font: {
+              size: 10
+            }
+          }
+        },
+
+        y: {
+          beginAtZero: true,
+
+          ticks: {
+            font: {
+              size: 10
+            }
+          }
+        }
+      }
+    }
+  });
+}
 function populateChartOfAccounts() {
   const select = document.getElementById("creditAccount");
   select.innerHTML = ""; 
@@ -9050,42 +9811,68 @@ document.addEventListener("DOMContentLoaded", () => {
   renderDraftTable();
 });
 function addBank() {
+
   const name = document.getElementById("bankName").value.trim();
   const accountNumber = document.getElementById("accountNumber").value.trim();
-  const balance = parseFloat(document.getElementById("initialBalance").value);
+  const balanceInput = document.getElementById("initialBalance");
+  const balance = parseFloat(balanceInput.value);
+
   const currency = document.getElementById("bankCurrency").value;
   const chartAccount = document.getElementById("creditAccount").value;
 
   if (!name || !accountNumber || isNaN(balance) || !currency || !chartAccount) {
+
     alert("Please fill all fields and select a Chart of Account");
+
     return;
   }
 
-  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
-  const acc = accounts.find(a => a.name === chartAccount);
-  if (acc) {
-    acc.amount = (acc.amount || 0) + convertToKES(balance, currency); 
-  }
-  localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+  const accounts = JSON.parse(
+    localStorage.getItem("chartOfAccounts") || "[]"
+  );
 
-  banks.push({ 
-    name, 
-    accountNumber, 
-    balance,           
-    currency,       
-    chartAccount 
+  const acc = accounts.find(
+    a => a.name === chartAccount
+  );
+
+  if (acc && name !== "Undeposited Funds") {
+
+    acc.amount = (acc.amount || 0) +
+      convertToKES(balance, currency);
+
+  }
+
+  localStorage.setItem(
+    "chartOfAccounts",
+    JSON.stringify(accounts)
+  );
+
+  banks.push({
+    name,
+    accountNumber,
+    balance,
+    currency,
+    chartAccount
   });
 
-  saveBanks();
-  renderOpeningBalances(); 
+  localStorage.setItem(
+    "banks",
+    JSON.stringify(banks)
+  );
+
+  renderBankTable();
+  updateBankDropdowns();
+  renderBalanceSheet();
+  renderOpeningBalances();
+
+  alert(`Bank added successfully: ${name}`);
 
   document.getElementById("bankName").value = "";
   document.getElementById("accountNumber").value = "";
   document.getElementById("initialBalance").value = "";
   document.getElementById("bankCurrency").value = "KES";
-  document.getElementById("creditAccount").value = "";
+  document.getElementById("creditAccount").selectedIndex = 0;
 
-  alert(`Bank added: ${name} (${currency} ${balance.toFixed(2)})`);
 }
 function renderBankTable() {
   const bankTable = document.getElementById("bankTable");
@@ -9093,25 +9880,97 @@ function renderBankTable() {
 
   banks.forEach((bank, index) => {
     const row = document.createElement("tr");
+
     row.innerHTML = `
-      <td class="px-4 py-2 text-left">${bank.name}</td>
-      <td class="px-4 py-2 text-left">${bank.chartAccount || "-"}</td>
-      <td class="px-4 py-2 text-left">${bank.accountNumber || "-"}</td>
-      <td class="px-4 py-2 text-left">
-  ${bank.currency} ${parseFloat(String(bank.balance).replace(/[^0-9.-]+/g, "") || 0)
-    .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-</td>
-      <td class="px-4 py-2 text-left">
-        <div class="flex gap-2">
-          <button onclick="viewBank(${index})" class="bg-blue-900 text-white w-20 py-1 rounded hover:bg-blue-700">View</button>
-          <button onclick="editBank(${index})" class="bg-blue-900 text-white w-20 py-1 rounded hover:bg-blue-700">Edit</button>
-          <button onclick="deleteBank(${index})" class="bg-blue-900 text-white w-20 py-1 rounded hover:bg-blue-700">Delete</button>
-          <a href="${bank.link || '#'}" target="_blank" class="bg-blue-900 text-white px-1 py-1 w-20 rounded text-center hover:bg-blue-700"> Link</a>
-        </div>
-      </td>
-    `;
+  <td class="px-4 py-2 text-left ${bank.system ? 'bg-yellow-100 font-bold' : ''}">
+    ${bank.name}
+  </td>
+
+  <td class="px-4 py-2 text-left ${bank.system ? 'bg-yellow-100' : ''}">
+    ${bank.chartAccount || "-"}
+  </td>
+
+  <td class="px-4 py-2 text-left ${bank.system ? 'bg-yellow-100' : ''}">
+    ${bank.accountNumber || "-"}
+  </td>
+
+  <td class="px-4 py-2 text-left ${bank.system ? 'bg-yellow-100' : ''}">
+    ${bank.currency}
+    ${parseFloat(
+      String(bank.balance).replace(/[^0-9.-]+/g, "") || 0
+    ).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}
+  </td>
+
+  <td class="px-4 py-2 text-left ${bank.system ? 'bg-yellow-100' : ''}">
+    <div class="flex gap-2">
+
+      <button onclick="viewBank(${index})"
+        class="bg-blue-900 text-white w-20 py-1 rounded hover:bg-blue-700">
+        View
+      </button>
+
+      ${bank.system ? "" : `
+
+        <button onclick="editBank(${index})"
+          class="bg-blue-900 text-white w-20 py-1 rounded hover:bg-blue-700">
+          Edit
+        </button>
+
+        <button onclick="deleteBank(${index})"
+          class="bg-blue-900 text-white w-20 py-1 rounded hover:bg-blue-700">
+          Delete
+        </button>
+
+      `}
+
+      <a href="${bank.link || '#'}"
+        target="_blank"
+        class="bg-blue-900 text-white px-1 py-1 w-20 rounded text-center hover:bg-blue-700">
+        Link
+      </a>
+
+    </div>
+  </td>
+`;
+
     bankTable.appendChild(row);
   });
+   renderBankChart();
+}
+function viewTransactions(index) {
+
+  const bank = banks[index];
+
+  const bankTransactions = transactions.filter(
+    t => t.bank === bank.name
+  );
+
+  let message = `Transactions for ${bank.name}\n\n`;
+
+  if (bankTransactions.length === 0) {
+
+    message += "No transactions found.";
+
+  } else {
+
+    bankTransactions.forEach(t => {
+
+      message += `
+Date: ${t.date || "-"}
+Type: ${t.type || "-"}
+Amount: ${t.amount || 0}
+Description: ${t.description || "-"}
+-------------------------
+`;
+
+    });
+
+  }
+
+  alert(message);
 }
 function updateBankDropdowns() {
   const ids = ["fromBank", "toBank", "manualBank", "expenseBank", "reconcileBank"];
@@ -9325,12 +10184,119 @@ function deleteBank(index) {
 
   alert("♻️ Bank moved to Recycle Bin.");
 }
+function updateBankSummary() {
+
+ 
+  transactions = JSON.parse(
+    localStorage.getItem("transactions")
+  ) || [];
+
+  let totalInflow = 0;
+  let totalOutflow = 0;
+
+  transactions.forEach(t => {
+
+    const amount = parseFloat(t.amount) || 0;
+
+    const type = String(t.type || "")
+      .trim()
+      .toLowerCase();
+
+    if (
+      type.includes("customer payment") ||
+      type.includes("income") ||
+      type.includes("loan received") ||
+      type.includes("capital") ||
+      type.includes("refund") ||
+      type.includes("sales") ||
+      type.includes("deposit") ||
+      type.includes("advance")
+    ) {
+
+      totalInflow += amount;
+
+    }
+
+    else if (
+      type.includes("expense") ||
+      type.includes("vendor payment") ||
+      type.includes("salary") ||
+      type.includes("tax") ||
+      type.includes("rent") ||
+      type.includes("bank charges") ||
+      type.includes("asset purchase") ||
+      type.includes("withdraw") ||
+      type.includes("payment")
+    ) {
+
+      totalOutflow += amount;
+
+    }
+
+  });
+
+  let totalBalance = 0;
+
+  banks.forEach(bank => {
+    totalBalance += parseFloat(bank.balance || 0);
+  });
+
+  const net = totalInflow - totalOutflow;
+
+  const totalBalanceEl = document.getElementById("totalBalance");
+  const totalInflowEl = document.getElementById("totalInflow");
+  const totalOutflowEl = document.getElementById("totalOutflow");
+  const netPositionEl = document.getElementById("netPosition");
+
+  if (totalBalanceEl) {
+    totalBalanceEl.textContent =
+      `KES ${totalBalance.toLocaleString(undefined, {
+        minimumFractionDigits: 2
+      })}`;
+  }
+
+  if (totalInflowEl) {
+    totalInflowEl.textContent =
+      `KES ${totalInflow.toLocaleString(undefined, {
+        minimumFractionDigits: 2
+      })}`;
+  }
+
+  if (totalOutflowEl) {
+    totalOutflowEl.textContent =
+      `KES ${totalOutflow.toLocaleString(undefined, {
+        minimumFractionDigits: 2
+      })}`;
+  }
+
+  if (netPositionEl) {
+    netPositionEl.textContent =
+      `KES ${net.toLocaleString(undefined, {
+        minimumFractionDigits: 2
+      })}`;
+  }
+
+  console.log("Bank Summary Updated", {
+    totalBalance,
+    totalInflow,
+    totalOutflow,
+    net
+  });
+
+}
 document.addEventListener("DOMContentLoaded", () => {
+
+  ensureUndepositedFundsAccount();
+
   renderBankTable();
+   renderBankChart();         
+  renderDraftTable();
   updateBankDropdowns();
   populateChartOfAccounts();
-  renderBalanceSheet(); 
+  renderBalanceSheet();
   renderOpeningBalances();
+    updateBankSummary();
+
 });
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -9472,43 +10438,64 @@ function manualTransaction() {
   renderManualTransactions();
   if (typeof renderBankTable === "function") renderBankTable();
   clearManualTxForm();
+  updateBankSummary();
 }
 
-function renderManualTransactions() {
+function renderManualTransactions(filterBank = "") {
   let transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
   const table = document.getElementById("manualTransactionLogTable");
   table.innerHTML = "";
 
-  transactions.forEach((tx, index) => {
+  if (filterBank) {
+    transactions = transactions.filter(tx => tx.bank === filterBank);
+  }
+
+  transactions.forEach(tx => {
     const row = document.createElement("tr");
+
     row.innerHTML = `
-      <td class="px-2 py-1"><input type="checkbox" class="manual-checkbox" data-index="${index}"></td>
+      <td class="px-2 py-1">
+        <input type="checkbox" class="manual-checkbox" data-id="${tx.id}">
+      </td>
+
       <td class="px-2 py-1">${tx.date}</td>
       <td class="px-2 py-1">${tx.bank}</td>
       <td class="px-2 py-1">${tx.type}</td>
       <td class="px-2 py-1">${tx.account} (${tx.code})</td>
+
       <td class="px-2 py-1 text-right">
-  ${parseFloat(String(tx.amount).replace(/[^0-9.-]+/g, "") || 0)
-    .toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })}
-</td>
+        ${parseFloat(String(tx.amount).replace(/[^0-9.-]+/g, "") || 0)
+          .toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })}
+      </td>
+
       <td class="px-2 py-1">${tx.ref}</td>
+
       <td class="px-2 py-1">
-        <button onclick="editManualTransaction(${index})" class="bg-blue-900 text-white w-10 py-1 rounded hover:bg-blue-700">Edit</button>
-        <button onclick="deleteManualTransaction(${index})" class="bg-blue-900 text-white w-10 py-1 rounded hover:bg-blue-700">Delete</button>
-        <button onclick="previewManualTransaction(${index})" class="bg-blue-900 text-white w-10 py-1 rounded hover:bg-blue-700">View</button>
-        <button onclick="attachFile(${index})" class="bg-blue-900 text-white w-10 py-1 rounded hover:bg-blue-700">Attach</button>
+        <button onclick="editManualTransaction('${tx.id}')"
+          class="bg-blue-900 text-white w-10 py-1 rounded hover:bg-blue-700">Edit</button>
+
+        <button onclick="deleteManualTransaction('${tx.id}')"
+          class="bg-blue-900 text-white w-10 py-1 rounded hover:bg-blue-700">Delete</button>
+
+        <button onclick="previewManualTransaction('${tx.id}')"
+          class="bg-blue-900 text-white w-10 py-1 rounded hover:bg-blue-700">View</button>
+
+        <button onclick="attachFile('${tx.id}')"
+          class="bg-blue-900 text-white w-10 py-1 rounded hover:bg-blue-700">Attach</button>
       </td>
     `;
+
     table.appendChild(row);
   });
 }
-function editManualTransaction(index) {
+function editManualTransaction(id) {
   const transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
-  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
-  const tx = transactions[index];
+  const tx = transactions.find(t => t.id === id);
+
+  if (!tx) return;
 
   document.getElementById("manualBank").value = tx.bank;
   document.getElementById("manualType").value = tx.type;
@@ -9517,18 +10504,20 @@ function editManualTransaction(index) {
   document.getElementById("manualDate").value = tx.date;
   document.getElementById("manualRef").value = tx.ref;
 
-  manualTxEditingIndex = index;
+  manualTxEditingIndex = id; 
 }
 
-function deleteManualTransaction(index) {
+function deleteManualTransaction(id) {
   let transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
   let banks = JSON.parse(localStorage.getItem("banks") || "[]");
   let accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
 
-  const tx = transactions[index];
+  const txIndex = transactions.findIndex(t => t.id === id);
+  const tx = transactions[txIndex];
+
   if (!tx) return;
   if (!confirm("Delete this manual transaction?")) return;
-  if (!tx.id) tx.id = crypto.randomUUID();
+
   moveToRecycle(tx, "File", "ManualTransactions");
 
   const bank = banks.find(b => b.name === tx.bank);
@@ -9543,7 +10532,9 @@ function deleteManualTransaction(index) {
     else if (moneyOutTypes.includes(tx.type)) acc.amount = (acc.amount || 0) + tx.amount;
   }
 
-  transactions.splice(index, 1);
+  if (txIndex !== -1) {
+    transactions.splice(txIndex, 1);
+  }
 
   localStorage.setItem("manualTransactions", JSON.stringify(transactions));
   localStorage.setItem("banks", JSON.stringify(banks));
@@ -9551,12 +10542,13 @@ function deleteManualTransaction(index) {
 
   updateBalanceSheetFromChart();
   renderManualTransactions();
-  if (typeof renderBankTable === "function") renderBankTable();
+  renderBankTable?.();
+
   alert("♻️ Transaction moved to Recycle Bin.");
 }
-function previewManualTransaction(index) {
+function previewManualTransaction(id) {
   const transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
-  const tx = transactions[index];
+  const tx = transactions.find(t => t.id === id);
   if (!tx) return;
 
   const { jsPDF } = window.jspdf;
@@ -9578,29 +10570,14 @@ function previewManualTransaction(index) {
   const debit = isDebit ? Number(tx.amount).toFixed(2) : "";
   const credit = isCredit ? Number(tx.amount).toFixed(2) : "";
 
-  doc.setFontSize(14);
   doc.text("JOURNAL ENTRY", 80, 20);
-
-  doc.setFontSize(10);
   doc.text(`Date: ${tx.date}`, 10, 40);
   doc.text(`Bank: ${tx.bank}`, 10, 47);
   doc.text(`Reference: ${tx.ref}`, 10, 54);
 
-  doc.line(10, 60, 200, 60);
-
-  doc.text("Account", 10, 70);
-  doc.text("Debit (Dr)", 120, 70);
-  doc.text("Credit (Cr)", 160, 70);
-
-  doc.line(10, 72, 200, 72);
-
   doc.text(`${tx.account} (${tx.code})`, 10, 85);
   doc.text(debit || "-", 120, 85);
   doc.text(credit || "-", 160, 85);
-
-  doc.line(10, 95, 200, 95);
-
-  doc.text(`Transaction Type: ${tx.type}`, 10, 110);
 
   const pdfBlob = doc.output("blob");
   const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -9643,7 +10620,7 @@ function openPdfPreviewModal(url, ref) {
     modal.remove();
   };
 }
-function attachFile(index) {
+function attachFile(id) {
   const input = document.createElement("input");
   input.type = "file";
 
@@ -9657,10 +10634,10 @@ function attachFile(index) {
       let attachments = JSON.parse(localStorage.getItem("manualAttachments") || "{}");
       let transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
 
-      const tx = transactions[index];
+      const tx = transactions.find(t => t.id === id);
       if (!tx) return;
 
-      const key = `${tx.date}_${tx.bank}_${tx.ref}_${index}`;
+      const key = `${tx.id}`;
 
       attachments[key] = {
         name: file.name,
@@ -9669,8 +10646,7 @@ function attachFile(index) {
       };
 
       localStorage.setItem("manualAttachments", JSON.stringify(attachments));
-
-      alert("Attachment saved separately!");
+      alert("Attachment saved!");
     };
 
     reader.readAsDataURL(file);
@@ -9828,19 +10804,101 @@ function bulkDeleteManualTransactions() {
     return;
   }
 
-  if (!confirm(`Delete ${selected.length} selected transactions?`)) {
-    return;
-  }
+  if (!confirm(`Delete ${selected.length} selected transactions?`)) return;
 
-  const indexes = Array.from(selected).map(cb => parseInt(cb.dataset.index));
+  const ids = Array.from(selected).map(cb => cb.dataset.id);
 
-  indexes.sort((a, b) => b - a).forEach(i => {
-    transactions.splice(i, 1);
+  ids.forEach(id => {
+    const txIndex = transactions.findIndex(t => t.id === id);
+    if (txIndex !== -1) {
+      moveToRecycle(transactions[txIndex], "File", "ManualTransactions");
+      transactions.splice(txIndex, 1);
+    }
   });
 
   localStorage.setItem("manualTransactions", JSON.stringify(transactions));
 
   renderManualTransactions();
+}
+
+function importExcelManualTransactions(file) {
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: "array" });
+
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet);
+
+    let transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+
+    rows.forEach(r => {
+      transactions.push({
+        id: crypto.randomUUID(),
+        date: r.date || "",
+        bank: r.bank || "",
+        type: r.type || "",
+        account: r.account || "",
+        code: r.code || "",
+        amount: Number(r.amount) || 0,
+        ref: r.ref || ""
+      });
+    });
+
+    localStorage.setItem("manualTransactions", JSON.stringify(transactions));
+    renderManualTransactions();
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+function exportExcelManualTransactions() {
+  const transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+
+  const data = transactions.map(t => ({
+    date: t.date,
+    bank: t.bank,
+    type: t.type,
+    account: t.account,
+    code: t.code,
+    amount: t.amount,
+    ref: t.ref
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+  XLSX.writeFile(wb, "manual_transactions.xlsx");
+}
+
+function exportManualTransactionsPDF() {
+  const transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  let y = 15;
+
+  doc.setFontSize(14);
+  doc.text("MANUAL TRANSACTIONS", 60, 10);
+
+  transactions.forEach(t => {
+    doc.setFontSize(9);
+
+    doc.text(`${t.date} | ${t.bank} | ${t.type}`, 10, y);
+    doc.text(`${t.account} (${t.code})`, 10, y + 5);
+    doc.text(String(t.amount), 160, y);
+
+    y += 12;
+
+    if (y > 280) {
+      doc.addPage();
+      y = 15;
+    }
+  });
+
+  doc.save("manual_transactions.pdf");
 }
 function showVendorUnpaid(name) {
   const bills = JSON.parse(localStorage.getItem("bills") || "[]");
@@ -9851,241 +10909,625 @@ function showVendorUnpaid(name) {
 
   console.log("Unpaid bills:", list);
 }
+function exportManualTransactions() {
+  let rows = [];
+  document.querySelectorAll("#manualTransactionLogTable tr").forEach(tr => {
+    let cols = tr.querySelectorAll("td");
+    let row = [];
+    cols.forEach(td => row.push(td.innerText.trim()));
+    rows.push(row.join(","));
+  });
+
+  let csvContent = "data:text/csv;charset=utf-8,"
+    + rows.join("\n");
+
+  let encodedUri = encodeURI(csvContent);
+  let link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "manual_transactions.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+document.getElementById("manualImportFile").addEventListener("change", function (e) {
+  let file = e.target.files[0];
+  if (!file) return;
+
+  let reader = new FileReader();
+  reader.onload = function (event) {
+    let lines = event.target.result.split("\n");
+
+    lines.forEach(line => {
+      let cols = line.split(",");
+
+      console.log(cols);
+    });
+  };
+  reader.readAsText(file);
+});
 </script>
 <script>
-let transfer = JSON.parse(localStorage.getItem("transfers") || "[]");
+let transfers = JSON.parse(localStorage.getItem("transfers") || "[]");
+
+function saveTransfers() {
+  localStorage.setItem("transfers", JSON.stringify(transfers));
+}
 
 function populateBankDropdowns() {
   const banks = JSON.parse(localStorage.getItem("banks") || "[]");
-  const fromSelect = document.getElementById("fromBankDropdown");
-  const toSelect = document.getElementById("toBankDropdown");
 
-  fromSelect.innerHTML = '<option value="">Select From Bank</option>';
-  toSelect.innerHTML = '<option value="">Select To Bank</option>';
+  const from = document.getElementById("fromBankDropdown");
+  const to = document.getElementById("toBankDropdown");
+
+  from.innerHTML = `<option value="">Select From Bank</option>`;
+  to.innerHTML = `<option value="">Select To Bank</option>`;
 
   banks.forEach(bank => {
-    const opt1 = document.createElement("option");
-    opt1.value = bank.name;
-    opt1.textContent = `${bank.name} (${bank.currency})`;
-    fromSelect.appendChild(opt1);
 
-    const opt2 = document.createElement("option");
-    opt2.value = bank.name;
-    opt2.textContent = `${bank.name} (${bank.currency})`;
-    toSelect.appendChild(opt2);
+    const option1 = document.createElement("option");
+    option1.value = bank.name;
+    option1.textContent = `${bank.name} (${bank.currency || "KES"})`;
+
+    const option2 = document.createElement("option");
+    option2.value = bank.name;
+    option2.textContent = `${bank.name} (${bank.currency || "KES"})`;
+
+    from.appendChild(option1);
+    to.appendChild(option2);
+
   });
 }
 
 function populateTransferAccounts() {
+
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+
   const select = document.getElementById("transferAccountDropdown");
 
-  select.innerHTML = '<option value="">Select Account</option>';
-  accounts.filter(a => a.type === "Cash" || a.type === "Banks")
-          .forEach(acc => {
-            const opt = document.createElement("option");
-            opt.value = acc.code;
-            opt.textContent = `${acc.name} (${acc.code})`;
-            select.appendChild(opt);
-          });
+  select.innerHTML = `<option value="">Select Account</option>`;
+
+  accounts.forEach(account => {
+
+    const option = document.createElement("option");
+
+    option.value = account.code;
+
+    option.textContent =
+      `${account.name} (${account.code})`;
+
+    select.appendChild(option);
+
+  });
+
 }
 
 function checkExchangeRateVisibility() {
-  const fromName = document.getElementById("fromBankDropdown").value;
-  const toName = document.getElementById("toBankDropdown").value;
-  const container = document.getElementById("exchangeRateContainer");
-  const banks = JSON.parse(localStorage.getItem("banks") || "[]");
 
-  const fromBank = banks.find(b => b.name === fromName);
-  const toBank = banks.find(b => b.name === toName);
+  const banks =
+    JSON.parse(localStorage.getItem("banks") || "[]");
 
-  if (fromBank && toBank && fromBank.currency !== toBank.currency) {
-    container.classList.remove("hidden");
+  const fromBank =
+    document.getElementById("fromBankDropdown").value;
+
+  const toBank =
+    document.getElementById("toBankDropdown").value;
+
+  const exchangeContainer =
+    document.getElementById("exchangeRateContainer");
+
+  const from =
+    banks.find(b => b.name === fromBank);
+
+  const to =
+    banks.find(b => b.name === toBank);
+
+  if (
+    from &&
+    to &&
+    from.currency !== to.currency
+  ) {
+
+    exchangeContainer.classList.remove("hidden");
+
   } else {
-    container.classList.add("hidden");
+
+    exchangeContainer.classList.add("hidden");
+
+    document.getElementById("exchangeRate").value = "";
+
   }
+
 }
 
 function clearTransferForm() {
+
   document.getElementById("fromBankDropdown").value = "";
+
   document.getElementById("toBankDropdown").value = "";
+
   document.getElementById("transferAccountDropdown").value = "";
-  document.getElementById("transferAmount").value = "";
+
   document.getElementById("transferDate").value = "";
+
   document.getElementById("transferRef").value = "";
+
+  document.getElementById("transferAmount").value = "";
+
   document.getElementById("exchangeRate").value = "";
-  document.getElementById("exchangeRateContainer").classList.add("hidden");
-}
 
-function rollbackTransfer(tx) {
-  const banks = JSON.parse(localStorage.getItem("banks") || "[]");
-  const fromBank = banks.find(b => b.name === tx.from);
-  const toBank = banks.find(b => b.name === tx.to);
-  if (fromBank) fromBank.balance += tx.amount;
-  if (toBank) toBank.balance -= tx.amountInDestCurrency;
-  localStorage.setItem("banks", JSON.stringify(banks));
-}
+  document.getElementById("paymentMode").value = "Bank Transfer";
 
-function formatDateForInput(dateStr) {
-  const d = new Date(dateStr);
-  if (isNaN(d)) return "";
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  document.getElementById("exchangeRateContainer")
+    .classList.add("hidden");
+
 }
 
 function transferBetweenBanks() {
-  const fromName = document.getElementById("fromBankDropdown").value.trim();
-  const toName = document.getElementById("toBankDropdown").value.trim();
-  const accountCode = document.getElementById("transferAccountDropdown").value.trim();
-  const amount = parseFloat(document.getElementById("transferAmount").value);
-   const dateInput = document.getElementById("transferDate");
-  const date = dateInput.value;
-  const ref = document.getElementById("transferRef").value.trim();
-  let exchangeRate = 1;
 
-  if (!fromName) { alert("Please select From Bank"); return; }
-  if (!toName) { alert("Please select To Bank"); return; }
-  if (!accountCode) { alert("Please select Chart of Account"); return; }
-  if (!dateInput.valueAsDate) { alert("Please select Transfer Date"); return; }
-  if (!ref) { alert("Please enter Reference"); return; }
-  if (!Number.isFinite(amount) || amount <= 0) { alert("Please enter a valid Amount"); return; }
+  const fromBank =
+    document.getElementById("fromBankDropdown").value;
 
-  const banks = JSON.parse(localStorage.getItem("banks") || "[]");
-  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
-  const fromBank = banks.find(b => b.name === fromName);
-  const toBank = banks.find(b => b.name === toName);
-  const account = accounts.find(a => a.code === accountCode);
+  const toBank =
+    document.getElementById("toBankDropdown").value;
 
-  if (!fromBank || !toBank) { alert("Invalid bank selection"); return; }
-  if (fromName === toName) { alert("Cannot transfer to the same bank"); return; }
+  const account =
+    document.getElementById("transferAccountDropdown").value;
 
-  if (fromBank.currency !== toBank.currency) {
-    exchangeRate = parseFloat(document.getElementById("exchangeRate").value);
-    if (!Number.isFinite(exchangeRate) || exchangeRate <= 0) {
-      alert("Please enter a valid exchange rate for different currencies.");
-      return;
-    }
+  const date =
+    document.getElementById("transferDate").value;
+
+  const reference =
+    document.getElementById("transferRef").value.trim();
+
+  const amount =
+    parseFloat(document.getElementById("transferAmount").value);
+
+  const paymentMode =
+    document.getElementById("paymentMode").value;
+
+  let exchangeRate =
+    parseFloat(document.getElementById("exchangeRate").value) || 1;
+
+  if (!fromBank) {
+    alert("Select From Bank");
+    return;
   }
 
-  if ((fromBank.balance || 0) < amount) { alert("Insufficient balance in source bank"); return; }
+  if (!toBank) {
+    alert("Select To Bank");
+    return;
+  }
 
-  const amountInDestCurrency = fromBank.currency === toBank.currency ? amount : amount * exchangeRate;
+  if (fromBank === toBank) {
+    alert("Banks cannot be the same");
+    return;
+  }
 
-  fromBank.balance -= amount;
-  toBank.balance += amountInDestCurrency;
+  if (!account) {
+    alert("Select Account");
+    return;
+  }
 
-  const tx = {
-    date,
-    from: fromBank.name,
-    to: toBank.name,
-    account: account.name,
-    code: account.code,
-    amount,
-    fromCurrency: fromBank.currency,
-    toCurrency: toBank.currency,
-    amountInDestCurrency,
-    exchangeRate,
-    ref
-  };
+  if (!date) {
+    alert("Select Date");
+    return;
+  }
 
-  transfers.push(tx);
-  localStorage.setItem("transfers", JSON.stringify(transfers));
+  if (!reference) {
+    alert("Enter Reference");
+    return;
+  }
+
+  if (!amount || amount <= 0) {
+    alert("Enter Valid Amount");
+    return;
+  }
+
+  const banks =
+    JSON.parse(localStorage.getItem("banks") || "[]");
+
+  const from =
+    banks.find(b => b.name === fromBank);
+
+  const to =
+    banks.find(b => b.name === toBank);
+
+  if (!from || !to) {
+    alert("Bank not found");
+    return;
+  }
+
+  if ((from.balance || 0) < amount) {
+    alert("Insufficient balance");
+    return;
+  }
+
+  if (from.currency !== to.currency && exchangeRate <= 0) {
+    alert("Invalid exchange rate");
+    return;
+  }
+
+  const convertedAmount =
+    from.currency === to.currency
+      ? amount
+      : amount * exchangeRate;
+
+  from.balance -= amount;
+
+  to.balance =
+    (to.balance || 0) + convertedAmount;
+
   localStorage.setItem("banks", JSON.stringify(banks));
 
+  const transfer = {
+
+    id: crypto.randomUUID(),
+
+    date,
+
+    fromBank,
+
+    toBank,
+
+    account,
+
+    amount,
+
+    convertedAmount,
+
+    exchangeRate,
+
+    paymentMode,
+
+    reference,
+
+    fromCurrency: from.currency || "KES",
+
+    toCurrency: to.currency || "KES",
+
+    status: "Completed",
+
+    createdAt: new Date().toISOString()
+
+  };
+
+  transfers.unshift(transfer);
+
+  saveTransfers();
+
   renderTransferLog();
+
   clearTransferForm();
-  alert("Transfer successful!");
+
+  alert("Transfer saved successfully");
+
 }
 
 function renderTransferLog() {
-  const table = document.getElementById("transferLogTable");
-  table.innerHTML = "";
 
-  transfers.forEach((tx, index) => {
-    const row = document.createElement("tr");
+  const tbody =
+    document.getElementById("transferLogTable");
+
+  tbody.innerHTML = "";
+
+  const search =
+    document.getElementById("transferSearch")
+      .value
+      .toLowerCase();
+
+  const filtered =
+    transfers.filter(tx => {
+
+      return (
+        tx.fromBank.toLowerCase().includes(search) ||
+        tx.toBank.toLowerCase().includes(search) ||
+        tx.reference.toLowerCase().includes(search)
+      );
+
+    });
+
+  filtered.forEach((tx, index) => {
+
+    const row =
+      document.createElement("tr");
+
+    row.className =
+      "hover:bg-gray-50 transition";
+
     row.innerHTML = `
-      <td class="px-2 py-1">${tx.date}</td>
-      <td class="px-2 py-1">${tx.from} (${tx.fromCurrency})</td>
-      <td class="px-2 py-1">${tx.to} (${tx.toCurrency})</td>
-      <td class="px-2 py-1">${tx.account} (${tx.code})</td>
-      <td class="px-2 py-1 text-right">
-        ${tx.amount.toFixed(2)} ${tx.fromCurrency} → ${tx.amountInDestCurrency.toFixed(2)} ${tx.toCurrency}
+
+      <td class="border px-3 py-2">
+        ${tx.date}
       </td>
-      <td class="px-2 py-1">${tx.ref}</td>
-      <td class="px-2 py-1">${tx.exchangeRate}</td>
-      <td class="px-2 py-1 text-center space-x-2">
-        <button onclick="editTransfer(${index})" class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">Edit</button>
-        <button onclick="deleteTransfer(${index})" class="bg-red-700 text-white px-2 py-1 rounded hover:bg-red-600">Delete</button>
+
+      <td class="border px-3 py-2">
+        ${tx.fromBank}
       </td>
+
+      <td class="border px-3 py-2">
+        ${tx.toBank}
+      </td>
+
+      <td class="border px-3 py-2">
+        ${tx.account}
+      </td>
+
+      <td class="border px-3 py-2 text-right">
+        ${Number(tx.amount).toLocaleString()}
+        ${tx.fromCurrency}
+      </td>
+
+      <td class="border px-3 py-2">
+        ${tx.reference}
+      </td>
+
+      <td class="border px-3 py-2 text-right">
+        ${tx.exchangeRate}
+      </td>
+
+      <td class="border px-3 py-2 text-center">
+
+        <span class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">
+          ${tx.status}
+        </span>
+
+      </td>
+
+      <td class="border px-3 py-2 text-center">
+
+        <div class="flex justify-center gap-2">
+
+          <button
+            onclick="editTransfer('${tx.id}')"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800"
+          >
+            Edit
+          </button>
+
+          <button
+            onclick="deleteTransfer('${tx.id}')"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800"
+          >
+            Delete
+          </button>
+
+        </div>
+
+      </td>
+
     `;
-    table.appendChild(row);
+
+    tbody.appendChild(row);
+
   });
+
 }
 
-function editTransfer(index) {
-  const tx = transfers[index];
+function editTransfer(id) {
+
+  const tx =
+    transfers.find(t => t.id === id);
+
   if (!tx) return;
 
-  rollbackTransfer(tx);
+  document.getElementById("fromBankDropdown").value =
+    tx.fromBank;
 
-  document.getElementById("fromBankDropdown").value = tx.from;
-  document.getElementById("toBankDropdown").value = tx.to;
-  document.getElementById("transferAccountDropdown").value = tx.code;
-  document.getElementById("transferAmount").value = tx.amount;
-  document.getElementById("transferDate").value = formatDateForInput(tx.date);
-  document.getElementById("transferRef").value = tx.ref;
-  document.getElementById("exchangeRate").value = tx.exchangeRate;
+  document.getElementById("toBankDropdown").value =
+    tx.toBank;
+
+  document.getElementById("transferAccountDropdown").value =
+    tx.account;
+
+  document.getElementById("transferDate").value =
+    tx.date;
+
+  document.getElementById("transferRef").value =
+    tx.reference;
+
+  document.getElementById("transferAmount").value =
+    tx.amount;
+
+  document.getElementById("paymentMode").value =
+    tx.paymentMode;
+
+  document.getElementById("exchangeRate").value =
+    tx.exchangeRate;
 
   checkExchangeRateVisibility();
 
-  transfers.splice(index, 1);
-  localStorage.setItem("transfers", JSON.stringify(transfers));
-  renderTransferLog();
+  deleteTransfer(id, false);
+
 }
 
-function deleteTransfer(index) {
-  if (!confirm("Delete this transfer?")) return;
+function deleteTransfer(id, confirmDelete = true) {
 
-  const tx = transfers[index];
-  if (!tx) return;
+  if (confirmDelete) {
 
-  if (!tx.id) tx.id = crypto.randomUUID();
+    const confirmed =
+      confirm("Delete this transfer?");
 
-  moveToRecycle(tx, "File", "Transfers");
+    if (!confirmed) return;
 
-  rollbackTransfer(tx);
+  }
 
-  transfers.splice(index, 1);
-  localStorage.setItem("transfers", JSON.stringify(transfers));
+  transfers =
+    transfers.filter(t => t.id !== id);
+
+  saveTransfers();
 
   renderTransferLog();
 
-  alert("♻️ Transfer moved to Recycle Bin.");
 }
+
+function exportTransferLog() {
+
+  if (!transfers.length) {
+    alert("No transfers found");
+    return;
+  }
+
+  let csv =
+    `Date,From Bank,To Bank,Account,Amount,Reference,Exchange Rate,Status\n`;
+
+  transfers.forEach(tx => {
+
+    csv +=
+      `${tx.date},${tx.fromBank},${tx.toBank},${tx.account},${tx.amount},${tx.reference},${tx.exchangeRate},${tx.status}\n`;
+
+  });
+
+  const blob =
+    new Blob([csv], { type: "text/csv" });
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const a =
+    document.createElement("a");
+
+  a.href = url;
+
+  a.download =
+    "transfer-log.csv";
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+function importTransfers(file) {
+
+  const reader =
+    new FileReader();
+
+  reader.onload = function(event) {
+
+    const csv =
+      event.target.result;
+
+    const lines =
+      csv.split("\n");
+
+    lines.shift();
+
+    lines.forEach(line => {
+
+      const cols =
+        line.split(",");
+
+      if (cols.length < 8) return;
+
+      transfers.push({
+
+        id: crypto.randomUUID(),
+
+        date: cols[0],
+
+        fromBank: cols[1],
+
+        toBank: cols[2],
+
+        account: cols[3],
+
+        amount: Number(cols[4]),
+
+        reference: cols[5],
+
+        exchangeRate: Number(cols[6]),
+
+        status: cols[7],
+
+        paymentMode: "Imported",
+
+        fromCurrency: "KES",
+
+        toCurrency: "KES"
+
+      });
+
+    });
+
+    saveTransfers();
+
+    renderTransferLog();
+
+    alert("Transfers imported");
+
+  };
+
+  reader.readAsText(file);
+
+}
+
+document
+  .getElementById("transferImportFile")
+  .addEventListener("change", function(e) {
+
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    importTransfers(file);
+
+  });
+
+document
+  .getElementById("transferSearch")
+  .addEventListener("input", renderTransferLog);
+
 document.addEventListener("DOMContentLoaded", () => {
+
   populateBankDropdowns();
+
   populateTransferAccounts();
+
   renderTransferLog();
+
 });
 </script>
 <script>
 let reconciliationTx = JSON.parse(localStorage.getItem("transactions") || "[]");
-let transfers = JSON.parse(localStorage.getItem("transfers") || "[]");
+let transfer = JSON.parse(localStorage.getItem("transfers") || "[]");
+
+function saveData() {
+  localStorage.setItem("transactions", JSON.stringify(reconciliationTx));
+  localStorage.setItem("transfers", JSON.stringify(transfers));
+}
+
+function generateId() {
+  return crypto.randomUUID();
+}
+
+reconciliationTx = reconciliationTx.map(tx => ({
+  id: tx.id || generateId(),
+  status: tx.status || "unreconciled",
+  ...tx
+}));
+
+transfers = transfers.map(tx => ({
+  id: tx.id || generateId(),
+  status: tx.status || "unreconciled",
+  ...tx
+}));
+
+saveData();
 
 function populateReconcileBankDropdown() {
   const select = document.getElementById("reconcileBank");
   if (!select) return;
 
   const banks = JSON.parse(localStorage.getItem("banks") || "[]");
-  select.innerHTML = '<option value="">Select Bank</option>';
+
+  select.innerHTML = `<option value="">Select Bank</option>`;
 
   banks.forEach(bank => {
-    const opt = document.createElement("option");
-    opt.value = bank.name;
-    opt.textContent = bank.name;
-    select.appendChild(opt);
+    const option = document.createElement("option");
+    option.value = bank.name;
+    option.textContent = bank.name;
+    select.appendChild(option);
   });
 }
 
@@ -10096,378 +11538,489 @@ function getAllTransactions() {
   ];
 }
 
-function renderReconciliationTransactions() {
-  const bankEl = document.getElementById("reconcileBank");
-  const tbody = document.getElementById("reconciliationTableBody");
-  if (!bankEl || !tbody) return;
+function getTransactionEffect(tx, bankName) {
+  let debit = 0;
+  let credit = 0;
+  let typeLabel = tx.type;
 
-  const bankName = bankEl.value;
-  if (!bankName) return;
+  if (tx.isTransfer) {
+
+    if (tx.bank === bankName) {
+      credit = Number(tx.amount);
+      typeLabel = "Transfer Out";
+    }
+
+    if (tx.toBank === bankName) {
+      debit = Number(tx.amount);
+      typeLabel = "Transfer In";
+    }
+
+  } else {
+
+    if (moneyInTypes.includes(tx.type)) {
+      debit = Number(tx.amount);
+    }
+
+    if (moneyOutTypes.includes(tx.type)) {
+      credit = Number(tx.amount);
+    }
+
+  }
+
+  return { debit, credit, typeLabel };
+}
+
+function updateSummary() {
+  const bankName = document.getElementById("reconcileBank").value;
+
+  const statementBalance =
+    parseFloat(document.getElementById("statementBalance").value) || 0;
+
+  const checkboxes = document.querySelectorAll(".reconcile-check");
+
+  const allTx = getAllTransactions();
+
+  let selectedDebit = 0;
+  let selectedCredit = 0;
+  let selectedCount = 0;
+
+  checkboxes.forEach(cb => {
+
+    if (!cb.checked) return;
+
+    selectedCount++;
+
+    const txId = cb.dataset.id;
+
+    const tx = allTx.find(t => t.id === txId);
+
+    if (!tx) return;
+
+    const { debit, credit } = getTransactionEffect(tx, bankName);
+
+    selectedDebit += debit;
+    selectedCredit += credit;
+  });
+
+  const calculated = selectedDebit - selectedCredit;
+  const difference = statementBalance - calculated;
+
+  document.getElementById("selectedCount").textContent = selectedCount;
+
+  document.getElementById("calculatedBalance").textContent =
+    `KES ${calculated.toLocaleString(undefined,{
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    })}`;
+
+  document.getElementById("bankBalance").textContent =
+    `KES ${statementBalance.toLocaleString(undefined,{
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    })}`;
+
+  const diffEl = document.getElementById("balanceDifference");
+
+  diffEl.textContent =
+    `KES ${difference.toLocaleString(undefined,{
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    })}`;
+
+  if (difference === 0) {
+    diffEl.className = "text-xl font-bold text-green-700";
+  } else {
+    diffEl.className = "text-xl font-bold text-red-700";
+  }
+}
+
+function renderReconciliationTransactions() {
+
+  const tbody = document.getElementById("reconciliationTableBody");
+
+  const bankName = document.getElementById("reconcileBank").value;
+
+  const filter = document.getElementById("filterStatus")?.value || "all";
+
+  if (!tbody || !bankName) return;
 
   tbody.innerHTML = "";
 
-  const allTx = getAllTransactions()
+  let runningBalance = 0;
+
+  let transactions = getAllTransactions()
     .filter(tx => tx.bank === bankName || tx.toBank === bankName)
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
+    .sort((a,b) => new Date(a.date) - new Date(b.date));
 
-  let totalDebit = 0;
-  let totalCredit = 0;
+  if (filter !== "all") {
+    transactions = transactions.filter(tx => tx.status === filter);
+  }
 
-  allTx.forEach(tx => {
-    let debit = 0, credit = 0, typeLabel = tx.type;
+  transactions.forEach(tx => {
 
-    if (tx.isTransfer) {
-      if (tx.bank === bankName) {
-        credit = tx.amount;
-        typeLabel = "Transfer Out";
-      } else if (tx.toBank === bankName) {
-        debit = tx.amount;
-        typeLabel = "Transfer In";
-      }
-    } else {
-      if (moneyInTypes.includes(tx.type)) {
-        debit = tx.amount;
-        typeLabel = `${tx.type} (Debit)`;
-      } else if (moneyOutTypes.includes(tx.type)) {
-        credit = tx.amount;
-        typeLabel = `${tx.type} (Credit)`;
-      } else {
-        credit = tx.amount;
-        typeLabel = `${tx.type} (?)`;
-      }
-    }
+    const { debit, credit, typeLabel } =
+      getTransactionEffect(tx, bankName);
 
-    totalDebit += debit;
-    totalCredit += credit;
+    runningBalance += debit;
+    runningBalance -= credit;
 
     const row = document.createElement("tr");
+
+    row.className = tx.reconciled
+      ? "bg-green-50"
+      : "hover:bg-gray-50";
+
     row.innerHTML = `
-      
-      <td class="border px-1 py-1 text-center">${tx.date}</td>
-      <td class="border px-1 py-1 text-center">${typeLabel}</td>
-      <td class="border px-1 py-1 text-right">
-  ${debit > 0 ? debit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
-</td>
-<td class="border px-1 py-1 text-right">
-  ${credit > 0 ? credit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
-</td>
-      <td class="border px-1 py-1 text-center">
-       <input type="checkbox" style="transform: scale(1.5);" data-id="${tx.ref || tx.date}"  ${tx.reconciled ? "checked disabled" : ""}/>
+      <td class="border px-3 py-2 text-center">
+        <input
+          type="checkbox"
+          class="reconcile-check"
+          data-id="${tx.id}"
+          ${tx.reconciled ? "checked disabled" : ""}
+        >
+      </td>
+
+      <td class="border px-3 py-2">
+        ${tx.date || ""}
+      </td>
+
+      <td class="border px-3 py-2">
+        ${tx.ref || ""}
+      </td>
+
+      <td class="border px-3 py-2">
+        ${tx.description || ""}
+      </td>
+
+      <td class="border px-3 py-2">
+        ${typeLabel}
+      </td>
+
+      <td class="border px-3 py-2 text-right">
+        ${debit > 0
+          ? debit.toLocaleString(undefined,{
+              minimumFractionDigits:2,
+              maximumFractionDigits:2
+            })
+          : ""}
+      </td>
+
+      <td class="border px-3 py-2 text-right">
+        ${credit > 0
+          ? credit.toLocaleString(undefined,{
+              minimumFractionDigits:2,
+              maximumFractionDigits:2
+            })
+          : ""}
+      </td>
+
+      <td class="border px-3 py-2 text-right">
+        ${runningBalance.toLocaleString(undefined,{
+          minimumFractionDigits:2,
+          maximumFractionDigits:2
+        })}
+      </td>
+
+      <td class="border px-3 py-2 text-center">
+
+        <span class="
+          px-2 py-1 rounded-full text-xs font-semibold
+          ${tx.status === "reconciled"
+            ? "bg-green-100 text-green-700"
+            : "bg-yellow-100 text-yellow-700"}
+        ">
+          ${tx.status}
+        </span>
+
       </td>
     `;
+
     tbody.appendChild(row);
   });
 
-  const calculatedBalance = totalDebit - totalCredit;
-  const statementBalanceInput = parseFloat(document.getElementById("statementBalance")?.value) || 0;
-
-  document.getElementById("calculatedBalance").textContent = `KES ${calculatedBalance.toFixed(2)}`;
-  document.getElementById("bankBalance").textContent = `KES ${statementBalanceInput.toFixed(2)}`;
-  document.getElementById("balanceDifference").textContent = `KES ${(statementBalanceInput - calculatedBalance).toFixed(2)}`;
-
-  const checkboxes = document.querySelectorAll("#reconciliationTableBody input[type='checkbox']");
-
-  function updateSummary() {
-    let selectedDebit = 0, selectedCredit = 0;
-
-    checkboxes.forEach(cb => {
-      const txId = cb.getAttribute("data-id");
-      const tx = allTx.find(t => t.ref === txId || t.date === txId);
-      if (!tx) return;
-
-      let debit = 0, credit = 0;
-
-      if (tx.isTransfer) {
-        if (tx.bank === bankName) credit = tx.amount;
-        else if (tx.toBank === bankName) debit = tx.amount;
-      } else {
-        if (moneyInTypes.includes(tx.type)) debit = tx.amount;
-        else if (moneyOutTypes.includes(tx.type)) credit = tx.amount;
-      }
-
-      if (cb.checked) {
-        selectedDebit += debit;
-        selectedCredit += credit;
-      }
+  document.querySelectorAll(".reconcile-check")
+    .forEach(cb => {
+      cb.addEventListener("change", updateSummary);
     });
 
-    const selectedTotal = selectedDebit - selectedCredit;
-    document.getElementById("calculatedBalance").textContent = `KES ${selectedTotal.toFixed(2)}`;
-    document.getElementById("balanceDifference").textContent = `KES ${(statementBalanceInput - selectedTotal).toFixed(2)}`;
-  }
-
-  checkboxes.forEach(cb => cb.addEventListener("change", updateSummary));
   updateSummary();
 }
 
+function reconcileBankAccount() {
+
+  const reconcileDate =
+    document.getElementById("reconcileDate").value;
+
+  if (!reconcileDate) {
+    alert("Select reconciliation date");
+    return;
+  }
+
+  const differenceText =
+    document.getElementById("balanceDifference")
+    .textContent;
+
+  const difference =
+    parseFloat(differenceText.replace(/[^0-9.-]+/g,"")) || 0;
+
+  if (difference !== 0) {
+    alert("Difference must equal zero");
+    return;
+  }
+
+  const allTx = getAllTransactions();
+
+  document.querySelectorAll(".reconcile-check")
+    .forEach(cb => {
+
+      if (!cb.checked) return;
+
+      const tx =
+        allTx.find(t => t.id === cb.dataset.id);
+
+      if (!tx) return;
+
+      tx.reconciled = true;
+      tx.reconcileDate = reconcileDate;
+      tx.status = "reconciled";
+    });
+
+  saveData();
+
+  render();
+
+  alert("Reconciliation complete");
+}
+
+function saveReconcileLater() {
+
+  const reconcileDate =
+    document.getElementById("reconcileDate").value;
+
+  if (!reconcileDate) {
+    alert("Select reconciliation date");
+    return;
+  }
+
+  const allTx = getAllTransactions();
+
+  document.querySelectorAll(".reconcile-check")
+    .forEach(cb => {
+
+      if (!cb.checked) return;
+
+      const tx =
+        allTx.find(t => t.id === cb.dataset.id);
+
+      if (!tx) return;
+
+      tx.status = "matched";
+      tx.reconcileDate = reconcileDate;
+    });
+
+  saveData();
+
+  render();
+
+  alert("Saved");
+}
+
 function renderReconciledTransactions() {
-  const tbody = document.getElementById("reconciledTransactionTableBody");
+
+  const tbody =
+    document.getElementById("reconciledTransactionTableBody");
+
   if (!tbody) return;
+
   tbody.innerHTML = "";
 
-  const reconcileDateInput = document.getElementById("reconcileDate")?.value || new Date().toISOString().slice(0,10);
-  const selectedDate = new Date(reconcileDateInput);
-  const selectedMonth = selectedDate.getMonth();
-  const selectedYear = selectedDate.getFullYear();
-  const bankName = document.getElementById("reconcileBank")?.value;
+  const txs = getAllTransactions()
+    .filter(tx => tx.reconciled)
+    .sort((a,b) =>
+      new Date(b.reconcileDate) -
+      new Date(a.reconcileDate)
+    );
 
-  const allTx = getAllTransactions()
-    .filter(tx => tx.reconciled && tx.reconcileDate)
-    .filter(tx => {
-      const txDate = new Date(tx.reconcileDate);
-      return txDate.getMonth() === selectedMonth && txDate.getFullYear() === selectedYear;
-    })
-    .sort((a, b) => new Date(a.reconcileDate) - new Date(b.reconcileDate));
+  txs.forEach(tx => {
 
-  allTx.forEach(tx => {
-    let bankLabel = tx.bank || (tx.isTransfer ? `${tx.fromBank || ""} ➝ ${tx.toBank || ""}` : "");
-    let typeLabel = tx.type || "";
-    let debit = 0, credit = 0;
+    const row = document.createElement("tr");
 
-    if (tx.isTransfer) {
-      if (tx.bank === bankName) credit = tx.amount;
-      else if (tx.toBank === bankName) debit = tx.amount;
-      else debit = tx.amount;
-      typeLabel = tx.bank === bankName ? "Transfer Out" : "Transfer In";
-    } else {
-      if (moneyInTypes.includes(tx.type)) debit = tx.amount;
-      else if (moneyOutTypes.includes(tx.type)) credit = tx.amount;
-      else credit = tx.amount;
-    }
-const id = tx.ref || tx.date;
+    row.innerHTML = `
+      <td class="border px-3 py-2 text-center">
+        <input
+          type="checkbox"
+          class="txCheck"
+          data-id="${tx.id}"
+        >
+      </td>
 
-const row = document.createElement("tr");
-row.innerHTML = `
-  <td class="border px-1 py-1 text-center"><input type="checkbox" class="txCheck" data-id="${id}"></td>
-  <td class="border px-1 py-1 text-center">${tx.reconcileDate}</td>
-  <td class="border px-1 py-1 text-center">${bankLabel}</td>
-  <td class="border px-1 py-1 text-center">${typeLabel}</td>
-  <td class="border px-1 py-1 text-right">${debit ? debit.toFixed(2) : ""}</td>
-  <td class="border px-1 py-1 text-right">${credit ? credit.toFixed(2) : ""}</td>
+      <td class="border px-3 py-2">
+        ${tx.reconcileDate || ""}
+      </td>
 
-  <td class="border px-1 py-1 text-center space-x-1">
+      <td class="border px-3 py-2">
+        ${tx.bank || ""}
+      </td>
 
-    <button class="bg-blue-900 text-white px-1 py-1 rounded" data-id="${id}">Open</button>
-    <button onclick="editTransaction('${id}')"class="bg-blue-900 text-white px-1 py-1 rounded">Edit</button>
-    <button onclick="attachTransaction('${id}')"class="bg-blue-900 text-white px-1 py-1 rounded">Attach</button>
-    <button onclick="deleteTransaction('${id}')"class="bg-blue-900 text-white px-1 py-1 rounded">Delete </button>
+      <td class="border px-3 py-2">
+        ${tx.ref || ""}
+      </td>
 
-  </td>
-`;
-tbody.appendChild(row);
-  });
+      <td class="border px-3 py-2">
+        ${tx.type || ""}
+      </td>
 
-  document.querySelectorAll(".openTxBtn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      openTransaction(btn.getAttribute("data-id"));
-    });
+      <td class="border px-3 py-2 text-right">
+        ${moneyInTypes.includes(tx.type)
+          ? Number(tx.amount).toFixed(2)
+          : ""}
+      </td>
+
+      <td class="border px-3 py-2 text-right">
+        ${moneyOutTypes.includes(tx.type)
+          ? Number(tx.amount).toFixed(2)
+          : ""}
+      </td>
+
+      <td class="border px-3 py-2 text-center space-x-1">
+
+        <button
+          onclick="openTransaction('${tx.id}')"
+          class="bg-blue-900 text-white px-1 py-1 rounded"
+        >
+          Open
+        </button>
+
+        <button
+          onclick="undoReconciliation('${tx.id}')"
+         class="bg-blue-900 text-white px-1 py-1 rounded"
+        >
+          Undo
+        </button>
+
+        <button
+          onclick="deleteTransaction('${tx.id}')"
+          class="bg-blue-900 text-white px-1 py-1 rounded"
+        >
+          Delete
+        </button>
+
+      </td>
+    `;
+
+    tbody.appendChild(row);
   });
 }
 
 function openTransaction(txId) {
-  const allTx = getAllTransactions();
-  const tx = allTx.find(t => t.ref === txId || t.date === txId);
-  if (!tx) { alert("Transaction not found"); return; }
 
-  let debit = 0, credit = 0;
-  const bankName = document.getElementById("reconcileBank")?.value;
+  const tx =
+    getAllTransactions()
+    .find(t => t.id === txId);
 
-  if (tx.isTransfer) {
-    if (tx.bank === bankName) credit = tx.amount;
-    else if (tx.toBank === bankName) debit = tx.amount;
-    else {
-      debit = tx.toBank ? tx.amount : 0;
-      credit = tx.bank ? tx.amount : 0;
-    }
-  } else {
-    if (moneyInTypes.includes(tx.type)) debit = tx.amount;
-    else if (moneyOutTypes.includes(tx.type)) credit = tx.amount;
-    else credit = tx.amount;
-  }
+  if (!tx) return;
 
   alert(`
-Transaction Details:
-Date: ${tx.reconcileDate || tx.date}
-Bank: ${tx.bank || (tx.isTransfer ? (tx.fromBank + " ➝ " + tx.toBank) : "")}
-Type: ${tx.type}
-Debit: ${debit ? debit.toFixed(2) : "0.00"}
-Credit: ${credit ? credit.toFixed(2) : "0.00"}
+Date: ${tx.date}
 Reference: ${tx.ref || ""}
+Type: ${tx.type}
+Amount: ${tx.amount}
+Bank: ${tx.bank || ""}
+Status: ${tx.status}
   `);
 }
 
-function reconcileBankAccount() {
-  const reconcileDate = document.getElementById("reconcileDate").value;
-  if (!reconcileDate) { alert("⚠️ Please select a reconcile date."); return; }
+function undoReconciliation(txId) {
 
-  const difference = parseFloat(document.getElementById("balanceDifference").textContent.replace(/[^0-9.-]+/g,"")) || 0;
-  if (difference !== 0) { alert("⚠️ Cannot reconcile. Difference must be 0."); return; }
+  const tx =
+    getAllTransactions()
+    .find(t => t.id === txId);
 
-  const allTx = getAllTransactions();
-  const checkboxes = document.querySelectorAll("#reconciliationTableBody input[type='checkbox']");
+  if (!tx) return;
 
-  checkboxes.forEach(cb => {
-    if (cb.checked) {
-      const txId = cb.getAttribute("data-id");
-      const tx = allTx.find(t => t.ref === txId || t.date === txId);
-      if (!tx) return;
+  tx.reconciled = false;
+  tx.reconcileDate = null;
+  tx.status = "unreconciled";
 
-      if (tx.isTransfer) {
-        const t = transfers.find(t => t.ref === txId || t.date === txId);
-        if (t) { t.reconciled = true; t.reconcileDate = reconcileDate; }
-      } else {
-        const t = reconciliationTx.find(t => t.ref === txId || t.date === txId);
-        if (t) { t.reconciled = true; t.reconcileDate = reconcileDate; }
-      }
-
-      cb.disabled = true;
-    }
-  });
-
-  localStorage.setItem("transactions", JSON.stringify(reconciliationTx));
-  localStorage.setItem("transfers", JSON.stringify(transfers));
+  saveData();
 
   render();
-  alert("✅ Reconciliation complete.");
 }
 
-function saveReconcileLater() {
-  const reconcileDate = document.getElementById("reconcileDate").value;
-  if (!reconcileDate) { alert("⚠️ Please select a reconcile date."); return; }
+function deleteTransaction(txId) {
 
-  const allTx = getAllTransactions();
-  const checkboxes = document.querySelectorAll("#reconciliationTableBody input[type='checkbox']");
+  if (!confirm("Delete transaction?")) return;
 
-  checkboxes.forEach(cb => {
-    if (cb.checked) {
-      const txId = cb.getAttribute("data-id");
-      const tx = allTx.find(t => t.ref === txId || t.date === txId);
-      if (!tx) return;
+  reconciliationTx =
+    reconciliationTx.filter(t => t.id !== txId);
 
-      if (tx.isTransfer) {
-        const t = transfers.find(t => t.ref === txId || t.date === txId);
-        if (t) { t.reconciled = true; t.reconcileDate = reconcileDate; }
-      } else {
-        const t = reconciliationTx.find(t => t.ref === txId || t.date === txId);
-        if (t) { t.reconciled = true; t.reconcileDate = reconcileDate; }
-      }
+  transfers =
+    transfers.filter(t => t.id !== txId);
 
-      cb.disabled = true;
-    }
-  });
-
-  localStorage.setItem("transactions", JSON.stringify(reconciliationTx));
-  localStorage.setItem("transfers", JSON.stringify(transfers));
+  saveData();
 
   render();
-  alert("✅ Saved. You can reconcile later.");
 }
+
+function bulkDeleteTransactions() {
+
+  const ids =
+    Array.from(document.querySelectorAll(".txCheck:checked"))
+    .map(cb => cb.dataset.id);
+
+  reconciliationTx =
+    reconciliationTx.filter(tx => !ids.includes(tx.id));
+
+  transfers =
+    transfers.filter(tx => !ids.includes(tx.id));
+
+  saveData();
+
+  render();
+}
+
 function render() {
   renderReconciliationTransactions();
   renderReconciledTransactions();
-  showTransactions();
 }
-function showTransactions() {
-  const tbody = document.getElementById("transactionTable");
-  if (!tbody) return;
-  tbody.innerHTML = "";
 
-  [...reconciliationTx, ...transfers].forEach(tx => {
-    let typeLabel = tx.type || "";
-    let bankLabel = tx.bank || "";
-    if (tx.type === "Transfer") bankLabel = `${tx.fromBank || ""} ➝ ${tx.toBank || ""}`;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td class="px-1 py-1 border">${tx.date || ""}</td>
-      <td class="px-1 py-1 border">${bankLabel}</td>
-      <td class="px-1 py-1 border">${typeLabel}</td>
-      <td class="px-1 py-1 text-right border">${tx.amount ? tx.amount.toFixed(2) : "0.00"}</td>
-      <td class="px-1 py-1 border">${tx.ref || ""}</td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-function attachTransaction(txId) {
-  const allTx = getAllTransactions();
-  const tx = allTx.find(t => t.ref === txId || t.date === txId);
-
-  if (!tx) {
-    alert("Transaction not found");
-    return;
-  }
-
-  const file = prompt("Paste attachment link or reference:");
-  if (!file) return;
-
-  tx.attachment = file;
-
-  localStorage.setItem("transactions", JSON.stringify(reconciliationTx));
-  localStorage.setItem("transfers", JSON.stringify(transfers));
-
-  alert("Attachment saved");
-  render();
-}
-function editTransaction(txId) {
-  const allTx = getAllTransactions();
-  const tx = allTx.find(t => t.ref === txId || t.date === txId);
-
-  if (!tx) {
-    alert("Transaction not found");
-    return;
-  }
-
-  const newAmount = prompt("Enter new amount:", tx.amount);
-  if (newAmount === null) return;
-
-  tx.amount = parseFloat(newAmount);
-
-  localStorage.setItem("transactions", JSON.stringify(reconciliationTx));
-  localStorage.setItem("transfers", JSON.stringify(transfers));
-
-  render();
-}
-function deleteTransaction(txId) {
-  if (!confirm("Are you sure you want to delete this transaction?")) return;
-
-  reconciliationTx = reconciliationTx.filter(t => t.ref !== txId && t.date !== txId);
-  transfers = transfers.filter(t => t.ref !== txId && t.date !== txId);
-
-  localStorage.setItem("transactions", JSON.stringify(reconciliationTx));
-  localStorage.setItem("transfers", JSON.stringify(transfers));
-
-  render();
-}
-document.addEventListener("change", function (e) {
-  if (e.target.id === "selectAllTx") {
-    const checks = document.querySelectorAll(".txCheck");
-    checks.forEach(c => c.checked = e.target.checked);
-  }
-});
-function bulkDeleteTransactions() {
-  let txs = getAllTransactions();
-  const checks = document.querySelectorAll(".txCheck:checked");
-
-  const idsToDelete = Array.from(checks).map(c => c.dataset.id);
-
-  txs = txs.filter(tx => {
-    const id = tx.ref || tx.date;
-    return !idsToDelete.includes(id);
-  });
-
-  localStorage.setItem("transactions", JSON.stringify(txs));
-
-  renderReconciledTransactions();
-}
 document.addEventListener("DOMContentLoaded", () => {
+
   populateReconcileBankDropdown();
+
   render();
 
-  document.getElementById("reconcileBank")?.addEventListener("change", render);
+  document.getElementById("reconcileBank")
+    ?.addEventListener("change", render);
 
-  document.getElementById("statementBalance")?.addEventListener("input", () => {
-    render();
-  });
+  document.getElementById("statementBalance")
+    ?.addEventListener("input", updateSummary);
+
+  document.getElementById("filterStatus")
+    ?.addEventListener("change", render);
+
+  document.getElementById("selectAllTransactions")
+    ?.addEventListener("change", function () {
+
+      document.querySelectorAll(".reconcile-check")
+        .forEach(cb => {
+          if (!cb.disabled) {
+            cb.checked = this.checked;
+          }
+        });
+
+      updateSummary();
+    });
+
+  document.getElementById("selectAllTx")
+    ?.addEventListener("change", function () {
+
+      document.querySelectorAll(".txCheck")
+        .forEach(cb => {
+          cb.checked = this.checked;
+        });
+    });
+
 });
 </script>
 <script>
