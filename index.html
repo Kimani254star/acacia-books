@@ -2059,6 +2059,7 @@ function login(email, password) {
 <li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li>
 <li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li>
 <li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li>
+<li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li>
 </ul>
 <li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li>
 
@@ -5317,6 +5318,138 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
 </div> 
 </div>
+<!-- ✅ PACKAGE -->
+ <div id="packagesTab" class="hidden ml-84 mr-7 p-2">
+   <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold text-black">All Packages</h2>
+
+        <div class="flex items-center gap-2">
+            <button class="p-2 bg-gray-200 rounded hover:bg-gray-300">
+                <i class="fas fa-list"></i>
+            </button>
+
+            <button class="p-2 bg-gray-200 rounded hover:bg-gray-300">
+                <i class="fas fa-th-large"></i>
+            </button>
+
+            <div class="relative group">
+                <button class="bg-orange-400 hover:bg-orange-500 text-white px-4 py-2 rounded font-semibold">
+                    + New
+                </button>
+
+                <div class="absolute right-0 mt-2 w-64 bg-white rounded shadow-lg hidden group-hover:block z-50">
+
+                    <div class="px-4 py-3 border-b">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                        <select class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                            <option>Select Customer</option>
+                        </select>
+                    </div>
+
+                    <div class="px-4 py-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Sales Order</label>
+                        <select class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400">
+                            <option>Select Sales Order</option>
+                        </select>
+                    </div>
+
+                    <div class="p-4 border-t">
+                        <button class="w-full bg-orange-400 hover:bg-orange-500 text-white py-2 rounded font-semibold">
+                            Create Package
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <div class="rounded shadow-sm overflow-hidden bg-cyan-50">
+
+            <div class="flex items-center justify-between px-4 py-3 bg-cyan-100 relative">
+                <h3 class="font-semibold text-lg">Packages, Not Shipped</h3>
+
+                <div class="relative group">
+                    <button class="text-xl">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <div class="absolute right-0 mt-2 w-56 bg-white rounded shadow-lg hidden group-hover:block z-50">
+                        <div class="bg-blue-500 text-white px-4 py-3 rounded-t flex items-center justify-between">
+                            <span>Sort by</span>
+                            <i class="fas fa-chevron-right text-sm"></i>
+                        </div>
+
+                        <button class="w-full text-left px-4 py-3 hover:bg-gray-100">Import Packages</button>
+                        <button class="w-full text-left px-4 py-3 hover:bg-gray-100">Export Packages</button>
+                        <button class="w-full text-left px-4 py-3 hover:bg-gray-100">Import Shipments</button>
+                        <button class="w-full text-left px-4 py-3 hover:bg-gray-100">Export Shipments</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="incomingPackages" class="p-3 space-y-3 h-[700px] overflow-y-auto"></div>
+        </div>
+
+        <div class="rounded shadow-sm overflow-hidden bg-yellow-50">
+
+            <div class="flex items-center justify-between px-4 py-3 bg-yellow-100 relative">
+                <h3 class="font-semibold text-lg">Shipped Packages</h3>
+
+                <div class="relative group">
+                    <button class="text-xl">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <div class="absolute right-0 mt-2 w-56 bg-white rounded shadow-lg hidden group-hover:block z-50">
+                        <div class="bg-blue-500 text-white px-4 py-3 rounded-t flex items-center justify-between">
+                            <span>Sort by</span>
+                            <i class="fas fa-chevron-right text-sm"></i>
+                        </div>
+
+                        <button class="w-full text-left px-4 py-3 hover:bg-gray-100">Import Packages</button>
+                        <button class="w-full text-left px-4 py-3 hover:bg-gray-100">Export Packages</button>
+                        <button class="w-full text-left px-4 py-3 hover:bg-gray-100">Import Shipments</button>
+                        <button class="w-full text-left px-4 py-3 hover:bg-gray-100">Export Shipments</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="shippingPackages" class="p-3 space-y-3 h-[700px] overflow-y-auto"></div>
+        </div>
+
+        <div class="rounded shadow-sm overflow-hidden bg-green-50">
+
+            <div class="flex items-center justify-between px-4 py-3 bg-green-200 relative">
+                <h3 class="font-semibold text-lg">Delivered Packages</h3>
+
+                <div class="relative group">
+                    <button class="text-xl">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <div class="absolute right-0 mt-2 w-56 bg-white rounded shadow-lg hidden group-hover:block z-50">
+                        <div class="bg-blue-500 text-white px-4 py-3 rounded-t flex items-center justify-between">
+                            <span>Sort by</span>
+                            <i class="fas fa-chevron-right text-sm"></i>
+                        </div>
+
+                        <button class="w-full text-left px-4 py-3 hover:bg-gray-100">Import Packages</button>
+                        <button class="w-full text-left px-4 py-3 hover:bg-gray-100">Export Packages</button>
+                        <button class="w-full text-left px-4 py-3 hover:bg-gray-100">Import Shipments</button>
+                        <button class="w-full text-left px-4 py-3 hover:bg-gray-100">Export Shipments</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="deliveredPackages" class="p-3 space-y-3 h-[700px] overflow-y-auto"></div>
+        </div>
+
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>const WAREHOUSES = [""];
@@ -8438,6 +8571,136 @@ window.addEventListener('click',function(e){
   }
 });
 </script>
+<script>
+let dragId = null;
+
+function loadCustomers() {
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  const select = document.querySelector("#packagesTab select.customerSelect");
+  if (!select) return;
+
+  select.innerHTML = `<option value="">Select Customer</option>`;
+  customers.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.name;
+    opt.textContent = c.name;
+    select.appendChild(opt);
+  });
+}
+
+function getAllPackages() {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
+  return orders.map(o => ({
+    id: o.id,
+    customer: o.customerName,
+    date: o.date,
+    items: o.items || [],
+    total: o.total || 0,
+    status: o.packageStatus || (o.converted ? "Shipped" : "Not Shipped"),
+    source: "order"
+  }));
+}
+
+function createPackage() {
+  const customer = document.querySelector("#packagesTab select.customerSelect")?.value;
+  const orderId = document.querySelector("#packagesTab select.orderSelect")?.value;
+
+  if (!customer || !orderId) return alert("Select customer and order");
+
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const index = orders.findIndex(o => o.id == orderId);
+  if (index === -1) return alert("Order not found");
+
+  orders[index].packageStatus = "Not Shipped";
+  orders[index].converted = true;
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+
+  renderPackages();
+}
+
+function renderPackages() {
+  const orders = getAllPackages();
+
+  const incoming = document.getElementById("incomingPackages");
+  const shipping = document.getElementById("shippingPackages");
+  const delivered = document.getElementById("deliveredPackages");
+
+  if (!incoming || !shipping || !delivered) return;
+
+  incoming.innerHTML = "";
+  shipping.innerHTML = "";
+  delivered.innerHTML = "";
+
+  orders.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "p-2 bg-white shadow rounded border cursor-pointer";
+    card.draggable = true;
+    card.ondragstart = () => dragId = p.id;
+    card.ondragover = e => e.preventDefault();
+    card.ondrop = () => onDrop(p.id);
+
+    card.innerHTML = `
+      <div class="font-bold">${p.customer}</div>
+      <div class="text-sm">${p.date}</div>
+      <div class="text-xs">Items: ${p.items.length}</div>
+      <div class="text-xs">Total: ${p.total}</div>
+    `;
+
+    if (p.status === "Not Shipped") incoming.appendChild(card);
+    else if (p.status === "Shipped") shipping.appendChild(card);
+    else delivered.appendChild(card);
+  });
+}
+
+function onDrop(targetId) {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
+  const order = orders.find(o => o.id == dragId);
+  if (!order) return;
+
+  if (order.packageStatus === "Not Shipped") order.packageStatus = "Shipped";
+  else if (order.packageStatus === "Shipped") order.packageStatus = "Delivered";
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+  renderPackages();
+}
+
+function bulkDeletePackages() {
+  const ids = [...document.querySelectorAll(".pkgCheck:checked")].map(c => c.dataset.id);
+  if (!ids.length) return alert("No selection");
+
+  let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  orders = orders.filter(o => !ids.includes(o.id));
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+  renderPackages();
+}
+
+function loadOrderOptions() {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const select = document.querySelector("#packagesTab select.orderSelect");
+  if (!select) return;
+
+  select.innerHTML = `<option value="">Select Order</option>`;
+  orders.forEach(o => {
+    const opt = document.createElement("option");
+    opt.value = o.id;
+    opt.textContent = o.number || o.id;
+    select.appendChild(opt);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadCustomers();
+  loadOrderOptions();
+  renderPackages();
+
+  const btn = document.querySelector("#packagesTab button.createPackageBtn");
+  if (btn) btn.onclick = createPackage;
+});
+</script>
  <!-- BANK MODULE -->
 <div id="fundsTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-2xl font-bold mb-3 text-left">Bank Accounts</h2>
@@ -9037,7 +9300,7 @@ window.addEventListener('click',function(e){
     <button
       type="button"
       onclick="transferBetweenBanks()"
-      class="bg-blue-900 text-white px-5 py-2.5 rounded-lg hover:bg-blue-800"
+      class="bg-blue-900 text-white px-1 py-1 rounded-lg hover:bg-blue-800"
     >
       Save Transfer
     </button>
@@ -9045,7 +9308,7 @@ window.addEventListener('click',function(e){
     <button
       type="button"
       onclick="clearTransferForm()"
-      class="bg-gray-500 text-white px-5 py-2.5 rounded-lg hover:bg-gray-600"
+       class="bg-blue-900 text-white px-1 py-1 rounded-lg hover:bg-blue-800"
     >
       Clear
     </button>
@@ -9076,7 +9339,7 @@ window.addEventListener('click',function(e){
         id="transferSearch"
         type="text"
         placeholder="Search transfer..."
-        class="border rounded-lg px-3 py-2 text-sm"
+         class="bg-blue-900 text-white px-1 py-1 rounded-lg hover:bg-blue-800"
       />
 
     </div>
@@ -9143,7 +9406,7 @@ window.addEventListener('click',function(e){
   type="file"
   id="transferImportFile"
   accept=".csv"
-  class="hidden"
+   class="bg-blue-900 text-white px-1 py-1 rounded-lg hover:bg-blue-800"
 />
 <!-- BANK RECONCILE-->
 <div class="bg-white p-6 rounded-xl shadow mb-6">
@@ -9540,16 +9803,18 @@ window.addEventListener('click',function(e){
 
   <div class="overflow-x-auto">
     <table class="min-w-full border border-gray-200 text-sm">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="border px-3 py-2 text-left">Bank</th>
-          <th class="border px-3 py-2 text-left">Ledger Account</th>
-          <th class="border px-3 py-2 text-left">Auto Reconciliation</th>
-          <th class="border px-3 py-2 text-left">Import Rules</th>
-          <th class="border px-3 py-2 text-left">Actions</th>
-        </tr>
-      </thead>
-
+     <thead class="bg-gray-100">
+    <tr>
+   <th class="border px-3 py-2 text-left">Bank</th>
+    <th class="border px-3 py-2 text-left">Ledger Account</th>
+    <th class="border px-3 py-2 text-left">Auto Reconciliation</th>
+    <th class="border px-3 py-2 text-left">Import Rules</th>
+    <th class="border px-3 py-2 text-left">Status</th>
+    <th class="border px-3 py-2 text-left">Last Updated</th>
+    <th class="border px-3 py-2 text-left">Sync Status</th>
+    <th class="border px-3 py-2 text-left">Actions</th>
+    </tr>
+     </thead>
       <tbody id="bankMappingTableBody">
         <!-- Rows will be inserted dynamically -->
         <tr>
@@ -12027,7 +12292,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function loadMappingBanks() {
   const select = document.getElementById("mappingBank");
-  if(!select) return;
+  if (!select) return;
 
   const banks = JSON.parse(localStorage.getItem("banks") || "[]");
   select.innerHTML = '<option value="">Select Bank</option>';
@@ -12042,7 +12307,7 @@ function loadMappingBanks() {
 
 function loadMappingAccounts() {
   const select = document.getElementById("mappingAccount");
-  if(!select) return;
+  if (!select) return;
 
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   select.innerHTML = '<option value="">Select Account</option>';
@@ -12060,9 +12325,11 @@ function saveBankMapping() {
   const accountCode = document.getElementById("mappingAccount").value;
   const autoReconcile = document.getElementById("autoReconcile").value;
   const mappingRulesInput = document.getElementById("mappingRules");
-  const mappingRulesFile = mappingRulesInput.files[0] ? mappingRulesInput.files[0].name : "";
+  const mappingRulesFile = mappingRulesInput.files[0]
+    ? mappingRulesInput.files[0].name
+    : "";
 
-  if(!bankName || !accountCode) {
+  if (!bankName || !accountCode) {
     alert("⚠️ Please select both Bank and Ledger Account.");
     return;
   }
@@ -12070,27 +12337,98 @@ function saveBankMapping() {
   let bankMappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
 
   const existingIndex = bankMappings.findIndex(m => m.bank === bankName);
+
   const mappingObj = {
+    id: existingIndex !== -1 ? bankMappings[existingIndex].id : Date.now(),
     bank: bankName,
     account: accountCode,
     autoReconcile,
-    mappingRulesFile
+    mappingRulesFile,
+    status: "Active",
+    syncStatus: "Not Synced",
+    lastUpdated: new Date().toLocaleString()
   };
 
-  if(existingIndex !== -1) {
+  if (existingIndex !== -1) {
     bankMappings[existingIndex] = mappingObj;
   } else {
     bankMappings.push(mappingObj);
   }
 
   localStorage.setItem("bankMappings", JSON.stringify(bankMappings));
+
+  renderBankMappings();
   alert("✅ Bank mapping configuration saved.");
 }
+
+function renderBankMappings() {
+  const tbody = document.getElementById("bankMappingTableBody");
+  if (!tbody) return;
+
+  const bankMappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
+
+  if (bankMappings.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td class="border px-3 py-2 text-gray-500" colspan="8">
+          No mappings available
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = "";
+
+  bankMappings.forEach(m => {
+    const row = `
+      <tr>
+        <td class="border px-3 py-2">${m.bank}</td>
+        <td class="border px-3 py-2">${m.account}</td>
+        <td class="border px-3 py-2">${m.autoReconcile}</td>
+        <td class="border px-3 py-2">${m.mappingRulesFile || "-"}</td>
+        <td class="border px-3 py-2">${m.status}</td>
+        <td class="border px-3 py-2">${m.lastUpdated}</td>
+        <td class="border px-3 py-2">${m.syncStatus}</td>
+
+        <td class="border px-3 py-2 space-x-1">
+        <button onclick="editMapping(${m.id})"class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-700"> Edit</button>
+        <buttononclick="deleteMapping(${m.id})"class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-700">Delete</button>
+
+        </td>
+      </tr>
+    `;
+    tbody.insertAdjacentHTML("beforeend", row);
+  });
+}
+function editMapping(id) {
+  const bankMappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
+
+  const mapping = bankMappings.find(m => m.id === id);
+  if (!mapping) return;
+
+  document.getElementById("mappingBank").value = mapping.bank;
+  document.getElementById("mappingAccount").value = mapping.account;
+  document.getElementById("autoReconcile").value = mapping.autoReconcile;
+
+  deleteMapping(id);
+}
+function deleteMapping(id) {
+  let bankMappings = JSON.parse(localStorage.getItem("bankMappings") || "[]");
+
+  bankMappings = bankMappings.filter(m => m.id !== id);
+
+  localStorage.setItem("bankMappings", JSON.stringify(bankMappings));
+  renderBankMappings();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   loadMappingBanks();
   loadMappingAccounts();
+  renderBankMappings();
 });
+
 </script>
+
 <!-- ✅ SALES HUB -->
 <div id="customersTab" class="hidden ml-84 mr-7 p-2">
   <div class="mb-3 relative inline-block">
@@ -18908,7 +19246,84 @@ function resetInvoiceColumnWidths() {
   localStorage.removeItem("invoiceColumnWidths");
   location.reload();
 }
+function loadConvertedOrderToInvoice() {
 
+  const currentInvoice =
+    JSON.parse(localStorage.getItem("currentInvoice") || "null");
+
+  if (!currentInvoice) return;
+
+  document.getElementById("invoiceNumber").value =
+    currentInvoice.invoiceNumber || generateInvoiceNumber();
+
+  document.getElementById("invoiceCustomer").value =
+    currentInvoice.customerName || "";
+
+  invoiceItems = (currentInvoice.items || []).map(item => ({
+    desc: item.desc || "",
+    warehouse: item.warehouse || "Main",
+    qty: parseFloat(item.qty) || 0,
+    price: parseFloat(item.price) || 0,
+    discount: parseFloat(item.discount) || 0,
+    vatRate: parseFloat(item.vatRate) || 0,
+    category: item.category || "General",
+    subtotal: parseFloat(item.subtotal) || 0,
+    vat: parseFloat(item.vat) || 0,
+    totalWithVat:
+      parseFloat(item.totalWithVat || item.total) || 0
+  }));
+
+  const tbody = document.getElementById("invoiceItemTableBody");
+
+  tbody.innerHTML = "";
+
+  invoiceItems.forEach((item, index) => {
+
+    tbody.innerHTML += `
+      <tr class="border">
+        <td class="p-2 text-xs">${item.desc}</td>
+        <td class="p-2 text-xs">${item.qty}</td>
+        <td class="p-2 text-xs">${formatCurrency(item.price)}</td>
+        <td class="p-2 text-xs">${formatCurrency(item.discount)}</td>
+        <td class="p-2 text-xs">${formatCurrency(item.vat)}</td>
+        <td class="p-2 text-xs">${formatCurrency(item.totalWithVat)}</td>
+        <td class="p-2 text-xs">
+          <button onclick="editInvoiceItem(${index})"
+          class="border border-red-600 text-white bg-blue-900 font-bold px-1 py-1 rounded">
+          Edit
+          </button>
+
+          <button onclick="removeInvoiceItem(${index})"
+          class="border border-red-600 text-white bg-blue-900 font-bold px-1 py-1 rounded">
+          Remove
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  const subtotal =
+    invoiceItems.reduce((sum, item) => sum + item.totalWithVat, 0);
+
+  const vat =
+    invoiceItems.reduce((sum, item) => sum + item.vat, 0);
+
+  document.getElementById("invoiceTotal").value =
+    subtotal.toFixed(2);
+
+  document.getElementById("invoiceVAT").value =
+    vat.toFixed(2);
+
+  localStorage.removeItem("currentInvoice");
+
+  alert("✅ Order converted to invoice");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  loadConvertedOrderToInvoice();
+
+});
 </script>
 <script>
 let orders = JSON.parse(localStorage.getItem("orders") || "[]");
@@ -19283,15 +19698,21 @@ function deleteOrder(index) {
   renderOrders();
 }
 function convertOrder(index) {
+
   const confirm1 = confirm("Convert this order to invoice?");
   if (!confirm1) return;
 
   const confirm2 = confirm("Approve conversion? This cannot be undone.");
   if (!confirm2) return;
 
-  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
   const order = orders[index];
-  if (!order) return;
+
+  if (!order) {
+    alert("Order not found");
+    return;
+  }
 
   if (order.converted) {
     alert("Already converted");
@@ -19299,47 +19720,108 @@ function convertOrder(index) {
   }
 
   const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-  const exists = invoices.find(i => i.sourceOrderId === order.id);
+
+  const exists = invoices.find(
+    i => i.sourceOrderId === order.id
+  );
+
   if (exists) {
     alert("Already converted");
     return;
   }
 
-  const convertedItems = (order.items || []).map(item => ({
-    desc: item.desc || item.name,
-    warehouse: item.warehouse || "Main",
-    qty: item.qty,
-    price: item.price,
-    discount: item.discount || 0,
-    vatRate: item.vatRate || 0,
-    category: item.category || "General",
-    subtotal: item.subtotal || 0,
-    vat: item.vat || 0,
-    totalWithVat: item.totalWithVat || item.total || 0
-  }));
+  const convertedItems = (order.items || []).map(item => {
+
+    const qty = parseFloat(item.qty) || 0;
+    const price = parseFloat(item.price) || 0;
+    const discount = parseFloat(item.discount) || 0;
+
+    const subtotal = qty * price;
+
+    const discountAmount =
+      subtotal * (discount / 100);
+
+    const afterDiscount =
+      subtotal - discountAmount;
+
+    const vatRate =
+      item.tax === "exempt"
+        ? "exempt"
+        : parseFloat(item.tax) || 0;
+
+    const vat =
+      vatRate === "exempt"
+        ? 0
+        : afterDiscount * (vatRate / 100);
+
+    const totalWithVat =
+      afterDiscount + vat;
+
+    let category = "Exempt";
+
+    if (String(item.tax) === "16") {
+      category = "General";
+    } else if (String(item.tax) === "0") {
+      category = "Zero";
+    }
+
+    return {
+      desc: item.desc || "",
+      warehouse: item.warehouse || "Main",
+      qty,
+      price,
+      discount,
+      vatRate,
+      category,
+      subtotal: afterDiscount,
+      vat,
+      totalWithVat
+    };
+  });
 
   const tempInvoice = {
-    invoiceNumber: "INV-" + order.number,
-    customerName: order.customerName,
-    total: order.total || 0,
-    vat: order.vat || 0,
+
+    invoiceNumber:
+      typeof generateInvoiceNumber === "function"
+        ? generateInvoiceNumber()
+        : "INV-" + Date.now(),
+
+    customerName: order.customerName || "",
+
+    total:
+      parseFloat(order.total) || 0,
+
+    vat:
+      parseFloat(order.vat) || 0,
+
     items: convertedItems,
-    sourceOrderId: order.id
+
+    sourceOrderId: order.id,
+
+    convertedFromOrder: order.number
   };
 
-  localStorage.setItem("currentInvoice", JSON.stringify(tempInvoice));
+  localStorage.setItem(
+    "currentInvoice",
+    JSON.stringify(tempInvoice)
+  );
 
   order.status = "converted";
   order.converted = true;
 
   orders[index] = order;
-  localStorage.setItem("orders", JSON.stringify(orders));
+
+  localStorage.setItem(
+    "orders",
+    JSON.stringify(orders)
+  );
 
   renderOrders();
 
+  alert("✅ Order converted successfully");
+
   window.location.href = "invoice.html";
 }
-
 function previewOrder(id) {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
   const order = orders.find(o => o.id == id);
