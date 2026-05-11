@@ -6054,125 +6054,44 @@ function toggleInventoryDropdownVisibility() {
 }
 
 function exportInventoryExcel() {
-  try {
-    console.log("Export started...");
-
-    const warehouse = document.getElementById('warehouseSelect').value;
-    console.log("Warehouse:", warehouse);
-
-    if (!warehouse) return alert('Please select a warehouse first.');
-
-    const items = getInventory(warehouse);
-    console.log("Items:", items);
-
-    if (!items || items.length === 0) return alert('No items to export.');
-
-    if (typeof XLSX === "undefined") {
-      return alert("❌ XLSX library not loaded");
-    }
-
-    const cleanItems = items.map(item => ({
-      name: item.name || "",
-      sku: item.sku || "",
-      qty: Number(item.qty || 0),
-      buyPrice: Number(item.buyPrice || 0),
-      sellPrice: Number(item.sellPrice || 0),
-      buyVat: item.buyVat || "",
-      sellVat: item.sellVat || ""
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(cleanItems);
-    const workbook = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, warehouse);
-
-    XLSX.writeFile(workbook, `${warehouse}_inventory.xlsx`);
-
-    alert('✅ Excel file exported successfully!');
-  } catch (err) {
-    console.error("EXPORT ERROR:", err);
-    alert("❌ Export failed. Check console.");
-  }
+  const warehouse = document.getElementById('warehouseSelect').value;
+  if (!warehouse) return alert('Please select a warehouse first.');
+  const items = getInventory(warehouse);
+  if (!items || items.length === 0) return alert('No items to export.');
+  const worksheet = XLSX.utils.json_to_sheet(items);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, warehouse);
+  XLSX.writeFile(workbook, `${warehouse}_inventory.xlsx`);
+  alert('✅ Excel file exported successfully!');
 }
+
 function importInventoryExcel(event) {
   const warehouse = document.getElementById('warehouseSelect').value;
   if (!warehouse) return alert('Please select a warehouse first.');
-
   const file = event.target.files[0];
   if (!file) return;
-
-  console.log("File:", file.name, file.size);
-
   const reader = new FileReader();
-
-  reader.onload = function (e) {
+  reader.onload = function(e) {
     try {
       const data = new Uint8Array(e.target.result);
-
-      const workbook = XLSX.read(data, {
-        type: "array",
-        cellDates: true,
-        WTF: true
-      });
-
-      console.log("Workbook:", workbook);
-
-      if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
-        throw new Error("No sheets found in Excel file");
-      }
-
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-
-      if (!sheet) {
-        throw new Error("Sheet is empty or unreadable");
-      }
-
-      let items = XLSX.utils.sheet_to_json(sheet, {
-        defval: ""
-      });
-
-      console.log("Parsed items:", items);
-
-      if (!items.length) {
-        throw new Error("No data found in sheet");
-      }
-
-      items = items.map(i => ({
-        name: i.name || "",
-        sku: i.sku || "",
-        qty: Number(i.qty || 0),
-        buyPrice: Number(i.buyPrice || 0),
-        sellPrice: Number(i.sellPrice || 0),
-        buyVat: i.buyVat || "",
-        sellVat: i.sellVat || "",
-        active: true,
-        history: []
-      }));
-
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const items = XLSX.utils.sheet_to_json(firstSheet);
+      if (!Array.isArray(items)) return alert('Invalid Excel format.');
       saveInventory(warehouse, items);
       renderInventoryTable();
-
-      alert("✅ Import successful!");
+      alert('✅ Excel data imported successfully!');
     } catch (err) {
-      console.error("FULL IMPORT ERROR:", err);
-      alert("❌ Import failed. Check console for details.");
+      console.error(err);
+      alert('❌ Error reading Excel file.');
     }
   };
-
-  reader.onerror = function () {
-    console.error("FileReader error");
-    alert("❌ Could not read file.");
-  };
-
   reader.readAsArrayBuffer(file);
-}
-function saveInventory(warehouse, items) {
-  localStorage.setItem(`inventory_${warehouse}`, JSON.stringify(items));
 }
 
 function resetInventoryTable() { renderInventoryTable(); }
 function manageInventoryFiles() { alert('🗂️ Manage Inventory Files clicked'); }
+
 
 function sortInventoryBy(field, order) {
   const warehouse = document.getElementById('warehouseSelect').value;
