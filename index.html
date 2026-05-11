@@ -1124,7 +1124,15 @@ function toggleFAQ(faqId) {
         From inventory control to payroll automation, Acacia Books centralizes your core business processes into a secure cloud system.
       </p>
     </div>
+    <div class="bg-white p-6 rounded-xl shadow hover:shadow-xl transition">
+    <h3 class="text-xl font-bold text-blue-900 mb-4">
+    Simplify Daily Operations With Smart Tools
+    </h3>
 
+    <p class="text-gray-600 leading-relaxed">
+    Manage sales, track expenses, monitor stock levels, and organize customer records from one easy-to-use digital workspace.
+    </p>
+    </div>
     <div class="bg-blue-900 text-white p-6 rounded-xl shadow hover:scale-105 transition">
       <h3 class="text-xl font-bold mb-4">Why Businesses Choose Acacia Books</h3>
 
@@ -8529,6 +8537,7 @@ function createPackage() {
 
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
   const index = orders.findIndex(o => o.id == orderId);
+
   if (index === -1) return alert("Order not found");
 
   orders[index].packageStatus = "Not Shipped";
@@ -8554,22 +8563,49 @@ function renderPackages() {
 
   orders.forEach(p => {
     const card = document.createElement("div");
-    card.className = "p-2 bg-white shadow rounded border cursor-pointer";
+
+    card.className =
+      "p-3 bg-white shadow rounded border cursor-pointer space-y-2";
+
     card.draggable = true;
+
     card.ondragstart = () => dragId = p.id;
     card.ondragover = e => e.preventDefault();
     card.ondrop = () => onDrop(p.id);
 
     card.innerHTML = `
       <div class="font-bold">${p.customer}</div>
-      <div class="text-sm">${p.date}</div>
+
+      <div class="text-sm text-gray-500">${p.date}</div>
+
       <div class="text-xs">Items: ${p.items.length}</div>
+
       <div class="text-xs">Total: ${p.total}</div>
+
+      <div class="flex gap-2 pt-2">
+        <button
+          onclick="viewPackage('${p.id}')"
+          class="px-1 py-1 bg-blue-900 text-white rounded text-xs hover:bg-blue-700"
+        >
+          View
+        </button>
+
+        <button
+          onclick="deletePackage('${p.id}')"
+          class="px-1 py-1 bg-blue-900 text-white rounded text-xs hover:bg-blue-700"
+        >
+          Delete
+        </button>
+      </div>
     `;
 
-    if (p.status === "Not Shipped") incoming.appendChild(card);
-    else if (p.status === "Shipped") shipping.appendChild(card);
-    else delivered.appendChild(card);
+    if (p.status === "Not Shipped") {
+      incoming.appendChild(card);
+    } else if (p.status === "Shipped") {
+      shipping.appendChild(card);
+    } else {
+      delivered.appendChild(card);
+    }
   });
 }
 
@@ -8577,36 +8613,82 @@ function onDrop(targetId) {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
 
   const order = orders.find(o => o.id == dragId);
+
   if (!order) return;
 
-  if (order.packageStatus === "Not Shipped") order.packageStatus = "Shipped";
-  else if (order.packageStatus === "Shipped") order.packageStatus = "Delivered";
+  if (order.packageStatus === "Not Shipped") {
+    order.packageStatus = "Shipped";
+  } else if (order.packageStatus === "Shipped") {
+    order.packageStatus = "Delivered";
+  }
 
   localStorage.setItem("orders", JSON.stringify(orders));
+
+  renderPackages();
+}
+
+function viewPackage(id) {
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
+  const pkg = orders.find(o => o.id == id);
+
+  if (!pkg) return alert("Package not found");
+
+  alert(`
+Customer: ${pkg.customerName}
+
+Date: ${pkg.date}
+
+Items: ${pkg.items.length}
+
+Total: ${pkg.total}
+
+Status: ${pkg.packageStatus || "Not Shipped"}
+  `);
+}
+
+function deletePackage(id) {
+  if (!confirm("Are you sure you want to delete this package?")) return;
+
+  let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
+  orders = orders.filter(o => o.id != id);
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+
   renderPackages();
 }
 
 function bulkDeletePackages() {
-  const ids = [...document.querySelectorAll(".pkgCheck:checked")].map(c => c.dataset.id);
+  const ids = [...document.querySelectorAll(".pkgCheck:checked")]
+    .map(c => c.dataset.id);
+
   if (!ids.length) return alert("No selection");
 
   let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
   orders = orders.filter(o => !ids.includes(o.id));
 
   localStorage.setItem("orders", JSON.stringify(orders));
+
   renderPackages();
 }
 
 function loadOrderOptions() {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
   const select = document.querySelector("#packagesTab select.orderSelect");
+
   if (!select) return;
 
   select.innerHTML = `<option value="">Select Order</option>`;
+
   orders.forEach(o => {
     const opt = document.createElement("option");
+
     opt.value = o.id;
     opt.textContent = o.number || o.id;
+
     select.appendChild(opt);
   });
 }
@@ -8616,7 +8698,10 @@ document.addEventListener("DOMContentLoaded", () => {
   loadOrderOptions();
   renderPackages();
 
-  const btn = document.querySelector("#packagesTab button.createPackageBtn");
+  const btn = document.querySelector(
+    "#packagesTab button.createPackageBtn"
+  );
+
   if (btn) btn.onclick = createPackage;
 });
 </script>
@@ -19237,7 +19322,22 @@ function loadConvertedOrderToInvoice() {
 
   alert("✅ Order converted to invoice");
 }
+function updatePackageStatusFromInvoice(invoice) {
+  let orders = JSON.parse(localStorage.getItem("orders") || "[]");
 
+  const index = orders.findIndex(o => o.id === invoice.sourceOrderId);
+
+  if (index !== -1) {
+
+    if (orders[index].status === "packed" || orders[index].status === "active") {
+      orders[index].status = "packed";
+      orders[index].packed = true;
+
+      localStorage.setItem("orders", JSON.stringify(orders));
+      renderOrders();
+    }
+  }
+}
 document.addEventListener("DOMContentLoaded", () => {
 
   loadConvertedOrderToInvoice();
@@ -19482,7 +19582,7 @@ function deductStock(items) {
   localStorage.setItem("inventories", JSON.stringify(inventory));
 }
 
-function saveOrder(status = "active") {
+function saveOrder(status = "packed") {
   const date = document.getElementById("orderDate").value;
   const customerId = document.getElementById("orderCustomer").value;
   const number = document.getElementById("orderNumber").value || generateOrderNumber();
@@ -19512,7 +19612,8 @@ function saveOrder(status = "active") {
     subtotal,
     vat,
     total,
-    status,
+    status: status,
+    converted: false,
     terms,
     dueDate
   };
@@ -23806,16 +23907,20 @@ function addDelivery() {
 
   const dnNumber = "DN" + String(deliveries.length + 1).padStart(3, "0");
 
-  let lastTrackNumber = deliveries.length ? deliveries[deliveries.length - 1].trackNumber : null;
-  let trackNumber = lastTrackNumber ? "TR" + String(parseInt(lastTrackNumber.replace(/^TR/, '')) + 1).padStart(4, "0") : "TR0001";
+  let lastTrackNumber = deliveries.length
+    ? deliveries[deliveries.length - 1].trackNumber
+    : null;
 
-  
+  let trackNumber = lastTrackNumber
+    ? "TR" + String(parseInt(lastTrackNumber.replace(/^TR/, "")) + 1).padStart(4, "0")
+    : "TR0001";
+
   const location = document.getElementById("deliveryLocation").value.trim();
   const truckNumber = document.getElementById("deliveryTruckNumber").value.trim();
   const driver = document.getElementById("deliveryDriver").value.trim();
 
-  
-  deliveries.push({ 
+  const newDelivery = {
+    id: crypto.randomUUID(),
     dn: dnNumber,
     customer,
     items,
@@ -23826,11 +23931,29 @@ function addDelivery() {
     location,
     truckNumber,
     driver
-  });
+  };
+
+  deliveries.push(newDelivery);
 
   localStorage.setItem("deliveries", JSON.stringify(deliveries));
 
- 
+  let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
+  orders.push({
+    id: newDelivery.id,
+    customerName: customer,
+    date: date,
+    items: items,
+    total: items.reduce(
+      (sum, i) => sum + ((i.amount || 0) * (i.qty || 1)),
+      0
+    ),
+    packageStatus: "Delivered",
+    converted: true
+  });
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+
   document.getElementById("deliveryDate").value = "";
   document.getElementById("deliveryDescription").value = "";
   document.getElementById("customerInvoiceSelect").value = "";
@@ -23841,8 +23964,11 @@ function addDelivery() {
   renderDeliveryTable();
   generateNextTrackNumber();
   renderDeliveryReport();
-}
 
+  if (typeof renderPackages === "function") {
+    renderPackages();
+  }
+}
 function renderDeliveryTable() {
   const deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
   const tbody = document.getElementById("deliveryTableBody");
@@ -23887,25 +24013,69 @@ function renderDeliveryTable() {
 
 function editDelivery(index) {
   const deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
   const d = deliveries[index];
   if (!d) return;
 
-  document.getElementById("deliveryCustomer").value = d.customer;
-  document.getElementById("deliveryDate").value = d.date;
-  document.getElementById("deliveryNote").value = d.note;
+  document.getElementById("deliveryCustomer").value = d.customer || "";
+  document.getElementById("deliveryDate").value = d.date || "";
+  document.getElementById("deliveryDescription").value = d.description || "";
+  document.getElementById("deliveryLocation").value = d.location || "";
+  document.getElementById("deliveryTruckNumber").value = d.truckNumber || "";
+  document.getElementById("deliveryDriver").value = d.driver || "";
 
-  
-  document.getElementById("addDeliveryBtn").onclick = function() {
+  document.getElementById("addDeliveryBtn").onclick = function () {
     d.customer = document.getElementById("deliveryCustomer").value;
     d.date = document.getElementById("deliveryDate").value;
-    d.note = document.getElementById("deliveryNote").value.trim();
+    d.description = document.getElementById("deliveryDescription").value.trim();
+    d.location = document.getElementById("deliveryLocation").value.trim();
+    d.truckNumber = document.getElementById("deliveryTruckNumber").value.trim();
+    d.driver = document.getElementById("deliveryDriver").value.trim();
+
     localStorage.setItem("deliveries", JSON.stringify(deliveries));
+
+    const orderIndex = orders.findIndex(o => o.id === d.id);
+    if (orderIndex !== -1) {
+      orders[orderIndex].customerName = d.customer;
+      orders[orderIndex].date = d.date;
+      orders[orderIndex].items = d.items;
+      localStorage.setItem("orders", JSON.stringify(orders));
+    }
+
     renderDeliveryTable();
+    if (typeof renderPackages === "function") renderPackages();
+    renderDeliveryReport();
     resetDeliveryForm();
   };
 }
+function deleteDelivery(index) {
+  if (!confirm("Are you sure you want to delete this delivery?")) return;
+
+  let deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
+  let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
+  const delivery = deliveries[index];
+  if (!delivery) return;
+
+  if (!delivery.id) delivery.id = crypto.randomUUID();
+
+  moveToRecycle(delivery, "File", "Deliveries");
+
+  deliveries.splice(index, 1);
+  orders = orders.filter(o => o.id !== delivery.id);
+
+  localStorage.setItem("deliveries", JSON.stringify(deliveries));
+  localStorage.setItem("orders", JSON.stringify(orders));
+
+  renderDeliveryTable();
+  if (typeof renderPackages === "function") renderPackages();
+
+  alert("♻️ Delivery removed");
+}
 function bulkDeleteDeliveries() {
   let deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
+  let orders = JSON.parse(localStorage.getItem("orders") || "[]");
 
   const selectedIds = [...document.querySelectorAll(".deliveryCheck:checked")]
     .map(cb => cb.dataset.id);
@@ -23916,44 +24086,24 @@ function bulkDeleteDeliveries() {
   }
 
   if (!confirm(`Delete ${selectedIds.length} deliveries?`)) return;
-
   if (!confirm("⚠️ This action cannot be undone. Continue?")) return;
 
-  deliveries = deliveries.filter((d, i) =>
-    !selectedIds.includes(String(d.id || i))
-  );
+  const deleted = deliveries.filter(d => selectedIds.includes(d.id));
+
+  deleted.forEach(d => {
+    moveToRecycle(d, "File", "Deliveries");
+  });
+
+  deliveries = deliveries.filter(d => !selectedIds.includes(d.id));
+  orders = orders.filter(o => !selectedIds.includes(o.id));
 
   localStorage.setItem("deliveries", JSON.stringify(deliveries));
+  localStorage.setItem("orders", JSON.stringify(orders));
 
   renderDeliveryTable();
+  if (typeof renderPackages === "function") renderPackages();
 
   document.getElementById("selectAllDeliveries").checked = false;
-}
-
-function toggleSelectAllDeliveries() {
-  const checked = document.getElementById("selectAllDeliveries").checked;
-
-  document.querySelectorAll(".deliveryCheck").forEach(cb => {
-    cb.checked = checked;
-  });
-}
-function deleteDelivery(index) {
-  if (!confirm("Are you sure you want to delete this delivery?")) return;
-
-  let deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
-  const delivery = deliveries[index];
-  if (!delivery) return;
-
-  if (!delivery.id) delivery.id = crypto.randomUUID();
-
-  moveToRecycle(delivery, "File", "Deliveries");
-
-  deliveries.splice(index, 1);
-  localStorage.setItem("deliveries", JSON.stringify(deliveries));
-
-  renderDeliveryTable();
-
-  alert("♻️ Delivery moved to Recycle Bin.");
 }
 
 function resetDeliveryForm() {
@@ -25465,9 +25615,11 @@ document.addEventListener("DOMContentLoaded", () => {
  
 <div class="bg-white p-6 rounded shadow">
   <h3 class="text-lg font-semibold mb-4">Payments List</h3>
+  <button onclick="deleteSelectedSupplierPayments()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
   <table class="w-full text-sm border">
     <thead class="bg-gray-100">
       <tr>
+        <th class="p-2"><input type="checkbox" onclick="toggleSelectAllSupplierPayments(this)"></th>
         <th class="p-2 text-left">Date</th>
         <th class="p-2 text-left">Supplier</th>
         <th class="p-2 text-left">Bill</th>
@@ -25789,9 +25941,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   <div class="bg-white p-6 rounded shadow">
     <h2 class="text-lg font-semibold mb-4">Supplier Bills List</h2>
+    <button onclick="deleteSelectedBills()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2"> <input type="checkbox" onclick="toggleSelectAllBills(this)"></th>
           <th class="p-2">Bill #</th>
           <th class="p-2">Date</th>
           <th class="p-2">Supplier</th>
@@ -26176,9 +26330,11 @@ document.addEventListener("DOMContentLoaded", () => {
   
   <div class="bg-white p-6 rounded shadow">
     <h2 class="text-lg font-semibold mb-4">Bulk Bills List</h2>
+    <button onclick="deleteSelectedBulkBills()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2"><input type="checkbox" onclick="toggleSelectAllBulkBills(this)"></th>
           <th class="p-2">Bill #</th>
           <th class="p-2">Date</th>
           <th class="p-2">Suppliers</th>
@@ -26369,16 +26525,27 @@ document.addEventListener("DOMContentLoaded", () => {
       </select>
 
       <button onclick="addQuoteItem()"
-        class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Add Item
       </button>
 
     </div>
+    <button type="button" id="saveDraftQuoteBtn"
+class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+Save Draft
+</button>
+    <button type="button" id="saveQuoteBtn"
+class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+Save Quote
+</button>
+
 
     <table class="w-full text-sm border mb-4" id="quoteItemsTable">
-
+    <h2 class="text-lg font-semibold mb-4">Qoute List</h2>
+    <button onclick="deleteSelectedQuoteItems()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2"><input type="checkbox" onclick="toggleSelectAllQuoteItems(this)"></th>
           <th class="p-2">Item</th>
           <th class="p-2">Qty</th>
           <th class="p-2">Unit Price</th>
@@ -26396,11 +26563,6 @@ document.addEventListener("DOMContentLoaded", () => {
       </tbody>
 
     </table>
-
-    <button type="button" id="saveQuoteBtn"
-      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-      Save Quote
-    </button>
 
   </div>
 
@@ -26702,8 +26864,10 @@ function managePOFiles() {
   
     <div class="overflow-x-auto mb-4">
       <table class="w-full text-sm border" id="poItemsTable">
+        <button onclick="deleteSelectedPurchaseOrders()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Bulk Delete</button>
         <thead class="bg-gray-100">
           <tr>
+            <th class="p-2"><input type="checkbox" onclick="toggleSelectAllPOs(this)"></th>
             <th class="p-2">Description</th>
             <th class="p-2">Qty</th>
             <th class="p-2">Unit Price</th>
@@ -26932,15 +27096,17 @@ function managePOFiles() {
       </tbody>
     </table>
 
-    <button type="button" id="saveDebitNoteBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
+    <button type="button" id="saveDebitNoteBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Save Debit Note
     </button>
   </div>
 <div class="bg-white p-6 rounded shadow">
   <h3 class="text-lg font-semibold mb-4">Debit Notes List</h3>
+  <button onclick="deleteSelectedDebitNotes()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
   <table class="w-full text-sm border">
     <thead class="bg-gray-100">
       <tr>
+        <th class="p-2 text-left"> <input type="checkbox" onclick="toggleSelectAllDebitNotes(this)"></th>
         <th class="p-2 text-left">Date</th>
         <th class="p-2 text-left">Supplier</th>
         <th class="p-2 text-left">Item</th>
@@ -27173,10 +27339,12 @@ function managePOFiles() {
   </div>
 
   <div class="bg-white p-6 rounded shadow">
-    <h3 class="text-lg font-semibold mb-4">Purchase Returns List</h3>
+    <h3 class="text-lg font-semibold mb-4">Purchase Returns</h3>
+    <button onclick="deleteSelectedPurchaseReturns()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2"><input type="checkbox" onclick="toggleSelectAllPurchaseReturns(this)"></th>
           <th class="p-2 text-left">PR Number</th>
           <th class="p-2 text-left">Date</th>
           <th class="p-2 text-left">Supplier</th>
@@ -27443,9 +27611,11 @@ function managePOFiles() {
 
   <div class="bg-white p-6 rounded shadow">
     <h3 class="text-lg font-semibold mb-4">Tax Payment History</h3>
+    <button onclick="deleteSelectedTaxPayments()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Bulk Delete</button>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2"><input type="checkbox" onclick="toggleSelectAllTaxPayments(this)"></th>
           <th class="p-2">Date</th>
           <th class="p-2">Tax Type</th>
           <th class="p-2">Mode</th>
@@ -27675,19 +27845,21 @@ function managePOFiles() {
         <tbody id="bulkExpenseBody"></tbody>
       </table>
 
-      <button onclick="addBulkRow()"class="bg-blue-900 text-white px-2 py-1 rounded ml-2"> Add Row </button>
+      <button onclick="addBulkRow()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Add Row </button>
 
-      <button onclick="saveBulkExpenses()" class="bg-blue-900 text-white px-2 py-1 rounded ml-2"> Save All</button>
+      <button onclick="saveBulkExpenses()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Save All</button>
 
     </div>
 
   </div>
   
   <div class="bg-white p-6 rounded shadow">
-    <h3 class="text-lg font-semibold mb-4">Operational Cost History</h3>
+    <h3 class="text-lg font-semibold mb-4">Operational Cost List</h3>
+    <button onclick="deleteSelectedOperationalCosts()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
     <table class="w-full text-sm border">
      <thead class="bg-gray-100">
   <tr>
+    <th class="p-2"> <input type="checkbox" onclick="toggleSelectAllOperationalCosts(this)"></th>
     <th class="p-2">Date</th>
     <th class="p-2">Description</th>
     <th class="p-2">Category</th>
@@ -27874,9 +28046,6 @@ function managePOFiles() {
 
 <div class="bg-white p-4 rounded shadow mb-6">
   <h3 class="text-lg font-semibold mb-4">Add GRN</h3>
-  
-  <form id="grnForm">
-    
     <div class="text-right">
       <button type="button" onclick="addGRN()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         ➕ Add GRN
@@ -27888,9 +28057,11 @@ function managePOFiles() {
 
 <div class="bg-white p-4 rounded shadow">
   <h3 class="text-lg font-semibold mb-2">GRN History</h3>
+  <button onclick="deleteSelectedGRN()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
   <table class="w-full border text-sm">
     <thead class="bg-gray-100">
       <tr>
+        <th class="p-2"><input type="checkbox" onclick="toggleSelectAllGRN(this)"></th>
         <th class="p-2 text-left">GRN No.</th>
         <th class="p-2 text-left">Supplier</th>
         <th class="p-2 text-left">Item</th>
@@ -28799,6 +28970,7 @@ function renderSupplierPayments() {
 
     const row = document.createElement("tr");
     row.innerHTML = `
+       <td class="p-2"><input type="checkbox" class="supplier-payment-checkbox" value="${index}"></td>
       <td class="p-2">${payment.date}</td>
       <td class="p-2">${payment.supplier}</td>
       <td class="p-2">KES ${parseFloat(payment.amount).toFixed(2)}</td>
@@ -28996,7 +29168,85 @@ function deleteSupplierPayment(index) {
   alert("♻️ Supplier payment moved to Recycle Bin & accounts rolled back.");
 }
 
+function deleteSelectedSupplierPayments() {
 
+  let payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
+  let banks = JSON.parse(localStorage.getItem("banks") || "[]");
+  let transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+  let manualTx = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+
+  const selected = Array.from(
+    document.querySelectorAll(".supplier-payment-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (selected.length === 0) {
+    alert("No payments selected");
+    return;
+  }
+
+  if (!confirm(`You selected ${selected.length} payment(s). Proceed?`)) return;
+
+  if (!confirm("This action cannot be undone. Confirm delete?")) return;
+
+  selected.sort((a, b) => b - a).forEach(index => {
+
+    const payment = payments[index];
+    if (!payment) return;
+
+    if (!payment.id) payment.id = crypto.randomUUID();
+
+    moveToRecycle(payment, "File", "SupplierPayments");
+
+    const bankIndex = banks.findIndex(b => b.name === payment.bank);
+
+    if (bankIndex !== -1) {
+      banks[bankIndex].balance += parseFloat(payment.amount);
+    }
+
+    transactions = transactions.filter(t =>
+      !(t.date === payment.date &&
+        t.bank === payment.bank &&
+        t.amount === payment.amount &&
+        t.ref === `Payment to ${payment.supplier}` &&
+        t.source === "supplierPayment")
+    );
+
+    manualTx = manualTx.filter(t =>
+      !(t.date === payment.date &&
+        t.bank === payment.bank &&
+        t.amount === payment.amount &&
+        t.ref === `Payment to ${payment.supplier}` &&
+        t.source === "supplierPayment")
+    );
+
+    payments.splice(index, 1);
+
+  });
+
+  localStorage.setItem("billPayments", JSON.stringify(payments));
+  localStorage.setItem("banks", JSON.stringify(banks));
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+  localStorage.setItem("manualTransactions", JSON.stringify(manualTx));
+
+  renderSupplierPayments();
+  renderManualTransactions?.();
+  renderReconciliationTransactions?.();
+  renderAccountsPayable?.();
+  renderCreditcontrolAnalysis?.();
+  loadDashboard?.();
+
+  alert("♻️ Selected supplier payments moved to Recycle Bin.");
+}
+
+function toggleSelectAllSupplierPayments(source) {
+
+  const checkboxes = document.querySelectorAll(".supplier-payment-checkbox");
+
+  checkboxes.forEach(cb => {
+    cb.checked = source.checked;
+  });
+
+}
 function clearPaymentForm() {
   document.getElementById("paymentDate").value = "";
   document.getElementById("paymentSupplierName").value = "";
@@ -29291,6 +29541,7 @@ function renderBillItems() {
     ${item.sku ? `<span class="text-xs text-gray-500">[${item.sku}]</span>` : ""}
     <span class="text-xs text-gray-500">(${item.warehouse || "No Warehouse"})</span>
   </td>
+ 
   <td class="p-2">${item.qty}</td> <!-- ✅ show quantity -->
   <td class="p-2">${item.price.toFixed(2)}</td>
   <td class="p-2">${item.discount || 0}%</td>
@@ -29610,27 +29861,30 @@ function loadSupplierBills() {
     else if (paidAmount > 0) status = 'Partial Paid';
     
     return `
-      <tr class="border-t">
-        <td class="p-2">${b.billNumber}</td>
-        <td class="p-2">${b.date}</td>
-        <td class="p-2">${b.supplier}</td>
-        <td class="p-2">${b.termDays || 0}</td>
-        <td class="p-2">${b.due || ''}</td>
-        <td class="p-2">${(b.total || 0).toFixed(2)}</td>
-        <td class="p-2">${(b.vat || 0).toFixed(2)}</td>
-        <td class="p-2">${paidAmount.toFixed(2)}</td>
-        <td class="p-2">${dueAmount.toFixed(2)}</td>
-        <td class="p-2">${status}</td>
-        <td class="p-2 space-x-1">
-          <button onclick="editSupplierBill(${i})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-          <button onclick="deleteBill(${i})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-          <button onclick="previewBill(${i})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-          <button onclick="recordPayment(${i})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Record Payment</button>
-          <button onclick="reversePayment(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Reverse Payment</button>
-          <button onclick="pushBillToEtims(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Push to eTims</button>
-        </td>
-      </tr>
-    `;
+  <tr class="border-t">
+    <td class="p-2">
+      <input type="checkbox" class="bill-checkbox" value="${i}">
+    </td>
+    <td class="p-2">${b.billNumber}</td>
+    <td class="p-2">${b.date}</td>
+    <td class="p-2">${b.supplier}</td>
+    <td class="p-2">${b.termDays || 0}</td>
+    <td class="p-2">${b.due || ''}</td>
+    <td class="p-2">${(b.total || 0).toFixed(2)}</td>
+    <td class="p-2">${(b.vat || 0).toFixed(2)}</td>
+    <td class="p-2">${paidAmount.toFixed(2)}</td>
+    <td class="p-2">${dueAmount.toFixed(2)}</td>
+    <td class="p-2">${status}</td>
+    <td class="p-2 space-x-1">
+      <button onclick="editSupplierBill(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
+      <button onclick="deleteBill(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
+      <button onclick="previewBill(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
+      <button onclick="recordPayment(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Record Payment</button>
+      <button onclick="reversePayment(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Reverse Payment</button>
+      <button onclick="pushBillToEtims(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Push to eTims</button>
+    </td>
+  </tr>
+`;
   }).join('');
 }
 function updateAccountsPayable() {
@@ -29695,6 +29949,57 @@ function deleteBill(index) {
   renderSuppliers();
 
   alert("♻️ Bill moved to Recycle Bin & inventory/supplier rolled back.");
+}
+function deleteSelectedBills() {
+
+  let bills = JSON.parse(localStorage.getItem("bills") || "[]");
+
+  const selected = Array.from(
+    document.querySelectorAll(".bill-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (selected.length === 0) {
+    alert("No bills selected");
+    return;
+  }
+
+  if (!confirm(`You selected ${selected.length} bill(s). Proceed?`)) return;
+
+  if (!confirm("This action cannot be undone. Confirm delete?")) return;
+
+  selected.sort((a, b) => b - a).forEach(index => {
+
+    const bill = bills[index];
+
+    if (!bill) return;
+
+    if (!bill.id) bill.id = crypto.randomUUID();
+
+    moveToRecycle(bill, "File", "Bills");
+
+    bills.splice(index, 1);
+
+  });
+
+  localStorage.setItem("bills", JSON.stringify(bills));
+
+  renderBills?.();
+  updateAccountsPayable?.();
+  renderAccountsPayable?.();
+  renderCreditcontrolAnalysis?.();
+  loadDashboard?.();
+
+  alert("♻️ Selected bills moved to Recycle Bin.");
+}
+
+function toggleSelectAllBills(source) {
+
+  const checkboxes = document.querySelectorAll(".bill-checkbox");
+
+  checkboxes.forEach(cb => {
+    cb.checked = source.checked;
+  });
+
 }
 // ✏️ Edit Supplier Bill — Anyone with edit rights
 function editSupplierBill(index) {
@@ -30391,22 +30696,27 @@ function loadBulkBills(){
   const tbody=document.getElementById('bulkBillsList');
   const bills=JSON.parse(localStorage.getItem('bulkBills')||'[]');
   tbody.innerHTML=bills.map((b,i)=>{
-    return `<tr class="border-t">
-      <td class="p-2">${b.billNumber}</td>
-      <td class="p-2">${b.date}</td>
-      <td class="p-2">${b.suppliers.join(', ')}</td>
-      <td class="p-2">${b.termDays}</td>
-      <td class="p-2">${b.date ? new Date(new Date(b.date).setDate(new Date(b.date).getDate()+b.termDays)).toISOString().split('T')[0] : ''}</td>
-      <td class="p-2">${b.currency}</td>
-      <td class="p-2">${b.total.toFixed(2)}</td>
-      <td class="p-2">${b.vat.toFixed(2)}</td>
-      <td class="p-2 space-x-1">
-        <button onclick="editBulkBill(${i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="deleteBulkBill(${i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">Delete</button>
-        <button onclick="previewBulkBill(${i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">Preview</button>
-        <button onclick="pushBulkBillETR(${i})" class="border border-green-700 text-white bg-green-700 px-2 py-1 rounded hover:bg-green-600">Push to ETIMS/ETR</button>
-      </td>
-    </tr>`;
+   return `
+   <tr class="border-t">
+  <td class="p-2">
+    <input type="checkbox" class="bulk-bill-checkbox" value="${i}">
+  </td>
+  <td class="p-2">${b.billNumber}</td>
+  <td class="p-2">${b.date}</td>
+  <td class="p-2">${b.suppliers.join(', ')}</td>
+  <td class="p-2">${b.termDays}</td>
+  <td class="p-2">${b.date ? new Date(new Date(b.date).setDate(new Date(b.date).getDate()+b.termDays)).toISOString().split('T')[0] : ''}</td>
+  <td class="p-2">${b.currency}</td>
+  <td class="p-2">${b.total.toFixed(2)}</td>
+  <td class="p-2">${b.vat.toFixed(2)}</td>
+  <td class="p-2 space-x-1">
+    <button onclick="editBulkBill(${i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">Edit</button>
+    <button onclick="deleteBulkBill(${i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">Delete</button>
+    <button onclick="previewBulkBill(${i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">Preview</button>
+    <button onclick="pushBulkBillETR(${i})" class="border border-green-700 text-white bg-green-700 px-2 py-1 rounded hover:bg-green-600">Push to ETIMS/ETR</button>
+  </td>
+</tr>`
+;
   }).join('');
 }
 
@@ -30425,6 +30735,53 @@ function editBulkBill(index){
   document.getElementById('bulkBillChartOfAccount').value=bill.chartOfAccount;
   document.getElementById('bulkBillCurrency').value=bill.currency;
   document.getElementById('bulkBillCurrencyRate').value=bill.currencyRate;
+}
+function deleteSelectedBulkBills() {
+
+  let bills = JSON.parse(localStorage.getItem("bulkBills") || "[]");
+
+  const selected = Array.from(
+    document.querySelectorAll(".bulk-bill-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (selected.length === 0) {
+    alert("No bulk bills selected");
+    return;
+  }
+
+  if (!confirm(`You selected ${selected.length} bulk bill(s). Proceed?`)) return;
+
+  if (!confirm("This action cannot be undone. Confirm delete?")) return;
+
+  selected.sort((a, b) => b - a).forEach(index => {
+
+    const bill = bills[index];
+
+    if (!bill) return;
+
+    if (!bill.id) bill.id = crypto.randomUUID();
+
+    moveToRecycle(bill, "File", "BulkBills");
+
+    bills.splice(index, 1);
+
+  });
+
+  localStorage.setItem("bulkBills", JSON.stringify(bills));
+
+  loadBulkBills();
+
+  alert("♻️ Selected bulk bills moved to Recycle Bin.");
+}
+
+function toggleSelectAllBulkBills(source) {
+
+  const checkboxes = document.querySelectorAll(".bulk-bill-checkbox");
+
+  checkboxes.forEach(cb => {
+    cb.checked = source.checked;
+  });
+
 }
 function deleteBulkBill(index) {
   if (!confirm('Delete this Bulk Bill?')) return;
@@ -30475,9 +30832,669 @@ document.addEventListener('DOMContentLoaded',()=>{
   loadBulkBills();
 });
 </script>
+
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+
+let supplierQuoteItems = [];
+let editingSupplierQuoteIndex = null;
+
+function getQuotes() {
+  return JSON.parse(localStorage.getItem("supplierQuotes") || "[]");
+}
+
+function saveQuotes(data) {
+  localStorage.setItem("supplierQuotes", JSON.stringify(data));
+}
+
+function populateSupplierDropdown() {
+  const select = document.getElementById("quoteSupplier");
+  if (!select) return;
+
+  const suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
+  select.innerHTML = '<option value="">Select Supplier</option>';
+
+  suppliers.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.name;
+    opt.textContent = s.name;
+    select.appendChild(opt);
+  });
+}
+
+function populateSupplierQuoteProductDropdown() {
+  const select = document.getElementById("quoteItemName");
+  if (!select) return;
+
+  select.innerHTML = '<option value="">Select Item</option>';
+
+  let items = [];
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+
+    if (key && key.startsWith("inventory_")) {
+      try {
+        const data = JSON.parse(localStorage.getItem(key) || "[]");
+        if (Array.isArray(data)) items = items.concat(data);
+      } catch (e) {}
+    }
+  }
+
+  const unique = new Map();
+
+  items.forEach(item => {
+    if (item && item.name) {
+      unique.set(item.sku || item.name, item);
+    }
+  });
+
+  unique.forEach(item => {
+    const opt = document.createElement("option");
+    opt.value = item.name;
+    opt.textContent = `${item.name} (${item.sku || "No SKU"})`;
+    select.appendChild(opt);
+  });
+}
+
+function addSupplierQuoteItem() {
+  const name = document.getElementById("quoteItemName").value;
+  const qty = parseFloat(document.getElementById("quoteItemQty").value);
+  const price = parseFloat(document.getElementById("quoteItemPrice").value);
+
+  if (!name || isNaN(qty) || isNaN(price)) return;
+
+  supplierQuoteItems.push({
+    name,
+    qty,
+    price,
+    total: qty * price
+  });
+
+  renderSupplierQuoteItems();
+  clearSupplierQuoteItemForm();
+}
+
+function renderSupplierQuoteItems() {
+  const tbody = document.getElementById("supplierQuotesTable");
+  if (!tbody) return;
+
+  tbody.innerHTML = supplierQuoteItems.length
+    ? supplierQuoteItems.map((i, index) => `
+      <tr>
+        <td>${i.name}</td>
+        <td>${i.qty}</td>
+        <td>${i.price}</td>
+        <td>${i.total}</td>
+        <td>
+          <button onclick="removeSupplierQuoteItem(${index})">Remove</button>
+        </td>
+      </tr>
+    `).join("")
+    : `<tr><td colspan="5" class="text-center">No items</td></tr>`;
+}
+
+function removeSupplierQuoteItem(index) {
+  supplierQuoteItems.splice(index, 1);
+  renderSupplierQuoteItems();
+}
+
+function clearSupplierQuoteItemForm() {
+  document.getElementById("quoteItemName").value = "";
+  document.getElementById("quoteItemQty").value = "";
+  document.getElementById("quoteItemPrice").value = "";
+}
+
+function saveSupplierQuote() {
+  const supplier = document.getElementById("quoteSupplier").value;
+  const date = document.getElementById("quoteDate").value;
+
+  if (!supplier || !date || supplierQuoteItems.length === 0) return;
+
+  let quotes = getQuotes();
+
+  const total = supplierQuoteItems.reduce((s, i) => s + i.total, 0);
+
+  const data = {
+    supplier,
+    date,
+    items: supplierQuoteItems,
+    total,
+    status: "Pending"
+  };
+
+  if (editingSupplierQuoteIndex !== null) {
+    quotes[editingSupplierQuoteIndex] = data;
+    editingSupplierQuoteIndex = null;
+  } else {
+    quotes.push(data);
+  }
+
+  saveQuotes(quotes);
+
+  supplierQuoteItems = [];
+  renderSupplierQuotes();
+  clearSupplierQuoteForm();
+}
+
+function renderSupplierQuotes() {
+
+  const table = document.getElementById("supplierQuotesList");
+  if (!table) return;
+
+  const quotes = getQuotes();
+
+  table.innerHTML = "";
+
+  quotes.forEach((q, index) => {
+
+    table.innerHTML += `
+      <tr>
+
+        <td class="p-2">
+          <input type="checkbox"
+            class="supplier-quote-checkbox"
+            value="${index}">
+        </td>
+
+        <td class="p-2">${q.supplier}</td>
+        <td class="p-2">${q.date}</td>
+        <td class="p-2">${q.total}</td>
+        <td class="p-2">${q.status}</td>
+
+        <td class="p-2 space-x-1">
+          <button onclick="viewSupplierQuote(${index})"
+            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+            View
+          </button>
+
+          <button onclick="editSupplierQuote(${index})"
+            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+            Edit
+          </button>
+
+          <button onclick="deleteSupplierQuote(${index})"
+            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+            Delete
+          </button>
+
+          <button onclick="convertSupplierQuote(${index})"
+            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+            Convert
+          </button>
+        </td>
+
+      </tr>
+    `;
+  });
+}
+function deleteSupplierQuote(index) {
+  if (!confirm("Delete this quote?")) return;
+
+  let quotes = getQuotes();
+  quotes.splice(index, 1);
+  saveQuotes(quotes);
+
+  renderSupplierQuotes();
+}
+function deleteSelectedSupplierQuotes() {
+
+  let quotes = getQuotes();
+
+  const selected = Array.from(
+    document.querySelectorAll(".supplier-quote-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (selected.length === 0) {
+    alert("No quotes selected");
+    return;
+  }
+
+  if (!confirm(`You selected ${selected.length} quote(s). Proceed?`)) return;
+
+  if (!confirm("This action cannot be undone. Confirm delete?")) return;
+
+  selected.sort((a, b) => b - a).forEach(index => {
+
+    const quote = quotes[index];
+
+    if (!quote) return;
+
+    if (!quote.id) quote.id = crypto.randomUUID();
+
+    moveToRecycle(quote, "File", "SupplierQuotes");
+
+    quotes.splice(index, 1);
+
+  });
+
+  localStorage.setItem("supplierQuotes", JSON.stringify(quotes));
+
+  renderSupplierQuotes();
+
+  alert("♻️ Selected supplier quotes moved to Recycle Bin.");
+}
+
+function toggleSelectAllSupplierQuotes(source) {
+
+  const checkboxes = document.querySelectorAll(".supplier-quote-checkbox");
+
+  checkboxes.forEach(cb => {
+    cb.checked = source.checked;
+  });
+
+}
+function editSupplierQuote(index) {
+  const quotes = getQuotes();
+  const q = quotes[index];
+
+  editingSupplierQuoteIndex = index;
+
+  document.getElementById("quoteSupplier").value = q.supplier;
+  document.getElementById("quoteDate").value = q.date;
+
+  supplierQuoteItems = [...q.items];
+  renderSupplierQuoteItems();
+}
+
+function viewSupplierQuote(index) {
+  const q = getQuotes()[index];
+  if (!q) return;
+
+  const old = document.getElementById("quotePopup");
+  if (old) old.remove();
+
+  const popup = document.createElement("div");
+
+  popup.style = `
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:99999;
+  `;
+
+  popup.innerHTML = `
+    <div style="background:#fff;padding:20px;width:70%;height:80%;overflow:auto;">
+      <h3>Supplier Quote</h3>
+      <p><b>Supplier:</b> ${q.supplier}</p>
+      <p><b>Date:</b> ${q.date}</p>
+      <p><b>Total:</b> ${q.total}</p>
+
+      <table border="1" width="100%">
+        <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
+        ${q.items.map(i => `
+          <tr>
+            <td>${i.name}</td>
+            <td>${i.qty}</td>
+            <td>${i.price}</td>
+            <td>${i.total}</td>
+          </tr>
+        `).join("")}
+      </table>
+
+      <button onclick="document.getElementById('quotePopup').remove()">Close</button>
+    </div>
+  `;
+
+  popup.id = "quotePopup";
+  document.body.appendChild(popup);
+}
+
+function convertSupplierQuote(index) {
+  const quotes = getQuotes();
+  const q = quotes[index];
+
+  if (!q) return;
+
+  let poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
+
+  poList.push({
+    poNumber: Date.now(),
+    date: q.date,
+    supplier: q.supplier,
+    items: q.items,
+    status: "From Quote"
+  });
+
+  localStorage.setItem("purchaseOrders", JSON.stringify(poList));
+
+  alert("Converted to Purchase Order");
+}
+
+function clearSupplierQuoteForm() {
+  document.getElementById("quoteSupplier").value = "";
+  document.getElementById("quoteDate").value = "";
+  supplierQuoteItems = [];
+  renderSupplierQuoteItems();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  populateSupplierDropdown();
+  populateSupplierQuoteProductDropdown();
+  renderSupplierQuotes();
+});
+
+</script>
+<script>
+
+let poItems = [];
+let editingPOIndex = null;
+
+function getPOList() {
+  return JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
+}
+
+function savePOList(list) {
+  localStorage.setItem("purchaseOrders", JSON.stringify(list));
+}
+
+function addPOItem() {
+  const name = document.getElementById("poProductSelect").value;
+  const qty = parseFloat(document.getElementById("poItemQty").value);
+  const price = parseFloat(document.getElementById("poItemPrice").value);
+
+  if (!name || isNaN(qty) || isNaN(price)) return;
+
+  const subtotal = qty * price;
+  const vat = subtotal * 0.16;
+
+  poItems.push({
+    name,
+    qty,
+    price,
+    vat,
+    subtotal
+  });
+
+  renderPOItems();
+  clearPOItemForm();
+}
+
+function renderPOItems() {
+  const tbody = document.querySelector("#poItemsTable tbody");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  if (poItems.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="p-2 text-center text-gray-500">No items</td></tr>`;
+    return;
+  }
+
+  poItems.forEach((i, index) => {
+    tbody.innerHTML += `
+      <tr>
+        <td class="p-2">${i.name}</td>
+        <td class="p-2">${i.qty}</td>
+        <td class="p-2">${i.price}</td>
+        <td class="p-2">${i.vat.toFixed(2)}</td>
+        <td class="p-2">${i.subtotal.toFixed(2)}</td>
+        <td class="p-2">
+          <button onclick="removePOItem(${index})">Remove</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function removePOItem(index) {
+  poItems.splice(index, 1);
+  renderPOItems();
+}
+
+function savePurchaseOrder() {
+  const date = document.getElementById("poDate").value;
+  const supplier = document.getElementById("poSupplier").value;
+  const chartOfAccount = document.getElementById("poChartAccount").value;
+  const validity = document.getElementById("poValidity")?.value || "";
+
+  if (!date || !supplier || !chartOfAccount || poItems.length === 0) return;
+
+  let poList = getPOList();
+
+  const poNumber = editingPOIndex !== null
+    ? poList[editingPOIndex].poNumber
+    : "PO-" + Date.now();
+
+  const data = {
+    poNumber,
+    date,
+    supplier,
+    chartOfAccount,
+    validity,
+    items: poItems
+  };
+
+  if (editingPOIndex !== null) {
+    poList[editingPOIndex] = data;
+    editingPOIndex = null;
+  } else {
+    poList.push(data);
+  }
+
+  savePOList(poList);
+
+  poItems = [];
+  renderPOItems();
+  renderPurchaseOrders();
+  clearPOForm();
+
+  document.getElementById("savePOBtn").textContent = "Save PO";
+}
+
+function renderPurchaseOrders() {
+
+  const poList = getPOList();
+  const table = document.getElementById("supplierPOsTable");
+
+  if (!table) return;
+
+  table.innerHTML = "";
+
+  poList.forEach((po, index) => {
+
+    const total = po.items.reduce((sum, i) =>
+      sum + (i.subtotal || 0) + (i.vat || 0), 0);
+
+    table.innerHTML += `
+      <tr>
+
+        <td class="p-2">
+          <input type="checkbox"
+            class="po-checkbox"
+            value="${index}">
+        </td>
+
+        <td class="p-2">${po.poNumber}</td>
+        <td class="p-2">${po.date}</td>
+        <td class="p-2">${po.supplier}</td>
+        <td class="p-2">${po.chartOfAccount}</td>
+        <td class="p-2">KES ${total.toFixed(2)}</td>
+
+        <td class="p-2 space-x-1">
+
+          <button onclick="previewPO(${index})"
+            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+            Preview
+          </button>
+
+          <button onclick="editPurchaseOrder(${index})"
+            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+            Edit
+          </button>
+
+          <button onclick="deletePurchaseOrder(${index})"
+            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+            Delete
+          </button>
+
+          <button onclick="convertPO(${index})"
+            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+            Convert
+          </button>
+
+        </td>
+
+      </tr>
+    `;
+  });
+}
+function deleteSelectedPurchaseOrders() {
+
+  let poList = getPOList();
+
+  const selected = Array.from(
+    document.querySelectorAll(".po-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (selected.length === 0) {
+    alert("No purchase orders selected");
+    return;
+  }
+
+  if (!confirm(`You selected ${selected.length} purchase order(s). Proceed?`)) return;
+
+  if (!confirm("This action cannot be undone. Confirm delete?")) return;
+
+  selected.sort((a, b) => b - a).forEach(index => {
+
+    const po = poList[index];
+
+    if (!po) return;
+
+    if (!po.id) po.id = crypto.randomUUID();
+
+    moveToRecycle(po, "File", "PurchaseOrders");
+
+    poList.splice(index, 1);
+
+  });
+
+  localStorage.setItem("purchaseOrders", JSON.stringify(poList));
+
+  renderPurchaseOrders();
+
+  alert("♻️ Selected purchase orders moved to Recycle Bin.");
+}
+
+function toggleSelectAllPOs(source) {
+
+  const checkboxes = document.querySelectorAll(".po-checkbox");
+
+  checkboxes.forEach(cb => {
+    cb.checked = source.checked;
+  });
+
+}
+function editPurchaseOrder(index) {
+  const po = getPOList()[index];
+
+  editingPOIndex = index;
+
+  document.getElementById("poDate").value = po.date;
+  document.getElementById("poSupplier").value = po.supplier;
+  document.getElementById("poChartAccount").value = po.chartOfAccount;
+  document.getElementById("poValidity").value = po.validity || "";
+
+  poItems = [...po.items];
+
+  renderPOItems();
+
+  document.getElementById("savePOBtn").textContent = "Update PO";
+}
+
+function deletePurchaseOrder(index) {
+  if (!confirm("Delete this Purchase Order?")) return;
+
+  let poList = getPOList();
+  poList.splice(index, 1);
+  savePOList(poList);
+
+  renderPurchaseOrders();
+}
+
+function previewPO(index) {
+  const po = getPOList()[index];
+  if (!po) return;
+
+  let total = 0;
+
+  const rows = po.items.map(i => {
+    const line = (i.subtotal || 0) + (i.vat || 0);
+    total += line;
+
+    return `
+      <tr>
+        <td>${i.name}</td>
+        <td>${i.qty}</td>
+        <td>${i.price}</td>
+        <td>${i.vat.toFixed(2)}</td>
+        <td>${line.toFixed(2)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  document.getElementById("poPreviewModal").classList.remove("hidden");
+
+  document.getElementById("previewPONumber").textContent = po.poNumber;
+  document.getElementById("previewDate").textContent = po.date;
+  document.getElementById("previewSupplierName").textContent = po.supplier;
+
+  document.getElementById("previewItems").innerHTML = rows;
+  document.getElementById("previewTotal").textContent = "KES " + total.toFixed(2);
+}
+
+function closePOPreview() {
+  document.getElementById("poPreviewModal").classList.add("hidden");
+}
+
+function convertPO(index) {
+  const po = getPOList()[index];
+
+  let grnList = JSON.parse(localStorage.getItem("grn") || "[]");
+
+  grnList.push({
+    fromPO: po.poNumber,
+    supplier: po.supplier,
+    chartOfAccount: po.chartOfAccount,
+    items: po.items,
+    date: new Date().toISOString().split("T")[0],
+    status: "Pending Receipt"
+  });
+
+  localStorage.setItem("grn", JSON.stringify(grnList));
+
+  alert("Converted");
+}
+
+function clearPOForm() {
+  document.getElementById("poDate").value = "";
+  document.getElementById("poSupplier").value = "";
+  document.getElementById("poChartAccount").value = "";
+  document.getElementById("poValidity").value = "";
+}
+
+function clearPOItemForm() {
+  document.getElementById("poProductSelect").value = "";
+  document.getElementById("poItemQty").value = "";
+  document.getElementById("poItemPrice").value = "";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderPurchaseOrders();
+  renderPOItems();
+});
+
+</script>
 <script>
 
 let debitItems = [];
@@ -30762,24 +31779,37 @@ function renderDebitNotes() {
     notes.forEach((note, idx) => {
       note.items.forEach((item, itemIdx) => {
         const total = item.subtotal + item.vat;
-        table.innerHTML += `
-          <tr>
-            <td class="p-2">${note.date}</td>
-            <td class="p-2">${note.supplier}</td>
-            <td class="p-2">${item.name}</td>
-            <td class="p-2">${item.qty}</td>
-            <td class="p-2">KES ${item.subtotal.toFixed(2)}</td>
-            <td class="p-2">KES ${item.vat.toFixed(2)}</td>
-            <td class="p-2">KES ${total.toFixed(2)}</td>
-            ${itemIdx === 0 ? `<td class="p-2 space-x-1" rowspan="${note.items.length}">
-              <button onclick="previewDebitNote(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-              <button onclick="editDebitNote(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-              <button onclick="deleteDebitNote(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-              <button onclick="applyDebitToBill(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Apply</button>
-              <button onclick="pushDebitToETims(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Push eTIMS</button>
-            </td>` : ""}
-          </tr>
-        `;
+       table.innerHTML += `
+  <tr>
+
+    <td class="p-2" ${itemIdx === 0 ? `rowspan="${note.items.length}"` : ""}>
+      ${itemIdx === 0 ? `
+        <input type="checkbox"
+          class="debit-note-checkbox"
+          value="${idx}">
+      ` : ""}
+    </td>
+
+    <td class="p-2">${note.date}</td>
+    <td class="p-2">${note.supplier}</td>
+    <td class="p-2">${item.name}</td>
+    <td class="p-2">${item.qty}</td>
+    <td class="p-2">KES ${item.subtotal.toFixed(2)}</td>
+    <td class="p-2">KES ${item.vat.toFixed(2)}</td>
+    <td class="p-2">KES ${total.toFixed(2)}</td>
+
+    ${itemIdx === 0 ? `
+      <td class="p-2 space-x-1" rowspan="${note.items.length}">
+        <button onclick="previewDebitNote(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Preview</button>
+        <button onclick="editDebitNote(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Edit</button>
+        <button onclick="deleteDebitNote(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Delete</button>
+        <button onclick="applyDebitToBill(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Apply</button>
+        <button onclick="pushDebitToETims(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Push eTIMS</button>
+      </td>
+    ` : ""}
+
+    </tr>
+   `;
       });
     });
   }
@@ -30966,6 +31996,43 @@ function deleteDebitNote(index) {
   renderDebitNotesReport();
 
   alert("♻️ Debit note moved to Recycle Bin.");
+}
+function deleteSelectedDebitNotes() {
+
+  let notes = JSON.parse(localStorage.getItem("supplierDebitNotes") || "[]");
+
+  const selected = Array.from(
+    document.querySelectorAll(".debit-note-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (selected.length === 0) {
+    alert("No debit notes selected");
+    return;
+  }
+
+  if (!confirm(`Delete ${selected.length} debit note(s)?`)) return;
+
+  selected.sort((a, b) => b - a).forEach(i => {
+    const note = notes[i];
+    if (!note) return;
+
+    if (!note.id) note.id = crypto.randomUUID();
+
+    moveToRecycle(note, "File", "DebitNotes");
+
+    notes.splice(i, 1);
+  });
+
+  localStorage.setItem("supplierDebitNotes", JSON.stringify(notes));
+
+  renderDebitNotes();
+
+  alert("♻️ Selected debit notes moved to Recycle Bin.");
+}
+
+function toggleSelectAllDebitNotes(source) {
+  document.querySelectorAll(".debit-note-checkbox")
+    .forEach(cb => cb.checked = source.checked);
 }
 function applyDebitToBill(index){
 
@@ -31311,274 +32378,7 @@ function manageDebitFiles(){
     alert('Open Debit Note file management modal or page here!');
 }
 </script>
-<script>
 
-let supplierQuoteItems = [];
-let editingSupplierQuoteIndex = null;
-
-function populateSupplierDropdown() {
-  const select = document.getElementById("quoteSupplier");
-  if (!select) return;
-
-  const suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
-  select.innerHTML = '<option value="">Select Supplier</option>';
-
-  suppliers.forEach(s => {
-    const opt = document.createElement("option");
-    opt.value = s.name;
-    opt.textContent = s.name;
-    select.appendChild(opt);
-  });
-}
-
-function populateSupplierQuoteProductDropdown() {
-  const select = document.getElementById("quoteItemName");
-  if (!select) return;
-
-  select.innerHTML = '<option value="">Select Item</option>';
-
-  let items = [];
-
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-
-    if (key && key.startsWith("inventory_")) {
-      try {
-        const data = JSON.parse(localStorage.getItem(key) || "[]");
-        if (Array.isArray(data)) {
-          items = items.concat(data);
-        }
-      } catch (e) {}
-    }
-  }
-
-  const unique = new Map();
-
-  items.forEach(item => {
-    if (item && item.name) {
-      unique.set(item.sku || item.name, item);
-    }
-  });
-
-  unique.forEach(item => {
-    const opt = document.createElement("option");
-    opt.value = item.name;
-    opt.textContent = `${item.name} (${item.sku || "No SKU"})`;
-    select.appendChild(opt);
-  });
-}
-function addSupplierQuoteItem() {
-  const name = document.getElementById("quoteItemName").value;
-  const qty = parseFloat(document.getElementById("quoteItemQty").value);
-  const price = parseFloat(document.getElementById("quoteItemPrice").value);
-
-  if (!name || isNaN(qty) || isNaN(price)) return;
-
-  supplierQuoteItems.push({
-    name,
-    qty,
-    price,
-    total: qty * price
-  });
-
-  renderSupplierQuoteItems();
-  clearSupplierQuoteItemForm();
-}
-
-function renderSupplierQuoteItems() {
-  const tbody = document.getElementById("supplierQuotesTable");
-  if (!tbody) return;
-
-  tbody.innerHTML = supplierQuoteItems.map((i, index) => `
-    <tr>
-      <td>${i.name}</td>
-      <td>${i.qty}</td>
-      <td>${i.price}</td>
-      <td>${i.total}</td>
-      <td>
-        <button onclick="removeSupplierQuoteItem(${index})">Remove</button>
-      </td>
-    </tr>
-  `).join("");
-}
-
-function removeSupplierQuoteItem(index) {
-  supplierQuoteItems.splice(index, 1);
-  renderSupplierQuoteItems();
-}
-
-function clearSupplierQuoteItemForm() {
-  document.getElementById("quoteItemName").value = "";
-  document.getElementById("quoteItemQty").value = "";
-  document.getElementById("quoteItemPrice").value = "";
-}
-
-function saveSupplierQuote() {
-  const supplier = document.getElementById("quoteSupplier").value;
-  const date = document.getElementById("quoteDate").value;
-
-  if (!supplier || !date || supplierQuoteItems.length === 0) return;
-
-  let quotes = JSON.parse(localStorage.getItem("supplierQuotes") || "[]");
-
-  const total = supplierQuoteItems.reduce((s, i) => s + i.total, 0);
-
-  const data = {
-    supplier,
-    date,
-    items: supplierQuoteItems,
-    total,
-    status: "Pending"
-  };
-
-  if (editingSupplierQuoteIndex !== null) {
-    quotes[editingSupplierQuoteIndex] = data;
-    editingSupplierQuoteIndex = null;
-  } else {
-    quotes.push(data);
-  }
-
-  localStorage.setItem("supplierQuotes", JSON.stringify(quotes));
-
-  supplierQuoteItems = [];
-  renderSupplierQuotes();
-  clearSupplierQuoteForm();
-}
-
-function renderPurchaseOrders() {
-  const poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
-  const table = document.getElementById("supplierPOsTable");
-  table.innerHTML = "";
-  poList.forEach((po) => {
-    const total = po.items.reduce((sum, i) => sum + i.subtotal + i.vat, 0);
-    table.innerHTML += `
-      <tr>
-        <td class="p-2">${po.poNumber}</td>
-        <td class="p-2">${po.date}</td>
-        <td class="p-2">${po.supplier}</td>
-        <td class="p-2">KES ${total.toFixed(2)}</td>
-        <td class="p-2">
-          <button onclick="previewPO(${po.poNumber})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-          <button onclick="editPurchaseOrder(${po.poNumber})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-          <button onclick="deletePurchaseOrder(${po.poNumber})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-        </td>
-      </tr>`;
-  });
-}
-function deletePurchaseOrder(poNumber) {
-  if (!confirm("Delete this Purchase Order?")) return;
-
-  let poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
-  const index = poList.findIndex(po => po.poNumber === poNumber);
-  if (index === -1) return;
-
-  const po = poList[index];
-
-  if (!po.id) po.id = crypto.randomUUID();
-
-  moveToRecycle(po, "File", "PurchaseOrders");
-
-  poList.splice(index, 1);
-  localStorage.setItem("purchaseOrders", JSON.stringify(poList));
-
-  renderPurchaseOrders();
-  alert("♻️ Purchase Order moved to Recycle Bin.");
-}
-
-function editPurchaseOrder(poNumber) {
-  const poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
-  const index = poList.findIndex(po => po.poNumber === poNumber);
-  if (index === -1) return;
-
-  const po = poList[index];
-  editingPOIndex = index;
-
-  document.getElementById("poDate").value = po.date;
-  document.getElementById("poSupplier").value = po.supplier;
-  document.getElementById("poChartAccount").value = po.chartOfAccount;
-
-  poItems = [...po.items];
-  renderPOItems();
-
-  const saveBtn = document.getElementById("savePOBtn");
-  if (saveBtn) saveBtn.textContent = "Update PO";
-}
-
-function clearSupplierQuoteForm() {
-  document.getElementById("quoteSupplier").value = "";
-  document.getElementById("quoteDate").value = "";
-  supplierQuoteItems = [];
-  renderSupplierQuoteItems();
-}
-
-function viewSupplierQuote(index) {
-  const quotes = JSON.parse(localStorage.getItem("supplierQuotes") || "[]");
-  const q = quotes[index];
-  if (!q) return;
-
-  const old = document.getElementById("quotePopup");
-  if (old) old.remove();
-
-  const popup = document.createElement("div");
-
-  popup.style = `
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.6);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    z-index:99999;
-  `;
-
-  popup.innerHTML = `
-    <div style="background:#fff;padding:20px;width:70%;height:80%;overflow:auto;">
-      <h3>Supplier Quote</h3>
-      <p><b>Supplier:</b> ${q.supplier}</p>
-      <p><b>Date:</b> ${q.date}</p>
-      <p><b>Total:</b> ${q.total}</p>
-      <table border="1" width="100%">
-        <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
-        ${q.items.map(i => `
-          <tr>
-            <td>${i.name}</td>
-            <td>${i.qty}</td>
-            <td>${i.price}</td>
-            <td>${i.total}</td>
-          </tr>
-        `).join("")}
-      </table>
-      <button onclick="document.getElementById('quotePopup').remove()">Close</button>
-    </div>
-  `;
-
-  popup.id = "quotePopup";
-  document.body.appendChild(popup);
-}
-
-function getAllInventories() {
-  let all = [];
-  const warehouses = JSON.parse(localStorage.getItem("warehouses") || "[]");
-
-  warehouses.forEach(w => {
-    const items = JSON.parse(localStorage.getItem(`inventory_${w}`) || "[]");
-    items.forEach(i => all.push(i));
-  });
-
-  return all;
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  populateSupplierDropdown();
-  populateSupplierQuoteProductDropdown();
-  renderSupplierQuotes();
-});
-
-</script>
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script>
 
 let purchaseReturnItems = [];
@@ -31756,22 +32556,35 @@ function clearPurchaseReturnForm() {
   purchaseReturnItems = [];
   renderPurchaseReturnItems();
 }
-
-
 function renderPurchaseReturns() {
+
     const returns = JSON.parse(localStorage.getItem("purchaseReturns") || "[]");
     const table = document.getElementById("purchaseReturnsTable");
     table.innerHTML = "";
 
-    if(returns.length === 0){
-        table.innerHTML = `<tr><td colspan="10" class="p-2 text-center text-gray-500">No Purchase Returns</td></tr>`;
+    if (returns.length === 0) {
+        table.innerHTML = `
+            <tr>
+                <td colspan="11" class="p-2 text-center text-gray-500">
+                    No Purchase Returns
+                </td>
+            </tr>`;
         return;
     }
 
     returns.forEach((r, idx) => {
-        if(r.items.length === 0){
+
+        if (r.items.length === 0) {
+
             table.innerHTML += `
             <tr>
+
+              <td class="p-2">
+                <input type="checkbox"
+                  class="purchase-return-checkbox"
+                  value="${idx}">
+              </td>
+
               <td class="p-2">${r.number}</td>
               <td class="p-2">${r.date}</td>
               <td class="p-2">${r.supplier}</td>
@@ -31780,30 +32593,84 @@ function renderPurchaseReturns() {
               <td class="p-2">-</td>
               <td class="p-2">KES 0.00</td>
               <td class="p-2">${r.reason}</td>
+
               <td class="p-2">
-                <button onclick="previewPurchaseReturn(${idx})" class="border border-gray-700 text-white bg-gray-700 font-bold px-1 py-1 rounded hover:bg-gray-600">Preview</button>
-                <button onclick="editPurchaseReturn(${idx})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-                <button onclick="deletePurchaseReturn(${idx})" class="border border-red-700 text-white bg-red-700 font-bold px-1 py-1 rounded hover:bg-red-600">Delete</button>
+                <button onclick="previewPurchaseReturn(${idx})"
+                  class="border border-gray-700 text-white bg-gray-700 font-bold px-1 py-1 rounded hover:bg-gray-600">
+                  Preview
+                </button>
+
+                <button onclick="editPurchaseReturn(${idx})"
+                  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+                  Edit
+                </button>
+
+                <button onclick="deletePurchaseReturn(${idx})"
+                  class="border border-red-700 text-white bg-red-700 font-bold px-1 py-1 rounded hover:bg-red-600">
+                  Delete
+                </button>
               </td>
+
             </tr>`;
-        } else {
+        }
+
+        else {
+
             r.items.forEach((item, i) => {
+
                 const total = item.subtotal + item.vat;
+
                 table.innerHTML += `
                 <tr>
-                  ${i === 0 ? `<td class="p-2" rowspan="${r.items.length}">${r.number}</td>
-                                <td class="p-2" rowspan="${r.items.length}">${r.date}</td>
-                                <td class="p-2" rowspan="${r.items.length}">${r.supplier}</td>` : ""}
+
+                  ${i === 0 ? `
+                    <td class="p-2" rowspan="${r.items.length}">
+                      <input type="checkbox"
+                        class="purchase-return-checkbox"
+                        value="${idx}">
+                    </td>
+
+                    <td class="p-2" rowspan="${r.items.length}">
+                      ${r.number}
+                    </td>
+
+                    <td class="p-2" rowspan="${r.items.length}">
+                      ${r.date}
+                    </td>
+
+                    <td class="p-2" rowspan="${r.items.length}">
+                      ${r.supplier}
+                    </td>
+                  ` : ""}
+
                   <td class="p-2">${item.name}</td>
                   <td class="p-2">${item.qty}</td>
                   <td class="p-2">KES ${item.vat.toFixed(2)}</td>
                   <td class="p-2">KES ${total.toFixed(2)}</td>
-                  ${i === 0 ? `<td class="p-2" rowspan="${r.items.length}">${r.reason}</td>
-                                <td class="p-2" rowspan="${r.items.length}">
-                                  <button onclick="previewPurchaseReturn(${idx})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-                                  <button onclick="editPurchaseReturn(${idx})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-                                  <button onclick="deletePurchaseReturn(${idx})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-                                </td>` : ""}
+
+                  ${i === 0 ? `
+                    <td class="p-2" rowspan="${r.items.length}">
+                      ${r.reason}
+                    </td>
+
+                    <td class="p-2" rowspan="${r.items.length}">
+                      <button onclick="previewPurchaseReturn(${idx})"
+                        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+                        Preview
+                      </button>
+
+                      <button onclick="editPurchaseReturn(${idx})"
+                        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+                        Edit
+                      </button>
+
+                      <button onclick="deletePurchaseReturn(${idx})"
+                        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+                        Delete
+                      </button>
+                    </td>
+                  ` : ""}
+
                 </tr>`;
             });
         }
@@ -31821,7 +32688,46 @@ function editPurchaseReturn(index) {
   editingReturnIndex = index;
   renderPurchaseReturnItems();
 }
+function deleteSelectedPurchaseReturns() {
 
+  let returns = JSON.parse(localStorage.getItem("purchaseReturns") || "[]");
+
+  const selected = Array.from(
+    document.querySelectorAll(".purchase-return-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (selected.length === 0) {
+    alert("No purchase returns selected");
+    return;
+  }
+
+  if (!confirm(`Delete ${selected.length} purchase return(s)?`)) return;
+
+  selected.sort((a, b) => b - a).forEach(i => {
+
+    const r = returns[i];
+    if (!r) return;
+
+    if (!r.id) r.id = crypto.randomUUID();
+
+    moveToRecycle(r, "File", "PurchaseReturns");
+
+    returns.splice(i, 1);
+  });
+
+  localStorage.setItem("purchaseReturns", JSON.stringify(returns));
+
+  renderPurchaseReturns();
+
+  alert("♻️ Selected purchase returns moved to Recycle Bin.");
+}
+
+function toggleSelectAllPurchaseReturns(source) {
+
+  document.querySelectorAll(".purchase-return-checkbox")
+    .forEach(cb => cb.checked = source.checked);
+
+}
 function deletePurchaseReturn(index) {
   if (!confirm("Delete this return?")) return;
 
@@ -32422,27 +33328,61 @@ function addTaxPayment() {
 
 
 function renderTaxPayments() {
-  const payments = JSON.parse(localStorage.getItem('taxPayments') || []);
-  const banks = JSON.parse(localStorage.getItem('banks') || []);
+
+  const payments = JSON.parse(localStorage.getItem('taxPayments') || "[]");
+  const banks = JSON.parse(localStorage.getItem('banks') || "[]");
   const tbody = document.getElementById('taxPaymentsTable');
+
   tbody.innerHTML = '';
 
+  if (!payments.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="p-2 text-center text-gray-500">
+          No tax payments found
+        </td>
+      </tr>`;
+    return;
+  }
+
   payments.forEach((payment, index) => {
+
     const bankName = banks[payment.bankIndex]?.name || "N/A";
+
     const tr = document.createElement('tr');
+
     tr.innerHTML = `
+      <td class="p-2">
+        <input type="checkbox"
+          class="tax-payment-checkbox"
+          value="${index}">
+      </td>
+
       <td class="p-2">${payment.date}</td>
       <td class="p-2">${payment.type}</td>
       <td class="p-2">${payment.method}</td>
       <td class="p-2">${bankName}</td>
-      <td class="p-2">KES ${payment.amount.toFixed(2)}</td>
+      <td class="p-2">KES ${parseFloat(payment.amount || 0).toFixed(2)}</td>
       <td class="p-2">${payment.reference}</td>
-      <td class="p-2">
-        <button onclick="editTaxPayment(${index})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Edit</button>
-        <button onclick="deleteTaxPayment(${index})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Delete</button>
-         <button onclick="previewTaxPayment(${index})" class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">Preview</button>
+
+      <td class="p-2 space-x-1">
+        <button onclick="editTaxPayment(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteTaxPayment(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button onclick="previewTaxPayment(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
       </td>
     `;
+
     tbody.appendChild(tr);
   });
 }
@@ -32611,7 +33551,46 @@ function deleteTaxPayment(index) {
 
   alert("♻️ Tax payment moved to Recycle Bin & accounts rolled back.");
 }
+function deleteSelectedTaxPayments() {
 
+  let payments = JSON.parse(localStorage.getItem("taxPayments") || "[]");
+
+  const selected = Array.from(
+    document.querySelectorAll(".tax-payment-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (!selected.length) {
+    alert("No tax payments selected");
+    return;
+  }
+
+  if (!confirm(`Delete ${selected.length} tax payment(s)?`)) return;
+
+  selected.sort((a, b) => b - a).forEach(i => {
+
+    const p = payments[i];
+    if (!p) return;
+
+    if (!p.id) p.id = crypto.randomUUID();
+
+    moveToRecycle(p, "File", "TaxPayments");
+
+    payments.splice(i, 1);
+  });
+
+  localStorage.setItem("taxPayments", JSON.stringify(payments));
+
+  renderTaxPayments();
+
+  alert("♻️ Selected tax payments moved to Recycle Bin.");
+}
+
+function toggleSelectAllTaxPayments(source) {
+
+  document.querySelectorAll(".tax-payment-checkbox")
+    .forEach(cb => cb.checked = source.checked);
+
+}
 function showSingleTax() {
     document.getElementById("singleTaxSection").classList.remove("hidden");
     document.getElementById("bulkTaxSection").classList.add("hidden");
@@ -32953,25 +33932,58 @@ function addOperationalCost() {
 }
 
 function renderOperationalCosts() {
+
   const costs = JSON.parse(localStorage.getItem("operationalCosts") || "[]");
   const table = document.getElementById("operationalCostsTable");
+
   table.innerHTML = "";
 
+  if (!costs.length) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="8" class="p-2 text-center text-gray-500">
+          No operational costs found
+        </td>
+      </tr>`;
+    return;
+  }
+
   costs.forEach((entry, index) => {
+
     const row = document.createElement("tr");
+
     row.innerHTML = `
+      <td class="p-2">
+        <input type="checkbox"
+          class="operational-cost-checkbox"
+          value="${index}">
+      </td>
+
       <td class="p-2">${entry.date}</td>
       <td class="p-2">${entry.description}</td>
       <td class="p-2">${entry.category}</td>
       <td class="p-2">${entry.method}</td>
       <td class="p-2">${entry.bank}</td>
-      <td class="p-2">KES ${parseFloat(entry.amount).toFixed(2)}</td>
+      <td class="p-2">KES ${parseFloat(entry.amount || 0).toFixed(2)}</td>
+
       <td class="p-2 space-x-1">
-        <button onclick="previewOperationalCost(${index})" class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">Preview</button>
-        <button onclick="editOperationalCost(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="deleteOperationalCost(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Delete</button>
+        <button onclick="previewOperationalCost(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+        <button onclick="editOperationalCost(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteOperationalCost(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
       </td>
     `;
+
     table.appendChild(row);
   });
 }
@@ -33092,7 +34104,46 @@ function editOperationalCost(index) {
 
   editingOperationalCostIndex = index;
 }
+function deleteSelectedOperationalCosts() {
 
+  let costs = JSON.parse(localStorage.getItem("operationalCosts") || "[]");
+
+  const selected = Array.from(
+    document.querySelectorAll(".operational-cost-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (!selected.length) {
+    alert("No operational costs selected");
+    return;
+  }
+
+  if (!confirm(`Delete ${selected.length} cost(s)?`)) return;
+
+  selected.sort((a, b) => b - a).forEach(i => {
+
+    const c = costs[i];
+    if (!c) return;
+
+    if (!c.id) c.id = crypto.randomUUID();
+
+    moveToRecycle(c, "File", "OperationalCosts");
+
+    costs.splice(i, 1);
+  });
+
+  localStorage.setItem("operationalCosts", JSON.stringify(costs));
+
+  renderOperationalCosts();
+
+  alert("♻️ Selected operational costs moved to Recycle Bin.");
+}
+
+function toggleSelectAllOperationalCosts(source) {
+
+  document.querySelectorAll(".operational-cost-checkbox")
+    .forEach(cb => cb.checked = source.checked);
+
+}
 function deleteOperationalCost(index) {
   if (!confirm("Are you sure you want to delete this operational cost?")) return;
 
@@ -33861,19 +34912,34 @@ function showGNNotification(message) {
   }, 3000);
 }
 function renderGRNTable() {
+
   const grns = JSON.parse(localStorage.getItem("grns") || "[]");
   const tbody = document.getElementById("grnTableBody");
+
   if (!tbody) return;
   tbody.innerHTML = "";
 
   if (grns.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" class="p-2 text-center text-gray-500">No GRNs recorded</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="11" class="p-2 text-center text-gray-500">
+          No GRNs recorded
+        </td>
+      </tr>`;
     return;
   }
 
   grns.forEach((grn, index) => {
+
     const row = document.createElement("tr");
+
     row.innerHTML = `
+      <td class="p-2 border-t">
+        <input type="checkbox"
+          class="grn-checkbox"
+          value="${index}">
+      </td>
+
       <td class="p-2 border-t">${grn.number}</td>
       <td class="p-2 border-t">${grn.supplier}</td>
       <td class="p-2 border-t">${grn.items?.map(i => i.name).join(", ") || "-"}</td>
@@ -33883,15 +34949,73 @@ function renderGRNTable() {
       <td class="p-2 border-t">${grn.reference || "-"}</td>
       <td class="p-2 border-t">${grn.receiver || "-"}</td>
       <td class="p-2 border-t">${grn.trackNo || "-"}</td>
-      <td class="p-2 border-t">
-        <button onclick="previewGRN(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-        <button onclick="editGRN(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="deleteGRN(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-        <button onclick="emailGRN(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Email</button>
+
+      <td class="p-2 border-t space-x-1">
+
+        <button onclick="previewGRN(${index})"
+          class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+        <button onclick="editGRN(${index})"
+          class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteGRN(${index})"
+          class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button onclick="emailGRN(${index})"
+          class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+          Email
+        </button>
+
       </td>
     `;
+
     tbody.appendChild(row);
   });
+}
+
+function deleteSelectedGRN() {
+
+  let grns = JSON.parse(localStorage.getItem("grns") || "[]");
+
+  const selected = Array.from(
+    document.querySelectorAll(".grn-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (!selected.length) {
+    alert("No GRNs selected");
+    return;
+  }
+
+  if (!confirm(`Delete ${selected.length} GRN(s)?`)) return;
+
+  selected.sort((a, b) => b - a).forEach(index => {
+
+    const g = grns[index];
+    if (!g) return;
+
+    if (!g.id) g.id = crypto.randomUUID();
+
+    moveToRecycle(g, "File", "GRN");
+
+    grns.splice(index, 1);
+  });
+
+  localStorage.setItem("grns", JSON.stringify(grns));
+
+  renderGRNTable();
+
+  alert("♻️ Selected GRNs moved to Recycle Bin.");
+}
+
+function toggleSelectAllGRN(source) {
+  document.querySelectorAll(".grn-checkbox")
+    .forEach(cb => cb.checked = source.checked);
 }
 
 function editGRN(index) {
@@ -36878,7 +38002,7 @@ function addJournalRow() {
       <input type="number" min="0" value="0" class="border p-1 rounded w-full text-right creditInput">
     </td>
     <td class="p-2 border text-center">
-      <button class="text-red-600 font-bold">✖</button>
+      <button class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Delete</button>
     </td>
   `;
 
@@ -37131,7 +38255,7 @@ function editJournal(index) {
       <td class="p-2 border"><input type="text" value="${e.description || ""}" class="border p-1 rounded w-full lineDesc"></td>
       <td class="p-2 border"><input type="number" min="0" value="${e.debit}" class="border p-1 rounded w-full text-right debitInput"></td>
       <td class="p-2 border"><input type="number" min="0" value="${e.credit}" class="border p-1 rounded w-full text-right creditInput"></td>
-      <td class="p-2 border text-center"><button class="text-red-600 font-bold">✖</button></td>
+      <td class="p-2 border text-center"><<button class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Delete</button></td>
     `;
     tbody.appendChild(row);
 
