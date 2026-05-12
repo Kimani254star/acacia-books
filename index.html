@@ -17832,10 +17832,21 @@ function renderInvoices() {
                     <button onclick="previewInvoice(${inv.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Preview</button>
                     <button onclick="deleteInvoice(${inv.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Delete</button>
                     <button onclick="recordInvoicePayment(${inv.id})"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900"> Record payment</button>
-                    <button onclick="reversePayment(${inv.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Reverse Payment</button>
+                    
                     <button onclick="pushInvoiceToETIMS(${inv.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Push to ETIMS</button>
                     <button onclick="shareInvoice(${inv.id})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Share</button>
-                    <button onclick="emailInvoice(${inv.id})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button>
+                    <div class="relative inline-block">
+                    <button onclick="toggleInvoiceMenu(${inv.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800"> More ▾ </button>
+                    <div id="menu-${inv.id}" class="hidden absolute right-0 mt-1 w-36 bg-white border rounded shadow z-50 flex flex-col">
+
+                    <button onclick="emailInvoice(${inv.id})"  c class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"> Email </button>
+                    <button onclick="reversePayment(${inv.id})"  class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">Reverse Payment</button>
+                    <button onclick="cloneInvoice(${inv.id})"  class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"> Clone </button>
+                    <button onclick="writeOffInvoice(${inv.id})"  class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"> Write Off </button>
+                    <button onclick="undoWriteOff(${inv.id})"  class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"> Undo Write Off</button>
+
+                </div>
+                </div>
                 </td>
             </tr>
         `;
@@ -17848,7 +17859,268 @@ document.addEventListener("DOMContentLoaded", () => {
 function generateInvoiceNumberFromId(id) {
     return "INV-" + String(id).slice(-4);
 }
+function toggleInvoiceMenu(id) {
+    const menu = document.getElementById(`menu-${id}`);
 
+    document.querySelectorAll('[id^="menu-"]').forEach(m => {
+        if (m.id !== `menu-${id}`) m.classList.add("hidden");
+    });
+
+    menu.classList.toggle("hidden");
+}
+
+document.addEventListener("click", function (e) {
+    if (!e.target.closest(".relative")) {
+        document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add("hidden"));
+    }
+});
+function cloneInvoice(id) {
+  let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+
+  const original = invoices.find(inv => String(inv.id) === String(id));
+  if (!original) return alert("Invoice not found");
+
+  const newInvoice = JSON.parse(JSON.stringify(original));
+
+  newInvoice.id = Date.now();
+
+  newInvoice.invoiceNumber = generateInvoiceNumber();
+
+  newInvoice.amountPaid = 0;
+  newInvoice.status = "Unpaid";
+
+  newInvoice.isCloned = true;
+  newInvoice.clonedFrom = original.id;
+
+  invoices.push(newInvoice);
+  localStorage.setItem("invoices", JSON.stringify(invoices));
+
+  renderInvoices();
+
+  alert("Invoice cloned successfully");
+}
+function writeOffInvoice(id) {
+  const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  const index = invoices.findIndex(i => i.id === id);
+  if (index === -1) return alert("Invoice not found");
+
+  const invoice = invoices[index];
+  const total = parseFloat(invoice.totalKES || invoice.total) || 0;
+
+  const receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
+
+  const paid = receipts
+    .filter(r => r.invoiceId === invoice.id)
+    .reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+
+  const balance = total - paid;
+
+  if (balance <= 0) return alert("Nothing to write off");
+
+  const modal = document.createElement("div");
+  modal.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000;";
+
+  modal.innerHTML = `
+    <div style="background:#fff;padding:20px;border-radius:8px;width:400px;">
+      <h3>Write Off ${invoice.invoiceNumber}</h3>
+
+      <label>Amount</label>
+      <input type="number" id="woAmount" value="${balance.toFixed(2)}" max="${balance.toFixed(2)}" class="border p-1 w-full mb-2"/>
+
+      <label>Reason</label>
+      <textarea id="woReason" class="border p-1 w-full mb-2"></textarea>
+
+      <div class="flex justify-end gap-2">
+        <button id="cancelWO" class="bg-gray-400 text-white px-3 py-1 rounded">Cancel</button>
+        <button id="confirmWO" class="bg-red-600 text-white px-3 py-1 rounded">Write Off</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  modal.querySelector("#cancelWO").onclick = () => modal.remove();
+
+  modal.querySelector("#confirmWO").onclick = () => {
+    const amount = parseFloat(document.getElementById("woAmount").value);
+    const reason = document.getElementById("woReason").value.trim();
+
+    if (isNaN(amount) || amount <= 0 || amount > balance) return alert("Invalid amount");
+    if (!reason) return alert("Reason required");
+
+    const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+
+    let badDebt = accounts.find(a => a.name === "Bad Debts Expense");
+    if (!badDebt) {
+      badDebt = { name: "Bad Debts Expense", code: "BDEBT", type: "Expense", amount: 0 };
+      accounts.push(badDebt);
+    }
+
+    let receivables = accounts.find(a => a.name === "Customer Receivables");
+    if (!receivables) {
+      receivables = { name: "Customer Receivables", code: "CUSTREC", type: "Asset", amount: 0 };
+      accounts.push(receivables);
+    }
+
+    badDebt.amount = (badDebt.amount || 0) + amount;
+    receivables.amount = (receivables.amount || 0) - amount;
+
+    const writeOffs = JSON.parse(localStorage.getItem("writeOffs") || "[]");
+
+    writeOffs.push({
+      id: Date.now(),
+      invoiceId: invoice.id,
+      invoiceNumber: invoice.invoiceNumber,
+      amount,
+      reason,
+      date: new Date().toISOString().split("T")[0]
+    });
+
+    const totalPaid = paid;
+
+    invoice.writeOffAmount = (invoice.writeOffAmount || 0) + amount;
+    invoice.balance = total - totalPaid - invoice.writeOffAmount;
+    invoice.amountPaid = totalPaid;
+
+    if (invoice.balance <= 0) {
+      invoice.balance = 0;
+      invoice.status = "Written Off";
+      invoice.paid = true;
+    } else {
+      invoice.status = "Partial Write Off";
+      invoice.paid = false;
+    }
+
+    invoices[index] = invoice;
+
+    const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+
+    transactions.push({
+      id: Date.now(),
+      type: "Write Off",
+      amount,
+      reason,
+      invoiceId: invoice.id,
+      ref: invoice.invoiceNumber,
+      date: new Date().toISOString().split("T")[0]
+    });
+
+    localStorage.setItem("invoices", JSON.stringify(invoices));
+    localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+    localStorage.setItem("transactions", JSON.stringify(transactions));
+    localStorage.setItem("writeOffs", JSON.stringify(writeOffs));
+
+    renderInvoices();
+    renderAccountsReceivable?.();
+    renderWriteOffReport?.();
+
+    modal.remove();
+
+    showToast("Write off recorded");
+  };
+}
+function undoWriteOff(id) {
+  const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  const index = invoices.findIndex(i => i.id === id);
+  if (index === -1) return;
+
+  const invoice = invoices[index];
+
+  const writeOffs = JSON.parse(localStorage.getItem("writeOffs") || "[]");
+
+  const invoiceWriteOffs = writeOffs.filter(w => w.invoiceId === invoice.id);
+
+  if (invoiceWriteOffs.length === 0) {
+    return alert("Nothing to undo");
+  }
+
+  const totalUndo = invoiceWriteOffs.reduce((s, w) => s + (parseFloat(w.amount) || 0), 0);
+
+  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+
+  const badDebt = accounts.find(a => a.name === "Bad Debts Expense");
+  const receivables = accounts.find(a => a.name === "Customer Receivables");
+
+  if (badDebt) badDebt.amount = (badDebt.amount || 0) - totalUndo;
+  if (receivables) receivables.amount = (receivables.amount || 0) + totalUndo;
+
+  const receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
+
+  const paid = receipts
+    .filter(r => r.invoiceId === invoice.id)
+    .reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+
+  invoice.writeOffAmount = 0;
+  invoice.amountPaid = paid;
+
+  const total = parseFloat(invoice.totalKES || invoice.total) || 0;
+
+  invoice.balance = total - paid;
+
+  if (invoice.balance <= 0) {
+    invoice.status = "Paid";
+    invoice.paid = true;
+  } else if (paid > 0) {
+    invoice.status = "Partial";
+    invoice.paid = false;
+  } else {
+    invoice.status = "Unpaid";
+    invoice.paid = false;
+  }
+
+  invoices[index] = invoice;
+
+  const remainingWriteOffs = writeOffs.filter(w => w.invoiceId !== invoice.id);
+
+  const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+
+  const filteredTx = transactions.filter(
+    t => !(t.type === "Write Off" && t.invoiceId === invoice.id)
+  );
+
+  localStorage.setItem("writeOffs", JSON.stringify(remainingWriteOffs));
+  localStorage.setItem("transactions", JSON.stringify(filteredTx));
+  localStorage.setItem("invoices", JSON.stringify(invoices));
+  localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+
+  renderInvoices();
+  renderAccountsReceivable?.();
+  renderWriteOffReport?.();
+
+  showToast("Write off reversed successfully");
+}
+function renderWriteOffReport() {
+  const writeOffs = JSON.parse(localStorage.getItem("writeOffs") || "[]");
+  const tbody = document.getElementById("invoiceSummary");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  writeOffs.forEach(w => {
+
+    const amount = parseFloat(w.amount || 0);
+    const wht = amount * 0.02;
+    const net = amount - wht;
+
+    tbody.innerHTML += `
+      <tr>
+        <td class="border px-2 py-1">${w.date}</td>
+        <td class="border px-2 py-1">${w.invoiceNumber}</td>
+        <td class="border px-2 py-1">${w.customer}</td>
+        <td class="border px-2 py-1 text-right">${amount.toFixed(2)}</td>
+        <td class="border px-2 py-1 text-right">${wht.toFixed(2)}</td>
+        <td class="border px-2 py-1 text-right">${net.toFixed(2)}</td>
+        <td class="border px-2 py-1">${w.reason}</td>
+        <td class="border px-2 py-1">
+          <button onclick="undoWriteOff(${w.invoiceId})"
+            class="bg-blue-900 text-white px-2 py-1 rounded">
+            Undo
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+}
 function getNextControlInvoiceNo(controlUnitNo) {
     const key = `etims_counter_${controlUnitNo}`;
     let current = parseInt(localStorage.getItem(key) || "0", 10);
@@ -18509,10 +18781,7 @@ function deleteInvoice(id) {
 
   showToast("♻️ Invoice moved to Recycle Bin & stock restored ✅");
 }
-function closePreview() {
-  const modal = document.getElementById("invoicePreviewModal");
-  if (modal) modal.classList.add("hidden");
-}
+
 
 function restoreStock(productName, qty, sku) {
   const keys = Object.keys(localStorage).filter(k => k === "inventory" || k.startsWith("inventory_"));
@@ -18541,38 +18810,7 @@ function restoreStock(productName, qty, sku) {
   }
   return false;
 }
-function cloneInvoices(id) {
-  const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || "{}");
-  const role = loggedInUser.role || "";
 
-  if (role !== "admin" && role !== "account") {
-    alert("🚫 Only admins and account users can clone invoices.");
-    return;
-  }
-
-  const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-  const invoice = invoices.find(inv => inv.id === id);
-  if (!invoice) return;
-
-  editingInvoiceId = null;
-
-  document.getElementById("invoiceDate").value = invoice.date;
-  document.getElementById("invoiceCustomer").value = invoice.customer;
-
-  if (document.getElementById("invoiceTerms")) {
-    document.getElementById("invoiceTerms").value = invoice.terms || "";
-  }
-
-  document.getElementById("invoiceTotal").value = invoice.total;
-  document.getElementById("invoiceVAT").value = invoice.vat;
-
-  invoiceItems = invoice.items.map(item => ({ ...item }));
-
-  renderInvoiceItems();
-  disableInvoiceItemEditing(true);
-
-  document.getElementById("saveInvoiceBtn").innerText = "Save Cloned Invoice";
-}
 function recordInvoicePayment(id) {
   const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
   const invoiceIndex = invoices.findIndex(i => i.id === id);
@@ -18772,118 +19010,88 @@ function reversePayment(id) {
   const invoice = invoices[index];
 
   const total = parseFloat(invoice.totalKES || invoice.total) || 0;
-  const currentPaid = parseFloat(invoice.amountPaid) || 0;
 
-  if (currentPaid <= 0) {
-    alert("No payment to reverse or edit.");
-    return;
+  let receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
+
+  const relatedReceipts = receipts.filter(r => String(r.invoiceId) === String(invoice.id));
+
+  const paid = relatedReceipts.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+
+  if (paid <= 0) return alert("No payment to reverse.");
+
+  const newPaid = parseFloat(prompt("Edit payment amount:", paid));
+
+  if (isNaN(newPaid) || newPaid < 0 || newPaid > total) {
+    return alert("Invalid amount");
   }
 
-  let newPaidAmount = parseFloat(
-    prompt(
-      `Edit payment for Invoice ${invoice.invoiceNumber}\nTotal: ${total}\nCurrently Paid: ${currentPaid}`,
-      currentPaid
-    )
-  );
-
-  if (isNaN(newPaidAmount) || newPaidAmount < 0) {
-    alert("Invalid amount.");
-    return;
-  }
-
-  if (newPaidAmount > total) {
-    alert("Paid amount cannot exceed total.");
-    return;
-  }
-
-  const receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
-
-  const paidFromReceipts = receipts
-    .filter(r =>
-  r.invoiceId === invoice.id ||
-  r.reference === `Invoice ${invoice.id}`
-)
-    .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
-
-  const difference = paidFromReceipts - newPaidAmount;
+  const difference = paid - newPaid;
 
   if (difference > 0) {
     let remaining = difference;
 
     for (let i = receipts.length - 1; i >= 0 && remaining > 0; i--) {
-  if (
-    receipts[i].invoiceId === invoice.id ||
-    receipts[i].reference === `Invoice ${invoice.id}`
-  ) {
-    const amt = parseFloat(receipts[i].amount) || 0;
+      if (String(receipts[i].invoiceId) === String(invoice.id)) {
+        const amt = parseFloat(receipts[i].amount) || 0;
 
-    if (amt <= remaining) {
-      remaining -= amt;
-      receipts.splice(i, 1);
-    } else {
-      receipts[i].amount = amt - remaining;
-      remaining = 0;
+        if (amt <= remaining) {
+          remaining -= amt;
+          receipts.splice(i, 1);
+        } else {
+          receipts[i].amount = amt - remaining;
+          remaining = 0;
+        }
+      }
     }
-  }
-}
 
     localStorage.setItem("receipts", JSON.stringify(receipts));
   }
 
-  invoice.amountPaid = newPaidAmount;
-  invoice.balance = total - newPaidAmount;
+  const finalPaid = receipts
+    .filter(r => String(r.invoiceId) === String(invoice.id))
+    .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
 
-  if (newPaidAmount === 0) {
-    invoice.status = "Unpaid";
-    invoice.paid = false;
-  } else if (newPaidAmount < total) {
-    invoice.status = "Partial";
-    invoice.paid = false;
-  } else {
+  invoice.amountPaid = finalPaid;
+  invoice.balance = total - finalPaid;
+
+  if (invoice.balance <= 0) {
     invoice.status = "Paid";
     invoice.paid = true;
     invoice.balance = 0;
+  } else if (finalPaid > 0) {
+    invoice.status = "Partial";
+    invoice.paid = false;
+  } else {
+    invoice.status = "Unpaid";
+    invoice.paid = false;
   }
 
   invoices[index] = invoice;
   localStorage.setItem("invoices", JSON.stringify(invoices));
 
- 
   const customerPayments = JSON.parse(localStorage.getItem("customerPayments") || "[]");
+  localStorage.setItem("customerPayments", JSON.stringify(
+    customerPayments.filter(p => String(p.invoiceId) !== String(invoice.id))
+  ));
 
-  const updatedCustomerPayments = customerPayments.filter(
-    p => !(p.invoiceId === invoice.id)
-  );
-
-  localStorage.setItem("customerPayments", JSON.stringify(updatedCustomerPayments));
+  const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+  localStorage.setItem("transactions", JSON.stringify(
+    transactions.filter(t =>
+      !(t.type === "Customer Payment" && String(t.ref) === String(invoice.invoiceNumber))
+    )
+  ));
 
   const manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+  localStorage.setItem("manualTransactions", JSON.stringify(
+    manualTransactions.filter(t =>
+      !(t.type === "Customer Payment" && String(t.ref) === String(invoice.invoiceNumber))
+    )
+  ));
 
-  const updatedTx = manualTransactions.filter(
-  t => !(
-    t.type === "Customer Payment" &&
-    (t.ref === invoice.invoiceNumber || t.ref === `Invoice ${invoice.id}`)
-  )
-);
-
-  localStorage.setItem("manualTransactions", JSON.stringify(updatedTx));
-
-  const allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
-
-  const updatedAllTx = allTx.filter(
-  t => !(
-    t.type === "Customer Payment" &&
-    (t.ref === invoice.invoiceNumber || t.ref === `Invoice ${invoice.id}`)
-  )
-);
-
-  localStorage.setItem("transactions", JSON.stringify(updatedAllTx));
-
-
-  syncInvoiceReceipt(invoice);
   renderInvoices();
-  updateDashboardTotals();
-  renderDebitControlPanel();
+  renderAccountsReceivable?.();
+  renderDebitControlPanel?.();
+  updateDashboardTotals?.();
 
   showToast(`🔄 Payment updated for Invoice ${invoice.invoiceNumber}`);
 }
@@ -19257,71 +19465,144 @@ function loadConvertedOrderToInvoice() {
 
   if (!currentInvoice) return;
 
-  document.getElementById("invoiceNumber").value =
-    currentInvoice.invoiceNumber || generateInvoiceNumber();
+  const invoices =
+    JSON.parse(localStorage.getItem("invoices") || "[]");
 
-  document.getElementById("invoiceCustomer").value =
-    currentInvoice.customerName || "";
+  const alreadyExists = invoices.find(
+    inv => inv.sourceOrderId === currentInvoice.sourceOrderId
+  );
 
-  invoiceItems = (currentInvoice.items || []).map(item => ({
-    desc: item.desc || "",
-    warehouse: item.warehouse || "Main",
-    qty: parseFloat(item.qty) || 0,
-    price: parseFloat(item.price) || 0,
-    discount: parseFloat(item.discount) || 0,
-    vatRate: parseFloat(item.vatRate) || 0,
-    category: item.category || "General",
-    subtotal: parseFloat(item.subtotal) || 0,
-    vat: parseFloat(item.vat) || 0,
-    totalWithVat:
-      parseFloat(item.totalWithVat || item.total) || 0
-  }));
+  if (alreadyExists) {
+    localStorage.removeItem("currentInvoice");
+    showTab("invoiceTab");
+    renderInvoices?.();
+    return;
+  }
 
-  const tbody = document.getElementById("invoiceItemTableBody");
+  const invoiceId = crypto.randomUUID();
 
-  tbody.innerHTML = "";
+  const newInvoice = {
+    id: invoiceId,
 
-  invoiceItems.forEach((item, index) => {
+    invoiceNumber:
+      currentInvoice.invoiceNumber ||
+      generateInvoiceNumberFromId(invoiceId),
 
-    tbody.innerHTML += `
-      <tr class="border">
-        <td class="p-2 text-xs">${item.desc}</td>
-        <td class="p-2 text-xs">${item.qty}</td>
-        <td class="p-2 text-xs">${formatCurrency(item.price)}</td>
-        <td class="p-2 text-xs">${formatCurrency(item.discount)}</td>
-        <td class="p-2 text-xs">${formatCurrency(item.vat)}</td>
-        <td class="p-2 text-xs">${formatCurrency(item.totalWithVat)}</td>
-        <td class="p-2 text-xs">
-          <button onclick="editInvoiceItem(${index})"
-          class="border border-red-600 text-white bg-blue-900 font-bold px-1 py-1 rounded">
-          Edit
-          </button>
+    customer:
+      currentInvoice.customerName || "",
 
-          <button onclick="removeInvoiceItem(${index})"
-          class="border border-red-600 text-white bg-blue-900 font-bold px-1 py-1 rounded">
-          Remove
-          </button>
-        </td>
-      </tr>
-    `;
-  });
+    customerName:
+      currentInvoice.customerName || "",
 
-  const subtotal =
-    invoiceItems.reduce((sum, item) => sum + item.totalWithVat, 0);
+    date:
+      new Date().toISOString().split("T")[0],
 
-  const vat =
-    invoiceItems.reduce((sum, item) => sum + item.vat, 0);
+    items:
+      currentInvoice.items || [],
 
-  document.getElementById("invoiceTotal").value =
-    subtotal.toFixed(2);
+    subtotal:
+      (currentInvoice.items || []).reduce(
+        (s, i) =>
+          s +
+          (
+            parseFloat(i.subtotal) ||
+            (
+              (parseFloat(i.qty) || 0) *
+              (parseFloat(i.price) || 0)
+            )
+          ),
+        0
+      ),
 
-  document.getElementById("invoiceVAT").value =
-    vat.toFixed(2);
+    vat:
+      parseFloat(currentInvoice.vat) || 0,
+
+    total:
+      parseFloat(currentInvoice.total) || 0,
+
+    totalKES:
+      parseFloat(currentInvoice.total) || 0,
+
+    vatKES:
+      parseFloat(currentInvoice.vat) || 0,
+
+    amountPaid: 0,
+
+    balance:
+      parseFloat(currentInvoice.total) || 0,
+
+    status: "Unpaid",
+
+    paid: false,
+
+    currency: currentInvoice.currency || "KES",
+
+    exchangeRate:
+      parseFloat(currentInvoice.exchangeRate) || 1,
+
+    sourceOrderId:
+      currentInvoice.sourceOrderId || "",
+
+    convertedFromOrder:
+      currentInvoice.convertedFromOrder || "",
+
+    createdAt:
+      new Date().toISOString()
+  };
+
+  invoices.push(newInvoice);
+
+  localStorage.setItem(
+    "invoices",
+    JSON.stringify(invoices)
+  );
+
+  localStorage.setItem(
+    "currentInvoiceId",
+    invoiceId
+  );
 
   localStorage.removeItem("currentInvoice");
 
-  alert("✅ Order converted to invoice");
+  showTab("invoiceTab");
+
+  document.getElementById("invoiceNumber").value =
+    newInvoice.invoiceNumber;
+
+  document.getElementById("invoiceDate").value =
+    newInvoice.date;
+
+  document.getElementById("invoiceCustomer").value =
+    newInvoice.customer;
+
+  document.getElementById("invoiceTotal").value =
+    newInvoice.total;
+
+  document.getElementById("invoiceVAT").value =
+    newInvoice.vat;
+
+  window.invoiceItems = [...newInvoice.items];
+
+  if (typeof renderInvoiceItems === "function") {
+    renderInvoiceItems();
+  }
+
+  renderInvoices?.();
+
+  updateDashboardTotals?.();
+
+  showToast(
+    `✅ Invoice ${newInvoice.invoiceNumber} created successfully`
+  );
+
+  previewInvoice(invoiceId);
 }
+
+window.addEventListener(
+  "load",
+  loadConvertedOrderToInvoice
+);
+
 function updatePackageStatusFromInvoice(invoice) {
   let orders = JSON.parse(localStorage.getItem("orders") || "[]");
 
@@ -19653,26 +19934,52 @@ function renderOrders(data = null) {
     <td>${o.paid || 0}</td>
     <td>${(o.total || 0) - (o.paid || 0)}</td>
     <td>${o.converted ? "Converted ✅" : (o.status || "active")}</td>
-    <td>
-        <button onclick="editOrder(${i})" ${o.converted ? "disabled style='opacity:0.5;cursor:not-allowed'" : ""} class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Edit</button>
-        <button onclick="emailOrder(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button>
-        <button onclick="convertOrder(${i})" ${o.converted ? "disabled style='opacity:0.5;cursor:not-allowed'" : ""} class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Convert</button>
-        <button onclick="deleteOrder(${i})" ${o.converted ? "disabled style='opacity:0.5;cursor:not-allowed'" : ""} class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Delete</button>
-    </td>
+   <td>
+    <button 
+      onclick="${o.converted ? `alert('Edit invoice first')` : `editOrder(${i})`}"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+      Edit
+    </button>
+
+    <button 
+      onclick="previewOrder('${o.id}')"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+      Preview
+    </button>
+
+    <button 
+      onclick="emailOrder(${i})"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+      Email
+    </button>
+
+    <button 
+      onclick="convertOrder(${i})"
+      ${o.converted ? "disabled style='opacity:0.5;cursor:not-allowed'" : ""}
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+      Convert
+    </button>
+
+    <button 
+      onclick="${o.converted ? `alert('Edit invoice first')` : `deleteOrder(${i})`}"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+      Delete
+    </button>
+</td>
   </tr>
   `).join("");
 }
-let editingOrderIndex = null;
+let isEditingOrder = false;
 
 function editOrder(index) {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
   const o = orders[index];
+
   if (!o) return;
 
-  if (o.converted) {
-    alert("Converted orders cannot be edited");
-    return;
-  }
+ 
+  isEditingOrder = true;
+  editingOrderIndex = index;
 
   document.getElementById("orderDate").value = o.date || "";
   document.getElementById("orderCustomer").value = o.customerId || "";
@@ -19680,26 +19987,25 @@ function editOrder(index) {
   document.getElementById("orderTerms").value = o.terms || "";
   document.getElementById("orderDueDate").value = o.dueDate || "";
 
-  orderItems = o.items ? [...o.items] : [];
+  orderItems = Array.isArray(o.items) ? [...o.items] : [];
+
   renderOrderItems();
 
-  editingOrderIndex = index;
+ 
+  showNotification("✏️ Editing order mode enabled", "info");
 }
 
 function deleteOrder(index) {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
   const recycleBin = JSON.parse(localStorage.getItem("recycle_orders") || "[]");
+
   const o = orders[index];
   if (!o) return;
-
-  if (o.converted) {
-    alert("❌ Converted orders cannot be deleted");
-    return;
-  }
 
   if (!confirm("Are you sure you want to delete this order?")) return;
 
   const confirmText = prompt(`Type DELETE ${o.number} to confirm`);
+
   if (confirmText !== `DELETE ${o.number}`) {
     alert("Verification failed");
     return;
@@ -19716,6 +20022,8 @@ function deleteOrder(index) {
   localStorage.setItem("recycle_orders", JSON.stringify(recycleBin));
 
   renderOrders();
+
+  showNotification("🗑️ Order moved to recycle bin", "warning");
 }
 function convertOrder(index) {
 
@@ -19799,31 +20107,89 @@ function convertOrder(index) {
     };
   });
 
-  const tempInvoice = {
+  const invoiceId = crypto.randomUUID();
+
+  const newInvoice = {
+
+    id: invoiceId,
 
     invoiceNumber:
       typeof generateInvoiceNumber === "function"
         ? generateInvoiceNumber()
         : "INV-" + Date.now(),
 
+    customer: order.customerName || "",
     customerName: order.customerName || "",
 
-    total:
-      parseFloat(order.total) || 0,
-
-    vat:
-      parseFloat(order.vat) || 0,
+    date:
+      new Date().toISOString().split("T")[0],
 
     items: convertedItems,
 
+    subtotal:
+      convertedItems.reduce(
+        (sum, item) =>
+          sum + (parseFloat(item.subtotal) || 0),
+        0
+      ),
+
+    vat:
+      convertedItems.reduce(
+        (sum, item) =>
+          sum + (parseFloat(item.vat) || 0),
+        0
+      ),
+
+    total:
+      convertedItems.reduce(
+        (sum, item) =>
+          sum + (parseFloat(item.totalWithVat) || 0),
+        0
+      ),
+
+    totalKES:
+      convertedItems.reduce(
+        (sum, item) =>
+          sum + (parseFloat(item.totalWithVat) || 0),
+        0
+      ),
+
+    vatKES:
+      convertedItems.reduce(
+        (sum, item) =>
+          sum + (parseFloat(item.vat) || 0),
+        0
+      ),
+
+    amountPaid: 0,
+
+    balance:
+      convertedItems.reduce(
+        (sum, item) =>
+          sum + (parseFloat(item.totalWithVat) || 0),
+        0
+      ),
+
+    status: "Unpaid",
+
+    paid: false,
+
+    currency: "KES",
+
+    exchangeRate: 1,
+
     sourceOrderId: order.id,
 
-    convertedFromOrder: order.number
+    convertedFromOrder: order.number,
+
+    createdAt: new Date().toISOString()
   };
 
+  invoices.push(newInvoice);
+
   localStorage.setItem(
-    "currentInvoice",
-    JSON.stringify(tempInvoice)
+    "invoices",
+    JSON.stringify(invoices)
   );
 
   order.status = "converted";
@@ -19838,72 +20204,112 @@ function convertOrder(index) {
 
   renderOrders();
 
-  alert("✅ Order converted successfully");
+  if (typeof renderInvoices === "function") {
+    renderInvoices();
+  }
 
-  window.location.href = "invoice.html";
+  if (typeof updateDashboardTotals === "function") {
+    updateDashboardTotals();
+  }
+
+  showTab("invoiceTab");
+
+  setTimeout(() => {
+    previewInvoice(invoiceId);
+  }, 200);
+
+  showToast(
+    `✅ Order ${order.number} converted to Invoice ${newInvoice.invoiceNumber}`
+  );
 }
 function previewOrder(id) {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
   const order = orders.find(o => o.id == id);
-  if (!order) return alert("Order not found!");
 
-  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-  const customer = customers.find(c => c.id == order.customerId) || {};
-  const orgInfo = JSON.parse(localStorage.getItem("orgInfo") || "{}");
-
-  document.getElementById("previewOrderCompanyName").textContent = orgInfo.name || "My Company Ltd";
-  document.getElementById("previewOrderCompanyAddress").textContent = orgInfo.address || "";
-  document.getElementById("previewOrderCompanyPhone").textContent = orgInfo.phone || "";
-  document.getElementById("previewOrderNumber").textContent = order.number || "";
-
-  const orderDate = order.date
-    ? new Date(order.date).toLocaleDateString("en-GB")
-    : new Date().toLocaleDateString("en-GB");
-
-  document.getElementById("previewOrderDate").textContent = orderDate;
-
-  document.getElementById("previewOrderCustomerName").textContent = customer.name || order.customerName || "N/A";
-  document.getElementById("previewOrderCustomerPhone").textContent = customer.phone || "";
-  document.getElementById("previewOrderCustomerAddress").textContent = customer.billingAddress || "";
-
-  const tbody = document.getElementById("previewOrderItems");
-  tbody.innerHTML = "";
-
-  let subtotal = 0;
-  let totalVAT = 0;
-
-  order.items.forEach((item, index) => {
-    const qty = parseFloat(item.qty) || 0;
-    const price = parseFloat(item.price) || 0;
-    const vat = parseFloat(item.vat) || 0;
-
-    const lineTotal = qty * price;
-    subtotal += lineTotal;
-    totalVAT += vat;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="p-2 border text-center">${index + 1}</td>
-      <td class="p-2 border">${item.desc}</td>
-      <td class="p-2 border text-center">${qty}</td>
-      <td class="p-2 border text-right">${price}</td>
-      <td class="p-2 border text-right">${vat}</td>
-      <td class="p-2 border text-right">${lineTotal + vat}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  const grandTotal = subtotal + totalVAT;
-
-  document.getElementById("previewOrderSubtotal").textContent = subtotal;
-  document.getElementById("previewOrderVAT").textContent = totalVAT;
-  document.getElementById("previewOrderTotal").textContent = grandTotal;
+  if (!order) {
+    alert("Order not found");
+    return;
+  }
 
   document.getElementById("orderPreviewModal").classList.remove("hidden");
+
+  document.getElementById("previewOrderNumber").textContent =
+    order.number || "-";
+
+  document.getElementById("previewOrderDate").textContent =
+    order.date || "-";
+
+  document.getElementById("previewOrderCustomerName").textContent =
+    order.customerName || "-";
+
+  document.getElementById("previewOrderCustomerAddress").textContent =
+    order.customerAddress || "-";
+
+  document.getElementById("previewOrderCustomerPhone").textContent =
+    order.customerPhone || "-";
+
+  document.getElementById("previewOrderCustomerPIN").textContent =
+    order.customerPIN || "-";
+
+  const subtotal = Number(order.subtotal || 0);
+  const vat = Number(order.vat || 0);
+  const total = Number(order.total || 0);
+  const paid = Number(order.paid || 0);
+
+  const balance = total - paid;
+
+  document.getElementById("previewOrderSubtotal").textContent =
+    `KES ${subtotal.toFixed(2)}`;
+
+  document.getElementById("previewOrderVAT").textContent =
+    `KES ${vat.toFixed(2)}`;
+
+  document.getElementById("previewOrderTotal").textContent =
+    `KES ${total.toFixed(2)}`;
+
+  document.getElementById("previewOrderPaid").textContent =
+    `KES ${paid.toFixed(2)}`;
+
+  document.getElementById("previewOrderBalance").textContent =
+    `KES ${balance.toFixed(2)}`;
+
+  document.getElementById("previewOrderStatus").textContent =
+    order.converted
+      ? "Converted"
+      : (order.status || "Pending");
+
+  const itemsBody =
+    document.getElementById("orderPreviewItems");
+
+  itemsBody.innerHTML = (order.items || []).map((item, i) => {
+
+    const qty = Number(item.qty || 0);
+    const price = Number(item.price || 0);
+    const discount = Number(item.discount || 0);
+    const vat = Number(item.vat || 0);
+
+    const itemTotal =
+      (qty * price) - discount + vat;
+
+    return `
+      <tr>
+        <td class="border p-2">${i + 1}</td>
+        <td class="border p-2">${item.name || item.desc || "-"}</td>
+        <td class="border p-2">${qty}</td>
+        <td class="border p-2">KES ${price.toFixed(2)}</td>
+        <td class="border p-2">KES ${discount.toFixed(2)}</td>
+        <td class="border p-2">KES ${vat.toFixed(2)}</td>
+        <td class="border p-2">KES ${itemTotal.toFixed(2)}</td>
+      </tr>
+    `;
+  }).join("");
 }
 
 function closeOrderPreview() {
-  document.getElementById("orderPreviewModal").classList.add("hidden");
+  document
+    .getElementById("orderPreviewModal")
+    .classList.add("hidden");
 }
 
 function bulkDeleteOrders() {
@@ -20054,6 +20460,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadOrderProducts();
   loadOrderAccounts();
   loadOrderSalesPersons();
+  renderCustomerOrdersReport();
   renderOrders();
 });
 </script>
@@ -20483,12 +20890,150 @@ function bulkDeleteQuotes() {
 function convertQuote(index) {
   const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
   const quote = quotes[index];
-  if (!quote) return alert("Quote not found.");
 
-  localStorage.setItem("quoteToInvoice", JSON.stringify(quote));
-  showTab("invoicesTab");
+  if (!quote) {
+    return alert("Quote not found.");
+  }
 
-  setTimeout(loadQuoteIntoInvoice, 150);
+  const confirmConvert = confirm(
+    `Convert quote ${quote.quoteNumber} to order?`
+  );
+
+  if (!confirmConvert) return;
+
+  let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+
+  const alreadyConverted = orders.find(
+    o => o.sourceQuoteNumber === quote.quoteNumber
+  );
+
+  if (alreadyConverted) {
+    return alert("Quote already converted to order.");
+  }
+
+  const customers =
+    JSON.parse(localStorage.getItem("customers") || "[]");
+
+  const customer =
+    customers.find(c => c.name === quote.customer) || {};
+
+  const convertedItems = (quote.items || []).map(item => {
+
+    const qty = parseFloat(item.qty) || 0;
+    const price = parseFloat(item.price) || 0;
+    const discount = parseFloat(item.discount) || 0;
+
+    const subtotal = qty * price;
+
+    const discountAmount =
+      subtotal * (discount / 100);
+
+    const afterDiscount =
+      subtotal - discountAmount;
+
+    const vat =
+      parseFloat(item.vat) || 0;
+
+    const total =
+      afterDiscount + vat;
+
+    return {
+      sku: item.sku || "",
+      desc: item.desc || "",
+      warehouse: item.warehouse || "Main",
+      qty,
+      price,
+      discount,
+      tax: item.tax || 16,
+      vat,
+      total
+    };
+  });
+
+  const subtotal =
+    convertedItems.reduce(
+      (sum, item) =>
+        sum + ((item.qty * item.price) -
+        ((item.qty * item.price) * (item.discount / 100))),
+      0
+    );
+
+  const vat =
+    convertedItems.reduce(
+      (sum, item) => sum + item.vat,
+      0
+    );
+
+  const total =
+    convertedItems.reduce(
+      (sum, item) => sum + item.total,
+      0
+    );
+
+  const newOrder = {
+    id: crypto.randomUUID(),
+
+    number:
+      typeof generateOrderNumber === "function"
+        ? generateOrderNumber()
+        : "ORD-" + Date.now(),
+
+    date:
+      new Date().toISOString().split("T")[0],
+
+    customerId: customer.id || "",
+    customerName: quote.customer || "",
+    customerAddress: customer.address || "",
+    customerPhone: customer.phone || "",
+    customerPIN: customer.kraPin || "",
+
+    items: convertedItems,
+
+    subtotal,
+    vat,
+    total,
+
+    paid: 0,
+
+    status: "pending",
+
+    converted: false,
+
+    sourceQuoteNumber: quote.quoteNumber,
+
+    quoteConverted: true,
+
+    terms: "",
+    dueDate: ""
+  };
+
+  orders.push(newOrder);
+
+  localStorage.setItem(
+    "orders",
+    JSON.stringify(orders)
+  );
+
+  quote.status = "Converted";
+
+  quotes[index] = quote;
+
+  localStorage.setItem(
+    "quotes",
+    JSON.stringify(quotes)
+  );
+
+  renderQuotes();
+
+  if (typeof renderOrders === "function") {
+    renderOrders();
+  }
+
+  alert("✅ Quote converted to order successfully");
+
+  if (typeof showTab === "function") {
+    showTab("ordersTab");
+  }
 }
 function previewQuote(index) {
   const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
@@ -49093,6 +49638,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <li onclick="showReport('invoiceSummaryReport', this)">📁Invoice Summary</li>
         <li onclick="showReport('salesByItemPanel', this)">📁Sales by Item</li>
         <li onclick="showReport('customerOrdersPanel', this)">📁customer Orders</li>
+        <li onclick="showReport('customerQuotesPanel', this)">📁 Customer Quotes</li>
         <li onclick="showReport('salesByPersonPanel', this)">📁Sales by Salesperson</li>
         <li onclick="showReport('salesByCustomerPanel', this)">📁Sales by Customer</li>
         <li onclick="showReport('creditNotesReport', this)">📁Credit Notes</li>
@@ -49100,6 +49646,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <li onclick="showReport('customerStatementPanel', this)">📁Customer Statements</li>
         <li onclick="showReport('accountsPayablePanel', this)">📁Accounts Payable</li>
         <li onclick="showReport('billSummaryReport', this)">📁Bill Summary</li>
+        <li onclick="showReport('writeOffReportPanel', this)">📁 Write Off Report</li>
         <li onclick="showReport('debitNotesReport', this)">📁Debit Notes</li>
         <li onclick="showReport('supplierQuotationsPanel', this)">📁 Supplier Quotations</li>
         <li onclick="showReport('operationalCostsPanel', this)">📁Operational Costs</li>
@@ -50575,7 +51122,55 @@ document.addEventListener("DOMContentLoaded", () => {
   </table>
 
 </div>
+<div id="writeOffReportPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4">
 
+  <h2 class="text-xl font-bold mb-4">🧾 Write Off Report</h2>
+
+  <div class="mb-4 flex gap-2">
+    <input type="month" id="writeOffMonth"
+      class="border px-2 py-1 rounded w-1/3"
+      onchange="renderWriteOffReport()">
+
+    <input type="date" id="writeOffStart"
+      class="border px-2 py-1 rounded w-1/3"
+      onchange="renderWriteOffReport()">
+
+    <input type="date" id="writeOffEnd"
+      class="border px-2 py-1 rounded w-1/3"
+      onchange="renderWriteOffReport()">
+  </div>
+
+  <h3 class="font-bold mb-2 text-blue-900">👤 Customer Write-Offs</h3>
+
+  <table class="w-full border text-sm mb-6">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="border px-2 py-1 text-left">Date</th>
+        <th class="border px-2 py-1 text-left">Invoice</th>
+        <th class="border px-2 py-1 text-left">Customer</th>
+        <th class="border px-2 py-1 text-right">Amount</th>
+        <th class="border px-2 py-1 text-left">Reason</th>
+      </tr>
+    </thead>
+    <tbody id="customerWriteOffTable"></tbody>
+  </table>
+
+  <h3 class="font-bold mb-2 text-green-900">🏭 Supplier Write-Offs</h3>
+
+  <table class="w-full border text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="border px-2 py-1 text-left">Date</th>
+        <th class="border px-2 py-1 text-left">Bill</th>
+        <th class="border px-2 py-1 text-left">Supplier</th>
+        <th class="border px-2 py-1 text-right">Amount</th>
+        <th class="border px-2 py-1 text-left">Reason</th>
+      </tr>
+    </thead>
+    <tbody id="supplierWriteOffTable"></tbody>
+  </table>
+
+</div>
 <div id="billSummaryReport" class="report-view hidden bg-white rounded shadow mb-4 p-4">
 <h2 class="text-xl font-bold mb-4">📦Bills  Report</h2>
   <div class="mb-4">
@@ -52948,6 +53543,63 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     </thead>
 
     <tbody id="customerOrdersBody"></tbody>
+
+  </table>
+
+</div>
+<div id="customerQuotesPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t">
+
+  <p class="font-semibold mb-3 text-lg">Customer Quotes Report</p>
+
+  <div class="flex flex-wrap gap-3 mb-2 items-end">
+
+    <div>
+      <label class="text-xs font-semibold">Start Date</label>
+      <input type="date" id="quoteStartDate" class="border p-1 rounded text-sm">
+    </div>
+
+    <div>
+      <label class="text-xs font-semibold">End Date</label>
+      <input type="date" id="quoteEndDate" class="border p-1 rounded text-sm">
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-3">
+
+    <button onclick="applyQuoteFilter()"
+      class="bg-blue-900 text-white font-bold px-4 py-1 rounded hover:bg-blue-800">
+      ✅ Apply Filter
+    </button>
+
+    <button onclick="clearQuoteFilter()"
+      class="bg-gray-300 text-black font-bold px-4 py-1 rounded hover:bg-gray-400">
+      ❌ Clear Filter
+    </button>
+
+    <button onclick="exportQuoteCSV()"
+      class="border border-blue-900 text-blue-900 bg-blue-100 font-bold px-3 py-1 rounded hover:bg-blue-200">
+      ⬇️ Export CSV
+    </button>
+
+  </div>
+
+  <table class="w-full border text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-2">Quote No.</th>
+        <th class="p-2">Customer</th>
+        <th class="p-2">Items</th>
+        <th class="p-2">Qty</th>
+        <th class="p-2">Unit Price </th>
+        <th class="p-2">Total</th>
+        <th class="p-2">Date</th>
+        <th class="p-2">Validity (Days)</th>
+        <th class="p-2">Status</th>
+      </tr>
+    </thead>
+
+    <tbody id="customerQuotesBody"></tbody>
 
   </table>
 
@@ -60244,7 +60896,284 @@ document.addEventListener("DOMContentLoaded", () => {
   renderProjectProfitabilityTable();
 });
 </script>
+<script>
+  function renderWriteOffReport() {
+  const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  const tbody = document.getElementById("invoiceSummary");
 
+  if (!tbody) return;
+
+  const month = document.getElementById("woMonth")?.value || "";
+  const start = document.getElementById("woStartDate")?.value || "";
+  const end = document.getElementById("woEndDate")?.value || "";
+
+  let totalWriteOff = 0;
+  let totalWht = 0;
+  let totalNet = 0;
+
+  tbody.innerHTML = "";
+
+  invoices.forEach(inv => {
+    const amount = parseFloat(inv.writeOffAmount || 0);
+    if (!amount || amount <= 0) return;
+
+    const date = inv.date ? new Date(inv.date) : null;
+    if (month && date && !inv.date.startsWith(month)) return;
+    if (start && date && new Date(inv.date) < new Date(start)) return;
+    if (end && date && new Date(inv.date) > new Date(end)) return;
+
+    const wht = amount * 0.02;
+    const net = amount - wht;
+
+    totalWriteOff += amount;
+    totalWht += wht;
+    totalNet += net;
+
+    tbody.innerHTML += `
+      <tr>
+        <td class="border px-2 py-1">${inv.date || "-"}</td>
+        <td class="border px-2 py-1">${inv.invoiceNumber || inv.id}</td>
+        <td class="border px-2 py-1">${inv.customer || inv.supplier || "-"}</td>
+        <td class="border px-2 py-1 text-right">${amount.toFixed(2)}</td>
+        <td class="border px-2 py-1 text-right">${wht.toFixed(2)}</td>
+        <td class="border px-2 py-1 text-right">${net.toFixed(2)}</td>
+        <td class="border px-2 py-1">${inv.writeOffReason || "-"}</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML += `
+    <tr class="font-bold bg-gray-100">
+      <td colspan="3" class="border px-2 py-1 text-right">TOTAL</td>
+      <td class="border px-2 py-1 text-right">${totalWriteOff.toFixed(2)}</td>
+      <td class="border px-2 py-1 text-right">${totalWht.toFixed(2)}</td>
+      <td class="border px-2 py-1 text-right">${totalNet.toFixed(2)}</td>
+      <td class="border px-2 py-1"></td>
+    </tr>
+  `;
+}
+
+function showReport(panelId, el) {
+  document.querySelectorAll(".report-view").forEach(r => r.classList.add("hidden"));
+  const panel = document.getElementById(panelId);
+  if (panel) panel.classList.remove("hidden");
+
+  if (panelId === "writeOffReportPanel") {
+    renderWriteOffReport();
+  }
+}
+</script>
+<script>
+  function getAllOrders() {
+  return JSON.parse(localStorage.getItem("orders") || "[]");
+}
+
+function renderCustomerOrdersReport(data = null) {
+  const tbody = document.getElementById("customerOrdersBody");
+  if (!tbody) return;
+
+  const orders = data || getAllOrders();
+
+  if (!orders.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="text-center p-4 text-gray-500">
+          No customer orders found
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = orders.map(o => {
+    const items = o.items || [];
+
+    const itemNames = items.map(i => i.desc || i.name || "-").join(", ");
+    const totalQty = items.reduce((s, i) => s + (Number(i.qty) || 0), 0);
+
+    return `
+      <tr class="border-b">
+        <td class="p-2">${o.number || "-"}</td>
+        <td class="p-2">${o.customerName || "-"}</td>
+        <td class="p-2">${itemNames}</td>
+        <td class="p-2">${totalQty}</td>
+        <td class="p-2">${items.length ? (items[0].price || 0) : 0}</td>
+        <td class="p-2">${Number(o.total || 0).toFixed(2)}</td>
+        <td class="p-2">${o.date || "-"}</td>
+        <td class="p-2">${o.status || "pending"}</td>
+        <td class="p-2">${o.paid ? "Paid" : "Unpaid"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function applyOrderFilter() {
+  const start = document.getElementById("orderStartDate").value;
+  const end = document.getElementById("orderEndDate").value;
+
+  let orders = getAllOrders();
+
+  if (start) {
+    orders = orders.filter(o => new Date(o.date) >= new Date(start));
+  }
+
+  if (end) {
+    orders = orders.filter(o => new Date(o.date) <= new Date(end));
+  }
+
+  renderCustomerOrdersReport(orders);
+}
+
+function clearOrderFilter() {
+  document.getElementById("orderStartDate").value = "";
+  document.getElementById("orderEndDate").value = "";
+
+  renderCustomerOrdersReport();
+}
+
+function exportOrderCSV() {
+  const orders = getAllOrders();
+
+  let csv = "Order No,Customer,Items,Qty,Total,Date,Status,Payment\n";
+
+  orders.forEach(o => {
+    const items = o.items || [];
+    const itemNames = items.map(i => i.desc || i.name || "").join(" | ");
+    const totalQty = items.reduce((s, i) => s + (Number(i.qty) || 0), 0);
+
+    csv += [
+      o.number || "",
+      o.customerName || "",
+      itemNames,
+      totalQty,
+      o.total || 0,
+      o.date || "",
+      o.status || "",
+      o.paid ? "Paid" : "Unpaid"
+    ].join(",") + "\n";
+  });
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "customer_orders_report.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+</script>
+<script>
+  function getAllQuotes() {
+  return JSON.parse(localStorage.getItem("quotes") || "[]");
+}
+
+function renderCustomerQuotesReport(data = null) {
+  const tbody = document.getElementById("customerQuotesBody");
+  if (!tbody) return;
+
+  const quotes = data || getAllQuotes();
+
+  if (!quotes.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="text-center p-4 text-gray-500">
+          No quotes found
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = quotes.map(q => {
+    const items = q.items || [];
+
+    const itemNames = items.map(i => i.desc || i.name || "-").join(", ");
+    const totalQty = items.reduce((s, i) => s + (Number(i.qty) || 0), 0);
+    const totalPrice = items.reduce((s, i) => s + (Number(i.price) || 0), 0);
+    const totalAmount = items.reduce(
+      (s, i) => s + (Number(i.subtotal || 0) + Number(i.vat || 0)),
+      0
+    );
+
+    return `
+      <tr class="border-b">
+        <td class="p-2">${q.quoteNumber || "-"}</td>
+        <td class="p-2">${q.customer || "-"}</td>
+        <td class="p-2">${itemNames}</td>
+        <td class="p-2">${totalQty}</td>
+        <td class="p-2">${totalPrice.toFixed(2)}</td>
+        <td class="p-2">${totalAmount.toFixed(2)}</td>
+        <td class="p-2">${q.date || "-"}</td>
+        <td class="p-2">${q.validity || "-"}</td>
+        <td class="p-2">${q.status || "Pending"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function applyQuoteFilter() {
+  const start = document.getElementById("quoteStartDate").value;
+  const end = document.getElementById("quoteEndDate").value;
+
+  let quotes = getAllQuotes();
+
+  if (start) {
+    quotes = quotes.filter(q => new Date(q.date) >= new Date(start));
+  }
+
+  if (end) {
+    quotes = quotes.filter(q => new Date(q.date) <= new Date(end));
+  }
+
+  renderCustomerQuotesReport(quotes);
+}
+
+function clearQuoteFilter() {
+  document.getElementById("quoteStartDate").value = "";
+  document.getElementById("quoteEndDate").value = "";
+
+  renderCustomerQuotesReport();
+}
+
+function exportQuoteCSV() {
+  const quotes = getAllQuotes();
+
+  let csv = "Quote No,Customer,Items,Qty,Price,Total,Date,Status\n";
+
+  quotes.forEach(q => {
+    const items = q.items || [];
+
+    const itemNames = items.map(i => i.desc || "").join(" | ");
+    const qty = items.reduce((s, i) => s + (Number(i.qty) || 0), 0);
+    const price = items.reduce((s, i) => s + (Number(i.price) || 0), 0);
+    const total = items.reduce(
+      (s, i) => s + (Number(i.subtotal || 0) + Number(i.vat || 0)),
+      0
+    );
+
+    csv += [
+      q.quoteNumber || "",
+      q.customer || "",
+      itemNames,
+      qty,
+      price,
+      total,
+      q.date || "",
+      q.status || ""
+    ].join(",") + "\n";
+  });
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "customer_quotes_report.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+</script>
 <!-- 🗂️ Plans Module -->
 <div id="plansTab" class="p-1">
   <h2 class="text-1xl font-bold mb-4 text-left">Strategic & Operational Plans</h2>
