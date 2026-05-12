@@ -17844,7 +17844,7 @@ function renderInvoices() {
                     <button onclick="cloneInvoice(${inv.id})"  class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"> Clone </button>
                     <button onclick="writeOffInvoice(${inv.id})"  class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"> Write Off </button>
                     <button onclick="undoWriteOff(${inv.id})"  class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"> Undo Write Off</button>
-
+                     <button onclick="applyCredit(${inv.id})"class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">Apply Credit</button>
                 </div>
                 </div>
                 </td>
@@ -19935,40 +19935,89 @@ function renderOrders(data = null) {
     <td>${(o.total || 0) - (o.paid || 0)}</td>
     <td>${o.converted ? "Converted ✅" : (o.status || "active")}</td>
    <td>
-    <button 
-      onclick="${o.converted ? `alert('Edit invoice first')` : `editOrder(${i})`}"
-      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
-      Edit
-    </button>
+  <button 
+    onclick="${o.converted ? `alert('Edit invoice first')` : `editOrder(${i})`}"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+    Edit
+  </button>
+
+  <button 
+    onclick="previewOrder('${o.id}')"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+    Preview
+  </button>
+
+  <button 
+    onclick="emailOrder(${i})"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+    Email
+  </button>
+
+  <button 
+    onclick="convertOrder(${i})"
+    ${o.converted ? "disabled style='opacity:0.5;cursor:not-allowed'" : ""}
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+    Convert
+  </button>
+
+  <div class="relative inline-block">
 
     <button 
-      onclick="previewOrder('${o.id}')"
-      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
-      Preview
+      onclick="toggleOrderMenu(${o.id})"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      More ▾
     </button>
 
-    <button 
-      onclick="emailOrder(${i})"
-      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
-      Email
-    </button>
+    <div id="menu-${o.id}"
+      class="hidden absolute right-0 mt-1 w-36 bg-white border rounded shadow z-50 flex flex-col">
 
-    <button 
-      onclick="convertOrder(${i})"
-      ${o.converted ? "disabled style='opacity:0.5;cursor:not-allowed'" : ""}
-      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
-      Convert
-    </button>
+      <button 
+        onclick="cloneOrder(${i})"
+        class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+        Clone
+      </button>
 
-    <button 
-      onclick="${o.converted ? `alert('Edit invoice first')` : `deleteOrder(${i})`}"
-      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
-      Delete
-    </button>
+      <button 
+        onclick="downloadOrder(${i})"
+        class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+        Download
+      </button>
+
+      <button 
+        onclick="printOrder(${i})"
+        class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+        Print
+      </button>
+
+    </div>
+  </div>
+
+  <button 
+    onclick="${o.converted ? `alert('Edit invoice first')` : `deleteOrder(${i})`}"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+    Delete
+  </button>
 </td>
   </tr>
   `).join("");
 }
+function toggleOrderMenu(id) {
+  document.querySelectorAll("[id^='menu-']").forEach(menu => {
+    if (menu.id !== `menu-${id}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document.getElementById(`menu-${id}`).classList.toggle("hidden");
+}
+
+document.addEventListener("click", function (e) {
+  if (!e.target.closest(".relative")) {
+    document.querySelectorAll("[id^='menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+  }
+});
 let isEditingOrder = false;
 
 function editOrder(index) {
@@ -20829,30 +20878,104 @@ function renderQuotes() {
   const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
 
   tbody.innerHTML = "";
+
   quotes.forEach((q, index) => {
     const row = `
       <tr>
         <td class="p-2">
-      <input type="checkbox" class="quoteCheck" data-index="${index}">
-    </td>
+          <input type="checkbox" class="quoteCheck" data-index="${index}">
+        </td>
+
         <td class="p-2">${q.quoteNumber}</td>
         <td class="p-2">${q.date}</td>
         <td class="p-2">${q.customer}</td>
         <td class="p-2">${q.validity || ""}</td>
         <td class="p-2">${formatCurrency(q.total || 0)}</td>
         <td class="p-2">${formatCurrency(q.vat || 0)}</td>
+
         <td class="p-2 space-x-2">
-          <button onclick="previewQuote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Preview</button>
-          <button onclick="editQuote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Edit</button>
-          <button onclick="deleteQuote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Delete</button>
-          <button onclick="convertQuote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Convert</button>
-          <button onclick="shareQuote(${index})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Share</button>
-          <button onclick="emailQuote(${index})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button>
+
+          <button onclick="previewQuote(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+            Preview
+          </button>
+
+          <button onclick="editQuote(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+            Edit
+          </button>
+
+          <button onclick="deleteQuote(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+            Delete
+          </button>
+
+          <button onclick="convertQuote(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+            Convert
+          </button>
+
+          <button onclick="shareQuote(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+            Share
+          </button>
+
+          <button onclick="emailQuote(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+            Email
+          </button>
+
+          <div class="relative inline-block">
+
+            <button onclick="toggleQuoteMenu(${index})"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+              More ▾
+            </button>
+
+            <div id="quote-menu-${index}"
+              class="hidden absolute right-0 mt-1 w-36 bg-white border rounded shadow z-50 flex flex-col">
+
+              <button onclick="cloneQuote(${index})"
+                class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+                Clone
+              </button>
+
+              <button onclick="downloadQuote(${index})"
+                class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+                Download
+              </button>
+
+              <button onclick="printQuote(${index})"
+                class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+                Print
+              </button>
+
+            </div>
+          </div>
+
         </td>
       </tr>`;
+
     tbody.innerHTML += row;
   });
 }
+function toggleQuoteMenu(index) {
+  document.querySelectorAll("[id^='quote-menu-']").forEach(menu => {
+    if (menu.id !== `quote-menu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document.getElementById(`quote-menu-${index}`).classList.toggle("hidden");
+}
+
+document.addEventListener("click", function (e) {
+  if (!e.target.closest(".relative")) {
+    document.querySelectorAll("[id^='quote-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+  }
+});
 function toggleQuoteSelectAll(master) {
   document.querySelectorAll(".quoteCheck")
     .forEach(cb => cb.checked = master.checked);
@@ -22149,34 +22272,95 @@ function renderCreditNotes() {
     const vat = note.items?.reduce((s, i) => s + (i.vatAmount || 0), 0) || 0;
     const total = subtotal + vat;
 
-    const reasonDisplay = note.reason || "-";
-
     const coa = accounts.find(a => a.code === note.account || a.name === note.account);
     const accountDisplay = coa ? `${coa.name} (${coa.code})` : (note.account || "Sales Returns");
 
-    tableBody.innerHTML += `<tr>
-      <td><input type="checkbox" class="creditCheck" data-id="${note.id}"></td>
-      <td>${note.number}</td>
-      <td>${note.date}</td>
-      <td>${note.customer}</td>
-      <td>${accountDisplay}</td>
-      <td>${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-      <td>${vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-      <td>${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-      <td>${reasonDisplay}</td>
-      <td>${note.invoiceNumber ? `<button onclick="viewAttachedInvoice(${note.id})">${note.invoiceNumber}</button>` : "None"}</td>
-      <td>
-        <button onclick="editCreditNote(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="deleteCreditNote(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-        <button onclick="previewCreditNote(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-        <button onclick="pushSingleToETIMS(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Push to ETIMS</button>
-        <button onclick="shareCreditNote(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Share</button>
-        <button onclick="emailCreditNote(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Email</button>
-        <button onclick="openAttachInvoiceModal(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Attach</button>
-      </td>
-    </tr>`;
+    tableBody.innerHTML += `
+      <tr>
+        <td><input type="checkbox" class="creditCheck" data-id="${note.id}"></td>
+        <td>${note.number}</td>
+        <td>${note.date}</td>
+        <td>${note.customer}</td>
+        <td>${accountDisplay}</td>
+        <td>${subtotal.toLocaleString()}</td>
+        <td>${vat.toLocaleString()}</td>
+        <td>${total.toLocaleString()}</td>
+        <td>${note.reason || "-"}</td>
+        <td>
+          ${note.invoiceNumber 
+            ? `<button onclick="viewAttachedInvoice(${note.id})"
+                class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+                ${note.invoiceNumber}
+               </button>`
+            : "None"}
+        </td>
+
+        <td class="space-x-1">
+
+          <!-- KEEP ALL EXISTING BUTTONS -->
+          <button onclick="editCreditNote(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
+          <button onclick="deleteCreditNote(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
+          <button onclick="previewCreditNote(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
+          <button onclick="pushSingleToETIMS(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Push to ETIMS</button>
+          <button onclick="shareCreditNote(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Share</button>
+          <button onclick="emailCreditNote(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Email</button>
+          <button onclick="openAttachInvoiceModal(${note.id})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Attach</button>
+
+          <div class="relative inline-block">
+
+            <button onclick="toggleCreditMore(${note.id})"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+              More ▾
+            </button>
+
+            <div id="credit-more-${note.id}"
+              class="hidden absolute right-0 mt-1 w-40 bg-white border rounded shadow z-50 flex flex-col">
+
+              <button onclick="cloneCreditNote(${note.id})"
+                class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+                Clone
+              </button>
+
+              <button onclick="downloadCreditNote(${note.id})"
+                class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+                Download
+              </button>
+
+              <button onclick="applyCreditToInvoice(${note.id})"
+                class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+                Apply to Invoice
+              </button>
+
+              <button onclick="printCreditNote(${note.id})"
+                class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+                Print
+              </button>
+
+            </div>
+          </div>
+
+        </td>
+      </tr>
+    `;
   });
 }
+function toggleCreditMore(id) {
+  document.querySelectorAll("[id^='credit-more-']").forEach(menu => {
+    if (menu.id !== `credit-more-${id}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document.getElementById(`credit-more-${id}`).classList.toggle("hidden");
+}
+
+document.addEventListener("click", function (e) {
+  if (!e.target.closest(".relative")) {
+    document.querySelectorAll("[id^='credit-more-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+  }
+});
 function pushSingleToETIMS(noteId) {
 
   const notes = JSON.parse(localStorage.getItem("creditNotes") || "[]");
@@ -23156,28 +23340,98 @@ function renderSalesReturnList() {
 
     const itemsList = r.items.map(item => `${item.qty}`).join(", ");
 
-    row.innerHTML = `
-      <td class="p-2"><input type="checkbox" class="salesReturnCheck" data-index="${index}"></td>
+     row.innerHTML = `
+      <td class="p-2">
+        <input type="checkbox" class="salesReturnCheck" data-index="${index}">
+      </td>
+
       <td class="p-2">${r.date}</td>
       <td class="p-2">${r.customer}</td>
       <td class="p-2">${r.account}</td>
       <td class="p-2">${r.reason}</td>
-      <td class="p-2">${itemsList}</td> 
+      <td class="p-2">${itemsList}</td>
       <td class="p-2">${r.invoiceId || "-"}</td>
-      <td class="p-2">${formatCurrency(r.total)}<br></td>
-      </td>
-      <td class="p-2 space-x-2">
-        <button onclick="previewSalesReturn(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-        <button onclick="editSalesReturn(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="deleteSalesReturn(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-       <button onclick="convertToCreditNote(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Convert to Credit Note</button> 
+      <td class="p-2">${formatCurrency(r.total)}</td>
+
+      <td class="p-2 space-x-1">
+
+        <!-- EXISTING BUTTONS (UNCHANGED) -->
+        <button onclick="previewSalesReturn(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+        <button onclick="editSalesReturn(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteSalesReturn(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button onclick="convertToCreditNote(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Convert to Credit Note
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleSalesReturnMore(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+            More ▾
+          </button>
+
+          <div id="salesreturn-more-${index}"
+            class="hidden absolute right-0 mt-1 w-40 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneSalesReturn(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadSalesReturn(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Download
+            </button>
+
+            <button onclick="applySalesReturnToInvoice(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Apply to Invoice
+            </button>
+
+            <button onclick="printSalesReturn(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+          </div>
+        </div>
+
       </td>
     `;
-    
+
     tbody.appendChild(row);
   });
 }
+function toggleSalesReturnMore(index) {
+  document.querySelectorAll("[id^='salesreturn-more-']").forEach(menu => {
+    if (menu.id !== `salesreturn-more-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
 
+  document.getElementById(`salesreturn-more-${index}`).classList.toggle("hidden");
+}
+
+document.addEventListener("click", function (e) {
+  if (!e.target.closest(".relative")) {
+    document.querySelectorAll("[id^='salesreturn-more-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+  }
+});
 function editSalesReturn(index) {
   const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || "{}");
   const role = loggedInUser.role || "";
@@ -23982,26 +24236,93 @@ function renderReceipts() {
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-    <td class="p-2">
+      <td class="p-2">
         <input type="checkbox" class="receiptCheck" data-id="${receipt.id}">
       </td>
+
       <td class="p-2">${receipt.date}</td>
       <td class="p-2">${receipt.customer}</td>
       <td class="p-2">KES ${receipt.amount.toFixed(2)}</td>
       <td class="p-2">${receipt.method}</td>
       <td class="p-2">${bankName}</td>
       <td class="p-2">${receipt.reference}</td>
-      <td class="p-2 flex gap-1">
-        <button onclick="previewReceipt(${receipt.id})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-        <button onclick="editReceipt(${receipt.id})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="deleteReceipt(${receipt.id})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Delete</button>
+
+      <td class="p-2 flex gap-1 items-center">
+
+        <!-- KEEP EXISTING BUTTONS -->
+        <button onclick="previewReceipt(${receipt.id})"
+          class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+        <button onclick="editReceipt(${receipt.id})"
+          class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteReceipt(${receipt.id})"
+          class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleReceiptMore(${receipt.id})"
+            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+            More ▾
+          </button>
+
+          <div id="receipt-more-${receipt.id}"
+            class="hidden absolute right-0 mt-1 w-40 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="downloadReceipt(${receipt.id})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Download
+            </button>
+
+            <button onclick="printReceipt(${receipt.id})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+            <button onclick="emailReceipt(${receipt.id})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Email
+            </button>
+
+            <button onclick="cloneReceipt(${receipt.id})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+          </div>
+        </div>
+
       </td>
     `;
+
     tbody.appendChild(tr);
   });
 
   document.getElementById('totalReceipts').textContent = `KES ${total.toFixed(2)}`;
 }
+function toggleReceiptMore(id) {
+  document.querySelectorAll("[id^='receipt-more-']").forEach(menu => {
+    if (menu.id !== `receipt-more-${id}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document.getElementById(`receipt-more-${id}`).classList.toggle("hidden");
+}
+
+document.addEventListener("click", function (e) {
+  if (!e.target.closest(".relative")) {
+    document.querySelectorAll("[id^='receipt-more-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+  }
+});
 function editReceipt(id) {
   const receipts = JSON.parse(localStorage.getItem('receipts') || "[]");
   const receipt = receipts.find(r => r.id === id);
@@ -24530,32 +24851,102 @@ function renderDeliveryTable() {
   })
   .join(", ");
     const row = document.createElement("tr");
-    row.innerHTML = `
-  <td class="p-2 border-t"> <input type="checkbox" class="deliveryCheck" data-id="${delivery.id || index}"></td>
-  <td class="p-2 border-t">${delivery.dn}</td>
-  <td class="p-2 border-t">${delivery.customer}</td>
-  <td class="p-2 border-t">${itemsList}</td>
-  <td class="p-2 border-t">${delivery.date}</td>
-  <td class="p-2 border-t">${delivery.description || "-"}</td>
-  <td class="p-2 border-t">${delivery.location || "-"}</td>
-  <td class="p-2 border-t">${delivery.truckNumber || "-"}</td>
-  <td class="p-2 border-t">${delivery.driver || "-"}</td>
-  <td class="p-2 border-t">
-    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(delivery.trackNumber)}" target="_blank" class="text-blue-600 underline">
-      ${delivery.trackNumber || "-"}
-    </a>
-  </td>
-  <td class="p-2 border-t space-x-2">
-    <button onclick="previewDelivery(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-    <button onclick="editDelivery(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-    <button onclick="deleteDelivery(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-    <button onclick="downloadDelivery(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Download</button>
-  </td>
-`;
+   row.innerHTML = `
+      <td class="p-2 border-t">
+        <input type="checkbox" class="deliveryCheck" data-id="${delivery.id || index}">
+      </td>
+
+      <td class="p-2 border-t">${delivery.dn}</td>
+      <td class="p-2 border-t">${delivery.customer}</td>
+      <td class="p-2 border-t">${itemsList}</td>
+      <td class="p-2 border-t">${delivery.date}</td>
+      <td class="p-2 border-t">${delivery.description || "-"}</td>
+      <td class="p-2 border-t">${delivery.location || "-"}</td>
+      <td class="p-2 border-t">${delivery.truckNumber || "-"}</td>
+      <td class="p-2 border-t">${delivery.driver || "-"}</td>
+
+      <td class="p-2 border-t">
+        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(delivery.trackNumber)}"
+           target="_blank"
+           class="text-blue-600 underline">
+          ${delivery.trackNumber || "-"}
+        </a>
+      </td>
+
+      <td class="p-2 border-t space-x-1">
+
+        <!-- KEEP MAIN ACTIONS -->
+        <button onclick="previewDelivery(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+        <button onclick="editDelivery(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteDelivery(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleDeliveryMore(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+            More ▾
+          </button>
+
+          <div id="delivery-more-${index}"
+            class="hidden absolute right-0 mt-1 w-40 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneDelivery(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadDelivery(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Download
+            </button>
+
+            <button onclick="printDelivery(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+            <button onclick="emailDelivery(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Email
+            </button>
+
+          </div>
+        </div>
+
+      </td>
+    `;
+
     tbody.appendChild(row);
   });
 }
+function toggleDeliveryMore(index) {
+  document.querySelectorAll("[id^='delivery-more-']").forEach(menu => {
+    if (menu.id !== `delivery-more-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
 
+  document.getElementById(`delivery-more-${index}`).classList.toggle("hidden");
+}
+
+document.addEventListener("click", function (e) {
+  if (!e.target.closest(".relative")) {
+    document.querySelectorAll("[id^='delivery-more-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+  }
+});
 function editDelivery(index) {
   const deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
@@ -30421,17 +30812,104 @@ function loadSupplierBills() {
     <td class="p-2">${dueAmount.toFixed(2)}</td>
     <td class="p-2">${status}</td>
     <td class="p-2 space-x-1">
-      <button onclick="editSupplierBill(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-      <button onclick="deleteBill(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-      <button onclick="previewBill(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-      <button onclick="recordPayment(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Record Payment</button>
-      <button onclick="reversePayment(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Reverse Payment</button>
-      <button onclick="pushBillToEtims(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Push to eTims</button>
-    </td>
+
+  <button onclick="editSupplierBill(${i})"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    Edit
+  </button>
+
+  <button onclick="deleteBill(${i})"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    Delete
+  </button>
+
+  <button onclick="previewBill(${i})"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    Preview
+  </button>
+
+  <button onclick="recordPayment(${i})"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    Record Payment
+  </button>
+
+  <button onclick="pushBillToEtims(${i})"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+    Push to ETIMS
+  </button>
+
+  <button onclick="shareBill(${i})"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+    Share
+  </button>
+
+  <div class="relative inline-block">
+
+    <button onclick="toggleBillMenu(${i})"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      More ▾
+    </button>
+
+    <div id="bill-menu-${i}"
+      class="hidden absolute right-0 mt-1 w-40 bg-white border rounded shadow z-50 flex flex-col">
+
+      <button onclick="emailBill(${i})"
+        class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+        Email
+      </button>
+
+      <button onclick="reversePayment(${i})"
+        class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+        Reverse Payment
+      </button>
+
+      <button onclick="cloneBill(${i})"
+        class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+        Clone
+      </button>
+
+      <button onclick="writeOffBill(${i})"
+        class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+        Write Off
+      </button>
+
+      <button onclick="undoWriteOffBill(${i})"
+        class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+        Undo Write Off
+      </button>
+
+      <button onclick="applyDebit(${i})"
+        class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+        Apply Debit
+      </button>
+
+    </div>
+  </div>
+
+</td>
   </tr>
 `;
   }).join('');
 }
+function toggleBillMenu(id) {
+  const menu = document.getElementById(`bill-menu-${id}`);
+
+  document.querySelectorAll('[id^="bill-menu-"]').forEach(m => {
+    if (m !== menu) {
+      m.classList.add('hidden');
+    }
+  });
+
+  menu.classList.toggle('hidden');
+}
+
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('.relative')) {
+    document.querySelectorAll('[id^="bill-menu-"]').forEach(menu => {
+      menu.classList.add('hidden');
+    });
+  }
+});
 function updateAccountsPayable() {
   const bills = JSON.parse(localStorage.getItem("bills") || "[]");
   const payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
@@ -31237,34 +31715,140 @@ function saveBulkBill(){
 }
 
 
-function loadBulkBills(){
-  const tbody=document.getElementById('bulkBillsList');
-  const bills=JSON.parse(localStorage.getItem('bulkBills')||'[]');
-  tbody.innerHTML=bills.map((b,i)=>{
-   return `
-   <tr class="border-t">
-  <td class="p-2">
-    <input type="checkbox" class="bulk-bill-checkbox" value="${i}">
-  </td>
-  <td class="p-2">${b.billNumber}</td>
-  <td class="p-2">${b.date}</td>
-  <td class="p-2">${b.suppliers.join(', ')}</td>
-  <td class="p-2">${b.termDays}</td>
-  <td class="p-2">${b.date ? new Date(new Date(b.date).setDate(new Date(b.date).getDate()+b.termDays)).toISOString().split('T')[0] : ''}</td>
-  <td class="p-2">${b.currency}</td>
-  <td class="p-2">${b.total.toFixed(2)}</td>
-  <td class="p-2">${b.vat.toFixed(2)}</td>
-  <td class="p-2 space-x-1">
-    <button onclick="editBulkBill(${i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">Edit</button>
-    <button onclick="deleteBulkBill(${i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">Delete</button>
-    <button onclick="previewBulkBill(${i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">Preview</button>
-    <button onclick="pushBulkBillETR(${i})" class="border border-green-700 text-white bg-green-700 px-2 py-1 rounded hover:bg-green-600">Push to ETIMS/ETR</button>
-  </td>
-</tr>`
-;
+function loadBulkBills() {
+  const tbody = document.getElementById('bulkBillsList');
+  const bills = JSON.parse(localStorage.getItem('bulkBills') || '[]');
+
+  tbody.innerHTML = bills.map((b, i) => {
+
+    return `
+    <tr class="border-t">
+
+      <td class="p-2">
+        <input type="checkbox" class="bulk-bill-checkbox" value="${i}">
+      </td>
+
+      <td class="p-2">${b.billNumber}</td>
+
+      <td class="p-2">${b.date}</td>
+
+      <td class="p-2">${b.suppliers.join(', ')}</td>
+
+      <td class="p-2">${b.termDays}</td>
+
+      <td class="p-2">
+        ${b.date
+          ? new Date(
+              new Date(b.date).setDate(
+                new Date(b.date).getDate() + b.termDays
+              )
+            ).toISOString().split('T')[0]
+          : ''}
+      </td>
+
+      <td class="p-2">${b.currency}</td>
+
+      <td class="p-2">${b.total.toFixed(2)}</td>
+
+      <td class="p-2">${b.vat.toFixed(2)}</td>
+
+      <td class="p-2 space-x-1">
+
+        <button onclick="editBulkBill(${i})"
+          class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteBulkBill(${i})"
+          class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button onclick="previewBulkBill(${i})"
+          class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+        <button onclick="pushBulkBillETR(${i})"
+          class="border border-green-700 text-white bg-green-700 px-2 py-1 rounded hover:bg-green-600">
+          Push to ETIMS/ETR
+        </button>
+
+        <button onclick="shareBulkBill(${i})"
+          class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-900">
+          Share
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleBulkBillMenu(${i})"
+            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+            More ▾
+          </button>
+
+          <div id="bulk-bill-menu-${i}"
+            class="hidden absolute right-0 mt-1 w-40 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="emailBulkBill(${i})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Email
+            </button>
+
+            <button onclick="reverseBulkBillPayment(${i})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Reverse Payment
+            </button>
+
+            <button onclick="cloneBulkBill(${i})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="writeOffBulkBill(${i})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Write Off
+            </button>
+
+            <button onclick="undoWriteOffBulkBill(${i})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Undo Write Off
+            </button>
+
+            <button onclick="applyBulkDebit(${i})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+              Apply Debit
+            </button>
+
+          </div>
+        </div>
+
+      </td>
+
+    </tr>
+    `;
   }).join('');
 }
+function toggleBulkBillMenu(id) {
+  const menu = document.getElementById(`bulk-bill-menu-${id}`);
 
+  document.querySelectorAll('[id^="bulk-bill-menu-"]').forEach(m => {
+    if (m !== menu) {
+      m.classList.add('hidden');
+    }
+  });
+
+  menu.classList.toggle('hidden');
+}
+
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('.relative')) {
+
+    document.querySelectorAll('[id^="bulk-bill-menu-"]').forEach(menu => {
+      menu.classList.add('hidden');
+    });
+
+  }
+});
 
 function editBulkBill(index){
   const bills=JSON.parse(localStorage.getItem('bulkBills')||'[]');
