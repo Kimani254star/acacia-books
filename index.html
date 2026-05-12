@@ -19959,7 +19959,12 @@ function renderOrders(data = null) {
     class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
     Convert
   </button>
-
+  
+  <button 
+    onclick="${o.converted ? `alert('Edit invoice first')` : `deleteOrder(${i})`}"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+    Delete
+  </button>
   <div class="relative inline-block">
 
     <button 
@@ -19992,11 +19997,6 @@ function renderOrders(data = null) {
     </div>
   </div>
 
-  <button 
-    onclick="${o.converted ? `alert('Edit invoice first')` : `deleteOrder(${i})`}"
-    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
-    Delete
-  </button>
 </td>
   </tr>
   `).join("");
