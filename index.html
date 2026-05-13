@@ -5490,7 +5490,14 @@ function renderFilteredInventoryTable(items, warehouse = "") {
     return;
   }
 
-  tbody.innerHTML = items.map((item, index) => {
+  tbody.innerHTML = items.map((item) => {
+
+  const realItems = getInventory(warehouse);
+
+  const realIndex = realItems.findIndex(i =>
+    i.name === item.name &&
+    i.sku === item.sku
+  );
     const total = item.qty * item.buyPrice;
     const margin = item.buyPrice > 0 ? (((item.sellPrice - item.buyPrice) / item.buyPrice) * 100).toFixed(1) : "0.0";
 
@@ -5506,8 +5513,8 @@ function renderFilteredInventoryTable(items, warehouse = "") {
         <td class="p-2">${margin}%</td>
         <td class="p-2">
           ${warehouse ? `
-            <button onclick="editItem(${index})" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">Edit</button>
-            <button onclick="deleteItem(${index})" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">Delete</button>
+            <button onclick="editItem(${realIndex})"class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">Edit</button>
+            <button onclick="deleteItem(${realIndex})" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">Delete</button>
           ` : `<span class="text-gray-400">--</span>`}
         </td>
       </tr>
@@ -5664,27 +5671,36 @@ function saveItem() {
   }
 
   saveInventory(warehouse, items);
-  localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
-  renderInventoryTable();
-  renderStockReports();
-  renderProfitMargin();
-  if (typeof renderBalanceSheet === "function") renderBalanceSheet();
-  if (typeof renderInventorySummary === "function") renderInventorySummary();
-  if (typeof renderStockValuation === "function") renderStockValuation();
-  if (typeof renderSimpleWarehouseMovement === "function") renderSimpleWarehouseMovement();
+localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
-  resetForm();
-  alert('Item saved successfully!');
+const updatedItems = getInventory(warehouse);
 
-  populatePriceListItemDropdown(warehouse);
-  populateAmendmentsItemDropdown(warehouse);
+renderFilteredInventoryTable(updatedItems, warehouse);
 
-  const fromLocation = document.getElementById('fromLocation')?.value;
-  if (fromLocation === warehouse) {
-    populateMovementItemsDropdown();
-    populateAccountDropdowns();
-  }
+renderStockReports();
+renderProfitMargin();
+
+if (typeof renderBalanceSheet === "function") renderBalanceSheet();
+if (typeof renderInventorySummary === "function") renderInventorySummary();
+if (typeof renderStockValuation === "function") renderStockValuation();
+if (typeof renderSimpleWarehouseMovement === "function") renderSimpleWarehouseMovement();
+
+resetForm();
+
+document.getElementById('inventorySearch').value = "";
+
+alert('Item saved successfully!');
+
+populatePriceListItemDropdown(warehouse);
+populateAmendmentsItemDropdown(warehouse);
+
+const fromLocation = document.getElementById('fromLocation')?.value;
+
+if (fromLocation === warehouse) {
+  populateMovementItemsDropdown();
+  populateAccountDropdowns();
+}
 }
 function renderInventoryTable() {
   const warehouse = document.getElementById('warehouseSelect').value;
@@ -5728,22 +5744,79 @@ function renderInventoryTable() {
         <td class="p-2">${money(item.sellPrice)}</td>
         <td class="p-2">${item.buyVat || "-"}</td>
         <td class="p-2">${margin}%</td>
-        <td class="p-2">
-          ${warehouse ? `
-            <button onclick="editItem(${index})" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">Edit</button>
-            <button onclick="deleteItem(${index})" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">Delete</button>
-            <button onclick="pushInventoryToETIMS(${index}, '${warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">Push to ETIMS</button>
-            <button onclick="setInventoryActive(${index}, '${warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">Mark Active</button>
-            <button onclick="setInventoryInactive(${index}, '${warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">Mark Inactive</button>
-            <button onclick="toggleHistoryRow(${index}, '${warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">History</button>
-          ` : `<span class="text-gray-400">--</span>`}
-        </td>
+       <td class="p-2 relative">
+  ${warehouse ? `
+
+    <button onclick="editItem(${index})" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">
+      Edit
+    </button>
+
+    <button onclick="deleteItem(${index})" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">
+      Delete
+    </button>
+
+    <button onclick="pushInventoryToETIMS(${index}, '${warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">
+      Push to ETIMS
+    </button>
+
+    <button onclick="setInventoryActive(${index}, '${warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">
+      Mark Active
+    </button>
+
+    <button onclick="toggleHistoryRow(${index}, '${warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800">
+      History
+    </button>
+
+    <button onclick="toggleInventoryMenu(${index})" class="bg-blue-900 text-white px-2 py-1 rounded mr-2 hover:bg-blue-800">
+      More ▼
+    </button>
+
+    <div
+      id="inventoryMenu-${index}"
+      class="hidden absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-50">
+
+      <button
+        onclick="cloneInventoryItem(${index})"
+        class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+        Clone
+      </button>
+
+      <button
+        onclick="setInventoryInactive(${index}, '${warehouse}')"
+        class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+        Mark Inactive
+      </button>
+
+      <button
+        onclick="previewInventoryItem(${index})"
+        class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+        Preview
+      </button>
+
+      <button
+        onclick="downloadInventoryItem(${index})"
+        class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+        Download
+      </button>
+
+    </div>
+
+  ` : `<span class="text-gray-400">--</span>`}
+</td>
       </tr>
       <tr id="historyRow-${warehouse}-${index}" class="history-row" style="display:none">
         <td colspan="8"></td>
       </tr>
     `;
   }).join('');
+}
+function toggleInventoryMenu(index) {
+
+  const menu = document.getElementById(`inventoryMenu-${index}`);
+
+  if (menu) {
+    menu.classList.toggle("hidden");
+  }
 }
 function renderStockReports() {
   const lowStockBody = document.getElementById("lowStockBody");
@@ -5860,16 +5933,20 @@ document.addEventListener("DOMContentLoaded", populateAccountDropdowns);
 
 function editItem(index) {
   guardAction('canEdit', () => {
+
     const warehouse = document.getElementById('warehouseSelect').value;
     const items = getInventory(warehouse);
-    if (!items[index]) return;
-    const item = items[index];
 
-    document.getElementById('itemName').value = item.name;
-    document.getElementById('itemSKU').value = item.sku;
-    document.getElementById('itemQty').value = item.qty;
-    document.getElementById('itemBuyPrice').value = item.buyPrice;
-    document.getElementById('itemSellPrice').value = item.sellPrice;
+    const item = items[index];
+    if (!item) return;
+
+    resetForm(); 
+
+    document.getElementById('itemName').value = item.name || "";
+    document.getElementById('itemSKU').value = item.sku || "";
+    document.getElementById('itemQty').value = item.qty || "";
+    document.getElementById('itemBuyPrice').value = item.buyPrice || "";
+    document.getElementById('itemSellPrice').value = item.sellPrice || "";
 
     document.getElementById('buyVatRule').value = item.buyVat || "";
     document.getElementById('sellVatRule').value = item.sellVat || "";
@@ -5881,11 +5958,10 @@ function editItem(index) {
 
     document.getElementById('editIndex').value = index;
 
-    const form = document.getElementById('addItemForm');
-    form.classList.remove('hidden');
+    document.getElementById('addItemForm').classList.remove('hidden');
+
   }, "🚫 You don't have permission to edit inventory items.");
 }
-
 function deleteItem(index) {
   guardAction('canDelete', () => {
     const warehouse = document.getElementById('warehouseSelect').value;
@@ -5919,7 +5995,208 @@ function deleteItem(index) {
     }
   }, "🚫 Only Admin or Account can delete items.");
 }
+function previewInventoryItem(index) {
 
+  const warehouse = document.getElementById('warehouseSelect').value;
+
+  const items = getInventory(warehouse);
+
+  const item = items[index];
+
+  if (!item) return;
+
+  const previewWindow = window.open('', '_blank');
+
+  previewWindow.document.write(`
+    <html>
+      <head>
+        <title>Inventory Preview</title>
+
+        <style>
+          body{
+            font-family: Arial;
+            padding:20px;
+          }
+
+          table{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:20px;
+          }
+
+          td,th{
+            border:1px solid #ccc;
+            padding:10px;
+            text-align:left;
+          }
+
+          h2{
+            margin-bottom:20px;
+          }
+
+          .top-buttons{
+            margin-bottom:20px;
+          }
+
+          .top-buttons button{
+            padding:10px 15px;
+            margin-right:10px;
+            border:none;
+            background:#1e3a8a;
+            color:white;
+            border-radius:5px;
+            cursor:pointer;
+          }
+        </style>
+      </head>
+
+      <body>
+
+        <div class="top-buttons">
+          <button onclick="window.print()">Download PDF</button>
+          <button onclick="window.close()">Close</button>
+        </div>
+
+        <h2>Inventory Item Preview</h2>
+
+        <table>
+
+          <tr>
+            <th>Warehouse</th>
+            <td>${warehouse}</td>
+          </tr>
+
+          <tr>
+            <th>Item Name</th>
+            <td>${item.name || '-'}</td>
+          </tr>
+
+          <tr>
+            <th>SKU</th>
+            <td>${item.sku || '-'}</td>
+          </tr>
+
+          <tr>
+            <th>Quantity</th>
+            <td>${item.qty || 0}</td>
+          </tr>
+
+          <tr>
+            <th>Buying Price</th>
+            <td>${money(item.buyPrice || 0)}</td>
+          </tr>
+
+          <tr>
+            <th>Selling Price</th>
+            <td>${money(item.sellPrice || 0)}</td>
+          </tr>
+
+          <tr>
+            <th>Buy VAT</th>
+            <td>${item.buyVat || '-'}</td>
+          </tr>
+
+          <tr>
+            <th>Sell VAT</th>
+            <td>${item.sellVat || '-'}</td>
+          </tr>
+
+          <tr>
+            <th>Buying Account</th>
+            <td>${item.buyingAccount || '-'}</td>
+          </tr>
+
+          <tr>
+            <th>Selling Account</th>
+            <td>${item.sellingAccount || '-'}</td>
+          </tr>
+
+          <tr>
+            <th>Description</th>
+            <td>${item.sellDescription || '-'}</td>
+          </tr>
+
+          <tr>
+            <th>Status</th>
+            <td>${item.active ? 'Active' : 'Inactive'}</td>
+          </tr>
+
+        </table>
+
+      </body>
+    </html>
+  `);
+
+  previewWindow.document.close();
+}
+function cloneInventoryItem(index) {
+
+  const warehouse = document.getElementById('warehouseSelect').value;
+
+  let items = getInventory(warehouse);
+
+  const item = items[index];
+
+  if (!item) return;
+
+  const clonedItem = {
+    ...item,
+    name: item.name + " Copy",
+    sku: (item.sku || "") + "-COPY"
+  };
+
+  items.push(clonedItem);
+
+  saveInventory(warehouse, items);
+
+  renderInventoryTable();
+
+  alert("Item cloned successfully!");
+}
+function downloadInventoryItem(index) {
+
+  const warehouse = document.getElementById('warehouseSelect').value;
+
+  const items = getInventory(warehouse);
+
+  const item = items[index];
+
+  if (!item) return;
+
+  const { jsPDF } = window.jspdf;
+
+  const doc = new jsPDF();
+
+  let y = 10;
+
+  doc.setFontSize(16);
+  doc.text("Inventory Item Report", 10, y);
+  y += 10;
+
+  doc.setFontSize(12);
+
+  const lines = [
+    `Warehouse: ${warehouse}`,
+    `Name: ${item.name || "-"}`,
+    `SKU: ${item.sku || "-"}`,
+    `Quantity: ${item.qty || 0}`,
+    `Buying Price: ${item.buyPrice || 0}`,
+    `Selling Price: ${item.sellPrice || 0}`,
+    `Buy VAT: ${item.buyVat || "-"}`,
+    `Sell VAT: ${item.sellVat || "-"}`,
+    `Buying Account: ${item.buyingAccount || "-"}`,
+    `Selling Account: ${item.sellingAccount || "-"}`,
+    `Description: ${item.sellDescription || "-"}`,
+    `Status: ${item.active ? "Active" : "Inactive"}`
+  ];
+
+  lines.forEach(line => {
+    doc.text(line, 10, y);
+    y += 10;
+  });
+
+  doc.save(`${item.name || "item"}.pdf`);
+}
 function bulkDeleteInventory() {
   const checkedBoxes = document.querySelectorAll(".itemCheckbox:checked");
 
@@ -6280,6 +6557,19 @@ function toggleHistoryRow(index, warehouse) {
   renderHistory();
 
   filterSelect.addEventListener("change", (e) => renderHistory(e.target.value));
+}
+function resetForm() {
+  document.getElementById('itemName').value = "";
+  document.getElementById('itemSKU').value = "";
+  document.getElementById('itemQty').value = "";
+  document.getElementById('itemBuyPrice').value = "";
+  document.getElementById('itemSellPrice').value = "";
+  document.getElementById('buyVatRule').value = "";
+  document.getElementById('sellVatRule').value = "";
+  document.getElementById('buyingAccountSelect').value = "";
+  document.getElementById('sellingAccountSelect').value = "";
+  document.getElementById('sellDescription').value = "";
+  document.getElementById('editIndex').value = "";
 }
 document.addEventListener("DOMContentLoaded", function () {
   if (typeof renderSimpleWarehouseMovement === "function") {
