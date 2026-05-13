@@ -31,7 +31,7 @@
   }
  
   table, th, td {
-    border: 1px solid #ccc;
+    border: 2px solid #ccc;
     border-collapse: collapse;
   }
 
@@ -28268,10 +28268,8 @@ function managePOFiles() {
         <tr><td colspan="6" class="p-2 text-center text-gray-500">No items added yet</td></tr>
       </tbody>
     </table>
-
-    <button id="savePurchaseReturnBtn"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-      Save Purchase Return
-    </button>
+     <button id="savePurchaseReturnDraftBtn"type="button"class="border border-gray-700 text-white bg-gray-700 font-bold px-1 py-1 rounded hover:bg-gray-600">Save as Draft </button>
+    <button id="savePurchaseReturnBtn"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save  Return</button>
   </div>
 
   <div class="bg-white p-6 rounded shadow">
@@ -28981,11 +28979,9 @@ function managePOFiles() {
   </div>
 
 <div class="bg-white p-4 rounded shadow mb-6">
-  <h3 class="text-lg font-semibold mb-4">Add GRN</h3>
-    <div class="text-right">
-      <button type="button" onclick="addGRN()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-        ➕ Add GRN
-      </button>
+  <div class="text-left">
+      <button type="button"  onclick="saveDraft()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Save as Draft </button>
+      <button type="button" onclick="addGRN()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Add GRN </button>
     </div>
   </form>
 </div>
@@ -29007,6 +29003,7 @@ function managePOFiles() {
         <th class="p-2 text-left">Reference No.</th>
         <th class="p-2 text-left">Received By</th>
         <th class="p-2 text-left">Track No.</th>
+        <th class="p-2 text-left">Status</th>
         <th class="p-2 text-left">Actions</th>
       </tr>
     </thead>
@@ -35975,52 +35972,168 @@ function populateGRNItemDropdown() {
     select.appendChild(opt);
   });
 }
+function saveDraft() {
+
+  const form = document.getElementById("grnForm") || { dataset: {} };
+
+  const date = document.getElementById("grnDate").value;
+
+  const number =
+    document.getElementById("grnNumber").value ||
+    generateNextGRNNumber();
+
+  const supplier =
+    document.getElementById("grnSupplier").value;
+
+  const description =
+    document.getElementById("grnDescription").value.trim();
+
+  const location =
+    document.getElementById("grnLocation").value.trim();
+
+  const reference =
+    document.getElementById("grnReferenceNumber").value.trim();
+
+  const receiver =
+    document.getElementById("grnReceiver").value.trim();
+
+  const trackNo =
+    document.getElementById("grnTrackNumber").value.trim();
+
+  let items = [];
+
+  if (form.dataset.items) {
+    try {
+      items = JSON.parse(form.dataset.items);
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  if (!items.length && description) {
+    items = [
+      {
+        name: description,
+        description: description
+      }
+    ];
+  }
+
+  let grns =
+    JSON.parse(localStorage.getItem("grns") || "[]");
+
+  const grnObj = {
+    number,
+    date,
+    supplier,
+    description,
+    location,
+    reference,
+    receiver,
+    trackNo,
+    items,
+    status: "Draft"
+  };
+
+  grns.push(grnObj);
+
+  localStorage.setItem("grns", JSON.stringify(grns));
+
+  renderGRNTable();
+
+  showGNNotification(`GRN ${number} saved as draft 📝`);
+}
 function addGRN() {
-  const form = document.getElementById("grnForm");
+
+  const form = document.getElementById("grnForm") || { dataset: {} };
+
   const date = document.getElementById("grnDate").value;
   const number = document.getElementById("grnNumber").value || generateNextGRNNumber();
   const supplier = document.getElementById("grnSupplier").value;
+
+  const description = document.getElementById("grnDescription").value.trim();
+
   const location = document.getElementById("grnLocation").value.trim();
   const reference = document.getElementById("grnReferenceNumber").value.trim();
   const receiver = document.getElementById("grnReceiver").value.trim();
   const trackNo = document.getElementById("grnTrackNumber").value.trim();
-  
-  if (!date || !supplier) return alert("Please fill all required fields (Date, Supplier)");
+
+  if (!date || !supplier) {
+    alert("Please fill all required fields (Date and Supplier)");
+    return;
+  }
 
   let items = [];
+
   if (form.dataset.items) {
-    try { items = JSON.parse(form.dataset.items); } 
-    catch (e) { console.error("Failed to parse items:", e); }
+    try {
+      items = JSON.parse(form.dataset.items);
+    } catch (e) {
+      console.error("Failed to parse GRN items:", e);
+    }
   }
 
   if (items.length === 0) {
-    const desc = document.getElementById("grnDescription").value.trim();
-    if (!desc) return alert("Please select a bill or enter an item description");
-    items = [{ name: desc }];
+
+    if (!description) {
+      alert("Please enter description");
+      return;
+    }
+
+    items = [
+      {
+        name: description,
+        description: description
+      }
+    ];
   }
 
-  const grns = JSON.parse(localStorage.getItem("grns") || "[]");
+  let grns = JSON.parse(localStorage.getItem("grns") || "[]");
+
   const editIndex = form.dataset.editIndex;
 
-  const grnObj = { number, date, supplier, location, reference, receiver, trackNo, items };
+  const grnObj = {
+  number,
+  date,
+  supplier,
+  description,
+  location,
+  reference,
+  receiver,
+  trackNo,
+  items,
+  status: "Approved"
+};
 
   if (editIndex !== undefined && editIndex !== "") {
+
     grns[editIndex] = grnObj;
+
     delete form.dataset.editIndex;
+
   } else {
+
     grns.push(grnObj);
+
   }
 
   localStorage.setItem("grns", JSON.stringify(grns));
 
-  ["grnDate","grnSupplier","grnDescription","grnLocation","grnReferenceNumber","grnReceiver","grnTrackNumber"].forEach(id => {
-    document.getElementById(id).value = "";
-  });
-  form.dataset.items = "";
+  renderGRNTable();
+
+  showGNNotification(`GRN ${number} saved successfully ✅`);
+
+  document.getElementById("grnDate").value = "";
+  document.getElementById("grnSupplier").value = "";
+  document.getElementById("grnDescription").value = "";
+  document.getElementById("grnLocation").value = "";
+  document.getElementById("grnReferenceNumber").value = "";
+  document.getElementById("grnReceiver").value = "";
+  document.getElementById("grnTrackNumber").value = "";
+
   document.getElementById("grnNumber").value = generateNextGRNNumber();
 
-  renderGRNTable();
-  showGNNotification(`GRN ${number} saved successfully ✅`);
+  form.dataset.items = "";
 }
 function showGNNotification(message) {
   let notif = document.createElement("div");
@@ -36043,18 +36156,23 @@ function showGNNotification(message) {
 function renderGRNTable() {
 
   const grns = JSON.parse(localStorage.getItem("grns") || "[]");
+
   const tbody = document.getElementById("grnTableBody");
 
   if (!tbody) return;
+
   tbody.innerHTML = "";
 
   if (grns.length === 0) {
+
     tbody.innerHTML = `
       <tr>
         <td colspan="11" class="p-2 text-center text-gray-500">
           No GRNs recorded
         </td>
-      </tr>`;
+      </tr>
+    `;
+
     return;
   }
 
@@ -36063,51 +36181,242 @@ function renderGRNTable() {
     const row = document.createElement("tr");
 
     row.innerHTML = `
+
       <td class="p-2 border-t">
-        <input type="checkbox"
+        <input
+          type="checkbox"
           class="grn-checkbox"
           value="${index}">
       </td>
 
-      <td class="p-2 border-t">${grn.number}</td>
-      <td class="p-2 border-t">${grn.supplier}</td>
-      <td class="p-2 border-t">${grn.items?.map(i => i.name).join(", ") || "-"}</td>
-      <td class="p-2 border-t">${grn.date}</td>
-      <td class="p-2 border-t">${grn.description || "-"}</td>
-      <td class="p-2 border-t">${grn.location || "-"}</td>
-      <td class="p-2 border-t">${grn.reference || "-"}</td>
-      <td class="p-2 border-t">${grn.receiver || "-"}</td>
-      <td class="p-2 border-t">${grn.trackNo || "-"}</td>
-
-      <td class="p-2 border-t space-x-1">
-
-        <button onclick="previewGRN(${index})"
-          class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
-          Preview
-        </button>
-
-        <button onclick="editGRN(${index})"
-          class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
-          Edit
-        </button>
-
-        <button onclick="deleteGRN(${index})"
-          class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
-          Delete
-        </button>
-
-        <button onclick="emailGRN(${index})"
-          class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
-          Email
-        </button>
-
+      <td class="p-2 border-t">
+        ${grn.number || "-"}
       </td>
+
+      <td class="p-2 border-t">
+        ${grn.supplier || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${grn.items?.map(i => i.name).join(", ") || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${grn.date || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${grn.description || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${grn.location || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${grn.reference || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${grn.receiver || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${grn.trackNo || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        <span class="
+          px-2 py-1 rounded text-xs font-bold
+          ${grn.status === "Draft"
+            ? "bg-yellow-100 text-yellow-700"
+            : "bg-green-100 text-green-700"}
+        ">
+          ${grn.status || "Approved"}
+        </span>
+      </td>
+
+     <td class="p-2 border-t relative">
+
+  <div class="flex flex-wrap gap-1">
+
+    <button
+      onclick="previewGRN(${index})"
+      class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+      👁 Preview
+    </button>
+
+    <button
+      onclick="editGRN(${index})"
+      class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+      ✏ Edit
+    </button>
+
+    <button
+      onclick="emailGRN(${index})"
+      class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+      📧 Email
+    </button>
+
+    <button
+      onclick="deleteGRN(${index})"
+      class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+      🗑 Delete
+    </button>
+
+    <button
+      onclick="toggleGRNActionMenu(${index})"
+      class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">>
+      More ▼
+    </button>
+
+  </div>
+
+  <div
+    id="grnActionMenu${index}"
+    class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow-lg z-50">
+
+    ${grn.status === "Draft" ? `
+      <button
+        onclick="approveGRN(${index})"
+        class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+        ✅ Approve
+      </button>
+    ` : ""}
+
+    <button
+      onclick="cloneGRN(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      📄 Clone
+    </button>
+
+    <button
+      onclick="downloadSingleGRNPDF(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      ⬇ Download
+    </button>
+
+    <button
+      onclick="printSingleGRN(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      🖨 Print
+    </button>
+
+  </div>
+
+</td>
     `;
 
     tbody.appendChild(row);
+
   });
+
+}
+function toggleGRNActionMenu(index) {
+
+  document
+    .querySelectorAll("[id^='grnActionMenu']")
+    .forEach(menu => {
+
+      if (menu.id !== `grnActionMenu${index}`) {
+        menu.classList.add("hidden");
+      }
+
+    });
+
+  const menu =
+    document.getElementById(`grnActionMenu${index}`);
+
+  if (menu) {
+    menu.classList.toggle("hidden");
+  }
 }
 
+function cloneGRN(index) {
+
+  let grns =
+    JSON.parse(localStorage.getItem("grns") || "[]");
+
+  const grn = grns[index];
+
+  if (!grn) return;
+
+  const cloned = {
+
+    ...grn,
+
+    number: generateNextGRNNumber(),
+
+    status: "Draft"
+
+  };
+
+  grns.push(cloned);
+
+  localStorage.setItem("grns", JSON.stringify(grns));
+
+  renderGRNTable();
+
+  showGNNotification(
+    `GRN cloned successfully 📄`
+  );
+}
+
+function downloadSingleGRNPDF(index) {
+
+  previewGRN(index);
+
+  setTimeout(() => {
+
+    downloadGRNPDF();
+
+  }, 300);
+}
+
+function printSingleGRN(index) {
+
+  previewGRN(index);
+
+  setTimeout(() => {
+
+    printGRNFromPreview();
+
+  }, 300);
+}
+
+document.addEventListener("click", function(e) {
+
+  if (
+    !e.target.closest("[id^='grnActionMenu']")
+    &&
+    !e.target.closest("button")
+  ) {
+
+    document
+      .querySelectorAll("[id^='grnActionMenu']")
+      .forEach(menu => {
+        menu.classList.add("hidden");
+      });
+
+  }
+});
+function approveGRN(index) {
+
+  let grns =
+    JSON.parse(localStorage.getItem("grns") || "[]");
+
+  if (!grns[index]) return;
+
+  grns[index].status = "Approved";
+
+  localStorage.setItem("grns", JSON.stringify(grns));
+
+  renderGRNTable();
+
+  showGNNotification(
+    `GRN ${grns[index].number} approved ✅`
+  );
+}
 function deleteSelectedGRN() {
 
   let grns = JSON.parse(localStorage.getItem("grns") || "[]");
@@ -36148,26 +36457,55 @@ function toggleSelectAllGRN(source) {
 }
 
 function editGRN(index) {
+
+  const grns = JSON.parse(localStorage.getItem("grns") || "[]");
+
   const grn = grns[index];
-  if (!grn) return;
 
-  document.getElementById("grnDate").value = grn.date;
-  document.getElementById("grnNumber").value = grn.number;
-  document.getElementById("grnSupplier").value = grn.supplier;
-  document.getElementById("grnQty").value = grn.qty;
-  document.getElementById("grnNote").value = grn.note;
-
-  const itemSelect = document.getElementById("grnItem");
-  if (itemSelect) {
-    const optionValue = JSON.stringify({
-      name: grn.item,
-      sku: grn.sku || "",
-      warehouse: grn.warehouse
-    });
-    itemSelect.value = optionValue;
+  if (!grn) {
+    alert("GRN not found");
+    return;
   }
 
-  document.getElementById("grnForm").dataset.editIndex = index;
+  document.getElementById("grnDate").value = grn.date || "";
+
+  document.getElementById("grnNumber").value = grn.number || "";
+
+  document.getElementById("grnSupplier").value = grn.supplier || "";
+
+  document.getElementById("grnDescription").value =
+    grn.description ||
+    grn.items?.map(i => i.name).join(", ") ||
+    "";
+
+  document.getElementById("grnLocation").value =
+    grn.location || "";
+
+  document.getElementById("grnReferenceNumber").value =
+    grn.reference || "";
+
+  document.getElementById("grnReceiver").value =
+    grn.receiver || "";
+
+  document.getElementById("grnTrackNumber").value =
+    grn.trackNo || "";
+
+  const form = document.getElementById("grnForm");
+
+  if (form) {
+
+    form.dataset.editIndex = index;
+
+    form.dataset.items = JSON.stringify(grn.items || []);
+
+  }
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  showGNNotification(`Editing GRN ${grn.number}`);
 }
 
 function deleteGRN(index) {
@@ -36714,18 +37052,18 @@ document.addEventListener('DOMContentLoaded', () => {
     </tfoot>
   </table>
 
-  <button onclick="addJournalRow()" class="bg-blue-900 hover:bg-blue-900 text-white px-1 py-1 rounded mb-4">
-    Add Row
-  </button>
-
+  <button onclick="addJournalRow()" class="bg-blue-900 hover:bg-blue-900 text-white px-1 py-1 rounded mb-4"> Add Row</button>
+<button  type="button" onclick="saveJournalDraft()"class="bg-gray-700 hover:bg-gray-600 text-white px-1 py-1 rounded"> Save as Draft</button>
  <button onclick="addManualJournal()" class="bg-blue-900 hover:bg-blue-900 text-white px-1 py-1 rounded">Post Journal</button>
 </div>
 
 <div class="bg-white p-6 rounded shadow">
   <h3 class="text-lg font-semibold mb-4 text-gray-800">📘 Journal Entries</h3>
+  <button onclick="bulkDeleteJournals()"class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
   <table class="w-full text-sm border">
     <thead class="bg-gray-100 text-gray-700">
       <tr>
+        <th class="p-2"><input type="checkbox" onclick="toggleAllJournals(this)"></th>
         <th class="p-2">Date</th>
         <th class="p-2">Reference</th>
         <th class="p-2">Description</th>
@@ -36845,21 +37183,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     <button onclick="addRecurringJournalRow()" class="bg-blue-900 hover:bg-blue-900 text-white px-1 py-1 rounded mb-4">Add Row</button>
-
-    
-    <button onclick="saveRecurringJournalEntry()" class="bg-blue-900 hover:bg-blue-800 text-white px-1 py-1 rounded">Save Recurring Journal</button>
+    <button type="button"onclick="saveRecurringJournalDraft()"class="bg-gray-700 hover:bg-gray-600 text-white px-1 py-1 rounded">Draft </button>
+    <button onclick="saveRecurringJournalEntry()" class="bg-blue-900 hover:bg-blue-800 text-white px-1 py-1 rounded">Save</button>
   </div>
 
   
   <div class="bg-white p-6 rounded shadow">
     <h3 class="text-lg font-semibold mb-4">Recurring Journal Entries</h3>
+    <button onclick="bulkDeleteRecurringJournals()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2">
+          <input type="checkbox" onclick="toggleAllRecurringJournals(this)">
+          </th>
           <th class="p-2">Start Date</th>
           <th class="p-2">Description</th>
           <th class="p-2">Frequency</th>
           <th class="p-2">Posted By</th>
+          <th class="p-2">Total Debit</th>
+          <th class="p-2">Total Credit</th>
           <th class="p-2">Action</th>
         </tr>
       </thead>
@@ -36985,6 +37328,10 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 
     <div class="flex gap-3">
+      <button 
+    type="button"
+    onclick="saveAdjustmentDraft()"
+    class="border border-gray-700 text-white bg-gray-700 font-bold px-1 py-1 rounded hover:bg-gray-600">Save as Draft</button>
       <button onclick="addCurrencyAdjustment()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Save Adjustment
       </button>
@@ -36996,9 +37343,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   <div class="bg-white p-6 rounded shadow">
     <h3 class="text-lg font-semibold mb-4">Adjustment History</h3>
+    <button onclick="bulkDeleteCurrencyAdjustments()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
       <tr>
+   <th class="p-2">
+   <input type="checkbox"
+    onclick="toggleAllCurrencyAdjustments(this)">
+   </th>
     <th class="p-2">Date</th>
     <th class="p-2">Bank</th>
     <th class="p-2">Account</th>
@@ -37136,9 +37488,15 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
   <div class="bg-white p-6 rounded shadow">
     <h3 class="text-lg font-semibold mb-4">Adjustment History</h3>
+     <button onclick="bulkDeleteTaxAdjustments()"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2">
+          <input type="checkbox"
+            onclick="toggleAllTaxAdjustments(this)">
+          </th>
           <th class="p-2">Date</th>
           <th class="p-2">Account</th>
           <th class="p-2">Type</th>
@@ -37777,37 +38135,53 @@ function manageCOAFiles(){
       <label for="accountAmount" class="block font-medium mb-1">Opening Balance (optional)</label>
       <input id="accountAmount" type="number" placeholder="Opening Balance" class="border p-2 rounded" style="width: 700px;"/>
     </div>
-
-    <button id="addAccountBtn" onclick="addAccount()" 
-            class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-900">
-      Save Account
-    </button>
+     <button type="button" onclick="saveAccountDraft()"class="bg-gray-700 text-white px-1 py-1 rounded hover:bg-gray-600">Save as Draft</button>
+    <button id="addAccountBtn" onclick="addAccount()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Save Account </button>
   </div>
 
 <div class="flex justify-end gap-4 mb-6">
   <button onclick="exportAccountsJSON()" class="bg-blue-900 text-white font-semibold px-1 py-1 rounded hover:bg-blue-700 ">Export JSON</button>
-  <button onclick="exportAccountsCSV()" class="bg-blue-900 text-white font-semibold px-1 py-1 rounded hover:bg-blue-700 ">Export CSV</button>
   <label for="importFile" class="bg-blue-900 text-white font-semibold px-1 py-1 rounded hover:bg-blue-700 cursor-pointer">Import Accounts</label>
   <input id="importFile" type="file" accept=".json,.csv" class="hidden" onchange="importAccounts(event)" />
 </div>
 
   <div class="bg-white p-1 rounded shadow">
-    <h3 class="text-lg font-semibold mb-4">Account List</h3>
-    <table class="w-full text-sm border">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="p-2">Name</th>
-          <th class="p-2">Code</th>
-          <th class="p-2">Type</th>
-          <th class="p-2">Parent Name</th>
-          <th class="p-2">Parent Code</th>
-          <th class="p-2 text-right">Opening Balance</th>
-          <th class="p-2">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="accountsTable"></tbody>
-    </table>
+
+  <div class="flex justify-between items-center mb-4">
+
+    <h3 class="text-lg font-semibold">
+      Account List
+    </h3>
+
+    <button onclick="bulkDeleteAccounts()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
+
   </div>
+
+  <table class="w-full text-sm border">
+
+    <thead class="bg-gray-100">
+      <tr>
+
+        <th class="p-2">
+          <input type="checkbox"
+            onclick="toggleAllAccounts(this)">
+        </th>
+
+        <th class="p-2">Name</th>
+        <th class="p-2">Code</th>
+        <th class="p-2">Type</th>
+        <th class="p-2">Parent Name</th>
+        <th class="p-2">Parent Code</th>
+        <th class="p-2 text-right">Opening Balance</th>
+        <th class="p-2">Actions</th>
+
+      </tr>
+    </thead>
+
+    <tbody id="accountsTable"></tbody>
+
+  </table>
+</div>
   <div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600">
   <div>
     Total Count: <span id="totalCount">0</span>
@@ -37899,19 +38273,41 @@ function manageCOAFiles(){
     </div>
   </div>
 
+  <div class="bg-white p-4 rounded shadow mb-6">
+
+  <div class="flex justify-between items-center mb-3">
+
+    <h3 class="text-lg font-semibold">
+      Non-Current Assets
+    </h3>
+
+    <button onclick="bulkDeleteNonCurrentAssets()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
+  </div>
+
   <table class="w-full border text-sm mb-6">
+
     <thead class="bg-gray-100">
       <tr>
+
+        <th class="p-2 border">
+          <input type="checkbox"
+            onclick="toggleAllNonCurrentAssets(this)">
+        </th>
+
         <th class="p-2 border">Asset</th>
         <th class="p-2 border">Asset Code</th>
         <th class="p-1 border">Description</th>
         <th class="p-2 border text-right">Value (KES)</th>
         <th class="p-2 border">Account</th>
         <th class="p-2 border">Actions</th>
+
       </tr>
     </thead>
+
     <tbody id="nonCurrentAssetsTableBody"></tbody>
+
   </table>
+</div>
 
   <h3 class="text-xl font-semibold mt-8 mb-2">Depreciation Overview</h3>
   <table class="w-full border text-sm mb-6">
@@ -38213,8 +38609,13 @@ Equity Actions
   </div>
 
   <table class="w-full border text-sm">
+   <button onclick="bulkDeleteEquity()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
     <thead class="bg-gray-100">
       <tr>
+        <th class="p-2 border">
+          <input type="checkbox"
+            onclick="toggleAllEquity(this)">
+        </th>
         <th class="p-2 border">Equity Item</th>
         <th class="p-2 border">Amount</th>
         <th class="p-2 border">Description</th>
@@ -38336,8 +38737,14 @@ Equity Actions
   </div>
 
   <table class="w-full border text-sm">
+       <button onclick="bulkDeleteCurrentAccounts()"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
     <thead class="bg-gray-100">
       <tr>
+        <th class="p-2 border">
+          <input type="checkbox"
+            onclick="toggleAllCurrentAccounts(this)">
+        </th>
         <th class="p-2 border">Name</th>
         <th class="p-2 border">Date</th>
         <th class="p-2 border">Reference</th>
@@ -39249,6 +39656,9 @@ function renderManualJournals() {
 
     const row = `
       <tr class="border-t">
+        <td class="p-2">
+          <input type="checkbox" class="journal-select" data-index="${index}">
+        </td>
         <td class="p-2">${j.date || ""}</td>
         <td class="p-2">${j.reference || ""}</td>
         <td class="p-2">${j.description || ""}</td>
@@ -39294,6 +39704,36 @@ function renderManualJournals() {
     `;
 
     tbody.innerHTML += row;
+  });
+}
+function bulkDeleteJournals() {
+  let journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
+
+  const selected = document.querySelectorAll(".journal-select:checked");
+
+  if (selected.length === 0) {
+    alert("Please select at least one journal.");
+    return;
+  }
+
+  const indexes = Array.from(selected).map(cb =>
+    Number(cb.dataset.index)
+  );
+
+  indexes.sort((a, b) => b - a);
+
+  indexes.forEach(i => {
+    journals.splice(i, 1);
+  });
+
+  localStorage.setItem("manualJournals", JSON.stringify(journals));
+
+  renderManualJournals();
+}
+
+function toggleAllJournals(master) {
+  document.querySelectorAll(".journal-select").forEach(cb => {
+    cb.checked = master.checked;
   });
 }
 function previewJournal(index) {
@@ -39744,10 +40184,23 @@ function renderRecurringJournalList() {
   recurringList.forEach((r, index) => {
     const row = `
       <tr class="border-t bg-gray-50">
-        <td class="p-2">${r.startDate}</td>
-        <td class="p-2">${r.description}</td>
-        <td class="p-2">${r.frequency}</td>
-        <td class="p-2">${r.postedBy}</td>
+         <td class="p-2"> <input type="checkbox"class="recurring-select" data-index="${index}">
+        </td>
+          <td class="p-2">${r.startDate}</td>
+
+         <td class="p-2">${r.description}</td>
+
+         <td class="p-2">${r.frequency}</td>
+
+         <td class="p-2">${r.postedBy}</td>
+
+         <td class="p-2 text-right text-green-700 font-semibold">
+         ${r.totals.debit.toFixed(2)}
+         </td>
+
+         <td class="p-2 text-right text-red-700 font-semibold">
+        ${r.totals.credit.toFixed(2)}
+        </td>
         <td class="p-2 text-center space-x-1">
           <button onclick="previewRecurring(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
           <button onclick="editRecurring(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
@@ -39784,6 +40237,36 @@ function renderRecurringJournalList() {
       </tr>
     `;
     tbody.innerHTML += row;
+  });
+}
+function bulkDeleteRecurringJournals() {
+  let recurringList = JSON.parse(localStorage.getItem("recurringJournals") || "[]");
+
+  const selected = document.querySelectorAll(".recurring-select:checked");
+
+  if (selected.length === 0) {
+    alert("Please select at least one recurring journal.");
+    return;
+  }
+
+  const indexes = Array.from(selected).map(cb =>
+    Number(cb.dataset.index)
+  );
+
+  indexes.sort((a, b) => b - a);
+
+  indexes.forEach(i => {
+    recurringList.splice(i, 1);
+  });
+
+  localStorage.setItem("recurringJournals", JSON.stringify(recurringList));
+
+  renderRecurringJournalList();
+}
+
+function toggleAllRecurringJournals(master) {
+  document.querySelectorAll(".recurring-select").forEach(cb => {
+    cb.checked = master.checked;
   });
 }
 function previewRecurring(index) {
@@ -40240,40 +40723,90 @@ function updateTotalCurrencyAdjustment() {
 function renderCurrencyAdjustments() {
   const adjustments = JSON.parse(localStorage.getItem("currencyAdjustments") || "[]");
   const table = document.getElementById("currencyAdjustmentsTable");
+
   if (!table) return;
 
   table.innerHTML = "";
 
+  if (adjustments.length === 0) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="9" class="p-3 text-center text-gray-500">
+          No Currency Adjustments Found
+        </td>
+      </tr>
+    `;
+
+    updateTotalCurrencyAdjustment();
+    return;
+  }
+
   adjustments.forEach((adj, index) => {
+
     const row = document.createElement("tr");
+
     row.innerHTML = `
-      <td class="p-2">${adj.date}</td>
-      <td class="p-2">${adj.bank || '-'}</td>       
-      <td class="p-2">${adj.account || '-'}</td>  
-      <td class="p-2">${adj.currency}</td>
-      <td class="p-2 text-right">${adj.amount.toFixed(2)}</td>
-      <td class="p-2 text-right">${adj.rate.toFixed(4)}</td>
-      <td class="p-2">${adj.note || '-'}</td>
       <td class="p-2">
+        <input type="checkbox"
+          class="currency-adjustment-select"
+          data-index="${index}">
+      </td>
+
+      <td class="p-2">${adj.date}</td>
+
+      <td class="p-2">${adj.bank || '-'}</td>
+
+      <td class="p-2">${adj.account || '-'}</td>
+
+      <td class="p-2">${adj.currency}</td>
+
+      <td class="p-2 text-right">
+        ${adj.amount.toFixed(2)}
+      </td>
+
+      <td class="p-2 text-right">
+        ${adj.rate.toFixed(4)}
+      </td>
+
+      <td class="p-2">${adj.note || '-'}</td>
+
+      <td class="p-2 space-x-1">
+
         <button onclick="previewCurrencyJournal(${index})"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
         <button onclick="editCurrencyAdjustment(${index})"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
         <button onclick="deleteCurrencyAdjustment(${index})"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
       </td>
     `;
+
     table.appendChild(row);
 
     const journalRow = document.createElement("tr");
+
     journalRow.id = `currency-journal-${index}`;
     journalRow.classList.add("hidden");
 
     let journalHTML = `
-      <td colspan="8">
+      <td colspan="9">
         <div class="bg-gray-50 p-3 rounded">
-          <h4 class="font-semibold mb-2">Journal Entry</h4>
+
+          <h4 class="font-semibold mb-2">
+            Journal Entry
+          </h4>
+
           <table class="w-full text-sm border">
+
             <thead class="bg-gray-200">
               <tr>
                 <th class="p-2">Account</th>
@@ -40281,31 +40814,83 @@ function renderCurrencyAdjustments() {
                 <th class="p-2 text-right">Credit</th>
               </tr>
             </thead>
+
             <tbody>
     `;
+
     adj.journal.forEach(j => {
       journalHTML += `
         <tr>
           <td class="p-2">${j.account}</td>
-          <td class="p-2 text-right">${j.debit.toFixed(2)}</td>
-          <td class="p-2 text-right">${j.credit.toFixed(2)}</td>
+
+          <td class="p-2 text-right">
+            ${j.debit.toFixed(2)}
+          </td>
+
+          <td class="p-2 text-right">
+            ${j.credit.toFixed(2)}
+          </td>
         </tr>
       `;
     });
+
     journalHTML += `
             </tbody>
           </table>
         </div>
       </td>
     `;
+
     journalRow.innerHTML = journalHTML;
+
     table.appendChild(journalRow);
   });
 
-  updateTotalCurrencyAdjustment(); 
-
+  updateTotalCurrencyAdjustment();
 }
 
+function bulkDeleteCurrencyAdjustments() {
+
+  let adjustments = JSON.parse(
+    localStorage.getItem("currencyAdjustments") || "[]"
+  );
+
+  const selected = document.querySelectorAll(
+    ".currency-adjustment-select:checked"
+  );
+
+  if (selected.length === 0) {
+    alert("Please select at least one adjustment.");
+    return;
+  }
+
+  const indexes = Array.from(selected).map(cb =>
+    Number(cb.dataset.index)
+  );
+
+  indexes.sort((a, b) => b - a);
+
+  indexes.forEach(i => {
+    adjustments.splice(i, 1);
+  });
+
+  localStorage.setItem(
+    "currencyAdjustments",
+    JSON.stringify(adjustments)
+  );
+
+  renderCurrencyAdjustments();
+}
+
+function toggleAllCurrencyAdjustments(master) {
+
+  document.querySelectorAll(
+    ".currency-adjustment-select"
+  ).forEach(cb => {
+    cb.checked = master.checked;
+  });
+
+}
 function previewCurrencyJournal(index) {
   const row = document.getElementById(`currency-journal-${index}`);
   row.classList.toggle("hidden");
@@ -40617,29 +41202,132 @@ function addTaxAdjustment(){
   renderTaxAdjustments()
 }
 
-function renderTaxAdjustments(){
-  const adjustments=JSON.parse(localStorage.getItem("taxAdjustments")||"[]")
-  const table=document.getElementById("taxAdjustmentsTable")
-  table.innerHTML=""
-  adjustments.forEach((adj,index)=>{
-    const row=document.createElement("tr")
-    row.innerHTML=`
-      <td class="p-2">${adj.date}</td>
-      <td class="p-2">${adj.accountName}</td>
-      <td class="p-2">${adj.type}</td>
-      <td class="p-2 text-right">${adj.before.toLocaleString()}</td>
-      <td class="p-2 text-right">${adj.amount.toLocaleString()}</td>
-      <td class="p-2 text-right">${adj.after.toLocaleString()}</td>
-      <td class="p-2">${adj.note||""}</td>
-      <td class="p-2 flex gap-1">
-        <button onclick="editTaxAdjustment(${index})" class="px-1 py-1 bg-blue-900 text-white rounded">Edit</button>
-        <button onclick="deleteTaxAdjustment(${index})" class="px-1 py-1 bg-blue-900 text-white rounded">Delete</button>
-        <button onclick="previewTaxAdjustment(${index})" class="px-1 py-1 bg-blue-900 text-white rounded">Preview</button>
-        <button onclick="showHistory()" class="px-1 py-1 bg-blue-900 text-white rounded">History</button>
+function renderTaxAdjustments() {
+
+  const adjustments = JSON.parse(
+    localStorage.getItem("taxAdjustments") || "[]"
+  );
+
+  const table = document.getElementById("taxAdjustmentsTable");
+
+  table.innerHTML = "";
+
+  if (adjustments.length === 0) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="9"
+          class="p-3 text-center text-gray-500">
+          No Tax Adjustments Found
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  adjustments.forEach((adj, index) => {
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+
+      <td class="p-2">
+        <input type="checkbox"
+          class="tax-adjustment-select"
+          data-index="${index}">
       </td>
-    `
-    table.appendChild(row)
-  })
+
+      <td class="p-2">${adj.date}</td>
+
+      <td class="p-2">${adj.accountName}</td>
+
+      <td class="p-2">${adj.type}</td>
+
+      <td class="p-2 text-right">
+        ${adj.before.toLocaleString()}
+      </td>
+
+      <td class="p-2 text-right">
+        ${adj.amount.toLocaleString()}
+      </td>
+
+      <td class="p-2 text-right">
+        ${adj.after.toLocaleString()}
+      </td>
+
+      <td class="p-2">${adj.note || ""}</td>
+
+      <td class="p-2 flex gap-1">
+
+        <button onclick="editTaxAdjustment(${index})"
+          class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteTaxAdjustment(${index})"
+          class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button onclick="previewTaxAdjustment(${index})"
+          class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+        <button onclick="showHistory()"
+          class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+          History
+        </button>
+
+      </td>
+    `;
+
+    table.appendChild(row);
+
+  });
+
+}
+
+function bulkDeleteTaxAdjustments() {
+
+  let adjustments = JSON.parse(
+    localStorage.getItem("taxAdjustments") || "[]"
+  );
+
+  const selected = document.querySelectorAll(
+    ".tax-adjustment-select:checked"
+  );
+
+  if (selected.length === 0) {
+    alert("Please select at least one adjustment.");
+    return;
+  }
+
+  const indexes = Array.from(selected).map(cb =>
+    Number(cb.dataset.index)
+  );
+
+  indexes.sort((a, b) => b - a);
+
+  indexes.forEach(i => {
+    adjustments.splice(i, 1);
+  });
+
+  localStorage.setItem(
+    "taxAdjustments",
+    JSON.stringify(adjustments)
+  );
+
+  renderTaxAdjustments();
+}
+
+function toggleAllTaxAdjustments(master) {
+
+  document.querySelectorAll(
+    ".tax-adjustment-select"
+  ).forEach(cb => {
+    cb.checked = master.checked;
+  });
+
 }
 
 function editTaxAdjustment(index){
@@ -41078,28 +41766,123 @@ function showAccountBalance(accountCode) {
 }
 
 function renderAccounts() {
-  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+
+  const accounts = JSON.parse(
+    localStorage.getItem("chartOfAccounts") || "[]"
+  );
+
   const table = document.getElementById("accountsTable");
+
   table.innerHTML = "";
 
+  if (accounts.length === 0) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="7" class="p-3 text-center text-gray-500">
+          No Accounts Found
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
   accounts.forEach((acc, index) => {
+
     const row = document.createElement("tr");
+
     row.innerHTML = `
-      <td class="p-2">${acc.name}</td>
-      <td class="p-2">${acc.code}</td>
-      <td class="p-2">${acc.type}</td>
-      <td class="p-2">${acc.parentName || "-"}</td>
-      <td class="p-2">${acc.parentCode || "-"}</td>
-      <td class="p-2 text-right">${(acc.amount || 0).toFixed(2)}</td>  
       <td class="p-2">
-        <button onclick="editAccount(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="deleteAccount(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-        <button onclick="viewAccountHistory(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> History</button>
-        <button onclick="previewAccount(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
+        <input type="checkbox"
+          class="account-select"
+          data-index="${index}">
+      </td>
+
+      <td class="p-2">${acc.name}</td>
+
+      <td class="p-2">${acc.code}</td>
+
+      <td class="p-2">${acc.type}</td>
+
+      <td class="p-2">${acc.parentName || "-"}</td>
+
+      <td class="p-2">${acc.parentCode || "-"}</td>
+
+      <td class="p-2 text-right">
+        ${(acc.amount || 0).toFixed(2)}
+      </td>
+
+      <td class="p-2 space-x-1">
+
+        <button onclick="editAccount(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteAccount(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button onclick="viewAccountHistory(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          History
+        </button>
+
+        <button onclick="previewAccount(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
       </td>
     `;
+
     table.appendChild(row);
+
   });
+
+}
+
+function bulkDeleteAccounts() {
+
+  let accounts = JSON.parse(
+    localStorage.getItem("chartOfAccounts") || "[]"
+  );
+
+  const selected = document.querySelectorAll(
+    ".account-select:checked"
+  );
+
+  if (selected.length === 0) {
+    alert("Please select at least one account.");
+    return;
+  }
+
+  const indexes = Array.from(selected).map(cb =>
+    Number(cb.dataset.index)
+  );
+
+  indexes.sort((a, b) => b - a);
+
+  indexes.forEach(i => {
+    accounts.splice(i, 1);
+  });
+
+  localStorage.setItem(
+    "chartOfAccounts",
+    JSON.stringify(accounts)
+  );
+
+  renderAccounts();
+}
+
+function toggleAllAccounts(master) {
+
+  document.querySelectorAll(
+    ".account-select"
+  ).forEach(cb => {
+    cb.checked = master.checked;
+  });
+
 }
 
 function editAccount(index) {
@@ -41476,29 +42259,94 @@ function parseCSV(csvText) {
   }
 
 function renderEquity() {
-  const equityRecords = JSON.parse(localStorage.getItem("equityRecords") || "[]");
-  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+
+  const equityRecords = JSON.parse(
+    localStorage.getItem("equityRecords") || "[]"
+  );
+
+  const accounts = JSON.parse(
+    localStorage.getItem("chartOfAccounts") || "[]"
+  );
+
   const table = document.getElementById("equityTableBody");
+
   table.innerHTML = "";
 
+  if (equityRecords.length === 0) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="7" class="p-3 text-center text-gray-500">
+          No Equity Records Found
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
   equityRecords.forEach((rec, index) => {
-    const account = accounts.find(a => a.code === rec.accountCode);
-    const accountName = account ? `${account.name} (${account.code})` : "N/A";
+
+    const account = accounts.find(
+      a => a.code === rec.accountCode
+    );
+
+    const accountName = account
+      ? `${account.name} (${account.code})`
+      : "N/A";
 
     const row = document.createElement("tr");
+
     row.innerHTML = `
+      <td class="p-2 border">
+        <input type="checkbox"
+          class="equity-select"
+          data-index="${index}">
+      </td>
+
       <td class="p-2 border">${rec.name}</td>
-      <td class="p-2 border text-right">${(rec.value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+
+      <td class="p-2 border text-right">
+        ${(rec.value || 0).toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}
+      </td>
+
       <td class="p-2 border">${rec.description || "-"}</td>
+
       <td class="p-2 border">${accountName}</td>
-     <td class="p-2 border text-right">${(Number(rec.bdAmount) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+
+      <td class="p-2 border text-right">
+        ${(Number(rec.bdAmount) || 0).toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}
+      </td>
+
       <td class="p-2 border flex gap-1">
-        <button onclick="editEquity(${index})" class="bg-blue-900 text-white px-1 py-1 rounded">Edit</button>
-        <button onclick="deleteEquity(${index})" class="bg-blue-900 text-white px-1 py-1 rounded">Delete</button>
-        <button onclick="reviewEquity(${index})" class="bg-blue-900 text-white px-1 py-1 rounded">Review</button>
-        <button onclick="openDisposeModal(${index})" class="bg-blue-900 text-white px-1 py-1 rounded">Dispose</button>
+
+        <button onclick="editEquity(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteEquity(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button onclick="reviewEquity(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">
+          Review
+        </button>
+
+        <button onclick="openDisposeModal(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">
+          Dispose
+        </button>
+
       </td>
     `;
+
     table.appendChild(row);
   });
 
@@ -41506,6 +42354,41 @@ function renderEquity() {
   syncEquityToOpeningBalances();
 }
 
+function bulkDeleteEquity() {
+
+  let equityRecords = JSON.parse(
+    localStorage.getItem("equityRecords") || "[]"
+  );
+
+  const selected = document.querySelectorAll(".equity-select:checked");
+
+  if (selected.length === 0) {
+    alert("Please select at least one equity record.");
+    return;
+  }
+
+  const indexes = Array.from(selected)
+    .map(cb => Number(cb.dataset.index))
+    .sort((a, b) => b - a);
+
+  indexes.forEach(i => {
+    if (equityRecords[i]) {
+      equityRecords.splice(i, 1);
+    }
+  });
+
+  localStorage.setItem(
+    "equityRecords",
+    JSON.stringify(equityRecords)
+  );
+
+  renderEquity();
+}
+
+function toggleAllEquity(master) {
+  document.querySelectorAll(".equity-select")
+    .forEach(cb => cb.checked = master.checked);
+}
   function loadEquityAccounts() {
     const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
     const select = document.getElementById("equityAccountSelect");
@@ -41653,7 +42536,8 @@ function handleDispose(index, modal) {
   updateBalanceSheetFromChart();
 
   modal.remove();
-}function deleteDispose(txId) {
+}
+function deleteDispose(txId) {
   let equityRecords = JSON.parse(localStorage.getItem("equityRecords") || "[]");
   let banks = JSON.parse(localStorage.getItem("banks") || "[]");
   let accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
@@ -42492,60 +43376,127 @@ function renderNonCurrentAssets() {
       maximumFractionDigits: 2
     })}`;
 
-  balanceSheet.nonCurrentAssets
-    .filter(asset => asset.status !== "sold" && asset.status !== "written_off")
-    .forEach((asset, index) => {
+  const assets = balanceSheet.nonCurrentAssets || [];
 
-      const row = document.createElement('tr');
+  const filteredAssets = assets
+    .map((asset, index) => ({ asset, index }))
+    .filter(a =>
+      a.asset.status !== "sold" &&
+      a.asset.status !== "written_off"
+    );
 
-      row.innerHTML = `
-        <td class="p-2 border">${asset.name || ''}</td>
-        <td class="p-2 border">${asset.code || ''}</td>
-        <td class="p-1 border text-sm max-w-xs leading-tight break-words"> ${asset.description || ''}</td>
-        <td class="p-2 border text-right">${formatKES(asset.value || 0)}</td>
-        <td class="p-2 border">${asset.account || ''}</td>
-
-        <td class="p-2 border space-x-2">
-
-          <button onclick="editNonCurrentAsset(${index})"
-            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-            Edit
-          </button>
-
-          <button onclick="deleteNonCurrentAsset(${index})"
-            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-            Delete
-          </button>
-
-          <button onclick="depreciateNonCurrentAsset(${index})"
-            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-            Depreciate
-          </button>
-
-          <!-- FIXED: proper index passing -->
-          <button onclick="sellNonCurrentAsset(${index})"
-            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-            Sell
-          </button>
-
-          <button onclick="writeOffNonCurrentAsset(${index})"
-            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-            Write Off
-          </button>
-
-          <button onclick="showDepreciationHistory(${index})"
-            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-            Preview
-          </button>
-
+  if (filteredAssets.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="p-3 text-center text-gray-500">
+          No Assets Found
         </td>
-      `;
+      </tr>
+    `;
+    return;
+  }
 
-      tbody.appendChild(row);
-    });
+  filteredAssets.forEach(({ asset, index }) => {
+
+    const row = document.createElement('tr');
+
+    row.innerHTML = `
+      <td class="p-2 border">
+        <input type="checkbox"
+          class="non-current-asset-select"
+          data-index="${index}">
+      </td>
+
+      <td class="p-2 border">${asset.name || ''}</td>
+      <td class="p-2 border">${asset.code || ''}</td>
+
+      <td class="p-1 border text-sm max-w-xs leading-tight break-words">
+        ${asset.description || ''}
+      </td>
+
+      <td class="p-2 border text-right">
+        ${formatKES(asset.value || 0)}
+      </td>
+
+      <td class="p-2 border">${asset.account || ''}</td>
+
+      <td class="p-2 border space-x-2">
+
+        <button onclick="editNonCurrentAsset(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteNonCurrentAsset(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button onclick="depreciateNonCurrentAsset(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Depreciate
+        </button>
+
+        <button onclick="sellNonCurrentAsset(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Sell
+        </button>
+
+        <button onclick="writeOffNonCurrentAsset(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Write Off
+        </button>
+
+        <button onclick="showDepreciationHistory(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+      </td>
+    `;
+
+    tbody.appendChild(row);
+  });
 
   renderDepreciationTable();
   syncNonCurrentAssetsToOpeningBalances();
+}
+function bulkDeleteNonCurrentAssets() {
+
+  let assets = balanceSheet.nonCurrentAssets || [];
+
+  const selected = document.querySelectorAll(
+    ".non-current-asset-select:checked"
+  );
+
+  if (selected.length === 0) {
+    alert("Please select at least one asset.");
+    return;
+  }
+
+  const indexes = Array.from(selected).map(cb =>
+    Number(cb.dataset.index)
+  );
+
+  indexes.sort((a, b) => b - a);
+
+  indexes.forEach(i => {
+    assets.splice(i, 1);
+  });
+
+  balanceSheet.nonCurrentAssets = assets;
+
+  renderNonCurrentAssets();
+}
+
+function toggleAllNonCurrentAssets(master) {
+
+  document.querySelectorAll(
+    ".non-current-asset-select"
+  ).forEach(cb => {
+    cb.checked = master.checked;
+  });
+
 }
 let sellingAssetIndex = null;
 
@@ -43505,39 +44456,104 @@ function updateCurrentAccount(index) {
   document.querySelector("#addCurrentAccountBtn").onclick = addCurrentAccount;
 }
 function renderCurrentAccounts() {
+
   const tbody = document.getElementById("currentAccountsTableBody");
+
   tbody.innerHTML = "";
 
   const chartLabels = [];
   const chartData = [];
 
+  if (!currentAccounts || currentAccounts.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="p-3 text-center text-gray-500">
+          No Current Accounts Found
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
   currentAccounts.forEach((acc, index) => {
-    const displayName = acc.name || ""; 
-    const displayId = acc.empId ? ` (${acc.empId})` : ""; 
+
+    const displayName = acc.name || "";
+    const displayId = acc.empId ? ` (${acc.empId})` : "";
 
     const row = document.createElement("tr");
+
     row.innerHTML = `
+      <td class="p-2">
+        <input type="checkbox"
+          class="current-account-select"
+          data-index="${index}">
+      </td>
+
       <td class="p-2">${displayName}${displayId}</td>
       <td class="p-2">${acc.date}</td>
       <td class="p-2">${acc.reference}</td>
       <td class="p-2">${acc.description}</td>
       <td class="p-2">${acc.account}</td>
       <td class="p-2">${acc.bank || '-'}</td>
-      <td class="p-2 text-right">${acc.amount.toFixed(2)}</td>
-      <td class="p-2">
-        <button onclick="editCurrentAccount(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="previewCurrentAccAccount('${acc.account}')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-        <button onclick="openCurrentAccTransactions('${acc.account}')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Transact</button>
-        <button onclick="deleteCurrentAccount(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
+
+      <td class="p-2 text-right">
+        ${acc.amount.toFixed(2)}
+      </td>
+
+      <td class="p-2 space-x-1">
+
+        <button onclick="editCurrentAccount(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="previewCurrentAccAccount('${acc.account}')"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+        <button onclick="openCurrentAccTransactions('${acc.account}')"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Transact
+        </button>
+
+        <button onclick="deleteCurrentAccount(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
       </td>
     `;
+
     tbody.appendChild(row);
 
-    chartLabels.push(displayName); 
+    chartLabels.push(displayName);
     chartData.push(acc.amount);
+
   });
 
   renderCurrentAccChart(chartLabels, chartData);
+}
+function bulkDeleteCurrentAccounts() {
+
+  const selected = document.querySelectorAll(
+    ".current-account-select:checked"
+  );
+
+  if (selected.length === 0) {
+    alert("Please select at least one account.");
+    return;
+  }
+
+  const indexes = Array.from(selected)
+    .map(cb => Number(cb.dataset.index))
+    .sort((a, b) => b - a);
+
+  indexes.forEach(i => {
+    currentAccounts.splice(i, 1);
+  });
+
+  renderCurrentAccounts();
 }
 function editCurrentAccount(index) {
   const acc = currentAccounts[index];
@@ -46919,10 +47935,15 @@ function downloadPreviewPDF() {
 
   <div class="bg-white p-6 rounded shadow">
     <h3 class="text-lg font-semibold mb-4">Employee List</h3>
-
+    <button onclick="bulkDeleteEmployees()"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
     <table class="w-full text-sm border">
       <thead>
         <tr>
+          <th class="p-2 border">
+          <input type="checkbox"
+            onclick="toggleAllEmployees(this)">
+        </th>
           <th class="p-2 border">Name</th>
           <th class="p-2 border">ID</th>
           <th class="p-2 border">Position</th>
@@ -47118,7 +48139,19 @@ function resetEarnings() {
       <input type="hidden" id="earningsEditIndex" />
 
     </div>
-
+     
+    <button 
+    type="button"
+    onclick="saveEarningsDraft()"
+    class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
+    Save as Draft
+  </button>
+   <button 
+    type="button"
+    onclick="bulkAddEarnings()"
+    class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
+    Bulk Add
+  </button>
     <button onclick="saveEarnings()"
             class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
       Save Earnings
@@ -47127,10 +48160,13 @@ function resetEarnings() {
 
   <div class="bg-white p-6 rounded shadow">
     <h3 class="text-lg font-semibold mb-4">Earnings Records</h3>
-
+    <button onclick="bulkDeleteEarnings()"class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Bulk Delete </button>
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2 border">
+          <input type="checkbox" onclick="toggleAllEarnings(this)">
+          </th>
           <th class="p-2">Employee ID</th>
           <th class="p-2">Basic</th>
           <th class="p-2">House</th>
@@ -48046,29 +49082,109 @@ function resetBankAccounts() {
 
  
 function renderEmployees() {
-  const employees = JSON.parse(localStorage.getItem("employees") || "[]");
+
+  const employees = JSON.parse(
+    localStorage.getItem("employees") || "[]"
+  );
+
   const tbody = document.getElementById("employeesTable");
+
   tbody.innerHTML = "";
 
-  employees.forEach((emp, index) => {
-    const row = `
+  if (employees.length === 0) {
+    tbody.innerHTML = `
       <tr>
-        <td class="p-2 border">${emp.name}</td>
-        <td class="p-2 border">${emp.id}</td>
-        <td class="p-2 border">${emp.position}</td>
-        <td class="p-2 border">${emp.department}</td>
-        <td class="p-2 border">${emp.email}</td>
-        <td class="p-2 border">${emp.phone}</td>
-        <td class="p-2 border">${emp.joinDate}</td>
-        <td class="p-2 border">KES ${emp.salary.toFixed(2)}</td>
-        <td class="p-2 border text-center space-x-2">
-          <button onclick="previewEmployee(${index})"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-          <button onclick="editEmployee(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-          <button onclick="deleteEmployee(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
+        <td colspan="10" class="p-3 text-center text-gray-500">
+          No Employees Found
         </td>
-      </tr>`;
-    tbody.innerHTML += row;
+      </tr>
+    `;
+    return;
+  }
+
+  employees.forEach((emp, index) => {
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td class="p-2 border">
+        <input type="checkbox"
+          class="employee-select"
+          data-index="${index}">
+      </td>
+
+      <td class="p-2 border">${emp.name}</td>
+      <td class="p-2 border">${emp.id}</td>
+      <td class="p-2 border">${emp.position}</td>
+      <td class="p-2 border">${emp.department}</td>
+      <td class="p-2 border">${emp.email}</td>
+      <td class="p-2 border">${emp.phone}</td>
+      <td class="p-2 border">${emp.joinDate}</td>
+
+      <td class="p-2 border">
+        KES ${(emp.salary || 0).toFixed(2)}
+      </td>
+
+      <td class="p-2 border text-center space-x-2">
+
+        <button onclick="previewEmployee(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+        <button onclick="editEmployee(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteEmployee(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+      </td>
+    `;
+
+    tbody.appendChild(row);
+
   });
+}
+function bulkDeleteEmployees() {
+
+  let employees = JSON.parse(
+    localStorage.getItem("employees") || "[]"
+  );
+
+  const selected = document.querySelectorAll(
+    ".employee-select:checked"
+  );
+
+  if (selected.length === 0) {
+    alert("Please select at least one employee.");
+    return;
+  }
+
+  const indexes = Array.from(selected)
+    .map(cb => Number(cb.dataset.index))
+    .sort((a, b) => b - a);
+
+  indexes.forEach(i => {
+    employees.splice(i, 1);
+  });
+
+  localStorage.setItem(
+    "employees",
+    JSON.stringify(employees)
+  );
+
+  renderEmployees();
+}
+
+function toggleAllEmployees(master) {
+
+  document.querySelectorAll(".employee-select")
+    .forEach(cb => cb.checked = master.checked);
+
 }
  
   function editEmployee(index) {
@@ -48371,6 +49487,55 @@ function resetEmployees() {
       if (e.target.id === id) calculateGrossPay();
     });
   });
+  function saveEarningsDraft() {
+  const empID = document.getElementById("earningsEmpID").value;
+  if (!empID) return alert("⚠️ Please select an employee!");
+
+  const earning = {
+    id: crypto.randomUUID(), 
+    empID,
+
+    basicPay: parseFloat(document.getElementById("basicPay").value) || 0,
+    houseAllowance: parseFloat(document.getElementById("houseAllowance").value) || 0,
+    transportAllowance: parseFloat(document.getElementById("transportAllowance").value) || 0,
+    overtimePay: parseFloat(document.getElementById("overtimePay").value) || 0,
+    bonusPay: parseFloat(document.getElementById("bonusPay").value) || 0,
+    otherBenefits: parseFloat(document.getElementById("otherBenefits").value) || 0
+  };
+
+  earning.grossPay =
+    earning.basicPay +
+    earning.houseAllowance +
+    earning.transportAllowance +
+    earning.overtimePay +
+    earning.bonusPay +
+    earning.otherBenefits;
+
+  earning.status = "draft";
+
+  let earnings = JSON.parse(localStorage.getItem("earnings") || "[]");
+
+  const editIndex = document.getElementById("earningsEditIndex").value;
+
+  if (editIndex !== "") {
+    earnings[parseInt(editIndex)] = earning;
+    document.getElementById("earningsEditIndex").value = "";
+  } else {
+    earnings.push(earning);
+  }
+
+  localStorage.setItem("earnings", JSON.stringify(earnings));
+
+  renderEarnings();
+
+  // clear form
+  ["basicPay", "houseAllowance", "transportAllowance", "overtimePay", "bonusPay", "otherBenefits", "Grosspay"]
+    .forEach(id => document.getElementById(id).value = "");
+
+  document.getElementById("earningsEmpID").value = "";
+
+  alert("📄 Saved as Draft (awaiting approval)");
+}
 function saveEarnings() {
   const empID = document.getElementById("earningsEmpID").value;
   if (!empID) return alert("⚠️ Please select an employee!");
@@ -48385,8 +49550,15 @@ function saveEarnings() {
     otherBenefits: parseFloat(document.getElementById("otherBenefits").value) || 0
   };
 
-  earning.grossPay = earning.basicPay + earning.houseAllowance + earning.transportAllowance +
-                     earning.overtimePay + earning.bonusPay + earning.otherBenefits;
+  earning.grossPay =
+    earning.basicPay +
+    earning.houseAllowance +
+    earning.transportAllowance +
+    earning.overtimePay +
+    earning.bonusPay +
+    earning.otherBenefits;
+
+  earning.status = "approved"; 
 
   let earnings = JSON.parse(localStorage.getItem("earnings") || "[]");
   const editIndex = document.getElementById("earningsEditIndex").value;
@@ -48406,15 +49578,110 @@ function saveEarnings() {
 
   localStorage.setItem("earnings", JSON.stringify(earnings));
   renderEarnings();
+
   ["basicPay", "houseAllowance", "transportAllowance", "overtimePay", "bonusPay", "otherBenefits", "Grosspay"]
     .forEach(id => document.getElementById(id).value = "");
-    
+
   document.getElementById("earningsEmpID").value = "";
 }
 
-function renderEarnings() {
-  const earnings = JSON.parse(localStorage.getItem("earnings") || "[]");
+function approveEarning(index) {
+  let earnings = JSON.parse(localStorage.getItem("earnings") || "[]");
+
+  if (!earnings[index]) return;
+
+ 
+  earnings[index].status = "approved";
+
+  localStorage.setItem("earnings", JSON.stringify(earnings));
+
+  renderEarnings();
+
+  alert("✅ Earning approved successfully!");
+}
+function bulkAddEarnings() {
+  const employees = JSON.parse(localStorage.getItem("employees") || "[]");
+  let earnings = JSON.parse(localStorage.getItem("earnings") || "[]");
+
+  if (employees.length === 0) {
+    alert("⚠️ No employees found!");
+    return;
+  }
+
+  employees.forEach(emp => {
+
+    const earning = {
+      id: crypto.randomUUID(),
+      empID: emp.id,
+
+      basicPay: parseFloat(emp.salary) || 0,
+      houseAllowance: 0,
+      transportAllowance: 0,
+      overtimePay: 0,
+      bonusPay: 0,
+      otherBenefits: 0,
+
+      grossPay: parseFloat(emp.salary) || 0,
+
+      status: "approved" 
+    };
+
+    
+    const exists = earnings.find(e => e.empID === emp.id);
+
+    if (exists) {
+   
+      Object.assign(exists, earning);
+    } else {
+      earnings.push(earning);
+    }
+  });
+
+  localStorage.setItem("earnings", JSON.stringify(earnings));
+
+  renderEarnings();
+
+  alert("✅ Bulk earnings added successfully!");
+}
+function renderDraftEarnings() {
+
+  const earnings = JSON.parse(localStorage.getItem("earnings") || "[]")
+    .filter(e => e.status === "draft");
+
   const tbody = document.getElementById("earningsTable");
+  tbody.innerHTML = "";
+
+  earnings.forEach((e, i) => {
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td class="p-2 border">${e.empID}</td>
+      <td class="p-2 border">KES ${e.grossPay.toFixed(2)}</td>
+
+      <td class="p-2 border">
+        <button onclick="approveEarning(${i})"
+          class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">
+          Approve
+        </button>
+      </td>
+    `;
+
+    tbody.appendChild(row);
+  });
+}
+function renderEarnings() {
+
+  const earnings = JSON.parse(
+    localStorage.getItem("earnings") || "[]"
+  ).map(e => ({
+    ...e,
+    status: e.status || "approved" // safety for old data
+  }))
+  .filter(e => e.status === "approved"); // ONLY FINAL RECORDS
+
+  const tbody = document.getElementById("earningsTable");
+
   tbody.innerHTML = "";
 
   let totalBasic = 0;
@@ -48425,64 +49692,129 @@ function renderEarnings() {
   let totalOther = 0;
   let totalGross = 0;
 
+  if (earnings.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" class="p-3 text-center text-gray-500">
+          No Earnings Found
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
   earnings.forEach((e, i) => {
 
-    totalBasic += e.basicPay;
-    totalHouse += e.houseAllowance;
-    totalTransport += e.transportAllowance;
-    totalOvertime += e.overtimePay;
-    totalBonus += e.bonusPay;
-    totalOther += e.otherBenefits;
-    totalGross += e.grossPay;
+    totalBasic += e.basicPay || 0;
+    totalHouse += e.houseAllowance || 0;
+    totalTransport += e.transportAllowance || 0;
+    totalOvertime += e.overtimePay || 0;
+    totalBonus += e.bonusPay || 0;
+    totalOther += e.otherBenefits || 0;
+    totalGross += e.grossPay || 0;
 
-    tbody.innerHTML += `
-      <tr>
-        <td class="p-2 border">${e.empID}</td>
-        <td class="p-2 border">KES ${e.basicPay.toFixed(2)}</td>
-        <td class="p-2 border">KES ${e.houseAllowance.toFixed(2)}</td>
-        <td class="p-2 border">KES ${e.transportAllowance.toFixed(2)}</td>
-        <td class="p-2 border">KES ${e.overtimePay.toFixed(2)}</td>
-        <td class="p-2 border">KES ${e.bonusPay.toFixed(2)}</td>
-        <td class="p-2 border">KES ${e.otherBenefits.toFixed(2)}</td>
-        <td class="p-2 border font-bold">KES ${e.grossPay.toFixed(2)}</td>
+    const row = document.createElement("tr");
 
-        <td class="p-2 border text-center space-x-1">
-          <button onclick="previewEarning(${i})"
-            class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
-            Preview
-          </button>
+    row.innerHTML = `
+      <td class="p-2 border">
+        <input type="checkbox"
+          class="earnings-select"
+          data-index="${i}">
+      </td>
 
-          <button onclick="viewHistory('${e.empID}')"
-            class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
-            History
-          </button>
+      <td class="p-2 border">${e.empID}</td>
+      <td class="p-2 border">KES ${e.basicPay.toFixed(2)}</td>
+      <td class="p-2 border">KES ${e.houseAllowance.toFixed(2)}</td>
+      <td class="p-2 border">KES ${e.transportAllowance.toFixed(2)}</td>
+      <td class="p-2 border">KES ${e.overtimePay.toFixed(2)}</td>
+      <td class="p-2 border">KES ${e.bonusPay.toFixed(2)}</td>
+      <td class="p-2 border">KES ${e.otherBenefits.toFixed(2)}</td>
+      <td class="p-2 border font-bold">
+        KES ${e.grossPay.toFixed(2)}
+      </td>
 
-          <button onclick="editEarning(${i})"
-            class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
-            Edit
-          </button>
+      <td class="p-2 border text-center space-x-1">
 
-          <button onclick="deleteEarning(${i})"
-            class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
-            Delete
-          </button>
-        </td>
-      </tr>`;
+        <button onclick="previewEarning(${i})"
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+        <button onclick="viewHistory('${e.empID}')"
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
+          History
+        </button>
+
+        <button onclick="editEarning(${i})"
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteEarning(${i})"
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+      </td>
+    `;
+
+    tbody.appendChild(row);
   });
 
-document.querySelector("#earningsTable").insertAdjacentHTML("beforeend", `
-  <tr class="bg-gray-200 text-black">
-    <td class="p-2 border"><strong>TOTAL</strong></td>
-    <td class="p-2 border"><strong>KES ${totalBasic.toFixed(2)}</strong></td>
-    <td class="p-2 border"><strong>KES ${totalHouse.toFixed(2)}</strong></td>
-    <td class="p-2 border"><strong>KES ${totalTransport.toFixed(2)}</strong></td>
-    <td class="p-2 border"><strong>KES ${totalOvertime.toFixed(2)}</strong></td>
-    <td class="p-2 border"><strong>KES ${totalBonus.toFixed(2)}</strong></td>
-    <td class="p-2 border"><strong>KES ${totalOther.toFixed(2)}</strong></td>
-    <td class="p-2 border text-blue-900"><strong>KES ${totalGross.toFixed(2)}</strong></td>
-    <td class="p-2 border"></td>
-  </tr>
-`);
+  tbody.insertAdjacentHTML("beforeend", `
+    <tr class="bg-gray-200 text-black font-bold">
+      <td class="p-2 border">TOTAL</td>
+      <td class="p-2 border"></td>
+      <td class="p-2 border">KES ${totalBasic.toFixed(2)}</td>
+      <td class="p-2 border">KES ${totalHouse.toFixed(2)}</td>
+      <td class="p-2 border">KES ${totalTransport.toFixed(2)}</td>
+      <td class="p-2 border">KES ${totalOvertime.toFixed(2)}</td>
+      <td class="p-2 border">KES ${totalBonus.toFixed(2)}</td>
+      <td class="p-2 border">KES ${totalOther.toFixed(2)}</td>
+      <td class="p-2 border text-blue-900">
+        KES ${totalGross.toFixed(2)}
+      </td>
+      <td class="p-2 border"></td>
+    </tr>
+  `);
+
+}
+function bulkDeleteEarnings() {
+
+  let earnings = JSON.parse(
+    localStorage.getItem("earnings") || "[]"
+  );
+
+  const selected = document.querySelectorAll(
+    ".earnings-select:checked"
+  );
+
+  if (selected.length === 0) {
+    alert("Please select at least one record.");
+    return;
+  }
+
+  const indexes = Array.from(selected)
+    .map(cb => Number(cb.dataset.index))
+    .sort((a, b) => b - a);
+
+  indexes.forEach(i => {
+    earnings.splice(i, 1);
+  });
+
+  localStorage.setItem(
+    "earnings",
+    JSON.stringify(earnings)
+  );
+
+  renderEarnings();
+}
+
+function toggleAllEarnings(master) {
+
+  document.querySelectorAll(".earnings-select")
+    .forEach(cb => cb.checked = master.checked);
+
 }
 function editEarning(index) {
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
@@ -65237,7 +66569,46 @@ Save
     </div>
   </div>
 </section>
+<!-- 🏦 BANK DETAILS -->
+<div class="rounded-xl border border-gray-300 bg-white p-4 shadow mt-4">
 
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-md font-semibold">🏦 Bank Details</h3>
+
+    <div class="flex gap-2">
+      <button
+        onclick="addBankRow()"
+        class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+        ➕ Add Row
+      </button>
+
+      <button
+        onclick="saveBankDetails()"
+       class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+        💾 Save Banks
+      </button>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm border border-gray-300" id="bankTable">
+      <thead class="bg-gray-100 text-gray-700">
+        <tr>
+          <th class="border px-2 py-1">BANK NAME</th>
+          <th class="border px-2 py-1">BRANCH</th>
+          <th class="border px-2 py-1">SWIFT CODE</th>
+          <th class="border px-2 py-1">KSH ACC</th>
+          <th class="border px-2 py-1">USD ACC</th>
+          <th class="border px-2 py-1">EURO ACC</th>
+          <th class="border px-2 py-1">ACTION</th>
+        </tr>
+      </thead>
+
+      <tbody id="bankTableBody"></tbody>
+    </table>
+  </div>
+
+</div>
 <section class="rounded-2xl border border-gray-300 bg-white p-4 shadow">
   <header class="mb-4">
     <h2 class="text-lg font-medium">🧩 Workflow & Approval Rules</h2>
@@ -68014,6 +69385,141 @@ function deleteRule(id) {
 
   loadTemplateList();
   updatePreview();
+
+function renderBankTable() {
+
+  const tbody = document.getElementById("bankTableBody");
+
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  const banks =
+    JSON.parse(localStorage.getItem("bankDetails") || "[]");
+
+  if (banks.length === 0) {
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7"
+          class="border px-2 py-3 text-center text-gray-500 italic">
+          No bank details added
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  banks.forEach((bank, index) => {
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td contenteditable="true" class="border px-2 py-1">
+        ${bank.bankName || ""}
+      </td>
+
+      <td contenteditable="true" class="border px-2 py-1">
+        ${bank.branch || ""}
+      </td>
+
+      <td contenteditable="true" class="border px-2 py-1">
+        ${bank.swift || ""}
+      </td>
+
+      <td contenteditable="true" class="border px-2 py-1">
+        ${bank.ksh || ""}
+      </td>
+
+      <td contenteditable="true" class="border px-2 py-1">
+        ${bank.usd || ""}
+      </td>
+
+      <td contenteditable="true" class="border px-2 py-1">
+        ${bank.euro || ""}
+      </td>
+
+      <td class="border px-2 py-1 text-center">
+
+        <button
+          onclick="updateBankRow(${index}, this)"
+          class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">
+          Save
+        </button>
+
+        <button
+          onclick="deleteBankRow(${index})"
+          class="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 ml-1">
+          Delete
+        </button>
+
+      </td>
+    `;
+
+    tbody.appendChild(row);
+
+  });
+
+}
+
+function addBankRow() {
+
+  const banks =
+    JSON.parse(localStorage.getItem("bankDetails") || "[]");
+
+  banks.push({
+    bankName: "",
+    branch: "",
+    swift: "",
+    ksh: "",
+    usd: "",
+    euro: ""
+  });
+
+  localStorage.setItem("bankDetails", JSON.stringify(banks));
+
+  renderBankTable();
+}
+
+function updateBankRow(index, btn) {
+
+  const row = btn.closest("tr");
+
+  const cells = row.querySelectorAll("td");
+
+  const banks =
+    JSON.parse(localStorage.getItem("bankDetails") || "[]");
+
+  banks[index] = {
+    bankName: cells[0].innerText.trim(),
+    branch: cells[1].innerText.trim(),
+    swift: cells[2].innerText.trim(),
+    ksh: cells[3].innerText.trim(),
+    usd: cells[4].innerText.trim(),
+    euro: cells[5].innerText.trim()
+  };
+
+  localStorage.setItem("bankDetails", JSON.stringify(banks));
+
+  renderBankTable();
+}
+
+function deleteBankRow(index) {
+
+  if (!confirm("Delete this bank row?")) return;
+
+  const banks =
+    JSON.parse(localStorage.getItem("bankDetails") || "[]");
+
+  banks.splice(index, 1);
+
+  localStorage.setItem("bankDetails", JSON.stringify(banks));
+
+  renderBankTable();
+}
+
+document.addEventListener("DOMContentLoaded", renderBankTable);
 </script>
 <script>
 
