@@ -10578,29 +10578,7 @@ function viewBank(index) {
     }
   });
 }
-function renderBalanceSheet() {
-  const table = document.getElementById("balanceSheetTable");
-  if (!table) return; 
 
-  table.innerHTML = "";
-  let totalKES = 0;
-
-  banks.forEach(bank => {
-    const kesEquivalent = convertToKES(bank.balance, bank.currency);
-    totalKES += kesEquivalent;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td class="p-2 border">${bank.name}</td>
-      <td class="p-2 border">${bank.currency}</td>
-      <td class="p-2 border text-right">${bank.balance.toFixed(2)}</td>
-      <td class="p-2 border text-right">KSh ${kesEquivalent.toFixed(2)}</td>
-    `;
-    table.appendChild(row);
-  });
-
-  document.getElementById("totalAssetsKES").textContent = `KSh ${totalKES.toFixed(2)}`;
-}
 
 function editBank(index) {
   const bank = banks[index];
@@ -52296,42 +52274,218 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
      
       <div id="pnlReport" class="report-view hidden">
-        <h2 class="text-xl font-bold mb-4">📦Profit and Loss</h2>
-        <div class="mb-4">
-          <label for="pnlSummaryMonth" class="font-semibold">Step 1: Filter by Month</label>
-          <input type="month" id="pnlSummaryMonth" class="border px-2 py-1 rounded w-full mt-1"
-            onchange="renderProfitLoss()">
+  <h2 class="text-xl font-bold mb-4">📦Profit and Loss</h2>
+
+  <div class="mb-4">
+    <label for="pnlSummaryMonth" class="font-semibold">
+      Step 1: Filter by Month
+    </label>
+
+    <input type="month"
+      id="pnlSummaryMonth"
+      class="border px-2 py-1 rounded w-full mt-1"
+      onchange="renderProfitLoss()">
+  </div>
+
+  <div class="mb-4">
+    <label class="font-semibold">
+      Or Filter by Date Range
+    </label>
+
+    <div class="flex gap-2 mt-1">
+      <input type="date"
+        id="pnlStartDate"
+        class="border px-2 py-1 rounded w-1/2"
+        onchange="renderProfitLoss()">
+
+      <input type="date"
+        id="pnlEndDate"
+        class="border px-2 py-1 rounded w-1/2"
+        onchange="renderProfitLoss()">
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <label for="pnlBasis" class="font-semibold">
+      Step 0: Select Basis
+    </label>
+
+    <select id="pnlBasis"
+      class="border px-2 py-1 rounded w-full mt-1"
+      onchange="renderProfitLoss()">
+
+      <option value="accrual">Accrual</option>
+      <option value="cash">Cash</option>
+    </select>
+  </div>
+
+  <div class="mb-4 flex gap-2">
+
+    <button onclick="clearBSFilters()"
+      class="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-400">
+
+      🧹 Clear Filter
+    </button>
+
+    <button onclick="renderProfitLoss()"
+      class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+
+      ✅ Apply Filter
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('pnlTable', 'Profit and Loss')"
+      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">
+
+      ⬇️ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleSubAccounts()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+
+      Collapse Sub-Accounts
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+        Compare With : Applied ▼
+      </button>
+
+      <div id="compareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">
+          Compare With
+        </h3>
+
+        <div class="mb-3">
+
+          <label class="block text-sm mb-1">
+            Compare Based on Period/Year
+          </label>
+
+          <select id="pnlCompareType"
+            class="border rounded px-2 py-2 w-full"
+            onchange="togglePnlCompareOptions()">
+
+            <option value="">None</option>
+            <option value="previousYear">Previous Year(s)</option>
+            <option value="previousPeriod">Previous Period(s)</option>
+
+          </select>
+
         </div>
 
-        <div class="mb-4">
-          <label class="font-semibold">Or Filter by Date Range</label>
-          <div class="flex gap-2 mt-1">
-            <input type="date" id="pnlStartDate" class="border px-2 py-1 rounded w-1/2" onchange="renderProfitLoss()">
-            <input type="date" id="pnlEndDate" class="border px-2 py-1 rounded w-1/2" onchange="renderProfitLoss()">
-          </div>
+        <div class="mb-3"
+          id="pnlYearsContainer"
+          style="display:none;">
+
+          <label class="block text-sm mb-1">
+            Number of Year(s)
+          </label>
+
+          <select id="pnlCompareYears"
+            class="border rounded px-2 py-2 w-full">
+
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+
+          </select>
+
         </div>
-        <div class="mb-4">
-  <label for="pnlBasis" class="font-semibold">Step 0: Select Basis</label>
-  <select id="pnlBasis" class="border px-2 py-1 rounded w-full mt-1" onchange="renderProfitLoss()">
-    <option value="accrual">Accrual</option>
-    <option value="cash">Cash</option>
-  </select>
-</div>
 
-<div class="mb-4 flex gap-2">
-  <button onclick="clearBSFilters()" class="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-400">
-    🧹 Clear Filter
-  </button>
-  
-  <button onclick="renderProfitLoss()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
-    ✅ Apply Filter
-  </button>
-  
-  <button onclick="exportFilteredTableToCSV('pnlTable', 'Profit and Loss')" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">
-    ⬇️ Export CSV
-  </button>
-</div>
+        <div class="flex items-start gap-2 mb-4">
 
+          <input type="checkbox"
+            id="pnlArrangeLatest"
+            checked>
+
+          <label class="text-sm">
+            Arrange period/year from latest to oldest
+          </label>
+
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyPnlComparison()"
+            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+
+            Apply
+          </button>
+
+          <button onclick="clearPnlComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleColumnCustomizer()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+        Customize Report Columns
+      </button>
+
+      <div id="columnCustomizer"
+        class="hidden absolute z-50 mt-2 bg-white border rounded shadow-lg p-4 w-64">
+
+        <h3 class="font-semibold mb-3">
+          Show/Hide Columns
+        </h3>
+
+        <div class="space-y-2">
+
+          <label class="flex items-center gap-2">
+
+            <input type="checkbox"
+              checked
+              onchange="toggleColumn(1,this)">
+
+            Amount
+          </label>
+
+          <label class="flex items-center gap-2">
+
+            <input type="checkbox"
+              checked
+              onchange="toggleColumn(2,this)">
+
+            Total
+          </label>
+
+          <label class="flex items-center gap-2">
+
+            <input type="checkbox"
+              checked
+              onchange="toggleColumn(3,this)">
+
+            Closing Balance
+          </label>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
         <table id="pnlTable" class="w-full border border-gray-300 mt-2 text-sm">
           <thead>
             <tr class="bg-gray-100">
@@ -52515,7 +52669,189 @@ document.addEventListener("DOMContentLoaded", () => {
     ⬇️ Export Balance Sheet CSV
   </button>
 </div>
+<div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
+    <button onclick="toggleBsSubAccounts()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+
+      Sub-Accounts
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleBsCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+        Compare With : Applied ▼
+      </button>
+
+      <div id="bsCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">
+          Compare With
+        </h3>
+
+        <div class="mb-3">
+
+          <label class="block text-sm mb-1">
+            Compare Based on Period/Year
+          </label>
+
+          <select id="bsCompareType"
+            class="border rounded px-2 py-2 w-full"
+            onchange="toggleBsCompareOptions()">
+
+            <option value="">None</option>
+            <option value="previousYear">Previous Year(s)</option>
+            <option value="previousPeriod">Previous Period(s)</option>
+
+          </select>
+
+        </div>
+
+        <div class="mb-3"
+          id="bsYearsContainer"
+          style="display:none;">
+
+          <label class="block text-sm mb-1">
+            Number of Year(s)
+          </label>
+
+          <select id="bsCompareYears"
+            class="border rounded px-2 py-2 w-full">
+
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-start gap-2 mb-4">
+
+          <input type="checkbox"
+            id="bsArrangeLatest"
+            checked>
+
+          <label class="text-sm">
+            Arrange period/year from latest to oldest
+          </label>
+
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyBsComparison()"
+            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+
+            Apply
+          </button>
+
+          <button onclick="clearBsComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+
+            Cancel
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleBsColumnCustomizer()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+        Customize Report Columns
+      </button>
+
+      <div id="bsColumnCustomizer"
+        class="hidden absolute z-50 mt-2 bg-white border rounded shadow-lg p-4 w-64">
+
+        <h3 class="font-semibold mb-3">
+          Show/Hide Columns
+        </h3>
+
+        <div class="space-y-2">
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleBsColumn(1,this)">
+            Amount
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleBsColumn(2,this)">
+            Total
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleBsColumn(3,this)">
+            Closing Balance
+          </label>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleBsSettingsDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+        Settings ⚙️
+      </button>
+
+      <div id="bsSettingsDropdown"
+        class="hidden absolute z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">
+          Settings
+        </h3>
+
+        <div class="mb-3">
+
+          <label class="block text-sm mb-1">
+            Account View
+          </label>
+
+          <select id="bsAccountFilter"
+            class="border rounded px-2 py-2 w-full">
+
+            <option value="all">All Accounts</option>
+            <option value="withBalance">Accounts With Balance</option>
+            <option value="zeroBalance">Accounts With Zero Balance</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyBsSettings()"
+            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+
+            Apply
+          </button>
+
+          <button onclick="clearBsSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+
+            Reset
+
+          </button>
+        </div>
+      </div>
+    </div>
+</div>
 <table id="balanceSheetTable" class="w-full border border-gray-300 mt-2 text-sm">
   <thead>
     <tr class="bg-gray-100">
@@ -52756,6 +53092,171 @@ document.addEventListener("DOMContentLoaded", () => {
   <button onclick="exportFilteredTableToCSV('cashFlowTable', 'Cash Flow')" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">
     ⬇️ Export Cash Flow CSV
   </button>
+</div>
+<div class="mb-4 flex items-center gap-2">
+
+  <button onclick="toggleCfSubAccounts()"
+    class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+    Sub-Accounts
+  </button>
+
+  <div class="relative">
+
+    <button onclick="toggleCfCompareDropdown()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Compare With : Applied ▼
+    </button>
+
+    <div id="cfCompareDropdown"
+      class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+      <h3 class="font-semibold mb-3">Compare With</h3>
+
+      <div class="mb-3">
+
+        <label class="block text-sm mb-1">
+          Compare Based on Period/Year
+        </label>
+
+        <select id="cfCompareType"
+          class="border rounded px-2 py-2 w-full"
+          onchange="toggleCfCompareOptions()">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year(s)</option>
+          <option value="previousPeriod">Previous Period(s)</option>
+
+        </select>
+
+      </div>
+
+      <div class="mb-3" id="cfYearsContainer" style="display:none;">
+
+        <label class="block text-sm mb-1">
+          Number of Year(s)
+        </label>
+
+        <select id="cfCompareYears"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+
+        </select>
+
+      </div>
+
+      <div class="flex items-start gap-2 mb-4">
+
+        <input type="checkbox" id="cfArrangeLatest" checked>
+
+        <label class="text-sm">
+          Arrange period/year from latest to oldest
+        </label>
+
+      </div>
+
+      <div class="flex gap-2">
+
+        <button onclick="applyCfComparison()"
+          class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+          Apply
+        </button>
+
+        <button onclick="clearCfComparison()"
+          class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+          Cancel
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="relative">
+
+    <button onclick="toggleCfColumnCustomizer()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Customize Report Columns
+    </button>
+
+    <div id="cfColumnCustomizer"
+      class="hidden absolute z-50 mt-2 bg-white border rounded shadow-lg p-4 w-64">
+
+      <h3 class="font-semibold mb-3">Show/Hide Columns</h3>
+
+      <div class="space-y-2">
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleCfColumn(1,this)">
+          Amount
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleCfColumn(2,this)">
+          Total
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleCfColumn(3,this)">
+          Closing Balance
+        </label>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="relative">
+
+    <button onclick="toggleCfSettingsDropdown()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Settings ⚙️
+    </button>
+
+    <div id="cfSettingsDropdown"
+      class="hidden absolute z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+      <h3 class="font-semibold mb-3">Settings</h3>
+
+      <div class="mb-3">
+
+        <label class="block text-sm mb-1">Account View</label>
+
+        <select id="cfAccountFilter"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="all">All Accounts</option>
+          <option value="withBalance">Accounts With Balance</option>
+          <option value="zeroBalance">Accounts With Zero Balance</option>
+
+        </select>
+
+      </div>
+
+      <div class="flex gap-2">
+
+        <button onclick="applyCfSettings()"
+          class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+          Apply
+        </button>
+
+        <button onclick="clearCfSettings()"
+          class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+          Reset
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
 </div>
 
   <table id="cashFlowTable" class="w-full border border-gray-300 mt-2 text-sm">
@@ -57352,65 +57853,562 @@ function clearReportFilter(prefix) {
     case "vat": renderVatSummary(); break;
   }
 }
-
 function renderProfitLoss() {
+
+  const compareType =
+    document.getElementById("pnlCompareType")?.value || "";
+
+  const compareYears =
+    parseInt(
+      document.getElementById("pnlCompareYears")?.value || 1
+    );
+
   const filtered = applyReportFilter(pnlData, {
     dateField: "date",
     monthId: "pnlSummaryMonth",
     startDateId: "pnlStartDate",
     endDateId: "pnlEndDate"
   });
-  const tbody = document.getElementById("pnlTable").querySelector("tbody");
+
+  const tbody =
+    document.getElementById("pnlTable")
+      .querySelector("tbody");
+
   tbody.innerHTML = "";
+
+  let currentTotal = 0;
+  let comparisonTotal = 0;
+
   filtered.forEach(row => {
-    const tr = document.createElement("tr");
+
+    currentTotal += Number(row.total || 0);
+
+    let comparisonValue = 0;
+
+    if (compareType === "previousYear") {
+
+      const currentYear =
+        new Date(row.date).getFullYear();
+
+      for (let i = 1; i <= compareYears; i++) {
+
+        const previousYear =
+          currentYear - i;
+
+        const previousRows =
+          pnlData.filter(p =>
+            new Date(p.date).getFullYear() === previousYear &&
+            p.item === row.item
+          );
+
+        comparisonValue += previousRows.reduce(
+          (sum, p) => sum + Number(p.total || 0),
+          0
+        );
+      }
+
+    } else if (compareType === "previousPeriod") {
+
+      const currentDate =
+        new Date(row.date);
+
+      const previousMonth =
+        currentDate.getMonth() - 1;
+
+      const previousRows =
+        pnlData.filter(p => {
+
+          const d = new Date(p.date);
+
+          return (
+            d.getMonth() === previousMonth &&
+            d.getFullYear() === currentDate.getFullYear() &&
+            p.item === row.item
+          );
+        });
+
+      comparisonValue =
+        previousRows.reduce(
+          (sum, p) => sum + Number(p.total || 0),
+          0
+        );
+    }
+
+    comparisonTotal += comparisonValue;
+
+    const variance =
+      Number(row.total || 0) - comparisonValue;
+
+    const tr =
+      document.createElement("tr");
+
+    tr.className =
+      row.subAccount
+        ? "sub-account-row"
+        : "";
+
     tr.innerHTML = `
-      <td class="border px-2 py-1">${row.item}</td>
-      <td class="border px-2 py-1 text-right">${row.amount.toFixed(2)}</td>
-      <td class="border px-2 py-1 text-right">${row.total.toFixed(2)}</td>
+      <td class="border px-2 py-1">
+        ${row.item}
+      </td>
+
+      <td class="border px-2 py-1 text-right">
+        ${Number(row.amount || 0).toLocaleString(undefined,{
+          minimumFractionDigits:2
+        })}
+      </td>
+
+      <td class="border px-2 py-1 text-right">
+        ${Number(row.total || 0).toLocaleString(undefined,{
+          minimumFractionDigits:2
+        })}
+      </td>
+
+      <td class="border px-2 py-1 text-right">
+        ${comparisonValue.toLocaleString(undefined,{
+          minimumFractionDigits:2
+        })}
+      </td>
     `;
+
     tbody.appendChild(tr);
+
+    if (variance !== 0) {
+
+      const varianceRow =
+        document.createElement("tr");
+
+      varianceRow.className =
+        "bg-gray-50 text-blue-700 sub-account-row";
+
+      varianceRow.innerHTML = `
+        <td class="border px-2 py-1 pl-8">
+          Variance
+        </td>
+
+        <td class="border px-2 py-1"></td>
+
+        <td class="border px-2 py-1"></td>
+
+        <td class="border px-2 py-1 text-right font-semibold">
+          ${variance.toLocaleString(undefined,{
+            minimumFractionDigits:2
+          })}
+        </td>
+      `;
+
+      tbody.appendChild(varianceRow);
+    }
+
+  });
+
+  const totalVariance =
+    currentTotal - comparisonTotal;
+
+  const totalRow =
+    document.createElement("tr");
+
+  totalRow.className =
+    "font-bold bg-gray-100";
+
+  totalRow.innerHTML = `
+    <td class="border px-2 py-1">
+      Grand Total
+    </td>
+
+    <td class="border px-2 py-1"></td>
+
+    <td class="border px-2 py-1 text-right">
+      ${currentTotal.toLocaleString(undefined,{
+        minimumFractionDigits:2
+      })}
+    </td>
+
+    <td class="border px-2 py-1 text-right">
+      ${comparisonTotal.toLocaleString(undefined,{
+        minimumFractionDigits:2
+      })}
+    </td>
+  `;
+
+  tbody.appendChild(totalRow);
+
+  const varianceTotalRow =
+    document.createElement("tr");
+
+  varianceTotalRow.className =
+    "font-bold text-green-700";
+
+  varianceTotalRow.innerHTML = `
+    <td class="border px-2 py-1">
+      Net Variance
+    </td>
+
+    <td class="border px-2 py-1"></td>
+
+    <td class="border px-2 py-1"></td>
+
+    <td class="border px-2 py-1 text-right">
+      ${totalVariance.toLocaleString(undefined,{
+        minimumFractionDigits:2
+      })}
+    </td>
+  `;
+
+  tbody.appendChild(varianceTotalRow);
+}
+
+function toggleCompareDropdown() {
+
+  document.getElementById("compareDropdown")
+    .classList.toggle("hidden");
+}
+
+function toggleColumnCustomizer() {
+
+  document.getElementById("columnCustomizer")
+    .classList.toggle("hidden");
+}
+
+function togglePnlCompareOptions() {
+
+  const type =
+    document.getElementById("pnlCompareType").value;
+
+  const yearsBox =
+    document.getElementById("pnlYearsContainer");
+
+  yearsBox.style.display =
+    type === "previousYear"
+      ? "block"
+      : "none";
+}
+
+function applyPnlComparison() {
+
+  document.getElementById("compareDropdown")
+    .classList.add("hidden");
+
+  renderProfitLoss();
+}
+
+function clearPnlComparison() {
+
+  document.getElementById("pnlCompareType").value = "";
+
+  document.getElementById("pnlCompareYears").value = "1";
+
+  document.getElementById("pnlArrangeLatest").checked = true;
+
+  document.getElementById("compareDropdown")
+    .classList.add("hidden");
+
+  renderProfitLoss();
+}
+
+function toggleSubAccounts() {
+
+  document.querySelectorAll(".sub-account-row")
+    .forEach(row => {
+
+      row.classList.toggle("hidden");
+    });
+}
+
+function toggleColumn(columnIndex, checkbox) {
+
+  const table =
+    document.getElementById("pnlTable");
+
+  const rows =
+    table.querySelectorAll("tr");
+
+  rows.forEach(row => {
+
+    const cells = row.children;
+
+    if (cells[columnIndex]) {
+
+      cells[columnIndex].style.display =
+        checkbox.checked
+          ? ""
+          : "none";
+    }
   });
 }
 
+
+let bsState = {
+  compare: null,
+  columns: {
+    1: true,
+    2: true,
+    3: true
+  },
+  accountFilter: "all",
+  subAccounts: true
+};
+
+function closeBsDropdowns() {
+  document.getElementById("bsCompareDropdown").classList.add("hidden");
+  document.getElementById("bsColumnCustomizer").classList.add("hidden");
+  document.getElementById("bsSettingsDropdown").classList.add("hidden");
+}
+
 function renderBalanceSheet() {
+
   const filtered = applyReportFilter(bsData, {
     dateField: "date",
     monthId: "bsSummaryMonth",
     startDateId: "bsStartDate",
     endDateId: "bsEndDate"
   });
+
+  let finalData = filtered;
+
+  const accountFilter = bsState.accountFilter;
+
+  if (accountFilter === "withBalance") {
+    finalData = finalData.filter(row =>
+      (row.amount || 0) !== 0 || (row.total || 0) !== 0
+    );
+  }
+
+  if (accountFilter === "zeroBalance") {
+    finalData = finalData.filter(row =>
+      (row.amount || 0) === 0 && (row.total || 0) === 0
+    );
+  }
+
   const tbody = document.getElementById("balanceSheetTable").querySelector("tbody");
   tbody.innerHTML = "";
-  filtered.forEach(row => {
+
+  finalData.forEach(row => {
+
     const tr = document.createElement("tr");
+
+    const amount = bsState.columns[1] ? (row.amount || 0).toFixed(2) : "";
+    const total = bsState.columns[2] ? (row.total || 0).toFixed(2) : "";
+    const closing = bsState.columns[3] ? (row.total || 0).toFixed(2) : "";
+
     tr.innerHTML = `
       <td class="border px-2 py-1">${row.item}</td>
-      <td class="border px-2 py-1 text-right">${row.amount.toFixed(2)}</td>
-      <td class="border px-2 py-1 text-right">${row.total.toFixed(2)}</td>
+      <td class="border px-2 py-1 text-right">${amount}</td>
+      <td class="border px-2 py-1 text-right">${total}</td>
+      <td class="border px-2 py-1 text-right">${closing}</td>
     `;
+
     tbody.appendChild(tr);
   });
 }
 
+function toggleBsCompareDropdown() {
+  const el = document.getElementById("bsCompareDropdown");
+  const isOpen = !el.classList.contains("hidden");
+  closeBsDropdowns();
+  if (!isOpen) el.classList.remove("hidden");
+}
+
+function toggleBsCompareOptions() {
+  const type = document.getElementById("bsCompareType").value;
+  document.getElementById("bsYearsContainer").style.display =
+    type === "previousYear" ? "block" : "none";
+}
+
+function applyBsComparison() {
+  bsState.compare = {
+    type: document.getElementById("bsCompareType").value,
+    years: document.getElementById("bsCompareYears").value,
+    latest: document.getElementById("bsArrangeLatest").checked
+  };
+
+  renderBalanceSheet();
+  document.getElementById("bsCompareDropdown").classList.add("hidden");
+}
+
+function clearBsComparison() {
+  document.getElementById("bsCompareType").value = "";
+  document.getElementById("bsCompareYears").value = "1";
+  document.getElementById("bsArrangeLatest").checked = true;
+
+  bsState.compare = null;
+
+  renderBalanceSheet();
+  document.getElementById("bsCompareDropdown").classList.add("hidden");
+}
+
+function toggleBsColumnCustomizer() {
+  const el = document.getElementById("bsColumnCustomizer");
+  const isOpen = !el.classList.contains("hidden");
+  closeBsDropdowns();
+  if (!isOpen) el.classList.remove("hidden");
+}
+
+function toggleBsColumn(index, el) {
+  bsState.columns[index] = el.checked;
+  renderBalanceSheet();
+}
+
+function toggleBsSettingsDropdown() {
+  const el = document.getElementById("bsSettingsDropdown");
+  const isOpen = !el.classList.contains("hidden");
+  closeBsDropdowns();
+  if (!isOpen) el.classList.remove("hidden");
+}
+
+function applyBsSettings() {
+  bsState.accountFilter = document.getElementById("bsAccountFilter").value;
+  renderBalanceSheet();
+  document.getElementById("bsSettingsDropdown").classList.add("hidden");
+}
+
+function clearBsSettings() {
+  document.getElementById("bsAccountFilter").value = "all";
+  bsState.accountFilter = "all";
+  renderBalanceSheet();
+  document.getElementById("bsSettingsDropdown").classList.add("hidden");
+}
+
+function toggleBsSubAccounts() {
+  bsState.subAccounts = !bsState.subAccounts;
+  renderBalanceSheet();
+}
+
+let cfState = {
+  compare: null,
+  columns: {
+    1: true,
+    2: true,
+    3: true
+  },
+  accountFilter: "all",
+  subAccounts: true
+};
+
+function closeCfDropdowns() {
+  document.getElementById("cfCompareDropdown").classList.add("hidden");
+  document.getElementById("cfColumnCustomizer").classList.add("hidden");
+  document.getElementById("cfSettingsDropdown").classList.add("hidden");
+}
+
 function renderCashFlow() {
+
   const filtered = applyReportFilter(cfData, {
     dateField: "date",
     monthId: "cfSummaryMonth",
     startDateId: "cfStartDate",
     endDateId: "cfEndDate"
   });
+
+  let finalData = filtered;
+
+  const accountFilter = cfState.accountFilter;
+
+  if (accountFilter === "withBalance") {
+    finalData = finalData.filter(row =>
+      (row.amount || 0) !== 0 || (row.total || 0) !== 0
+    );
+  }
+
+  if (accountFilter === "zeroBalance") {
+    finalData = finalData.filter(row =>
+      (row.amount || 0) === 0 && (row.total || 0) === 0
+    );
+  }
+
   const tbody = document.getElementById("cashFlowTable").querySelector("tbody");
   tbody.innerHTML = "";
-  filtered.forEach(row => {
+
+  finalData.forEach(row => {
+
     const tr = document.createElement("tr");
+
+    const amount = cfState.columns[1] ? (row.amount || 0).toFixed(2) : "";
+    const total = cfState.columns[2] ? (row.total || 0).toFixed(2) : "";
+    const closing = cfState.columns[3] ? (row.total || 0).toFixed(2) : "";
+
     tr.innerHTML = `
       <td class="border px-2 py-1">${row.item}</td>
-      <td class="border px-2 py-1 text-right">${row.amount.toFixed(2)}</td>
-      <td class="border px-2 py-1 text-right">${row.total.toFixed(2)}</td>
+      <td class="border px-2 py-1 text-right">${amount}</td>
+      <td class="border px-2 py-1 text-right">${total}</td>
+      <td class="border px-2 py-1 text-right">${closing}</td>
     `;
+
     tbody.appendChild(tr);
+
   });
+}
+
+function toggleCfCompareDropdown() {
+  const el = document.getElementById("cfCompareDropdown");
+  const isOpen = !el.classList.contains("hidden");
+  closeCfDropdowns();
+  if (!isOpen) el.classList.remove("hidden");
+}
+
+function toggleCfCompareOptions() {
+  const type = document.getElementById("cfCompareType").value;
+  document.getElementById("cfYearsContainer").style.display =
+    type === "previousYear" ? "block" : "none";
+}
+
+function applyCfComparison() {
+  cfState.compare = {
+    type: document.getElementById("cfCompareType").value,
+    years: document.getElementById("cfCompareYears").value,
+    latest: document.getElementById("cfArrangeLatest").checked
+  };
+
+  renderCashFlow();
+  document.getElementById("cfCompareDropdown").classList.add("hidden");
+}
+
+function clearCfComparison() {
+  document.getElementById("cfCompareType").value = "";
+  document.getElementById("cfCompareYears").value = "1";
+  document.getElementById("cfArrangeLatest").checked = true;
+
+  cfState.compare = null;
+
+  renderCashFlow();
+  document.getElementById("cfCompareDropdown").classList.add("hidden");
+}
+
+function toggleCfColumnCustomizer() {
+  const el = document.getElementById("cfColumnCustomizer");
+  const isOpen = !el.classList.contains("hidden");
+  closeCfDropdowns();
+  if (!isOpen) el.classList.remove("hidden");
+}
+
+function toggleCfColumn(index, el) {
+  cfState.columns[index] = el.checked;
+  renderCashFlow();
+}
+
+function toggleCfSettingsDropdown() {
+  const el = document.getElementById("cfSettingsDropdown");
+  const isOpen = !el.classList.contains("hidden");
+  closeCfDropdowns();
+  if (!isOpen) el.classList.remove("hidden");
+}
+
+function applyCfSettings() {
+  cfState.accountFilter = document.getElementById("cfAccountFilter").value;
+  renderCashFlow();
+  document.getElementById("cfSettingsDropdown").classList.add("hidden");
+}
+
+function clearCfSettings() {
+  document.getElementById("cfAccountFilter").value = "all";
+  cfState.accountFilter = "all";
+  renderCashFlow();
+  document.getElementById("cfSettingsDropdown").classList.add("hidden");
+}
+
+function toggleCfSubAccounts() {
+  cfState.subAccounts = !cfState.subAccounts;
+  renderCashFlow();
 }
 
 function renderVatSummary() {
@@ -57434,7 +58432,95 @@ function renderVatSummary() {
     salesBody.appendChild(tr);
   });
 }
+function toggleCompareDropdown() {
 
+  document.getElementById("compareDropdown")
+    ?.classList.toggle("hidden");
+}
+
+function toggleColumnCustomizer() {
+
+  document.getElementById("columnCustomizer")
+    ?.classList.toggle("hidden");
+}
+
+function togglePnlCompareOptions() {
+
+  const type =
+    document.getElementById("pnlCompareType")?.value;
+
+  const yearsBox =
+    document.getElementById("pnlYearsContainer");
+
+  if (!yearsBox) return;
+
+  yearsBox.style.display =
+    type === "previousYear"
+      ? "block"
+      : "none";
+}
+
+function applyPnlComparison() {
+
+  document.getElementById("compareDropdown")
+    ?.classList.add("hidden");
+
+  renderReports();
+}
+
+function clearPnlComparison() {
+
+  const compareType =
+    document.getElementById("pnlCompareType");
+
+  const compareYears =
+    document.getElementById("pnlCompareYears");
+
+  const arrangeLatest =
+    document.getElementById("pnlArrangeLatest");
+
+  if (compareType) compareType.value = "";
+  if (compareYears) compareYears.value = "1";
+  if (arrangeLatest) arrangeLatest.checked = true;
+
+  document.getElementById("compareDropdown")
+    ?.classList.add("hidden");
+
+  renderReports();
+}
+
+function toggleSubAccounts() {
+
+  document.querySelectorAll(".sub-account-row")
+    .forEach(row => {
+
+      row.classList.toggle("hidden");
+    });
+}
+
+function toggleColumn(columnIndex, checkbox) {
+
+  const table =
+    document.getElementById("pnlTable");
+
+  if (!table) return;
+
+  const rows =
+    table.querySelectorAll("tr");
+
+  rows.forEach(row => {
+
+    const cells = row.children;
+
+    if (cells[columnIndex]) {
+
+      cells[columnIndex].style.display =
+        checkbox.checked
+          ? ""
+          : "none";
+    }
+  });
+}
 function renderReports() {
   const month = document.getElementById('pnlSummaryMonth')?.value;
   const startDate = document.getElementById('pnlStartDate')?.value;
@@ -57460,19 +58546,30 @@ function renderReports() {
   const expenses = operationalCosts;
 
   if (month) {
-    const [y, m] = month.split('-').map(Number);
-    const start = new Date(y, m - 1, 1);
-    const end = new Date(y, m, 0);
-    const inMonth = d => {
-      const dt = new Date(d);
-      return dt >= start && dt <= end;
-    };
-    invoices = invoices.filter(i => inMonth(i.date));
-    bills = bills.filter(b => inMonth(b.date));
-    operationalCosts = operationalCosts.filter(c => inMonth(c.date));
-    payrollRecords = payrollRecords.filter(p => inMonth(p.date));
-    taxes = taxes.filter(t => inMonth(t.date));
-  }
+  const [y, m] = month.split('-').map(Number);
+  const start = new Date(y, m - 1, 1);
+  const end = new Date(y, m, 0);
+
+  const parseDateSafe = (d) => {
+    const dt = new Date(d);
+    return isNaN(dt.getTime()) ? null : dt;
+  };
+
+  const inMonth = d => {
+    const dt = parseDateSafe(d);
+    if (!dt) return false;
+
+    dt.setHours(0, 0, 0, 0);
+
+    return dt >= start && dt <= end;
+  };
+
+  invoices = invoices.filter(i => inMonth(i.date));
+  bills = bills.filter(b => inMonth(b.date));
+  operationalCosts = operationalCosts.filter(c => inMonth(c.date));
+  payrollRecords = payrollRecords.filter(p => inMonth(p.date));
+  taxes = taxes.filter(t => inMonth(t.date));
+}
 
   if (startDate && endDate) {
     const start = new Date(startDate);
@@ -57610,6 +58707,25 @@ updateText('pnlProfitBeforeTax', profitBeforeTax);
 updateText('pnlIncomeTax', incomeTax);
 updateText('pnlProfit', netProfit);
 
+updateText('closingRevenue', revenue);
+updateText('closingOtherIncomes', otherIncomeTotal);
+updateText('closingDiscount', discountTotal);
+updateText('closingCogs', cogs);
+updateText('closingBadDebts', badDebts);
+updateText('closingGrossProfit', grossProfit);
+
+updateText('closingBills', billTotal);
+updateText('closingDepreciation', depreciation);
+updateText('closingInterest', interestPaid);
+updateText('closingExpenses', operationalCostsTotal);
+updateText('closingPayroll', payrollTotal);
+updateText('closingCurrencyAdjustment', currencyAdjustment);
+
+updateText('closingTaxes', taxTotal);
+updateText('closingProfitBeforeTax', profitBeforeTax);
+updateText('closingIncomeTax', incomeTax);
+updateText('closingProfit', netProfit);
+
 
 const pnlTaxesBreakdown = document.getElementById("pnlTaxesBreakdown");
 if (pnlTaxesBreakdown) {
@@ -57654,16 +58770,31 @@ if (pnlOperationalCostsBreakdown) {
   });
 }
 
-updateText('bsRevenue', revenue);     
+updateText('bsRevenue', revenue);
+updateText('closingBsRevenue', revenue);
+
 updateText('bsBanks', bankValue);
+updateText('closingBsBanks', bankValue);
+
 updateText('bsInventory', inventoryValue);
+updateText('closingBsInventory', inventoryValue);
+
 updateText('bsCurrentAssets', currentAssets);
+updateText('closingBsCurrentAssets', currentAssets);
+
 updateText('bsBadDebts', badDebts);
+updateText('closingBsBadDebts', badDebts);
+
 updateText('bsDepreciation', depreciation);
+updateText('closingBsDepreciation', depreciation);
+
 updateText('bsNonCurrentAssetsTotal', adjustedNonCurrentAssets);
+updateText('closingBsNonCurrentAssetsTotal', adjustedNonCurrentAssets);
 
 const adjustedTotalAssets = currentAssets + adjustedNonCurrentAssets;
+
 updateText('bsTotalAssets', adjustedTotalAssets);
+updateText('closingBsTotalAssets', adjustedTotalAssets);
 
 const bsDepreciationBreakdown = document.getElementById("bsDepreciationBreakdown");
 if (bsDepreciationBreakdown) {
@@ -57708,6 +58839,7 @@ if (bsBanksBreakdown) {
 }
 
 updateText("bsBanks", totalBankValue);
+updateText("closingBsBanks", totalBankValue);
 
   const bsNonCurrentAssetsBreakdown = document.getElementById("bsNonCurrentAssetsBreakdown");
   if (bsNonCurrentAssetsBreakdown) {
@@ -57724,12 +58856,25 @@ updateText("bsBanks", totalBankValue);
   }
 
 updateText('bsBills', billTotal);
+updateText('closingBsBills', billTotal);
+
 updateText('bsExpenses', operationalCostsTotal);
+updateText('closingBsExpenses', operationalCostsTotal);
+
 updateText('bsPayroll', payrollTotal);
+updateText('closingBsPayroll', payrollTotal);
+
 updateText('bsTaxes', taxTotal);
+updateText('closingBsTaxes', taxTotal);
+
 updateText('bsCurrentLiabilities', currentLiabilities);
+updateText('closingBsCurrentLiabilities', currentLiabilities);
+
 updateText('bsNonCurrentLiabilitiesTotal', nonCurrentLiabilityValue);
+updateText('closingBsNonCurrentLiabilitiesTotal', nonCurrentLiabilityValue);
+
 updateText('bsTotalLiabilities', totalLiabilities);
+updateText('closingBsTotalLiabilities', totalLiabilities);
 
 const bsNonCurrentLiabilitiesBreakdown = document.getElementById("bsNonCurrentLiabilitiesBreakdown");
 if (bsNonCurrentLiabilitiesBreakdown) {
@@ -57778,10 +58923,13 @@ if (bsEquityBreakdown) {
 }
 
 updateText('bsEquity', totalEquityValue);
+updateText('closingBsEquity', totalEquityValue);
 
 const totalLiabilitiesAndEquity =
   parseFloatSafe(totalLiabilities) + totalEquityValue;
+
 updateText('bsTotalLiabilitiesEquity', totalLiabilitiesAndEquity);
+updateText('closingBsTotalLiabilitiesEquity', totalLiabilitiesAndEquity);
 
 function renderCashFlow() {
   const parseSafe = (val) => parseFloat(val) || 0;
