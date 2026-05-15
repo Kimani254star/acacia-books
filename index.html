@@ -35157,36 +35157,7 @@ function resetTaxForm() {
 }
 
 resetTaxForm();
-function renderTaxesReport() {
-  const taxPayments = JSON.parse(localStorage.getItem("taxPayments") || "[]");
-  const table = document.getElementById("taxesTable");
-  if (!table) return;
 
-  table.innerHTML = "";
-
-  let runningBalance = 0;
-  let grandTotal = 0;
-
-  taxPayments.forEach(entry => {
-    const amount = parseFloat(entry.amount) || 0;
-    runningBalance += amount;
-    grandTotal += amount;
-
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td class="p-2">${entry.date || '-'}</td>
-      <td class="p-2">${entry.type || '-'}</td>
-      <td class="p-2 text-right">KES ${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-      <td class="p-2">${entry.status || 'Paid'}</td>
-      <td class="p-2">${entry.reference || '-'}</td>
-      <td class="p-2 text-right">KES ${runningBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-    `;
-    table.appendChild(row);
-  });
-
-  const totalEl = document.getElementById("taxesGrandTotal");
-  if (totalEl) totalEl.textContent = `KES ${grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-}
 
 document.addEventListener('DOMContentLoaded', () => {
   populateTaxBanks();
@@ -54919,54 +54890,388 @@ Export CSV
 </div>
 
 <div class="bg-white rounded shadow mb-4">
+
   <div id="accountsPayablePanel" class="report-view hidden p-4 border-t">
-    <h2 class="text-xl font-semibold mb-4">📦 Account Paybles Report</h2>
+
+    <h2 class="text-xl font-semibold mb-4">
+      📦 Account Payables Report
+    </h2>
+
     <div class="flex items-center gap-2 mb-2">
-      <label for="accountsPayableMonth" class="font-medium">Select Month:</label>
-      <input type="month" id="accountsPayableMonth" class="border px-2 py-1 rounded w-full" onchange="renderAccountsPayable()">
+
+      <label for="accountsPayableMonth" class="font-medium">
+        Select Month:
+      </label>
+
+      <input type="month"
+        id="accountsPayableMonth"
+        class="border px-2 py-1 rounded w-full"
+        onchange="renderAccountsPayable()">
+
     </div>
 
     <div class="flex items-center gap-2 mb-4">
-      <label class="font-medium">Or Date Range:</label>
-      <input type="date" id="accountsPayableStartDate" class="border px-2 py-1 rounded" onchange="renderAccountsPayable()">
-      <input type="date" id="accountsPayableEndDate" class="border px-2 py-1 rounded" onchange="renderAccountsPayable()">
+
+      <label class="font-medium">
+        Or Date Range:
+      </label>
+
+      <input type="date"
+        id="accountsPayableStartDate"
+        class="border px-2 py-1 rounded"
+        onchange="renderAccountsPayable()">
+
+      <input type="date"
+        id="accountsPayableEndDate"
+        class="border px-2 py-1 rounded"
+        onchange="renderAccountsPayable()">
+
     </div>
-<div class="mb-4 flex items-center gap-2">
-  <button onclick="renderAccountsPayable()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
-    ✅ Apply Filter
-  </button>
-  <button onclick="exportFilteredTableToCSV('accountsPayable', 'Accounts Payable', 'accountsPayableMonth')" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
-    ⬇️ Export CSV
-  </button>
-</div>
+
+    <div class="mb-4 flex gap-2">
+
+      <button onclick="renderAccountsPayable()"
+        class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+        ✅ Apply Filter
+      </button>
+
+      <button onclick="clearAccountsPayableFilters(); renderAccountsPayable();"
+        class="px-1 py-1 bg-gray-300 text-black rounded hover:bg-gray-400">
+        ❌ Clear Filters
+      </button>
+
+      <button onclick="exportFilteredTableToCSV('accountsPayable', 'Accounts Payable', 'accountsPayableMonth')"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800 mb-2">
+        ⬇️ Export CSV
+      </button>
+
+    </div>
+
+    <div class="mb-4 flex flex-wrap items-center gap-2 border-b pb-3">
+
+      <div class="relative">
+
+        <button onclick="toggleApGroupByDropdown()"
+          class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+          Group By ▼
+        </button>
+
+        <div id="apGroupByDropdown"
+          class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+          <h3 class="font-semibold mb-3">
+            Group By
+          </h3>
+
+          <select id="apGroupBy"
+            class="border rounded px-2 py-2 w-full"
+            onchange="renderAccountsPayable()">
+
+            <option value="supplier">Supplier</option>
+            <option value="branch">Branch</option>
+            <option value="currency">Currency</option>
+            <option value="category">Category</option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleApShowByDropdown()"
+          class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+          Show By ▼
+        </button>
+
+        <div id="apShowByDropdown"
+          class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+          <h3 class="font-semibold mb-3">
+            Show By
+          </h3>
+
+          <select id="apShowBy"
+            class="border rounded px-2 py-2 w-full"
+            onchange="renderAccountsPayable()">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+            <option value="bill">Bill Wise</option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleApAgingDropdown()"
+          class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+          Aging Intervals ▼
+        </button>
+
+        <div id="apAgingDropdown"
+          class="hidden absolute z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+          <h3 class="font-semibold mb-3">
+            Aging Intervals
+          </h3>
+
+          <div class="space-y-2 max-h-80 overflow-y-auto">
+
+            <label class="flex items-center gap-2">
+              <input type="radio" name="apAging" value="7"
+                onchange="renderAccountsPayable()">
+              30 X 7 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="radio" name="apAging" value="10"
+                onchange="renderAccountsPayable()">
+              18 X 10 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="radio" name="apAging" value="15"
+                onchange="renderAccountsPayable()">
+              12 X 15 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="radio" name="apAging" value="20"
+                onchange="renderAccountsPayable()">
+              9 X 20 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="radio" name="apAging" value="30" checked
+                onchange="renderAccountsPayable()">
+              6 X 30 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="radio" name="apAging" value="45"
+                onchange="renderAccountsPayable()">
+              4 X 45 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="radio" name="apAging" value="60"
+                onchange="renderAccountsPayable()">
+              3 X 60 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="radio" name="apAging" value="90"
+                onchange="renderAccountsPayable()">
+              2 X 90 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="radio" name="apAging" value="120"
+                onchange="renderAccountsPayable()">
+              180 + 120 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="radio" name="apAging" value="365"
+                onchange="renderAccountsPayable()">
+              Yearly Aging
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="radio" name="apAging" value="custom"
+                onchange="toggleCustomApIntervals()">
+              Custom Intervals
+            </label>
+
+            <div id="customApIntervalsBox"
+              class="hidden border rounded p-3 bg-gray-50 mt-2">
+
+              <label class="block text-sm mb-2 font-medium">
+                Enter Interval Days
+              </label>
+
+              <div class="grid grid-cols-2 gap-2">
+
+                <input type="number" id="apCustom1"
+                  class="border rounded px-2 py-1"
+                  placeholder="Interval 1">
+
+                <input type="number" id="apCustom2"
+                  class="border rounded px-2 py-1"
+                  placeholder="Interval 2">
+
+                <input type="number" id="apCustom3"
+                  class="border rounded px-2 py-1"
+                  placeholder="Interval 3">
+
+                <input type="number" id="apCustom4"
+                  class="border rounded px-2 py-1"
+                  placeholder="Interval 4">
+
+                <input type="number" id="apCustom5"
+                  class="border rounded px-2 py-1"
+                  placeholder="Interval 5">
+
+                <input type="number" id="apCustom6"
+                  class="border rounded px-2 py-1"
+                  placeholder="Interval 6">
+
+              </div>
+
+              <button onclick="renderAccountsPayable()"
+                class="mt-3 bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+                Apply Custom Aging
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleApColumnCustomizer()"
+          class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+          Customize Report Columns
+        </button>
+
+        <div id="apColumnCustomizer"
+          class="hidden absolute z-50 mt-2 bg-white border rounded shadow-lg p-4 w-72">
+
+          <h3 class="font-semibold mb-3">
+            Show/Hide Columns
+          </h3>
+
+          <div class="space-y-2">
+
+            <label class="flex items-center gap-2">
+              <input type="checkbox" checked onchange="toggleApColumn(1,this)">
+              Current
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="checkbox" checked onchange="toggleApColumn(2,this)">
+              1–30 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="checkbox" checked onchange="toggleApColumn(3,this)">
+              31–60 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="checkbox" checked onchange="toggleApColumn(4,this)">
+              61–90 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="checkbox" checked onchange="toggleApColumn(5,this)">
+              91–120 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="checkbox" checked onchange="toggleApColumn(6,this)">
+              121–150 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="checkbox" checked onchange="toggleApColumn(7,this)">
+              >150 Days
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="checkbox" checked onchange="toggleApColumn(8,this)">
+              Total
+            </label>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
 
     <div class="overflow-x-auto">
+
       <table class="w-full border border-gray-300 text-sm border-collapse">
+
         <thead class="bg-gray-100">
+
           <tr>
+
             <th class="border px-2 py-1 text-left">Supplier</th>
+
             <th class="border px-2 py-1 text-right">Current</th>
+
             <th class="border px-2 py-1 text-right">1–30 Days</th>
+
             <th class="border px-2 py-1 text-right">31–60 Days</th>
+
             <th class="border px-2 py-1 text-right">61–90 Days</th>
+
             <th class="border px-2 py-1 text-right">91–120 Days</th>
+
             <th class="border px-2 py-1 text-right">121–150 Days</th>
+
             <th class="border px-2 py-1 text-right">&gt;150 Days</th>
+
             <th class="border px-2 py-1 text-right">Total</th>
+
           </tr>
+
         </thead>
+
         <tbody id="accountsPayable"></tbody>
+
         <tfoot>
+
           <tr class="font-bold bg-gray-100">
-            <td class="border px-2 py-1 text-right">TOTAL</td>
-            <td id="apCurrent" class="border px-2 py-1 text-right">KES 0</td>
-            <td id="ap30" class="border px-2 py-1 text-right">KES 0</td>
-            <td id="ap60" class="border px-2 py-1 text-right">KES 0</td>
-            <td id="ap90" class="border px-2 py-1 text-right">KES 0</td>
-            <td id="ap120" class="border px-2 py-1 text-right">KES 0</td>
-            <td id="ap150" class="border px-2 py-1 text-right">KES 0</td>
-            <td id="apOver150" class="border px-2 py-1 text-right">KES 0</td>
-            <td id="apTotal" class="border px-2 py-1 text-right">KES 0</td>
+
+            <td class="border px-2 py-1 text-right">
+              TOTAL
+            </td>
+
+            <td id="apCurrent" class="border px-2 py-1 text-right">
+              KES 0
+            </td>
+
+            <td id="ap30" class="border px-2 py-1 text-right">
+              KES 0
+            </td>
+
+            <td id="ap60" class="border px-2 py-1 text-right">
+              KES 0
+            </td>
+
+            <td id="ap90" class="border px-2 py-1 text-right">
+              KES 0
+            </td>
+
+            <td id="ap120" class="border px-2 py-1 text-right">
+              KES 0
+            </td>
+
+            <td id="ap150" class="border px-2 py-1 text-right">
+              KES 0
+            </td>
+
+            <td id="apOver150" class="border px-2 py-1 text-right">
+              KES 0
+            </td>
+
+            <td id="apTotal" class="border px-2 py-1 text-right">
+              KES 0
+            </td>
+
           </tr>
         </tfoot>
       </table>
@@ -55563,7 +55868,250 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   ⬇️ Export CSV
 </button>
 </div>
+<div class="mb-4 flex flex-wrap items-center gap-2 border-b pb-3">
 
+  <div class="relative">
+
+    <button onclick="toggleArGroupByDropdown()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Group By ▼
+    </button>
+
+    <div id="arGroupByDropdown"
+      class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+      <h3 class="font-semibold mb-3">Group By</h3>
+
+      <select id="arGroupBy"
+        class="border rounded px-2 py-2 w-full"
+        onchange="renderAccountsReceivable()">
+
+        <option value="customer">Customer</option>
+        <option value="salesPerson">Sales Person</option>
+        <option value="branch">Branch</option>
+        <option value="currency">Currency</option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+  <div class="relative">
+
+    <button onclick="toggleArShowByDropdown()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Show By ▼
+    </button>
+
+    <div id="arShowByDropdown"
+      class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+      <h3 class="font-semibold mb-3">Show By</h3>
+
+      <select id="arShowBy"
+        class="border rounded px-2 py-2 w-full"
+        onchange="renderAccountsReceivable()">
+
+        <option value="summary">Summary</option>
+        <option value="detailed">Detailed</option>
+        <option value="invoice">Invoice Wise</option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+<div class="relative">
+
+  <button onclick="toggleArAgingDropdown()"
+    class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+    Aging Intervals ▼
+  </button>
+
+  <div id="arAgingDropdown"
+    class="hidden absolute z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+    <h3 class="font-semibold mb-3">Aging Intervals</h3>
+
+    <div class="space-y-2 max-h-80 overflow-y-auto">
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="arAging" value="7"
+          onchange="renderAccountsReceivable()">
+        30 X 7 Days
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="arAging" value="10"
+          onchange="renderAccountsReceivable()">
+        18 X 10 Days
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="arAging" value="15"
+          onchange="renderAccountsReceivable()">
+        12 X 15 Days
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="arAging" value="20"
+          onchange="renderAccountsReceivable()">
+        9 X 20 Days
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="arAging" value="30" checked
+          onchange="renderAccountsReceivable()">
+        6 X 30 Days
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="arAging" value="45"
+          onchange="renderAccountsReceivable()">
+        4 X 45 Days
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="arAging" value="60"
+          onchange="renderAccountsReceivable()">
+        3 X 60 Days
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="arAging" value="90"
+          onchange="renderAccountsReceivable()">
+        2 X 90 Days
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="arAging" value="120"
+          onchange="renderAccountsReceivable()">
+        180 + 120 Days
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="arAging" value="365"
+          onchange="renderAccountsReceivable()">
+        Yearly Aging
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="arAging" value="custom"
+          onchange="toggleCustomArIntervals()">
+        Custom Intervals
+      </label>
+
+      <div id="customArIntervalsBox"
+        class="hidden border rounded p-3 bg-gray-50 mt-2">
+
+        <label class="block text-sm mb-2 font-medium">
+          Enter Interval Days
+        </label>
+
+        <div class="grid grid-cols-2 gap-2">
+
+          <input type="number" id="arCustom1"
+            class="border rounded px-2 py-1"
+            placeholder="Interval 1">
+
+          <input type="number" id="arCustom2"
+            class="border rounded px-2 py-1"
+            placeholder="Interval 2">
+
+          <input type="number" id="arCustom3"
+            class="border rounded px-2 py-1"
+            placeholder="Interval 3">
+
+          <input type="number" id="arCustom4"
+            class="border rounded px-2 py-1"
+            placeholder="Interval 4">
+
+          <input type="number" id="arCustom5"
+            class="border rounded px-2 py-1"
+            placeholder="Interval 5">
+
+          <input type="number" id="arCustom6"
+            class="border rounded px-2 py-1"
+            placeholder="Interval 6">
+
+        </div>
+
+        <button onclick="renderAccountsReceivable()"
+          class="mt-3 bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+          Apply Custom Aging
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+  <div class="relative">
+
+    <button onclick="toggleArColumnCustomizer()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Customize Report Columns
+    </button>
+
+    <div id="arColumnCustomizer"
+      class="hidden absolute z-50 mt-2 bg-white border rounded shadow-lg p-4 w-72">
+
+      <h3 class="font-semibold mb-3">Show/Hide Columns</h3>
+
+      <div class="space-y-2">
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleArColumn(1,this)">
+          Current
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleArColumn(2,this)">
+          1–30 Days
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleArColumn(3,this)">
+          31–60 Days
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleArColumn(4,this)">
+          61–90 Days
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleArColumn(5,this)">
+          91–120 Days
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleArColumn(6,this)">
+          121–150 Days
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleArColumn(7,this)">
+          >150 Days
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleArColumn(8,this)">
+          Total
+        </label>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 <div class="overflow-x-auto">
     <table class="w-full border border-gray-300 text-sm border-collapse">
       <thead class="bg-gray-100">
@@ -55720,37 +56268,175 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <p class="font-semibold mb-3 text-lg">Taxes Report</p>
 
   <div class="flex flex-wrap gap-3 mb-3 items-end">
+
     <div>
       <label class="text-xs font-semibold">Select Month</label>
-      <input type="month" id="taxesMonth" class="border px-2 py-1 rounded" onchange="renderTaxes()">
+      <input type="month"
+        id="taxesMonth"
+        class="border px-2 py-1 rounded"
+        onchange="renderTaxes()">
     </div>
 
     <div>
       <label class="text-xs font-semibold">Or Filter by Date Range</label>
-      <input type="date" id="taxesStart" class="border px-2 py-1 rounded" onchange="renderTaxes()">
-      <input type="date" id="taxesEnd" class="border px-2 py-1 rounded" onchange="renderTaxes()">
+      <input type="date"
+        id="taxesStart"
+        class="border px-2 py-1 rounded"
+        onchange="renderTaxes()">
+
+      <input type="date"
+        id="taxesEnd"
+        class="border px-2 py-1 rounded"
+        onchange="renderTaxes()">
     </div>
+
   </div>
 
   <div class="flex gap-2 mb-3">
+
     <button onclick="renderTaxes()"
-            class="bg-green-900 text-white font-bold px-4 py-1 rounded hover:bg-green-800">
+      class="bg-green-900 text-white font-bold px-4 py-1 rounded hover:bg-green-800">
       ✅ Apply Filter
     </button>
 
-    <button onclick="clearTaxesFilter(); renderTaxes();"
-            class="bg-gray-300 text-black font-bold px-4 py-1 rounded hover:bg-gray-400">
+    <button onclick="document.getElementById('taxesMonth').value='';document.getElementById('taxesStart').value='';document.getElementById('taxesEnd').value='';renderTaxes();"
+      class="bg-gray-300 text-black font-bold px-4 py-1 rounded hover:bg-gray-400">
       ❌ Clear Filter
     </button>
 
     <button onclick="exportFilteredTableToCSV('taxesTable', 'Taxes Report', 'taxesMonth')"
-            class="border border-green-900 text-green-900 bg-green-100 font-bold px-3 py-1 rounded hover:bg-green-200 ml-2">
+      class="border border-green-900 text-green-900 bg-green-100 font-bold px-3 py-1 rounded hover:bg-green-200 ml-2">
       ⬇️ Export CSV
     </button>
+
+  </div>
+
+  <div class="mb-4 flex flex-wrap items-center gap-2 border-b pb-3">
+
+    <div class="relative">
+
+      <button onclick="toggleTaxesGroupByDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Group By ▼
+      </button>
+
+      <div id="taxesGroupByDropdown"
+        class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Group By</h3>
+
+        <select id="taxesGroupBy"
+          class="border rounded px-2 py-2 w-full"
+          onchange="renderTaxes()">
+
+          <option value="taxType">Tax Type</option>
+          <option value="status">Status</option>
+          <option value="month">Month</option>
+          <option value="reference">Reference</option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleTaxesShowByDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Show By ▼
+      </button>
+
+      <div id="taxesShowByDropdown"
+        class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Show By</h3>
+
+        <select id="taxesShowBy"
+          class="border rounded px-2 py-2 w-full"
+          onchange="renderTaxes()">
+
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
+          <option value="monthly">Monthly</option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleTaxesColumnCustomizer()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Customize Report Columns
+      </button>
+
+      <div id="taxesColumnCustomizer"
+        class="hidden absolute z-50 mt-2 bg-white border rounded shadow-lg p-4 w-72">
+
+        <h3 class="font-semibold mb-3">Show/Hide Columns</h3>
+
+        <div class="space-y-2">
+
+  <label class="flex items-center gap-2">
+    <input type="checkbox" checked onchange="toggleTaxesColumn(0,this)">
+    Date
+  </label>
+
+  <label class="flex items-center gap-2">
+    <input type="checkbox" checked onchange="toggleTaxesColumn(1,this)">
+    Tax Type
+  </label>
+
+  <label class="flex items-center gap-2">
+    <input type="checkbox" checked onchange="toggleTaxesColumn(2,this)">
+    Amount
+  </label>
+
+  <label class="flex items-center gap-2">
+    <input type="checkbox" checked onchange="toggleTaxesColumn(3,this)">
+    Status
+  </label>
+
+  <label class="flex items-center gap-2">
+    <input type="checkbox" checked onchange="toggleTaxesColumn(4,this)">
+    Reference
+  </label>
+
+  <label class="flex items-center gap-2">
+    <input type="checkbox" checked onchange="toggleTaxesColumn(5,this)">
+    Running Balance
+  </label>
+
+  <label class="flex items-center gap-2">
+    <input type="checkbox" onchange="toggleTaxesColumn(6,this)">
+    Contact
+  </label>
+
+  <label class="flex items-center gap-2">
+    <input type="checkbox" onchange="toggleTaxesColumn(7,this)">
+    Description
+  </label>
+
+  <label class="flex items-center gap-2">
+    <input type="checkbox" onchange="toggleTaxesColumn(8,this)">
+    Closing Balance
+  </label>
+
+</div>
+
+      </div>
+
+    </div>
+
   </div>
 
   <div class="overflow-x-auto">
+
     <table class="w-full border mt-3">
+
       <thead class="bg-gray-100">
         <tr>
           <th class="p-2">Date</th>
@@ -55758,13 +56444,19 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           <th class="p-2">Amount</th>
           <th class="p-2">Status</th>
           <th class="p-2">Reference</th>
-          <th class="p-2">Running Balance</th> 
+          <th class="p-2">Running Balance</th>
+
+          <th class="p-2 tax-col hidden">Contact</th>
+          <th class="p-2 tax-col hidden">Description</th>
+          <th class="p-2 tax-col hidden">Closing Balance</th>
         </tr>
       </thead>
-      <tbody id="taxesTable"></tbody>
-    </table>
-  </div>
 
+      <tbody id="taxesTable"></tbody>
+
+    </table>
+
+  </div>
 
   <div class="mt-4 p-3 bg-gray-100 rounded font-bold flex justify-between">
     <span>Grand Total:</span>
@@ -55772,6 +56464,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   </div>
 
 </div>
+
 <div id="plansPanel" class="report-view hidden bg-white rounded shadow mb-6 p-4 border-t">
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
     <div class="flex flex-col">
@@ -55866,63 +56559,228 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
 <div id="operationalCostsPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t">
 
-  <p class="font-semibold mb-3 text-lg">Operational Costs Report</p>
+  <p class="font-semibold mb-3 text-lg">
+    Operational Costs Report
+  </p>
 
   <div class="flex flex-wrap gap-3 mb-3 items-end">
+
     <div>
-      <label class="text-xs font-semibold">Select Month</label>
-      <input type="month" id="operationalCostsMonth" class="border px-2 py-1 rounded" onchange="renderOperationalCosts()">
+
+      <label class="text-xs font-semibold">
+        Select Month
+      </label>
+
+      <input type="month"
+        id="operationalCostsMonth"
+        class="border px-2 py-1 rounded"
+        onchange="renderOperationalCosts()">
+
     </div>
 
     <div>
-      <label class="text-xs font-semibold">Or Filter by Date Range</label>
-      <input type="date" id="operationalCostsStart" class="border px-2 py-1 rounded" onchange="renderOperationalCosts()">
-      <input type="date" id="operationalCostsEnd" class="border px-2 py-1 rounded" onchange="renderOperationalCosts()">
+
+      <label class="text-xs font-semibold">
+        Or Filter by Date Range
+      </label>
+
+      <input type="date"
+        id="operationalCostsStart"
+        class="border px-2 py-1 rounded"
+        onchange="renderOperationalCosts()">
+
+      <input type="date"
+        id="operationalCostsEnd"
+        class="border px-2 py-1 rounded"
+        onchange="renderOperationalCosts()">
+
     </div>
+
   </div>
 
   <div class="flex gap-2 mb-3">
+
     <button onclick="renderOperationalCosts()"
-            class="bg-green-900 text-white font-bold px-4 py-1 rounded hover:bg-green-800">
+      class="bg-green-900 text-white font-bold px-4 py-1 rounded hover:bg-green-800">
       ✅ Apply Filter
     </button>
 
     <button onclick="clearOperationalCostsFilter(); renderOperationalCosts();"
-            class="bg-gray-300 text-black font-bold px-4 py-1 rounded hover:bg-gray-400">
+      class="bg-gray-300 text-black font-bold px-4 py-1 rounded hover:bg-gray-400">
       ❌ Clear Filter
     </button>
 
     <button onclick="exportFilteredTableToCSV('operationalCosts', 'Operational Costs', 'operationalCostsMonth')"
-            class="border border-green-900 text-green-900 bg-green-100 font-bold px-3 py-1 rounded hover:bg-green-200 ml-2">
+      class="border border-green-900 text-green-900 bg-green-100 font-bold px-3 py-1 rounded hover:bg-green-200 ml-2">
       ⬇️ Export CSV
     </button>
+
+  </div>
+
+  <div class="mb-4 flex flex-wrap items-center gap-2 border-b pb-3">
+
+    <div class="relative">
+
+      <button onclick="toggleOcGroupByDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Group By ▼
+      </button>
+
+      <div id="ocGroupByDropdown"
+        class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">
+          Group By
+        </h3>
+
+        <select id="ocGroupBy"
+          class="border rounded px-2 py-2 w-full"
+          onchange="renderOperationalCosts()">
+
+          <option value="expense">Expense</option>
+          <option value="account">Account</option>
+          <option value="reference">Reference</option>
+          <option value="month">Month</option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleOcShowByDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Show By ▼
+      </button>
+
+      <div id="ocShowByDropdown"
+        class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">
+          Show By
+        </h3>
+
+        <select id="ocShowBy"
+          class="border rounded px-2 py-2 w-full"
+          onchange="renderOperationalCosts()">
+
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
+          <option value="daily">Daily</option>
+          <option value="monthly">Monthly</option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleOcColumnCustomizer()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Customize Report Columns
+      </button>
+
+      <div id="ocColumnCustomizer"
+        class="hidden absolute z-50 mt-2 bg-white border rounded shadow-lg p-4 w-72">
+
+        <h3 class="font-semibold mb-3">
+          Show/Hide Columns
+        </h3>
+
+        <div class="space-y-2">
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleOcColumn(0,this)">
+            Date
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleOcColumn(1,this)">
+            Expense
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleOcColumn(2,this)">
+            Account
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleOcColumn(3,this)">
+            Amount
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleOcColumn(4,this)">
+            Reference
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleOcColumn(5,this)">
+            Running Balance
+          </label>
+
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
 
   <div class="overflow-x-auto">
+
     <table class="w-full border">
+
       <thead class="bg-gray-100">
+
         <tr>
+
           <th class="p-2">Date</th>
+
           <th class="p-2">Expense</th>
-          <th class="p-2">Account</th> 
+
+          <th class="p-2">Account</th>
+
           <th class="p-2">Amount</th>
+
           <th class="p-2">Reference</th>
-          <th class="p-2">Running Balance</th> 
+
+          <th class="p-2">Running Balance</th>
+
         </tr>
+
       </thead>
+
       <tbody id="operationalCosts"></tbody>
+
     </table>
+
   </div>
 
-  <!-- ✅ Grand Total Section -->
   <div class="mt-4 p-3 bg-gray-100 rounded font-bold flex justify-between">
-    <span>Grand Total:</span>
-    <span id="operationalCostsTotal">0.00</span>
+
+    <span>
+      Grand Total:
+    </span>
+
+    <span id="operationalCostsTotal">
+      0.00
+    </span>
+
   </div>
 
   <div class="mt-6">
-    <h4 class="font-semibold mb-2">Operational Costs Overview</h4>
+
+    <h4 class="font-semibold mb-2">
+      Operational Costs Overview
+    </h4>
+
     <canvas id="operationalCostsChart" height="150"></canvas>
+
   </div>
 
 </div>
@@ -59665,7 +60523,180 @@ function renderJournalReport() {
 window.addEventListener("load", renderJournalReport);
 </script>
 <script>
+function getFilteredTaxes() {
+  const month = document.getElementById("taxesMonth")?.value || "";
+  const start = document.getElementById("taxesStart")?.value || "";
+  const end = document.getElementById("taxesEnd")?.value || "";
+  const groupBy = document.getElementById("taxesGroupBy")?.value || "taxType";
 
+  let data = JSON.parse(localStorage.getItem("taxPayments") || "[]");
+
+  data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  if (month) {
+    data = data.filter(e => (e.date || "").startsWith(month));
+  }
+
+  if (start) {
+    data = data.filter(e => new Date(e.date) >= new Date(start));
+  }
+
+  if (end) {
+    data = data.filter(e => new Date(e.date) <= new Date(end));
+  }
+
+  return { data, groupBy };
+}
+
+function renderTaxes() {
+  const table = document.getElementById("taxesTable");
+  if (!table) return;
+
+  table.innerHTML = "";
+
+  const { data, groupBy } = getFilteredTaxes();
+
+  let runningBalance = 0;
+  let grandTotal = 0;
+
+  if (groupBy === "taxType") {
+    const grouped = {};
+
+    data.forEach(e => {
+      const key = e.type || "Unknown";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(e);
+    });
+
+    Object.keys(grouped).forEach(group => {
+      let groupTotal = 0;
+
+      const header = document.createElement("tr");
+      header.innerHTML = `<td colspan="9" class="p-2 bg-gray-200 font-bold">${group}</td>`;
+      table.appendChild(header);
+
+      grouped[group].forEach(entry => {
+        const amount = parseFloat(entry.amount) || 0;
+        runningBalance += amount;
+        groupTotal += amount;
+        grandTotal += amount;
+
+        const closingBalance = entry.closingBalance ?? runningBalance;
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="p-2">${entry.date || '-'}</td>
+          <td class="p-2">${entry.type || '-'}</td>
+          <td class="p-2 text-right">KES ${amount.toLocaleString()}</td>
+          <td class="p-2">${entry.status || 'Paid'}</td>
+          <td class="p-2">${entry.reference || '-'}</td>
+          <td class="p-2 text-right">KES ${runningBalance.toLocaleString()}</td>
+          <td class="p-2 tax-col">${entry.contact || ""}</td>
+          <td class="p-2 tax-col">${entry.description || ""}</td>
+          <td class="p-2 tax-col text-right">KES ${closingBalance.toLocaleString()}</td>
+        `;
+        table.appendChild(row);
+      });
+
+      const totalRow = document.createElement("tr");
+      totalRow.innerHTML = `<td colspan="9" class="p-2 bg-yellow-100 font-bold text-right">Group Total (${group}): KES ${groupTotal.toLocaleString()}</td>`;
+      table.appendChild(totalRow);
+    });
+
+  } else {
+    data.forEach(entry => {
+      const amount = parseFloat(entry.amount) || 0;
+      runningBalance += amount;
+      grandTotal += amount;
+
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td class="p-2">${entry.date || '-'}</td>
+        <td class="p-2">${entry.type || '-'}</td>
+        <td class="p-2 text-right">KES ${amount.toLocaleString()}</td>
+        <td class="p-2">${entry.status || 'Paid'}</td>
+        <td class="p-2">${entry.reference || '-'}</td>
+        <td class="p-2 text-right">KES ${runningBalance.toLocaleString()}</td>
+        <td class="p-2 tax-col">${entry.contact || ""}</td>
+        <td class="p-2 tax-col">${entry.description || ""}</td>
+        <td class="p-2 tax-col text-right">KES ${entry.closingBalance ?? runningBalance}</td>
+      `;
+
+      table.appendChild(row);
+    });
+  }
+
+  document.getElementById("taxesGrandTotal").textContent =
+    "KES " + grandTotal.toLocaleString();
+}
+
+function toggleTaxesColumn(index, el) {
+  const table = document.getElementById("taxesTable");
+  if (!table) return;
+
+  table.querySelectorAll("tr").forEach(row => {
+    const cell = row.children[index];
+    if (cell) cell.style.display = el.checked ? "" : "none";
+  });
+
+  const headers = document.querySelectorAll("#taxesPanel thead th");
+  if (headers[index]) headers[index].style.display = el.checked ? "" : "none";
+}
+
+function exportTaxesCSV() {
+  const table = document.getElementById("taxesTable");
+  if (!table) return;
+
+  let csv = [];
+
+  table.querySelectorAll("tr").forEach(row => {
+    let rowData = [];
+    row.querySelectorAll("td").forEach(cell => {
+      if (cell.style.display !== "none") {
+        rowData.push(cell.innerText.trim());
+      }
+    });
+    if (rowData.length) csv.push(rowData.join(","));
+  });
+
+  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "taxes_report.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function toggleTaxesGroupByDropdown() {
+  document.getElementById("taxesGroupByDropdown").classList.toggle("hidden");
+}
+
+function toggleTaxesShowByDropdown() {
+  document.getElementById("taxesShowByDropdown").classList.toggle("hidden");
+}
+
+function toggleTaxesColumnCustomizer() {
+  document.getElementById("taxesColumnCustomizer").classList.toggle("hidden");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  ["taxesMonth", "taxesStart", "taxesEnd", "taxesGroupBy"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("input", renderTaxes);
+      el.addEventListener("change", renderTaxes);
+    }
+  });
+
+  renderTaxes();
+});
+</script>
+<script>
+ 
 const operationalCostsTable = document.getElementById('operationalCosts');
 
 if (operationalCostsTable) {
@@ -59698,79 +60729,66 @@ if (operationalCostsTable) {
   }
 }
 function renderOperationalCostsChart(expenses) {
-  const sortedExpenses = expenses.sort((a,b) => new Date(a.date) - new Date(b.date));
-  let runningBalance = 0;
-  const labels = [];
-  const runningBalances = [];
-  const categoryTotals = {};
+  const canvas = document.getElementById("operationalCostsChart");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const sorted = [...expenses].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  let running = 0;
   let grandTotal = 0;
 
-  sortedExpenses.forEach(e => {
+  const categoryTotals = {};
+  const runningData = [];
+
+  sorted.forEach(e => {
     const amount = parseFloat(e.amount) || 0;
-    runningBalance += amount;
+
+    running += amount;
     grandTotal += amount;
-    labels.push(e.date || '-');
-    runningBalances.push(runningBalance);
-    const category = e.category || 'Other';
-    categoryTotals[category] = (categoryTotals[category] || 0) + amount;
+
+    runningData.push(running);
+
+    const cat = e.category || "Other";
+    categoryTotals[cat] = (categoryTotals[cat] || 0) + amount;
   });
-
-  const categoryLabels = Object.keys(categoryTotals);
-  const categoryValues = Object.values(categoryTotals);
-
-  const ctx = document.getElementById('operationalCostsChart').getContext('2d');
 
   if (window.operationalCostsChartInstance) {
     window.operationalCostsChartInstance.destroy();
   }
 
   window.operationalCostsChartInstance = new Chart(ctx, {
-    type: 'bar',
     data: {
-      labels: categoryLabels,
+      labels: Object.keys(categoryTotals),
       datasets: [
         {
-          type: 'bar',
-          label: 'Expenses by Category (KES)',
-          data: categoryValues,
-          backgroundColor: 'rgba(34, 197, 94, 0.7)',
-          borderColor: 'rgba(34, 197, 94, 1)',
-          borderWidth: 1
+          type: "bar",
+          label: "Expenses by Category (KES)",
+          data: Object.values(categoryTotals)
         },
         {
-          type: 'line',
-          label: 'Running Balance (KES)',
-          data: runningBalances,
-          borderColor: 'rgba(59, 130, 246, 1)',
-          backgroundColor: 'rgba(59, 130, 246, 0.2)',
-          yAxisID: 'y1',
-          tension: 0.3,
-          fill: true
+          type: "line",
+          label: "Running Balance (KES)",
+          data: runningData,
+          yAxisID: "y1"
         }
       ]
     },
     options: {
       responsive: true,
-      interaction: { mode: 'index', intersect: false },
+      interaction: { mode: "index", intersect: false },
       plugins: {
         title: {
           display: true,
-          text: `Operational Costs Overview (Grand Total: KES ${grandTotal.toLocaleString()})`,
-          font: { size: 16, weight: 'bold' }
-        },
-        tooltip: { mode: 'index', intersect: false }
+          text: "Operational Costs Overview (KES " + grandTotal.toLocaleString() + ")"
+        }
       },
       scales: {
-        y: {
-          type: 'linear',
-          position: 'left',
-          title: { display: true, text: 'Category Expenses (KES)' },
-          beginAtZero: true
-        },
+        y: { beginAtZero: true },
         y1: {
-          type: 'linear',
-          position: 'right',
-          title: { display: true, text: 'Running Balance (KES)' },
+          position: "right",
           beginAtZero: true,
           grid: { drawOnChartArea: false }
         }
@@ -59778,108 +60796,835 @@ function renderOperationalCostsChart(expenses) {
     }
   });
 }
-</script>
-<script>
-function renderPaymentsReceived() {
-  const table = document.getElementById("paymentsReceived");
+
+function clearOperationalCostsFilter() {
+  document.getElementById("operationalCostsMonth").value = "";
+  document.getElementById("operationalCostsStart").value = "";
+  document.getElementById("operationalCostsEnd").value = "";
+  renderOperationalCosts();
+}
+
+function toggleOcGroupByDropdown() {
+  document.getElementById("ocGroupByDropdown").classList.toggle("hidden");
+}
+
+function toggleOcShowByDropdown() {
+  document.getElementById("ocShowByDropdown").classList.toggle("hidden");
+}
+
+function toggleOcColumnCustomizer() {
+  document.getElementById("ocColumnCustomizer").classList.toggle("hidden");
+}
+
+function toggleOcColumn(index, checkbox) {
+  const table = document.getElementById("operationalCosts");
   if (!table) return;
 
-  table.innerHTML = "";
+  table.querySelectorAll("tr").forEach(row => {
+    const cell = row.children[index];
+    if (cell) cell.style.display = checkbox.checked ? "" : "none";
+  });
+}
+
+function exportFilteredTableToCSV(tableId, filename) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+
+  let csv = [];
+  const rows = table.querySelectorAll("tr");
+
+  rows.forEach(row => {
+    const cols = row.querySelectorAll("td, th");
+    const rowData = [];
+    cols.forEach(col => rowData.push(col.innerText));
+    csv.push(rowData.join(","));
+  });
+
+  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename + ".csv";
+  link.click();
+}
+
+</script>
+<script>
+
+function toggleArGroupByDropdown() {
+  document.getElementById("arGroupByDropdown")?.classList.toggle("hidden");
+}
+
+function toggleArShowByDropdown() {
+  document.getElementById("arShowByDropdown")?.classList.toggle("hidden");
+}
+
+function toggleArAgingDropdown() {
+  document.getElementById("arAgingDropdown")?.classList.toggle("hidden");
+}
+
+function toggleArColumnCustomizer() {
+  document.getElementById("arColumnCustomizer")?.classList.toggle("hidden");
+}
+
+function toggleCustomArIntervals() {
+
+  const box = document.getElementById("customArIntervalsBox");
+
+  if (box) {
+    box.classList.toggle("hidden");
+  }
+
+}
+
+function closeAllArDropdowns() {
+
+  document.getElementById("arGroupByDropdown")?.classList.add("hidden");
+  document.getElementById("arShowByDropdown")?.classList.add("hidden");
+  document.getElementById("arAgingDropdown")?.classList.add("hidden");
+  document.getElementById("arColumnCustomizer")?.classList.add("hidden");
+
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+    closeAllArDropdowns();
+  }
+
+});
+
+function toggleArColumn(index, checkbox) {
+
+  const table = document.querySelector("#accountsReceivablePanel table");
+
+  if (!table) return;
+
+  table.querySelectorAll("tr").forEach(row => {
+
+    const cell = row.children[index];
+
+    if (cell) {
+      cell.style.display = checkbox.checked ? "" : "none";
+    }
+
+  });
+
+}
+
+function getArSelectedInterval() {
+
+  const selected = document.querySelector('input[name="arAging"]:checked');
+
+  return selected ? selected.value : "30";
+
+}
+
+function getArAgingBucket(days, interval) {
+
+  if (interval === "custom") {
+
+    const custom = [
+      parseInt(document.getElementById("arCustom1")?.value) || 30,
+      parseInt(document.getElementById("arCustom2")?.value) || 60,
+      parseInt(document.getElementById("arCustom3")?.value) || 90,
+      parseInt(document.getElementById("arCustom4")?.value) || 120,
+      parseInt(document.getElementById("arCustom5")?.value) || 150,
+      parseInt(document.getElementById("arCustom6")?.value) || 180
+    ];
+
+    if (days <= custom[0]) return 0;
+    if (days <= custom[1]) return 1;
+    if (days <= custom[2]) return 2;
+    if (days <= custom[3]) return 3;
+    if (days <= custom[4]) return 4;
+    if (days <= custom[5]) return 5;
+
+    return 6;
+
+  }
+
+  interval = parseInt(interval);
+
+  if (days <= interval) return 0;
+  if (days <= interval * 2) return 1;
+  if (days <= interval * 3) return 2;
+  if (days <= interval * 4) return 3;
+  if (days <= interval * 5) return 4;
+  if (days <= interval * 6) return 5;
+
+  return 6;
+
+}
+
+function renderAccountsReceivable() {
+
+  const tbody = document.getElementById("accountsReceivable");
+
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
 
   const invoices = JSON.parse(localStorage.getItem("invoices")) || [];
   const receipts = JSON.parse(localStorage.getItem("receipts")) || [];
 
-  const customerBalances = {};
+  const selectedMonth = document.getElementById("accountsReceivableMonth")?.value || "";
+  const startDate = document.getElementById("accountsReceivableStartDate")?.value || "";
+  const endDate = document.getElementById("accountsReceivableEndDate")?.value || "";
+
+  const groupBy = document.getElementById("arGroupBy")?.value || "customer";
+  const showBy = document.getElementById("arShowBy")?.value || "summary";
+
+  const interval = getArSelectedInterval();
+
+  const grouped = {};
 
   invoices.forEach(inv => {
-    const amt = parseFloat(inv.total) || 0;
-    if (!customerBalances[inv.customer]) {
-      customerBalances[inv.customer] = { invoices: [], receipts: [], totalInvoices: 0, totalReceipts: 0 };
+
+    if (!inv.date) return;
+
+    if (selectedMonth && !inv.date.startsWith(selectedMonth)) {
+      return;
     }
-    customerBalances[inv.customer].invoices.push(inv);
-    customerBalances[inv.customer].totalInvoices += amt;
-  });
 
-  receipts.forEach(r => {
-    const amt = parseFloat(r.amount) || 0;
-    if (!customerBalances[r.customer]) {
-      customerBalances[r.customer] = { invoices: [], receipts: [], totalInvoices: 0, totalReceipts: 0 };
+    if (startDate && inv.date < startDate) {
+      return;
     }
-    customerBalances[r.customer].receipts.push(r);
-    customerBalances[r.customer].totalReceipts += amt;
-  });
 
-  let grandInvoices = 0;
-  let grandReceipts = 0;
+    if (endDate && inv.date > endDate) {
+      return;
+    }
 
-  
-  Object.keys(customerBalances).forEach(customer => {
-    const c = customerBalances[customer];
-    const balance = c.totalInvoices - c.totalReceipts;
-    grandInvoices += c.totalInvoices;
-    grandReceipts += c.totalReceipts;
+    let groupValue = "Unknown";
 
-    table.innerHTML += `
-      <tr class="bg-gray-200 font-bold">
-        <td colspan="4" class="px-2 py-1">${customer}</td>
-      </tr>
-    `;
+    if (groupBy === "customer") {
+      groupValue = inv.customer || "Unknown Customer";
+    }
 
-    
-    c.invoices.forEach(inv => {
-      table.innerHTML += `
-        <tr>
-          <td class="border px-2 py-1">${inv.date || "-"}</td>
-          <td class="border px-2 py-1">Invoice #${inv.id || "-"}</td>
-          <td class="border px-2 py-1 text-right">KES ${(parseFloat(inv.total) || 0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
-          <td class="border px-2 py-1">Issued</td>
-        </tr>
-      `;
+    if (groupBy === "salesPerson") {
+      groupValue = inv.salesPerson || "No Sales Person";
+    }
+
+    if (groupBy === "branch") {
+      groupValue = inv.branch || "No Branch";
+    }
+
+    if (groupBy === "currency") {
+      groupValue = inv.currency || "KES";
+    }
+
+    if (!grouped[groupValue]) {
+
+      grouped[groupValue] = {
+        buckets: [0,0,0,0,0,0,0],
+        total: 0,
+        invoices: []
+      };
+
+    }
+
+    const invoiceAmount = parseFloat(inv.total) || 0;
+
+    let paidAmount = 0;
+
+    receipts.forEach(r => {
+
+      if (
+        r.customer === inv.customer &&
+        (
+          r.invoiceId == inv.id ||
+          r.invoiceNumber == inv.id
+        )
+      ) {
+
+        paidAmount += parseFloat(r.amount) || 0;
+
+      }
+
     });
 
-    c.receipts.forEach(r => {
-      table.innerHTML += `
-        <tr>
-          <td class="border px-2 py-1">${r.date || "-"}</td>
-          <td class="border px-2 py-1">Receipt #${r.id || "-"}</td>
-          <td class="border px-2 py-1 text-right">KES ${(parseFloat(r.amount) || 0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
-          <td class="border px-2 py-1">Paid</td>
-        </tr>
-      `;
+    const balance = invoiceAmount - paidAmount;
+
+    if (balance <= 0) return;
+
+    const today = new Date();
+    const invDate = new Date(inv.date);
+
+    const diffDays = Math.floor(
+      (today - invDate) / (1000 * 60 * 60 * 24)
+    );
+
+    const bucket = getArAgingBucket(diffDays, interval);
+
+    grouped[groupValue].buckets[bucket] += balance;
+    grouped[groupValue].total += balance;
+
+    grouped[groupValue].invoices.push({
+      ...inv,
+      balance,
+      bucket
     });
 
-    table.innerHTML += `
-      <tr class="bg-yellow-100 font-medium">
-        <td colspan="2" class="border px-2 py-1 text-right">Balance for ${customer}</td>
-        <td class="border px-2 py-1 text-right">KES ${balance.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
-        <td class="border px-2 py-1"></td>
-      </tr>
-    `;
   });
 
-  const grandBalance = grandInvoices - grandReceipts;
-  table.innerHTML += `
-    <tr class="bg-blue-100 font-bold">
-      <td colspan="2" class="border px-2 py-1 text-right">GRAND TOTAL</td>
-      <td class="border px-2 py-1 text-right">
-        Invoices: KES ${grandInvoices.toLocaleString(undefined,{minimumFractionDigits:2})}<br>
-        Receipts: KES ${grandReceipts.toLocaleString(undefined,{minimumFractionDigits:2})}<br>
-        Balance: KES ${grandBalance.toLocaleString(undefined,{minimumFractionDigits:2})}
-      </td>
-      <td class="border px-2 py-1"></td>
-    </tr>
-  `;
+  const totals = [0,0,0,0,0,0,0];
+  let grandTotal = 0;
+
+  Object.keys(grouped).forEach(group => {
+
+    const data = grouped[group];
+
+    grandTotal += data.total;
+
+    data.buckets.forEach((v,i) => {
+      totals[i] += v;
+    });
+
+    if (showBy === "summary") {
+
+      tbody.innerHTML += `
+        <tr>
+          <td class="border px-2 py-1 font-medium">${group}</td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[0].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[1].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[2].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[3].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[4].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[5].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[6].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right font-bold">
+            KES ${data.total.toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+        </tr>
+      `;
+
+    }
+
+    if (showBy === "detailed" || showBy === "invoice") {
+
+      tbody.innerHTML += `
+        <tr class="bg-gray-200 font-bold">
+          <td colspan="9" class="border px-2 py-1">
+            ${group}
+          </td>
+        </tr>
+      `;
+
+      data.invoices.forEach(inv => {
+
+        const rowBuckets = [0,0,0,0,0,0,0];
+
+        rowBuckets[inv.bucket] = inv.balance;
+
+        tbody.innerHTML += `
+          <tr>
+
+            <td class="border px-2 py-1">
+              ${showBy === "invoice"
+                ? `Invoice #${inv.id || "-"}`
+                : (inv.customer || "-")}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[0].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[1].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[2].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[3].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[4].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[5].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[6].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right font-medium">
+              KES ${inv.balance.toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+          </tr>
+        `;
+
+      });
+
+    }
+
+  });
+
+  document.getElementById("arCurrent").innerText =
+    `KES ${totals[0].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("ar30").innerText =
+    `KES ${totals[1].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("ar60").innerText =
+    `KES ${totals[2].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("ar90").innerText =
+    `KES ${totals[3].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("ar120").innerText =
+    `KES ${totals[4].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("ar150").innerText =
+    `KES ${totals[5].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("arOver150").innerText =
+    `KES ${totals[6].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("arTotal").innerText =
+    `KES ${grandTotal.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
 }
 
+function clearAccountsReceivableFilters() {
+
+  document.getElementById("accountsReceivableMonth").value = "";
+  document.getElementById("accountsReceivableStartDate").value = "";
+  document.getElementById("accountsReceivableEndDate").value = "";
+
+  document.getElementById("arGroupBy").value = "customer";
+  document.getElementById("arShowBy").value = "summary";
+
+  document.querySelector('input[name="arAging"][value="30"]').checked = true;
+
+  renderAccountsReceivable();
+
+}
 
 document.addEventListener("DOMContentLoaded", () => {
-  renderPaymentsReceived();
-});
-</script>
 
+  renderAccountsReceivable();
+
+});
+
+</script>
 <script>
+
+function toggleApGroupByDropdown() {
+  document.getElementById("apGroupByDropdown")?.classList.toggle("hidden");
+}
+
+function toggleApShowByDropdown() {
+  document.getElementById("apShowByDropdown")?.classList.toggle("hidden");
+}
+
+function toggleApAgingDropdown() {
+  document.getElementById("apAgingDropdown")?.classList.toggle("hidden");
+}
+
+function toggleApColumnCustomizer() {
+  document.getElementById("apColumnCustomizer")?.classList.toggle("hidden");
+}
+
+function toggleCustomApIntervals() {
+
+  const box = document.getElementById("customApIntervalsBox");
+
+  if (box) {
+    box.classList.toggle("hidden");
+  }
+
+}
+
+function closeAllApDropdowns() {
+
+  document.getElementById("apGroupByDropdown")?.classList.add("hidden");
+  document.getElementById("apShowByDropdown")?.classList.add("hidden");
+  document.getElementById("apAgingDropdown")?.classList.add("hidden");
+  document.getElementById("apColumnCustomizer")?.classList.add("hidden");
+
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+    closeAllApDropdowns();
+  }
+
+});
+
+function toggleApColumn(index, checkbox) {
+
+  const table = document.querySelector("#accountsPayablePanel table");
+
+  if (!table) return;
+
+  table.querySelectorAll("tr").forEach(row => {
+
+    const cell = row.children[index];
+
+    if (cell) {
+      cell.style.display = checkbox.checked ? "" : "none";
+    }
+
+  });
+
+}
+
+function getApSelectedInterval() {
+
+  const selected = document.querySelector('input[name="apAging"]:checked');
+
+  return selected ? selected.value : "30";
+
+}
+
+function getApAgingBucket(days, interval) {
+
+  if (interval === "custom") {
+
+    const custom = [
+      parseInt(document.getElementById("apCustom1")?.value) || 30,
+      parseInt(document.getElementById("apCustom2")?.value) || 60,
+      parseInt(document.getElementById("apCustom3")?.value) || 90,
+      parseInt(document.getElementById("apCustom4")?.value) || 120,
+      parseInt(document.getElementById("apCustom5")?.value) || 150,
+      parseInt(document.getElementById("apCustom6")?.value) || 180
+    ];
+
+    if (days <= custom[0]) return 0;
+    if (days <= custom[1]) return 1;
+    if (days <= custom[2]) return 2;
+    if (days <= custom[3]) return 3;
+    if (days <= custom[4]) return 4;
+    if (days <= custom[5]) return 5;
+
+    return 6;
+
+  }
+
+  interval = parseInt(interval);
+
+  if (days <= interval) return 0;
+  if (days <= interval * 2) return 1;
+  if (days <= interval * 3) return 2;
+  if (days <= interval * 4) return 3;
+  if (days <= interval * 5) return 4;
+  if (days <= interval * 6) return 5;
+
+  return 6;
+
+}
+
+function renderAccountsPayable() {
+
+  const tbody = document.getElementById("accountsPayable");
+
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  const bills = JSON.parse(localStorage.getItem("bills")) || [];
+  const payments = JSON.parse(localStorage.getItem("paymentsMade")) || [];
+
+  const selectedMonth = document.getElementById("accountsPayableMonth")?.value || "";
+  const startDate = document.getElementById("accountsPayableStartDate")?.value || "";
+  const endDate = document.getElementById("accountsPayableEndDate")?.value || "";
+
+  const groupBy = document.getElementById("apGroupBy")?.value || "supplier";
+  const showBy = document.getElementById("apShowBy")?.value || "summary";
+
+  const interval = getApSelectedInterval();
+
+  const grouped = {};
+
+  bills.forEach(bill => {
+
+    if (!bill.date) return;
+
+    if (selectedMonth && !bill.date.startsWith(selectedMonth)) {
+      return;
+    }
+
+    if (startDate && bill.date < startDate) {
+      return;
+    }
+
+    if (endDate && bill.date > endDate) {
+      return;
+    }
+
+    let groupValue = "Unknown";
+
+    if (groupBy === "supplier") {
+      groupValue = bill.supplier || "Unknown Supplier";
+    }
+
+    if (groupBy === "branch") {
+      groupValue = bill.branch || "No Branch";
+    }
+
+    if (groupBy === "currency") {
+      groupValue = bill.currency || "KES";
+    }
+
+    if (groupBy === "category") {
+      groupValue = bill.category || "Uncategorized";
+    }
+
+    if (!grouped[groupValue]) {
+
+      grouped[groupValue] = {
+        buckets: [0,0,0,0,0,0,0],
+        total: 0,
+        bills: []
+      };
+
+    }
+
+    const billAmount = parseFloat(bill.total) || 0;
+
+    let paidAmount = 0;
+
+    payments.forEach(p => {
+
+      if (
+        p.supplier === bill.supplier &&
+        (
+          p.billId == bill.id ||
+          p.billNumber == bill.id
+        )
+      ) {
+
+        paidAmount += parseFloat(p.amount) || 0;
+
+      }
+
+    });
+
+    const balance = billAmount - paidAmount;
+
+    if (balance <= 0) return;
+
+    const today = new Date();
+    const billDate = new Date(bill.date);
+
+    const diffDays = Math.floor(
+      (today - billDate) / (1000 * 60 * 60 * 24)
+    );
+
+    const bucket = getApAgingBucket(diffDays, interval);
+
+    grouped[groupValue].buckets[bucket] += balance;
+    grouped[groupValue].total += balance;
+
+    grouped[groupValue].bills.push({
+      ...bill,
+      balance,
+      bucket
+    });
+
+  });
+
+  const totals = [0,0,0,0,0,0,0];
+  let grandTotal = 0;
+
+  Object.keys(grouped).forEach(group => {
+
+    const data = grouped[group];
+
+    grandTotal += data.total;
+
+    data.buckets.forEach((v,i) => {
+      totals[i] += v;
+    });
+
+    if (showBy === "summary") {
+
+      tbody.innerHTML += `
+        <tr>
+
+          <td class="border px-2 py-1 font-medium">
+            ${group}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[0].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[1].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[2].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[3].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[4].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[5].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${data.buckets[6].toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1 text-right font-bold">
+            KES ${data.total.toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+        </tr>
+      `;
+
+    }
+
+    if (showBy === "detailed" || showBy === "bill") {
+
+      tbody.innerHTML += `
+        <tr class="bg-gray-200 font-bold">
+          <td colspan="9" class="border px-2 py-1">
+            ${group}
+          </td>
+        </tr>
+      `;
+
+      data.bills.forEach(bill => {
+
+        const rowBuckets = [0,0,0,0,0,0,0];
+
+        rowBuckets[bill.bucket] = bill.balance;
+
+        tbody.innerHTML += `
+          <tr>
+
+            <td class="border px-2 py-1">
+
+              ${showBy === "bill"
+                ? `Bill #${bill.id || "-"}`
+                : (bill.supplier || "-")}
+
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[0].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[1].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[2].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[3].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[4].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[5].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right">
+              KES ${rowBuckets[6].toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+            <td class="border px-2 py-1 text-right font-medium">
+              KES ${bill.balance.toLocaleString(undefined,{minimumFractionDigits:2})}
+            </td>
+
+          </tr>
+        `;
+
+      });
+
+    }
+
+  });
+
+  document.getElementById("apCurrent").innerText =
+    `KES ${totals[0].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("ap30").innerText =
+    `KES ${totals[1].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("ap60").innerText =
+    `KES ${totals[2].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("ap90").innerText =
+    `KES ${totals[3].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("ap120").innerText =
+    `KES ${totals[4].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("ap150").innerText =
+    `KES ${totals[5].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("apOver150").innerText =
+    `KES ${totals[6].toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+  document.getElementById("apTotal").innerText =
+    `KES ${grandTotal.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+
+}
+
+function clearAccountsPayableFilters() {
+
+  document.getElementById("accountsPayableMonth").value = "";
+  document.getElementById("accountsPayableStartDate").value = "";
+  document.getElementById("accountsPayableEndDate").value = "";
+
+  document.getElementById("apGroupBy").value = "supplier";
+  document.getElementById("apShowBy").value = "summary";
+
+  document.querySelector('input[name="apAging"][value="30"]').checked = true;
+
+  renderAccountsPayable();
+
+}
+
 function renderPaymentsMade() {
+
   const table = document.getElementById("paymentsMade");
+
   if (!table) return;
 
   table.innerHTML = "";
@@ -59887,96 +61632,179 @@ function renderPaymentsMade() {
   const bills = JSON.parse(localStorage.getItem("bills")) || [];
   const payments = JSON.parse(localStorage.getItem("paymentsMade")) || [];
 
-  
   const supplierBalances = {};
 
   bills.forEach(bill => {
+
     const amt = parseFloat(bill.total) || 0;
+
     if (!supplierBalances[bill.supplier]) {
-      supplierBalances[bill.supplier] = { bills: [], payments: [], totalBills: 0, totalPayments: 0 };
+
+      supplierBalances[bill.supplier] = {
+        bills: [],
+        payments: [],
+        totalBills: 0,
+        totalPayments: 0
+      };
+
     }
+
     supplierBalances[bill.supplier].bills.push(bill);
     supplierBalances[bill.supplier].totalBills += amt;
+
   });
 
   payments.forEach(p => {
+
     const amt = parseFloat(p.amount) || 0;
+
     if (!supplierBalances[p.supplier]) {
-      supplierBalances[p.supplier] = { bills: [], payments: [], totalBills: 0, totalPayments: 0 };
+
+      supplierBalances[p.supplier] = {
+        bills: [],
+        payments: [],
+        totalBills: 0,
+        totalPayments: 0
+      };
+
     }
+
     supplierBalances[p.supplier].payments.push(p);
     supplierBalances[p.supplier].totalPayments += amt;
+
   });
 
   let grandBills = 0;
   let grandPayments = 0;
 
-  
   Object.keys(supplierBalances).forEach(supplier => {
+
     const s = supplierBalances[supplier];
+
     const balance = s.totalBills - s.totalPayments;
+
     grandBills += s.totalBills;
     grandPayments += s.totalPayments;
 
-    
     table.innerHTML += `
       <tr class="bg-gray-200 font-bold">
-        <td colspan="4" class="px-2 py-1">${supplier}</td>
+        <td colspan="4" class="px-2 py-1">
+          ${supplier}
+        </td>
       </tr>
     `;
 
-   
     s.bills.forEach(bill => {
+
       table.innerHTML += `
         <tr>
-          <td class="border px-2 py-1">${bill.date || "-"}</td>
-          <td class="border px-2 py-1">Bill #${bill.id || "-"}</td>
-          <td class="border px-2 py-1 text-right">KES ${(parseFloat(bill.total) || 0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
-          <td class="border px-2 py-1">Received</td>
+
+          <td class="border px-2 py-1">
+            ${bill.date || "-"}
+          </td>
+
+          <td class="border px-2 py-1">
+            Bill #${bill.id || "-"}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${(parseFloat(bill.total) || 0).toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1">
+            Received
+          </td>
+
         </tr>
       `;
+
     });
 
-    
     s.payments.forEach(p => {
+
       table.innerHTML += `
         <tr>
-          <td class="border px-2 py-1">${p.date || "-"}</td>
-          <td class="border px-2 py-1">Payment #${p.id || "-"}</td>
-          <td class="border px-2 py-1 text-right">KES ${(parseFloat(p.amount) || 0).toLocaleString(undefined,{minimumFractionDigits:2})}</td>
-          <td class="border px-2 py-1">Paid</td>
+
+          <td class="border px-2 py-1">
+            ${p.date || "-"}
+          </td>
+
+          <td class="border px-2 py-1">
+            Payment #${p.id || "-"}
+          </td>
+
+          <td class="border px-2 py-1 text-right">
+            KES ${(parseFloat(p.amount) || 0).toLocaleString(undefined,{minimumFractionDigits:2})}
+          </td>
+
+          <td class="border px-2 py-1">
+            Paid
+          </td>
+
         </tr>
       `;
+
     });
 
-    
     table.innerHTML += `
       <tr class="bg-yellow-100 font-medium">
-        <td colspan="2" class="border px-2 py-1 text-right">Balance for ${supplier}</td>
-        <td class="border px-2 py-1 text-right">KES ${balance.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+
+        <td colspan="2"
+          class="border px-2 py-1 text-right">
+
+          Balance for ${supplier}
+
+        </td>
+
+        <td class="border px-2 py-1 text-right">
+
+          KES ${balance.toLocaleString(undefined,{minimumFractionDigits:2})}
+
+        </td>
+
         <td class="border px-2 py-1"></td>
+
       </tr>
     `;
+
   });
 
-  
   const grandBalance = grandBills - grandPayments;
+
   table.innerHTML += `
     <tr class="bg-blue-100 font-bold">
-      <td colspan="2" class="border px-2 py-1 text-right">GRAND TOTAL</td>
-      <td class="border px-2 py-1 text-right">
-        Bills: KES ${grandBills.toLocaleString(undefined,{minimumFractionDigits:2})}<br>
-        Payments: KES ${grandPayments.toLocaleString(undefined,{minimumFractionDigits:2})}<br>
-        Balance: KES ${grandBalance.toLocaleString(undefined,{minimumFractionDigits:2})}
+
+      <td colspan="2"
+        class="border px-2 py-1 text-right">
+
+        GRAND TOTAL
+
       </td>
+
+      <td class="border px-2 py-1 text-right">
+
+        Bills: KES ${grandBills.toLocaleString(undefined,{minimumFractionDigits:2})}<br>
+
+        Payments: KES ${grandPayments.toLocaleString(undefined,{minimumFractionDigits:2})}<br>
+
+        Balance: KES ${grandBalance.toLocaleString(undefined,{minimumFractionDigits:2})}
+
+      </td>
+
       <td class="border px-2 py-1"></td>
+
     </tr>
   `;
+
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  renderAccountsPayable();
   renderPaymentsMade();
+
 });
+
 </script>
 <script>
 
