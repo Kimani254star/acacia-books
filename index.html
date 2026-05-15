@@ -51791,6 +51791,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <li onclick="showReport('taxComputationReport', this)">📁Tax Computation</li>
         <li onclick="showReport('accountsReceivablePanel', this)">📁Accounts Receivable</li>
         <li onclick="showReport('invoiceSummaryReport', this)">📁Invoice Summary</li>
+        <li onclick="showReport('recurringInvoiceReport', this)">📁Recurring Invoice</li>
         <li onclick="showReport('salesByItemPanel', this)">📁Sales by Item</li>
         <li onclick="showReport('customerOrdersPanel', this)">📁customer Orders</li>
         <li onclick="showReport('customerQuotesPanel', this)">📁 Customer Quotes</li>
@@ -53783,12 +53784,172 @@ document.addEventListener("DOMContentLoaded", () => {
     ⬇️ Export CSV
   </button>
 </div>
+  <div class="mb-4 flex flex-wrap items-center gap-2 border-b pb-3">
 
+  <div class="relative">
+
+  <button onclick="toggleInvoiceGroupByDropdown()"
+    class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+    Group By ▼
+  </button>
+
+  <div id="invoiceGroupByDropdown"
+    class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4 space-y-4">
+
+    <div>
+      <h3 class="font-semibold mb-2">Group By</h3>
+
+      <select id="invoiceGroupBy"
+        class="border rounded px-2 py-2 w-full"
+        onchange="renderInvoiceSummary()">
+
+        <option value="customer">Customer</option>
+        <option value="date">Date</option>
+        <option value="month">Month</option>
+        <option value="currency">Currency</option>
+
+      </select>
+    </div>
+
+    <div>
+      <h3 class="font-semibold mb-2">Customer Filter</h3>
+
+      <input type="text"
+        id="invoiceCustomerFilter"
+        placeholder="Search customer..."
+        class="border rounded px-2 py-2 w-full"
+        onkeyup="renderInvoiceSummary()">
+    </div>
+
+    <div>
+      <h3 class="font-semibold mb-2">Customer Order</h3>
+
+      <select id="invoiceCustomerSort"
+        class="border rounded px-2 py-2 w-full"
+        onchange="renderInvoiceSummary()">
+
+        <option value="">Default</option>
+        <option value="az">A → Z</option>
+        <option value="za">Z → A</option>
+
+      </select>
+    </div>
+
+    <div>
+      <h3 class="font-semibold mb-2">Currency Filter</h3>
+
+      <select id="invoiceCurrencyFilter"
+        class="border rounded px-2 py-2 w-full"
+        onchange="renderInvoiceSummary()">
+
+        <option value="">All Currencies</option>
+
+        <option value="KES">KES</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+        <option value="UGX">UGX</option>
+        <option value="TZS">TZS</option>
+        <option value="RWF">RWF</option>
+        <option value="NGN">NGN</option>
+        <option value="ZAR">ZAR</option>
+        <option value="CAD">CAD</option>
+        <option value="AUD">AUD</option>
+
+      </select>
+    </div>
+
+  </div>
+
+</div>
+
+  <div class="relative">
+
+    <button onclick="toggleInvoiceShowByDropdown()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Show By ▼
+    </button>
+
+    <div id="invoiceShowByDropdown"
+      class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+      <h3 class="font-semibold mb-3">Show By</h3>
+
+      <select id="invoiceShowBy"
+        class="border rounded px-2 py-2 w-full"
+        onchange="renderInvoiceSummary()">
+
+        <option value="summary">Summary</option>
+        <option value="detailed">Detailed</option>
+        <option value="invoice">Invoice Wise</option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+  <div class="relative">
+
+    <button onclick="toggleInvoiceColumnCustomizer()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Customize Columns
+    </button>
+
+    <div id="invoiceColumnCustomizer"
+      class="hidden absolute z-50 mt-2 bg-white border rounded shadow-lg p-4 w-72">
+
+      <h3 class="font-semibold mb-3">Show/Hide Columns</h3>
+
+      <div class="space-y-2">
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleInvoiceColumn(0,this)">
+          Date
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleInvoiceColumn(1,this)">
+          Customer
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleInvoiceColumn(2,this)">
+          Before VAT
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleInvoiceColumn(3,this)">
+          VAT
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleInvoiceColumn(4,this)">
+          After VAT
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleInvoiceColumn(5,this)">
+          Withholding
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleInvoiceColumn(6,this)">
+          Total Receivable
+        </label>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
   <table class="w-full border text-sm">
     <thead class="bg-gray-100">
       <tr>
         <th class="border px-2 py-1 text-left">Date</th>
-        <th class="border px-2 py-1 text-left">Supplier</th>
+        <th class="border px-2 py-1 text-left">Customer</th>
         <th class="border px-2 py-1 text-right">Before VAT</th>
         <th class="border px-2 py-1 text-right">VAT (16%)</th>
         <th class="border px-2 py-1 text-right">After VAT</th>
@@ -53800,52 +53961,599 @@ document.addEventListener("DOMContentLoaded", () => {
   </table>
 
 </div>
+<div id="recurringInvoiceReport" class="report-view hidden bg-white rounded shadow mb-4 p-4">
+
+<h2 class="text-xl font-bold mb-4">🔁Recurring Invoice Report</h2>
+
+<div class="mb-4">
+  <label class="font-semibold">Step 1: Filter by Month</label>
+
+  <input type="month"
+         id="recurringInvoiceMonth"
+         class="border px-2 py-1 rounded w-full mt-1"
+         onchange="renderRecurringInvoiceReport()">
+</div>
+
+<div class="mb-4">
+  <label class="font-semibold">Or Filter by Date Range</label>
+
+  <div class="flex gap-2 mt-1">
+
+    <input type="date"
+           id="recurringInvoiceStartDate"
+           class="border px-2 py-1 rounded w-1/2"
+           onchange="renderRecurringInvoiceReport()">
+
+    <input type="date"
+           id="recurringInvoiceEndDate"
+           class="border px-2 py-1 rounded w-1/2"
+           onchange="renderRecurringInvoiceReport()">
+
+  </div>
+</div>
+
+<div class="mb-4 flex items-center gap-2">
+
+  <select id="recurringInvoiceBasis"
+          class="border px-1 py-1 rounded"
+          onchange="renderRecurringInvoiceReport()">
+
+    <option value="accrual">Accrual</option>
+    <option value="cash">Cash</option>
+
+  </select>
+
+  <button onclick="renderRecurringInvoiceReport()"
+          class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+
+    ✅ Apply Filter
+
+  </button>
+
+  <button onclick="exportFilteredTableToCSV('recurringInvoiceSummary','Recurring Invoice Report')"
+          class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+
+    ⬇️ Export CSV
+
+  </button>
+
+</div>
+
+<div class="flex flex-wrap items-center gap-3 mb-4">
+
+  <!-- GROUP BY -->
+
+  <div class="relative">
+
+    <button onclick="toggleRecurringInvoiceGroupByDropdown()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+      Group By ▼
+
+    </button>
+
+    <div id="recurringInvoiceGroupByDropdown"
+      class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4 space-y-4">
+
+      <div>
+
+        <h3 class="font-semibold mb-2">Group By</h3>
+
+        <select id="recurringInvoiceGroupBy"
+          class="border rounded px-2 py-2 w-full"
+          onchange="renderRecurringInvoiceReport()">
+
+          <option value="customer">Customer</option>
+          <option value="date">Date</option>
+          <option value="month">Month</option>
+          <option value="currency">Currency</option>
+          <option value="status">Status</option>
+
+        </select>
+
+      </div>
+
+      <div>
+
+        <h3 class="font-semibold mb-2">Customer Filter</h3>
+
+        <input type="text"
+          id="recurringInvoiceCustomerFilter"
+          class="border rounded px-2 py-2 w-full"
+          placeholder="Search customer..."
+          onkeyup="renderRecurringInvoiceReport()">
+
+      </div>
+
+      <div>
+
+        <h3 class="font-semibold mb-2">Customer Order</h3>
+
+        <select id="recurringInvoiceCustomerSort"
+          class="border rounded px-2 py-2 w-full"
+          onchange="renderRecurringInvoiceReport()">
+
+          <option value="">Default</option>
+          <option value="az">A → Z</option>
+          <option value="za">Z → A</option>
+
+        </select>
+
+      </div>
+
+      <div>
+
+        <h3 class="font-semibold mb-2">Currency Filter</h3>
+
+        <select id="recurringInvoiceCurrencyFilter"
+          class="border rounded px-2 py-2 w-full"
+          onchange="renderRecurringInvoiceReport()">
+
+          <option value="">All Currencies</option>
+          <option value="KES">KES</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="UGX">UGX</option>
+          <option value="TZS">TZS</option>
+          <option value="RWF">RWF</option>
+          <option value="NGN">NGN</option>
+          <option value="ZAR">ZAR</option>
+          <option value="CAD">CAD</option>
+          <option value="AUD">AUD</option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- SHOW BY -->
+
+  <div class="relative">
+
+    <button onclick="toggleRecurringInvoiceShowByDropdown()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+      Show By ▼
+
+    </button>
+
+    <div id="recurringInvoiceShowByDropdown"
+      class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+      <h3 class="font-semibold mb-3">Show By</h3>
+
+      <select id="recurringInvoiceShowBy"
+        class="border rounded px-2 py-2 w-full"
+        onchange="renderRecurringInvoiceReport()">
+
+        <option value="summary">Summary</option>
+        <option value="detailed">Detailed</option>
+        <option value="invoice">Invoice Wise</option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+  <!-- CUSTOMIZE COLUMNS -->
+
+  <div class="relative">
+
+    <button onclick="toggleRecurringInvoiceColumnCustomizer()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+      Customize Columns
+
+    </button>
+
+    <div id="recurringInvoiceColumnCustomizer"
+      class="hidden absolute z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+      <h3 class="font-semibold mb-3">Show/Hide Columns</h3>
+
+      <div class="space-y-2">
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleRecurringInvoiceColumn(0,this)">
+          Date
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleRecurringInvoiceColumn(1,this)">
+          Customer
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleRecurringInvoiceColumn(2,this)">
+          Invoice No
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleRecurringInvoiceColumn(3,this)">
+          Frequency
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleRecurringInvoiceColumn(4,this)">
+          Before VAT
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleRecurringInvoiceColumn(5,this)">
+          VAT
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleRecurringInvoiceColumn(6,this)">
+          Total Amount
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleRecurringInvoiceColumn(7,this)">
+          Status
+        </label>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- SETTINGS -->
+
+  <div class="relative">
+
+    <button onclick="toggleRecurringInvoiceSettingsDropdown()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+      Settings ⚙️
+
+    </button>
+
+    <div id="recurringInvoiceSettingsDropdown"
+      class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+      <h3 class="font-semibold mb-3">Settings</h3>
+
+      <div class="space-y-3">
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" onchange="toggleRecurringInvoiceDarkMode(this)">
+          Dark Mode
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" onchange="toggleRecurringInvoiceCompactView(this)">
+          Compact View
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" onchange="toggleRecurringInvoiceShowTotals(this)">
+          Show Totals Only
+        </label>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<table class="w-full border text-sm">
+
+  <thead class="bg-gray-100">
+
+    <tr>
+
+      <th class="border px-2 py-1 text-left">Date</th>
+
+      <th class="border px-2 py-1 text-left">Customer</th>
+
+      <th class="border px-2 py-1 text-left">Invoice No</th>
+
+      <th class="border px-2 py-1 text-left">Frequency</th>
+
+      <th class="border px-2 py-1 text-right">Before VAT</th>
+
+      <th class="border px-2 py-1 text-right">VAT (16%)</th>
+
+      <th class="border px-2 py-1 text-right">Total Amount</th>
+
+      <th class="border px-2 py-1 text-center">Status</th>
+
+    </tr>
+
+  </thead>
+
+  <tbody id="recurringInvoiceSummary"></tbody>
+
+</table>
+</div>
 <div id="writeOffReportPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4">
 
   <h2 class="text-xl font-bold mb-4">🧾 Write Off Report</h2>
 
-  <div class="mb-4 flex gap-2">
-    <input type="month" id="writeOffMonth"
-      class="border px-2 py-1 rounded w-1/3"
-      onchange="renderWriteOffReport()">
+  <div class="mb-4">
+    <label class="font-semibold">Step 1: Filter by Month</label>
 
-    <input type="date" id="writeOffStart"
-      class="border px-2 py-1 rounded w-1/3"
-      onchange="renderWriteOffReport()">
+    <input type="month"
+           id="writeOffMonth"
+           class="border px-2 py-1 rounded w-full mt-1"
+           onchange="renderWriteOffReport()">
+  </div>
 
-    <input type="date" id="writeOffEnd"
-      class="border px-2 py-1 rounded w-1/3"
-      onchange="renderWriteOffReport()">
+  <div class="mb-4">
+    <label class="font-semibold">Or Filter by Date Range</label>
+
+    <div class="flex gap-2 mt-1">
+
+      <input type="date"
+             id="writeOffStart"
+             class="border px-2 py-1 rounded w-1/2"
+             onchange="renderWriteOffReport()">
+
+      <input type="date"
+             id="writeOffEnd"
+             class="border px-2 py-1 rounded w-1/2"
+             onchange="renderWriteOffReport()">
+
+    </div>
+  </div>
+
+  <div class="mb-4 flex items-center gap-2">
+
+    <select id="writeOffBasis"
+            class="border px-1 py-1 rounded"
+            onchange="renderWriteOffReport()">
+
+      <option value="accrual">Accrual</option>
+      <option value="cash">Cash</option>
+
+    </select>
+
+    <button onclick="renderWriteOffReport()"
+            class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+
+      ✅ Apply Filter
+
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('customerWriteOffTable','Customer Write Off Report')"
+            class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+
+      ⬇️ Export Customer CSV
+
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('supplierWriteOffTable','Supplier Write Off Report')"
+            class="px-1 py-1 bg-green-900 text-white rounded hover:bg-green-800">
+
+      ⬇️ Export Supplier CSV
+
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3 mb-4">
+
+    <div class="relative">
+
+      <button onclick="toggleWriteOffGroupByDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+        Group By ▼
+
+      </button>
+
+      <div id="writeOffGroupByDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4 space-y-4">
+
+        <div>
+
+          <h3 class="font-semibold mb-2">Group By</h3>
+
+          <select id="writeOffGroupBy"
+            class="border rounded px-2 py-2 w-full"
+            onchange="renderWriteOffReport()">
+
+            <option value="customer">Customer</option>
+            <option value="supplier">Supplier</option>
+            <option value="date">Date</option>
+            <option value="month">Month</option>
+
+          </select>
+
+        </div>
+
+        <div>
+
+          <h3 class="font-semibold mb-2">Customer Filter</h3>
+
+          <input type="text"
+            id="writeOffCustomerFilter"
+            class="border rounded px-2 py-2 w-full"
+            placeholder="Search customer..."
+            onkeyup="renderWriteOffReport()">
+
+        </div>
+
+        <div>
+
+          <h3 class="font-semibold mb-2">Supplier Filter</h3>
+
+          <input type="text"
+            id="writeOffSupplierFilter"
+            class="border rounded px-2 py-2 w-full"
+            placeholder="Search supplier..."
+            onkeyup="renderWriteOffReport()">
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleWriteOffShowByDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+        Show By ▼
+
+      </button>
+
+      <div id="writeOffShowByDropdown"
+        class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Show By</h3>
+
+        <select id="writeOffShowBy"
+          class="border rounded px-2 py-2 w-full"
+          onchange="renderWriteOffReport()">
+
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleWriteOffColumnCustomizer()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+        Customize Columns
+
+      </button>
+
+      <div id="writeOffColumnCustomizer"
+        class="hidden absolute z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Show/Hide Columns</h3>
+
+        <div class="space-y-2">
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleWriteOffColumn(0,this)">
+            Date
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleWriteOffColumn(1,this)">
+            Invoice/Bill
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleWriteOffColumn(2,this)">
+            Customer/Supplier
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleWriteOffColumn(3,this)">
+            Amount
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked onchange="toggleWriteOffColumn(4,this)">
+            Reason
+          </label>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleWriteOffSettingsDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
+        Settings ⚙️
+
+      </button>
+
+      <div id="writeOffSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Settings</h3>
+
+        <div class="space-y-3">
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" onchange="toggleWriteOffDarkMode(this)">
+            Dark Mode
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" onchange="toggleWriteOffCompactView(this)">
+            Compact View
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" onchange="toggleWriteOffShowTotals(this)">
+            Show Totals Only
+          </label>
+
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
 
   <h3 class="font-bold mb-2 text-blue-900">👤 Customer Write-Offs</h3>
 
   <table class="w-full border text-sm mb-6">
+
     <thead class="bg-gray-100">
+
       <tr>
+
         <th class="border px-2 py-1 text-left">Date</th>
         <th class="border px-2 py-1 text-left">Invoice</th>
         <th class="border px-2 py-1 text-left">Customer</th>
         <th class="border px-2 py-1 text-right">Amount</th>
         <th class="border px-2 py-1 text-left">Reason</th>
+
       </tr>
+
     </thead>
+
     <tbody id="customerWriteOffTable"></tbody>
+
   </table>
 
   <h3 class="font-bold mb-2 text-green-900">🏭 Supplier Write-Offs</h3>
 
   <table class="w-full border text-sm">
+
     <thead class="bg-gray-100">
+
       <tr>
+
         <th class="border px-2 py-1 text-left">Date</th>
         <th class="border px-2 py-1 text-left">Bill</th>
         <th class="border px-2 py-1 text-left">Supplier</th>
         <th class="border px-2 py-1 text-right">Amount</th>
         <th class="border px-2 py-1 text-left">Reason</th>
+
       </tr>
+
     </thead>
+
     <tbody id="supplierWriteOffTable"></tbody>
+
   </table>
 
 </div>
@@ -53877,7 +54585,197 @@ document.addEventListener("DOMContentLoaded", () => {
     ⬇️ Export CSV
   </button>
 </div>
+  <div class="flex flex-wrap items-center gap-3 mb-4">
 
+  <div class="relative">
+
+    <button onclick="toggleBillGroupByDropdown()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Group By ▼
+    </button>
+
+    <div id="billGroupByDropdown"
+      class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4 space-y-4">
+
+      <div>
+        <h3 class="font-semibold mb-2">Group By</h3>
+
+        <select id="billGroupBy"
+          class="border rounded px-2 py-2 w-full"
+          onchange="renderBillSummary()">
+
+          <option value="supplier">Supplier</option>
+          <option value="date">Date</option>
+          <option value="month">Month</option>
+          <option value="currency">Currency</option>
+
+        </select>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-2">Supplier Filter</h3>
+
+        <input type="text"
+          id="billSupplierFilter"
+          class="border rounded px-2 py-2 w-full"
+          placeholder="Search supplier..."
+          onkeyup="renderBillSummary()">
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-2">Supplier Order</h3>
+
+        <select id="billSupplierSort"
+          class="border rounded px-2 py-2 w-full"
+          onchange="renderBillSummary()">
+
+          <option value="">Default</option>
+          <option value="az">A → Z</option>
+          <option value="za">Z → A</option>
+
+        </select>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-2">Currency Filter</h3>
+
+        <select id="billCurrencyFilter"
+          class="border rounded px-2 py-2 w-full"
+          onchange="renderBillSummary()">
+
+          <option value="">All Currencies</option>
+          <option value="KES">KES</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+          <option value="GBP">GBP</option>
+          <option value="UGX">UGX</option>
+          <option value="TZS">TZS</option>
+          <option value="RWF">RWF</option>
+          <option value="NGN">NGN</option>
+          <option value="ZAR">ZAR</option>
+          <option value="CAD">CAD</option>
+          <option value="AUD">AUD</option>
+
+        </select>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="relative">
+
+    <button onclick="toggleBillShowByDropdown()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Show By ▼
+    </button>
+
+    <div id="billShowByDropdown"
+      class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+      <h3 class="font-semibold mb-3">Show By</h3>
+
+      <select id="billShowBy"
+        class="border rounded px-2 py-2 w-full"
+        onchange="renderBillSummary()">
+
+        <option value="summary">Summary</option>
+        <option value="detailed">Detailed</option>
+        <option value="bill">Bill Wise</option>
+
+      </select>
+
+    </div>
+  </div>
+
+  <div class="relative">
+
+    <button onclick="toggleBillColumnCustomizer()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Customize Columns
+    </button>
+
+    <div id="billColumnCustomizer"
+      class="hidden absolute z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+      <h3 class="font-semibold mb-3">Show/Hide Columns</h3>
+
+      <div class="space-y-2">
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleBillColumn(0,this)">
+          Date
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleBillColumn(1,this)">
+          Supplier
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleBillColumn(2,this)">
+          Before VAT
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleBillColumn(3,this)">
+          VAT
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleBillColumn(4,this)">
+          After VAT
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleBillColumn(5,this)">
+          Withholding
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" checked onchange="toggleBillColumn(6,this)">
+          Total Payable
+        </label>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="relative">
+
+    <button onclick="toggleBillSettingsDropdown()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Settings ⚙️
+    </button>
+
+    <div id="billSettingsDropdown"
+      class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+      <h3 class="font-semibold mb-3">Settings</h3>
+
+      <div class="space-y-3">
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" onchange="toggleBillDarkMode(this)">
+          Dark Mode
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" onchange="toggleBillCompactView(this)">
+          Compact View
+        </label>
+
+        <label class="flex items-center gap-2">
+          <input type="checkbox" onchange="toggleBillShowTotals(this)">
+          Show Totals Only
+        </label>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>
   <table class="w-full border text-sm">
     <thead class="bg-gray-100">
       <tr>
@@ -60035,62 +60933,6 @@ function saveFiledAmount() {
   document.getElementById("vatStatus").textContent = `💰 Payment added! Total Paid: KES ${filedData.totalPaid.toLocaleString()}`;
 }
 
-document.addEventListener("vatRecalculated", displayFiledInfo);
-
-document.addEventListener("DOMContentLoaded", displayFiledInfo);
-
- const invoiceTable = document.getElementById('invoiceSummary');
-invoiceTable.innerHTML = '';
-
-invoices.forEach(i => {
-  const total = parseFloatSafe(i.total);
-  const beforeVAT = total / 1.16;
-  const vat = total - beforeVAT;
-  const withholding = beforeVAT * 0.02;
-  const receivable = total - withholding;
-
-  invoiceTable.innerHTML += `
-    <tr>
-      <td class="p-2">${i.date || '-'}</td>
-      <td class="p-2">${i.customer || '-'}</td>
-      <td class="p-2">KES ${beforeVAT.toFixed(2)}</td>
-      <td class="p-2">KES ${vat.toFixed(2)}</td>
-      <td class="p-2">KES ${total.toFixed(2)}</td>
-      <td class="p-2">KES ${withholding.toFixed(2)}</td>
-      <td class="p-2 font-semibold">KES ${receivable.toFixed(2)}</td>
-    </tr>
-  `;
-});
-
-const bills = JSON.parse(localStorage.getItem('bills') || '[]');
-
-const billTable = document.getElementById('billSummary');
-
-if (billTable && Array.isArray(bills)) {
-  billTable.innerHTML = '';
-  bills.forEach(b => {
-    const total = parseFloatSafe(b.total);
-    const beforeVAT = total / 1.16;
-    const vat = total - beforeVAT;
-    const withholding = beforeVAT * 0.02;
-    const payable = total - withholding;
-
-    billTable.innerHTML += `
-      <tr>
-        <td class="p-2">${b.date || '-'}</td>
-        <td class="p-2">${b.supplier || '-'}</td>
-        <td class="p-2">KES ${beforeVAT.toFixed(2)}</td>
-        <td class="p-2">KES ${vat.toFixed(2)}</td>
-        <td class="p-2">KES ${total.toFixed(2)}</td>
-        <td class="p-2">KES ${withholding.toFixed(2)}</td>
-        <td class="p-2 font-semibold">KES ${payable.toFixed(2)}</td>
-      </tr>
-    `;
-  });
-} else {
-  console.warn('⚠️ Bill table not found or no bills in localStorage');
-}
-
 const inventory = getAllInventories();
 
 const inventoryTable = document.getElementById('inventorySummary');
@@ -60313,7 +61155,271 @@ function filterByDate(data, field, prefix = "tb") {
 }
 </script>
 <script>
-/* =============================== trial Balance ================================ */
+document.addEventListener("DOMContentLoaded", () => {
+  renderInvoiceSummary();
+});
+
+function parseFloatSafe(value) {
+  return parseFloat(value) || 0;
+}
+
+function getInvoices() {
+  return JSON.parse(localStorage.getItem("invoices") || "[]");
+}
+
+function renderInvoiceSummary() {
+  const invoiceTable = document.getElementById("invoiceSummary");
+
+  if (!invoiceTable) return;
+
+  const invoices = getInvoices();
+
+  const monthFilter = document.getElementById("invoiceSummaryMonth")?.value || "";
+  const startDate = document.getElementById("invoiceStartDate")?.value || "";
+  const endDate = document.getElementById("invoiceEndDate")?.value || "";
+
+  let filtered = [...invoices];
+
+  if (monthFilter) {
+    filtered = filtered.filter(i =>
+      (i.date || "").startsWith(monthFilter)
+    );
+  }
+
+  if (startDate) {
+    filtered = filtered.filter(i => i.date >= startDate);
+  }
+
+  if (endDate) {
+    filtered = filtered.filter(i => i.date <= endDate);
+  }
+
+  invoiceTable.innerHTML = "";
+
+  filtered.forEach(i => {
+    const total = parseFloatSafe(i.total);
+    const beforeVAT = total / 1.16;
+    const vat = total - beforeVAT;
+    const withholding = beforeVAT * 0.02;
+    const receivable = total - withholding;
+
+    invoiceTable.innerHTML += `
+      <tr>
+        <td class="border px-2 py-1">${i.date || "-"}</td>
+        <td class="border px-2 py-1">${i.customer || "-"}</td>
+        <td class="border px-2 py-1 text-right">KES ${beforeVAT.toFixed(2)}</td>
+        <td class="border px-2 py-1 text-right">KES ${vat.toFixed(2)}</td>
+        <td class="border px-2 py-1 text-right">KES ${total.toFixed(2)}</td>
+        <td class="border px-2 py-1 text-right">KES ${withholding.toFixed(2)}</td>
+        <td class="border px-2 py-1 text-right font-semibold">KES ${receivable.toFixed(2)}</td>
+      </tr>
+    `;
+  });
+}
+
+function toggleInvoiceGroupByDropdown() {
+  const dropdown = document.getElementById("invoiceGroupByDropdown");
+
+  if (!dropdown) return;
+
+  dropdown.classList.toggle("hidden");
+}
+
+document.addEventListener("click", function (e) {
+  const btn = e.target.closest("button");
+  const dropdown = document.getElementById("invoiceGroupByDropdown");
+
+  if (!dropdown) return;
+
+  const isClickInside = dropdown.contains(e.target);
+  const isButton = btn && btn.onclick?.toString().includes("toggleInvoiceGroupByDropdown");
+
+  if (!isClickInside && !isButton) {
+    dropdown.classList.add("hidden");
+  }
+});
+
+function toggleInvoiceShowByDropdown() {
+  document
+    .getElementById("invoiceShowByDropdown")
+    .classList.toggle("hidden");
+}
+
+function toggleInvoiceColumnCustomizer() {
+  document
+    .getElementById("invoiceColumnCustomizer")
+    .classList.toggle("hidden");
+}
+
+function toggleInvoiceColumn(index, checkbox) {
+  const table = document.querySelector("#invoiceSummaryReport table");
+
+  if (!table) return;
+
+  table.querySelectorAll("tr").forEach(row => {
+    const cells = row.children;
+
+    if (cells[index]) {
+      cells[index].style.display = checkbox.checked ? "" : "none";
+    }
+  });
+}
+
+function exportFilteredTableToCSV(tableId, filename) {
+  const rows = document.querySelectorAll(`#${tableId} tr`);
+
+  let csv = [];
+
+  rows.forEach(row => {
+    const cols = row.querySelectorAll("td, th");
+
+    let rowData = [];
+
+    cols.forEach(col => {
+      rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+    });
+
+    csv.push(rowData.join(","));
+  });
+
+  const csvFile = new Blob([csv.join("\n")], {
+    type: "text/csv"
+  });
+
+  const downloadLink = document.createElement("a");
+
+  downloadLink.download = filename + ".csv";
+  downloadLink.href = window.URL.createObjectURL(csvFile);
+
+  downloadLink.style.display = "none";
+
+  document.body.appendChild(downloadLink);
+
+  downloadLink.click();
+
+  document.body.removeChild(downloadLink);
+}
+</script>
+<script>
+
+const bills = JSON.parse(localStorage.getItem('bills') || '[]');
+
+const billTable = document.getElementById('billSummary');
+
+if (billTable && Array.isArray(bills)) {
+  billTable.innerHTML = '';
+  bills.forEach(b => {
+    const total = parseFloatSafe(b.total);
+    const beforeVAT = total / 1.16;
+    const vat = total - beforeVAT;
+    const withholding = beforeVAT * 0.02;
+    const payable = total - withholding;
+
+    billTable.innerHTML += `
+      <tr>
+        <td class="p-2">${b.date || '-'}</td>
+        <td class="p-2">${b.supplier || '-'}</td>
+        <td class="p-2">KES ${beforeVAT.toFixed(2)}</td>
+        <td class="p-2">KES ${vat.toFixed(2)}</td>
+        <td class="p-2">KES ${total.toFixed(2)}</td>
+        <td class="p-2">KES ${withholding.toFixed(2)}</td>
+        <td class="p-2 font-semibold">KES ${payable.toFixed(2)}</td>
+      </tr>
+    `;
+  });
+} else {
+  console.warn('⚠️ Bill table not found or no bills in localStorage');
+}
+function toggleBillGroupByDropdown() {
+  const el = document.getElementById("billGroupByDropdown");
+  if (!el) return;
+  el.classList.toggle("hidden");
+}
+
+function toggleBillShowByDropdown() {
+  const el = document.getElementById("billShowByDropdown");
+  if (!el) return;
+  el.classList.toggle("hidden");
+}
+
+function toggleBillColumnCustomizer() {
+  const el = document.getElementById("billColumnCustomizer");
+  if (!el) return;
+  el.classList.toggle("hidden");
+}
+
+function toggleBillSettingsDropdown() {
+  const el = document.getElementById("billSettingsDropdown");
+  if (!el) return;
+  el.classList.toggle("hidden");
+}
+
+function toggleBillColumn(index, checkbox) {
+  const table = document.querySelector("#billSummaryReport table");
+  if (!table) return;
+
+  table.querySelectorAll("tr").forEach(row => {
+    const cell = row.children[index];
+    if (cell) {
+      cell.style.display = checkbox.checked ? "" : "none";
+    }
+  });
+}
+
+function toggleBillDarkMode(cb) {
+  document.body.classList.toggle("dark-mode", cb.checked);
+}
+
+function toggleBillCompactView(cb) {
+  const table = document.querySelector("#billSummaryReport table");
+  if (!table) return;
+
+  table.classList.toggle("text-sm", cb.checked);
+  table.classList.toggle("text-xs", cb.checked);
+}
+
+function toggleBillShowTotals(cb) {
+  const rows = document.querySelectorAll("#billSummary tr");
+  if (!rows.length) return;
+
+  rows.forEach(r => {
+    r.style.display = cb.checked ? "none" : "";
+  });
+}
+
+document.addEventListener("click", function (e) {
+  const group = document.getElementById("billGroupByDropdown");
+  const show = document.getElementById("billShowByDropdown");
+  const custom = document.getElementById("billColumnCustomizer");
+  const settings = document.getElementById("billSettingsDropdown");
+
+  const groupBtn = document.querySelector("button[onclick='toggleBillGroupByDropdown()']");
+  const showBtn = document.querySelector("button[onclick='toggleBillShowByDropdown()']");
+  const customBtn = document.querySelector("button[onclick='toggleBillColumnCustomizer()']");
+  const settingsBtn = document.querySelector("button[onclick='toggleBillSettingsDropdown()']");
+
+  const clickedInside =
+    group?.contains(e.target) ||
+    show?.contains(e.target) ||
+    custom?.contains(e.target) ||
+    settings?.contains(e.target);
+
+  const clickedButton =
+    groupBtn?.contains(e.target) ||
+    showBtn?.contains(e.target) ||
+    customBtn?.contains(e.target) ||
+    settingsBtn?.contains(e.target);
+
+  if (!clickedInside && !clickedButton) {
+    group?.classList.add("hidden");
+    show?.classList.add("hidden");
+    custom?.classList.add("hidden");
+    settings?.classList.add("hidden");
+  }
+});
+</script>
+<script>
+
 function renderTrialBalance(filteredInvoices = null, filteredBills = null) {
   const invoices = filteredInvoices || JSON.parse(localStorage.getItem('invoices') || '[]');
   const bills = filteredBills || JSON.parse(localStorage.getItem('bills') || '[]');
@@ -66079,71 +67185,126 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 <script>
-  function renderWriteOffReport() {
+
+function renderWriteOffReport() {
+
+  const customerTbody = document.getElementById("customerWriteOffTable");
+  const supplierTbody = document.getElementById("supplierWriteOffTable");
+
+  if (!customerTbody || !supplierTbody) return;
+
   const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-  const tbody = document.getElementById("invoiceSummary");
 
-  if (!tbody) return;
+  const month = document.getElementById("writeOffMonth")?.value || "";
+  const start = document.getElementById("writeOffStart")?.value || "";
+  const end = document.getElementById("writeOffEnd")?.value || "";
 
-  const month = document.getElementById("woMonth")?.value || "";
-  const start = document.getElementById("woStartDate")?.value || "";
-  const end = document.getElementById("woEndDate")?.value || "";
+  customerTbody.innerHTML = "";
+  supplierTbody.innerHTML = "";
 
-  let totalWriteOff = 0;
-  let totalWht = 0;
-  let totalNet = 0;
+  const filtered = invoices.filter(inv => {
 
-  tbody.innerHTML = "";
+    const date = inv.date || "";
 
-  invoices.forEach(inv => {
-    const amount = parseFloat(inv.writeOffAmount || 0);
-    if (!amount || amount <= 0) return;
+    if (!inv.writeOffAmount || parseFloat(inv.writeOffAmount) <= 0) return false;
+    if (month && !date.startsWith(month)) return false;
+    if (start && date < start) return false;
+    if (end && date > end) return false;
 
-    const date = inv.date ? new Date(inv.date) : null;
-    if (month && date && !inv.date.startsWith(month)) return;
-    if (start && date && new Date(inv.date) < new Date(start)) return;
-    if (end && date && new Date(inv.date) > new Date(end)) return;
+    return true;
+  });
 
-    const wht = amount * 0.02;
-    const net = amount - wht;
+  const customers = filtered.filter(x => x.customer);
+  const suppliers = filtered.filter(x => x.supplier);
 
-    totalWriteOff += amount;
-    totalWht += wht;
-    totalNet += net;
+  customers.forEach(inv => {
 
-    tbody.innerHTML += `
+    const amount = Number(inv.writeOffAmount || 0);
+
+    customerTbody.innerHTML += `
       <tr>
         <td class="border px-2 py-1">${inv.date || "-"}</td>
-        <td class="border px-2 py-1">${inv.invoiceNumber || inv.id}</td>
-        <td class="border px-2 py-1">${inv.customer || inv.supplier || "-"}</td>
+        <td class="border px-2 py-1">${inv.invoiceNumber || inv.id || "-"}</td>
+        <td class="border px-2 py-1">${inv.customer || "-"}</td>
         <td class="border px-2 py-1 text-right">${amount.toFixed(2)}</td>
-        <td class="border px-2 py-1 text-right">${wht.toFixed(2)}</td>
-        <td class="border px-2 py-1 text-right">${net.toFixed(2)}</td>
         <td class="border px-2 py-1">${inv.writeOffReason || "-"}</td>
       </tr>
     `;
   });
 
-  tbody.innerHTML += `
-    <tr class="font-bold bg-gray-100">
-      <td colspan="3" class="border px-2 py-1 text-right">TOTAL</td>
-      <td class="border px-2 py-1 text-right">${totalWriteOff.toFixed(2)}</td>
-      <td class="border px-2 py-1 text-right">${totalWht.toFixed(2)}</td>
-      <td class="border px-2 py-1 text-right">${totalNet.toFixed(2)}</td>
-      <td class="border px-2 py-1"></td>
-    </tr>
-  `;
+  suppliers.forEach(inv => {
+
+    const amount = Number(inv.writeOffAmount || 0);
+
+    supplierTbody.innerHTML += `
+      <tr>
+        <td class="border px-2 py-1">${inv.date || "-"}</td>
+        <td class="border px-2 py-1">${inv.invoiceNumber || inv.id || "-"}</td>
+        <td class="border px-2 py-1">${inv.supplier || "-"}</td>
+        <td class="border px-2 py-1 text-right">${amount.toFixed(2)}</td>
+        <td class="border px-2 py-1">${inv.writeOffReason || "-"}</td>
+      </tr>
+    `;
+  });
+
 }
 
-function showReport(panelId, el) {
-  document.querySelectorAll(".report-view").forEach(r => r.classList.add("hidden"));
+function showReport(panelId) {
+
+  document.querySelectorAll(".report-view")
+    .forEach(r => r.classList.add("hidden"));
+
   const panel = document.getElementById(panelId);
+
   if (panel) panel.classList.remove("hidden");
 
   if (panelId === "writeOffReportPanel") {
     renderWriteOffReport();
   }
 }
+
+function exportFilteredTableToCSV(tableId, filename) {
+
+  const table = document.getElementById(tableId);
+  if (!table) return;
+
+  let csv = [];
+
+  table.querySelectorAll("tr").forEach(row => {
+    let cols = row.querySelectorAll("td,th");
+    let rowData = [];
+    cols.forEach(c => rowData.push(c.innerText));
+    csv.push(rowData.join(","));
+  });
+
+  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+  const a = document.createElement("a");
+
+  a.href = URL.createObjectURL(blob);
+  a.download = filename + ".csv";
+  a.click();
+}
+
+function toggleWriteOffGroupByDropdown() {
+  document.getElementById("writeOffGroupByDropdown").classList.toggle("hidden");
+}
+
+function toggleWriteOffShowByDropdown() {
+  document.getElementById("writeOffShowByDropdown").classList.toggle("hidden");
+}
+
+function toggleWriteOffColumnCustomizer() {
+  document.getElementById("writeOffColumnCustomizer").classList.toggle("hidden");
+}
+
+function toggleWriteOffSettingsDropdown() {
+  document.getElementById("writeOffSettingsDropdown").classList.toggle("hidden");
+}
+
+function applyWriteOffFilter() {
+  renderWriteOffReport();
+}
+
 </script>
 <script>
   function getAllOrders() {
@@ -66355,6 +67516,203 @@ function exportQuoteCSV() {
 
   URL.revokeObjectURL(url);
 }
+</script>
+<script>
+
+function renderRecurringInvoiceReport() {
+
+  const tbody = document.getElementById("recurringInvoiceSummary");
+
+  tbody.innerHTML = "";
+
+  let recurringInvoices =
+    JSON.parse(localStorage.getItem("recurringInvoices")) || [];
+
+  const monthFilter =
+    document.getElementById("recurringInvoiceMonth")?.value || "";
+
+  const startDate =
+    document.getElementById("recurringInvoiceStartDate")?.value || "";
+
+  const endDate =
+    document.getElementById("recurringInvoiceEndDate")?.value || "";
+
+  const customerFilter =
+    document.getElementById("recurringInvoiceCustomerFilter")?.value
+      .toLowerCase() || "";
+
+  const currencyFilter =
+    document.getElementById("recurringInvoiceCurrencyFilter")?.value || "";
+
+  const customerSort =
+    document.getElementById("recurringInvoiceCustomerSort")?.value || "";
+
+  const groupBy =
+    document.getElementById("recurringInvoiceGroupBy")?.value || "customer";
+
+  const showBy =
+    document.getElementById("recurringInvoiceShowBy")?.value || "summary";
+
+  recurringInvoices = recurringInvoices.filter(invoice => {
+
+    const invoiceDate =
+      invoice.date ||
+      invoice.invoiceDate ||
+      "";
+
+    if (monthFilter && !invoiceDate.startsWith(monthFilter))
+      return false;
+
+    if (startDate && invoiceDate < startDate)
+      return false;
+
+    if (endDate && invoiceDate > endDate)
+      return false;
+
+    if (
+      customerFilter &&
+      !(invoice.customer || "")
+        .toLowerCase()
+        .includes(customerFilter)
+    )
+      return false;
+
+    if (
+      currencyFilter &&
+      (invoice.currency || "") !== currencyFilter
+    )
+      return false;
+
+    return true;
+
+  });
+
+
+  if (customerSort === "az") {
+
+    recurringInvoices.sort((a, b) =>
+      (a.customer || "").localeCompare(b.customer || "")
+    );
+
+  }
+
+  if (customerSort === "za") {
+
+    recurringInvoices.sort((a, b) =>
+      (b.customer || "").localeCompare(a.customer || "")
+    );
+
+  }
+
+
+  if (recurringInvoices.length === 0) {
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8"
+            class="border px-2 py-3 text-center text-gray-500">
+          No recurring invoices found
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+  let grandTotal = 0;
+  let grandVat = 0;
+  let grandBeforeVat = 0;
+
+  recurringInvoices.forEach(invoice => {
+
+    const beforeVat =
+      Number(invoice.beforeVat || invoice.subtotal || 0);
+
+    const vat =
+      Number(invoice.vat || beforeVat * 0.16);
+
+    const total =
+      Number(invoice.totalAmount || beforeVat + vat);
+
+    grandBeforeVat += beforeVat;
+    grandVat += vat;
+    grandTotal += total;
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+
+      <td class="border px-2 py-1">
+        ${invoice.date || "-"}
+      </td>
+
+      <td class="border px-2 py-1">
+        ${invoice.customer || "-"}
+      </td>
+
+      <td class="border px-2 py-1">
+        ${invoice.invoiceNumber || invoice.invoiceNo || "-"}
+      </td>
+
+      <td class="border px-2 py-1">
+        ${invoice.frequency || "-"}
+      </td>
+
+      <td class="border px-2 py-1 text-right">
+        ${beforeVat.toLocaleString()}
+      </td>
+
+      <td class="border px-2 py-1 text-right">
+        ${vat.toLocaleString()}
+      </td>
+
+      <td class="border px-2 py-1 text-right font-semibold">
+        ${total.toLocaleString()}
+      </td>
+
+      <td class="border px-2 py-1 text-center">
+        ${invoice.status || "Active"}
+      </td>
+
+    `;
+
+    tbody.appendChild(tr);
+
+  });
+
+
+  const totalRow = document.createElement("tr");
+
+  totalRow.className = "bg-gray-100 font-bold";
+
+  totalRow.innerHTML = `
+
+    <td colspan="4"
+        class="border px-2 py-2 text-right">
+      TOTAL
+    </td>
+
+    <td class="border px-2 py-2 text-right">
+      ${grandBeforeVat.toLocaleString()}
+    </td>
+
+    <td class="border px-2 py-2 text-right">
+      ${grandVat.toLocaleString()}
+    </td>
+
+    <td class="border px-2 py-2 text-right">
+      ${grandTotal.toLocaleString()}
+    </td>
+
+    <td class="border px-2 py-2"></td>
+
+  `;
+
+  tbody.appendChild(totalRow);
+
+}
+
 </script>
 <!-- 🗂️ Plans Module -->
 <div id="plansTab" class="p-1">
