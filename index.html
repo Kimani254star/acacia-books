@@ -52535,7 +52535,27 @@ document.addEventListener("DOMContentLoaded", () => {
         <li onclick="showReport('auditTrailPanel', this)">📁Audit Trail</li>
         <li onclick="showReport('userActivityPanel', this)">📁User Activity Log</li>
         <li onclick="showReport('kpiDashboardPanel', this)">📁KPI Dashboard</li>
-
+        <li onclick="showReport('businessHealthPanel', this)">📁Business Health</li>
+        <li onclick="showReport('profitTrendPanel', this)">📁Profit Trends</li>
+        <li onclick="showReport('revenueVsExpensesPanel', this)">📁Revenue vs Expenses</li>
+        <li onclick="showReport('cashflowForecastPanel', this)">📁Cashflow Forecast</li>
+        <li onclick="showReport('projectExpensesPanel', this)">📁Project Expenses</li>
+        <li onclick="showReport('projectRevenuePanel', this)">📁Project Revenue</li>
+        <li onclick="showReport('projectBudgetVariancePanel', this)">📁Project Budget Variance</li>
+        <li onclick="showReport('projectTimelinePanel', this)">📁Project Timeline</li>
+        <li onclick="showReport('batchTrackingPanel', this)">📁Batch Tracking</li>
+        <li onclick="showReport('damagedStockPanel', this)">📁Damaged Stock</li>
+        <li onclick="showReport('expiredItemsPanel', this)">📁Expired Items</li>
+        <li onclick="showReport('leaveSummaryPanel', this)">📁Leave Summary</li>
+        <li onclick="showReport('attendanceSummaryPanel', this)">📁Attendance Summary</li>
+        <li onclick="showReport('overtimeSummaryPanel', this)">📁Overtime Summary</li>
+        <li onclick="showReport('budgetVariancePanel', this)">📁Budget Variance</li>
+        <li onclick="showReport('currencyGainLossPanel', this)">📁Currency Gain/Loss</li>
+        <li onclick="showReport('topCustomersPanel', this)">📁Top Customers</li>
+        <li onclick="showReport('topSellingItemsPanel', this)">📁Top Selling Items</li>
+        <li onclick="showReport('salesComparisonPanel', this)">📁Sales Comparison</li>
+        <li onclick="showReport('salesTaxSummaryPanel', this)">📁Sales Tax Summary</li>
+        <li onclick="showReport('salesForecastPanel', this)">📁Sales Forecast</li>
       </ul>
     </div>
 
@@ -66344,6 +66364,223 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     </table>
   </div>
 </div>
+<div id="businessHealthPanel" class="report-view hidden bg-green-50 rounded-xl shadow-md mb-6 p-6 border-2 border-green-500">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-green-900">Business Health Overview</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label for="businessHealthMonthFilter" class="text-xs font-semibold text-green-800">
+          Select Month
+        </label>
+        <input type="month"
+               id="businessHealthMonthFilter"
+               class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label for="businessHealthStartDate" class="text-xs font-semibold text-green-800">
+          Start
+        </label>
+        <input type="date"
+               id="businessHealthStartDate"
+               class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label for="businessHealthEndDate" class="text-xs font-semibold text-green-800">
+          End
+        </label>
+        <input type="date"
+               id="businessHealthEndDate"
+               class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <button onclick="loadBusinessHealthDashboard()"
+              class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1 rounded shadow">
+        Apply
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3 mb-4">
+
+    <div class="relative">
+
+      <button onclick="toggleBusinessHealthGroupByDropdown()"
+              class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Group By ▼
+      </button>
+
+      <div id="businessHealthGroupByDropdown"
+           class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4 space-y-4">
+
+        <div>
+
+          <h3 class="font-semibold mb-2">Group By</h3>
+
+          <select id="businessHealthGroupBy"
+                  class="border rounded px-2 py-2 w-full"
+                  onchange="loadBusinessHealthDashboard()">
+
+            <option value="month">Month</option>
+            <option value="quarter">Quarter</option>
+            <option value="year">Year</option>
+
+          </select>
+
+        </div>
+
+        <div>
+
+          <h3 class="font-semibold mb-2">Metric Filter</h3>
+
+          <input type="text"
+                 id="businessHealthMetricSearch"
+                 class="border rounded px-2 py-2 w-full"
+                 placeholder="Search Metric..."
+                 onkeyup="loadBusinessHealthDashboard()">
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleBusinessHealthShowByDropdown()"
+              class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Show By ▼
+      </button>
+
+      <div id="businessHealthShowByDropdown"
+           class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Show By</h3>
+
+        <select id="businessHealthShowBy"
+                class="border rounded px-2 py-2 w-full"
+                onchange="loadBusinessHealthDashboard()">
+
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleBusinessHealthSettingsDropdown()"
+              class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="businessHealthSettingsDropdown"
+           class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Settings</h3>
+
+        <div class="space-y-3">
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" onchange="toggleBusinessHealthDarkMode(this)">
+            Dark Mode
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" onchange="toggleBusinessHealthCompactView(this)">
+            Compact View
+          </label>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+
+    <div class="bg-green-100 p-4 rounded-xl shadow text-center border-2 border-green-500">
+      <p class="text-xs font-semibold text-green-800">Liquidity</p>
+      <p id="businessHealthLiquidity"
+         data-amount="0"
+         class="text-xl font-bold text-green-900">
+         0%
+      </p>
+    </div>
+
+    <div class="bg-blue-100 p-4 rounded-xl shadow text-center border-2 border-blue-500">
+      <p class="text-xs font-semibold text-blue-800">Profit Margin</p>
+      <p id="businessHealthProfitMargin"
+         data-amount="0"
+         class="text-xl font-bold text-blue-900">
+         0%
+      </p>
+    </div>
+
+    <div class="bg-yellow-100 p-4 rounded-xl shadow text-center border-2 border-yellow-500">
+      <p class="text-xs font-semibold text-yellow-800">Expense Ratio</p>
+      <p id="businessHealthExpenseRatio"
+         data-amount="0"
+         class="text-xl font-bold text-yellow-900">
+         0%
+      </p>
+    </div>
+
+    <div class="bg-purple-100 p-4 rounded-xl shadow text-center border-2 border-purple-500">
+      <p class="text-xs font-semibold text-purple-800">Growth Rate</p>
+      <p id="businessHealthGrowthRate"
+         data-amount="0"
+         class="text-xl font-bold text-purple-900">
+         0%
+      </p>
+    </div>
+
+    <div class="bg-red-100 p-4 rounded-xl shadow text-center border-2 border-red-500">
+      <p class="text-xs font-semibold text-red-800">Debt Ratio</p>
+      <p id="businessHealthDebtRatio"
+         data-amount="0"
+         class="text-xl font-bold text-red-900">
+         0%
+      </p>
+    </div>
+
+    <div class="bg-emerald-100 p-4 rounded-xl shadow text-center border-2 border-emerald-600">
+      <p class="text-xs font-semibold text-emerald-800">Business Score</p>
+      <p id="businessHealthScore"
+         data-amount="0"
+         class="text-xl font-bold text-emerald-900">
+         0/100
+      </p>
+    </div>
+
+  </div>
+
+  <div class="mt-6 bg-white p-4 rounded-xl shadow">
+
+    <h4 class="text-sm font-semibold text-green-800 mb-2">
+      Business Health Analysis
+    </h4>
+
+    <div class="h-64">
+      <canvas id="businessHealthChart"></canvas>
+    </div>
+  </div>
+</div>
+
 <div id="userActivityPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t">
   <h2 class="text-lg font-semibold mb-4">👤 User Activity Report</h2>
 
@@ -66543,6 +66780,3331 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <h3 class="text-md font-semibold mb-2">User Activity Graph</h3>
   <canvas id="userActivityChart" height="150"></canvas>
 </div>
+<div id="profitTrendPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Profit Trends</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Month</label>
+        <input type="month" id="profitTrendMonth" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="profitTrendStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="profitTrendEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyProfitTrendFilters()"
+      class="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearProfitTrendFilters()"
+      class="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('profitTrendTable','Profit Trends Report','profitTrendMonth')"
+      class="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleProfitTrendGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleProfitTrendCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="profitTrendCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="profitTrendCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyProfitTrendComparison()"
+            class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-500">
+            Apply
+          </button>
+
+          <button onclick="clearProfitTrendComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleProfitTrendSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="profitTrendSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <select id="profitTrendView"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
+
+        </select>
+
+        <div class="flex items-center gap-2 mt-3">
+          <input type="checkbox" onchange="toggleProfitTrendDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2 mt-3">
+
+          <button onclick="applyProfitTrendSettings()"
+            class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-500">
+            Apply
+          </button>
+
+          <button onclick="clearProfitTrendSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow">
+    <canvas id="profitTrendChart"></canvas>
+  </div>
+
+</div>
+<div id="revenueVsExpensesPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Revenue vs Expenses</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Month</label>
+        <input type="month" id="revExpMonth" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="revExpStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="revExpEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyRevenueVsExpensesFilters()"
+      class="px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearRevenueVsExpensesFilters()"
+      class="px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('revenueVsExpensesTable','Revenue vs Expenses Report','revExpMonth')"
+      class="px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleRevExpGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleRevExpCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="revExpCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="revExpCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyRevExpComparison()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="clearRevExpComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleRevExpSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="revExpSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <select id="revExpView"
+          class="border rounded px-2 py-1 w-full">
+
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
+
+        </select>
+
+        <div class="flex items-center gap-2 mt-3">
+          <input type="checkbox" onchange="toggleRevExpDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2 mt-3">
+
+          <button onclick="applyRevExpSettings()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="clearRevExpSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white p-4 rounded-xl shadow">
+    <canvas id="revenueVsExpensesChart"></canvas>
+  </div>
+</div>
+<div id="cashflowForecastPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Cashflow Forecast</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Month</label>
+        <input type="month" id="cashflowMonth" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="cashflowStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="cashflowEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyCashflowFilters()"
+      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearCashflowFilters()"
+      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('cashflowTable','Cashflow Forecast','cashflowMonth')"
+      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleCashflowGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleCashflowCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="cashflowCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="cashflowCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyCashflowComparison()"
+            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+            Apply
+          </button>
+
+          <button onclick="clearCashflowComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleCashflowSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="cashflowSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <select id="cashflowView"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
+
+        </select>
+
+        <div class="flex items-center gap-2 mt-3">
+          <input type="checkbox" onchange="toggleCashflowDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2 mt-3">
+
+          <button onclick="applyCashflowSettings()"
+            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+            Apply
+          </button>
+
+          <button onclick="clearCashflowSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow">
+    <canvas id="cashflowChart"></canvas>
+  </div>
+
+</div>
+<div id="projectExpensesPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Project Expenses</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Project</label>
+        <input type="text" id="projectExpensesProject" class="border px-2 py-1 rounded text-sm" placeholder="Project name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="projectExpensesStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="projectExpensesEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyProjectExpensesFilters()"
+      class="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearProjectExpensesFilters()"
+      class="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('projectExpensesTable','Project Expenses Report','projectExpensesProject')"
+      class="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleProjectExpensesGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleProjectExpensesCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="projectExpensesCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="projectExpensesCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyProjectExpensesComparison()"
+            class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500">
+            Apply
+          </button>
+
+          <button onclick="clearProjectExpensesComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleProjectExpensesSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="projectExpensesSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="projectExpensesView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleProjectExpensesDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyProjectExpensesSettings()"
+            class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500">
+            Apply
+          </button>
+
+          <button onclick="clearProjectExpensesSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="projectExpensesChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="projectExpensesTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Month</th>
+          <th class="p-2 text-left">Project</th>
+          <th class="p-2 text-left">Expense</th>
+        </tr>
+      </thead>
+
+      <tbody id="projectExpensesBody">
+        <tr>
+          <td colspan="3" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
+<div id="projectRevenuePanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Project Revenue</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Project</label>
+        <input type="text" id="projectRevenueProject" class="border px-2 py-1 rounded text-sm" placeholder="Project name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="projectRevenueStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="projectRevenueEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyProjectRevenueFilters()"
+      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearProjectRevenueFilters()"
+      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('projectRevenueTable','Project Revenue Report','projectRevenueProject')"
+      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleProjectRevenueGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleProjectRevenueCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="projectRevenueCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="projectRevenueCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyProjectRevenueComparison()"
+            class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500">
+            Apply
+          </button>
+
+          <button onclick="clearProjectRevenueComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleProjectRevenueSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="projectRevenueSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="projectRevenueView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleProjectRevenueDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyProjectRevenueSettings()"
+            class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500">
+            Apply
+          </button>
+
+          <button onclick="clearProjectRevenueSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="projectRevenueChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="projectRevenueTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Month</th>
+          <th class="p-2 text-left">Project</th>
+          <th class="p-2 text-left">Revenue</th>
+        </tr>
+      </thead>
+
+      <tbody id="projectRevenueBody">
+        <tr>
+          <td colspan="3" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="projectBudgetVariancePanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Project Budget Variance</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Project</label>
+        <input type="text" id="projectBudgetVarianceProject" class="border px-2 py-1 rounded text-sm" placeholder="Project name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="projectBudgetVarianceStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="projectBudgetVarianceEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyProjectBudgetVarianceFilters()"
+      class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-500">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearProjectBudgetVarianceFilters()"
+      class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-500">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('projectBudgetVarianceTable','Project Budget Variance Report','projectBudgetVarianceProject')"
+      class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-500">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleProjectBudgetVarianceGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleProjectBudgetVarianceCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="projectBudgetVarianceCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="projectBudgetVarianceCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyProjectBudgetVarianceComparison()"
+            class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-500">
+            Apply
+          </button>
+
+          <button onclick="clearProjectBudgetVarianceComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleProjectBudgetVarianceSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="projectBudgetVarianceSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="projectBudgetVarianceView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleProjectBudgetVarianceDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyProjectBudgetVarianceSettings()"
+            class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-500">
+            Apply
+          </button>
+
+          <button onclick="clearProjectBudgetVarianceSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="projectBudgetVarianceChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="projectBudgetVarianceTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Month</th>
+          <th class="p-2 text-left">Project</th>
+          <th class="p-2 text-left">Budget</th>
+          <th class="p-2 text-left">Actual</th>
+          <th class="p-2 text-left">Variance</th>
+        </tr>
+      </thead>
+
+      <tbody id="projectBudgetVarianceBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="projectTimelinePanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Project Timeline</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Project</label>
+        <input type="text" id="projectTimelineProject" class="border px-2 py-1 rounded text-sm" placeholder="Project name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="projectTimelineStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="projectTimelineEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyProjectTimelineFilters()"
+      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearProjectTimelineFilters()"
+      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('projectTimelineTable','Project Timeline Report','projectTimelineProject')"
+      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleProjectTimelineGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleProjectTimelineCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="projectTimelineCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="projectTimelineCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyProjectTimelineComparison()"
+            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            Apply
+          </button>
+
+          <button onclick="clearProjectTimelineComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleProjectTimelineSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="projectTimelineSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="projectTimelineView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleProjectTimelineDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyProjectTimelineSettings()"
+            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            Apply
+          </button>
+
+          <button onclick="clearProjectTimelineSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="projectTimelineChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="projectTimelineTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Phase</th>
+          <th class="p-2 text-left">Project</th>
+          <th class="p-2 text-left">Start Date</th>
+          <th class="p-2 text-left">End Date</th>
+          <th class="p-2 text-left">Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="projectTimelineBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="batchTrackingPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Batch Tracking</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Batch No</label>
+        <input type="text" id="batchTrackingNumber" class="border px-2 py-1 rounded text-sm" placeholder="Batch number">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Item</label>
+        <input type="text" id="batchTrackingItem" class="border px-2 py-1 rounded text-sm" placeholder="Item name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="batchTrackingStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="batchTrackingEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyBatchTrackingFilters()"
+      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearBatchTrackingFilters()"
+      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('batchTrackingTable','Batch Tracking Report','batchTrackingNumber')"
+      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleBatchTrackingGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleBatchTrackingCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="batchTrackingCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="batchTrackingCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyBatchTrackingComparison()"
+            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+            Apply
+          </button>
+
+          <button onclick="clearBatchTrackingComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleBatchTrackingSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="batchTrackingSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="batchTrackingView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleBatchTrackingDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyBatchTrackingSettings()"
+            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+            Apply
+          </button>
+
+          <button onclick="clearBatchTrackingSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="batchTrackingChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="batchTrackingTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Batch No</th>
+          <th class="p-2 text-left">Item</th>
+          <th class="p-2 text-left">Quantity</th>
+          <th class="p-2 text-left">Warehouse</th>
+          <th class="p-2 text-left">Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="batchTrackingBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="damagedStockPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Damaged Stock</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Item</label>
+        <input type="text" id="damagedStockItem" class="border px-2 py-1 rounded text-sm" placeholder="Item name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Warehouse</label>
+        <input type="text" id="damagedStockWarehouse" class="border px-2 py-1 rounded text-sm" placeholder="Warehouse">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="damagedStockStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="damagedStockEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyDamagedStockFilters()"
+      class="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearDamagedStockFilters()"
+      class="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('damagedStockTable','Damaged Stock Report','damagedStockItem')"
+      class="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleDamagedStockGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleDamagedStockCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="damagedStockCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="damagedStockCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyDamagedStockComparison()"
+            class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500">
+            Apply
+          </button>
+
+          <button onclick="clearDamagedStockComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleDamagedStockSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="damagedStockSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="damagedStockView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleDamagedStockDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyDamagedStockSettings()"
+            class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500">
+            Apply
+          </button>
+
+          <button onclick="clearDamagedStockSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="damagedStockChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="damagedStockTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Item</th>
+          <th class="p-2 text-left">Warehouse</th>
+          <th class="p-2 text-left">Quantity</th>
+          <th class="p-2 text-left">Reason</th>
+          <th class="p-2 text-left">Date</th>
+        </tr>
+      </thead>
+
+      <tbody id="damagedStockBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="expiredItemsPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Expired Items</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Item</label>
+        <input type="text" id="expiredItemsSearch" class="border px-2 py-1 rounded text-sm" placeholder="Item name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Warehouse</label>
+        <input type="text" id="expiredItemsWarehouse" class="border px-2 py-1 rounded text-sm" placeholder="Warehouse">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="expiredItemsStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="expiredItemsEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyExpiredItemsFilters()"
+      class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearExpiredItemsFilters()"
+      class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('expiredItemsTable','Expired Items Report','expiredItemsSearch')"
+      class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleExpiredItemsGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleExpiredItemsCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="expiredItemsCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="expiredItemsCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyExpiredItemsComparison()"
+            class="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-500">
+            Apply
+          </button>
+
+          <button onclick="clearExpiredItemsComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleExpiredItemsSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="expiredItemsSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="expiredItemsView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleExpiredItemsDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyExpiredItemsSettings()"
+            class="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-500">
+            Apply
+          </button>
+
+          <button onclick="clearExpiredItemsSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="expiredItemsChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="expiredItemsTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Item</th>
+          <th class="p-2 text-left">Warehouse</th>
+          <th class="p-2 text-left">Quantity</th>
+          <th class="p-2 text-left">Expiry Date</th>
+          <th class="p-2 text-left">Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="expiredItemsBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="leaveSummaryPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Leave Summary</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Employee</label>
+        <input type="text" id="leaveSummaryEmployee" class="border px-2 py-1 rounded text-sm" placeholder="Employee name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="leaveSummaryStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="leaveSummaryEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyLeaveSummaryFilters()"
+      class="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearLeaveSummaryFilters()"
+      class="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('leaveSummaryTable','Leave Summary Report','leaveSummaryEmployee')"
+      class="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleLeaveSummaryGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleLeaveSummaryCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="leaveSummaryCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="leaveSummaryCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyLeaveSummaryComparison()"
+            class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-500">
+            Apply
+          </button>
+
+          <button onclick="clearLeaveSummaryComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleLeaveSummarySettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="leaveSummarySettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="leaveSummaryView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleLeaveSummaryDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyLeaveSummarySettings()"
+            class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-500">
+            Apply
+          </button>
+
+          <button onclick="clearLeaveSummarySettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="leaveSummaryChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="leaveSummaryTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Employee</th>
+          <th class="p-2 text-left">Leave Type</th>
+          <th class="p-2 text-left">Start Date</th>
+          <th class="p-2 text-left">End Date</th>
+          <th class="p-2 text-left">Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="leaveSummaryBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="attendanceSummaryPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Attendance Summary</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Employee</label>
+        <input type="text" id="attendanceSummaryEmployee" class="border px-2 py-1 rounded text-sm" placeholder="Employee name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="attendanceSummaryStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="attendanceSummaryEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyAttendanceSummaryFilters()"
+      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearAttendanceSummaryFilters()"
+      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('attendanceSummaryTable','Attendance Summary Report','attendanceSummaryEmployee')"
+      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleAttendanceSummaryGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleAttendanceSummaryCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="attendanceSummaryCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="attendanceSummaryCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyAttendanceSummaryComparison()"
+            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            Apply
+          </button>
+
+          <button onclick="clearAttendanceSummaryComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleAttendanceSummarySettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="attendanceSummarySettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="attendanceSummaryView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleAttendanceSummaryDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyAttendanceSummarySettings()"
+            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            Apply
+          </button>
+
+          <button onclick="clearAttendanceSummarySettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="attendanceSummaryChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="attendanceSummaryTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Employee</th>
+          <th class="p-2 text-left">Date</th>
+          <th class="p-2 text-left">Check In</th>
+          <th class="p-2 text-left">Check Out</th>
+          <th class="p-2 text-left">Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="attendanceSummaryBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="overtimeSummaryPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Overtime Summary</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Employee</label>
+        <input type="text" id="overtimeSummaryEmployee" class="border px-2 py-1 rounded text-sm" placeholder="Employee name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="overtimeSummaryStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="overtimeSummaryEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyOvertimeSummaryFilters()"
+      class="px-3 py-1 bg-orange-700 text-white rounded hover:bg-orange-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearOvertimeSummaryFilters()"
+      class="px-3 py-1 bg-orange-700 text-white rounded hover:bg-orange-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('overtimeSummaryTable','Overtime Summary Report','overtimeSummaryEmployee')"
+      class="px-3 py-1 bg-orange-700 text-white rounded hover:bg-orange-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleOvertimeSummaryGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleOvertimeSummaryCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="overtimeSummaryCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="overtimeSummaryCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyOvertimeSummaryComparison()"
+            class="bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-500">
+            Apply
+          </button>
+
+          <button onclick="clearOvertimeSummaryComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleOvertimeSummarySettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="overtimeSummarySettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="overtimeSummaryView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleOvertimeSummaryDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyOvertimeSummarySettings()"
+            class="bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-500">
+            Apply
+          </button>
+
+          <button onclick="clearOvertimeSummarySettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="overtimeSummaryChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="overtimeSummaryTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Employee</th>
+          <th class="p-2 text-left">Date</th>
+          <th class="p-2 text-left">Hours</th>
+          <th class="p-2 text-left">Rate</th>
+          <th class="p-2 text-left">Total Pay</th>
+        </tr>
+      </thead>
+
+      <tbody id="overtimeSummaryBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="budgetVariancePanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Budget Variance</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Department</label>
+        <input type="text" id="budgetVarianceDept" class="border px-2 py-1 rounded text-sm" placeholder="Department">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="budgetVarianceStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="budgetVarianceEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyBudgetVarianceFilters()"
+      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearBudgetVarianceFilters()"
+      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('budgetVarianceTable','Budget Variance Report','budgetVarianceDept')"
+      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleBudgetVarianceGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleBudgetVarianceCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="budgetVarianceCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="budgetVarianceCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyBudgetVarianceComparison()"
+            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            Apply
+          </button>
+
+          <button onclick="clearBudgetVarianceComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleBudgetVarianceSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="budgetVarianceSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="budgetVarianceView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleBudgetVarianceDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyBudgetVarianceSettings()"
+            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            Apply
+          </button>
+
+          <button onclick="clearBudgetVarianceSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="budgetVarianceChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="budgetVarianceTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Department</th>
+          <th class="p-2 text-left">Budget</th>
+          <th class="p-2 text-left">Actual</th>
+          <th class="p-2 text-left">Variance</th>
+          <th class="p-2 text-left">Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="budgetVarianceBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="currencyGainLossPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Currency Gain / Loss</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Currency</label>
+        <input type="text" id="currencyGainLossCurrency" class="border px-2 py-1 rounded text-sm" placeholder="e.g. USD, EUR">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="currencyGainLossStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="currencyGainLossEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyCurrencyGainLossFilters()"
+      class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-500">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearCurrencyGainLossFilters()"
+      class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-500">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('currencyGainLossTable','Currency Gain Loss Report','currencyGainLossCurrency')"
+      class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-500">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleCurrencyGainLossGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleCurrencyGainLossCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="currencyGainLossCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="currencyGainLossCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyCurrencyGainLossComparison()"
+            class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-500">
+            Apply
+          </button>
+
+          <button onclick="clearCurrencyGainLossComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleCurrencyGainLossSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="currencyGainLossSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="currencyGainLossView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleCurrencyGainLossDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyCurrencyGainLossSettings()"
+            class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-500">
+            Apply
+          </button>
+
+          <button onclick="clearCurrencyGainLossSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="currencyGainLossChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="currencyGainLossTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Currency</th>
+          <th class="p-2 text-left">Rate</th>
+          <th class="p-2 text-left">Gain</th>
+          <th class="p-2 text-left">Loss</th>
+          <th class="p-2 text-left">Net</th>
+        </tr>
+      </thead>
+
+      <tbody id="currencyGainLossBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+
+  </div>
+</div>
+<div id="topCustomersPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Top Customers</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Customer</label>
+        <input type="text" id="topCustomersSearch" class="border px-2 py-1 rounded text-sm" placeholder="Customer name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="topCustomersStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="topCustomersEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyTopCustomersFilters()"
+      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearTopCustomersFilters()"
+      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('topCustomersTable','Top Customers Report','topCustomersSearch')"
+      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleTopCustomersGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleTopCustomersCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="topCustomersCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="topCustomersCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyTopCustomersComparison()"
+            class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500">
+            Apply
+          </button>
+
+          <button onclick="clearTopCustomersComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleTopCustomersSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="topCustomersSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="topCustomersView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleTopCustomersDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyTopCustomersSettings()"
+            class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500">
+            Apply
+          </button>
+
+          <button onclick="clearTopCustomersSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="topCustomersChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="topCustomersTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Customer</th>
+          <th class="p-2 text-left">Sales</th>
+          <th class="p-2 text-left">Orders</th>
+          <th class="p-2 text-left">Last Purchase</th>
+          <th class="p-2 text-left">Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="topCustomersBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="topSellingItemsPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Top Selling Items</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Item</label>
+        <input type="text" id="topSellingItemsSearch" class="border px-2 py-1 rounded text-sm" placeholder="Item name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="topSellingItemsStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="topSellingItemsEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applyTopSellingItemsFilters()"
+      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearTopSellingItemsFilters()"
+      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('topSellingItemsTable','Top Selling Items Report','topSellingItemsSearch')"
+      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleTopSellingItemsGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleTopSellingItemsCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="topSellingItemsCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="topSellingItemsCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyTopSellingItemsComparison()"
+            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+            Apply
+          </button>
+
+          <button onclick="clearTopSellingItemsComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleTopSellingItemsSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="topSellingItemsSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="topSellingItemsView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleTopSellingItemsDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applyTopSellingItemsSettings()"
+            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+            Apply
+          </button>
+
+          <button onclick="clearTopSellingItemsSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="topSellingItemsChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="topSellingItemsTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Item</th>
+          <th class="p-2 text-left">Quantity Sold</th>
+          <th class="p-2 text-left">Revenue</th>
+          <th class="p-2 text-left">Profit</th>
+          <th class="p-2 text-left">Trend</th>
+        </tr>
+      </thead>
+
+      <tbody id="topSellingItemsBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="salesComparisonPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Sales Comparison</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Product / Category</label>
+        <input type="text" id="salesComparisonSearch" class="border px-2 py-1 rounded text-sm" placeholder="Item or category">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="salesComparisonStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="salesComparisonEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applySalesComparisonFilters()"
+      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearSalesComparisonFilters()"
+      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('salesComparisonTable','Sales Comparison Report','salesComparisonSearch')"
+      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleSalesComparisonGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleSalesComparisonCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="salesComparisonCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="salesComparisonCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applySalesComparisonComparison()"
+            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            Apply
+          </button>
+
+          <button onclick="clearSalesComparisonComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleSalesComparisonSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="salesComparisonSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="salesComparisonView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleSalesComparisonDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applySalesComparisonSettings()"
+            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            Apply
+          </button>
+
+          <button onclick="clearSalesComparisonSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="salesComparisonChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="salesComparisonTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Item / Category</th>
+          <th class="p-2 text-left">Current Period</th>
+          <th class="p-2 text-left">Previous Period</th>
+          <th class="p-2 text-left">Difference</th>
+          <th class="p-2 text-left">Growth %</th>
+        </tr>
+      </thead>
+
+      <tbody id="salesComparisonBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="salesTaxSummaryPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Sales Tax Summary</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Tax Type</label>
+        <input type="text" id="salesTaxSummarySearch" class="border px-2 py-1 rounded text-sm" placeholder="VAT, GST...">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="salesTaxSummaryStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="salesTaxSummaryEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applySalesTaxSummaryFilters()"
+      class="px-3 py-1 bg-rose-700 text-white rounded hover:bg-rose-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearSalesTaxSummaryFilters()"
+      class="px-3 py-1 bg-rose-700 text-white rounded hover:bg-rose-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('salesTaxSummaryTable','Sales Tax Summary Report','salesTaxSummarySearch')"
+      class="px-3 py-1 bg-rose-700 text-white rounded hover:bg-rose-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleSalesTaxSummaryGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleSalesTaxSummaryCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="salesTaxSummaryCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="salesTaxSummaryCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applySalesTaxSummaryComparison()"
+            class="bg-rose-600 text-white px-3 py-1 rounded hover:bg-rose-500">
+            Apply
+          </button>
+
+          <button onclick="clearSalesTaxSummaryComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleSalesTaxSummarySettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="salesTaxSummarySettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="salesTaxSummaryView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleSalesTaxSummaryDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applySalesTaxSummarySettings()"
+            class="bg-rose-600 text-white px-3 py-1 rounded hover:bg-rose-500">
+            Apply
+          </button>
+
+          <button onclick="clearSalesTaxSummarySettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="salesTaxSummaryChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="salesTaxSummaryTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Tax Type</th>
+          <th class="p-2 text-left">Taxable Amount</th>
+          <th class="p-2 text-left">Tax Amount</th>
+          <th class="p-2 text-left">Rate %</th>
+          <th class="p-2 text-left">Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="salesTaxSummaryBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+<div id="salesForecastPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-gray-800">Sales Forecast</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label class="text-xs font-semibold">Product / Category</label>
+        <input type="text" id="salesForecastSearch" class="border px-2 py-1 rounded text-sm" placeholder="Item or category">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Start</label>
+        <input type="date" id="salesForecastStart" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">End</label>
+        <input type="date" id="salesForecastEnd" class="border px-2 py-1 rounded text-sm">
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="flex gap-2 mb-4 flex-wrap">
+
+    <button onclick="applySalesForecastFilters()"
+      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      🔍 Apply Filter
+    </button>
+
+    <button onclick="clearSalesForecastFilters()"
+      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      ❌ Clear
+    </button>
+
+    <button onclick="exportFilteredTableToCSV('salesForecastTable','Sales Forecast Report','salesForecastSearch')"
+      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      ⬇ Export CSV
+    </button>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleSalesForecastGroupBy()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleSalesForecastCompareDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Compare ▼
+      </button>
+
+      <div id="salesForecastCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="salesForecastCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applySalesForecastComparison()"
+            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+            Apply
+          </button>
+
+          <button onclick="clearSalesForecastComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleSalesForecastSettings()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="salesForecastSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <div class="mb-3">
+
+          <label class="text-sm font-semibold">View</label>
+
+          <select id="salesForecastView"
+            class="border rounded px-2 py-1 w-full">
+
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-center gap-2 mb-3">
+          <input type="checkbox" onchange="toggleSalesForecastDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applySalesForecastSettings()"
+            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+            Apply
+          </button>
+
+          <button onclick="clearSalesForecastSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="salesForecastChart"></canvas>
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full border text-sm" id="salesForecastTable">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Item / Category</th>
+          <th class="p-2 text-left">Current Sales</th>
+          <th class="p-2 text-left">Forecasted Sales</th>
+          <th class="p-2 text-left">Growth %</th>
+          <th class="p-2 text-left">Trend</th>
+        </tr>
+      </thead>
+
+      <tbody id="salesForecastBody">
+        <tr>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
 <div id="kpiDashboardPanel" class="report-view hidden bg-blue-50 rounded-xl shadow-md mb-6 p-6 border-2 border-blue-500">
 
   <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
@@ -66715,6 +70277,223 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="h-64">
       <canvas id="kpiDashboardChart"></canvas>
     </div>
+</div>
+<div id="businessHealthPanel" class="report-view hidden bg-green-50 rounded-xl shadow-md mb-6 p-6 border-2 border-green-500">
+
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+
+    <div>
+      <h3 class="text-lg font-bold text-green-900">Business Health Overview</h3>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+
+      <div>
+        <label for="businessHealthMonthFilter" class="text-xs font-semibold text-green-800">
+          Select Month
+        </label>
+        <input type="month"
+               id="businessHealthMonthFilter"
+               class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label for="businessHealthStartDate" class="text-xs font-semibold text-green-800">
+          Start
+        </label>
+        <input type="date"
+               id="businessHealthStartDate"
+               class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <div>
+        <label for="businessHealthEndDate" class="text-xs font-semibold text-green-800">
+          End
+        </label>
+        <input type="date"
+               id="businessHealthEndDate"
+               class="border px-2 py-1 rounded text-sm">
+      </div>
+
+      <button onclick="loadBusinessHealthDashboard()"
+              class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-3 py-1 rounded shadow">
+        Apply
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3 mb-4">
+
+    <div class="relative">
+
+      <button onclick="toggleBusinessHealthGroupByDropdown()"
+              class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Group By ▼
+      </button>
+
+      <div id="businessHealthGroupByDropdown"
+           class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4 space-y-4">
+
+        <div>
+
+          <h3 class="font-semibold mb-2">Group By</h3>
+
+          <select id="businessHealthGroupBy"
+                  class="border rounded px-2 py-2 w-full"
+                  onchange="loadBusinessHealthDashboard()">
+
+            <option value="month">Month</option>
+            <option value="quarter">Quarter</option>
+            <option value="year">Year</option>
+
+          </select>
+
+        </div>
+
+        <div>
+
+          <h3 class="font-semibold mb-2">Metric Filter</h3>
+
+          <input type="text"
+                 id="businessHealthMetricSearch"
+                 class="border rounded px-2 py-2 w-full"
+                 placeholder="Search Metric..."
+                 onkeyup="loadBusinessHealthDashboard()">
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleBusinessHealthShowByDropdown()"
+              class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Show By ▼
+      </button>
+
+      <div id="businessHealthShowByDropdown"
+           class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Show By</h3>
+
+        <select id="businessHealthShowBy"
+                class="border rounded px-2 py-2 w-full"
+                onchange="loadBusinessHealthDashboard()">
+
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleBusinessHealthSettingsDropdown()"
+              class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="businessHealthSettingsDropdown"
+           class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Settings</h3>
+
+        <div class="space-y-3">
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" onchange="toggleBusinessHealthDarkMode(this)">
+            Dark Mode
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" onchange="toggleBusinessHealthCompactView(this)">
+            Compact View
+          </label>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+
+    <div class="bg-green-100 p-4 rounded-xl shadow text-center border-2 border-green-500">
+      <p class="text-xs font-semibold text-green-800">Liquidity</p>
+      <p id="businessHealthLiquidity"
+         data-amount="0"
+         class="text-xl font-bold text-green-900">
+         0%
+      </p>
+    </div>
+
+    <div class="bg-blue-100 p-4 rounded-xl shadow text-center border-2 border-blue-500">
+      <p class="text-xs font-semibold text-blue-800">Profit Margin</p>
+      <p id="businessHealthProfitMargin"
+         data-amount="0"
+         class="text-xl font-bold text-blue-900">
+         0%
+      </p>
+    </div>
+
+    <div class="bg-yellow-100 p-4 rounded-xl shadow text-center border-2 border-yellow-500">
+      <p class="text-xs font-semibold text-yellow-800">Expense Ratio</p>
+      <p id="businessHealthExpenseRatio"
+         data-amount="0"
+         class="text-xl font-bold text-yellow-900">
+         0%
+      </p>
+    </div>
+
+    <div class="bg-purple-100 p-4 rounded-xl shadow text-center border-2 border-purple-500">
+      <p class="text-xs font-semibold text-purple-800">Growth Rate</p>
+      <p id="businessHealthGrowthRate"
+         data-amount="0"
+         class="text-xl font-bold text-purple-900">
+         0%
+      </p>
+    </div>
+
+    <div class="bg-red-100 p-4 rounded-xl shadow text-center border-2 border-red-500">
+      <p class="text-xs font-semibold text-red-800">Debt Ratio</p>
+      <p id="businessHealthDebtRatio"
+         data-amount="0"
+         class="text-xl font-bold text-red-900">
+         0%
+      </p>
+    </div>
+
+    <div class="bg-emerald-100 p-4 rounded-xl shadow text-center border-2 border-emerald-600">
+      <p class="text-xs font-semibold text-emerald-800">Business Score</p>
+      <p id="businessHealthScore"
+         data-amount="0"
+         class="text-xl font-bold text-emerald-900">
+         0/100
+      </p>
+    </div>
+
+  </div>
+
+  <div class="mt-6 bg-white p-4 rounded-xl shadow">
+
+    <h4 class="text-sm font-semibold text-green-800 mb-2">
+      Business Health Analysis
+    </h4>
+
+    <div class="h-64">
+      <canvas id="businessHealthChart"></canvas>
+    </div>
+
+  </div>
 </div>
 </div>
 </div>
@@ -74995,6 +78774,1699 @@ function renderRecurringInvoiceReport() {
 
 }
 
+</script>
+<script>
+
+function loadBusinessHealthDashboard() {
+
+  document.getElementById("businessHealthLiquidity").innerText = "75%";
+  document.getElementById("businessHealthProfitMargin").innerText = "32%";
+  document.getElementById("businessHealthExpenseRatio").innerText = "45%";
+  document.getElementById("businessHealthGrowthRate").innerText = "18%";
+  document.getElementById("businessHealthDebtRatio").innerText = "20%";
+  document.getElementById("businessHealthScore").innerText = "82/100";
+
+  const canvas = document.getElementById("businessHealthChart");
+
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  if (window.businessHealthChartInstance) {
+    window.businessHealthChartInstance.destroy();
+  }
+
+  window.businessHealthChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: [
+        "Liquidity",
+        "Profit",
+        "Expenses",
+        "Growth",
+        "Debt"
+      ],
+      datasets: [{
+        label: "Business Health",
+        data: [75, 32, 45, 18, 20]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+
+}
+
+function toggleBusinessHealthGroupByDropdown() {
+  document
+    .getElementById("businessHealthGroupByDropdown")
+    .classList.toggle("hidden");
+}
+
+function toggleBusinessHealthShowByDropdown() {
+  document
+    .getElementById("businessHealthShowByDropdown")
+    .classList.toggle("hidden");
+}
+
+function toggleBusinessHealthSettingsDropdown() {
+  document
+    .getElementById("businessHealthSettingsDropdown")
+    .classList.toggle("hidden");
+}
+
+function toggleBusinessHealthDarkMode(el) {
+
+  const panel = document.getElementById("businessHealthPanel");
+
+  if (el.checked) {
+    panel.classList.add("bg-gray-900", "text-white");
+  } else {
+    panel.classList.remove("bg-gray-900", "text-white");
+  }
+
+}
+
+function toggleBusinessHealthCompactView(el) {
+
+  const panel = document.getElementById("businessHealthPanel");
+
+  if (el.checked) {
+    panel.classList.add("p-2");
+  } else {
+    panel.classList.remove("p-2");
+  }
+
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  loadBusinessHealthDashboard();
+});
+
+</script>
+<script>
+
+function applyProfitTrendFilters() {
+  renderProfitTrend();
+}
+
+function clearProfitTrendFilters() {
+  document.getElementById("profitTrendMonth").value = "";
+  document.getElementById("profitTrendStart").value = "";
+  document.getElementById("profitTrendEnd").value = "";
+  renderProfitTrend();
+}
+
+function renderProfitTrend() {
+
+  const revenue = [120000, 180000, 150000, 240000, 300000, 420000];
+  const expenses = [80000, 90000, 85000, 120000, 160000, 200000];
+
+  const net = revenue.map((r, i) => r - expenses[i]);
+
+  const canvas = document.getElementById("profitTrendChart");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  if (window.profitTrendChartInstance) {
+    window.profitTrendChartInstance.destroy();
+  }
+
+  window.profitTrendChartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+      datasets: [
+        {
+          label: "Revenue",
+          data: revenue
+        },
+        {
+          label: "Expenses",
+          data: expenses
+        },
+        {
+          label: "Net Profit",
+          data: net
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+
+}
+
+function toggleProfitTrendCompareDropdown() {
+  document.getElementById("profitTrendCompareDropdown").classList.toggle("hidden");
+}
+
+function toggleProfitTrendSettings() {
+  document.getElementById("profitTrendSettingsDropdown").classList.toggle("hidden");
+}
+
+function applyProfitTrendComparison() {
+  renderProfitTrend();
+}
+
+function clearProfitTrendComparison() {
+  document.getElementById("profitTrendCompareType").value = "";
+  renderProfitTrend();
+}
+
+function applyProfitTrendSettings() {
+  renderProfitTrend();
+}
+
+function clearProfitTrendSettings() {
+  document.getElementById("profitTrendView").value = "summary";
+  renderProfitTrend();
+}
+
+function toggleProfitTrendDarkMode(el) {
+  const panel = document.getElementById("profitTrendPanel");
+  if (el.checked) {
+    panel.classList.add("bg-gray-900", "text-white");
+  } else {
+    panel.classList.remove("bg-gray-900", "text-white");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  renderProfitTrend();
+});
+
+</script>
+<script>
+
+function applyRevenueVsExpensesFilters() {
+  renderRevenueVsExpenses();
+}
+
+function clearRevenueVsExpensesFilters() {
+  document.getElementById("revExpMonth").value = "";
+  document.getElementById("revExpStart").value = "";
+  document.getElementById("revExpEnd").value = "";
+  renderRevenueVsExpenses();
+}
+
+function renderRevenueVsExpenses() {
+
+  const revenue = [200000, 250000, 180000, 300000, 350000, 420000];
+  const expenses = [120000, 140000, 110000, 160000, 190000, 210000];
+
+  const canvas = document.getElementById("revenueVsExpensesChart");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  if (window.revExpChartInstance) {
+    window.revExpChartInstance.destroy();
+  }
+
+  window.revExpChartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+      datasets: [
+        {
+          label: "Revenue",
+          data: revenue
+        },
+        {
+          label: "Expenses",
+          data: expenses
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+
+}
+
+function toggleRevExpCompareDropdown() {
+  document.getElementById("revExpCompareDropdown").classList.toggle("hidden");
+}
+
+function toggleRevExpSettings() {
+  document.getElementById("revExpSettingsDropdown").classList.toggle("hidden");
+}
+
+function applyRevExpComparison() {
+  renderRevenueVsExpenses();
+}
+
+function clearRevExpComparison() {
+  document.getElementById("revExpCompareType").value = "";
+  renderRevenueVsExpenses();
+}
+
+function applyRevExpSettings() {
+  renderRevenueVsExpenses();
+}
+
+function clearRevExpSettings() {
+  document.getElementById("revExpView").value = "summary";
+  renderRevenueVsExpenses();
+}
+
+function toggleRevExpDarkMode(el) {
+  const panel = document.getElementById("revenueVsExpensesPanel");
+
+  if (el.checked) {
+    panel.classList.add("bg-gray-900", "text-white");
+  } else {
+    panel.classList.remove("bg-gray-900", "text-white");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  renderRevenueVsExpenses();
+});
+
+</script>
+<script>
+
+function applyCashflowFilters() {
+  renderCashflow();
+}
+
+function clearCashflowFilters() {
+  document.getElementById("cashflowMonth").value = "";
+  document.getElementById("cashflowStart").value = "";
+  document.getElementById("cashflowEnd").value = "";
+  renderCashflow();
+}
+
+function renderCashflow() {
+
+  const inflow = [200000, 220000, 250000, 210000, 300000, 320000];
+  const outflow = [150000, 160000, 170000, 180000, 200000, 210000];
+  const net = inflow.map((v, i) => v - outflow[i]);
+
+  const canvas = document.getElementById("cashflowChart");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  if (window.cashflowChartInstance) {
+    window.cashflowChartInstance.destroy();
+  }
+
+  window.cashflowChartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+      datasets: [
+        { label: "Inflow", data: inflow },
+        { label: "Outflow", data: outflow },
+        { label: "Net", data: net }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+
+}
+
+function toggleCashflowCompareDropdown() {
+  document.getElementById("cashflowCompareDropdown").classList.toggle("hidden");
+}
+
+function toggleCashflowSettings() {
+  document.getElementById("cashflowSettingsDropdown").classList.toggle("hidden");
+}
+
+function applyCashflowComparison() {
+  renderCashflow();
+}
+
+function clearCashflowComparison() {
+  document.getElementById("cashflowCompareType").value = "";
+  renderCashflow();
+}
+
+function applyCashflowSettings() {
+  renderCashflow();
+}
+
+function clearCashflowSettings() {
+  document.getElementById("cashflowView").value = "summary";
+  renderCashflow();
+}
+
+function toggleCashflowDarkMode(el) {
+  const panel = document.getElementById("cashflowForecastPanel");
+
+  if (el.checked) {
+    panel.classList.add("bg-gray-900", "text-white");
+  } else {
+    panel.classList.remove("bg-gray-900", "text-white");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  renderCashflow();
+});
+
+</script>
+<script>
+function applyProjectExpensesFilters() {
+  renderProjectExpenses();
+}
+
+function clearProjectExpensesFilters() {
+  document.getElementById("projectExpensesProject").value = "";
+  document.getElementById("projectExpensesStart").value = "";
+  document.getElementById("projectExpensesEnd").value = "";
+  renderProjectExpenses();
+}
+
+function renderProjectExpenses() {
+  const project = document.getElementById("projectExpensesProject")?.value || "";
+  const start = document.getElementById("projectExpensesStart")?.value || "";
+  const end = document.getElementById("projectExpensesEnd")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("projectExpenses") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date);
+    return (!project || r.project === project) &&
+           (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const tbody = document.getElementById("projectExpensesBody");
+  tbody.innerHTML = "";
+
+  let total = 0;
+
+  filtered.forEach(r => {
+    total += parseFloat(r.amount || 0);
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.project || ""}</td>
+      <td class="p-2">${r.description || ""}</td>
+      <td class="p-2">${r.date || ""}</td>
+      <td class="p-2">${parseFloat(r.amount || 0).toFixed(2)}</td>
+      <td class="p-2">${r.user || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const totalEl = document.getElementById("projectExpensesTotal");
+  if (totalEl) totalEl.innerText = total.toFixed(2);
+}
+
+function toggleProjectExpensesGroupBy() {}
+
+function toggleProjectExpensesCompareDropdown() {
+  const el = document.getElementById("projectExpensesCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyProjectExpensesComparison() {}
+
+function clearProjectExpensesComparison() {}
+
+function toggleProjectExpensesSettings() {
+  const el = document.getElementById("projectExpensesSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyProjectExpensesSettings() {}
+
+function clearProjectExpensesSettings() {}
+
+function toggleProjectExpensesDarkMode(el) {
+  const panel = document.getElementById("projectExpensesPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+
+
+<script>
+function applyProjectRevenueFilters() {
+  renderProjectRevenue();
+}
+
+function clearProjectRevenueFilters() {
+  document.getElementById("projectRevenueProject").value = "";
+  document.getElementById("projectRevenueStart").value = "";
+  document.getElementById("projectRevenueEnd").value = "";
+  renderProjectRevenue();
+}
+
+function renderProjectRevenue() {
+  const project = document.getElementById("projectRevenueProject")?.value || "";
+  const start = document.getElementById("projectRevenueStart")?.value || "";
+  const end = document.getElementById("projectRevenueEnd")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("projectRevenue") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date);
+    return (!project || r.project === project) &&
+           (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const tbody = document.getElementById("projectRevenueBody");
+  tbody.innerHTML = "";
+
+  let total = 0;
+
+  filtered.forEach(r => {
+    total += parseFloat(r.amount || 0);
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.project || ""}</td>
+      <td class="p-2">${r.source || ""}</td>
+      <td class="p-2">${r.date || ""}</td>
+      <td class="p-2">${parseFloat(r.amount || 0).toFixed(2)}</td>
+      <td class="p-2">${r.user || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const totalEl = document.getElementById("projectRevenueTotal");
+  if (totalEl) totalEl.innerText = total.toFixed(2);
+}
+
+function toggleProjectRevenueGroupBy() {}
+
+function toggleProjectRevenueCompareDropdown() {
+  const el = document.getElementById("projectRevenueCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyProjectRevenueComparison() {}
+
+function clearProjectRevenueComparison() {}
+
+function toggleProjectRevenueSettings() {
+  const el = document.getElementById("projectRevenueSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyProjectRevenueSettings() {}
+
+function clearProjectRevenueSettings() {}
+
+function toggleProjectRevenueDarkMode(el) {
+  const panel = document.getElementById("projectRevenuePanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applyProjectBudgetVarianceFilters() {
+  renderProjectBudgetVariance();
+}
+
+function clearProjectBudgetVarianceFilters() {
+  document.getElementById("projectBudgetVarianceProject").value = "";
+  document.getElementById("projectBudgetVarianceStart").value = "";
+  document.getElementById("projectBudgetVarianceEnd").value = "";
+  renderProjectBudgetVariance();
+}
+
+function renderProjectBudgetVariance() {
+  const project = document.getElementById("projectBudgetVarianceProject")?.value || "";
+  const start = document.getElementById("projectBudgetVarianceStart")?.value || "";
+  const end = document.getElementById("projectBudgetVarianceEnd")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("projectBudgetVariance") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date);
+    return (!project || r.project === project) &&
+           (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const tbody = document.getElementById("projectBudgetVarianceBody");
+  tbody.innerHTML = "";
+
+  filtered.forEach(r => {
+    const budget = parseFloat(r.budget || 0);
+    const actual = parseFloat(r.actual || 0);
+    const variance = budget - actual;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.project || ""}</td>
+      <td class="p-2">${budget.toFixed(2)}</td>
+      <td class="p-2">${actual.toFixed(2)}</td>
+      <td class="p-2">${variance.toFixed(2)}</td>
+      <td class="p-2">${variance >= 0 ? "Under Budget" : "Over Budget"}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleProjectBudgetVarianceGroupBy() {}
+
+function toggleProjectBudgetVarianceCompareDropdown() {
+  const el = document.getElementById("projectBudgetVarianceCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyProjectBudgetVarianceComparison() {}
+
+function clearProjectBudgetVarianceComparison() {}
+
+function toggleProjectBudgetVarianceSettings() {
+  const el = document.getElementById("projectBudgetVarianceSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyProjectBudgetVarianceSettings() {}
+
+function clearProjectBudgetVarianceSettings() {}
+
+function toggleProjectBudgetVarianceDarkMode(el) {
+  const panel = document.getElementById("projectBudgetVariancePanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applyProjectTimelineFilters() {
+  renderProjectTimeline();
+}
+
+function clearProjectTimelineFilters() {
+  document.getElementById("projectTimelineProject").value = "";
+  document.getElementById("projectTimelineStart").value = "";
+  document.getElementById("projectTimelineEnd").value = "";
+  renderProjectTimeline();
+}
+
+function renderProjectTimeline() {
+  const project = document.getElementById("projectTimelineProject")?.value || "";
+  const start = document.getElementById("projectTimelineStart")?.value || "";
+  const end = document.getElementById("projectTimelineEnd")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("projectTimeline") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date || r.startDate);
+    return (!project || r.project === project) &&
+           (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const tbody = document.getElementById("projectTimelineBody");
+  tbody.innerHTML = "";
+
+  filtered.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.project || ""}</td>
+      <td class="p-2">${r.task || ""}</td>
+      <td class="p-2">${r.startDate || ""}</td>
+      <td class="p-2">${r.endDate || ""}</td>
+      <td class="p-2">${r.status || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleProjectTimelineGroupBy() {}
+
+function toggleProjectTimelineCompareDropdown() {
+  const el = document.getElementById("projectTimelineCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyProjectTimelineComparison() {}
+
+function clearProjectTimelineComparison() {}
+
+function toggleProjectTimelineSettings() {
+  const el = document.getElementById("projectTimelineSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyProjectTimelineSettings() {}
+
+function clearProjectTimelineSettings() {}
+
+function toggleProjectTimelineDarkMode(el) {
+  const panel = document.getElementById("projectTimelinePanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applyBatchTrackingFilters() {
+  renderBatchTracking();
+}
+
+function clearBatchTrackingFilters() {
+  document.getElementById("batchTrackingBatch").value = "";
+  document.getElementById("batchTrackingStart").value = "";
+  document.getElementById("batchTrackingEnd").value = "";
+  renderBatchTracking();
+}
+
+function renderBatchTracking() {
+  const batch = document.getElementById("batchTrackingBatch")?.value || "";
+  const start = document.getElementById("batchTrackingStart")?.value || "";
+  const end = document.getElementById("batchTrackingEnd")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("batchTracking") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date || r.createdAt);
+    return (!batch || r.batchNumber === batch) &&
+           (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const tbody = document.getElementById("batchTrackingBody");
+  tbody.innerHTML = "";
+
+  filtered.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.batchNumber || ""}</td>
+      <td class="p-2">${r.item || ""}</td>
+      <td class="p-2">${r.quantity || ""}</td>
+      <td class="p-2">${r.warehouse || ""}</td>
+      <td class="p-2">${r.status || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleBatchTrackingGroupBy() {}
+
+function toggleBatchTrackingCompareDropdown() {
+  const el = document.getElementById("batchTrackingCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyBatchTrackingComparison() {}
+
+function clearBatchTrackingComparison() {}
+
+function toggleBatchTrackingSettings() {
+  const el = document.getElementById("batchTrackingSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyBatchTrackingSettings() {}
+
+function clearBatchTrackingSettings() {}
+
+function toggleBatchTrackingDarkMode(el) {
+  const panel = document.getElementById("batchTrackingPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applyDamagedStockFilters() {
+  renderDamagedStock();
+}
+
+function clearDamagedStockFilters() {
+  document.getElementById("damagedStockItem").value = "";
+  document.getElementById("damagedStockStart").value = "";
+  document.getElementById("damagedStockEnd").value = "";
+  renderDamagedStock();
+}
+
+function renderDamagedStock() {
+  const item = document.getElementById("damagedStockItem")?.value || "";
+  const start = document.getElementById("damagedStockStart")?.value || "";
+  const end = document.getElementById("damagedStockEnd")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("damagedStock") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date || r.createdAt);
+    return (!item || r.item === item) &&
+           (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const tbody = document.getElementById("damagedStockBody");
+  tbody.innerHTML = "";
+
+  let totalLoss = 0;
+
+  filtered.forEach(r => {
+    const loss = parseFloat(r.loss || r.amount || 0);
+    totalLoss += loss;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.item || ""}</td>
+      <td class="p-2">${r.quantity || ""}</td>
+      <td class="p-2">${loss.toFixed(2)}</td>
+      <td class="p-2">${r.reason || ""}</td>
+      <td class="p-2">${r.user || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const totalEl = document.getElementById("damagedStockTotal");
+  if (totalEl) totalEl.innerText = totalLoss.toFixed(2);
+}
+
+function toggleDamagedStockGroupBy() {}
+
+function toggleDamagedStockCompareDropdown() {
+  const el = document.getElementById("damagedStockCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyDamagedStockComparison() {}
+
+function clearDamagedStockComparison() {}
+
+function toggleDamagedStockSettings() {
+  const el = document.getElementById("damagedStockSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyDamagedStockSettings() {}
+
+function clearDamagedStockSettings() {}
+
+function toggleDamagedStockDarkMode(el) {
+  const panel = document.getElementById("damagedStockPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applyExpiredItemsFilters() {
+  renderExpiredItems();
+}
+
+function clearExpiredItemsFilters() {
+  document.getElementById("expiredItemsItem").value = "";
+  document.getElementById("expiredItemsStart").value = "";
+  document.getElementById("expiredItemsEnd").value = "";
+  renderExpiredItems();
+}
+
+function renderExpiredItems() {
+  const item = document.getElementById("expiredItemsItem")?.value || "";
+  const start = document.getElementById("expiredItemsStart")?.value || "";
+  const end = document.getElementById("expiredItemsEnd")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("expiredItems") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.expiryDate || r.date);
+    return (!item || r.item === item) &&
+           (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const tbody = document.getElementById("expiredItemsBody");
+  tbody.innerHTML = "";
+
+  let totalLoss = 0;
+
+  filtered.forEach(r => {
+    const loss = parseFloat(r.loss || r.amount || 0);
+    totalLoss += loss;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.item || ""}</td>
+      <td class="p-2">${r.quantity || ""}</td>
+      <td class="p-2">${r.expiryDate || ""}</td>
+      <td class="p-2">${loss.toFixed(2)}</td>
+      <td class="p-2">${r.reason || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const totalEl = document.getElementById("expiredItemsTotal");
+  if (totalEl) totalEl.innerText = totalLoss.toFixed(2);
+}
+
+function toggleExpiredItemsGroupBy() {}
+
+function toggleExpiredItemsCompareDropdown() {
+  const el = document.getElementById("expiredItemsCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyExpiredItemsComparison() {}
+
+function clearExpiredItemsComparison() {}
+
+function toggleExpiredItemsSettings() {
+  const el = document.getElementById("expiredItemsSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyExpiredItemsSettings() {}
+
+function clearExpiredItemsSettings() {}
+
+function toggleExpiredItemsDarkMode(el) {
+  const panel = document.getElementById("expiredItemsPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applyLeaveSummaryFilters() {
+  renderLeaveSummary();
+}
+
+function clearLeaveSummaryFilters() {
+  document.getElementById("leaveSummaryEmployee").value = "";
+  document.getElementById("leaveSummaryStart").value = "";
+  document.getElementById("leaveSummaryEnd").value = "";
+  renderLeaveSummary();
+}
+
+function renderLeaveSummary() {
+  const employee = document.getElementById("leaveSummaryEmployee")?.value || "";
+  const start = document.getElementById("leaveSummaryStart")?.value || "";
+  const end = document.getElementById("leaveSummaryEnd")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("leaveSummary") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date || r.startDate);
+    return (!employee || r.employee === employee) &&
+           (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const tbody = document.getElementById("leaveSummaryBody");
+  tbody.innerHTML = "";
+
+  let totalDays = 0;
+
+  filtered.forEach(r => {
+    const days = parseFloat(r.days || 0);
+    totalDays += days;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.employee || ""}</td>
+      <td class="p-2">${r.type || ""}</td>
+      <td class="p-2">${r.startDate || ""}</td>
+      <td class="p-2">${r.endDate || ""}</td>
+      <td class="p-2">${days}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const totalEl = document.getElementById("leaveSummaryTotal");
+  if (totalEl) totalEl.innerText = totalDays;
+}
+
+function toggleLeaveSummaryGroupBy() {}
+
+function toggleLeaveSummaryCompareDropdown() {
+  const el = document.getElementById("leaveSummaryCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyLeaveSummaryComparison() {}
+
+function clearLeaveSummaryComparison() {}
+
+function toggleLeaveSummarySettings() {
+  const el = document.getElementById("leaveSummarySettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyLeaveSummarySettings() {}
+
+function clearLeaveSummarySettings() {}
+
+function toggleLeaveSummaryDarkMode(el) {
+  const panel = document.getElementById("leaveSummaryPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applyAttendanceSummaryFilters() {
+  renderAttendanceSummary();
+}
+
+function clearAttendanceSummaryFilters() {
+  document.getElementById("attendanceSummaryEmployee").value = "";
+  document.getElementById("attendanceSummaryStart").value = "";
+  document.getElementById("attendanceSummaryEnd").value = "";
+  renderAttendanceSummary();
+}
+
+function renderAttendanceSummary() {
+  const employee = document.getElementById("attendanceSummaryEmployee")?.value || "";
+  const start = document.getElementById("attendanceSummaryStart")?.value || "";
+  const end = document.getElementById("attendanceSummaryEnd")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("attendanceSummary") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date);
+    return (!employee || r.employee === employee) &&
+           (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const tbody = document.getElementById("attendanceSummaryBody");
+  tbody.innerHTML = "";
+
+  let totalPresent = 0;
+  let totalAbsent = 0;
+
+  filtered.forEach(r => {
+    if (r.status === "Present") totalPresent++;
+    if (r.status === "Absent") totalAbsent++;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.employee || ""}</td>
+      <td class="p-2">${r.date || ""}</td>
+      <td class="p-2">${r.status || ""}</td>
+      <td class="p-2">${r.checkIn || ""}</td>
+      <td class="p-2">${r.checkOut || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const presentEl = document.getElementById("attendancePresentTotal");
+  const absentEl = document.getElementById("attendanceAbsentTotal");
+
+  if (presentEl) presentEl.innerText = totalPresent;
+  if (absentEl) absentEl.innerText = totalAbsent;
+}
+
+function toggleAttendanceSummaryGroupBy() {}
+
+function toggleAttendanceSummaryCompareDropdown() {
+  const el = document.getElementById("attendanceSummaryCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyAttendanceSummaryComparison() {}
+
+function clearAttendanceSummaryComparison() {}
+
+function toggleAttendanceSummarySettings() {
+  const el = document.getElementById("attendanceSummarySettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyAttendanceSummarySettings() {}
+
+function clearAttendanceSummarySettings() {}
+
+function toggleAttendanceSummaryDarkMode(el) {
+  const panel = document.getElementById("attendanceSummaryPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applyOvertimeSummaryFilters() {
+  renderOvertimeSummary();
+}
+
+function clearOvertimeSummaryFilters() {
+  document.getElementById("overtimeSummaryEmployee").value = "";
+  document.getElementById("overtimeSummaryStart").value = "";
+  document.getElementById("overtimeSummaryEnd").value = "";
+  renderOvertimeSummary();
+}
+
+function renderOvertimeSummary() {
+  const employee = document.getElementById("overtimeSummaryEmployee")?.value || "";
+  const start = document.getElementById("overtimeSummaryStart")?.value || "";
+  const end = document.getElementById("overtimeSummaryEnd")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("overtimeSummary") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date);
+    return (!employee || r.employee === employee) &&
+           (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const tbody = document.getElementById("overtimeSummaryBody");
+  tbody.innerHTML = "";
+
+  let totalHours = 0;
+
+  filtered.forEach(r => {
+    const hours = parseFloat(r.hours || 0);
+    totalHours += hours;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.employee || ""}</td>
+      <td class="p-2">${r.date || ""}</td>
+      <td class="p-2">${hours}</td>
+      <td class="p-2">${r.rate || ""}</td>
+      <td class="p-2">${r.amount || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const totalEl = document.getElementById("overtimeTotalHours");
+  if (totalEl) totalEl.innerText = totalHours.toFixed(2);
+}
+
+function toggleOvertimeSummaryGroupBy() {}
+
+function toggleOvertimeSummaryCompareDropdown() {
+  const el = document.getElementById("overtimeSummaryCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyOvertimeSummaryComparison() {}
+
+function clearOvertimeSummaryComparison() {}
+
+function toggleOvertimeSummarySettings() {
+  const el = document.getElementById("overtimeSummarySettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyOvertimeSummarySettings() {}
+
+function clearOvertimeSummarySettings() {}
+
+function toggleOvertimeSummaryDarkMode(el) {
+  const panel = document.getElementById("overtimeSummaryPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applyBudgetVarianceFilters() {
+  renderBudgetVariance();
+}
+
+function clearBudgetVarianceFilters() {
+  document.getElementById("budgetVarianceProject").value = "";
+  document.getElementById("budgetVarianceStart").value = "";
+  document.getElementById("budgetVarianceEnd").value = "";
+  renderBudgetVariance();
+}
+
+function renderBudgetVariance() {
+  const project = document.getElementById("budgetVarianceProject")?.value || "";
+  const start = document.getElementById("budgetVarianceStart")?.value || "";
+  const end = document.getElementById("budgetVarianceEnd")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("budgetVariance") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date);
+    return (!project || r.project === project) &&
+           (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const tbody = document.getElementById("budgetVarianceBody");
+  tbody.innerHTML = "";
+
+  filtered.forEach(r => {
+    const budget = parseFloat(r.budget || 0);
+    const actual = parseFloat(r.actual || 0);
+    const variance = budget - actual;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.project || ""}</td>
+      <td class="p-2">${budget.toFixed(2)}</td>
+      <td class="p-2">${actual.toFixed(2)}</td>
+      <td class="p-2">${variance.toFixed(2)}</td>
+      <td class="p-2">${variance >= 0 ? "Under Budget" : "Over Budget"}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleBudgetVarianceGroupBy() {}
+
+function toggleBudgetVarianceCompareDropdown() {
+  const el = document.getElementById("budgetVarianceCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyBudgetVarianceComparison() {}
+
+function clearBudgetVarianceComparison() {}
+
+function toggleBudgetVarianceSettings() {
+  const el = document.getElementById("budgetVarianceSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyBudgetVarianceSettings() {}
+
+function clearBudgetVarianceSettings() {}
+
+function toggleBudgetVarianceDarkMode(el) {
+  const panel = document.getElementById("budgetVariancePanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applyCurrencyGainLossFilters() {
+  renderCurrencyGainLoss();
+}
+
+function clearCurrencyGainLossFilters() {
+  document.getElementById("currencyGainLossCurrency").value = "";
+  document.getElementById("currencyGainLossStart").value = "";
+  document.getElementById("currencyGainLossEnd").value = "";
+  renderCurrencyGainLoss();
+}
+
+function renderCurrencyGainLoss() {
+  const currency = document.getElementById("currencyGainLossCurrency")?.value || "";
+  const start = document.getElementById("currencyGainLossStart")?.value || "";
+  const end = document.getElementById("currencyGainLossEnd")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("currencyGainLoss") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date);
+    return (!currency || r.currency === currency) &&
+           (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const tbody = document.getElementById("currencyGainLossBody");
+  tbody.innerHTML = "";
+
+  let totalGain = 0;
+  let totalLoss = 0;
+
+  filtered.forEach(r => {
+    const gain = parseFloat(r.gain || 0);
+    const loss = parseFloat(r.loss || 0);
+
+    totalGain += gain;
+    totalLoss += loss;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.currency || ""}</td>
+      <td class="p-2">${r.rate || ""}</td>
+      <td class="p-2">${gain.toFixed(2)}</td>
+      <td class="p-2">${loss.toFixed(2)}</td>
+      <td class="p-2">${r.date || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const gainEl = document.getElementById("currencyGainTotal");
+  const lossEl = document.getElementById("currencyLossTotal");
+
+  if (gainEl) gainEl.innerText = totalGain.toFixed(2);
+  if (lossEl) lossEl.innerText = totalLoss.toFixed(2);
+}
+
+function toggleCurrencyGainLossGroupBy() {}
+
+function toggleCurrencyGainLossCompareDropdown() {
+  const el = document.getElementById("currencyGainLossCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyCurrencyGainLossComparison() {}
+
+function clearCurrencyGainLossComparison() {}
+
+function toggleCurrencyGainLossSettings() {
+  const el = document.getElementById("currencyGainLossSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyCurrencyGainLossSettings() {}
+
+function clearCurrencyGainLossSettings() {}
+
+function toggleCurrencyGainLossDarkMode(el) {
+  const panel = document.getElementById("currencyGainLossPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applyTopCustomersFilters() {
+  renderTopCustomers();
+}
+
+function clearTopCustomersFilters() {
+  document.getElementById("topCustomersStart").value = "";
+  document.getElementById("topCustomersEnd").value = "";
+  document.getElementById("topCustomersSearch").value = "";
+  renderTopCustomers();
+}
+
+function renderTopCustomers() {
+  const start = document.getElementById("topCustomersStart")?.value || "";
+  const end = document.getElementById("topCustomersEnd")?.value || "";
+  const search = document.getElementById("topCustomersSearch")?.value?.toLowerCase() || "";
+
+  const data = JSON.parse(localStorage.getItem("topCustomers") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date);
+    const matchDate = (!start || date >= new Date(start)) &&
+                      (!end || date <= new Date(end));
+    const matchSearch = !search || (r.customer || "").toLowerCase().includes(search);
+    return matchDate && matchSearch;
+  });
+
+  const tbody = document.getElementById("topCustomersBody");
+  tbody.innerHTML = "";
+
+  let totalSales = 0;
+
+  filtered.forEach(r => {
+    const sales = parseFloat(r.sales || 0);
+    totalSales += sales;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.customer || ""}</td>
+      <td class="p-2">${sales.toFixed(2)}</td>
+      <td class="p-2">${r.orders || ""}</td>
+      <td class="p-2">${r.region || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const totalEl = document.getElementById("topCustomersTotal");
+  if (totalEl) totalEl.innerText = totalSales.toFixed(2);
+}
+
+function toggleTopCustomersGroupBy() {}
+
+function toggleTopCustomersCompareDropdown() {
+  const el = document.getElementById("topCustomersCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyTopCustomersComparison() {}
+
+function clearTopCustomersComparison() {}
+
+function toggleTopCustomersSettings() {
+  const el = document.getElementById("topCustomersSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyTopCustomersSettings() {}
+
+function clearTopCustomersSettings() {}
+
+function toggleTopCustomersDarkMode(el) {
+  const panel = document.getElementById("topCustomersPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applyTopSellingItemsFilters() {
+  renderTopSellingItems();
+}
+
+function clearTopSellingItemsFilters() {
+  document.getElementById("topSellingItemsStart").value = "";
+  document.getElementById("topSellingItemsEnd").value = "";
+  document.getElementById("topSellingItemsSearch").value = "";
+  renderTopSellingItems();
+}
+
+function renderTopSellingItems() {
+  const start = document.getElementById("topSellingItemsStart")?.value || "";
+  const end = document.getElementById("topSellingItemsEnd")?.value || "";
+  const search = document.getElementById("topSellingItemsSearch")?.value?.toLowerCase() || "";
+
+  const data = JSON.parse(localStorage.getItem("topSellingItems") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date);
+    const matchDate = (!start || date >= new Date(start)) &&
+                      (!end || date <= new Date(end));
+    const matchSearch = !search || (r.item || "").toLowerCase().includes(search);
+    return matchDate && matchSearch;
+  });
+
+  const tbody = document.getElementById("topSellingItemsBody");
+  tbody.innerHTML = "";
+
+  let totalQty = 0;
+  let totalSales = 0;
+
+  filtered.forEach(r => {
+    const qty = parseFloat(r.quantity || 0);
+    const sales = parseFloat(r.sales || 0);
+
+    totalQty += qty;
+    totalSales += sales;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.item || ""}</td>
+      <td class="p-2">${qty}</td>
+      <td class="p-2">${sales.toFixed(2)}</td>
+      <td class="p-2">${r.category || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const qtyEl = document.getElementById("topSellingItemsTotalQty");
+  const salesEl = document.getElementById("topSellingItemsTotalSales");
+
+  if (qtyEl) qtyEl.innerText = totalQty;
+  if (salesEl) salesEl.innerText = totalSales.toFixed(2);
+}
+
+function toggleTopSellingItemsGroupBy() {}
+
+function toggleTopSellingItemsCompareDropdown() {
+  const el = document.getElementById("topSellingItemsCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyTopSellingItemsComparison() {}
+
+function clearTopSellingItemsComparison() {}
+
+function toggleTopSellingItemsSettings() {
+  const el = document.getElementById("topSellingItemsSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applyTopSellingItemsSettings() {}
+
+function clearTopSellingItemsSettings() {}
+
+function toggleTopSellingItemsDarkMode(el) {
+  const panel = document.getElementById("topSellingItemsPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applySalesComparisonFilters() {
+  renderSalesComparison();
+}
+
+function clearSalesComparisonFilters() {
+  document.getElementById("salesComparisonStart").value = "";
+  document.getElementById("salesComparisonEnd").value = "";
+  document.getElementById("salesComparisonGroupBy").value = "month";
+  renderSalesComparison();
+}
+
+function renderSalesComparison() {
+  const start = document.getElementById("salesComparisonStart")?.value || "";
+  const end = document.getElementById("salesComparisonEnd")?.value || "";
+  const groupBy = document.getElementById("salesComparisonGroupBy")?.value || "month";
+
+  const data = JSON.parse(localStorage.getItem("salesComparison") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date);
+    return (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  const grouped = {};
+
+  filtered.forEach(r => {
+    const date = new Date(r.date);
+    let key = "";
+
+    if (groupBy === "month") {
+      key = `${date.getFullYear()}-${date.getMonth() + 1}`;
+    } else if (groupBy === "quarter") {
+      key = `${date.getFullYear()}-Q${Math.floor(date.getMonth() / 3) + 1}`;
+    } else {
+      key = `${date.getFullYear()}`;
+    }
+
+    if (!grouped[key]) grouped[key] = { sales: 0, orders: 0 };
+    grouped[key].sales += parseFloat(r.sales || 0);
+    grouped[key].orders += parseFloat(r.orders || 0);
+  });
+
+  const tbody = document.getElementById("salesComparisonBody");
+  tbody.innerHTML = "";
+
+  Object.keys(grouped).forEach(k => {
+    const row = grouped[k];
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${k}</td>
+      <td class="p-2">${row.sales.toFixed(2)}</td>
+      <td class="p-2">${row.orders}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleSalesComparisonGroupBy() {}
+
+function toggleSalesComparisonCompareDropdown() {
+  const el = document.getElementById("salesComparisonCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applySalesComparisonComparison() {}
+
+function clearSalesComparisonComparison() {}
+
+function toggleSalesComparisonSettings() {
+  const el = document.getElementById("salesComparisonSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applySalesComparisonSettings() {}
+
+function clearSalesComparisonSettings() {}
+
+function toggleSalesComparisonDarkMode(el) {
+  const panel = document.getElementById("salesComparisonPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applySalesTaxSummaryFilters() {
+  renderSalesTaxSummary();
+}
+
+function clearSalesTaxSummaryFilters() {
+  document.getElementById("salesTaxSummaryStart").value = "";
+  document.getElementById("salesTaxSummaryEnd").value = "";
+  document.getElementById("salesTaxSummaryType").value = "";
+  renderSalesTaxSummary();
+}
+
+function renderSalesTaxSummary() {
+  const start = document.getElementById("salesTaxSummaryStart")?.value || "";
+  const end = document.getElementById("salesTaxSummaryEnd")?.value || "";
+  const type = document.getElementById("salesTaxSummaryType")?.value || "";
+
+  const data = JSON.parse(localStorage.getItem("salesTaxSummary") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date);
+    return (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end)) &&
+           (!type || r.taxType === type);
+  });
+
+  const tbody = document.getElementById("salesTaxSummaryBody");
+  tbody.innerHTML = "";
+
+  let totalTax = 0;
+  let totalSales = 0;
+
+  filtered.forEach(r => {
+    const sales = parseFloat(r.sales || 0);
+    const tax = parseFloat(r.tax || 0);
+
+    totalSales += sales;
+    totalTax += tax;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.date || ""}</td>
+      <td class="p-2">${r.taxType || ""}</td>
+      <td class="p-2">${sales.toFixed(2)}</td>
+      <td class="p-2">${tax.toFixed(2)}</td>
+      <td class="p-2">${r.rate || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const salesEl = document.getElementById("salesTaxTotalSales");
+  const taxEl = document.getElementById("salesTaxTotalTax");
+
+  if (salesEl) salesEl.innerText = totalSales.toFixed(2);
+  if (taxEl) taxEl.innerText = totalTax.toFixed(2);
+}
+
+function toggleSalesTaxSummaryGroupBy() {}
+
+function toggleSalesTaxSummaryCompareDropdown() {
+  const el = document.getElementById("salesTaxSummaryCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applySalesTaxSummaryComparison() {}
+
+function clearSalesTaxSummaryComparison() {}
+
+function toggleSalesTaxSummarySettings() {
+  const el = document.getElementById("salesTaxSummarySettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applySalesTaxSummarySettings() {}
+
+function clearSalesTaxSummarySettings() {}
+
+function toggleSalesTaxSummaryDarkMode(el) {
+  const panel = document.getElementById("salesTaxSummaryPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+  function applySalesForecastFilters() {
+  renderSalesForecast();
+}
+
+function clearSalesForecastFilters() {
+  document.getElementById("salesForecastStart").value = "";
+  document.getElementById("salesForecastEnd").value = "";
+  document.getElementById("salesForecastMethod").value = "basic";
+  renderSalesForecast();
+}
+
+function renderSalesForecast() {
+  const start = document.getElementById("salesForecastStart")?.value || "";
+  const end = document.getElementById("salesForecastEnd")?.value || "";
+  const method = document.getElementById("salesForecastMethod")?.value || "basic";
+
+  const data = JSON.parse(localStorage.getItem("salesForecast") || "[]");
+
+  const filtered = data.filter(r => {
+    const date = new Date(r.date);
+    return (!start || date >= new Date(start)) &&
+           (!end || date <= new Date(end));
+  });
+
+  let forecastTotal = 0;
+
+  const tbody = document.getElementById("salesForecastBody");
+  tbody.innerHTML = "";
+
+  filtered.forEach(r => {
+    const sales = parseFloat(r.sales || 0);
+    let forecast = sales;
+
+    if (method === "basic") {
+      forecast = sales * 1.05;
+    } else if (method === "growth") {
+      forecast = sales * 1.1;
+    } else if (method === "conservative") {
+      forecast = sales * 0.95;
+    }
+
+    forecastTotal += forecast;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="p-2">${r.date || ""}</td>
+      <td class="p-2">${sales.toFixed(2)}</td>
+      <td class="p-2">${forecast.toFixed(2)}</td>
+      <td class="p-2">${method}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const totalEl = document.getElementById("salesForecastTotal");
+  if (totalEl) totalEl.innerText = forecastTotal.toFixed(2);
+}
+
+function toggleSalesForecastGroupBy() {}
+
+function toggleSalesForecastCompareDropdown() {
+  const el = document.getElementById("salesForecastCompareDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applySalesForecastComparison() {}
+
+function clearSalesForecastComparison() {}
+
+function toggleSalesForecastSettings() {
+  const el = document.getElementById("salesForecastSettingsDropdown");
+  if (el) el.classList.toggle("hidden");
+}
+
+function applySalesForecastSettings() {}
+
+function clearSalesForecastSettings() {}
+
+function toggleSalesForecastDarkMode(el) {
+  const panel = document.getElementById("salesForecastPanel");
+  if (!panel) return;
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
+}
 </script>
 <!-- 🗂️ Plans Module -->
 <div id="plansTab" class="p-1">
