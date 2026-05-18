@@ -51933,59 +51933,122 @@ function searchPayments() {
   }
 
 function addAttendance() {
-  const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
-  const role = loggedInUser.role?.toLowerCase();
+
+  const loggedInUser =
+    JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+
+  const role =
+    loggedInUser.role?.toLowerCase();
 
   if (role !== "human resource" && role !== "admin") {
+
     alert("🚫 Only HR or Admin can add attendance records.");
+
     return;
+
   }
 
-  const empID = document.getElementById("attEmpID").value;
-  const date = document.getElementById("attDate").value;
-  const type = document.getElementById("attType").value;
-  const note = document.getElementById("attNote").value;
-  let days = parseFloat(document.getElementById("attDays").value) || 0;
+  const empID =
+    document.getElementById("attEmpID").value;
+
+  const date =
+    document.getElementById("attDate").value;
+
+  const type =
+    document.getElementById("attType").value;
+
+  const note =
+    document.getElementById("attNote").value;
+
+  let days =
+    parseFloat(document.getElementById("attDays").value) || 0;
 
   if (!empID || !date || !type) {
+
     alert("⚠️ Please fill all required fields.");
+
     return;
+
   }
 
-  const employees = JSON.parse(localStorage.getItem("employees") || "[]");
-  const attendance = JSON.parse(localStorage.getItem("attendance") || "[]");
+  const employees =
+    JSON.parse(localStorage.getItem("employees") || "[]");
 
- 
+  const attendance =
+    JSON.parse(localStorage.getItem("attendance") || "[]");
+
   let totalLeaveUsed = attendance
-    .filter(a => a.empID === empID && a.type === "Annual Leave")
-    .reduce((sum, a) => sum + (a.days || 0), 0);
 
-  const maxLeave = 21; 
+    .filter(a =>
+      a.empID === empID &&
+      a.type === "Annual Leave"
+    )
+
+    .reduce((sum, a) =>
+      sum + (a.days || 0),
+      0
+    );
+
+  const maxLeave = 21;
+
   if (type === "Annual Leave") {
+
     if (totalLeaveUsed + days > maxLeave) {
-      const remaining = maxLeave - totalLeaveUsed;
+
+      const remaining =
+        maxLeave - totalLeaveUsed;
+
       if (remaining <= 0) {
-        alert(`❌ Employee has no remaining leave!`);
+
+        alert("❌ Employee has no remaining leave!");
+
         return;
+
       } else {
+
         alert(`⚠️ Only ${remaining} days of leave remaining. Adjusted automatically.`);
-        days = remaining; 
+
+        days = remaining;
+
       }
+
     }
+
   }
 
-  const newRecord = { empID, date, type, note, days };
+  const newRecord = {
+
+    empID,
+    date,
+    type,
+    note,
+    days
+
+  };
+
   attendance.push(newRecord);
-  localStorage.setItem("attendance", JSON.stringify(attendance));
+
+  localStorage.setItem(
+    "attendance",
+    JSON.stringify(attendance)
+  );
+
+  renderLeaveSummary();
 
   document.getElementById("attEmpID").value = "";
+
   document.getElementById("attDate").value = "";
+
   document.getElementById("attType").value = "Present";
+
   document.getElementById("attNote").value = "";
+
   document.getElementById("attDays").value = 1;
 
   alert("✅ Attendance saved successfully!");
+
   renderAttendanceTable();
+
 }
   function renderAttendanceTable() {
     const attendance = JSON.parse(localStorage.getItem("attendance") || "[]");
@@ -52094,9 +52157,13 @@ function deleteAttendance(index) {
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    updateAttendanceDropdown();
-    renderAttendanceTable();
-  });
+  updateAttendanceDropdown();
+  renderAttendanceTable();
+  if (typeof renderLeaveSummary === "function") {
+    renderLeaveSummary();
+
+  }
+});
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
@@ -68409,24 +68476,44 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
 
     <div>
-      <h3 class="text-lg font-bold text-gray-800">Leave Summary</h3>
+      <h3 class="text-lg font-bold text-gray-800">Leave Summary Report</h3>
+      <p class="text-sm text-gray-500">
+        Employee attendance, leave usage, balances and leave analytics
+      </p>
     </div>
 
     <div class="flex flex-wrap items-end gap-3">
 
       <div>
         <label class="text-xs font-semibold">Employee</label>
-        <input type="text" id="leaveSummaryEmployee" class="border px-2 py-1 rounded text-sm" placeholder="Employee name">
+        <input type="text" id="leaveSummaryEmployee"
+          class="border px-2 py-1 rounded text-sm"
+          placeholder="Employee ID or name">
+      </div>
+
+      <div>
+        <label class="text-xs font-semibold">Leave Type</label>
+        <select id="leaveSummaryType"
+          class="border px-2 py-1 rounded text-sm">
+          <option value="">All</option>
+          <option value="Present">Present</option>
+          <option value="Sick Leave">Sick Leave</option>
+          <option value="Annual Leave">Annual Leave</option>
+          <option value="Unpaid Leave">Unpaid Leave</option>
+          <option value="Absent">Absent</option>
+        </select>
       </div>
 
       <div>
         <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="leaveSummaryStart" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="leaveSummaryStart"
+          class="border px-2 py-1 rounded text-sm">
       </div>
 
       <div>
         <label class="text-xs font-semibold">End</label>
-        <input type="date" id="leaveSummaryEnd" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="leaveSummaryEnd"
+          class="border px-2 py-1 rounded text-sm">
       </div>
 
     </div>
@@ -68436,17 +68523,17 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyLeaveSummaryFilters()"
-      class="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-600">
+      class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearLeaveSummaryFilters()"
-      class="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-600">
+      class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-400">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('leaveSummaryTable','Leave Summary Report','leaveSummaryEmployee')"
-      class="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-600">
+      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
       ⬇ Export CSV
     </button>
 
@@ -68458,6 +68545,26 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
       Group By ▼
     </button>
+
+    <div id="leaveSummaryGroupOptions"
+      class="hidden flex flex-wrap gap-2">
+
+      <button onclick="groupLeaveSummary('employee')"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Employee
+      </button>
+
+      <button onclick="groupLeaveSummary('type')"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Leave Type
+      </button>
+
+      <button onclick="groupLeaveSummary('month')"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Month
+      </button>
+
+    </div>
 
     <div class="relative">
 
@@ -68483,7 +68590,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyLeaveSummaryComparison()"
-            class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-500">
+            class="bg-blue-900 text-white px-3 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
@@ -68523,14 +68630,15 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         </div>
 
         <div class="flex items-center gap-2 mb-3">
-          <input type="checkbox" onchange="toggleLeaveSummaryDarkMode(this)">
+          <input type="checkbox"
+            onchange="toggleLeaveSummaryDarkMode(this)">
           <label class="text-sm">Dark Mode</label>
         </div>
 
         <div class="flex gap-2">
 
           <button onclick="applyLeaveSummarySettings()"
-            class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-500">
+            class="bg-blue-900 text-white px-3 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
@@ -68547,8 +68655,33 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
   </div>
 
-  <div class="bg-white p-4 rounded-xl shadow mb-6">
-    <canvas id="leaveSummaryChart"></canvas>
+  <!-- SUMMARY CARDS -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+
+    <div class="bg-blue-50 border rounded-lg p-4">
+      <p class="text-sm text-gray-500">Total Records</p>
+      <h2 id="leaveTotalRecords"
+        class="text-2xl font-bold text-blue-900">0</h2>
+    </div>
+
+    <div class="bg-green-50 border rounded-lg p-4">
+      <p class="text-sm text-gray-500">Annual Leave Days</p>
+      <h2 id="leaveAnnualDays"
+        class="text-2xl font-bold text-green-700">0</h2>
+    </div>
+
+    <div class="bg-yellow-50 border rounded-lg p-4">
+      <p class="text-sm text-gray-500">Sick Leave Days</p>
+      <h2 id="leaveSickDays"
+        class="text-2xl font-bold text-yellow-700">0</h2>
+    </div>
+
+    <div class="bg-red-50 border rounded-lg p-4">
+      <p class="text-sm text-gray-500">Absent Days</p>
+      <h2 id="leaveAbsentDays"
+        class="text-2xl font-bold text-red-700">0</h2>
+    </div>
+
   </div>
 
   <div class="overflow-x-auto">
@@ -68556,21 +68689,27 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <table class="w-full border text-sm" id="leaveSummaryTable">
 
       <thead class="bg-gray-100">
+
         <tr>
-          <th class="p-2 text-left">Employee</th>
-          <th class="p-2 text-left">Leave Type</th>
-          <th class="p-2 text-left">Start Date</th>
-          <th class="p-2 text-left">End Date</th>
-          <th class="p-2 text-left">Status</th>
+          <th class="p-2 border text-left">Employee ID</th>
+          <th class="p-2 border text-left">Date</th>
+          <th class="p-2 border text-left">Leave Type</th>
+          <th class="p-2 border text-left">Days</th>
+          <th class="p-2 border text-left">Note</th>
+          <th class="p-2 border text-left">Remaining Leave</th>
+          <th class="p-2 border text-left">Status</th>
         </tr>
+
       </thead>
 
       <tbody id="leaveSummaryBody">
         <tr>
-          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+          <td colspan="7"
+            class="p-4 text-center text-gray-500">
+            No leave records found
+          </td>
         </tr>
       </tbody>
-
     </table>
   </div>
 </div>
@@ -69139,6 +69278,11 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
+    <button onclick="toggleSalesItemSubAccounts()"
+      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      Sub-Items
+    </button>
+
     <div class="relative">
 
       <button onclick="toggleCurrencyGainLossCompareDropdown()"
@@ -69180,41 +69324,107 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
     <div class="relative">
 
-      <button onclick="toggleCurrencyGainLossSettings()"
+      <button onclick="toggleSalesItemCompareDropdown()"
         class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-        Settings ⚙️
+        Compare With : Applied ▼
       </button>
 
-      <div id="currencyGainLossSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+      <div id="salesItemCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
 
         <div class="mb-3">
 
-          <label class="text-sm font-semibold">View</label>
+          <label class="block text-sm mb-1">Compare Based on Period/Year</label>
 
-          <select id="currencyGainLossView"
-            class="border rounded px-2 py-1 w-full">
+          <select id="salesItemCompareType"
+            class="border rounded px-2 py-2 w-full"
+            onchange="toggleSalesItemCompareOptions()">
 
-            <option value="summary">Summary</option>
-            <option value="detailed">Detailed</option>
+            <option value="">None</option>
+            <option value="previousYear">Previous Year(s)</option>
+            <option value="previousPeriod">Previous Period(s)</option>
 
           </select>
 
         </div>
 
-        <div class="flex items-center gap-2 mb-3">
-          <input type="checkbox" onchange="toggleCurrencyGainLossDarkMode(this)">
-          <label class="text-sm">Dark Mode</label>
+        <div class="mb-3" id="salesItemYearsContainer" style="display:none;">
+
+          <label class="block text-sm mb-1">Number of Year(s)</label>
+
+          <select id="salesItemCompareYears"
+            class="border rounded px-2 py-2 w-full">
+
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex items-start gap-2 mb-4">
+
+          <input type="checkbox" id="salesItemArrangeLatest" checked>
+
+          <label class="text-sm">Arrange period/year from latest to oldest</label>
+
         </div>
 
         <div class="flex gap-2">
 
-          <button onclick="applyCurrencyGainLossSettings()"
-            class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-500">
+          <button onclick="applySalesItemComparison()"
+            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
             Apply
           </button>
 
-          <button onclick="clearCurrencyGainLossSettings()"
+          <button onclick="clearSalesItemComparison()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleSalesItemSettingsDropdown()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Settings ⚙️
+      </button>
+
+      <div id="salesItemSettingsDropdown"
+        class="hidden absolute z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Settings</h3>
+
+        <div class="mb-3">
+
+          <label class="block text-sm mb-1">Item View</label>
+
+          <select id="salesItemFilter"
+            class="border rounded px-2 py-2 w-full">
+
+            <option value="all">All Items</option>
+            <option value="withSales">Items With Sales</option>
+            <option value="zeroSales">Items With Zero Sales</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex gap-2">
+
+          <button onclick="applySalesItemSettings()"
+            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+            Apply
+          </button>
+
+          <button onclick="clearSalesItemSettings()"
             class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
             Reset
           </button>
@@ -69233,15 +69443,15 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
   <div class="overflow-x-auto">
 
-    <table class="w-full border text-sm" id="currencyGainLossTable">
+    <table class="w-full border border-gray-200 text-sm rounded overflow-hidden" id="currencyGainLossTable">
 
-      <thead class="bg-gray-100">
+      <thead class="bg-gray-100 text-gray-700 font-semibold">
         <tr>
-          <th class="p-2 text-left">Currency</th>
-          <th class="p-2 text-left">Rate</th>
-          <th class="p-2 text-left">Gain</th>
-          <th class="p-2 text-left">Loss</th>
-          <th class="p-2 text-left">Net</th>
+          <th class="p-2 text-left border">Currency</th>
+          <th class="p-2 text-left border">Rate</th>
+          <th class="p-2 text-left border">Gain</th>
+          <th class="p-2 text-left border">Loss</th>
+          <th class="p-2 text-left border">Net</th>
         </tr>
       </thead>
 
@@ -69252,7 +69462,6 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       </tbody>
 
     </table>
-
   </div>
 </div>
 <div id="topCustomersPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
@@ -79660,81 +79869,366 @@ function toggleExpiredItemsDarkMode(el) {
 }
 </script>
 <script>
-  function applyLeaveSummaryFilters() {
+
+function applyLeaveSummaryFilters() {
   renderLeaveSummary();
 }
 
 function clearLeaveSummaryFilters() {
+
   document.getElementById("leaveSummaryEmployee").value = "";
+  document.getElementById("leaveSummaryType").value = "";
   document.getElementById("leaveSummaryStart").value = "";
   document.getElementById("leaveSummaryEnd").value = "";
+
   renderLeaveSummary();
 }
 
 function renderLeaveSummary() {
-  const employee = document.getElementById("leaveSummaryEmployee")?.value || "";
-  const start = document.getElementById("leaveSummaryStart")?.value || "";
-  const end = document.getElementById("leaveSummaryEnd")?.value || "";
 
-  const data = JSON.parse(localStorage.getItem("leaveSummary") || "[]");
+  const employee =
+    document.getElementById("leaveSummaryEmployee")?.value
+      .toLowerCase()
+      .trim() || "";
 
-  const filtered = data.filter(r => {
-    const date = new Date(r.date || r.startDate);
-    return (!employee || r.employee === employee) &&
-           (!start || date >= new Date(start)) &&
-           (!end || date <= new Date(end));
-  });
+  const leaveType =
+    document.getElementById("leaveSummaryType")?.value || "";
 
-  const tbody = document.getElementById("leaveSummaryBody");
+  const start =
+    document.getElementById("leaveSummaryStart")?.value || "";
+
+  const end =
+    document.getElementById("leaveSummaryEnd")?.value || "";
+
+  const attendance =
+    JSON.parse(localStorage.getItem("attendance") || "[]");
+
+  const employees =
+    JSON.parse(localStorage.getItem("employees") || "[]");
+
+  const tbody =
+    document.getElementById("leaveSummaryBody");
+
   tbody.innerHTML = "";
 
-  let totalDays = 0;
+  if (!attendance.length) {
 
-  filtered.forEach(r => {
-    const days = parseFloat(r.days || 0);
-    totalDays += days;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="p-2">${r.employee || ""}</td>
-      <td class="p-2">${r.type || ""}</td>
-      <td class="p-2">${r.startDate || ""}</td>
-      <td class="p-2">${r.endDate || ""}</td>
-      <td class="p-2">${days}</td>
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7"
+          class="p-4 text-center text-gray-500">
+          No leave records found
+        </td>
+      </tr>
     `;
-    tbody.appendChild(tr);
+
+    return;
+  }
+
+  const leaveCount = {};
+
+  employees.forEach(emp => {
+    leaveCount[emp.id] = 21;
   });
 
-  const totalEl = document.getElementById("leaveSummaryTotal");
-  if (totalEl) totalEl.innerText = totalDays;
+  attendance.forEach(rec => {
+
+    if (rec.type === "Annual Leave") {
+
+      leaveCount[rec.empID] -=
+        parseFloat(rec.days || 0);
+
+    }
+
+  });
+
+  const filtered = attendance.filter(record => {
+
+    const emp =
+      (record.empID || "")
+        .toLowerCase();
+
+    const recordType =
+      record.type || "";
+
+    const recordDate =
+      record.date || "";
+
+    const matchesEmployee =
+      !employee ||
+      emp.includes(employee);
+
+    const matchesType =
+      !leaveType ||
+      recordType === leaveType;
+
+    const matchesStart =
+      !start ||
+      recordDate >= start;
+
+    const matchesEnd =
+      !end ||
+      recordDate <= end;
+
+    return matchesEmployee &&
+           matchesType &&
+           matchesStart &&
+           matchesEnd;
+
+  });
+
+  let totalRecords = 0;
+  let annualDays = 0;
+  let sickDays = 0;
+  let absentDays = 0;
+
+  if (!filtered.length) {
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7"
+          class="p-4 text-center text-gray-500">
+          No matching records found
+        </td>
+      </tr>
+    `;
+
+  }
+
+  filtered.forEach((record, index) => {
+
+    const days =
+      parseFloat(record.days || 0);
+
+    totalRecords++;
+
+    if (record.type === "Annual Leave") {
+      annualDays += days;
+    }
+
+    if (record.type === "Sick Leave") {
+      sickDays += days;
+    }
+
+    if (record.type === "Absent") {
+      absentDays += days;
+    }
+
+    const tr =
+      document.createElement("tr");
+
+    tr.className =
+      "hover:bg-gray-50";
+
+    tr.innerHTML = `
+
+      <td class="p-2 border">
+        ${record.empID || ""}
+      </td>
+
+      <td class="p-2 border">
+        ${record.date || ""}
+      </td>
+
+      <td class="p-2 border">
+        ${record.type || ""}
+      </td>
+
+      <td class="p-2 border">
+        ${days}
+      </td>
+
+      <td class="p-2 border">
+        ${record.note || ""}
+      </td>
+
+      <td class="p-2 border">
+        ${(leaveCount[record.empID] || 0).toFixed(1)}
+      </td>
+
+      <td class="p-2 border">
+
+        <div class="flex gap-1 flex-wrap">
+
+          <button
+            onclick="previewAttendance(${index})"
+            class="bg-blue-900 text-white px-2 py-1 rounded text-xs hover:bg-blue-800">
+            Preview
+          </button>
+
+          <button
+            onclick="viewHistory(${index})"
+            class="bg-green-700 text-white px-2 py-1 rounded text-xs hover:bg-green-600">
+            History
+          </button>
+
+        </div>
+
+      </td>
+
+    `;
+
+    tbody.appendChild(tr);
+
+  });
+
+  const totalEl =
+    document.getElementById("leaveTotalRecords");
+
+  if (totalEl) {
+    totalEl.innerText = totalRecords;
+  }
+
+  const annualEl =
+    document.getElementById("leaveAnnualDays");
+
+  if (annualEl) {
+    annualEl.innerText = annualDays.toFixed(1);
+  }
+
+  const sickEl =
+    document.getElementById("leaveSickDays");
+
+  if (sickEl) {
+    sickEl.innerText = sickDays.toFixed(1);
+  }
+
+  const absentEl =
+    document.getElementById("leaveAbsentDays");
+
+  if (absentEl) {
+    absentEl.innerText = absentDays.toFixed(1);
+  }
+
 }
 
-function toggleLeaveSummaryGroupBy() {}
+function toggleLeaveSummaryGroupBy() {
 
+  const el =
+    document.getElementById(
+      "leaveSummaryGroupOptions"
+    );
+
+  if (el) {
+    el.classList.toggle("hidden");
+  }
+
+}
+
+function groupLeaveSummary(type) {
+
+  const attendance =
+    JSON.parse(localStorage.getItem("attendance") || "[]");
+
+  let sorted = [...attendance];
+
+  if (type === "employee") {
+
+    sorted.sort((a, b) =>
+      (a.empID || "")
+      .localeCompare(b.empID || "")
+    );
+
+  }
+
+  if (type === "type") {
+
+    sorted.sort((a, b) =>
+      (a.type || "")
+      .localeCompare(b.type || "")
+    );
+
+  }
+
+  if (type === "month") {
+
+    sorted.sort((a, b) =>
+      (a.date || "")
+      .localeCompare(b.date || "")
+    );
+
+  }
+
+  localStorage.setItem(
+    "attendance",
+    JSON.stringify(sorted)
+  );
+
+  renderLeaveSummary();
+
+}
 function toggleLeaveSummaryCompareDropdown() {
-  const el = document.getElementById("leaveSummaryCompareDropdown");
-  if (el) el.classList.toggle("hidden");
+
+  const el =
+    document.getElementById(
+      "leaveSummaryCompareDropdown"
+    );
+
+  if (el) {
+    el.classList.toggle("hidden");
+  }
+
+}
+function applyLeaveSummaryComparison() {
+
+  alert("Comparison Applied");
+
 }
 
-function applyLeaveSummaryComparison() {}
+function clearLeaveSummaryComparison() {
 
-function clearLeaveSummaryComparison() {}
+  document.getElementById(
+    "leaveSummaryCompareType"
+  ).value = "";
 
+}
 function toggleLeaveSummarySettings() {
-  const el = document.getElementById("leaveSummarySettingsDropdown");
-  if (el) el.classList.toggle("hidden");
+
+  const el =
+    document.getElementById(
+      "leaveSummarySettingsDropdown"
+    );
+
+  if (el) {
+    el.classList.toggle("hidden");
+  }
+
 }
+function applyLeaveSummarySettings() {
 
-function applyLeaveSummarySettings() {}
+  renderLeaveSummary();
 
-function clearLeaveSummarySettings() {}
+}
+function clearLeaveSummarySettings() {
 
+  document.getElementById(
+    "leaveSummaryView"
+  ).value = "summary";
+
+}
 function toggleLeaveSummaryDarkMode(el) {
-  const panel = document.getElementById("leaveSummaryPanel");
+
+  const panel =
+    document.getElementById(
+      "leaveSummaryPanel"
+    );
+
   if (!panel) return;
-  panel.classList.toggle("bg-gray-900", el.checked);
-  panel.classList.toggle("text-white", el.checked);
+
+  panel.classList.toggle(
+    "bg-gray-900",
+    el.checked
+  );
+  panel.classList.toggle(
+    "text-white",
+    el.checked
+  );
+
 }
+document.addEventListener(
+  "DOMContentLoaded",
+  renderLeaveSummary
+);
 </script>
 <script>
   function applyAttendanceSummaryFilters() {
@@ -79968,7 +80462,7 @@ function toggleBudgetVarianceDarkMode(el) {
 }
 </script>
 <script>
-  function applyCurrencyGainLossFilters() {
+function applyCurrencyGainLossFilters() {
   renderCurrencyGainLoss();
 }
 
@@ -79994,34 +80488,44 @@ function renderCurrencyGainLoss() {
   });
 
   const tbody = document.getElementById("currencyGainLossBody");
+  if (!tbody) return;
+
   tbody.innerHTML = "";
 
   let totalGain = 0;
   let totalLoss = 0;
 
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="p-3 text-center text-gray-500">
+          No Currency Gain/Loss Data Found
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
   filtered.forEach(r => {
     const gain = parseFloat(r.gain || 0);
     const loss = parseFloat(r.loss || 0);
+    const net = gain - loss;
 
     totalGain += gain;
     totalLoss += loss;
 
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
       <td class="p-2">${r.currency || ""}</td>
       <td class="p-2">${r.rate || ""}</td>
-      <td class="p-2">${gain.toFixed(2)}</td>
-      <td class="p-2">${loss.toFixed(2)}</td>
-      <td class="p-2">${r.date || ""}</td>
+      <td class="p-2 text-right">${gain.toFixed(2)}</td>
+      <td class="p-2 text-right">${loss.toFixed(2)}</td>
+      <td class="p-2 text-right">${net.toFixed(2)}</td>
     `;
+
     tbody.appendChild(tr);
   });
-
-  const gainEl = document.getElementById("currencyGainTotal");
-  const lossEl = document.getElementById("currencyLossTotal");
-
-  if (gainEl) gainEl.innerText = totalGain.toFixed(2);
-  if (lossEl) lossEl.innerText = totalLoss.toFixed(2);
 }
 
 function toggleCurrencyGainLossGroupBy() {}
@@ -80047,9 +80551,14 @@ function clearCurrencyGainLossSettings() {}
 function toggleCurrencyGainLossDarkMode(el) {
   const panel = document.getElementById("currencyGainLossPanel");
   if (!panel) return;
+
   panel.classList.toggle("bg-gray-900", el.checked);
   panel.classList.toggle("text-white", el.checked);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderCurrencyGainLoss();
+});
 </script>
 <script>
   function applyTopCustomersFilters() {
