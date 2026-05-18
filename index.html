@@ -67156,109 +67156,49 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   </div>
 
   <div class="flex gap-2 mb-4 flex-wrap">
-
-    <button onclick="applyCashflowFilters()"
-      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+    <button onclick="applyCashflowFilters()" class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
       🔍 Apply Filter
     </button>
 
-    <button onclick="clearCashflowFilters()"
-      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+    <button onclick="clearCashflowFilters()" class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
       ❌ Clear
     </button>
+  </div>
 
-    <button onclick="exportFilteredTableToCSV('cashflowTable','Cashflow Forecast','cashflowMonth')"
-      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
-      ⬇ Export CSV
-    </button>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg bg-green-50">
+      <h4 class="text-sm font-semibold">Operating Cashflow</h4>
+      <p id="cfOperatingTotal" class="text-lg font-bold text-green-700">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-blue-50">
+      <h4 class="text-sm font-semibold">Investing Cashflow</h4>
+      <p id="cfInvestingTotal" class="text-lg font-bold text-blue-700">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-purple-50">
+      <h4 class="text-sm font-semibold">Financing Cashflow</h4>
+      <p id="cfFinancingTotal" class="text-lg font-bold text-purple-700">KES 0.00</p>
+    </div>
 
   </div>
 
-  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
-    <button onclick="toggleCashflowGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
-      Group By ▼
-    </button>
-
-    <div class="relative">
-
-      <button onclick="toggleCashflowCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-        Compare ▼
-      </button>
-
-      <div id="cashflowCompareDropdown"
-        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
-
-        <h3 class="font-semibold mb-3">Compare With</h3>
-
-        <select id="cashflowCompareType"
-          class="border rounded px-2 py-2 w-full">
-
-          <option value="">None</option>
-          <option value="previousYear">Previous Year</option>
-          <option value="previousPeriod">Previous Period</option>
-
-        </select>
-
-        <div class="flex gap-2 mt-4">
-
-          <button onclick="applyCashflowComparison()"
-            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
-            Apply
-          </button>
-
-          <button onclick="clearCashflowComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
-            Cancel
-          </button>
-
-        </div>
-
-      </div>
-
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Net Change</h4>
+      <p id="cfNetChange" class="text-lg font-bold">KES 0.00</p>
     </div>
 
-    <div class="relative">
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Opening Cash</h4>
+      <p id="cfOpeningCash" class="text-lg font-bold">KES 0.00</p>
+    </div>
 
-      <button onclick="toggleCashflowSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-        Settings ⚙️
-      </button>
-
-      <div id="cashflowSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
-
-        <select id="cashflowView"
-          class="border rounded px-2 py-2 w-full">
-
-          <option value="summary">Summary</option>
-          <option value="detailed">Detailed</option>
-
-        </select>
-
-        <div class="flex items-center gap-2 mt-3">
-          <input type="checkbox" onchange="toggleCashflowDarkMode(this)">
-          <label class="text-sm">Dark Mode</label>
-        </div>
-
-        <div class="flex gap-2 mt-3">
-
-          <button onclick="applyCashflowSettings()"
-            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
-            Apply
-          </button>
-
-          <button onclick="clearCashflowSettings()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
-            Reset
-          </button>
-
-        </div>
-
-      </div>
-
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Closing Cash</h4>
+      <p id="cfClosingCash" class="text-lg font-bold">KES 0.00</p>
     </div>
 
   </div>
@@ -69464,50 +69404,50 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     </table>
   </div>
 </div>
-<div id="topCustomersPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+<div id="topCustomersPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t">
 
-  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+  <h2 class="text-xl font-semibold mb-4">👥 Top Customers</h2>
 
-    <div>
-      <h3 class="text-lg font-bold text-gray-800">Top Customers</h3>
-    </div>
+  <div class="flex items-center gap-2 mb-2">
+    <label for="topCustomersMonth" class="font-medium">Select Month:</label>
 
-    <div class="flex flex-wrap items-end gap-3">
+    <input type="month" id="topCustomersMonth"
+      class="border px-2 py-1 rounded w-full">
+  </div>
 
-      <div>
-        <label class="text-xs font-semibold">Customer</label>
-        <input type="text" id="topCustomersSearch" class="border px-2 py-1 rounded text-sm" placeholder="Customer name">
-      </div>
+  <div class="flex items-center gap-2 mb-4">
+    <label class="font-medium">Or Date Range:</label>
 
-      <div>
-        <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="topCustomersStart" class="border px-2 py-1 rounded text-sm">
-      </div>
+    <input type="date" id="topCustomersStart"
+      class="border px-2 py-1 rounded">
 
-      <div>
-        <label class="text-xs font-semibold">End</label>
-        <input type="date" id="topCustomersEnd" class="border px-2 py-1 rounded text-sm">
-      </div>
+    <input type="date" id="topCustomersEnd"
+      class="border px-2 py-1 rounded">
+  </div>
 
-    </div>
+  <div class="flex items-center gap-2 mb-4 flex-wrap">
+
+    <input type="text" id="topCustomersSearch"
+      placeholder="Customer Name"
+      class="border px-2 py-1 rounded">
 
   </div>
 
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyTopCustomersFilters()"
-      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
-      🔍 Apply Filter
+      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+      ✅ Apply Filter
     </button>
 
     <button onclick="clearTopCustomersFilters()"
-      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
+      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('topCustomersTable','Top Customers Report','topCustomersSearch')"
-      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
-      ⬇ Export CSV
+      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+      ⬇️ Export CSV
     </button>
 
   </div>
@@ -69516,39 +69456,53 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
     <button onclick="toggleTopCustomersGroupBy()"
       class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
-      Group By ▼
+
+      Group By
     </button>
 
     <div class="relative">
 
       <button onclick="toggleTopCustomersCompareDropdown()"
         class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-        Compare ▼
+
+        Compare With : Applied ▼
       </button>
 
       <div id="topCustomersCompareDropdown"
         class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
 
-        <h3 class="font-semibold mb-3">Compare With</h3>
+        <h3 class="font-semibold mb-3">
+          Compare With
+        </h3>
 
-        <select id="topCustomersCompareType"
-          class="border rounded px-2 py-2 w-full">
+        <div class="mb-3">
 
-          <option value="">None</option>
-          <option value="previousYear">Previous Year</option>
-          <option value="previousPeriod">Previous Period</option>
+          <label class="block text-sm mb-1">
+            Compare Based on Period/Year
+          </label>
 
-        </select>
+          <select id="topCustomersCompareType"
+            class="border rounded px-2 py-2 w-full">
 
-        <div class="flex gap-2 mt-4">
+            <option value="">None</option>
+            <option value="previousYear">Previous Year</option>
+            <option value="previousPeriod">Previous Period</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex gap-2">
 
           <button onclick="applyTopCustomersComparison()"
-            class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500">
+            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+
             Apply
           </button>
 
           <button onclick="clearTopCustomersComparison()"
             class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+
             Cancel
           </button>
 
@@ -69562,18 +69516,25 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
       <button onclick="toggleTopCustomersSettings()"
         class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
         Settings ⚙️
       </button>
 
       <div id="topCustomersSettingsDropdown"
         class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
 
+        <h3 class="font-semibold mb-3">
+          Settings
+        </h3>
+
         <div class="mb-3">
 
-          <label class="text-sm font-semibold">View</label>
+          <label class="block text-sm mb-1">
+            View
+          </label>
 
           <select id="topCustomersView"
-            class="border rounded px-2 py-1 w-full">
+            class="border rounded px-2 py-2 w-full">
 
             <option value="summary">Summary</option>
             <option value="detailed">Detailed</option>
@@ -69583,19 +69544,27 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         </div>
 
         <div class="flex items-center gap-2 mb-3">
-          <input type="checkbox" onchange="toggleTopCustomersDarkMode(this)">
-          <label class="text-sm">Dark Mode</label>
+
+          <input type="checkbox"
+            onchange="toggleTopCustomersDarkMode(this)">
+
+          <label class="text-sm">
+            Dark Mode
+          </label>
+
         </div>
 
         <div class="flex gap-2">
 
           <button onclick="applyTopCustomersSettings()"
-            class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500">
+            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+
             Apply
           </button>
 
           <button onclick="clearTopCustomersSettings()"
             class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+
             Reset
           </button>
 
@@ -69607,77 +69576,88 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
   </div>
 
-  <div class="bg-white p-4 rounded-xl shadow mb-6">
+  <div class="bg-white p-4 rounded shadow mb-4 border">
     <canvas id="topCustomersChart"></canvas>
   </div>
 
   <div class="overflow-x-auto">
 
-    <table class="w-full border text-sm" id="topCustomersTable">
+    <table class="w-full border border-gray-300 text-sm border-collapse"
+      id="topCustomersTable">
 
       <thead class="bg-gray-100">
+
         <tr>
-          <th class="p-2 text-left">Customer</th>
-          <th class="p-2 text-left">Sales</th>
-          <th class="p-2 text-left">Orders</th>
-          <th class="p-2 text-left">Last Purchase</th>
-          <th class="p-2 text-left">Status</th>
+          <th class="border px-2 py-1 text-left">Customer</th>
+          <th class="border px-2 py-1 text-left">Sales</th>
+          <th class="border px-2 py-1 text-left">Orders</th>
+          <th class="border px-2 py-1 text-left">Last Purchase</th>
+          <th class="border px-2 py-1 text-left">Status</th>
         </tr>
+
       </thead>
 
       <tbody id="topCustomersBody">
+
         <tr>
-          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+          <td colspan="5"
+            class="border px-2 py-3 text-center text-gray-500">
+
+            No data yet
+          </td>
         </tr>
+
       </tbody>
 
     </table>
+
   </div>
+
 </div>
-<div id="topSellingItemsPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+<div id="topSellingItemsPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t">
 
-  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+  <h2 class="text-xl font-semibold mb-4">📦 Top Selling Items</h2>
 
-    <div>
-      <h3 class="text-lg font-bold text-gray-800">Top Selling Items</h3>
-    </div>
+  <div class="flex items-center gap-2 mb-2">
+    <label for="topSellingItemsMonth" class="font-medium">Select Month:</label>
 
-    <div class="flex flex-wrap items-end gap-3">
+    <input type="month" id="topSellingItemsMonth"
+      class="border px-2 py-1 rounded w-full">
+  </div>
 
-      <div>
-        <label class="text-xs font-semibold">Item</label>
-        <input type="text" id="topSellingItemsSearch" class="border px-2 py-1 rounded text-sm" placeholder="Item name">
-      </div>
+  <div class="flex items-center gap-2 mb-4">
+    <label class="font-medium">Or Date Range:</label>
 
-      <div>
-        <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="topSellingItemsStart" class="border px-2 py-1 rounded text-sm">
-      </div>
+    <input type="date" id="topSellingItemsStart"
+      class="border px-2 py-1 rounded">
 
-      <div>
-        <label class="text-xs font-semibold">End</label>
-        <input type="date" id="topSellingItemsEnd" class="border px-2 py-1 rounded text-sm">
-      </div>
+    <input type="date" id="topSellingItemsEnd"
+      class="border px-2 py-1 rounded">
+  </div>
 
-    </div>
+  <div class="flex items-center gap-2 mb-4 flex-wrap">
+
+    <input type="text" id="topSellingItemsSearch"
+      placeholder="Item Name"
+      class="border px-2 py-1 rounded">
 
   </div>
 
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyTopSellingItemsFilters()"
-      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
-      🔍 Apply Filter
+      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+      ✅ Apply Filter
     </button>
 
     <button onclick="clearTopSellingItemsFilters()"
-      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('topSellingItemsTable','Top Selling Items Report','topSellingItemsSearch')"
-      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
-      ⬇ Export CSV
+      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+      ⬇️ Export CSV
     </button>
 
   </div>
@@ -69686,39 +69666,53 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
     <button onclick="toggleTopSellingItemsGroupBy()"
       class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
-      Group By ▼
+
+      Group By
     </button>
 
     <div class="relative">
 
       <button onclick="toggleTopSellingItemsCompareDropdown()"
         class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-        Compare ▼
+
+        Compare With : Applied ▼
       </button>
 
       <div id="topSellingItemsCompareDropdown"
         class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
 
-        <h3 class="font-semibold mb-3">Compare With</h3>
+        <h3 class="font-semibold mb-3">
+          Compare With
+        </h3>
 
-        <select id="topSellingItemsCompareType"
-          class="border rounded px-2 py-2 w-full">
+        <div class="mb-3">
 
-          <option value="">None</option>
-          <option value="previousYear">Previous Year</option>
-          <option value="previousPeriod">Previous Period</option>
+          <label class="block text-sm mb-1">
+            Compare Based on Period/Year
+          </label>
 
-        </select>
+          <select id="topSellingItemsCompareType"
+            class="border rounded px-2 py-2 w-full">
 
-        <div class="flex gap-2 mt-4">
+            <option value="">None</option>
+            <option value="previousYear">Previous Year</option>
+            <option value="previousPeriod">Previous Period</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex gap-2">
 
           <button onclick="applyTopSellingItemsComparison()"
-            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+
             Apply
           </button>
 
           <button onclick="clearTopSellingItemsComparison()"
             class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+
             Cancel
           </button>
 
@@ -69732,18 +69726,25 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
       <button onclick="toggleTopSellingItemsSettings()"
         class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
         Settings ⚙️
       </button>
 
       <div id="topSellingItemsSettingsDropdown"
         class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
 
+        <h3 class="font-semibold mb-3">
+          Settings
+        </h3>
+
         <div class="mb-3">
 
-          <label class="text-sm font-semibold">View</label>
+          <label class="block text-sm mb-1">
+            View
+          </label>
 
           <select id="topSellingItemsView"
-            class="border rounded px-2 py-1 w-full">
+            class="border rounded px-2 py-2 w-full">
 
             <option value="summary">Summary</option>
             <option value="detailed">Detailed</option>
@@ -69753,19 +69754,27 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         </div>
 
         <div class="flex items-center gap-2 mb-3">
-          <input type="checkbox" onchange="toggleTopSellingItemsDarkMode(this)">
-          <label class="text-sm">Dark Mode</label>
+
+          <input type="checkbox"
+            onchange="toggleTopSellingItemsDarkMode(this)">
+
+          <label class="text-sm">
+            Dark Mode
+          </label>
+
         </div>
 
         <div class="flex gap-2">
 
           <button onclick="applyTopSellingItemsSettings()"
-            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+
             Apply
           </button>
 
           <button onclick="clearTopSellingItemsSettings()"
             class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+
             Reset
           </button>
 
@@ -69777,77 +69786,85 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
   </div>
 
-  <div class="bg-white p-4 rounded-xl shadow mb-6">
+  <div class="bg-white p-4 rounded shadow mb-4 border">
     <canvas id="topSellingItemsChart"></canvas>
   </div>
 
   <div class="overflow-x-auto">
 
-    <table class="w-full border text-sm" id="topSellingItemsTable">
+    <table class="w-full border border-gray-300 text-sm border-collapse"
+      id="topSellingItemsTable">
 
       <thead class="bg-gray-100">
+
         <tr>
-          <th class="p-2 text-left">Item</th>
-          <th class="p-2 text-left">Quantity Sold</th>
-          <th class="p-2 text-left">Revenue</th>
-          <th class="p-2 text-left">Profit</th>
-          <th class="p-2 text-left">Trend</th>
+          <th class="border px-2 py-1 text-left">Item</th>
+          <th class="border px-2 py-1 text-left">Quantity Sold</th>
+          <th class="border px-2 py-1 text-left">Revenue</th>
+          <th class="border px-2 py-1 text-left">Profit</th>
+          <th class="border px-2 py-1 text-left">Trend</th>
         </tr>
+
       </thead>
 
       <tbody id="topSellingItemsBody">
-        <tr>
-          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
-        </tr>
-      </tbody>
 
+        <tr>
+          <td colspan="5"
+            class="border px-2 py-3 text-center text-gray-500">
+
+            No data yet
+          </td>
+        </tr>
+
+      </tbody>
     </table>
   </div>
 </div>
-<div id="salesComparisonPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+<div id="salesComparisonPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t">
 
-  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+  <h2 class="text-xl font-semibold mb-4">📊 Sales Comparison</h2>
 
-    <div>
-      <h3 class="text-lg font-bold text-gray-800">Sales Comparison</h3>
-    </div>
+  <div class="flex items-center gap-2 mb-2">
+    <label for="salesComparisonMonth" class="font-medium">Select Month:</label>
 
-    <div class="flex flex-wrap items-end gap-3">
+    <input type="month" id="salesComparisonMonth"
+      class="border px-2 py-1 rounded w-full">
+  </div>
 
-      <div>
-        <label class="text-xs font-semibold">Product / Category</label>
-        <input type="text" id="salesComparisonSearch" class="border px-2 py-1 rounded text-sm" placeholder="Item or category">
-      </div>
+  <div class="flex items-center gap-2 mb-4">
+    <label class="font-medium">Or Date Range:</label>
 
-      <div>
-        <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="salesComparisonStart" class="border px-2 py-1 rounded text-sm">
-      </div>
+    <input type="date" id="salesComparisonStart"
+      class="border px-2 py-1 rounded">
 
-      <div>
-        <label class="text-xs font-semibold">End</label>
-        <input type="date" id="salesComparisonEnd" class="border px-2 py-1 rounded text-sm">
-      </div>
+    <input type="date" id="salesComparisonEnd"
+      class="border px-2 py-1 rounded">
+  </div>
 
-    </div>
+  <div class="flex items-center gap-2 mb-4 flex-wrap">
+
+    <input type="text" id="salesComparisonSearch"
+      placeholder="Item or Category"
+      class="border px-2 py-1 rounded">
 
   </div>
 
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applySalesComparisonFilters()"
-      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
-      🔍 Apply Filter
+      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+      ✅ Apply Filter
     </button>
 
     <button onclick="clearSalesComparisonFilters()"
-      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('salesComparisonTable','Sales Comparison Report','salesComparisonSearch')"
-      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
-      ⬇ Export CSV
+      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+      ⬇️ Export CSV
     </button>
 
   </div>
@@ -69856,39 +69873,53 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
     <button onclick="toggleSalesComparisonGroupBy()"
       class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
-      Group By ▼
+
+      Group By
     </button>
 
     <div class="relative">
 
       <button onclick="toggleSalesComparisonCompareDropdown()"
         class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-        Compare ▼
+
+        Compare With : Applied ▼
       </button>
 
       <div id="salesComparisonCompareDropdown"
         class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
 
-        <h3 class="font-semibold mb-3">Compare With</h3>
+        <h3 class="font-semibold mb-3">
+          Compare With
+        </h3>
 
-        <select id="salesComparisonCompareType"
-          class="border rounded px-2 py-2 w-full">
+        <div class="mb-3">
 
-          <option value="">None</option>
-          <option value="previousYear">Previous Year</option>
-          <option value="previousPeriod">Previous Period</option>
+          <label class="block text-sm mb-1">
+            Compare Based on Period/Year
+          </label>
 
-        </select>
+          <select id="salesComparisonCompareType"
+            class="border rounded px-2 py-2 w-full">
 
-        <div class="flex gap-2 mt-4">
+            <option value="">None</option>
+            <option value="previousYear">Previous Year</option>
+            <option value="previousPeriod">Previous Period</option>
+
+          </select>
+
+        </div>
+
+        <div class="flex gap-2">
 
           <button onclick="applySalesComparisonComparison()"
-            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+
             Apply
           </button>
 
           <button onclick="clearSalesComparisonComparison()"
             class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+
             Cancel
           </button>
 
@@ -69902,18 +69933,25 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
       <button onclick="toggleSalesComparisonSettings()"
         class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+
         Settings ⚙️
       </button>
 
       <div id="salesComparisonSettingsDropdown"
         class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
 
+        <h3 class="font-semibold mb-3">
+          Settings
+        </h3>
+
         <div class="mb-3">
 
-          <label class="text-sm font-semibold">View</label>
+          <label class="block text-sm mb-1">
+            View
+          </label>
 
           <select id="salesComparisonView"
-            class="border rounded px-2 py-1 w-full">
+            class="border rounded px-2 py-2 w-full">
 
             <option value="summary">Summary</option>
             <option value="detailed">Detailed</option>
@@ -69923,19 +69961,27 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         </div>
 
         <div class="flex items-center gap-2 mb-3">
-          <input type="checkbox" onchange="toggleSalesComparisonDarkMode(this)">
-          <label class="text-sm">Dark Mode</label>
+
+          <input type="checkbox"
+            onchange="toggleSalesComparisonDarkMode(this)">
+
+          <label class="text-sm">
+            Dark Mode
+          </label>
+
         </div>
 
         <div class="flex gap-2">
 
           <button onclick="applySalesComparisonSettings()"
-            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+
             Apply
           </button>
 
           <button onclick="clearSalesComparisonSettings()"
             class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+
             Reset
           </button>
 
@@ -69947,77 +69993,82 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
   </div>
 
-  <div class="bg-white p-4 rounded-xl shadow mb-6">
+  <div class="bg-white p-4 rounded shadow mb-4 border">
     <canvas id="salesComparisonChart"></canvas>
   </div>
 
   <div class="overflow-x-auto">
 
-    <table class="w-full border text-sm" id="salesComparisonTable">
+    <table class="w-full border border-gray-300 text-sm border-collapse"
+      id="salesComparisonTable">
 
       <thead class="bg-gray-100">
+
         <tr>
-          <th class="p-2 text-left">Item / Category</th>
-          <th class="p-2 text-left">Current Period</th>
-          <th class="p-2 text-left">Previous Period</th>
-          <th class="p-2 text-left">Difference</th>
-          <th class="p-2 text-left">Growth %</th>
+          <th class="border px-2 py-1 text-left">Item / Category</th>
+          <th class="border px-2 py-1 text-left">Current Period</th>
+          <th class="border px-2 py-1 text-left">Previous Period</th>
+          <th class="border px-2 py-1 text-left">Difference</th>
+          <th class="border px-2 py-1 text-left">Growth %</th>
         </tr>
+
       </thead>
 
       <tbody id="salesComparisonBody">
+
         <tr>
-          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+          <td colspan="5"
+            class="border px-2 py-3 text-center text-gray-500">
+
+            No data yet
+          </td>
         </tr>
+
       </tbody>
 
     </table>
+
   </div>
+
 </div>
-<div id="salesTaxSummaryPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
+<div id="salesTaxSummaryPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t">
 
-  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
+  <h2 class="text-xl font-semibold mb-4">🧾 Sales Tax Summary</h2>
 
-    <div>
-      <h3 class="text-lg font-bold text-gray-800">Sales Tax Summary</h3>
-    </div>
+  <div class="flex items-center gap-2 mb-2">
+    <label for="salesTaxSummaryMonth" class="font-medium">Select Month:</label>
+    <input type="month" id="salesTaxSummaryMonth" class="border px-2 py-1 rounded w-full">
+  </div>
 
-    <div class="flex flex-wrap items-end gap-3">
+  <div class="flex items-center gap-2 mb-4">
+    <label class="font-medium">Or Date Range:</label>
 
-      <div>
-        <label class="text-xs font-semibold">Tax Type</label>
-        <input type="text" id="salesTaxSummarySearch" class="border px-2 py-1 rounded text-sm" placeholder="VAT, GST...">
-      </div>
+    <input type="date" id="salesTaxSummaryStart" class="border px-2 py-1 rounded">
+    <input type="date" id="salesTaxSummaryEnd" class="border px-2 py-1 rounded">
+  </div>
 
-      <div>
-        <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="salesTaxSummaryStart" class="border px-2 py-1 rounded text-sm">
-      </div>
-
-      <div>
-        <label class="text-xs font-semibold">End</label>
-        <input type="date" id="salesTaxSummaryEnd" class="border px-2 py-1 rounded text-sm">
-      </div>
-
-    </div>
-
+  <div class="flex items-center gap-2 mb-4">
+    <input type="text"
+      id="salesTaxSummarySearch"
+      placeholder="Tax type (VAT, GST...)"
+      class="border px-2 py-1 rounded w-full">
   </div>
 
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applySalesTaxSummaryFilters()"
-      class="px-3 py-1 bg-rose-700 text-white rounded hover:bg-rose-600">
-      🔍 Apply Filter
+      class="px-1 py-1 bg-rose-900 text-white rounded hover:bg-rose-800">
+      ✅ Apply Filter
     </button>
 
     <button onclick="clearSalesTaxSummaryFilters()"
-      class="px-3 py-1 bg-rose-700 text-white rounded hover:bg-rose-600">
+      class="px-1 py-1 bg-rose-900 text-white rounded hover:bg-rose-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('salesTaxSummaryTable','Sales Tax Summary Report','salesTaxSummarySearch')"
-      class="px-3 py-1 bg-rose-700 text-white rounded hover:bg-rose-600">
-      ⬇ Export CSV
+      class="px-1 py-1 bg-rose-900 text-white rounded hover:bg-rose-800">
+      ⬇️ Export CSV
     </button>
 
   </div>
@@ -70026,14 +70077,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
     <button onclick="toggleSalesTaxSummaryGroupBy()"
       class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
-      Group By ▼
+      Group By
     </button>
 
     <div class="relative">
 
       <button onclick="toggleSalesTaxSummaryCompareDropdown()"
         class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-        Compare ▼
+        Compare With ▼
       </button>
 
       <div id="salesTaxSummaryCompareDropdown"
@@ -70078,12 +70129,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       <div id="salesTaxSummarySettingsDropdown"
         class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
 
+        <h3 class="font-semibold mb-3">Settings</h3>
+
         <div class="mb-3">
 
-          <label class="text-sm font-semibold">View</label>
+          <label class="block text-sm mb-1">View</label>
 
           <select id="salesTaxSummaryView"
-            class="border rounded px-2 py-1 w-full">
+            class="border rounded px-2 py-2 w-full">
 
             <option value="summary">Summary</option>
             <option value="detailed">Detailed</option>
@@ -70117,27 +70170,30 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
   </div>
 
-  <div class="bg-white p-4 rounded-xl shadow mb-6">
+  <div class="bg-white p-4 rounded shadow mb-4 border">
     <canvas id="salesTaxSummaryChart"></canvas>
   </div>
 
   <div class="overflow-x-auto">
 
-    <table class="w-full border text-sm" id="salesTaxSummaryTable">
+    <table class="w-full border border-gray-300 text-sm border-collapse"
+      id="salesTaxSummaryTable">
 
       <thead class="bg-gray-100">
         <tr>
-          <th class="p-2 text-left">Tax Type</th>
-          <th class="p-2 text-left">Taxable Amount</th>
-          <th class="p-2 text-left">Tax Amount</th>
-          <th class="p-2 text-left">Rate %</th>
-          <th class="p-2 text-left">Status</th>
+          <th class="border px-2 py-1 text-left">Tax Type</th>
+          <th class="border px-2 py-1 text-left">Taxable Amount</th>
+          <th class="border px-2 py-1 text-left">Tax Amount</th>
+          <th class="border px-2 py-1 text-left">Rate %</th>
+          <th class="border px-2 py-1 text-left">Status</th>
         </tr>
       </thead>
 
       <tbody id="salesTaxSummaryBody">
         <tr>
-          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+          <td colspan="5" class="border px-2 py-3 text-center text-gray-500">
+            No data yet
+          </td>
         </tr>
       </tbody>
 
@@ -70156,17 +70212,17 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
       <div>
         <label class="text-xs font-semibold">Product / Category</label>
-        <input type="text" id="salesForecastSearch" class="border px-2 py-1 rounded text-sm" placeholder="Item or category">
+        <input type="text" id="salesForecastSearch" class="border px-2 py-1 rounded text-sm" placeholder="Item or category" oninput="renderSalesForecast()">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="salesForecastStart" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="salesForecastStart" class="border px-2 py-1 rounded text-sm" onchange="renderSalesForecast()">
       </div>
 
       <div>
         <label class="text-xs font-semibold">End</label>
-        <input type="date" id="salesForecastEnd" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="salesForecastEnd" class="border px-2 py-1 rounded text-sm" onchange="renderSalesForecast()">
       </div>
 
     </div>
@@ -70287,10 +70343,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
   </div>
 
+  <!-- CHART -->
   <div class="bg-white p-4 rounded-xl shadow mb-6">
     <canvas id="salesForecastChart"></canvas>
   </div>
 
+  <!-- TABLE -->
   <div class="overflow-x-auto">
 
     <table class="w-full border text-sm" id="salesForecastTable">
@@ -75174,6 +75232,7 @@ function renderSalesByItem() {
     document.getElementById("totalAmountWithDiscount").innerText = `KES ${totalWithDiscount.toFixed(2)}`;
 }
 </script>
+
 <script>
 function renderSalesByPersonReport(filteredInvoices = null) {
     const tbody = document.getElementById("salesByPerson");
@@ -79275,11 +79334,89 @@ function clearCashflowFilters() {
   renderCashflow();
 }
 
+function parseSafe(val) {
+  return parseFloat(val) || 0;
+}
+
 function renderCashflow() {
 
-  const inflow = [200000, 220000, 250000, 210000, 300000, 320000];
-  const outflow = [150000, 160000, 170000, 180000, 200000, 210000];
-  const net = inflow.map((v, i) => v - outflow[i]);
+  const operationalCosts = JSON.parse(localStorage.getItem('operationalCosts') || '[]');
+  const payroll = JSON.parse(localStorage.getItem('payrollRecords') || '[]');
+  const taxes = JSON.parse(localStorage.getItem('taxPayments') || '[]');
+  const banks = JSON.parse(localStorage.getItem('banks') || '[]');
+  const nonCurrentAssets = (JSON.parse(localStorage.getItem('balanceSheet') || '{}').nonCurrentAssets) || [];
+  const bills = JSON.parse(localStorage.getItem('bills') || '[]');
+  const manualTx = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+
+  const profitBeforeTax = parseSafe(document.getElementById("pnlProfitBeforeTax")?.textContent.replace(/[^\d.-]/g, "") || 0);
+  const netProfit = parseSafe(document.getElementById("pnlProfit")?.textContent.replace(/[^\d.-]/g, "") || 0);
+  const depreciation = parseSafe(document.getElementById("pnlDepreciation")?.textContent.replace(/[^\d.-]/g, "") || 0);
+  const interestPaid = parseSafe(document.getElementById("pnlInterest")?.textContent.replace(/[^\d.-]/g, "") || 0);
+  const currencyAdjustment = parseSafe(document.getElementById("pnlCurrencyAdjustment")?.textContent.replace(/[^\d.-]/g, "") || 0);
+
+  const totalOperationalCosts = operationalCosts.reduce((sum, o) => sum + parseSafe(o.amount || o.total || o.value || 0), 0);
+  const totalPayroll = payroll.reduce((sum, p) => sum + parseSafe(p.netPay || p.net || p.amount || p.total || 0), 0);
+  const totalTaxes = taxes.reduce((sum, t) => sum + parseSafe(t.amount || 0), 0);
+
+  const cashFromOperations =
+    netProfit +
+    depreciation +
+    currencyAdjustment -
+    totalOperationalCosts -
+    totalPayroll -
+    interestPaid -
+    totalTaxes;
+
+  const assetPurchase = nonCurrentAssets.reduce((sum, a) => sum + parseSafe(a.newPurchase || 0), 0);
+  const assetSale = nonCurrentAssets.reduce((sum, a) => sum + parseSafe(a.saleValue || 0), 0);
+  const investingTotal = assetSale - assetPurchase;
+
+  const ownersContribution = manualTx.reduce((sum, tx) => {
+    if (tx.type === "Owner Contribution" && tx.source === "bank") {
+      return sum + parseSafe(tx.amount || 0);
+    }
+    return sum;
+  }, 0);
+
+  const loanProceeds = bills.reduce((sum, b) => sum + parseSafe(b.loanReceived || 0), 0);
+  const loanRepayments = bills.reduce((sum, b) => sum + parseSafe(b.loanRepaid || 0), 0);
+  const financingTotal = (ownersContribution + loanProceeds) - loanRepayments;
+
+  const netChange = cashFromOperations + investingTotal + financingTotal;
+
+  let totalBankValue = banks.reduce((sum, b) => sum + parseSafe(b.balance || 0), 0);
+
+  const excludedInflows = manualTx.reduce((sum, tx) => {
+    if (tx.type === "Owner Contribution" || tx.type === "Other Income") {
+      return sum + parseFloat(tx.amount || 0);
+    }
+    return sum;
+  }, 0);
+
+  const openingCash = totalBankValue - excludedInflows;
+  const closingCash = openingCash + netChange;
+
+  function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = `KES ${Number(val).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`;
+    }
+  }
+
+  setVal("cfOperatingTotal", cashFromOperations);
+  setVal("cfInvestingTotal", investingTotal);
+  setVal("cfFinancingTotal", financingTotal);
+  setVal("cfNetChange", netChange);
+  setVal("cfOpeningCash", openingCash);
+  setVal("cfClosingCash", closingCash);
+
+  renderCashflowChart(cashFromOperations, investingTotal, financingTotal, netChange);
+}
+
+function renderCashflowChart(operating, investing, financing, net) {
 
   const canvas = document.getElementById("cashflowChart");
   if (!canvas) return;
@@ -79291,21 +79428,30 @@ function renderCashflow() {
   }
 
   window.cashflowChartInstance = new Chart(ctx, {
-    type: "line",
+    type: "bar",
     data: {
-      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-      datasets: [
-        { label: "Inflow", data: inflow },
-        { label: "Outflow", data: outflow },
-        { label: "Net", data: net }
-      ]
+      labels: ["Operating", "Investing", "Financing", "Net Change"],
+      datasets: [{
+        label: "Cashflow (KES)",
+        data: [operating, investing, financing, net],
+        backgroundColor: [
+          "#22c55e",
+          "#3b82f6",
+          "#a855f7",
+          "#f97316"
+        ]
+      }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
     }
   });
-
 }
 
 function toggleCashflowCompareDropdown() {
@@ -79336,12 +79482,10 @@ function clearCashflowSettings() {
 
 function toggleCashflowDarkMode(el) {
   const panel = document.getElementById("cashflowForecastPanel");
+  if (!panel) return;
 
-  if (el.checked) {
-    panel.classList.add("bg-gray-900", "text-white");
-  } else {
-    panel.classList.remove("bg-gray-900", "text-white");
-  }
+  panel.classList.toggle("bg-gray-900", el.checked);
+  panel.classList.toggle("text-white", el.checked);
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -80561,60 +80705,207 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 <script>
-  function applyTopCustomersFilters() {
-  renderTopCustomers();
+
+function applyTopCustomersFilters() {
+    renderTopCustomers();
 }
 
 function clearTopCustomersFilters() {
-  document.getElementById("topCustomersStart").value = "";
-  document.getElementById("topCustomersEnd").value = "";
-  document.getElementById("topCustomersSearch").value = "";
-  renderTopCustomers();
+
+    document.getElementById("topCustomersMonth").value = "";
+    document.getElementById("topCustomersStart").value = "";
+    document.getElementById("topCustomersEnd").value = "";
+    document.getElementById("topCustomersSearch").value = "";
+
+    renderTopCustomers();
 }
 
 function renderTopCustomers() {
-  const start = document.getElementById("topCustomersStart")?.value || "";
-  const end = document.getElementById("topCustomersEnd")?.value || "";
-  const search = document.getElementById("topCustomersSearch")?.value?.toLowerCase() || "";
 
-  const data = JSON.parse(localStorage.getItem("topCustomers") || "[]");
+    const tbody = document.getElementById("topCustomersBody");
+    tbody.innerHTML = "";
 
-  const filtered = data.filter(r => {
-    const date = new Date(r.date);
-    const matchDate = (!start || date >= new Date(start)) &&
-                      (!end || date <= new Date(end));
-    const matchSearch = !search || (r.customer || "").toLowerCase().includes(search);
-    return matchDate && matchSearch;
-  });
+    const month = document.getElementById("topCustomersMonth").value;
+    const startDate = document.getElementById("topCustomersStart").value;
+    const endDate = document.getElementById("topCustomersEnd").value;
+    const search = document.getElementById("topCustomersSearch").value.toLowerCase();
 
-  const tbody = document.getElementById("topCustomersBody");
-  tbody.innerHTML = "";
+    let invoicesList = JSON.parse(localStorage.getItem("invoices") || "[]");
 
-  let totalSales = 0;
+    if (month) {
+        invoicesList = invoicesList.filter(inv =>
+            inv.date.startsWith(month)
+        );
+    }
 
-  filtered.forEach(r => {
-    const sales = parseFloat(r.sales || 0);
-    totalSales += sales;
+    if (startDate && endDate) {
+        invoicesList = invoicesList.filter(inv =>
+            inv.date >= startDate &&
+            inv.date <= endDate
+        );
+    }
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="p-2">${r.customer || ""}</td>
-      <td class="p-2">${sales.toFixed(2)}</td>
-      <td class="p-2">${r.orders || ""}</td>
-      <td class="p-2">${r.region || ""}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+    const data = {};
 
-  const totalEl = document.getElementById("topCustomersTotal");
-  if (totalEl) totalEl.innerText = totalSales.toFixed(2);
+    invoicesList.forEach(inv => {
+
+        const customer = inv.customer || "Unknown";
+
+        if (search && !customer.toLowerCase().includes(search)) return;
+
+        if (!data[customer]) {
+
+            data[customer] = {
+                sales: 0,
+                orders: 0,
+                lastPurchase: inv.date,
+                quantity: 0
+            };
+
+        }
+
+        data[customer].orders += 1;
+
+        if (inv.date > data[customer].lastPurchase) {
+            data[customer].lastPurchase = inv.date;
+        }
+
+        inv.items.forEach(item => {
+
+            const qty = parseFloat(item.qty) || 0;
+            const price = parseFloat(item.price) || 0;
+
+            data[customer].quantity += qty;
+            data[customer].sales += qty * price;
+
+        });
+
+    });
+
+    const sortedCustomers = Object.entries(data)
+        .sort((a, b) => b[1].sales - a[1].sales);
+
+    if (sortedCustomers.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5"
+                    class="border px-2 py-3 text-center text-gray-500">
+                    No data found
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    let totalSales = 0;
+    let totalOrders = 0;
+
+    sortedCustomers.forEach(([customerName, row]) => {
+
+        totalSales += row.sales;
+        totalOrders += row.orders;
+
+        let status = "🥇 VIP";
+
+        if (row.sales < 5000) {
+            status = "🙂 Regular";
+        } else if (row.sales < 20000) {
+            status = "⭐ Active";
+        }
+
+        tbody.innerHTML += `
+            <tr>
+
+                <td class="border px-2 py-1">
+                    ${customerName}
+                </td>
+
+                <td class="border px-2 py-1 text-left">
+                    KES ${row.sales.toFixed(2)}
+                </td>
+
+                <td class="border px-2 py-1 text-left">
+                    ${row.orders}
+                </td>
+
+                <td class="border px-2 py-1 text-left">
+                    ${row.lastPurchase}
+                </td>
+
+                <td class="border px-2 py-1 text-left">
+                    ${status}
+                </td>
+
+            </tr>
+        `;
+
+    });
+
+    const totalEl = document.getElementById("topCustomersTotal");
+    const ordersEl = document.getElementById("topCustomersOrders");
+
+    if (totalEl) {
+        totalEl.innerText = `KES ${totalSales.toFixed(2)}`;
+    }
+
+    if (ordersEl) {
+        ordersEl.innerText = totalOrders;
+    }
+
+    renderTopCustomersChart(sortedCustomers);
+}
+
+function renderTopCustomersChart(customers) {
+
+    const ctx = document.getElementById("topCustomersChart");
+
+    if (!ctx) return;
+
+    if (window.topCustomersChartInstance) {
+        window.topCustomersChartInstance.destroy();
+    }
+
+    const labels = customers.map(c => c[0]);
+    const sales = customers.map(c => c[1].sales);
+
+    window.topCustomersChartInstance = new Chart(ctx, {
+
+        type: "bar",
+
+        data: {
+
+            labels: labels,
+
+            datasets: [{
+                label: "Customer Sales",
+                data: sales,
+                backgroundColor: "#1d4ed8"
+            }]
+        },
+
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true
+                }
+            }
+        }
+
+    });
 }
 
 function toggleTopCustomersGroupBy() {}
 
 function toggleTopCustomersCompareDropdown() {
-  const el = document.getElementById("topCustomersCompareDropdown");
-  if (el) el.classList.toggle("hidden");
+
+    const el = document.getElementById("topCustomersCompareDropdown");
+
+    if (el) {
+        el.classList.toggle("hidden");
+    }
 }
 
 function applyTopCustomersComparison() {}
@@ -80622,8 +80913,12 @@ function applyTopCustomersComparison() {}
 function clearTopCustomersComparison() {}
 
 function toggleTopCustomersSettings() {
-  const el = document.getElementById("topCustomersSettingsDropdown");
-  if (el) el.classList.toggle("hidden");
+
+    const el = document.getElementById("topCustomersSettingsDropdown");
+
+    if (el) {
+        el.classList.toggle("hidden");
+    }
 }
 
 function applyTopCustomersSettings() {}
@@ -80631,74 +80926,214 @@ function applyTopCustomersSettings() {}
 function clearTopCustomersSettings() {}
 
 function toggleTopCustomersDarkMode(el) {
-  const panel = document.getElementById("topCustomersPanel");
-  if (!panel) return;
-  panel.classList.toggle("bg-gray-900", el.checked);
-  panel.classList.toggle("text-white", el.checked);
+
+    const panel = document.getElementById("topCustomersPanel");
+
+    if (!panel) return;
+
+    panel.classList.toggle("bg-gray-900", el.checked);
+    panel.classList.toggle("text-white", el.checked);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    renderTopCustomers();
+});
+
 </script>
 <script>
-  function applyTopSellingItemsFilters() {
-  renderTopSellingItems();
+
+function applyTopSellingItemsFilters() {
+    renderTopSellingItems();
 }
 
 function clearTopSellingItemsFilters() {
-  document.getElementById("topSellingItemsStart").value = "";
-  document.getElementById("topSellingItemsEnd").value = "";
-  document.getElementById("topSellingItemsSearch").value = "";
-  renderTopSellingItems();
+
+    document.getElementById("topSellingItemsMonth").value = "";
+    document.getElementById("topSellingItemsStart").value = "";
+    document.getElementById("topSellingItemsEnd").value = "";
+    document.getElementById("topSellingItemsSearch").value = "";
+
+    renderTopSellingItems();
 }
 
 function renderTopSellingItems() {
-  const start = document.getElementById("topSellingItemsStart")?.value || "";
-  const end = document.getElementById("topSellingItemsEnd")?.value || "";
-  const search = document.getElementById("topSellingItemsSearch")?.value?.toLowerCase() || "";
 
-  const data = JSON.parse(localStorage.getItem("topSellingItems") || "[]");
+    const tbody = document.getElementById("topSellingItemsBody");
+    tbody.innerHTML = "";
 
-  const filtered = data.filter(r => {
-    const date = new Date(r.date);
-    const matchDate = (!start || date >= new Date(start)) &&
-                      (!end || date <= new Date(end));
-    const matchSearch = !search || (r.item || "").toLowerCase().includes(search);
-    return matchDate && matchSearch;
-  });
+    const month = document.getElementById("topSellingItemsMonth").value;
+    const startDate = document.getElementById("topSellingItemsStart").value;
+    const endDate = document.getElementById("topSellingItemsEnd").value;
+    const search = document.getElementById("topSellingItemsSearch").value.toLowerCase();
 
-  const tbody = document.getElementById("topSellingItemsBody");
-  tbody.innerHTML = "";
+    let invoicesList = JSON.parse(localStorage.getItem("invoices") || "[]");
 
-  let totalQty = 0;
-  let totalSales = 0;
+    if (month) {
+        invoicesList = invoicesList.filter(inv =>
+            inv.date.startsWith(month)
+        );
+    }
 
-  filtered.forEach(r => {
-    const qty = parseFloat(r.quantity || 0);
-    const sales = parseFloat(r.sales || 0);
+    if (startDate && endDate) {
+        invoicesList = invoicesList.filter(inv =>
+            inv.date >= startDate &&
+            inv.date <= endDate
+        );
+    }
 
-    totalQty += qty;
-    totalSales += sales;
+    const data = {};
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="p-2">${r.item || ""}</td>
-      <td class="p-2">${qty}</td>
-      <td class="p-2">${sales.toFixed(2)}</td>
-      <td class="p-2">${r.category || ""}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+    invoicesList.forEach(inv => {
 
-  const qtyEl = document.getElementById("topSellingItemsTotalQty");
-  const salesEl = document.getElementById("topSellingItemsTotalSales");
+        inv.items.forEach(item => {
 
-  if (qtyEl) qtyEl.innerText = totalQty;
-  if (salesEl) salesEl.innerText = totalSales.toFixed(2);
+            const name = item.desc || "Unknown";
+
+            if (search && !name.toLowerCase().includes(search)) return;
+
+            if (!data[name]) {
+
+                data[name] = {
+                    quantity: 0,
+                    revenue: 0,
+                    profit: 0
+                };
+
+            }
+
+            const qty = parseFloat(item.qty) || 0;
+            const price = parseFloat(item.price) || 0;
+            const buyingPrice = parseFloat(item.buyingPrice || 0);
+
+            const revenue = qty * price;
+            const profit = qty * (price - buyingPrice);
+
+            data[name].quantity += qty;
+            data[name].revenue += revenue;
+            data[name].profit += profit;
+
+        });
+
+    });
+
+    const sortedItems = Object.entries(data)
+        .sort((a, b) => b[1].quantity - a[1].quantity);
+
+    if (sortedItems.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5"
+                    class="border px-2 py-3 text-center text-gray-500">
+                    No data found
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    let totalQty = 0;
+    let totalRevenue = 0;
+    let totalProfit = 0;
+
+    sortedItems.forEach(([itemName, row]) => {
+
+        totalQty += row.quantity;
+        totalRevenue += row.revenue;
+        totalProfit += row.profit;
+
+        let trend = "📈 High";
+
+        if (row.quantity < 5) {
+            trend = "📉 Low";
+        } else if (row.quantity < 15) {
+            trend = "➡️ Medium";
+        }
+
+        tbody.innerHTML += `
+            <tr>
+                <td class="border px-2 py-1">${itemName}</td>
+
+                <td class="border px-2 py-1 text-left">
+                    ${row.quantity}
+                </td>
+
+                <td class="border px-2 py-1 text-left">
+                    KES ${row.revenue.toFixed(2)}
+                </td>
+
+                <td class="border px-2 py-1 text-left">
+                    KES ${row.profit.toFixed(2)}
+                </td>
+
+                <td class="border px-2 py-1 text-left">
+                    ${trend}
+                </td>
+            </tr>
+        `;
+    });
+
+    const qtyEl = document.getElementById("topSellingItemsTotalQty");
+    const salesEl = document.getElementById("topSellingItemsTotalSales");
+    const profitEl = document.getElementById("topSellingItemsTotalProfit");
+
+    if (qtyEl) qtyEl.innerText = totalQty;
+    if (salesEl) salesEl.innerText = `KES ${totalRevenue.toFixed(2)}`;
+    if (profitEl) profitEl.innerText = `KES ${totalProfit.toFixed(2)}`;
+
+    renderTopSellingItemsChart(sortedItems);
+}
+
+function renderTopSellingItemsChart(items) {
+
+    const ctx = document.getElementById("topSellingItemsChart");
+
+    if (!ctx) return;
+
+    if (window.topSellingItemsChartInstance) {
+        window.topSellingItemsChartInstance.destroy();
+    }
+
+    const labels = items.map(i => i[0]);
+    const quantities = items.map(i => i[1].quantity);
+
+    window.topSellingItemsChartInstance = new Chart(ctx, {
+
+        type: "bar",
+
+        data: {
+
+            labels: labels,
+
+            datasets: [{
+                label: "Quantity Sold",
+                data: quantities,
+                backgroundColor: "#4338ca"
+            }]
+        },
+
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true
+                }
+            }
+        }
+
+    });
 }
 
 function toggleTopSellingItemsGroupBy() {}
 
 function toggleTopSellingItemsCompareDropdown() {
-  const el = document.getElementById("topSellingItemsCompareDropdown");
-  if (el) el.classList.toggle("hidden");
+
+    const el = document.getElementById("topSellingItemsCompareDropdown");
+
+    if (el) {
+        el.classList.toggle("hidden");
+    }
 }
 
 function applyTopSellingItemsComparison() {}
@@ -80706,8 +81141,12 @@ function applyTopSellingItemsComparison() {}
 function clearTopSellingItemsComparison() {}
 
 function toggleTopSellingItemsSettings() {
-  const el = document.getElementById("topSellingItemsSettingsDropdown");
-  if (el) el.classList.toggle("hidden");
+
+    const el = document.getElementById("topSellingItemsSettingsDropdown");
+
+    if (el) {
+        el.classList.toggle("hidden");
+    }
 }
 
 function applyTopSellingItemsSettings() {}
@@ -80715,77 +81154,266 @@ function applyTopSellingItemsSettings() {}
 function clearTopSellingItemsSettings() {}
 
 function toggleTopSellingItemsDarkMode(el) {
-  const panel = document.getElementById("topSellingItemsPanel");
-  if (!panel) return;
-  panel.classList.toggle("bg-gray-900", el.checked);
-  panel.classList.toggle("text-white", el.checked);
+
+    const panel = document.getElementById("topSellingItemsPanel");
+
+    if (!panel) return;
+
+    panel.classList.toggle("bg-gray-900", el.checked);
+    panel.classList.toggle("text-white", el.checked);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    renderTopSellingItems();
+});
+
 </script>
 <script>
-  function applySalesComparisonFilters() {
-  renderSalesComparison();
+
+function applySalesComparisonFilters() {
+    renderSalesComparison();
 }
 
 function clearSalesComparisonFilters() {
-  document.getElementById("salesComparisonStart").value = "";
-  document.getElementById("salesComparisonEnd").value = "";
-  document.getElementById("salesComparisonGroupBy").value = "month";
-  renderSalesComparison();
+
+    document.getElementById("salesComparisonMonth").value = "";
+    document.getElementById("salesComparisonStart").value = "";
+    document.getElementById("salesComparisonEnd").value = "";
+    document.getElementById("salesComparisonSearch").value = "";
+
+    renderSalesComparison();
 }
 
 function renderSalesComparison() {
-  const start = document.getElementById("salesComparisonStart")?.value || "";
-  const end = document.getElementById("salesComparisonEnd")?.value || "";
-  const groupBy = document.getElementById("salesComparisonGroupBy")?.value || "month";
 
-  const data = JSON.parse(localStorage.getItem("salesComparison") || "[]");
+    const tbody = document.getElementById("salesComparisonBody");
+    tbody.innerHTML = "";
 
-  const filtered = data.filter(r => {
-    const date = new Date(r.date);
-    return (!start || date >= new Date(start)) &&
-           (!end || date <= new Date(end));
-  });
+    const month = document.getElementById("salesComparisonMonth")?.value || "";
+    const start = document.getElementById("salesComparisonStart")?.value || "";
+    const end = document.getElementById("salesComparisonEnd")?.value || "";
+    const search = document.getElementById("salesComparisonSearch")?.value?.toLowerCase() || "";
 
-  const grouped = {};
+    let invoicesList = JSON.parse(localStorage.getItem("invoices") || "[]");
 
-  filtered.forEach(r => {
-    const date = new Date(r.date);
-    let key = "";
-
-    if (groupBy === "month") {
-      key = `${date.getFullYear()}-${date.getMonth() + 1}`;
-    } else if (groupBy === "quarter") {
-      key = `${date.getFullYear()}-Q${Math.floor(date.getMonth() / 3) + 1}`;
-    } else {
-      key = `${date.getFullYear()}`;
+    if (month) {
+        invoicesList = invoicesList.filter(inv =>
+            inv.date.startsWith(month)
+        );
     }
 
-    if (!grouped[key]) grouped[key] = { sales: 0, orders: 0 };
-    grouped[key].sales += parseFloat(r.sales || 0);
-    grouped[key].orders += parseFloat(r.orders || 0);
-  });
+    if (start && end) {
+        invoicesList = invoicesList.filter(inv =>
+            inv.date >= start && inv.date <= end
+        );
+    }
 
-  const tbody = document.getElementById("salesComparisonBody");
-  tbody.innerHTML = "";
+    const currentData = {};
 
-  Object.keys(grouped).forEach(k => {
-    const row = grouped[k];
+    invoicesList.forEach(inv => {
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="p-2">${k}</td>
-      <td class="p-2">${row.sales.toFixed(2)}</td>
-      <td class="p-2">${row.orders}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+        inv.items.forEach(item => {
+
+            const name = item.desc || "Unknown";
+
+            if (search && !name.toLowerCase().includes(search)) return;
+
+            if (!currentData[name]) {
+                currentData[name] = {
+                    current: 0
+                };
+            }
+
+            const qty = parseFloat(item.qty) || 0;
+            const price = parseFloat(item.price) || 0;
+
+            currentData[name].current += qty * price;
+        });
+
+    });
+
+    const prevData = {};
+
+    const allInvoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+
+    allInvoices.forEach(inv => {
+
+        if (!inv.date) return;
+
+        const nameMatch = month ? inv.date.startsWith(getPreviousMonth(month)) : true;
+
+        if (!nameMatch) return;
+
+        inv.items.forEach(item => {
+
+            const name = item.desc || "Unknown";
+
+            if (search && !name.toLowerCase().includes(search)) return;
+
+            if (!prevData[name]) {
+                prevData[name] = 0;
+            }
+
+            const qty = parseFloat(item.qty) || 0;
+            const price = parseFloat(item.price) || 0;
+
+            prevData[name] += qty * price;
+
+        });
+
+    });
+
+    const keys = new Set([
+        ...Object.keys(currentData),
+        ...Object.keys(prevData)
+    ]);
+
+    let rows = [];
+
+    keys.forEach(k => {
+
+        const current = currentData[k]?.current || 0;
+        const prev = prevData[k] || 0;
+
+        const diff = current - prev;
+        const growth = prev === 0 ? 100 : (diff / prev) * 100;
+
+        rows.push({
+            name: k,
+            current,
+            prev,
+            diff,
+            growth
+        });
+
+    });
+
+    rows.sort((a, b) => b.current - a.current);
+
+    if (rows.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="p-2 text-center text-gray-500">
+                    No data found
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    let totalCurrent = 0;
+    let totalPrev = 0;
+
+    rows.forEach(r => {
+
+        totalCurrent += r.current;
+        totalPrev += r.prev;
+
+        tbody.innerHTML += `
+            <tr>
+
+                <td class="border px-2 py-1">
+                    ${r.name}
+                </td>
+
+                <td class="border px-2 py-1 text-right">
+                    KES ${r.current.toFixed(2)}
+                </td>
+
+                <td class="border px-2 py-1 text-right">
+                    KES ${r.prev.toFixed(2)}
+                </td>
+
+                <td class="border px-2 py-1 text-right">
+                    ${r.diff.toFixed(2)}
+                </td>
+
+                <td class="border px-2 py-1 text-right">
+                    ${r.growth.toFixed(1)}%
+                </td>
+
+            </tr>
+        `;
+    });
+
+    renderSalesComparisonChart(rows);
 }
+
+function renderSalesComparisonChart(rows) {
+
+    const ctx = document.getElementById("salesComparisonChart");
+    if (!ctx) return;
+
+    if (window.salesComparisonChartInstance) {
+        window.salesComparisonChartInstance.destroy();
+    }
+
+    const labels = rows.map(r => r.name);
+    const current = rows.map(r => r.current);
+    const previous = rows.map(r => r.prev);
+
+    window.salesComparisonChartInstance = new Chart(ctx, {
+
+        type: "bar",
+
+        data: {
+
+            labels: labels,
+
+            datasets: [
+                {
+                    label: "Current Period",
+                    data: current,
+                    backgroundColor: "#2563eb"
+                },
+                {
+                    label: "Previous Period",
+                    data: previous,
+                    backgroundColor: "#9ca3af"
+                }
+            ]
+        },
+
+        options: {
+
+            responsive: true,
+
+            plugins: {
+                legend: {
+                    display: true
+                }
+            },
+
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+
+        }
+
+    });
+}
+
+
+function getPreviousMonth(monthStr) {
+
+    if (!monthStr) return "";
+
+    const [y, m] = monthStr.split("-");
+
+    const d = new Date(y, m - 2); // previous month
+
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/* ===================== UI TOGGLES ===================== */
 
 function toggleSalesComparisonGroupBy() {}
 
 function toggleSalesComparisonCompareDropdown() {
-  const el = document.getElementById("salesComparisonCompareDropdown");
-  if (el) el.classList.toggle("hidden");
+    const el = document.getElementById("salesComparisonCompareDropdown");
+    if (el) el.classList.toggle("hidden");
 }
 
 function applySalesComparisonComparison() {}
@@ -80793,8 +81421,8 @@ function applySalesComparisonComparison() {}
 function clearSalesComparisonComparison() {}
 
 function toggleSalesComparisonSettings() {
-  const el = document.getElementById("salesComparisonSettingsDropdown");
-  if (el) el.classList.toggle("hidden");
+    const el = document.getElementById("salesComparisonSettingsDropdown");
+    if (el) el.classList.toggle("hidden");
 }
 
 function applySalesComparisonSettings() {}
@@ -80802,74 +81430,193 @@ function applySalesComparisonSettings() {}
 function clearSalesComparisonSettings() {}
 
 function toggleSalesComparisonDarkMode(el) {
-  const panel = document.getElementById("salesComparisonPanel");
-  if (!panel) return;
-  panel.classList.toggle("bg-gray-900", el.checked);
-  panel.classList.toggle("text-white", el.checked);
+    const panel = document.getElementById("salesComparisonPanel");
+    if (!panel) return;
+
+    panel.classList.toggle("bg-gray-900", el.checked);
+    panel.classList.toggle("text-white", el.checked);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    renderSalesComparison();
+});
+
 </script>
 <script>
-  function applySalesTaxSummaryFilters() {
-  renderSalesTaxSummary();
+
+function applySalesTaxSummaryFilters() {
+    renderSalesTaxSummary();
 }
 
 function clearSalesTaxSummaryFilters() {
-  document.getElementById("salesTaxSummaryStart").value = "";
-  document.getElementById("salesTaxSummaryEnd").value = "";
-  document.getElementById("salesTaxSummaryType").value = "";
-  renderSalesTaxSummary();
+
+    document.getElementById("salesTaxSummaryMonth").value = "";
+    document.getElementById("salesTaxSummaryStart").value = "";
+    document.getElementById("salesTaxSummaryEnd").value = "";
+    document.getElementById("salesTaxSummarySearch").value = "";
+
+    renderSalesTaxSummary();
 }
 
 function renderSalesTaxSummary() {
-  const start = document.getElementById("salesTaxSummaryStart")?.value || "";
-  const end = document.getElementById("salesTaxSummaryEnd")?.value || "";
-  const type = document.getElementById("salesTaxSummaryType")?.value || "";
 
-  const data = JSON.parse(localStorage.getItem("salesTaxSummary") || "[]");
+    const tbody = document.getElementById("salesTaxSummaryBody");
+    tbody.innerHTML = "";
 
-  const filtered = data.filter(r => {
-    const date = new Date(r.date);
-    return (!start || date >= new Date(start)) &&
-           (!end || date <= new Date(end)) &&
-           (!type || r.taxType === type);
-  });
+    const month = document.getElementById("salesTaxSummaryMonth")?.value || "";
+    const start = document.getElementById("salesTaxSummaryStart")?.value || "";
+    const end = document.getElementById("salesTaxSummaryEnd")?.value || "";
+    const search = document.getElementById("salesTaxSummarySearch")?.value?.toLowerCase() || "";
 
-  const tbody = document.getElementById("salesTaxSummaryBody");
-  tbody.innerHTML = "";
+    let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
 
-  let totalTax = 0;
-  let totalSales = 0;
+    if (month) {
+        invoices = invoices.filter(inv =>
+            inv.date.startsWith(month)
+        );
+    }
 
-  filtered.forEach(r => {
-    const sales = parseFloat(r.sales || 0);
-    const tax = parseFloat(r.tax || 0);
+    if (start && end) {
+        invoices = invoices.filter(inv =>
+            inv.date >= start && inv.date <= end
+        );
+    }
 
-    totalSales += sales;
-    totalTax += tax;
+    const taxData = {};
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="p-2">${r.date || ""}</td>
-      <td class="p-2">${r.taxType || ""}</td>
-      <td class="p-2">${sales.toFixed(2)}</td>
-      <td class="p-2">${tax.toFixed(2)}</td>
-      <td class="p-2">${r.rate || ""}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+    invoices.forEach(inv => {
 
-  const salesEl = document.getElementById("salesTaxTotalSales");
-  const taxEl = document.getElementById("salesTaxTotalTax");
+        inv.items.forEach(item => {
 
-  if (salesEl) salesEl.innerText = totalSales.toFixed(2);
-  if (taxEl) taxEl.innerText = totalTax.toFixed(2);
+            const taxType = (item.taxType || "VAT").toUpperCase();
+
+            if (search && !taxType.toLowerCase().includes(search)) return;
+
+            const qty = parseFloat(item.qty) || 0;
+            const price = parseFloat(item.price) || 0;
+            const vatRate = parseFloat(item.vatRate) || 0;
+
+            const base = qty * price;
+            const tax = base * (vatRate / 100);
+
+            if (!taxData[taxType]) {
+                taxData[taxType] = {
+                    taxable: 0,
+                    tax: 0,
+                    rate: vatRate
+                };
+            }
+
+            taxData[taxType].taxable += base;
+            taxData[taxType].tax += tax;
+
+        });
+
+    });
+
+    const keys = Object.keys(taxData);
+
+    if (keys.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="p-2 text-center text-gray-500">
+                    No tax data found
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    const labels = [];
+    const chartData = [];
+
+    keys.forEach(type => {
+
+        const r = taxData[type];
+
+        tbody.innerHTML += `
+            <tr>
+
+                <td class="border px-2 py-1">
+                    ${type}
+                </td>
+
+                <td class="border px-2 py-1 text-right">
+                    KES ${r.taxable.toFixed(2)}
+                </td>
+
+                <td class="border px-2 py-1 text-right">
+                    KES ${r.tax.toFixed(2)}
+                </td>
+
+                <td class="border px-2 py-1 text-right">
+                    ${r.rate.toFixed(2)}%
+                </td>
+
+                <td class="border px-2 py-1 text-center">
+                    ${r.tax > 0 ? "Active" : "Zero"}
+                </td>
+
+            </tr>
+        `;
+
+        labels.push(type);
+        chartData.push(r.tax);
+
+    });
+
+    renderSalesTaxSummaryChart(labels, chartData);
+}
+
+function renderSalesTaxSummaryChart(labels, data) {
+
+    const ctx = document.getElementById("salesTaxSummaryChart");
+    if (!ctx) return;
+
+    if (window.salesTaxSummaryChartInstance) {
+        window.salesTaxSummaryChartInstance.destroy();
+    }
+
+    window.salesTaxSummaryChartInstance = new Chart(ctx, {
+
+        type: "bar",
+
+        data: {
+            labels: labels,
+
+            datasets: [{
+                label: "Tax Amount (KES)",
+                data: data,
+                backgroundColor: "#ef4444"
+            }]
+        },
+
+        options: {
+
+            responsive: true,
+
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+
+        }
+
+    });
 }
 
 function toggleSalesTaxSummaryGroupBy() {}
 
 function toggleSalesTaxSummaryCompareDropdown() {
-  const el = document.getElementById("salesTaxSummaryCompareDropdown");
-  if (el) el.classList.toggle("hidden");
+    const el = document.getElementById("salesTaxSummaryCompareDropdown");
+    if (el) el.classList.toggle("hidden");
 }
 
 function applySalesTaxSummaryComparison() {}
@@ -80877,8 +81624,8 @@ function applySalesTaxSummaryComparison() {}
 function clearSalesTaxSummaryComparison() {}
 
 function toggleSalesTaxSummarySettings() {
-  const el = document.getElementById("salesTaxSummarySettingsDropdown");
-  if (el) el.classList.toggle("hidden");
+    const el = document.getElementById("salesTaxSummarySettingsDropdown");
+    if (el) el.classList.toggle("hidden");
 }
 
 function applySalesTaxSummarySettings() {}
@@ -80886,75 +81633,190 @@ function applySalesTaxSummarySettings() {}
 function clearSalesTaxSummarySettings() {}
 
 function toggleSalesTaxSummaryDarkMode(el) {
-  const panel = document.getElementById("salesTaxSummaryPanel");
-  if (!panel) return;
-  panel.classList.toggle("bg-gray-900", el.checked);
-  panel.classList.toggle("text-white", el.checked);
+    const panel = document.getElementById("salesTaxSummaryPanel");
+    if (!panel) return;
+
+    panel.classList.toggle("bg-gray-900", el.checked);
+    panel.classList.toggle("text-white", el.checked);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    renderSalesTaxSummary();
+});
+
 </script>
 <script>
-  function applySalesForecastFilters() {
-  renderSalesForecast();
+
+function applySalesForecastFilters() {
+    renderSalesForecast();
 }
 
 function clearSalesForecastFilters() {
-  document.getElementById("salesForecastStart").value = "";
-  document.getElementById("salesForecastEnd").value = "";
-  document.getElementById("salesForecastMethod").value = "basic";
-  renderSalesForecast();
+
+    document.getElementById("salesForecastStart").value = "";
+    document.getElementById("salesForecastEnd").value = "";
+    document.getElementById("salesForecastSearch").value = "";
+    document.getElementById("salesForecastMethod").value = "basic";
+
+    renderSalesForecast();
 }
 
 function renderSalesForecast() {
-  const start = document.getElementById("salesForecastStart")?.value || "";
-  const end = document.getElementById("salesForecastEnd")?.value || "";
-  const method = document.getElementById("salesForecastMethod")?.value || "basic";
 
-  const data = JSON.parse(localStorage.getItem("salesForecast") || "[]");
+    const tbody = document.getElementById("salesForecastBody");
+    tbody.innerHTML = "";
 
-  const filtered = data.filter(r => {
-    const date = new Date(r.date);
-    return (!start || date >= new Date(start)) &&
-           (!end || date <= new Date(end));
-  });
+    const start = document.getElementById("salesForecastStart")?.value || "";
+    const end = document.getElementById("salesForecastEnd")?.value || "";
+    const search = document.getElementById("salesForecastSearch")?.value?.toLowerCase() || "";
+    const method = document.getElementById("salesForecastMethod")?.value || "basic";
 
-  let forecastTotal = 0;
+    let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
 
-  const tbody = document.getElementById("salesForecastBody");
-  tbody.innerHTML = "";
-
-  filtered.forEach(r => {
-    const sales = parseFloat(r.sales || 0);
-    let forecast = sales;
-
-    if (method === "basic") {
-      forecast = sales * 1.05;
-    } else if (method === "growth") {
-      forecast = sales * 1.1;
-    } else if (method === "conservative") {
-      forecast = sales * 0.95;
+    if (start && end) {
+        invoices = invoices.filter(inv =>
+            inv.date >= start && inv.date <= end
+        );
     }
 
-    forecastTotal += forecast;
+    const data = {};
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="p-2">${r.date || ""}</td>
-      <td class="p-2">${sales.toFixed(2)}</td>
-      <td class="p-2">${forecast.toFixed(2)}</td>
-      <td class="p-2">${method}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+    invoices.forEach(inv => {
 
-  const totalEl = document.getElementById("salesForecastTotal");
-  if (totalEl) totalEl.innerText = forecastTotal.toFixed(2);
+        if (!inv.items) return;
+
+        inv.items.forEach(item => {
+
+            const name = (item.desc || "Unknown").toLowerCase();
+
+            if (search && !name.includes(search)) return;
+
+            const qty = parseFloat(item.qty) || 0;
+            const price = parseFloat(item.price) || 0;
+
+            const total = qty * price;
+
+            if (!data[name]) {
+                data[name] = { sales: 0 };
+            }
+
+            data[name].sales += total;
+
+        });
+
+    });
+
+    const labels = [];
+    const current = [];
+    const forecast = [];
+
+    let totalForecast = 0;
+
+    Object.keys(data).forEach(key => {
+
+        const sales = data[key].sales;
+
+        let predicted = sales;
+
+        if (method === "basic") {
+            predicted = sales * 1.05;
+        } else if (method === "growth") {
+            predicted = sales * 1.1;
+        } else if (method === "conservative") {
+            predicted = sales * 0.95;
+        }
+
+        totalForecast += predicted;
+
+        labels.push(key);
+        current.push(sales);
+        forecast.push(predicted);
+
+        tbody.innerHTML += `
+            <tr>
+
+                <td class="border px-2 py-1">
+                    ${key}
+                </td>
+
+                <td class="border px-2 py-1 text-right">
+                    KES ${sales.toFixed(2)}
+                </td>
+
+                <td class="border px-2 py-1 text-right">
+                    KES ${predicted.toFixed(2)}
+                </td>
+
+                <td class="border px-2 py-1 text-center">
+                    ${method}
+                </td>
+
+            </tr>
+        `;
+    });
+
+    renderSalesForecastChart(labels, current, forecast);
+
+    const totalEl = document.getElementById("salesForecastTotal");
+    if (totalEl) totalEl.innerText = totalForecast.toFixed(2);
+}
+
+function renderSalesForecastChart(labels, current, forecast) {
+
+    const ctx = document.getElementById("salesForecastChart");
+    if (!ctx) return;
+
+    if (window.salesForecastChartInstance) {
+        window.salesForecastChartInstance.destroy();
+    }
+
+    window.salesForecastChartInstance = new Chart(ctx, {
+
+        type: "bar",
+
+        data: {
+            labels: labels,
+
+            datasets: [
+                {
+                    label: "Current Sales",
+                    data: current,
+                    backgroundColor: "#3b82f6"
+                },
+                {
+                    label: "Forecast",
+                    data: forecast,
+                    backgroundColor: "#f97316"
+                }
+            ]
+        },
+
+        options: {
+
+            responsive: true,
+
+            plugins: {
+                legend: {
+                    position: "top"
+                }
+            },
+
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+
+        }
+
+    });
 }
 
 function toggleSalesForecastGroupBy() {}
 
 function toggleSalesForecastCompareDropdown() {
-  const el = document.getElementById("salesForecastCompareDropdown");
-  if (el) el.classList.toggle("hidden");
+    const el = document.getElementById("salesForecastCompareDropdown");
+    if (el) el.classList.toggle("hidden");
 }
 
 function applySalesForecastComparison() {}
@@ -80962,8 +81824,8 @@ function applySalesForecastComparison() {}
 function clearSalesForecastComparison() {}
 
 function toggleSalesForecastSettings() {
-  const el = document.getElementById("salesForecastSettingsDropdown");
-  if (el) el.classList.toggle("hidden");
+    const el = document.getElementById("salesForecastSettingsDropdown");
+    if (el) el.classList.toggle("hidden");
 }
 
 function applySalesForecastSettings() {}
@@ -80971,11 +81833,17 @@ function applySalesForecastSettings() {}
 function clearSalesForecastSettings() {}
 
 function toggleSalesForecastDarkMode(el) {
-  const panel = document.getElementById("salesForecastPanel");
-  if (!panel) return;
-  panel.classList.toggle("bg-gray-900", el.checked);
-  panel.classList.toggle("text-white", el.checked);
+    const panel = document.getElementById("salesForecastPanel");
+    if (!panel) return;
+
+    panel.classList.toggle("bg-gray-900", el.checked);
+    panel.classList.toggle("text-white", el.checked);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    renderSalesForecast();
+});
+
 </script>
 <!-- 🗂️ Plans Module -->
 <div id="plansTab" class="p-1">
