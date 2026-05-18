@@ -46210,97 +46210,64 @@ function loadDraft() {
 }
 
 window.onload = loadDraft;
-window.addNonCurrentLiability = async function () {
 
+window.addNonCurrentLiability = function () {
     console.log("🟦 Add button clicked");
 
     const name = document.getElementById("nonCurrentLiabilityName").value.trim();
     const principal = parseFloat(document.getElementById("nonCurrentLiabilityValue").value);
     const interestRate = parseFloat(document.getElementById("nonCurrentLiabilityInterest").value || "0");
     const accountCode = document.getElementById("liabilityAccountSelect").value;
-    const bankName = document.getElementById("nonCurrentLiabilityBankSelect")?.value || "";
-    const currency = document.getElementById("liabilityCurrency")?.value || "KES";
+    const bankName = document.getElementById("nonCurrentLiabilityBankSelect")?.value || ""; 
 
     if (!name || isNaN(principal) || !accountCode) {
-        alert("⚠️ Enter valid name, principal, and account");
+        alert("⚠️ Enter valid name, principal, and select an account.");
         return;
     }
 
-    const amount = principal + (principal * interestRate / 100);
+    const amount = principal + (principal * (interestRate || 0) / 100);
+    const liability = { name, principal, interestRate, amount, accountCode, payments: [], bankName: bankName || null };
 
-    const liability = {
-        name,
-        principal,
-        interestRate,
-        amount,
-        accountCode,
-        currency,
-        payments: [],
-        bankName: bankName || null
-    };
+   if (editLiabilityIndex > -1) {
 
-    let balanceSheet = JSON.parse(localStorage.getItem("balanceSheet") || "{}");
-    balanceSheet.nonCurrentLiabilities = balanceSheet.nonCurrentLiabilities || [];
+    const oldLiability = balanceSheet.nonCurrentLiabilities[editLiabilityIndex];
+    const banks = JSON.parse(localStorage.getItem("banks") || "[]");
 
-    let banks = JSON.parse(localStorage.getItem("banks") || "[]");
-
-    if (editLiabilityIndex > -1) {
-
-        const oldLiability = balanceSheet.nonCurrentLiabilities[editLiabilityIndex];
-
-        if (oldLiability.bankName) {
-            const oldBank = banks.find(b => b.name === oldLiability.bankName);
-            if (oldBank) oldBank.balance -= oldLiability.principal;
-        }
-
-        if (bankName) {
-            const bank = banks.find(b => b.name === bankName);
-
-            if (bank) {
-                const converted = await convertAmount(
-                    principal,
-                    currency,
-                    bank.currency || "KES"
-                );
-
-                bank.balance += converted;
-            }
-        }
-
-        liability.payments = oldLiability.payments || [];
-        balanceSheet.nonCurrentLiabilities[editLiabilityIndex] = liability;
-
-        editLiabilityIndex = -1;
-        document.getElementById("cancelEditLiabilityBtn").classList.add("hidden");
-
+    if (oldLiability.bankName) {
+        const oldBank = banks.find(b => b.name === oldLiability.bankName);
+        if (oldBank) oldBank.balance -= oldLiability.principal;
     }
 
-    else {
-
-        if (bankName) {
-            const bank = banks.find(b => b.name === bankName);
-
-            if (bank) {
-                const converted = await convertAmount(
-                    principal,
-                    currency,
-                    bank.currency || "KES"
-                );
-
-                bank.balance += converted;
-            }
-        }
-
-        balanceSheet.nonCurrentLiabilities.push(liability);
+    if (bankName) {
+        const newBank = banks.find(b => b.name === bankName);
+        if (newBank) newBank.balance += principal;
     }
 
     localStorage.setItem("banks", JSON.stringify(banks));
-    localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
 
+    liability.payments = oldLiability.payments || [];
+    balanceSheet.nonCurrentLiabilities[editLiabilityIndex] = liability;
+
+    editLiabilityIndex = -1;
+    document.getElementById("cancelEditLiabilityBtn").classList.add("hidden");
+
+} else {
+
+    if (bankName) {
+        const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+        const bank = banks.find(b => b.name === bankName);
+        if (bank) bank.balance += principal;
+        localStorage.setItem("banks", JSON.stringify(banks));
+    }
+
+    balanceSheet.nonCurrentLiabilities.push(liability);
+}
+
+    localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
     renderNonCurrentLiabilities();
     renderNonCurrentLiabilitiesSummary();
     syncNonCurrentLiabilitiesToOpeningBalances();
-    buildLoanAndInterestData();
+    buildLoanAndInterestData(); 
     renderLoanSchedule(loanSchedules);
     renderInterestExpense(interestExpenses);
     clearInputs();
@@ -46308,7 +46275,7 @@ window.addNonCurrentLiability = async function () {
     try {
         renderReports();
     } catch {
-        console.warn("⚠️ renderReports() not defined");
+        console.warn("⚠️ renderReports() not defined, skipping...");
     }
 };
 
