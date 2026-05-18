@@ -46313,59 +46313,211 @@ window.addNonCurrentLiability = async function () {
 };
 
   function renderNonCurrentLiabilities() {
-  const tbody = document.getElementById("nonCurrentLiabilitiesTableBody");
+
+  const tbody = document.getElementById(
+    "nonCurrentLiabilitiesTableBody"
+  );
+
   if (!tbody) return;
+
   tbody.innerHTML = "";
 
-  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
-  const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+  const accounts = JSON.parse(
+    localStorage.getItem("chartOfAccounts") || "[]"
+  );
+
+  const banks = JSON.parse(
+    localStorage.getItem("banks") || "[]"
+  );
 
   balanceSheet.nonCurrentLiabilities.forEach((l, index) => {
-    const acc = accounts.find(a => a.code === l.accountCode);
+
+    const acc = accounts.find(
+      a => a.code === l.accountCode
+    );
+
     const accName = acc ? acc.name : "-";
 
     let bankDisplay = "-";
+
     if (l.bankName) {
-      const bank = banks.find(b => b.name === l.bankName);
+
+      const bank = banks.find(
+        b => b.name === l.bankName
+      );
+
       if (bank) {
-        bankDisplay = `${bank.name} (Balance: KES ${bank.balance.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})})`;
+
+        bankDisplay =
+          `${bank.name} (Balance: KES ${bank.balance.toLocaleString(
+            'en-KE',
+            {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            }
+          )})`;
+
       } else {
+
         bankDisplay = l.bankName;
+
       }
     }
 
     const row = document.createElement("tr");
+
     row.innerHTML = `
-      <td class="p-2 border">${l.name}</td>
-      <td class="p-2 border text-right">KES ${l.principal.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-      <td class="p-2 border text-right">${l.interestRate || 0}%</td>
-      <td class="p-2 border">${accName}</td>
-      <td class="p-2 border">${bankDisplay}</td>
-      <td class="p-2 border text-right">KES ${getOutstandingBalance(l).toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+
       <td class="p-2 border">
+        <input type="checkbox"
+          class="non-current-liability-select"
+          data-index="${index}">
+      </td>
+
+      <td class="p-2 border">
+        ${l.name}
+      </td>
+
+      <td class="p-2 border text-right">
+        KES ${l.principal.toLocaleString(
+          'en-KE',
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }
+        )}
+      </td>
+
+      <td class="p-2 border text-right">
+        ${l.interestRate || 0}%
+      </td>
+
+      <td class="p-2 border">
+        ${accName}
+      </td>
+
+      <td class="p-2 border">
+        ${bankDisplay}
+      </td>
+
+      <td class="p-2 border text-right">
+        KES ${getOutstandingBalance(l).toLocaleString(
+          'en-KE',
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }
+        )}
+      </td>
+
+      <td class="p-2 border">
+
         <div class="flex flex-wrap gap-1">
-          <button onclick="editNonCurrentLiability(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-          <button onclick="deleteNonCurrentLiability(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-          <button onclick="payNonCurrentLiability(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Pay</button>
-          <button onclick="increaseNonCurrentLiability(${index})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Increase</button>
-          <button onclick="togglePaymentHistory(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">History</button>
+
+          <button onclick="editNonCurrentLiability(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Edit
+          </button>
+
+          <button onclick="deleteNonCurrentLiability(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Delete
+          </button>
+
+          <button onclick="payNonCurrentLiability(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Pay
+          </button>
+
+          <button onclick="increaseNonCurrentLiability(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Increase
+          </button>
+
+          <button onclick="togglePaymentHistory(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            History
+          </button>
+
         </div>
-        <div id="paymentHistory-${index}" class="hidden mt-1 text-xs"></div>
+
+        <div id="paymentHistory-${index}"
+          class="hidden mt-1 text-xs">
+        </div>
+
       </td>
     `;
+
     tbody.appendChild(row);
+
   });
 
-  const totalOutstanding = balanceSheet.nonCurrentLiabilities
-    .reduce((sum, l) => sum + getOutstandingBalance(l), 0);
+  const totalOutstanding =
+    balanceSheet.nonCurrentLiabilities.reduce(
+      (sum, l) => sum + getOutstandingBalance(l),
+      0
+    );
 
   const totalRow = document.createElement("tr");
+
   totalRow.innerHTML = `
-    <td colspan="5" class="p-2 border font-bold text-right">Total Outstanding</td>
-    <td class="p-2 border text-right font-bold">KES ${totalOutstanding.toLocaleString('en-KE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+    <td colspan="6"
+      class="p-2 border font-bold text-right">
+      Total Outstanding
+    </td>
+
+    <td class="p-2 border text-right font-bold">
+      KES ${totalOutstanding.toLocaleString(
+        'en-KE',
+        {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }
+      )}
+    </td>
+
     <td class="p-2 border"></td>
   `;
+
   tbody.appendChild(totalRow);
+
+}
+function toggleAllNonCurrentLiabilities(master) {
+
+  const checkboxes = document.querySelectorAll(
+    ".non-current-liability-select"
+  );
+
+  checkboxes.forEach(cb => {
+    cb.checked = master.checked;
+  });
+
+}
+function bulkDeleteNonCurrentLiabilities() {
+
+  const selected = document.querySelectorAll(
+    ".non-current-liability-select:checked"
+  );
+
+  if (selected.length === 0) {
+
+    alert("Please select at least one liability.");
+
+    return;
+  }
+
+  const indexes = Array.from(selected)
+    .map(cb => Number(cb.dataset.index))
+    .sort((a, b) => b - a);
+
+  indexes.forEach(i => {
+
+    balanceSheet.nonCurrentLiabilities.splice(i, 1);
+
+  });
+
+  renderNonCurrentLiabilities();
+
 }
   window.cancelEditLiability = function () {
     clearInputs();
