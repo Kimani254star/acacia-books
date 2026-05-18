@@ -39415,14 +39415,21 @@ Liability Actions
     </div>
  
   <div class="flex gap-2 justify-start">
+    <button type="button" onclick="saveAsDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
     <button type="button" onclick="addNonCurrentLiability()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Add</button>
     <button type="button" id="cancelEditLiabilityBtn" onclick="cancelEditLiability()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800 hidden">Cancel</button>
   </div>
 </div>
 
   <table class="w-full border text-sm">
+     <button onclick="bulkDeleteNonCurrentLiabilities()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
     <thead class="bg-gray-100">
       <tr>
+        <th class="p-2 border">
+        <input type="checkbox"
+          id="selectAllNonCurrentLiabilities"
+          onclick="toggleAllNonCurrentLiabilities(this)">
+         </th>
         <th class="p-2 border">Liability</th>
         <th class="p-2 border text-right">Principal</th>
         <th class="p-2 border text-right">Interest (%)</th>
@@ -46175,6 +46182,34 @@ balanceSheet.nonCurrentLiabilities = balanceSheet.nonCurrentLiabilities || [];
     select.appendChild(opt);
   });
 }
+function saveAsDraft() {
+  const draft = {
+    name: document.getElementById("nonCurrentLiabilityName").value,
+    principal: document.getElementById("nonCurrentLiabilityValue").value,
+    interest: document.getElementById("nonCurrentLiabilityInterest").value,
+    bank: document.getElementById("nonCurrentLiabilityBankSelect").value,
+    account: document.getElementById("liabilityAccountSelect").value,
+    timestamp: new Date().toISOString()
+  };
+
+  localStorage.setItem("nonCurrentLiabilityDraft", JSON.stringify(draft));
+
+  alert("Draft saved successfully");
+}
+
+function loadDraft() {
+  const draft = JSON.parse(localStorage.getItem("nonCurrentLiabilityDraft"));
+
+  if (!draft) return;
+
+  document.getElementById("nonCurrentLiabilityName").value = draft.name || "";
+  document.getElementById("nonCurrentLiabilityValue").value = draft.principal || "";
+  document.getElementById("nonCurrentLiabilityInterest").value = draft.interest || "";
+  document.getElementById("nonCurrentLiabilityBankSelect").value = draft.bank || "";
+  document.getElementById("liabilityAccountSelect").value = draft.account || "";
+}
+
+window.onload = loadDraft;
 window.addNonCurrentLiability = async function () {
 
     console.log("🟦 Add button clicked");
@@ -54894,8 +54929,6 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 
 <div class="flex flex-wrap items-center gap-3 mb-4">
-
-  <!-- GROUP BY -->
 
   <div class="relative">
 
