@@ -27436,74 +27436,6 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </div>
 
-<script>
-  const billBtn = document.getElementById('billOptionsBtn');
-  const billDropdown = document.getElementById('billDropdown');
-  const billFileBtn = document.getElementById('billFileBtn');
-  const billFileDropdown = document.getElementById('billFileDropdown');
-
-  let billTimer = null;
-
-  function toggleBillDropdown(button, dropdown, otherDropdown, otherButton) {
-    const isHidden = dropdown.classList.contains('hidden');
-
-    if (!otherDropdown.classList.contains('hidden')) {
-      otherDropdown.classList.add('hidden');
-      otherButton.setAttribute('aria-expanded', 'false');
-    }
-
-    if (isHidden) {
-      dropdown.classList.remove('hidden');
-      button.setAttribute('aria-expanded', 'true');
-
-      if (billTimer) clearTimeout(billTimer);
-
-      billTimer = setTimeout(() => {
-        dropdown.classList.add('hidden');
-        button.setAttribute('aria-expanded', 'false');
-      }, 3000);
-    } else {
-      dropdown.classList.add('hidden');
-      button.setAttribute('aria-expanded', 'false');
-      if (billTimer) clearTimeout(billTimer);
-    }
-  }
-
-  billBtn.addEventListener('click', () => toggleBillDropdown(billBtn, billDropdown, billFileDropdown, billFileBtn));
-  billFileBtn.addEventListener('click', () => toggleBillDropdown(billFileBtn, billFileDropdown, billDropdown, billBtn));
-
-  document.addEventListener('click', (event) => {
-    if (!billBtn.contains(event.target) && !billDropdown.contains(event.target)) {
-      billDropdown.classList.add('hidden');
-      billBtn.setAttribute('aria-expanded', 'false');
-    }
-    if (!billFileBtn.contains(event.target) && !billFileDropdown.contains(event.target)) {
-      billFileDropdown.classList.add('hidden');
-      billFileBtn.setAttribute('aria-expanded', 'false');
-    }
-  });
-
-  function sortBillsBy(field) {
-    console.log("Sorting bills by:", field);
-  }
-
-  function filterBillsByStatus(status) {
-    console.log("Filtering bills by status:", status);
-  }
-
-  function exportBills() {
-    console.log("Exporting bills...");
-  }
-
-  function resetBillColumns() {
-    console.log("Resetting supplier bill table column widths...");
-  }
-
-  function manageBillFiles() {
-    console.log("Opening supplier bill custom files manager...");
-  }
-</script>
-  
   <div class="bg-white p-6 rounded shadow mb-6">
     <h2 class="text-xl font-bold mb-4">Add  Bill</h2>
 
@@ -28338,101 +28270,6 @@ Save Quote
     </div>
   </div>
 </div>
-
-<script>
-  const btn = document.getElementById('poMasterBtn');
-  const dropdown = document.getElementById('poMasterDropdown');
-  const chevron = btn.querySelector('svg');
-
-  dropdown.style.overflow = 'hidden';
-  dropdown.style.transition = 'max-height 0.3s ease';
-
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const isHidden = dropdown.classList.contains('hidden');
-
-    document.querySelectorAll('.origin-top-left').forEach(dd => {
-      if (dd !== dropdown) {
-        dd.style.maxHeight = null;
-        dd.classList.add('hidden');
-        const parentChevron = dd.previousElementSibling.querySelector('svg');
-        if (parentChevron) parentChevron.style.transform = '';
-      }
-    });
-
-    if (isHidden) {
-      dropdown.classList.remove('hidden');
-      dropdown.style.maxHeight = dropdown.scrollHeight + "px";
-      chevron.style.transform = 'rotate(180deg)';
-    } else {
-      dropdown.style.maxHeight = null;
-      setTimeout(() => dropdown.classList.add('hidden'), 300);
-      chevron.style.transform = '';
-    }
-  });
-
-  document.addEventListener('click', () => {
-    dropdown.style.maxHeight = null;
-    setTimeout(() => dropdown.classList.add('hidden'), 300);
-    chevron.style.transform = '';
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      dropdown.style.maxHeight = null;
-      setTimeout(() => dropdown.classList.add('hidden'), 300);
-      chevron.style.transform = '';
-    }
-  });
-  function importPOs() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.csv, .json';
-    input.onchange = e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = event => {
-            const content = event.target.result;
-            console.log('Imported PO content:', content);
-            alert('POs imported successfully!');
-            
-        };
-        reader.readAsText(file);
-    };
-    input.click();
-}
-
-function exportPOs() {
-    const rows = [
-        ['PO #', 'Date', 'Supplier', 'Total'],
-        ['PO001', '2026-03-04', 'Supplier A', '1000'],
-        ['PO002', '2026-03-05', 'Supplier B', '1500']
-    ];
-    const csvContent = rows.map(r => r.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'purchase_orders.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-    alert('POs exported successfully!');
-}
-
-function resetPOColumns() {
-    const table = document.getElementById('poItemsTable');
-    if (!table) return;
-    const headers = table.querySelectorAll('th');
-    headers.forEach(th => th.style.width = '');
-    alert('PO table columns reset!');
-}
-
-function managePOFiles() {
-    alert('Open PO file management modal or page here!');
-}
-</script>
-  
   <div class="bg-white p-6 rounded shadow mb-6">
     <h3 class="text-xl font-semibold mb-4">Add New Purchase Order</h3>
   
@@ -28569,23 +28406,27 @@ function managePOFiles() {
 
   
     <div class="overflow-x-auto mb-4">
-      <table class="w-full text-sm border" id="poItemsTable">
-        <button onclick="deleteSelectedPurchaseOrders()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Bulk Delete</button>
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="p-2"><input type="checkbox" onclick="toggleSelectAllPOs(this)"></th>
-            <th class="p-2">Description</th>
-            <th class="p-2">Qty</th>
-            <th class="p-2">Unit Price</th>
-            <th class="p-2">Discount %</th>
-            <th class="p-2">VAT</th>
-            <th class="p-2">Subtotal</th>
-            <th class="p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-  </div>
+
+  <button onclick="deleteSelectedPurchaseOrders()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
+  <table class="w-full text-sm border" id="supplierPOsTable">
+
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-2">
+          <input type="checkbox" onclick="toggleSelectAllPOs(this)">
+        </th>
+        <th class="p-2">PO #</th>
+        <th class="p-2">Date</th>
+        <th class="p-2">Supplier</th>
+        <th class="p-2">Chart Account</th>
+        <th class="p-2">Total</th>
+        <th class="p-2">Status</th>
+        <th class="p-2">Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
 <div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600">
   <div>
     Total Count: <span id="totalCount">0</span>
@@ -28899,7 +28740,7 @@ function managePOFiles() {
 <!-- ✅ SUPPLIER PURCHASE RETURNS MODULE -->
 <div id="purchaseReturnsTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-1xl font-bold mb-4 text-left">Purchase Returns</h2>
-  <!-- 🔎 Purchase Returns Search -->
+  
 <div class="relative mb-4">
   <input 
     type="text" 
@@ -32218,6 +32059,256 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAccountsPayable(); 
 });
 
+  const billBtn = document.getElementById('billOptionsBtn');
+  const billDropdown = document.getElementById('billDropdown');
+  const billFileBtn = document.getElementById('billFileBtn');
+  const billFileDropdown = document.getElementById('billFileDropdown');
+
+  let billTimer = null;
+
+  function toggleBillDropdown(button, dropdown, otherDropdown, otherButton) {
+    const isHidden = dropdown.classList.contains('hidden');
+
+    if (!otherDropdown.classList.contains('hidden')) {
+      otherDropdown.classList.add('hidden');
+      otherButton.setAttribute('aria-expanded', 'false');
+    }
+
+    if (isHidden) {
+      dropdown.classList.remove('hidden');
+      button.setAttribute('aria-expanded', 'true');
+
+      if (billTimer) clearTimeout(billTimer);
+
+      billTimer = setTimeout(() => {
+        dropdown.classList.add('hidden');
+        button.setAttribute('aria-expanded', 'false');
+      }, 3000);
+    } else {
+      dropdown.classList.add('hidden');
+      button.setAttribute('aria-expanded', 'false');
+      if (billTimer) clearTimeout(billTimer);
+    }
+  }
+
+  billBtn.addEventListener('click', () => toggleBillDropdown(billBtn, billDropdown, billFileDropdown, billFileBtn));
+  billFileBtn.addEventListener('click', () => toggleBillDropdown(billFileBtn, billFileDropdown, billDropdown, billBtn));
+
+  document.addEventListener('click', (event) => {
+    if (!billBtn.contains(event.target) && !billDropdown.contains(event.target)) {
+      billDropdown.classList.add('hidden');
+      billBtn.setAttribute('aria-expanded', 'false');
+    }
+    if (!billFileBtn.contains(event.target) && !billFileDropdown.contains(event.target)) {
+      billFileDropdown.classList.add('hidden');
+      billFileBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  function sortBillsBy(field) {
+    console.log("Sorting bills by:", field);
+  }
+
+ function filterSupplierBills() {
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+
+  const search = (document.getElementById("billSearch")?.value || "").toLowerCase();
+  const status = document.getElementById("billStatusFilter")?.value || "";
+  const supplier = document.getElementById("billSupplierFilter")?.value || "";
+
+  const filtered = bills.filter(b => {
+    const paid = b.paidAmount || 0;
+
+    let billStatus = "Unpaid";
+    if (paid >= b.total) billStatus = "Full Paid";
+    else if (paid > 0) billStatus = "Partial Paid";
+
+    const matchSearch =
+      b.billNumber?.toLowerCase().includes(search) ||
+      b.supplier?.toLowerCase().includes(search);
+
+    const matchStatus = !status || status === billStatus;
+    const matchSupplier = !supplier || b.supplier === supplier;
+
+    return matchSearch && matchStatus && matchSupplier;
+  });
+
+  renderFilteredBills(filtered);
+}
+function renderFilteredBills(bills) {
+  const tbody = document.getElementById("supplierBillsList");
+  if (!tbody) return;
+
+  tbody.innerHTML = bills.map((b, i) => {
+    const paidAmount = b.paidAmount || 0;
+    const dueAmount = (b.total || 0) - paidAmount;
+
+    let status = "Unpaid";
+    if (paidAmount >= b.total) status = "Full Paid";
+    else if (paidAmount > 0) status = "Partial Paid";
+
+    return `
+      <tr class="border-t">
+        <td class="p-2"><input type="checkbox" class="bill-checkbox" value="${i}"></td>
+        <td class="p-2">${b.billNumber}</td>
+        <td class="p-2">${b.date}</td>
+        <td class="p-2">${b.supplier}</td>
+        <td class="p-2">${b.termDays || 0}</td>
+        <td class="p-2">${b.due || ""}</td>
+        <td class="p-2">${(b.total || 0).toFixed(2)}</td>
+        <td class="p-2">${(b.vat || 0).toFixed(2)}</td>
+        <td class="p-2">${paidAmount.toFixed(2)}</td>
+        <td class="p-2">${dueAmount.toFixed(2)}</td>
+        <td class="p-2">${status}</td>
+      </tr>
+    `;
+  }).join("");
+}
+function importBills() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".xlsx,.xls";
+
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = event => {
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet);
+
+      let bills = JSON.parse(localStorage.getItem("bills") || "[]");
+
+      json.forEach(row => {
+        bills.push({
+          billNumber: row["Bill No"] || "IMP-" + Date.now(),
+          date: row["Date"],
+          supplier: row["Supplier"],
+          termDays: row["Terms"] || 0,
+          due: row["Due Date"],
+          total: parseFloat(row["Total"]) || 0,
+          vat: parseFloat(row["VAT"]) || 0,
+          paidAmount: parseFloat(row["Paid"]) || 0,
+          items: []
+        });
+      });
+
+      localStorage.setItem("bills", JSON.stringify(bills));
+
+      loadSupplierBills(); 
+
+      alert("Excel imported successfully!");
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
+  input.click();
+}
+ function exportBills() {
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+
+  if (!bills.length) {
+    alert("No bills to export");
+    return;
+  }
+
+  const data = bills.map(b => {
+    const paid = b.paidAmount || 0;
+    const due = (b.total || 0) - paid;
+
+    let status = "Unpaid";
+    if (paid >= b.total) status = "Full Paid";
+    else if (paid > 0) status = "Partial Paid";
+
+    return {
+      "Bill No": b.billNumber,
+      "Date": b.date,
+      "Supplier": b.supplier,
+      "Terms": b.termDays,
+      "Due Date": b.due,
+      "Total": b.total,
+      "VAT": b.vat,
+      "Paid": paid,
+      "Due": due,
+      "Status": status
+    };
+  });
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Supplier Bills");
+
+  XLSX.writeFile(wb, `supplier_bills_${Date.now()}.xlsx`);
+
+  alert("Excel exported successfully!");
+}
+
+function resetBillColumns() {
+ 
+  const search = document.getElementById("billSearch");
+  const status = document.getElementById("billStatusFilter");
+  const supplier = document.getElementById("billSupplierFilter");
+
+  if (search) search.value = "";
+  if (status) status.value = "";
+  if (supplier) supplier.value = "";
+
+  loadSupplierBills();
+
+  alert("Filters reset successfully!");
+}
+function manageBillFiles() {
+  const modal = document.createElement("div");
+  modal.style.position = "fixed";
+  modal.style.top = 0;
+  modal.style.left = 0;
+  modal.style.width = "100%";
+  modal.style.height = "100%";
+  modal.style.background = "rgba(0,0,0,0.5)";
+  modal.style.display = "flex";
+  modal.style.justifyContent = "center";
+  modal.style.alignItems = "center";
+  modal.style.zIndex = 9999;
+
+  modal.innerHTML = `
+    <div style="background:#fff; padding:20px; border-radius:10px; width:300px;">
+      <h3 style="margin-bottom:10px;">Bill File Manager</h3>
+
+      <button onclick="exportBills(); closeBillFileModal();"
+        style="width:100%; margin-bottom:10px; padding:8px; background:#1e3a8a; color:#fff;">
+        Export to Excel
+      </button>
+
+      <button onclick="importBills(); closeBillFileModal();"
+        style="width:100%; margin-bottom:10px; padding:8px; background:#1e3a8a; color:#fff;">
+        Import Excel
+      </button>
+
+      <button onclick="resetBillColumns(); closeBillFileModal();"
+        style="width:100%; padding:8px; background:gray; color:#fff;">
+        Reset Filters
+      </button>
+
+      <button onclick="closeBillFileModal()"
+        style="width:100%; margin-top:10px; padding:8px;">
+        Close
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  window.closeBillFileModal = function () {
+    document.body.removeChild(modal);
+  };
+}
+
 </script>
 <script>
 
@@ -33086,7 +33177,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </script>
 <script>
-
 let poItems = [];
 let editingPOIndex = null;
 
@@ -33163,14 +33253,7 @@ function populatePOProductDropdown() {
   });
 
 }
-document.getElementById("poProductSelect").addEventListener("change", function () {
 
-  const selectedOption = this.options[this.selectedIndex];
-
-  document.getElementById("poItemPrice").value =
-    selectedOption.dataset.price || "";
-
-});
 function addPOItem() {
   const name = document.getElementById("poProductSelect").value;
   const qty = parseFloat(document.getElementById("poItemQty").value);
@@ -33562,6 +33645,164 @@ function clearPOItemForm() {
   document.getElementById("poItemPrice").value = "";
 }
 
+  const btn = document.getElementById('poMasterBtn');
+  const dropdown = document.getElementById('poMasterDropdown');
+  const chevron = btn.querySelector('svg');
+
+  dropdown.style.overflow = 'hidden';
+  dropdown.style.transition = 'max-height 0.3s ease';
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isHidden = dropdown.classList.contains('hidden');
+
+    document.querySelectorAll('.origin-top-left').forEach(dd => {
+      if (dd !== dropdown) {
+        dd.style.maxHeight = null;
+        dd.classList.add('hidden');
+        const parentChevron = dd.previousElementSibling.querySelector('svg');
+        if (parentChevron) parentChevron.style.transform = '';
+      }
+    });
+
+    if (isHidden) {
+      dropdown.classList.remove('hidden');
+      dropdown.style.maxHeight = dropdown.scrollHeight + "px";
+      chevron.style.transform = 'rotate(180deg)';
+    } else {
+      dropdown.style.maxHeight = null;
+      setTimeout(() => dropdown.classList.add('hidden'), 300);
+      chevron.style.transform = '';
+    }
+  });
+
+  document.addEventListener('click', () => {
+    dropdown.style.maxHeight = null;
+    setTimeout(() => dropdown.classList.add('hidden'), 300);
+    chevron.style.transform = '';
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      dropdown.style.maxHeight = null;
+      setTimeout(() => dropdown.classList.add('hidden'), 300);
+      chevron.style.transform = '';
+    }
+  });
+  function exportPOs() {
+  const poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
+
+  if (!poList.length) {
+    alert("No Purchase Orders to export");
+    return;
+  }
+
+  const rows = [
+    ["PO #", "Date", "Supplier", "Chart Account", "Currency", "Total", "Status"]
+  ];
+
+  poList.forEach(po => {
+    let total = 0;
+
+    (po.items || []).forEach(i => {
+      total += (parseFloat(i.subtotal) || 0) + (parseFloat(i.vat) || 0);
+    });
+
+    rows.push([
+      po.poNumber,
+      po.date,
+      po.supplier,
+      po.chartOfAccount,
+      po.currency || "KES",
+      total.toFixed(2),
+      po.status
+    ]);
+  });
+
+  const csvContent = rows.map(r => r.join(",")).join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `purchase_orders_${Date.now()}.csv`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+  alert("Export successful!");
+}
+function importPOs() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".csv";
+
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = event => {
+      const text = event.target.result;
+
+      const lines = text.split("\n").map(l => l.split(","));
+
+      const dataRows = lines.slice(1);
+
+      let poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
+
+      dataRows.forEach(row => {
+        if (row.length < 4) return;
+
+        const [poNumber, date, supplier, chartAccount, currency, total, status] = row;
+
+        poList.push({
+          poNumber: poNumber || "IMPORTED-" + Date.now(),
+          date,
+          supplier,
+          chartOfAccount: chartAccount,
+          currency: currency || "KES",
+          status: status || "final",
+          items: [
+            {
+              name: "Imported Item",
+              qty: 1,
+              price: parseFloat(total) || 0,
+              vat: 0,
+              subtotal: parseFloat(total) || 0
+            }
+          ]
+        });
+      });
+
+      localStorage.setItem("purchaseOrders", JSON.stringify(poList));
+
+      renderPurchaseOrders();
+
+      alert("Import successful!");
+    };
+
+    reader.readAsText(file);
+  };
+
+  input.click();
+}
+
+function resetPOColumns() {
+    const table = document.getElementById('poItemsTable');
+    if (!table) return;
+    const headers = table.querySelectorAll('th');
+    headers.forEach(th => th.style.width = '');
+    alert('PO table columns reset!');
+}
+
+function managePOFiles() {
+    alert('Open PO file management modal or page here!');
+}
+
+  
 document.addEventListener("DOMContentLoaded", () => {
 
   populatePOProductDropdown();
@@ -34454,7 +34695,6 @@ function manageDebitFiles(){
     alert('Open Debit Note file management modal or page here!');
 }
 </script>
-
 <script>
 
 let purchaseReturnItems = [];
