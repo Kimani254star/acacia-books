@@ -1,4 +1,4 @@
-<!-- MAIN APP LAYOUT --><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -33176,6 +33176,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 let poItems = [];
 let editingPOIndex = null;
@@ -33227,32 +33228,43 @@ function savePOList(list) {
   localStorage.setItem("purchaseOrders", JSON.stringify(list));
 }
 function populatePOProductDropdown() {
-
   const select = document.getElementById("poProductSelect");
-
   if (!select) return;
 
   select.innerHTML = '<option value="">Select Product</option>';
 
-  const items = getAllInventories();
+  const items = getAllInventories() || [];
 
   items.forEach(item => {
-
     if (!item || !item.name) return;
 
     const opt = document.createElement("option");
-
     opt.value = item.name;
-
     opt.textContent = `${item.name} | Qty: ${item.qty} | Price: ${item.buyPrice}`;
 
-    opt.dataset.price = item.buyPrice || 0;
+    opt.dataset.price = Number(item.buyPrice || 0);
 
     select.appendChild(opt);
-
   });
-
 }
+
+function onPOProductChange() {
+  const select = document.getElementById("poProductSelect");
+  const priceInput = document.getElementById("poItemPrice");
+  const qtyInput = document.getElementById("poItemQty");
+
+  if (!select || !priceInput) return;
+
+  const option = select.options[select.selectedIndex];
+  const price = Number(option?.dataset?.price || 0);
+
+  priceInput.value = price.toFixed(2);
+
+  if (qtyInput) qtyInput.value = 1;
+
+  updatePOItemTotals();
+}
+
 
 function addPOItem() {
   const name = document.getElementById("poProductSelect").value;
@@ -33320,6 +33332,25 @@ function removePOItem(index) {
   poItems.splice(index, 1);
   renderPOItems();
 }
+function generatePONumber() {
+  const poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
+
+  let lastNumber = 0;
+
+  poList.forEach(po => {
+    if (!po.poNumber) return;
+
+    const match = po.poNumber.match(/PO-(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num > lastNumber) lastNumber = num;
+    }
+  });
+
+  const nextNumber = lastNumber + 1;
+
+  return "PO-" + String(nextNumber).padStart(4, "0");
+}
 function saveAsDraft() {
   const date = document.getElementById("poDate")?.value || "";
   const supplier = document.getElementById("poSupplier")?.value || "";
@@ -33332,8 +33363,8 @@ function saveAsDraft() {
   let poList = getPOList();
 
   const poNumber = editingPOIndex !== null
-    ? poList[editingPOIndex].poNumber
-    : "DRAFT-" + Date.now();
+  ? poList[editingPOIndex].poNumber
+  : generatePONumber();
 
   const data = {
     poNumber,
@@ -33383,9 +33414,9 @@ function savePurchaseOrder(status = "final") {
 
   let poList = getPOList();
 
-  const poNumber = editingPOIndex !== null
-    ? poList[editingPOIndex].poNumber
-    : "PO-" + Date.now();
+ const poNumber = editingPOIndex !== null
+  ? poList[editingPOIndex].poNumber
+  : generatePONumber();
 
   const data = {
     poNumber,
@@ -33476,34 +33507,92 @@ function renderPurchaseOrders() {
           </span>
         </td>
 
-        <td class="p-2 space-x-1">
+       <td class="p-2 border-t relative">
 
-          <button onclick="previewPO(${index})"
-            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
-            Preview
-          </button>
+  <div class="flex flex-wrap gap-1">
 
-          <button onclick="editPurchaseOrder(${index})"
-            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
-            Edit
-          </button>
+    <button
+      onclick="previewPO(${index})"
+      class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+      👁 Preview
+    </button>
 
-          <button onclick="deletePurchaseOrder(${index})"
-            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
-            Delete
-          </button>
+    <button
+      onclick="editPurchaseOrder(${index})"
+      class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+      ✏ Edit
+    </button>
 
-          <button onclick="convertPO(${index})"
-            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
-            Convert
-          </button>
+    <button
+      onclick="deletePurchaseOrder(${index})"
+      class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+      🗑 Delete
+    </button>
 
-        </td>
+    <button
+      onclick="convertPO(${index})"
+      class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+      🔄 Convert
+    </button>
 
+    <button
+      onclick="togglePOActionMenu(${index})"
+      class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+      More ▼
+    </button>
+
+  </div>
+
+  <div
+    id="poActionMenu${index}"
+    class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow-lg z-50">
+
+    <button
+      onclick="emailPO(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      📧 Email
+    </button>
+
+    <button
+      onclick="clonePO(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      📄 Clone
+    </button>
+
+    <button
+      onclick="downloadPO(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      ⬇ Download
+    </button>
+
+    <button
+      onclick="printPO(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      🖨 Print
+    </button>
+
+  </div>
+
+</td>
       </tr>
     `;
   });
 }
+function togglePOActionMenu(index) {
+  const menu = document.getElementById(`poActionMenu${index}`);
+
+  document.querySelectorAll('[id^="poActionMenu"]').forEach(m => {
+    if (m !== menu) m.classList.add('hidden');
+  });
+
+  menu.classList.toggle('hidden');
+}
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".relative")) {
+    document.querySelectorAll('[id^="poActionMenu"]').forEach(m => m.classList.add("hidden"));
+  }
+});
 function deleteSelectedPurchaseOrders() {
 
   let poList = getPOList();
@@ -33638,7 +33727,95 @@ function clearPOForm() {
   document.getElementById("poChartAccount").value = "";
   document.getElementById("poValidity").value = "";
 }
+function generatePOPdf(po) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
 
+  let y = 10;
+
+  doc.setFontSize(14);
+  doc.text(`PURCHASE ORDER: ${po.poNumber}`, 10, y);
+
+  y += 10;
+  doc.setFontSize(11);
+
+  doc.text(`Date: ${po.date}`, 10, y += 10);
+  doc.text(`Supplier: ${po.supplier}`, 10, y += 10);
+  doc.text(`Status: ${po.status}`, 10, y += 10);
+
+  y += 10;
+  doc.text("ITEMS:", 10, y += 10);
+
+  po.items.forEach((item, i) => {
+    const line = `${i + 1}. ${item.name} | Qty: ${item.qty} | Price: ${item.price} | Total: ${item.subtotal}`;
+    doc.text(line, 10, y += 8);
+  });
+
+  y += 10;
+
+  const total = po.items.reduce((s, i) => s + (i.subtotal + i.vat), 0);
+  doc.text(`TOTAL: ${total.toFixed(2)}`, 10, y + 10);
+
+  return doc;
+}
+function downloadPO(index) {
+  const po = getPOList()[index];
+  if (!po) return;
+
+  const doc = generatePOPdf(po);
+  doc.save(`${po.poNumber}.pdf`);
+}
+function printPO(index) {
+  const po = getPOList()[index];
+  if (!po) return;
+
+  const doc = generatePOPdf(po);
+  const pdfBlob = doc.output("blob");
+  const url = URL.createObjectURL(pdfBlob);
+
+  const win = window.open(url, "_blank");
+  win.print();
+}
+function clonePO(index) {
+  const poList = getPOList();
+  const po = poList[index];
+  if (!po) return;
+
+  const newPO = {
+    ...po,
+    poNumber: generatePONumber(),
+    status: "draft"
+  };
+
+  poList.push(newPO);
+  savePOList(poList);
+
+  renderPurchaseOrders();
+
+  alert("PO cloned successfully");
+}
+function emailPO(index) {
+  const po = getPOList()[index];
+  if (!po) return;
+
+  const doc = generatePOPdf(po);
+  const pdfBlob = doc.output("blob");
+  const url = URL.createObjectURL(pdfBlob);
+
+  const subject = `Purchase Order ${po.poNumber}`;
+  const body = `
+Please find Purchase Order attached.
+
+PO Number: ${po.poNumber}
+Supplier: ${po.supplier}
+Date: ${po.date}
+
+Download PDF: ${url}
+  `;
+
+  window.location.href =
+    `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
 function clearPOItemForm() {
   document.getElementById("poProductSelect").value = "";
   document.getElementById("poItemQty").value = "";
@@ -33801,7 +33978,13 @@ function resetPOColumns() {
 function managePOFiles() {
     alert('Open PO file management modal or page here!');
 }
+document.addEventListener("DOMContentLoaded", () => {
+  populatePOProductDropdown();
 
+  const select = document.getElementById("poProductSelect");
+
+  select?.addEventListener("change", onPOProductChange);
+});
   
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -34096,42 +34279,110 @@ function renderDebitNotes() {
     notes.forEach((note, idx) => {
       note.items.forEach((item, itemIdx) => {
         const total = item.subtotal + item.vat;
-       table.innerHTML += `
-  <tr>
 
-    <td class="p-2" ${itemIdx === 0 ? `rowspan="${note.items.length}"` : ""}>
-      ${itemIdx === 0 ? `
-        <input type="checkbox"
-          class="debit-note-checkbox"
-          value="${idx}">
-      ` : ""}
-    </td>
+        table.innerHTML += `
+          <tr>
 
-    <td class="p-2">${note.date}</td>
-    <td class="p-2">${note.supplier}</td>
-    <td class="p-2">${item.name}</td>
-    <td class="p-2">${item.qty}</td>
-    <td class="p-2">KES ${item.subtotal.toFixed(2)}</td>
-    <td class="p-2">KES ${item.vat.toFixed(2)}</td>
-    <td class="p-2">KES ${total.toFixed(2)}</td>
+            <td class="p-2" ${itemIdx === 0 ? `rowspan="${note.items.length}"` : ""}>
+              ${itemIdx === 0 ? `
+                <input type="checkbox"
+                  class="debit-note-checkbox"
+                  value="${idx}">
+              ` : ""}
+            </td>
 
-    ${itemIdx === 0 ? `
-      <td class="p-2 space-x-1" rowspan="${note.items.length}">
-        <button onclick="previewDebitNote(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-        <button onclick="editDebitNote(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="deleteDebitNote(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-        <button onclick="applyDebitToBill(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Apply</button>
-        <button onclick="pushDebitToETims(${idx})" class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">Push eTIMS</button>
-      </td>
-    ` : ""}
+            <td class="p-2">${note.date}</td>
+            <td class="p-2">${note.supplier}</td>
+            <td class="p-2">${item.name}</td>
+            <td class="p-2">${item.qty}</td>
+            <td class="p-2">KES ${item.subtotal.toFixed(2)}</td>
+            <td class="p-2">KES ${item.vat.toFixed(2)}</td>
+            <td class="p-2">KES ${total.toFixed(2)}</td>
 
-    </tr>
-   `;
+            ${itemIdx === 0 ? `
+              <td class="p-2 space-x-1 relative" rowspan="${note.items.length}">
+
+                <button onclick="previewDebitNote(${idx})"
+                  class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+                  Preview
+                </button>
+
+                <button onclick="editDebitNote(${idx})"
+                  class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+                  Edit
+                </button>
+
+                <button onclick="deleteDebitNote(${idx})"
+                  class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+                  Delete
+                </button>
+
+                <button onclick="applyDebitToBill(${idx})"
+                  class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+                  Apply
+                </button>
+
+                <button onclick="pushDebitToETims(${idx})"
+                  class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+                  Push eTIMS
+                </button>
+
+                <button onclick="toggleDebitMenu(${idx})"
+                  class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+                  More ▼
+                </button>
+
+                <div id="debitMenu-${idx}"
+                  class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+
+                  <button onclick="emailDebitNote(${idx})"
+                    class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+                    📧 Email
+                  </button>
+
+                  <button onclick="cloneDebitNote(${idx})"
+                    class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+                    📄 Clone
+                  </button>
+
+                  <button onclick="downloadDebitPDF(${idx})"
+                    class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+                    ⬇ Download
+                  </button>
+
+                  <button onclick="printDebitPDF(${idx})"
+                    class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+                    🖨 Print
+                  </button>
+
+                </div>
+
+              </td>
+            ` : ""}
+
+          </tr>
+        `;
       });
     });
   }
 }
+function toggleDebitMenu(index) {
+  const menu = document.getElementById(`debitMenu-${index}`);
 
+  document.querySelectorAll('[id^="debitMenu-"]').forEach(m => {
+    if (m !== menu) m.classList.add("hidden");
+  });
+
+  menu.classList.toggle("hidden");
+}
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("td")) {
+    document.querySelectorAll('[id^="debitMenu-"]').forEach(m => {
+      m.classList.add("hidden");
+    });
+  }
+});
 function previewDebitNote(index) {
   const notes = JSON.parse(localStorage.getItem("supplierDebitNotes") || "[]");
   const orgInfo = JSON.parse(localStorage.getItem("orgInfo") || "{}");
@@ -34460,6 +34711,84 @@ function pushDebitToETims(index){
 renderDebitNotes();
 
 renderDebitNotesReport();
+
+function emailDebitNote(index) {
+  const notes = JSON.parse(localStorage.getItem("supplierDebitNotes") || "[]");
+  const note = notes[index];
+  if (!note) return;
+
+  const subject = `Debit Note ${note.date} - ${note.supplier}`;
+  const body = `Debit Note Details:\n\nSupplier: ${note.supplier}\nDate: ${note.date}\nItems: ${note.items.map(i => i.name).join(", ")}`;
+
+  const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  window.location.href = mailto;
+}
+function cloneDebitNote(index) {
+  const notes = JSON.parse(localStorage.getItem("supplierDebitNotes") || "[]");
+  const note = notes[index];
+  if (!note) return;
+
+  const newNote = {
+    ...note,
+    date: new Date().toISOString().split("T")[0],
+    items: note.items.map(i => ({ ...i }))
+  };
+
+  notes.push(newNote);
+  localStorage.setItem("supplierDebitNotes", JSON.stringify(notes));
+
+  renderDebitNotes();
+  alert("Debit Note cloned successfully");
+}
+function downloadDebitPDF(index) {
+  const notes = JSON.parse(localStorage.getItem("supplierDebitNotes") || "[]");
+  const note = notes[index];
+  if (!note) return;
+
+  const win = window.open("", "_blank");
+
+  let rows = "";
+  note.items.forEach(i => {
+    rows += `
+      <tr>
+        <td>${i.name}</td>
+        <td>${i.qty}</td>
+        <td>${i.subtotal}</td>
+        <td>${i.vat}</td>
+      </tr>
+    `;
+  });
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Debit Note</title>
+    </head>
+    <body>
+      <h2>Debit Note</h2>
+      <p>Supplier: ${note.supplier}</p>
+      <p>Date: ${note.date}</p>
+
+      <table border="1" cellpadding="5">
+        <tr>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Subtotal</th>
+          <th>VAT</th>
+        </tr>
+        ${rows}
+      </table>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+  win.print();
+}
+function printDebitPDF(index) {
+  downloadDebitPDF(index);
+}
   function renderDebitNotesReport() {
   const notes = JSON.parse(localStorage.getItem("supplierDebitNotes") || "[]");
   const tbody = document.getElementById("debitNotes");
@@ -35646,7 +35975,7 @@ function addTaxPayment() {
 function renderTaxPayments() {
 
   const payments = JSON.parse(localStorage.getItem('taxPayments') || "[]");
-  const banks = JSON.parse(localStorage.getItem('banks') || "[]");
+  const banks = JSON.parse(localStorage.getItem("banks") || "[]");
   const tbody = document.getElementById('taxPaymentsTable');
 
   tbody.innerHTML = '';
@@ -35681,7 +36010,8 @@ function renderTaxPayments() {
       <td class="p-2">KES ${parseFloat(payment.amount || 0).toFixed(2)}</td>
       <td class="p-2">${payment.reference}</td>
 
-      <td class="p-2 space-x-1">
+      <td class="p-2 space-x-1 relative">
+
         <button onclick="editTaxPayment(${index})"
           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
           Edit
@@ -35696,12 +36026,44 @@ function renderTaxPayments() {
           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
           Preview
         </button>
+
+        <button onclick="toggleTaxPaymentMenu(${index})"
+          class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
+          More ▼
+        </button>
+
+        <div id="taxPaymentMenu-${index}"
+          class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+
+          <button onclick="emailTaxPayment(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📧 Email
+          </button>
+
+          <button onclick="cloneTaxPayment(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📄 Clone
+          </button>
+
+          <button onclick="downloadTaxPaymentPDF(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            ⬇ Download
+          </button>
+
+          <button onclick="printTaxPaymentPDF(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            🖨 Print
+          </button>
+
+        </div>
+
       </td>
     `;
 
     tbody.appendChild(tr);
   });
 }
+
 function previewTaxPayment(index) {
   const payments = JSON.parse(localStorage.getItem('taxPayments') || "[]");
   const payment = payments[index];
@@ -35866,6 +36228,78 @@ function deleteTaxPayment(index) {
   loadTransactions?.();
 
   alert("♻️ Tax payment moved to Recycle Bin & accounts rolled back.");
+}
+function toggleTaxPaymentMenu(index) {
+  const menu = document.getElementById(`taxPaymentMenu-${index}`);
+  if (!menu) return;
+
+  const isHidden = menu.classList.contains("hidden");
+
+  document.querySelectorAll('[id^="taxPaymentMenu-"]').forEach(m => {
+    if (m !== menu) m.classList.add("hidden");
+  });
+
+  menu.classList.toggle("hidden", !isHidden);
+}
+function cloneTaxPayment(index) {
+  const payments = JSON.parse(localStorage.getItem("taxPayments") || "[]");
+  const payment = payments[index];
+  if (!payment) return;
+
+  const cloned = {
+    ...payment,
+    reference: payment.reference + "-CLONE",
+    date: new Date().toISOString().split("T")[0]
+  };
+
+  payments.push(cloned);
+  localStorage.setItem("taxPayments", JSON.stringify(payments));
+
+  renderTaxPayments();
+  alert("Tax payment cloned successfully");
+}
+function downloadTaxPaymentPDF(index) {
+  const payments = JSON.parse(localStorage.getItem("taxPayments") || "[]");
+  const payment = payments[index];
+  if (!payment) return;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Tax Payment PDF</title>
+      <style>
+        body { font-family: Arial; padding: 20px; }
+        h2 { text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        td { padding: 8px; border: 1px solid #ddd; }
+      </style>
+    </head>
+    <body>
+
+      <h2>Tax Payment</h2>
+
+      <table>
+        <tr><td>Date</td><td>${payment.date}</td></tr>
+        <tr><td>Type</td><td>${payment.type}</td></tr>
+        <tr><td>Method</td><td>${payment.method}</td></tr>
+        <tr><td>Amount</td><td>KES ${payment.amount}</td></tr>
+        <tr><td>Reference</td><td>${payment.reference}</td></tr>
+      </table>
+
+      <script>
+        window.print();
+      <\/script>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
+function printTaxPaymentPDF(index) {
+  downloadTaxPaymentPDF(index);
 }
 function deleteSelectedTaxPayments() {
 
@@ -36253,7 +36687,8 @@ function renderOperationalCosts() {
       <td class="p-2">${entry.bank}</td>
       <td class="p-2">KES ${parseFloat(entry.amount || 0).toFixed(2)}</td>
 
-      <td class="p-2 space-x-1">
+      <td class="p-2 space-x-1 relative">
+
         <button onclick="previewOperationalCost(${index})"
           class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
           Preview
@@ -36268,6 +36703,37 @@ function renderOperationalCosts() {
           class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
           Delete
         </button>
+
+        <button onclick="toggleOperationalCostMenu(${index})"
+          class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+          More ▼
+        </button>
+
+        <div id="operationalCostMenu-${index}"
+          class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+
+          <button onclick="emailOperationalCost(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📧 Email
+          </button>
+
+          <button onclick="cloneOperationalCost(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📄 Clone
+          </button>
+
+          <button onclick="downloadOperationalCostPDF(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            ⬇ Download
+          </button>
+
+          <button onclick="printOperationalCostPDF(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            🖨 Print
+          </button>
+
+        </div>
+
       </td>
     `;
 
@@ -36430,6 +36896,77 @@ function toggleSelectAllOperationalCosts(source) {
   document.querySelectorAll(".operational-cost-checkbox")
     .forEach(cb => cb.checked = source.checked);
 
+}
+function toggleOperationalCostMenu(index) {
+  const menu = document.getElementById(`operationalCostMenu-${index}`);
+  if (!menu) return;
+
+  const isHidden = menu.classList.contains("hidden");
+
+  document.querySelectorAll('[id^="operationalCostMenu-"]').forEach(m => {
+    if (m !== menu) m.classList.add("hidden");
+  });
+
+  menu.classList.toggle("hidden", !isHidden);
+}
+function cloneOperationalCost(index) {
+  const costs = JSON.parse(localStorage.getItem("operationalCosts") || "[]");
+  const item = costs[index];
+  if (!item) return;
+
+  const clone = {
+    ...item,
+    description: item.description + " (Clone)",
+    date: new Date().toISOString().split("T")[0]
+  };
+
+  costs.push(clone);
+  localStorage.setItem("operationalCosts", JSON.stringify(costs));
+
+  renderOperationalCosts();
+}
+function downloadOperationalCostPDF(index) {
+  const costs = JSON.parse(localStorage.getItem("operationalCosts") || "[]");
+  const item = costs[index];
+  if (!item) return;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Operational Cost</title>
+      <style>
+        body { font-family: Arial; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 8px; border: 1px solid #ddd; }
+      </style>
+    </head>
+    <body>
+
+      <h2>Operational Cost</h2>
+
+      <table>
+        <tr><td>Date</td><td>${item.date}</td></tr>
+        <tr><td>Description</td><td>${item.description}</td></tr>
+        <tr><td>Category</td><td>${item.category}</td></tr>
+        <tr><td>Method</td><td>${item.method}</td></tr>
+        <tr><td>Bank</td><td>${item.bank}</td></tr>
+        <tr><td>Amount</td><td>KES ${item.amount}</td></tr>
+      </table>
+
+      <script>
+        window.print();
+      <\/script>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
+function printOperationalCostPDF(index) {
+  downloadOperationalCostPDF(index);
 }
 function deleteOperationalCost(index) {
   if (!confirm("Are you sure you want to delete this operational cost?")) return;
@@ -40808,7 +41345,6 @@ function addManualJournal() {
   addJournalRow();
   updateManualTotals();
 }
-
 function renderManualJournals() {
   const journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
   const tbody = document.getElementById("manualJournalBody");
@@ -40828,21 +41364,70 @@ function renderManualJournals() {
         <td class="p-2">
           <input type="checkbox" class="journal-select" data-index="${index}">
         </td>
+
         <td class="p-2">${j.date || ""}</td>
+
         <td class="p-2">${j.reference || ""}</td>
+
         <td class="p-2">${j.description || ""}</td>
-        <td class="p-2">${accountDisplay}</td> <!-- ✅ Account column -->
-        <td class="p-2 text-right text-green-700 font-semibold">${totalDebit.toFixed(2)}</td>
-        <td class="p-2 text-right text-red-700 font-semibold">${totalCredit.toFixed(2)}</td>
-        <td class="p-2 space-x-1">
-          <button onclick="togglePreview(${index})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Preview</button>
-          <button onclick="editJournal(${index})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Edit</button>
-          <button onclick="deleteJournal(${index})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Delete</button>
+
+        <td class="p-2">${accountDisplay}</td>
+
+        <td class="p-2 text-right text-green-700 font-semibold">
+          ${totalDebit.toFixed(2)}
+        </td>
+
+        <td class="p-2 text-right text-red-700 font-semibold">
+          ${totalCredit.toFixed(2)}
+        </td>
+
+        <td class="p-2 space-x-1 relative">
+
+          <button onclick="togglePreview(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">
+            Preview
+          </button>
+
+          <button onclick="editJournal(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">
+            Edit
+          </button>
+
+          <button onclick="deleteJournal(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">
+            Delete
+          </button>
+
+          <button onclick="toggleJournalMenu(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">
+            More ▼
+          </button>
+
+          <div id="journalMenu-${index}"
+            class="hidden absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg z-50">
+
+            <button onclick="cloneJournal(${index})"
+              class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+              📄 Clone
+            </button>
+
+            <button onclick="downloadJournalPDF(${index})"
+              class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+              ⬇ Download PDF
+            </button>
+
+            <button onclick="printJournalPDF(${index})"
+              class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+              🖨 Print PDF
+            </button>
+
+          </div>
+
         </td>
       </tr>
 
       <tr id="preview-${index}" class="hidden">
-        <td colspan="7" class="bg-gray-50">
+        <td colspan="8" class="bg-gray-50">
           <table class="w-full border mt-2 text-sm">
             <thead class="bg-gray-200">
               <tr>
@@ -40852,6 +41437,7 @@ function renderManualJournals() {
                 <th class="p-2 text-right">Credit</th>
               </tr>
             </thead>
+
             <tbody>
               ${j.entries.map(e => `
                 <tr>
@@ -40861,6 +41447,7 @@ function renderManualJournals() {
                   <td class="p-1 border text-right">${(e.credit || 0).toFixed(2)}</td>
                 </tr>
               `).join("")}
+
               <tr class="font-bold border-t">
                 <td colspan="2" class="p-2 text-right">Totals</td>
                 <td class="p-2 text-right">${totalDebit.toFixed(2)}</td>
@@ -40874,6 +41461,130 @@ function renderManualJournals() {
 
     tbody.innerHTML += row;
   });
+}
+function toggleJournalMenu(index) {
+  document.querySelectorAll('[id^="journalMenu-"]').forEach(menu => {
+    if (menu.id !== `journalMenu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document.getElementById(`journalMenu-${index}`).classList.toggle("hidden");
+}
+
+function cloneJournal(index) {
+  const journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
+
+  const cloned = JSON.parse(JSON.stringify(journals[index]));
+
+  cloned.reference = "COPY-" + Date.now();
+
+  journals.push(cloned);
+
+  localStorage.setItem("manualJournals", JSON.stringify(journals));
+
+  renderManualJournals();
+
+  alert("Journal cloned successfully");
+}
+
+function downloadJournalPDF(index) {
+  const journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
+
+  const j = journals[index];
+
+  let content = `
+    MANUAL JOURNAL
+
+    Date: ${j.date}
+    Reference: ${j.reference}
+    Description: ${j.description}
+
+  `;
+
+  j.entries.forEach(e => {
+    content += `
+Account: ${e.account}
+Description: ${e.description || ""}
+Debit: ${(e.debit || 0).toFixed(2)}
+Credit: ${(e.credit || 0).toFixed(2)}
+
+`;
+  });
+
+  const blob = new Blob([content], { type: "application/pdf" });
+
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+
+  link.download = `${j.reference || "journal"}.pdf`;
+
+  link.click();
+}
+
+function printJournalPDF(index) {
+  const journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
+
+  const j = journals[index];
+
+  let rows = "";
+
+  j.entries.forEach(e => {
+    rows += `
+      <tr>
+        <td style="border:1px solid #ccc;padding:8px;">${e.account}</td>
+        <td style="border:1px solid #ccc;padding:8px;">${e.description || ""}</td>
+        <td style="border:1px solid #ccc;padding:8px;text-align:right;">
+          ${(e.debit || 0).toFixed(2)}
+        </td>
+        <td style="border:1px solid #ccc;padding:8px;text-align:right;">
+          ${(e.credit || 0).toFixed(2)}
+        </td>
+      </tr>
+    `;
+  });
+
+  const win = window.open("", "", "width=900,height=700");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Manual Journal</title>
+    </head>
+
+    <body style="font-family:Arial;padding:20px;">
+
+      <h2>Manual Journal</h2>
+
+      <p><strong>Date:</strong> ${j.date}</p>
+
+      <p><strong>Reference:</strong> ${j.reference}</p>
+
+      <p><strong>Description:</strong> ${j.description}</p>
+
+      <table style="width:100%;border-collapse:collapse;margin-top:20px;">
+        <thead>
+          <tr>
+            <th style="border:1px solid #ccc;padding:8px;">Account</th>
+            <th style="border:1px solid #ccc;padding:8px;">Description</th>
+            <th style="border:1px solid #ccc;padding:8px;">Debit</th>
+            <th style="border:1px solid #ccc;padding:8px;">Credit</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
 }
 function bulkDeleteJournals() {
   let journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
@@ -41345,68 +42056,150 @@ function resetRecurringForm() {
   updateRecurringTotals();
 }
 
-function renderRecurringJournalList() {
-  const recurringList = JSON.parse(localStorage.getItem("recurringJournals") || "[]");
-  const tbody = document.getElementById("recurringJournalList");
-  tbody.innerHTML = "";
+function toggleRecurringMenu(index) {
+  const menu = document.getElementById(`recurringMenu-${index}`);
+  if (!menu) return;
 
-  recurringList.forEach((r, index) => {
-    const row = `
-      <tr class="border-t bg-gray-50">
-         <td class="p-2"> <input type="checkbox"class="recurring-select" data-index="${index}">
-        </td>
-          <td class="p-2">${r.startDate}</td>
+  const isHidden = menu.classList.contains("hidden");
 
-         <td class="p-2">${r.description}</td>
-
-         <td class="p-2">${r.frequency}</td>
-
-         <td class="p-2">${r.postedBy}</td>
-
-         <td class="p-2 text-right text-green-700 font-semibold">
-         ${r.totals.debit.toFixed(2)}
-         </td>
-
-         <td class="p-2 text-right text-red-700 font-semibold">
-        ${r.totals.credit.toFixed(2)}
-        </td>
-        <td class="p-2 text-center space-x-1">
-          <button onclick="previewRecurring(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
-          <button onclick="editRecurring(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-          <button onclick="deleteRecurring(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-        </td>
-      </tr>
-      <tr id="recurringPreview-${index}" class="hidden bg-white">
-        <td colspan="5" class="p-3">
-          <table class="w-full text-sm border">
-            <thead class="bg-gray-100">
-              <tr>
-                <th class="p-2 text-left">Account</th>
-                <th class="p-2 text-left">Description</th>
-                <th class="p-2 text-right">Debit (KSh)</th>
-                <th class="p-2 text-right">Credit (KSh)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${r.lines.map(l => `
-                <tr>
-                  <td class="p-2">${l.account}</td>
-                  <td class="p-2">${l.lineDesc || ""}</td>
-                  <td class="p-2 text-right">${l.debit.toFixed(2)}</td>
-                  <td class="p-2 text-right">${l.credit.toFixed(2)}</td>
-                </tr>`).join("")}
-              <tr class="font-bold border-t">
-                <td colspan="2" class="p-2 text-right">Totals:</td>
-                <td class="p-2 text-right text-green-700">${r.totals.debit.toFixed(2)}</td>
-                <td class="p-2 text-right text-red-700">${r.totals.credit.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </td>
-      </tr>
-    `;
-    tbody.innerHTML += row;
+  document.querySelectorAll('[id^="recurringMenu-"]').forEach(m => {
+    if (m !== menu) {
+      m.classList.add("hidden");
+    }
   });
+
+  menu.classList.toggle("hidden", !isHidden);
+}
+
+function cloneRecurring(index) {
+  const recurringList = JSON.parse(localStorage.getItem("recurringJournals") || "[]");
+  const item = recurringList[index];
+
+  if (!item) return;
+
+  const clone = {
+    ...item,
+    description: item.description + " (Clone)",
+    startDate: new Date().toISOString().split("T")[0]
+  };
+
+  recurringList.push(clone);
+
+  localStorage.setItem("recurringJournals", JSON.stringify(recurringList));
+
+  renderRecurringJournalList();
+
+  alert("Recurring journal cloned successfully");
+}
+
+function downloadRecurringPDF(index) {
+  const recurringList = JSON.parse(localStorage.getItem("recurringJournals") || "[]");
+  const item = recurringList[index];
+
+  if (!item) return;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Recurring Journal</title>
+
+      <style>
+        body {
+          font-family: Arial;
+          padding: 20px;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+        }
+
+        td, th {
+          border: 1px solid #ddd;
+          padding: 8px;
+        }
+
+        th {
+          background: #f3f4f6;
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <h2>Recurring Journal</h2>
+
+      <p><strong>Date:</strong> ${item.startDate}</p>
+      <p><strong>Description:</strong> ${item.description}</p>
+      <p><strong>Frequency:</strong> ${item.frequency}</p>
+      <p><strong>Posted By:</strong> ${item.postedBy}</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Account</th>
+            <th>Description</th>
+            <th>Debit</th>
+            <th>Credit</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          ${item.lines.map(line => `
+            <tr>
+              <td>${line.account}</td>
+              <td>${line.lineDesc || ""}</td>
+              <td>${line.debit.toFixed(2)}</td>
+              <td>${line.credit.toFixed(2)}</td>
+            </tr>
+          `).join("")}
+
+          <tr>
+            <td colspan="2"><strong>Totals</strong></td>
+            <td><strong>${item.totals.debit.toFixed(2)}</strong></td>
+            <td><strong>${item.totals.credit.toFixed(2)}</strong></td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+      <script>
+        window.print();
+      <\/script>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
+
+function printRecurringPDF(index) {
+  downloadRecurringPDF(index);
+}
+
+function emailRecurring(index) {
+  const recurringList = JSON.parse(localStorage.getItem("recurringJournals") || "[]");
+  const item = recurringList[index];
+
+  if (!item) return;
+
+  const subject = encodeURIComponent("Recurring Journal");
+  const body = encodeURIComponent(
+    "Recurring Journal Details\n\n" +
+    "Date: " + item.startDate + "\n" +
+    "Description: " + item.description + "\n" +
+    "Frequency: " + item.frequency + "\n" +
+    "Debit: " + item.totals.debit.toFixed(2) + "\n" +
+    "Credit: " + item.totals.credit.toFixed(2)
+  );
+
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 function bulkDeleteRecurringJournals() {
   let recurringList = JSON.parse(localStorage.getItem("recurringJournals") || "[]");
@@ -41939,7 +42732,7 @@ function renderCurrencyAdjustments() {
 
       <td class="p-2">${adj.note || '-'}</td>
 
-      <td class="p-2 space-x-1">
+      <td class="p-2 space-x-1 relative">
 
         <button onclick="previewCurrencyJournal(${index})"
           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
@@ -41955,6 +42748,31 @@ function renderCurrencyAdjustments() {
           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
           Delete
         </button>
+
+        <button onclick="toggleCurrencyAdjustmentMenu(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          More ▼
+        </button>
+
+        <div id="currencyAdjustmentMenu-${index}"
+          class="hidden absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg z-50">
+
+          <button onclick="cloneCurrencyAdjustment(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📄 Clone
+          </button>
+
+          <button onclick="downloadCurrencyAdjustmentPDF(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            ⬇ Download PDF
+          </button>
+
+          <button onclick="printCurrencyAdjustmentPDF(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            🖨 Print PDF
+          </button>
+
+        </div>
 
       </td>
     `;
@@ -42050,7 +42868,133 @@ function bulkDeleteCurrencyAdjustments() {
 
   renderCurrencyAdjustments();
 }
+function toggleCurrencyAdjustmentMenu(index) {
+  document.querySelectorAll('[id^="currencyAdjustmentMenu-"]').forEach(menu => {
+    if (menu.id !== `currencyAdjustmentMenu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
 
+  document.getElementById(`currencyAdjustmentMenu-${index}`).classList.toggle("hidden");
+}
+
+function cloneCurrencyAdjustment(index) {
+  const adjustments = JSON.parse(localStorage.getItem("currencyAdjustments") || "[]");
+
+  const cloned = JSON.parse(JSON.stringify(adjustments[index]));
+
+  cloned.date = new Date().toISOString().split("T")[0];
+
+  adjustments.push(cloned);
+
+  localStorage.setItem("currencyAdjustments", JSON.stringify(adjustments));
+
+  renderCurrencyAdjustments();
+
+  alert("Currency adjustment cloned successfully");
+}
+
+function downloadCurrencyAdjustmentPDF(index) {
+  const adjustments = JSON.parse(localStorage.getItem("currencyAdjustments") || "[]");
+
+  const adj = adjustments[index];
+
+  let content = `
+CURRENCY ADJUSTMENT
+
+Date: ${adj.date}
+Bank: ${adj.bank || "-"}
+Account: ${adj.account || "-"}
+Currency: ${adj.currency}
+Amount: ${adj.amount.toFixed(2)}
+Rate: ${adj.rate.toFixed(4)}
+Note: ${adj.note || "-"}
+
+JOURNAL ENTRIES
+`;
+
+  adj.journal.forEach(j => {
+    content += `
+Account: ${j.account}
+Debit: ${j.debit.toFixed(2)}
+Credit: ${j.credit.toFixed(2)}
+`;
+  });
+
+  const blob = new Blob([content], { type: "application/pdf" });
+
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+
+  link.download = `currency_adjustment_${index + 1}.pdf`;
+
+  link.click();
+}
+
+function printCurrencyAdjustmentPDF(index) {
+  const adjustments = JSON.parse(localStorage.getItem("currencyAdjustments") || "[]");
+
+  const adj = adjustments[index];
+
+  let rows = "";
+
+  adj.journal.forEach(j => {
+    rows += `
+      <tr>
+        <td style="border:1px solid #ccc;padding:8px;">${j.account}</td>
+        <td style="border:1px solid #ccc;padding:8px;text-align:right;">
+          ${j.debit.toFixed(2)}
+        </td>
+        <td style="border:1px solid #ccc;padding:8px;text-align:right;">
+          ${j.credit.toFixed(2)}
+        </td>
+      </tr>
+    `;
+  });
+
+  const win = window.open("", "", "width=900,height=700");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Currency Adjustment</title>
+    </head>
+
+    <body style="font-family:Arial;padding:20px;">
+
+      <h2>Currency Adjustment</h2>
+
+      <p><strong>Date:</strong> ${adj.date}</p>
+      <p><strong>Bank:</strong> ${adj.bank || "-"}</p>
+      <p><strong>Account:</strong> ${adj.account || "-"}</p>
+      <p><strong>Currency:</strong> ${adj.currency}</p>
+      <p><strong>Amount:</strong> ${adj.amount.toFixed(2)}</p>
+      <p><strong>Rate:</strong> ${adj.rate.toFixed(4)}</p>
+      <p><strong>Note:</strong> ${adj.note || "-"}</p>
+
+      <table style="width:100%;border-collapse:collapse;margin-top:20px;">
+        <thead>
+          <tr>
+            <th style="border:1px solid #ccc;padding:8px;">Account</th>
+            <th style="border:1px solid #ccc;padding:8px;">Debit</th>
+            <th style="border:1px solid #ccc;padding:8px;">Credit</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+}
 function toggleAllCurrencyAdjustments(master) {
 
   document.querySelectorAll(
@@ -42425,7 +43369,7 @@ function renderTaxAdjustments() {
 
       <td class="p-2">${adj.note || ""}</td>
 
-      <td class="p-2 flex gap-1">
+      <td class="p-2 flex gap-1 relative">
 
         <button onclick="editTaxAdjustment(${index})"
           class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
@@ -42447,6 +43391,31 @@ function renderTaxAdjustments() {
           History
         </button>
 
+        <button onclick="toggleTaxAdjustmentMenu(${index})"
+          class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+          More ▼
+        </button>
+
+        <div id="taxAdjustmentMenu-${index}"
+          class="hidden absolute right-0 mt-10 w-44 bg-white border rounded shadow-lg z-50">
+
+          <button onclick="cloneTaxAdjustment(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📄 Clone
+          </button>
+
+          <button onclick="downloadTaxAdjustmentPDF(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            ⬇ Download PDF
+          </button>
+
+          <button onclick="printTaxAdjustmentPDF(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            🖨 Print PDF
+          </button>
+
+        </div>
+
       </td>
     `;
 
@@ -42455,7 +43424,121 @@ function renderTaxAdjustments() {
   });
 
 }
+function toggleTaxAdjustmentMenu(index) {
+  document.querySelectorAll('[id^="taxAdjustmentMenu-"]').forEach(menu => {
+    if (menu.id !== `taxAdjustmentMenu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
 
+  document.getElementById(`taxAdjustmentMenu-${index}`).classList.toggle("hidden");
+}
+
+function cloneTaxAdjustment(index) {
+  const adjustments = JSON.parse(
+    localStorage.getItem("taxAdjustments") || "[]"
+  );
+
+  const cloned = JSON.parse(JSON.stringify(adjustments[index]));
+
+  cloned.date = new Date().toISOString().split("T")[0];
+
+  adjustments.push(cloned);
+
+  localStorage.setItem(
+    "taxAdjustments",
+    JSON.stringify(adjustments)
+  );
+
+  renderTaxAdjustments();
+
+  alert("Tax adjustment cloned successfully");
+}
+
+function downloadTaxAdjustmentPDF(index) {
+  const adjustments = JSON.parse(
+    localStorage.getItem("taxAdjustments") || "[]"
+  );
+
+  const adj = adjustments[index];
+
+  const content = `
+TAX ADJUSTMENT
+
+Date: ${adj.date}
+Account: ${adj.accountName}
+Type: ${adj.type}
+
+Before Amount: ${adj.before.toLocaleString()}
+Adjustment Amount: ${adj.amount.toLocaleString()}
+After Amount: ${adj.after.toLocaleString()}
+
+Note:
+${adj.note || "-"}
+`;
+
+  const blob = new Blob([content], {
+    type: "application/pdf"
+  });
+
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+
+  link.download = `tax_adjustment_${index + 1}.pdf`;
+
+  link.click();
+}
+
+function printTaxAdjustmentPDF(index) {
+  const adjustments = JSON.parse(
+    localStorage.getItem("taxAdjustments") || "[]"
+  );
+
+  const adj = adjustments[index];
+
+  const win = window.open("", "", "width=900,height=700");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Tax Adjustment</title>
+    </head>
+
+    <body style="font-family:Arial;padding:20px;">
+
+      <h2>Tax Adjustment</h2>
+
+      <p><strong>Date:</strong> ${adj.date}</p>
+
+      <p><strong>Account:</strong> ${adj.accountName}</p>
+
+      <p><strong>Type:</strong> ${adj.type}</p>
+
+      <p><strong>Before:</strong>
+        ${adj.before.toLocaleString()}
+      </p>
+
+      <p><strong>Adjustment:</strong>
+        ${adj.amount.toLocaleString()}
+      </p>
+
+      <p><strong>After:</strong>
+        ${adj.after.toLocaleString()}
+      </p>
+
+      <p><strong>Note:</strong>
+        ${adj.note || "-"}
+      </p>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+}
 function bulkDeleteTaxAdjustments() {
 
   let adjustments = JSON.parse(
@@ -42980,29 +44063,58 @@ function renderAccounts() {
         ${(acc.amount || 0).toFixed(2)}
       </td>
 
-      <td class="p-2 space-x-1">
+     <td class="p-2 relative">
 
-        <button onclick="editAccount(${index})"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-          Edit
-        </button>
+  <div class="flex flex-wrap gap-1">
 
-        <button onclick="deleteAccount(${index})"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-          Delete
-        </button>
+    <button onclick="editAccount(${index})"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      Edit
+    </button>
 
-        <button onclick="viewAccountHistory(${index})"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-          History
-        </button>
+    <button onclick="deleteAccount(${index})"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      Delete
+    </button>
 
-        <button onclick="previewAccount(${index})"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-          Preview
-        </button>
+    <button onclick="viewAccountHistory(${index})"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      History
+    </button>
 
-      </td>
+    <button onclick="previewAccount(${index})"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      Preview
+    </button>
+
+    <button onclick="toggleAccountMenu(${index})"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      More ▼
+    </button>
+
+  </div>
+
+  <div id="accountMenu-${index}"
+    class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+
+    <button onclick="cloneAccount(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      📄 Clone
+    </button>
+
+    <button onclick="downloadAccountPDF(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      ⬇ Download
+    </button>
+
+    <button onclick="printAccountPDF(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      🖨 Print
+    </button>
+
+  </div>
+
+</td>
     `;
 
     table.appendChild(row);
@@ -43010,7 +44122,108 @@ function renderAccounts() {
   });
 
 }
+function toggleAccountMenu(index) {
 
+  document.querySelectorAll("[id^='accountMenu-']")
+    .forEach(menu => {
+      if (menu.id !== `accountMenu-${index}`) {
+        menu.classList.add("hidden");
+      }
+    });
+
+  document
+    .getElementById(`accountMenu-${index}`)
+    ?.classList.toggle("hidden");
+}
+
+function cloneAccount(index) {
+
+  const accounts = JSON.parse(
+    localStorage.getItem("chartOfAccounts") || "[]"
+  );
+
+  const account = { ...accounts[index] };
+
+  account.name = account.name + " Copy";
+
+  accounts.push(account);
+
+  localStorage.setItem(
+    "chartOfAccounts",
+    JSON.stringify(accounts)
+  );
+
+  renderAccounts();
+
+  alert("Account cloned successfully");
+}
+
+function downloadAccountPDF(index) {
+
+  const accounts = JSON.parse(
+    localStorage.getItem("chartOfAccounts") || "[]"
+  );
+
+  const acc = accounts[index];
+
+  let content = `
+    ACCOUNT DETAILS
+
+    Name: ${acc.name}
+    Code: ${acc.code}
+    Type: ${acc.type}
+    Parent Name: ${acc.parentName || "-"}
+    Parent Code: ${acc.parentCode || "-"}
+    Amount: ${(acc.amount || 0).toFixed(2)}
+  `;
+
+  const blob = new Blob([content], {
+    type: "application/pdf"
+  });
+
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+
+  link.download = `${acc.name}.pdf`;
+
+  link.click();
+}
+
+function printAccountPDF(index) {
+
+  const accounts = JSON.parse(
+    localStorage.getItem("chartOfAccounts") || "[]"
+  );
+
+  const acc = accounts[index];
+
+  const win = window.open("", "", "width=900,height=700");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Print Account</title>
+    </head>
+    <body>
+      <h2>Account Details</h2>
+
+      <p><strong>Name:</strong> ${acc.name}</p>
+      <p><strong>Code:</strong> ${acc.code}</p>
+      <p><strong>Type:</strong> ${acc.type}</p>
+      <p><strong>Parent Name:</strong> ${acc.parentName || "-"}</p>
+      <p><strong>Parent Code:</strong> ${acc.parentCode || "-"}</p>
+      <p><strong>Amount:</strong> ${(acc.amount || 0).toFixed(2)}</p>
+
+      <script>
+        window.print();
+      <\/script>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
 function bulkDeleteAccounts() {
 
   let accounts = JSON.parse(
@@ -45669,29 +46882,54 @@ function renderCurrentAccounts() {
         ${acc.amount.toFixed(2)}
       </td>
 
-      <td class="p-2 space-x-1">
+     <td class="p-2 space-x-1">
 
-        <button onclick="editCurrentAccount(${index})"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-          Edit
-        </button>
+  <button onclick="editCurrentAccount(${index})"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    Edit
+  </button>
 
-        <button onclick="previewCurrentAccAccount('${acc.account}')"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-          Preview
-        </button>
+  <button onclick="previewCurrentAccAccount('${acc.account}')"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    Preview
+  </button>
 
-        <button onclick="openCurrentAccTransactions('${acc.account}')"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-          Transact
-        </button>
+  <button onclick="openCurrentAccTransactions('${acc.account}')"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    Transact
+  </button>
 
-        <button onclick="deleteCurrentAccount(${index})"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-          Delete
-        </button>
+  <button onclick="deleteCurrentAccount(${index})"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    Delete
+  </button>
 
-      </td>
+  <button onclick="toggleCurrentAccountMenu(${index})"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    More ▼
+  </button>
+
+  <div id="currentAccountMenu-${index}"
+    class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+
+    <button onclick="cloneCurrentAccount(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      📄 Clone
+    </button>
+
+    <button onclick="downloadCurrentAccountPDF(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      ⬇ Download
+    </button>
+
+    <button onclick="printCurrentAccountPDF(${index})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      🖨 Print
+    </button>
+
+  </div>
+
+</td>
     `;
 
     tbody.appendChild(row);
@@ -45702,6 +46940,100 @@ function renderCurrentAccounts() {
   });
 
   renderCurrentAccChart(chartLabels, chartData);
+}
+function toggleCurrentAccountMenu(index) {
+
+  document.querySelectorAll("[id^='currentAccountMenu-']")
+    .forEach(menu => {
+      if (menu.id !== `currentAccountMenu-${index}`) {
+        menu.classList.add("hidden");
+      }
+    });
+
+  document
+    .getElementById(`currentAccountMenu-${index}`)
+    ?.classList.toggle("hidden");
+}
+
+function cloneCurrentAccount(index) {
+
+  const cloned = { ...currentAccounts[index] };
+
+  cloned.reference = (cloned.reference || "") + "-COPY";
+
+  currentAccounts.push(cloned);
+
+  localStorage.setItem(
+    "currentAccounts",
+    JSON.stringify(currentAccounts)
+  );
+
+  renderCurrentAccounts();
+
+  alert("Current account cloned successfully");
+}
+
+function downloadCurrentAccountPDF(index) {
+
+  const acc = currentAccounts[index];
+
+  const content = `
+CURRENT ACCOUNT DETAILS
+
+Name: ${acc.name || ""}
+Date: ${acc.date || ""}
+Reference: ${acc.reference || ""}
+Description: ${acc.description || ""}
+Account: ${acc.account || ""}
+Bank: ${acc.bank || "-"}
+Amount: ${acc.amount.toFixed(2)}
+`;
+
+  const blob = new Blob([content], {
+    type: "application/pdf"
+  });
+
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+
+  link.download = `CurrentAccount-${index + 1}.pdf`;
+
+  link.click();
+}
+
+function printCurrentAccountPDF(index) {
+
+  const acc = currentAccounts[index];
+
+  const win = window.open("", "", "width=900,height=700");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Print Current Account</title>
+    </head>
+    <body>
+
+      <h2>Current Account Details</h2>
+
+      <p><strong>Name:</strong> ${acc.name || ""}</p>
+      <p><strong>Date:</strong> ${acc.date || ""}</p>
+      <p><strong>Reference:</strong> ${acc.reference || ""}</p>
+      <p><strong>Description:</strong> ${acc.description || ""}</p>
+      <p><strong>Account:</strong> ${acc.account || ""}</p>
+      <p><strong>Bank:</strong> ${acc.bank || "-"}</p>
+      <p><strong>Amount:</strong> ${acc.amount.toFixed(2)}</p>
+
+      <script>
+        window.print();
+      <\/script>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
 }
 function bulkDeleteCurrentAccounts() {
 
@@ -46145,16 +47477,149 @@ function renderCurrentAccTransactions() {
       <td class="p-2 border text-right">${(trans.debit||0).toFixed(2)}</td>
       <td class="p-2 border text-right">${(trans.credit||0).toFixed(2)}</td>
       <td class="p-2 border text-right">${runningBalance.toFixed(2)}</td>
-      <td class="p-2 flex gap-1">
-        <button onclick="editCurrentAccTransaction(${fullIndex})" class="border bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="previewTransaction(${fullIndex})" class="border bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">Preview</button>
-        <button onclick="deleteCurrentAccTransaction(${fullIndex})" class="border bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">Delete</button>
-      </td>
+    <td class="p-2 flex gap-1 relative">
+
+  <button onclick="editCurrentAccTransaction(${fullIndex})"
+    class="border bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
+    Edit
+  </button>
+
+  <button onclick="previewTransaction(${fullIndex})"
+    class="border bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
+    Preview
+  </button>
+
+  <button onclick="deleteCurrentAccTransaction(${fullIndex})"
+    class="border bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
+    Delete
+  </button>
+
+  <button onclick="toggleCurrentTransactionMenu(${fullIndex})"
+    class="border bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">
+    More ▼
+  </button>
+
+  <div id="currentTransactionMenu-${fullIndex}"
+    class="hidden absolute right-0 mt-10 w-40 bg-white border rounded shadow-lg z-50">
+
+    <button onclick="cloneCurrentTransaction(${fullIndex})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      📄 Clone
+    </button>
+
+    <button onclick="downloadCurrentTransactionPDF(${fullIndex})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      ⬇ Download
+    </button>
+
+    <button onclick="printCurrentTransactionPDF(${fullIndex})"
+      class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+      🖨 Print
+    </button>
+
+  </div>
+
+</td>
     `;
     tbody.appendChild(row);
   });
 }
+function toggleCurrentTransactionMenu(index) {
 
+  document.querySelectorAll("[id^='currentTransactionMenu-']")
+    .forEach(menu => {
+      if (menu.id !== `currentTransactionMenu-${index}`) {
+        menu.classList.add("hidden");
+      }
+    });
+
+  document
+    .getElementById(`currentTransactionMenu-${index}`)
+    ?.classList.toggle("hidden");
+}
+
+function cloneCurrentTransaction(index) {
+
+  const cloned = {
+    ...currentAccTransactions[index]
+  };
+
+  cloned.reference =
+    (cloned.reference || "") + "-COPY";
+
+  currentAccTransactions.push(cloned);
+
+  localStorage.setItem(
+    "currentAccTransactions",
+    JSON.stringify(currentAccTransactions)
+  );
+
+  renderCurrentAccTransactions();
+
+  alert("Transaction cloned successfully");
+}
+
+function downloadCurrentTransactionPDF(index) {
+
+  const trans = currentAccTransactions[index];
+
+  const content = `
+CURRENT ACCOUNT TRANSACTION
+
+Date: ${trans.date}
+Reference: ${trans.reference}
+Description: ${trans.description}
+Debit: ${(trans.debit || 0).toFixed(2)}
+Credit: ${(trans.credit || 0).toFixed(2)}
+Balance: ${(trans.balance || 0).toFixed(2)}
+`;
+
+  const blob = new Blob([content], {
+    type: "application/pdf"
+  });
+
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+
+  link.download =
+    `Transaction-${index + 1}.pdf`;
+
+  link.click();
+}
+
+function printCurrentTransactionPDF(index) {
+
+  const trans = currentAccTransactions[index];
+
+  const win = window.open("", "", "width=900,height=700");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Print Transaction</title>
+    </head>
+    <body>
+
+      <h2>Current Account Transaction</h2>
+
+      <p><strong>Date:</strong> ${trans.date}</p>
+      <p><strong>Reference:</strong> ${trans.reference}</p>
+      <p><strong>Description:</strong> ${trans.description}</p>
+      <p><strong>Debit:</strong> ${(trans.debit || 0).toFixed(2)}</p>
+      <p><strong>Credit:</strong> ${(trans.credit || 0).toFixed(2)}</p>
+      <p><strong>Balance:</strong> ${(trans.balance || 0).toFixed(2)}</p>
+
+      <script>
+        window.print();
+      <\/script>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
 function clearTransactionForm(){
   document.getElementById("transDate").value="";
   document.getElementById("transReference").value="";
@@ -48015,20 +49480,167 @@ function addPlannedBudget() {
 function renderBudgets() {
   const container = document.getElementById("budgetPlansList");
   if (!container) return;
+
   if (budgets.length === 0) {
     container.innerHTML = "<p class='text-gray-500'>No budget plans saved.</p>";
     return;
   }
-  container.innerHTML = budgets.map((b, i) =>
-    `<div class="border p-2 mb-1 rounded">
-       <strong>${escapeHtml(b.account)}</strong> — ${escapeHtml(b.department)} (${escapeHtml(b.period)})
-       <div class="text-xs mt-1">${b.months.map(m => `${m.month}: KES ${m.amount.toLocaleString()}`).join(", ")}</div>
-       <div class="mt-2">
-         <button onclick="editBudget(${i})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-         <button onclick="deleteBudget(${i})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-       </div>
-     </div>`
-  ).join("");
+
+  container.innerHTML = budgets.map((b, i) => `
+    <div class="border p-2 mb-2 rounded relative">
+
+      <div>
+        <strong>${escapeHtml(b.account)}</strong> — ${escapeHtml(b.department)} (${escapeHtml(b.period)})
+      </div>
+
+      <div class="text-xs mt-1">
+        ${b.months.map(m => `${m.month}: KES ${m.amount.toLocaleString()}`).join(", ")}
+      </div>
+
+      <div class="mt-2 flex gap-1">
+
+        <button onclick="editBudget(${i})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteBudget(${i})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button onclick="toggleBudgetMenu(${i})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          More ▼
+        </button>
+
+      </div>
+
+      <div id="budgetMenu-${i}"
+        class="hidden absolute right-2 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+
+        <button onclick="emailBudget(${i})"
+          class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+          📧 Email
+        </button>
+
+        <button onclick="cloneBudget(${i})"
+          class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+          📄 Clone
+        </button>
+
+        <button onclick="downloadBudgetPDF(${i})"
+          class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+          ⬇ Download
+        </button>
+
+        <button onclick="printBudgetPDF(${i})"
+          class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+          🖨 Print
+        </button>
+
+      </div>
+
+    </div>
+  `).join("");
+}
+function toggleBudgetMenu(index) {
+
+  document.querySelectorAll("[id^='budgetMenu-']")
+    .forEach(menu => {
+      if (menu.id !== `budgetMenu-${index}`) {
+        menu.classList.add("hidden");
+      }
+    });
+
+  document
+    .getElementById(`budgetMenu-${index}`)
+    ?.classList.toggle("hidden");
+}
+
+function cloneBudget(index) {
+
+  const cloned = JSON.parse(
+    JSON.stringify(budgets[index])
+  );
+
+  cloned.account += " Copy";
+
+  budgets.push(cloned);
+
+  localStorage.setItem(
+    "budgets",
+    JSON.stringify(budgets)
+  );
+
+  renderBudgets();
+
+  alert("Budget cloned successfully");
+}
+
+function downloadBudgetPDF(index) {
+
+  const b = budgets[index];
+
+  const content = `
+BUDGET PLAN
+
+Account: ${b.account}
+Department: ${b.department}
+Period: ${b.period}
+
+${b.months.map(m =>
+  `${m.month}: KES ${m.amount.toLocaleString()}`
+).join("\n")}
+`;
+
+  const blob = new Blob([content], {
+    type: "application/pdf"
+  });
+
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+
+  link.download = `Budget-${index + 1}.pdf`;
+
+  link.click();
+}
+
+function printBudgetPDF(index) {
+
+  const b = budgets[index];
+
+  const win = window.open("", "", "width=900,height=700");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Print Budget</title>
+    </head>
+    <body>
+
+      <h2>Budget Plan</h2>
+
+      <p><strong>Account:</strong> ${b.account}</p>
+      <p><strong>Department:</strong> ${b.department}</p>
+      <p><strong>Period:</strong> ${b.period}</p>
+
+      <h3>Monthly Budget</h3>
+
+      ${b.months.map(m => `
+        <p>${m.month}: KES ${m.amount.toLocaleString()}</p>
+      `).join("")}
+
+      <script>
+        window.print();
+      <\/script>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
 }
 function editBudget(index) {
   const b = budgets[index];
@@ -48388,28 +50000,152 @@ function deleteRevision(id) {
 function renderRevisionHistory() {
   const container = document.getElementById("revisionHistory");
   if (!container) return;
+
   container.innerHTML = revisionHistoryData
-    .map(
-      (r) => `
-      <div class="p-2 border-b flex justify-between items-start">
+    .map((r) => `
+      <div class="p-2 border-b flex justify-between items-start relative">
+
         <div>
           <strong>${r.account} (${r.department})</strong><br>
           <span class="text-xs text-gray-600">${r.type} • ${r.period}: ${r.periodLabel}</span><br>
           New Value: <span class="text-blue-700">KES ${r.newValue.toLocaleString()}</span><br>
           <em>${r.note}</em> — <span class="text-xs text-gray-500">${r.date}</span>
         </div>
-        <div class="space-x-2">
+
+        <div class="space-x-1 flex items-start">
+
           <button onclick="editRevision(${r.id})"
-            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Edit
+          </button>
+
           <button onclick="deleteRevision(${r.id})"
-            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Delete
+          </button>
+
+          <button onclick="toggleRevisionMenu(${r.id})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            More ▼
+          </button>
+
         </div>
+
+        <div id="revisionMenu-${r.id}"
+          class="hidden absolute right-2 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+
+          <button onclick="emailRevision(${r.id})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📧 Email
+          </button>
+
+          <button onclick="cloneRevision(${r.id})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📄 Clone
+          </button>
+
+          <button onclick="downloadRevisionPDF(${r.id})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            ⬇ Download
+          </button>
+
+          <button onclick="printRevisionPDF(${r.id})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            🖨 Print
+          </button>
+
+        </div>
+
       </div>
-    `
-    )
+    `)
     .join("");
 }
+function toggleRevisionMenu(id) {
+  const menu = document.getElementById(`revisionMenu-${id}`);
 
+  if (!menu) return;
+  document.querySelectorAll('[id^="revisionMenu-"]').forEach(m => {
+    if (m !== menu) m.classList.add("hidden");
+  });
+
+  menu.classList.toggle("hidden");
+}
+function cloneRevision(id) {
+  const item = revisionHistoryData.find(r => r.id === id);
+  if (!item) return;
+
+  const newItem = {
+    ...item,
+    id: Date.now(),
+    date: new Date().toISOString().split("T")[0],
+    note: item.note + " (Cloned)"
+  };
+
+  revisionHistoryData.push(newItem);
+  renderRevisionHistory();
+}
+function emailRevision(id) {
+  const item = revisionHistoryData.find(r => r.id === id);
+  if (!item) return;
+
+  const subject = `Revision - ${item.account}`;
+  const body = `
+Account: ${item.account}
+Department: ${item.department}
+Type: ${item.type}
+Period: ${item.period} - ${item.periodLabel}
+New Value: KES ${item.newValue}
+Note: ${item.note}
+Date: ${item.date}
+`;
+
+  window.location.href =
+    `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+function downloadRevisionPDF(id) {
+  const item = revisionHistoryData.find(r => r.id === id);
+  if (!item) return;
+
+  const doc = new jspdf.jsPDF();
+
+  doc.text(`Revision Report`, 10, 10);
+  doc.text(`Account: ${item.account}`, 10, 20);
+  doc.text(`Department: ${item.department}`, 10, 30);
+  doc.text(`Type: ${item.type}`, 10, 40);
+  doc.text(`Period: ${item.period} - ${item.periodLabel}`, 10, 50);
+  doc.text(`New Value: KES ${item.newValue}`, 10, 60);
+  doc.text(`Note: ${item.note}`, 10, 70);
+  doc.text(`Date: ${item.date}`, 10, 80);
+
+  doc.save(`revision-${item.id}.pdf`);
+}
+function printRevisionPDF(id) {
+  const item = revisionHistoryData.find(r => r.id === id);
+  if (!item) return;
+
+  const w = window.open("", "_blank");
+
+  w.document.write(`
+    <html>
+      <head>
+        <title>Revision Print</title>
+      </head>
+      <body>
+        <h2>Revision Report</h2>
+        <p><b>Account:</b> ${item.account}</p>
+        <p><b>Department:</b> ${item.department}</p>
+        <p><b>Type:</b> ${item.type}</p>
+        <p><b>Period:</b> ${item.period} - ${item.periodLabel}</p>
+        <p><b>New Value:</b> KES ${item.newValue}</p>
+        <p><b>Note:</b> ${item.note}</p>
+        <p><b>Date:</b> ${item.date}</p>
+      </body>
+    </html>
+  `);
+
+  w.document.close();
+  w.print();
+}
 window.addEventListener("DOMContentLoaded", () => {
   loadRevisionAccounts();
   renderRevisionHistory();
@@ -48953,6 +50689,7 @@ function renderLockedModules() {
   if (!tbody) return;
 
   tbody.innerHTML = "";
+
   if (transactionLocks.length === 0) {
     tbody.innerHTML = `<tr><td colspan="5" class="text-center py-2">No modules are locked</td></tr>`;
     return;
@@ -48960,36 +50697,135 @@ function renderLockedModules() {
 
   transactionLocks.forEach((lock, index) => {
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
       <td class="border px-2 py-1">${lock.date}</td>
       <td class="border px-2 py-1">${lock.module}</td>
       <td class="border px-2 py-1">${lock.reason}</td>
-      <td class="border px-2 py-1">
-        <button onclick="previewLock(${index})" class="px-1 py-1 bg-blue-900 text-white font-bold rounded ml-1 hover:bg-blue-800">Preview</button>
-      </td>
-      <td class="border px-2 py-1">
-        <button onclick="unlockTransactions('${lock.module}')" class="px-1 py-1 bg-blue-900 text-white font-bold rounded ml-1 hover:bg-blue-800">Unlock</button>
+
+      <td class="border px-2 py-1 space-x-1 relative">
+
+        <button onclick="previewLock(${index})"
+          class="px-1 py-1 bg-blue-900 text-white font-bold rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+        <button onclick="unlockTransactions('${lock.module}')"
+          class="px-1 py-1 bg-blue-900 text-white font-bold rounded hover:bg-blue-800">
+          Unlock
+        </button>
+
+        <button onclick="toggleLockMenu(${index})"
+          class="px-1 py-1 bg-blue-900 text-white font-bold rounded hover:bg-blue-800">
+          More ▼
+        </button>
+
+        <div id="lockMenu-${index}"
+          class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+
+          <button onclick="emailLock(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📧 Email
+          </button>
+
+          <button onclick="cloneLock(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📄 Clone
+          </button>
+
+          <button onclick="downloadLockPDF(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            ⬇ Download
+          </button>
+
+          <button onclick="printLockPDF(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            🖨 Print
+          </button>
+
+        </div>
+
       </td>
     `;
+
     tbody.appendChild(tr);
   });
-}  function toggleModuleSelect() {
-    const lockType = document.querySelector('input[name="lockType"]:checked').value;
-    const single = document.getElementById("lockModuleSingle");
-    const multiple = document.getElementById("lockModuleMultiple");
-    const hint = document.getElementById("multiSelectHint");
+}
+function toggleLockMenu(index) {
+  const menu = document.getElementById(`lockMenu-${index}`);
 
-    if (lockType === "single") {
-      single.classList.remove("hidden");
-      multiple.classList.add("hidden");
-      hint.style.display = "none";
-    } else {
-      single.classList.add("hidden");
-      multiple.classList.remove("hidden");
-      hint.style.display = "block";
-    }
-  }
+  if (!menu) return;
 
+  document.querySelectorAll('[id^="lockMenu-"]').forEach(m => {
+    if (m !== menu) m.classList.add("hidden");
+  });
+
+  menu.classList.toggle("hidden");
+}
+function emailLock(index) {
+  const lock = transactionLocks[index];
+  if (!lock) return;
+
+  const subject = `Locked Module: ${lock.module}`;
+  const body = `
+Module: ${lock.module}
+Date: ${lock.date}
+Reason: ${lock.reason}
+`;
+
+  window.location.href =
+    `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+function cloneLock(index) {
+  const lock = transactionLocks[index];
+  if (!lock) return;
+
+  const newLock = {
+    ...lock,
+    date: new Date().toISOString().split("T")[0],
+    reason: lock.reason + " (Cloned)"
+  };
+
+  transactionLocks.push(newLock);
+
+  localStorage.setItem("transactionLocks", JSON.stringify(transactionLocks));
+  renderLockedModules();
+}
+function downloadLockPDF(index) {
+  const lock = transactionLocks[index];
+  if (!lock) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.text("Locked Module Report", 10, 10);
+  doc.text(`Module: ${lock.module}`, 10, 20);
+  doc.text(`Date: ${lock.date}`, 10, 30);
+  doc.text(`Reason: ${lock.reason}`, 10, 40);
+
+  doc.save(`lock-${lock.module}.pdf`);
+}
+function printLockPDF(index) {
+  const lock = transactionLocks[index];
+  if (!lock) return;
+
+  const w = window.open("", "_blank");
+
+  w.document.write(`
+    <html>
+      <head><title>Lock Print</title></head>
+      <body>
+        <h2>Locked Module</h2>
+        <p><b>Module:</b> ${lock.module}</p>
+        <p><b>Date:</b> ${lock.date}</p>
+        <p><b>Reason:</b> ${lock.reason}</p>
+      </body>
+    </html>
+  `);
+
+  w.document.close();
+  w.print();
+}
 function showToast(msg) {
   const toast = document.createElement("div");
   toast.textContent = msg;
