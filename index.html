@@ -39062,6 +39062,7 @@ function manageCOAFiles(){
 
 <div class="flex justify-end gap-4 mb-6">
   <button onclick="exportAccountsJSON()" class="bg-blue-900 text-white font-semibold px-1 py-1 rounded hover:bg-blue-700 ">Export JSON</button>
+   <button onclick="exportAccountsCSV()" class="bg-blue-900 text-white font-semibold px-1 py-1 rounded hover:bg-blue-700 ">Export CSV</button>
   <label for="importFile" class="bg-blue-900 text-white font-semibold px-1 py-1 rounded hover:bg-blue-700 cursor-pointer">Import Accounts</label>
   <input id="importFile" type="file" accept=".json,.csv" class="hidden" onchange="importAccounts(event)" />
 </div>
