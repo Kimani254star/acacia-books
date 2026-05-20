@@ -4934,6 +4934,7 @@ window.addEventListener('DOMContentLoaded', () => {
   <input type="hidden" id="editIndex" value="">
   <button onclick="saveDraft()"  class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900 mt-6">Save as Draft</button>
   <button onclick="saveItem()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900 mt-6">Save Item</button>
+  <button onclick="cancelItem()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600"> Cancel </button>
 </div>
 <div id="importExportSection" class="hidden mb-4 flex justify-end">
   <div class="relative inline-block text-left">
@@ -5093,6 +5094,7 @@ window.addEventListener('DOMContentLoaded', () => {
     <div>
       <button onclick="saveTransferDraft()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800"> Save as Draft</button>
       <button onclick="saveTransfer()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Transfer Stock</button>
+       <button onclick="cancelTransfer()"  class="bg-gray-500 text-white px-1 py-1 rounded hover:bg-gray-600">Cancel</button>
     </div>
   </div>
 
@@ -5294,6 +5296,8 @@ window.addEventListener('DOMContentLoaded', () => {
             <div id="sort-amend-date-submenu" class="hidden pl-6 space-y-1">
               <button onclick="sortAmendments('date','asc')" class="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-50">Ascending</button>
               <button onclick="sortAmendments('date','desc')" class="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-50">Descending</button>
+              <button onclick="closeSortMenu()" class="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600">  Cancel </button>
+
             </div>
 
           </div>
@@ -5384,6 +5388,7 @@ window.addEventListener('DOMContentLoaded', () => {
     <div class="text-right">
       <button onclick="savePriceDraft()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
       <button onclick="updatePrice()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800"> Save Price</button>
+        <button  onclick="closePriceSortMenu()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600"> Cancel</button>
     </div>
   </div>
   <div id="priceExpertSection" class="mb-4 flex justify-end">
@@ -5447,6 +5452,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <div id="sort-date-submenu" class="hidden pl-6 space-y-1">
           <button onclick="sortPriceList('date','asc')" class="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-50">Ascending</button>
           <button onclick="sortPriceList('date','desc')" class="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-50">Descending</button>
+            <button  onclick="closePriceSortMenu()" class="px-1 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600">Cancel</button>
         </div>
 
       </div>
@@ -5652,7 +5658,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     <div class="text-right">
       <button onclick="saveBundleItemDraft()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
-      <button onclick="createBundleItem()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Create Bundle Item</button>
+      <button onclick="createBundleItem()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Create Bundle </button>
+      <button onclick="cancelBundleCreation()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Cancel </button>
     </div>
 
   </div>
@@ -5720,6 +5727,7 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
   <button id="saveBAAdjustmentsDraftBtn" type="button" onclick="saveBAAdjustmentsDraft()"class="bg-blue-900 text-white font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
   <button id="applyBAAdjustmentsBtn" type="button" class="bg-blue-900 text-white font-bold px-1 py-1 rounded hover:bg-blue-900">Apply Adjustments</button>
+  <button type="button"onclick="cancelBAAdjustments()"  class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600"> Cancel</button>
   
   <div id="bulkExpertSection" class="mb-4 flex justify-end">
     <div class="relative inline-block text-left">
@@ -6199,6 +6207,20 @@ const fromLocation = document.getElementById('fromLocation')?.value;
 if (fromLocation === warehouse) {
   populateMovementItemsDropdown();
   populateAccountDropdowns();
+}
+function cancelItem() {
+  document.getElementById('warehouseSelect').value = '';
+  document.getElementById('itemName').value = '';
+  document.getElementById('itemSKU').value = '';
+  document.getElementById('itemQty').value = '';
+  document.getElementById('itemBuyPrice').value = '';
+  document.getElementById('itemSellPrice').value = '';
+  document.getElementById('buyVatRule').value = '';
+  document.getElementById('sellVatRule').value = '';
+  document.getElementById('buyingAccountSelect').value = '';
+  document.getElementById('sellingAccountSelect').value = '';
+  document.getElementById('sellDescription').value = '';
+  document.getElementById('editIndex').value = '';
 }
 }
 function renderInventoryTable() {
@@ -7242,32 +7264,187 @@ function saveTransfer() {
   renderInventoryTable();
   renderStockTransfer();
 }
-
+function cancelTransfer() {
+  document.getElementById('transferItem').value = '';
+  document.getElementById('fromLocation').value = '';
+  document.getElementById('toLocation').value = '';
+  document.getElementById('transferQuantity').value = '';
+  document.getElementById('transferDate').value = '';
+}
 function renderMovementTable() {
   const tbody = document.getElementById('movementTableBody');
   tbody.innerHTML = '';
 
   let movements = JSON.parse(localStorage.getItem('movements') || '[]');
+
   if (movements.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-gray-500">No stock movements recorded.</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center p-4 text-gray-500">
+          No stock movements recorded.
+        </td>
+      </tr>
+    `;
     return;
   }
 
   tbody.innerHTML = movements.map((move, index) => `
     <tr>
-      <td><input type="checkbox" class="movementCheckbox" data-index="${index}"></td>
+      <td>
+        <input type="checkbox"
+          class="movementCheckbox"
+          data-index="${index}">
+      </td>
+
       <td class="border p-2">${move.item}</td>
       <td class="border p-2">${move.from}</td>
       <td class="border p-2">${move.to}</td>
       <td class="border p-2">${move.quantity}</td>
       <td class="border p-2">${move.date}</td>
-      <td class="border p-2 text-center">
-        <button class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-900" onclick="editMovement(${index})">Edit</button>
-        <button class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-900" onclick="previewMovement(${index})">Preview</button>
-        <button class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900" onclick="deleteMovement(${index})">Delete</button>
+
+      <td class="border p-2 text-center relative">
+
+        <button
+          class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800"
+          onclick="editMovement(${index})">
+          Edit
+        </button>
+
+        <button
+          class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800"
+          onclick="previewMovement(${index})">
+          Preview
+        </button>
+
+        <button
+          class="bg-blue-900 text-white px-1 py-1 rounded mr-2 hover:bg-blue-800"
+          onclick="deleteMovement(${index})">
+          Delete
+        </button>
+
+        <button
+          onclick="toggleMovementMenu(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">
+          More ▼
+        </button>
+
+        <div id="movementMenu-${index}"
+          class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+
+          <button
+            onclick="cloneMovement(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📄 Clone
+          </button>
+
+          <button
+            onclick="downloadMovementPDF(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            ⬇ Download
+          </button>
+
+          <button
+            onclick="printMovementPDF(${index})"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            🖨 Print
+          </button>
+
+        </div>
+
       </td>
     </tr>
   `).join('');
+}
+
+function toggleMovementMenu(index) {
+  document
+    .querySelectorAll('[id^="movementMenu-"]')
+    .forEach(menu => {
+      if (menu.id !== `movementMenu-${index}`) {
+        menu.classList.add("hidden");
+      }
+    });
+
+  document
+    .getElementById(`movementMenu-${index}`)
+    .classList.toggle("hidden");
+}
+
+function cloneMovement(index) {
+  const movements = JSON.parse(localStorage.getItem('movements') || '[]');
+
+  const cloned = {
+    ...movements[index],
+    date: new Date().toISOString().split('T')[0]
+  };
+
+  movements.push(cloned);
+
+  localStorage.setItem('movements', JSON.stringify(movements));
+
+  renderMovementTable();
+
+  alert("Movement cloned successfully");
+}
+
+function downloadMovementPDF(index) {
+  const movements = JSON.parse(localStorage.getItem('movements') || '[]');
+
+  const move = movements[index];
+
+  const content = `
+    STOCK MOVEMENT
+
+    Item: ${move.item}
+    From: ${move.from}
+    To: ${move.to}
+    Quantity: ${move.quantity}
+    Date: ${move.date}
+  `;
+
+  const blob = new Blob([content], { type: "application/pdf" });
+
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+
+  link.download = `Movement-${index + 1}.pdf`;
+
+  link.click();
+}
+
+function printMovementPDF(index) {
+  const movements = JSON.parse(localStorage.getItem('movements') || '[]');
+
+  const move = movements[index];
+
+  const win = window.open('', '', 'width=900,height=700');
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Stock Movement</title>
+    </head>
+    <body>
+      <h2>Stock Movement</h2>
+
+      <p><strong>Item:</strong> ${move.item}</p>
+      <p><strong>From:</strong> ${move.from}</p>
+      <p><strong>To:</strong> ${move.to}</p>
+      <p><strong>Quantity:</strong> ${move.quantity}</p>
+      <p><strong>Date:</strong> ${move.date}</p>
+
+      <script>
+        window.onload = function() {
+          window.print();
+          window.close();
+        }
+      <\/script>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
 }
 
 function editMovement(index) {
@@ -7288,13 +7465,117 @@ function editMovement(index) {
 }
 
 function previewMovement(index) {
-  let movements = JSON.parse(localStorage.getItem('movements') || '[]');
-  const move = movements[index];
-  alert(
-    `📦 Stock Movement\n\nItem: ${move.item}\nFrom: ${move.from}\nTo: ${move.to}\nQuantity: ${move.quantity}\nDate: ${move.date}`
-  );
-}
 
+  let movements = JSON.parse(localStorage.getItem('movements') || '[]');
+
+  const move = movements[index];
+
+  const win = window.open('', '', 'width=900,height=700');
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Stock Movement Preview</title>
+
+      <style>
+        body{
+          font-family: Arial, sans-serif;
+          padding: 20px;
+          color: #333;
+        }
+
+        h2{
+          color: #1e3a8a;
+          margin-bottom: 20px;
+        }
+
+        table{
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+        }
+
+        table, th, td{
+          border: 1px solid #ccc;
+        }
+
+        th, td{
+          padding: 12px;
+          text-align: left;
+        }
+
+        th{
+          background: #1e3a8a;
+          color: white;
+        }
+
+        .footer{
+          margin-top: 40px;
+          font-size: 12px;
+          color: gray;
+        }
+
+        .print-btn{
+          margin-top: 20px;
+          padding: 10px 20px;
+          background: #1e3a8a;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+        }
+
+        .print-btn:hover{
+          background: #163172;
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <h2>📦 Stock Movement Preview</h2>
+
+      <table>
+        <tr>
+          <th>Item</th>
+          <td>${move.item}</td>
+        </tr>
+
+        <tr>
+          <th>From Warehouse</th>
+          <td>${move.from}</td>
+        </tr>
+
+        <tr>
+          <th>To Warehouse</th>
+          <td>${move.to}</td>
+        </tr>
+
+        <tr>
+          <th>Quantity</th>
+          <td>${move.quantity}</td>
+        </tr>
+
+        <tr>
+          <th>Date</th>
+          <td>${move.date}</td>
+        </tr>
+      </table>
+
+      <button class="print-btn" onclick="window.print()">
+        🖨 Print PDF
+      </button>
+
+      <div class="footer">
+        Generated on ${new Date().toLocaleString()}
+      </div>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
 function deleteMovement(index) {
   if (!confirm("Are you sure you want to delete this record?")) return;
 
@@ -7612,6 +7893,13 @@ function updatePrice() {
     renderInventoryTable();
   }
 }
+function closePriceSortMenu() {
+  document.getElementById('priceItem').value = '';
+  document.getElementById('newSellingPrice').value = '';
+  document.getElementById('newCostPrice').value = '';
+  document.getElementById('effectiveDate').value = '';
+  document.getElementById('priceListWarehouseSelect').value = '';
+}
 
 function renderPriceListTable() {
   const tbody = document.getElementById('priceListTableBody');
@@ -7641,31 +7929,258 @@ function renderPriceListTable() {
   });
 
   if (merged.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-gray-500">No items found.</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center p-4 text-gray-500">
+          No items found.
+        </td>
+      </tr>
+    `;
     return;
   }
 
   tbody.innerHTML = merged.map((entry, index) => `
     <tr>
-      <td><input type="checkbox" class="priceCheckbox"></td>
-      <td>${entry.name}</td>
-      <td>KSh ${entry.sellingPrice.toFixed(2)}</td>
-      <td>KSh ${entry.costPrice.toFixed(2)}</td>
-      <td>${entry.effectiveDate ? new Date(entry.effectiveDate).toLocaleDateString() : "-"}</td>
+
       <td>
-        <button onclick="editPriceMerged('${entry.item}', '${entry.warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-1">Edit</button>
-        <button onclick="deletePriceMerged('${entry.item}', '${entry.warehouse}')" class="bg-blue-900 text-white px-1 py-1 rounded mr-1">Delete</button>
-        <button onclick="togglePriceHistory('${entry.item}', '${entry.warehouse}', ${index})" class="bg-blue-900 text-white px-1 py-1 rounded">History</button>
+        <input type="checkbox" class="priceCheckbox">
       </td>
+
+      <td>${entry.name}</td>
+
+      <td>
+        KSh ${entry.sellingPrice.toFixed(2)}
+      </td>
+
+      <td>
+        KSh ${entry.costPrice.toFixed(2)}
+      </td>
+
+      <td>
+        ${entry.effectiveDate
+          ? new Date(entry.effectiveDate).toLocaleDateString()
+          : "-"}
+      </td>
+
+      <td class="relative space-x-1">
+
+        <button
+          onclick="editPriceMerged('${entry.item}', '${entry.warehouse}')"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button
+          onclick="deletePriceMerged('${entry.item}', '${entry.warehouse}')"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button
+          onclick="togglePriceHistory('${entry.item}', '${entry.warehouse}', ${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">
+          History
+        </button>
+
+        <button
+          onclick="togglePriceMenu(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">
+          More ▼
+        </button>
+
+        <div id="priceMenu-${index}"
+          class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+
+          <button
+            onclick="emailPriceItem('${entry.item}', '${entry.warehouse}')"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📧 Email
+          </button>
+
+          <button
+            onclick="clonePriceItem('${entry.item}', '${entry.warehouse}')"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📄 Clone
+          </button>
+
+          <button
+            onclick="downloadPricePDF('${entry.item}', '${entry.warehouse}')"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            ⬇ Download
+          </button>
+
+          <button
+            onclick="printPricePDF('${entry.item}', '${entry.warehouse}')"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            🖨 Print
+          </button>
+
+        </div>
+
+      </td>
+
     </tr>
 
-    <!-- ✅ THIS IS THE MISSING HISTORY ROW -->
     <tr id="priceHistoryRow-${entry.item}-${index}" style="display:none">
       <td colspan="6"></td>
     </tr>
   `).join('');
 }
+function togglePriceMenu(index) {
+  const menu = document.getElementById(`priceMenu-${index}`);
 
+  if (!menu) return;
+
+  document.querySelectorAll('[id^="priceMenu-"]').forEach(m => {
+    if (m !== menu) {
+      m.classList.add("hidden");
+    }
+  });
+
+  menu.classList.toggle("hidden");
+}
+
+function emailPriceItem(item, warehouse) {
+
+  const priceList = JSON.parse(localStorage.getItem(PRICE_LIST_KEY) || "[]");
+
+  const entry = priceList.find(p =>
+    p.item === item &&
+    p.warehouse === warehouse
+  );
+
+  if (!entry) return;
+
+  const subject = `Price List - ${entry.item}`;
+
+  const body = `
+Item: ${entry.item}
+Warehouse: ${entry.warehouse}
+Selling Price: KES ${parseFloat(entry.sellingPrice || 0).toFixed(2)}
+Cost Price: KES ${parseFloat(entry.costPrice || 0).toFixed(2)}
+Effective Date: ${entry.effectiveDate || "-"}
+`;
+
+  window.location.href =
+    `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function clonePriceItem(item, warehouse) {
+
+  const priceList = JSON.parse(localStorage.getItem(PRICE_LIST_KEY) || "[]");
+
+  const entry = priceList.find(p =>
+    p.item === item &&
+    p.warehouse === warehouse
+  );
+
+  if (!entry) return;
+
+  const cloned = {
+    ...entry,
+    effectiveDate: new Date().toISOString().split("T")[0],
+    item: entry.item + " Copy"
+  };
+
+  priceList.push(cloned);
+
+  localStorage.setItem(PRICE_LIST_KEY, JSON.stringify(priceList));
+
+  renderPriceListTable();
+}
+
+function downloadPricePDF(item, warehouse) {
+
+  const priceList = JSON.parse(localStorage.getItem(PRICE_LIST_KEY) || "[]");
+
+  const entry = priceList.find(p =>
+    p.item === item &&
+    p.warehouse === warehouse
+  );
+
+  if (!entry) return;
+
+  const { jsPDF } = window.jspdf;
+
+  const doc = new jsPDF();
+
+  doc.text("Price List Report", 10, 10);
+
+  doc.text(`Item: ${entry.item}`, 10, 20);
+
+  doc.text(`Warehouse: ${entry.warehouse}`, 10, 30);
+
+  doc.text(
+    `Selling Price: KES ${parseFloat(entry.sellingPrice || 0).toFixed(2)}`,
+    10,
+    40
+  );
+
+  doc.text(
+    `Cost Price: KES ${parseFloat(entry.costPrice || 0).toFixed(2)}`,
+    10,
+    50
+  );
+
+  doc.text(
+    `Effective Date: ${entry.effectiveDate || "-"}`,
+    10,
+    60
+  );
+
+  doc.save(`${entry.item}-price-list.pdf`);
+}
+
+function printPricePDF(item, warehouse) {
+
+  const priceList = JSON.parse(localStorage.getItem(PRICE_LIST_KEY) || "[]");
+
+  const entry = priceList.find(p =>
+    p.item === item &&
+    p.warehouse === warehouse
+  );
+
+  if (!entry) return;
+
+  const w = window.open("", "_blank");
+
+  w.document.write(`
+    <html>
+      <head>
+        <title>Price List Print</title>
+      </head>
+
+      <body>
+
+        <h2>Price List Report</h2>
+
+        <p><b>Item:</b> ${entry.item}</p>
+
+        <p><b>Warehouse:</b> ${entry.warehouse}</p>
+
+        <p>
+          <b>Selling Price:</b>
+          KES ${parseFloat(entry.sellingPrice || 0).toFixed(2)}
+        </p>
+
+        <p>
+          <b>Cost Price:</b>
+          KES ${parseFloat(entry.costPrice || 0).toFixed(2)}
+        </p>
+
+        <p>
+          <b>Effective Date:</b>
+          ${entry.effectiveDate || "-"}
+        </p>
+
+      </body>
+    </html>
+  `);
+
+  w.document.close();
+
+  w.print();
+}
 function editPriceMerged(itemKey, warehouse) {
   const priceList = JSON.parse(localStorage.getItem(PRICE_LIST_KEY) || '[]');
   const entry = priceList.find(e => e.item === itemKey && e.warehouse === warehouse);
@@ -8029,7 +8544,12 @@ function submitAdjustment() {
 
   alert("Adjustments applied successfully!");
 }
-
+function closeSortMenu() {
+  document.getElementById('adjustItem').value = '';
+  document.getElementById('adjustType').value = '';
+  document.getElementById('adjustQty').value = '';
+  document.getElementById('adjustReason').value = '';
+}
 function renderAmendmentsTable() {
   const tbody = document.getElementById('amendmentsTable');
   const warehouse = document.getElementById('amendmentsWarehouseSelect').value;
@@ -8376,7 +8896,22 @@ function createBundleItem() {
   renderBundles();
   renderInventoryTable();
 }
+function cancelBundleCreation() {
+  document.getElementById("bundleFinalName").value = '';
+  document.getElementById("bundleQty").value = '';
+  document.getElementById("bundleBuyPrice").value = '';
+  document.getElementById("bundleSellPrice").value = '';
+  document.getElementById("bundleBuyVAT").value = '';
+  document.getElementById("bundleSellVAT").value = '';
+  document.getElementById("bundleToWarehouse").value = '';
 
+  document.getElementById("bundleFromWarehouse1").value = '';
+  document.getElementById("bundleItem1").value = '';
+  document.getElementById("bundleFromWarehouse2").value = '';
+  document.getElementById("bundleItem2").value = '';
+  document.getElementById("bundleFromWarehouse3").value = '';
+  document.getElementById("bundleItem3").value = '';
+}
 function saveBundleItemDraft() {
   const drafts = JSON.parse(localStorage.getItem("bundleDrafts") || "[]");
 
@@ -9059,7 +9594,19 @@ updateAfterAdjustment({ single: true, warehouse });
 
 alert("Adjustments applied successfully!");
 }
+function cancelBAAdjustments() {
+  const rows = document.querySelectorAll("#baProductBody tr");
 
+  rows.forEach(row => {
+    const warehouse = row.querySelector(".baWarehouse");
+    const product = row.querySelector(".baProduct");
+    const qty = row.querySelector(".baQty");
+
+    if (warehouse) warehouse.value = '';
+    if (product) product.value = '';
+    if (qty) qty.value = '';
+  });
+}
 function renderBALog() {
   const logBody = document.getElementById("baLogBody");
   const adjustmentLog = JSON.parse(localStorage.getItem("baLog") || "[]");
@@ -9336,7 +9883,13 @@ function createPackage() {
 
   renderPackages();
 }
+function cancelPackage() {
+  const customerSelect = document.querySelector("#packagesTab select.customerSelect");
+  const orderSelect = document.querySelector("#packagesTab select.orderSelect");
 
+  if (customerSelect) customerSelect.value = '';
+  if (orderSelect) orderSelect.value = '';
+}
 function renderPackages() {
   const orders = getAllPackages();
 
@@ -9630,6 +10183,7 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
      <button onclick="saveAsDraft()" class="mt-4 bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Save as Draft</button>
     <button onclick="addBank()" class="mt-4 bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Add Bank</button>
+     <button  onclick="cancelBank()"   class="bg-gray-500 text-white px-1 py-1 rounded hover:bg-gray-600"> Cancel</button>
   </div>
 
  <div class="bg-white p-2 rounded shadow mb-6">
@@ -9806,8 +10360,9 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 
   </div>
-
+  <button  onclick="saveTransactionDraft()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Save as Draft</button>
   <button onclick="manualTransaction()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Submit Transaction</button>
+   <button  onclick="cancelTransaction()" class="bg-gray-500 text-white px-1 py-1 rounded hover:bg-gray-600">Cancel</button>
 </div>
 
 <div class="bg-white p-2 rounded shadow mb-6">
@@ -10932,6 +11487,13 @@ function addBank() {
   document.getElementById("creditAccount").selectedIndex = 0;
 
 }
+function cancelBank() {
+  document.getElementById("bankName").value = '';
+  document.getElementById("accountNumber").value = '';
+  document.getElementById("initialBalance").value = '';
+  document.getElementById("bankCurrency").value = 'KES';
+  document.getElementById("creditAccount").selectedIndex = 0;
+}
 function renderBankTable() {
   const bankTable = document.getElementById("bankTable");
   bankTable.innerHTML = "";
@@ -11476,56 +12038,316 @@ function manualTransaction() {
   clearManualTxForm();
   updateBankSummary();
 }
+function cancelTransaction() {
+  document.getElementById("manualBank").value = '';
+  document.getElementById("manualType").value = '';
+  document.getElementById("manualAccount").value = '';
+  document.getElementById("manualAmount").value = '';
+  document.getElementById("manualDate").value = '';
+  document.getElementById("manualRef").value = '';
+  manualTxEditingIndex = null;
+}
 
+function saveTransactionDraft() {
+  const draft = {
+    bankName: document.getElementById("manualBank").value,
+    type: document.getElementById("manualType").value,
+    accountCode: document.getElementById("manualAccount").value,
+    amount: document.getElementById("manualAmount").value,
+    date: document.getElementById("manualDate").value,
+    ref: document.getElementById("manualRef").value,
+    savedAt: new Date().toISOString()
+  };
+
+  let drafts = JSON.parse(localStorage.getItem("manualTxDrafts") || "[]");
+  drafts.push(draft);
+  localStorage.setItem("manualTxDrafts", JSON.stringify(drafts));
+
+  alert("Draft saved successfully");
+}
 function renderManualTransactions(filterBank = "") {
+
   let transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+
   const table = document.getElementById("manualTransactionLogTable");
+
   table.innerHTML = "";
 
   if (filterBank) {
     transactions = transactions.filter(tx => tx.bank === filterBank);
   }
 
-  transactions.forEach(tx => {
+  transactions.forEach((tx, index) => {
+
     const row = document.createElement("tr");
 
     row.innerHTML = `
       <td class="px-2 py-1">
-        <input type="checkbox" class="manual-checkbox" data-id="${tx.id}">
+        <input type="checkbox"
+          class="manual-checkbox"
+          data-id="${tx.id}">
       </td>
 
       <td class="px-2 py-1">${tx.date}</td>
+
       <td class="px-2 py-1">${tx.bank}</td>
+
       <td class="px-2 py-1">${tx.type}</td>
-      <td class="px-2 py-1">${tx.account} (${tx.code})</td>
+
+      <td class="px-2 py-1">
+        ${tx.account} (${tx.code})
+      </td>
 
       <td class="px-2 py-1 text-right">
-        ${parseFloat(String(tx.amount).replace(/[^0-9.-]+/g, "") || 0)
-          .toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          })}
+        ${parseFloat(
+          String(tx.amount).replace(/[^0-9.-]+/g, "") || 0
+        ).toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })}
       </td>
 
       <td class="px-2 py-1">${tx.ref}</td>
 
-      <td class="px-2 py-1">
+      <td class="px-2 py-1 relative">
+
         <button onclick="editManualTransaction('${tx.id}')"
-          class="bg-blue-900 text-white w-10 py-1 rounded hover:bg-blue-700">Edit</button>
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">
+          Edit
+        </button>
 
         <button onclick="deleteManualTransaction('${tx.id}')"
-          class="bg-blue-900 text-white w-10 py-1 rounded hover:bg-blue-700">Delete</button>
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">
+          Delete
+        </button>
 
         <button onclick="previewManualTransaction('${tx.id}')"
-          class="bg-blue-900 text-white w-10 py-1 rounded hover:bg-blue-700">View</button>
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">
+          View
+        </button>
 
         <button onclick="attachFile('${tx.id}')"
-          class="bg-blue-900 text-white w-10 py-1 rounded hover:bg-blue-700">Attach</button>
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">
+          Attach
+        </button>
+
+        <button onclick="toggleManualTxMenu(${index})"
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">
+          More ▼
+        </button>
+
+        <div id="manualTxMenu-${index}"
+          class="hidden absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg z-50">
+
+          <button onclick="cloneManualTransaction('${tx.id}')"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            📄 Clone
+          </button>
+
+          <button onclick="downloadManualTransactionPDF('${tx.id}')"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            ⬇ Download
+          </button>
+
+          <button onclick="printManualTransactionPDF('${tx.id}')"
+            class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+            🖨 Print
+          </button>
+
+        </div>
+
       </td>
     `;
 
     table.appendChild(row);
+
   });
+
+}
+
+function toggleManualTxMenu(index) {
+
+  document
+    .querySelectorAll('[id^="manualTxMenu-"]')
+    .forEach(menu => {
+      if (menu.id !== `manualTxMenu-${index}`) {
+        menu.classList.add("hidden");
+      }
+    });
+
+  document
+    .getElementById(`manualTxMenu-${index}`)
+    .classList.toggle("hidden");
+}
+
+function cloneManualTransaction(id) {
+
+  const transactions = JSON.parse(
+    localStorage.getItem("manualTransactions") || "[]"
+  );
+
+  const tx = transactions.find(t => t.id == id);
+
+  if (!tx) return;
+
+  const cloned = {
+    ...tx,
+    id: Date.now().toString(),
+    date: new Date().toISOString().split("T")[0]
+  };
+
+  transactions.push(cloned);
+
+  localStorage.setItem(
+    "manualTransactions",
+    JSON.stringify(transactions)
+  );
+
+  renderManualTransactions();
+
+  alert("Transaction cloned successfully");
+}
+
+function downloadManualTransactionPDF(id) {
+
+  const transactions = JSON.parse(
+    localStorage.getItem("manualTransactions") || "[]"
+  );
+
+  const tx = transactions.find(t => t.id == id);
+
+  if (!tx) return;
+
+  const content = `
+MANUAL TRANSACTION
+
+Date: ${tx.date}
+Bank: ${tx.bank}
+Type: ${tx.type}
+Account: ${tx.account}
+Code: ${tx.code}
+Amount: ${tx.amount}
+Reference: ${tx.ref}
+  `;
+
+  const blob = new Blob([content], {
+    type: "application/pdf"
+  });
+
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(blob);
+
+  link.download = `ManualTransaction-${id}.pdf`;
+
+  link.click();
+}
+
+function printManualTransactionPDF(id) {
+
+  const transactions = JSON.parse(
+    localStorage.getItem("manualTransactions") || "[]"
+  );
+
+  const tx = transactions.find(t => t.id == id);
+
+  if (!tx) return;
+
+  const win = window.open("", "", "width=900,height=700");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Manual Transaction</title>
+
+      <style>
+        body{
+          font-family: Arial;
+          padding: 20px;
+        }
+
+        h2{
+          color: #1e3a8a;
+        }
+
+        table{
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+        }
+
+        table, th, td{
+          border: 1px solid #ccc;
+        }
+
+        th, td{
+          padding: 10px;
+          text-align: left;
+        }
+
+        th{
+          background: #1e3a8a;
+          color: white;
+          width: 200px;
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <h2>Manual Transaction</h2>
+
+      <table>
+
+        <tr>
+          <th>Date</th>
+          <td>${tx.date}</td>
+        </tr>
+
+        <tr>
+          <th>Bank</th>
+          <td>${tx.bank}</td>
+        </tr>
+
+        <tr>
+          <th>Type</th>
+          <td>${tx.type}</td>
+        </tr>
+
+        <tr>
+          <th>Account</th>
+          <td>${tx.account}</td>
+        </tr>
+
+        <tr>
+          <th>Code</th>
+          <td>${tx.code}</td>
+        </tr>
+
+        <tr>
+          <th>Amount</th>
+          <td>${tx.amount}</td>
+        </tr>
+
+        <tr>
+          <th>Reference</th>
+          <td>${tx.ref}</td>
+        </tr>
+
+      </table>
+
+      <script>
+        window.onload = function() {
+          window.print();
+          window.close();
+        }
+      <\/script>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
 }
 function editManualTransaction(id) {
   const transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
