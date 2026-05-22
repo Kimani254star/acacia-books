@@ -2567,7 +2567,9 @@ setTimeout(() => {
 <li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li>
 <li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li>
 <li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li>
+<li> <button   onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li>
 </ul>
+
 <li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li>
 
 <li>
@@ -2586,6 +2588,7 @@ setTimeout(() => {
 <li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li>
 <li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li>
 </ul>
+
 <li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li>
 <ul id="supplierSubmenu" class="ml-4 hidden space-y-1">
 <li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li>
@@ -2649,15 +2652,15 @@ setTimeout(() => {
 <li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li>
 <li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li>
 <li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li>
-<li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button>
-</li>
+<li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li>
 </ul>
+
 <li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li>
 <ul id="filesSubmenu" class="ml-4 hidden space-y-1">
 <li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li>
-<li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button>
-</li>
+<li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li>
 </ul>
+
 <li id="mailLink" class="hidden"><a href="20251127 accaciamail Vol 03.HTML" target="_blank" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💬Acacia Mail Hub</a></li>
 <li id="crmLink"><a href="20251127 accaia bookks crm Vol 03.html?from=books" target="_blank" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🏢CRM Portal Hub </a></li>
 <li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li>
@@ -3712,60 +3715,200 @@ window.addEventListener("DOMContentLoaded", () => {
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
   <div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
-    <h4 class="text-sm font-semibold text-blue-800 mb-2">📊 Cash Flow Over Time</h4>
-    <div class="h-64">
-      <canvas id="cashFlowChart"></canvas>
-    </div>
+
+  <div class="flex justify-between items-center mb-2">
+    <h4 class="text-sm font-semibold text-blue-800">
+      📊 Cash Flow Over Time
+    </h4>
+
+    <select 
+      id="cashFlowFilter"
+      class="border border-blue-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      onchange="renderCashFlowChart()"
+    >
+      <option value="3">Last 3 Months</option>
+      <option value="6">Last 6 Months</option>
+      <option value="9">Last 9 Months</option>
+      <option value="12">Last 12 Months</option>
+      <option value="all">All</option>
+    </select>
   </div>
+
+  <div class="h-64">
+    <canvas id="cashFlowChart"></canvas>
+  </div>
+
+</div>
 
  <div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
-    <h4 class="text-sm font-semibold text-blue-800 mb-2">🧾 Customer Receivables Aging</h4>
-    <div class="h-64">
-      <canvas id="receivablesAgingChart"></canvas>
-    </div>
+
+  <div class="flex justify-between items-center mb-2">
+    <h4 class="text-sm font-semibold text-blue-800">
+      🧾 Customer Receivables Aging
+    </h4>
+
+    <select 
+      id="receivablesAgingFilter"
+      class="border border-blue-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      onchange="renderReceivablesAgingChart()"
+    >
+      <option value="3">0 - 3 Months</option>
+      <option value="6">3 - 6 Months</option>
+      <option value="9">6 - 9 Months</option>
+      <option value="12">9 - 12 Months</option>
+      <option value="all">All</option>
+    </select>
   </div>
+
+  <div class="h-64">
+    <canvas id="receivablesAgingChart"></canvas>
+  </div>
+
+</div>
 
  <div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
-    <h4 class="text-sm font-semibold text-blue-800 mb-2">📦 Supplier Payment Aging</h4>
-    <div class="h-65">
-      <canvas id="supplierAgingChart"></canvas>
-    </div>
+
+  <div class="flex justify-between items-center mb-2">
+    <h4 class="text-sm font-semibold text-blue-800">📦 Supplier Payment Aging</h4>
+
+    <select 
+      id="supplierAgingFilter"
+      class="border border-blue-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      onchange="renderSupplierAgingChart()"
+    >
+      <option value="3">0 - 3 Months</option>
+      <option value="6">3 - 6 Months</option>
+      <option value="9">6 - 9 Months</option>
+      <option value="12">9 - 12 Months</option>
+      <option value="all">All</option>
+    </select>
   </div>
 
-  <div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
-    <h4 class="text-sm font-semibold text-blue-800 mb-2">📈 Monthly Profit</h4>
-    <div class="h-65">
-      <canvas id="profitChart"></canvas>
-    </div>
+  <div class="h-64">
+    <canvas id="supplierAgingChart"></canvas>
   </div>
 
-  <div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
-    <h4 class="text-sm font-semibold text-blue-800 mb-2">💰 Yearly Profit Breakdown</h4>
-    <div class="h-65 flex items-center justify-center">
-      <canvas id="profitBreakdownChart"></canvas>
-    </div>
+</div>
+
+<div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
+
+  <div class="flex justify-between items-center mb-2">
+    <h4 class="text-sm font-semibold text-blue-800">📈 Monthly Profit</h4>
+
+    <select 
+      id="monthlyProfitFilter"
+      class="border border-blue-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      onchange="renderProfitChart()"
+    >
+      <option value="3">Last 3 Months</option>
+      <option value="6">Last 6 Months</option>
+      <option value="9">Last 9 Months</option>
+      <option value="12">Last 12 Months</option>
+      <option value="all">All</option>
+    </select>
   </div>
 
- <div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
-    <h4 class="text-sm font-semibold text-blue-800 mb-2">📊 Financial Distribution</h4>
-    <div class="h-65 flex items-center justify-center">
-      <canvas id="comparisonChart"></canvas>
-    </div>
+  <div class="h-64">
+    <canvas id="profitChart"></canvas>
   </div>
 
-  <div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
-    <h4 class="text-sm font-semibold text-blue-800 mb-2">🧾 Taxes Breakdown</h4>
-    <div class="h-65">
-      <canvas id="taxesBreakdownChart"></canvas>
-    </div>
+</div>
+
+<div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
+
+  <div class="flex justify-between items-center mb-2">
+    <h4 class="text-sm font-semibold text-blue-800">💰 Yearly Profit Breakdown</h4>
+
+    <select 
+      id="yearlyProfitFilter"
+      class="border border-blue-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      onchange="renderProfitBreakdownChart()"
+    >
+      <option value="1">1 Year</option>
+      <option value="2">2 Years</option>
+      <option value="3">3 Years</option>
+      <option value="5">5 Years</option>
+      <option value="all">All</option>
+    </select>
   </div>
 
-  <div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
-    <h4 class="text-sm font-semibold text-blue-800 mb-2">📊 Operational Costs Breakdown</h4>
-    <div class="h-65">
-      <canvas id="operationalCostsChart"></canvas>
-    </div>
+  <div class="h-64 flex items-center justify-center">
+    <canvas id="profitBreakdownChart"></canvas>
   </div>
+
+</div>
+
+<div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
+
+  <div class="flex justify-between items-center mb-2">
+    <h4 class="text-sm font-semibold text-blue-800">📊 Financial Distribution</h4>
+
+    <select 
+      id="financialDistributionFilter"
+      class="border border-blue-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      onchange="renderComparisonChart()"
+    >
+      <option value="3">Last 3 Months</option>
+      <option value="6">Last 6 Months</option>
+      <option value="9">Last 9 Months</option>
+      <option value="12">Last 12 Months</option>
+      <option value="all">All</option>
+    </select>
+  </div>
+
+  <div class="h-64 flex items-center justify-center">
+    <canvas id="comparisonChart"></canvas>
+  </div>
+
+</div>
+
+<div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
+
+  <div class="flex justify-between items-center mb-2">
+    <h4 class="text-sm font-semibold text-blue-800">🧾 Taxes Breakdown</h4>
+
+    <select 
+      id="taxesBreakdownFilter"
+      class="border border-blue-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      onchange="renderTaxesBreakdownChart()"
+    >
+      <option value="3">Last 3 Months</option>
+      <option value="6">Last 6 Months</option>
+      <option value="9">Last 9 Months</option>
+      <option value="12">Last 12 Months</option>
+      <option value="all">All</option>
+    </select>
+  </div>
+
+  <div class="h-64">
+    <canvas id="taxesBreakdownChart"></canvas>
+  </div>
+
+</div>
+
+<div class="bg-white p-4 rounded-xl shadow-md text-blue-900 border-2 border-blue-600">
+
+  <div class="flex justify-between items-center mb-2">
+    <h4 class="text-sm font-semibold text-blue-800">📊 Operational Costs Breakdown</h4>
+
+    <select 
+      id="operationalCostsFilter"
+      class="border border-blue-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      onchange="renderOperationalCostsChart()"
+    >
+      <option value="3">Last 3 Months</option>
+      <option value="6">Last 6 Months</option>
+      <option value="9">Last 9 Months</option>
+      <option value="12">Last 12 Months</option>
+      <option value="all">All</option>
+    </select>
+  </div>
+
+  <div class="h-64">
+    <canvas id="operationalCostsChart"></canvas>
+  </div>
+
+</div>
 </div>
 </div>
 
@@ -5979,8 +6122,191 @@ window.addEventListener('DOMContentLoaded', () => {
 
             <div id="deliveredPackages" class="p-3 space-y-3 h-[700px] overflow-y-auto"></div>
         </div>
-
+      </div>
     </div>
+    <!-- 🚢 SHIPMENTS TAB -->
+<div id="shipmentsTab" class="hidden p-1">
+
+  <h2 class="text-2xl font-bold mb-4">🚢 Shipment Records</h2>
+
+  <div class="relative mb-3">
+    <input 
+      type="text" 
+      id="shipmentSearch" 
+      placeholder="Search Shipments (/)" 
+      class="border rounded-md pl-8 pr-3 py-1 text-sm w-full max-w-[700px] focus:outline-none focus:ring-2 focus:ring-blue-400" 
+      oninput="searchShipments()"
+    />
+    <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+  </div>
+
+  <div class="mb-2 relative inline-block text-right">
+
+    <button id="shipmentOptionsBtn" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-9 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+      Shipment Options
+      <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+
+    <div id="shipmentDropdown" class="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
+
+      <div class="py-1">
+
+        <button onclick="sortShipmentsBy('date')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Date
+        </button>
+
+        <button onclick="sortShipmentsBy('customer')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Customer
+        </button>
+
+        <button onclick="sortShipmentsBy('shipmentNo')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Shipment No.
+        </button>
+
+        <button onclick="sortShipmentsBy('item')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Item
+        </button>
+
+        <button onclick="sortShipmentsBy('carrier')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Carrier
+        </button>
+
+        <button onclick="sortShipmentsBy('trackingNo')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Tracking No.
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="relative inline-block text-left">
+
+    <button id="shipmentFileBtn" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-6 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+      File / Export
+      <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+
+    <div id="shipmentFileDropdown" class="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10">
+
+      <div class="py-1">
+
+        <button onclick="exportShipments()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Export Shipments
+        </button>
+
+        <button onclick="resetShipmentColumns()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Reset Column Width
+        </button>
+
+        <button onclick="manageShipmentFiles()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          Manage Custom Files
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white p-4 rounded shadow mb-6 mt-4">
+
+    <h3 class="text-lg font-semibold mb-4">Add Shipment</h3>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Customer</label>
+      <select id="shipmentCustomer" class="border p-2 rounded" style="width:700px;">
+        <option value="">-- Select Customer --</option>
+      </select>
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Shipment Date</label>
+      <input type="date" id="shipmentDate" class="border p-2 rounded" style="width:700px;">
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Shipment No.</label>
+      <input type="text" id="shipmentNo" class="border bg-gray-100 p-2 rounded" style="width:700px;" readonly>
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Item</label>
+      <input type="text" id="shipmentItem" placeholder="Shipment Item" class="border p-2 rounded" style="width:700px;">
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Origin</label>
+      <input type="text" id="shipmentOrigin" placeholder="Shipment Origin" class="border p-2 rounded" style="width:700px;">
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Destination</label>
+      <input type="text" id="shipmentDestination" placeholder="Shipment Destination" class="border p-2 rounded" style="width:700px;">
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Carrier</label>
+      <input type="text" id="shipmentCarrier" placeholder="Carrier / Courier" class="border p-2 rounded" style="width:700px;">
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">Tracking Number</label>
+      <input type="text" id="shipmentTrackingNo" placeholder="Tracking Number" class="border p-2 rounded" style="width:700px;">
+    </div>
+
+    <div class="text-right">
+      <button onclick="saveShipmentDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Save as Draft
+      </button>
+
+      <button onclick="addShipment()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        ➕ Add Shipment
+      </button>
+      <button onclick="cancelShipment()" class="border border-red-900 text-white bg-red-900 font-bold px-1 py-1 rounded hover:bg-red-800" >
+    Cancel
+  </button>
+    </div>
+
+  </div>
+
+  <div class="bg-white p-4 rounded shadow">
+
+    <h3 class="text-lg font-semibold mb-2">Shipment History</h3>
+
+    <button onclick="bulkDeleteShipments()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      Bulk Delete
+    </button>
+
+    <table class="w-full border text-sm mt-2">
+
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">
+            <input type="checkbox" id="selectAllShipments" onclick="toggleSelectAllShipments()" />
+          </th>
+          <th class="p-2 text-left">Shipment No.</th>
+          <th class="p-2 text-left">Customer</th>
+          <th class="p-2 text-left">Item</th>
+          <th class="p-2 text-left">Date</th>
+          <th class="p-2 text-left">Origin</th>
+          <th class="p-2 text-left">Destination</th>
+          <th class="p-2 text-left">Carrier</th>
+          <th class="p-2 text-left">Tracking No.</th>
+          <th class="p-2 text-left">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="shipmentTableBody"></tbody>
+
+    </table>
+  </div>
+
+
 </div>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -10190,11 +10516,12 @@ function renderPackages() {
   shipping.innerHTML = "";
   delivered.innerHTML = "";
 
-  orders.forEach(p => {
+  orders.forEach((p, index) => {
+
     const card = document.createElement("div");
 
     card.className =
-      "p-3 bg-white shadow rounded border cursor-pointer space-y-2";
+      "p-3 bg-white shadow rounded border cursor-pointer space-y-2 relative";
 
     card.draggable = true;
 
@@ -10211,20 +10538,55 @@ function renderPackages() {
 
       <div class="text-xs">Total: ${p.total}</div>
 
-      <div class="flex gap-2 pt-2">
+      <div class="flex gap-2 pt-2 flex-wrap">
+
         <button
           onclick="viewPackage('${p.id}')"
-          class="px-1 py-1 bg-blue-900 text-white rounded text-xs hover:bg-blue-700"
-        >
+          class="px-1 py-1 bg-blue-900 text-white rounded text-xs hover:bg-blue-700">
           View
         </button>
 
         <button
           onclick="deletePackage('${p.id}')"
-          class="px-1 py-1 bg-blue-900 text-white rounded text-xs hover:bg-blue-700"
-        >
+          class="px-1 py-1 bg-blue-900 text-white rounded text-xs hover:bg-blue-700">
           Delete
         </button>
+
+        <button
+          onclick="togglePackageMenu(${index})"
+          class="px-1 py-1 bg-blue-900 text-white rounded text-xs hover:bg-blue-700">
+          More ▼
+        </button>
+
+      </div>
+
+      <div id="packageMenu-${index}"
+        class="hidden absolute right-2 mt-1 w-40 bg-white border rounded shadow-lg z-50">
+
+        <button
+          onclick="emailPackage('${p.id}')"
+          class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+          📧 Email
+        </button>
+
+        <button
+          onclick="clonePackage('${p.id}')"
+          class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+          📄 Clone
+        </button>
+
+        <button
+          onclick="downloadPackagePDF('${p.id}')"
+          class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+          ⬇ Download PDF
+        </button>
+
+        <button
+          onclick="printPackage('${p.id}')"
+          class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+          🖨 Print
+        </button>
+
       </div>
     `;
 
@@ -10236,6 +10598,52 @@ function renderPackages() {
       delivered.appendChild(card);
     }
   });
+}
+
+function togglePackageMenu(index) {
+  document.querySelectorAll('[id^="packageMenu-"]').forEach(menu => {
+    if (menu.id !== `packageMenu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document
+    .getElementById(`packageMenu-${index}`)
+    .classList.toggle("hidden");
+}
+
+function emailPackage(id) {
+  alert("Package emailed successfully");
+}
+
+function clonePackage(id) {
+  const packages = getAllPackages();
+
+  const pkg = packages.find(p => p.id == id);
+
+  if (!pkg) return;
+
+  const cloned = {
+    ...pkg,
+    id: "PKG-" + Date.now(),
+    customer: pkg.customer + " Copy"
+  };
+
+  packages.push(cloned);
+
+  localStorage.setItem("packages", JSON.stringify(packages));
+
+  renderPackages();
+
+  alert("Package cloned successfully");
+}
+
+function downloadPackagePDF(id) {
+  window.print();
+}
+
+function printPackage(id) {
+  window.print();
 }
 
 function onDrop(targetId) {
@@ -10257,23 +10665,142 @@ function onDrop(targetId) {
 }
 
 function viewPackage(id) {
+
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
 
   const pkg = orders.find(o => o.id == id);
 
   if (!pkg) return alert("Package not found");
 
-  alert(`
-Customer: ${pkg.customerName}
+  const itemsHtml = pkg.items.map(item => `
+    <tr>
+      <td>${item.desc || "-"}</td>
+      <td>${item.qty || 0}</td>
+      <td>${item.currency || "KES"} ${item.amount || 0}</td>
+    </tr>
+  `).join("");
 
-Date: ${pkg.date}
+  const previewWindow = window.open("", "_blank");
 
-Items: ${pkg.items.length}
+  previewWindow.document.write(`
 
-Total: ${pkg.total}
+    <html>
 
-Status: ${pkg.packageStatus || "Not Shipped"}
+    <head>
+
+      <title>Package Preview</title>
+
+      <style>
+
+        body{
+          font-family: Arial, sans-serif;
+          padding:30px;
+          color:#111827;
+        }
+
+        h2{
+          margin-bottom:20px;
+          color:#1e3a8a;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:15px;
+        }
+
+        td,th{
+          border:1px solid #d1d5db;
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#f3f4f6;
+        }
+
+        .summary{
+          margin-bottom:20px;
+        }
+
+        .summary p{
+          margin:6px 0;
+        }
+
+        .btns{
+          margin-top:20px;
+          display:flex;
+          gap:10px;
+        }
+
+        button{
+          background:#1e3a8a;
+          color:white;
+          border:none;
+          padding:10px 18px;
+          border-radius:6px;
+          cursor:pointer;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Package Preview</h2>
+
+      <div class="summary">
+
+        <p><strong>Customer:</strong> ${pkg.customerName}</p>
+
+        <p><strong>Date:</strong> ${pkg.date}</p>
+
+        <p><strong>Total:</strong> ${pkg.total}</p>
+
+        <p><strong>Status:</strong> ${pkg.packageStatus || "Not Shipped"}</p>
+
+      </div>
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Amount</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${itemsHtml}
+
+        </tbody>
+
+      </table>
+
+      <div class="btns">
+
+        <button onclick="window.print()">
+          Print / Save PDF
+        </button>
+
+        <button onclick="window.close()">
+          Close
+        </button>
+
+      </div>
+
+    </body>
+
+    </html>
+
   `);
+
+  previewWindow.document.close();
 }
 
 function deletePackage(id) {
@@ -10333,6 +10860,962 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btn) btn.onclick = createPackage;
 });
+</script>
+<script>
+
+function searchShipments() {
+
+  const input = document.getElementById('shipmentSearch').value.toLowerCase();
+  const rows = document.querySelectorAll('#shipmentTableBody tr');
+
+  rows.forEach(row => {
+    const text = row.innerText.toLowerCase();
+    row.style.display = text.includes(input) ? '' : 'none';
+  });
+
+  updateShipmentPlaceholder();
+}
+
+function updateShipmentPlaceholder() {
+
+  const tbody = document.getElementById('shipmentTableBody');
+
+  if ([...tbody.children].every(row => row.style.display === 'none')) {
+
+    if (!tbody.querySelector('.placeholder')) {
+
+      const placeholder = document.createElement('tr');
+
+      placeholder.classList.add('placeholder');
+
+      placeholder.innerHTML = `
+        <td colspan="10" class="text-center text-gray-500 p-2">
+          No shipments found
+        </td>
+      `;
+
+      tbody.appendChild(placeholder);
+    }
+
+  } else {
+
+    const placeholder = tbody.querySelector('.placeholder');
+
+    if (placeholder) placeholder.remove();
+  }
+}
+
+function populateShipmentCustomerDropdown() {
+
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+
+  const customerSelect = document.getElementById("shipmentCustomer");
+
+  if (!customerSelect) return;
+
+  customerSelect.innerHTML = `
+    <option value="">-- Select Customer --</option>
+  `;
+
+  customers.forEach(c => {
+
+    const option = document.createElement("option");
+
+    option.value = c.name;
+    option.textContent = c.name;
+
+    customerSelect.appendChild(option);
+  });
+}
+
+function generateNextShipmentNumber() {
+
+  const shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  let nextNumber;
+
+  if (shipments.length === 0) {
+
+    nextNumber = "SH001";
+
+  } else {
+
+    const lastShipment = shipments[shipments.length - 1].shipmentNo;
+
+    const lastNum = parseInt(lastShipment.replace(/^SH/, ''));
+
+    nextNumber = "SH" + String(lastNum + 1).padStart(3, "0");
+  }
+
+  document.getElementById("shipmentNo").value = nextNumber;
+}
+
+function addShipment() {
+
+  const customer = document.getElementById("shipmentCustomer").value;
+
+  const date = document.getElementById("shipmentDate").value;
+
+  const item = document.getElementById("shipmentItem").value.trim();
+
+  const origin = document.getElementById("shipmentOrigin").value.trim();
+
+  const destination = document.getElementById("shipmentDestination").value.trim();
+
+  const carrier = document.getElementById("shipmentCarrier").value.trim();
+
+  const trackingNo = document.getElementById("shipmentTrackingNo").value.trim();
+
+  const shipmentNo = document.getElementById("shipmentNo").value;
+
+  if (
+    !customer ||
+    !date ||
+    !item ||
+    !origin ||
+    !destination
+  ) {
+
+    alert("Please fill all required shipment fields.");
+
+    return;
+  }
+
+  let shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  const shipment = {
+
+    id: crypto.randomUUID(),
+
+    shipmentNo,
+
+    customer,
+
+    item,
+
+    date,
+
+    origin,
+
+    destination,
+
+    carrier,
+
+    trackingNo
+  };
+
+  shipments.push(shipment);
+
+  localStorage.setItem("shipments", JSON.stringify(shipments));
+
+  renderShipmentTable();
+
+  resetShipmentForm();
+
+  generateNextShipmentNumber();
+
+  alert("✅ Shipment added successfully.");
+}
+
+function renderShipmentTable() {
+
+  const shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  const tbody = document.getElementById("shipmentTableBody");
+
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  shipments.forEach((shipment, index) => {
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+
+      <td class="p-2 border-t">
+        <input 
+          type="checkbox" 
+          class="shipmentCheck"
+          data-id="${shipment.id}"
+        >
+      </td>
+
+      <td class="p-2 border-t">${shipment.shipmentNo}</td>
+
+      <td class="p-2 border-t">${shipment.customer}</td>
+
+      <td class="p-2 border-t">${shipment.item}</td>
+
+      <td class="p-2 border-t">${shipment.date}</td>
+
+      <td class="p-2 border-t">${shipment.origin}</td>
+
+      <td class="p-2 border-t">${shipment.destination}</td>
+
+      <td class="p-2 border-t">${shipment.carrier || "-"}</td>
+
+      <td class="p-2 border-t">${shipment.trackingNo || "-"}</td>
+
+      <td class="p-2 border-t space-x-1">
+
+        <button
+          onclick="previewShipment(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+        >
+          Preview
+        </button>
+
+        <button
+          onclick="editShipment(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+        >
+          Edit
+        </button>
+
+        <button
+          onclick="deleteShipment(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+        >
+          Delete
+        </button>
+
+        <div class="relative inline-block">
+
+          <button
+            onclick="toggleShipmentMore(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800"
+          >
+            More ▾
+          </button>
+
+          <div
+            id="shipment-more-${index}"
+            class="hidden absolute right-0 mt-1 w-40 bg-white border rounded shadow z-50 flex flex-col"
+          >
+
+            <button
+              onclick="cloneShipment(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"
+            >
+              Clone
+            </button>
+
+            <button
+              onclick="downloadShipment(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"
+            >
+              Download
+            </button>
+
+            <button
+              onclick="printShipment(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"
+            >
+              Print
+            </button>
+
+            <button
+              onclick="emailShipment(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"
+            >
+              Email
+            </button>
+
+          </div>
+
+        </div>
+
+      </td>
+    `;
+
+    tbody.appendChild(row);
+  });
+}
+
+function toggleShipmentMore(index) {
+
+  document.querySelectorAll("[id^='shipment-more-']").forEach(menu => {
+
+    if (menu.id !== `shipment-more-${index}`) {
+
+      menu.classList.add("hidden");
+    }
+  });
+
+  document
+    .getElementById(`shipment-more-${index}`)
+    .classList.toggle("hidden");
+}
+
+document.addEventListener("click", function (e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='shipment-more-']").forEach(menu => {
+
+      menu.classList.add("hidden");
+    });
+  }
+});
+
+function editShipment(index) {
+
+  const shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  const s = shipments[index];
+
+  if (!s) return;
+
+  document.getElementById("shipmentCustomer").value = s.customer || "";
+
+  document.getElementById("shipmentDate").value = s.date || "";
+
+  document.getElementById("shipmentItem").value = s.item || "";
+
+  document.getElementById("shipmentOrigin").value = s.origin || "";
+
+  document.getElementById("shipmentDestination").value = s.destination || "";
+
+  document.getElementById("shipmentCarrier").value = s.carrier || "";
+
+  document.getElementById("shipmentTrackingNo").value = s.trackingNo || "";
+
+  document.getElementById("addShipmentBtn").onclick = function () {
+
+    s.customer = document.getElementById("shipmentCustomer").value;
+
+    s.date = document.getElementById("shipmentDate").value;
+
+    s.item = document.getElementById("shipmentItem").value.trim();
+
+    s.origin = document.getElementById("shipmentOrigin").value.trim();
+
+    s.destination = document.getElementById("shipmentDestination").value.trim();
+
+    s.carrier = document.getElementById("shipmentCarrier").value.trim();
+
+    s.trackingNo = document.getElementById("shipmentTrackingNo").value.trim();
+
+    localStorage.setItem("shipments", JSON.stringify(shipments));
+
+    renderShipmentTable();
+
+    resetShipmentForm();
+
+    alert("✅ Shipment updated.");
+  };
+}
+
+function deleteShipment(index) {
+
+  if (!confirm("Delete this shipment?")) return;
+
+  let shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  const shipment = shipments[index];
+
+  moveToRecycle(shipment, "File", "Shipments");
+
+  shipments.splice(index, 1);
+
+  localStorage.setItem("shipments", JSON.stringify(shipments));
+
+  renderShipmentTable();
+
+  alert("♻️ Shipment deleted.");
+}
+
+function bulkDeleteShipments() {
+
+  let shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  const selectedIds = [
+
+    ...document.querySelectorAll(".shipmentCheck:checked")
+
+  ].map(cb => cb.dataset.id);
+
+  if (selectedIds.length === 0) {
+
+    alert("No shipments selected.");
+
+    return;
+  }
+
+  if (!confirm(`Delete ${selectedIds.length} shipments?`)) return;
+
+  const deleted = shipments.filter(s =>
+    selectedIds.includes(s.id)
+  );
+
+  deleted.forEach(s => {
+
+    moveToRecycle(s, "File", "Shipments");
+  });
+
+  shipments = shipments.filter(s =>
+    !selectedIds.includes(s.id)
+  );
+
+  localStorage.setItem("shipments", JSON.stringify(shipments));
+
+  renderShipmentTable();
+
+  document.getElementById("selectAllShipments").checked = false;
+}
+
+function resetShipmentForm() {
+
+  document.getElementById("shipmentCustomer").value = "";
+
+  document.getElementById("shipmentDate").value = "";
+
+  document.getElementById("shipmentItem").value = "";
+
+  document.getElementById("shipmentOrigin").value = "";
+
+  document.getElementById("shipmentDestination").value = "";
+
+  document.getElementById("shipmentCarrier").value = "";
+
+  document.getElementById("shipmentTrackingNo").value = "";
+}
+
+function cancelShipment() {
+
+  resetShipmentForm();
+
+  alert("Shipment form cleared.");
+}
+
+function previewShipment(index) {
+
+  const shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  const s = shipments[index];
+
+  if (!s) return;
+
+  const previewWindow = window.open("", "_blank");
+
+  previewWindow.document.write(`
+
+    <html>
+
+    <head>
+
+      <title>Shipment Preview</title>
+
+      <style>
+
+        body{
+          font-family: Arial, sans-serif;
+          padding: 30px;
+          color:#111827;
+        }
+
+        h2{
+          margin-bottom:20px;
+          color:#1e3a8a;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+        }
+
+        td,th{
+          border:1px solid #d1d5db;
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#f3f4f6;
+          width:220px;
+        }
+
+        .btns{
+          margin-top:20px;
+          display:flex;
+          gap:10px;
+        }
+
+        button{
+          background:#1e3a8a;
+          color:white;
+          border:none;
+          padding:10px 18px;
+          border-radius:6px;
+          cursor:pointer;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Shipment Preview</h2>
+
+      <table>
+
+        <tr>
+          <th>Shipment No.</th>
+          <td>${s.shipmentNo}</td>
+        </tr>
+
+        <tr>
+          <th>Customer</th>
+          <td>${s.customer}</td>
+        </tr>
+
+        <tr>
+          <th>Item</th>
+          <td>${s.item}</td>
+        </tr>
+
+        <tr>
+          <th>Date</th>
+          <td>${s.date}</td>
+        </tr>
+
+        <tr>
+          <th>Origin</th>
+          <td>${s.origin}</td>
+        </tr>
+
+        <tr>
+          <th>Destination</th>
+          <td>${s.destination}</td>
+        </tr>
+
+        <tr>
+          <th>Carrier</th>
+          <td>${s.carrier || "-"}</td>
+        </tr>
+
+        <tr>
+          <th>Tracking No.</th>
+          <td>${s.trackingNo || "-"}</td>
+        </tr>
+
+      </table>
+
+      <div class="btns">
+
+        <button onclick="window.print()">
+          Print / Save PDF
+        </button>
+
+        <button onclick="window.close()">
+          Close
+        </button>
+
+      </div>
+
+    </body>
+
+    </html>
+
+  `);
+
+  previewWindow.document.close();
+}
+
+function cloneShipment(index) {
+
+  const shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  const s = shipments[index];
+
+  if (!s) return;
+
+  const cloned = {
+
+    ...s,
+
+    id: crypto.randomUUID(),
+
+    shipmentNo: "SH" + Date.now()
+  };
+
+  shipments.push(cloned);
+
+  localStorage.setItem("shipments", JSON.stringify(shipments));
+
+  renderShipmentTable();
+
+  alert("✅ Shipment cloned.");
+}
+
+function downloadShipment(index) {
+
+  const shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  const s = shipments[index];
+
+  if (!s) return;
+
+  const { jsPDF } = window.jspdf;
+
+  const doc = new jsPDF();
+
+  let y = 10;
+
+  doc.setFontSize(16);
+
+  doc.text(`Shipment: ${s.shipmentNo}`, 10, y);
+
+  y += 10;
+
+  doc.setFontSize(12);
+
+  doc.text(`Customer: ${s.customer}`, 10, y);
+
+  y += 7;
+
+  doc.text(`Item: ${s.item}`, 10, y);
+
+  y += 7;
+
+  doc.text(`Date: ${s.date}`, 10, y);
+
+  y += 7;
+
+  doc.text(`Origin: ${s.origin}`, 10, y);
+
+  y += 7;
+
+  doc.text(`Destination: ${s.destination}`, 10, y);
+
+  y += 7;
+
+  doc.text(`Carrier: ${s.carrier || "-"}`, 10, y);
+
+  y += 7;
+
+  doc.text(`Tracking No: ${s.trackingNo || "-"}`, 10, y);
+
+  doc.save(`${s.shipmentNo}.pdf`);
+}
+
+function printShipment(index) {
+
+  const shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  const s = shipments[index];
+
+  if (!s) return;
+
+  const content = `
+    <h2>Shipment ${s.shipmentNo}</h2>
+    <p>Customer: ${s.customer}</p>
+    <p>Item: ${s.item}</p>
+    <p>Date: ${s.date}</p>
+    <p>Origin: ${s.origin}</p>
+    <p>Destination: ${s.destination}</p>
+    <p>Carrier: ${s.carrier || "-"}</p>
+    <p>Tracking No: ${s.trackingNo || "-"}</p>
+  `;
+
+  const w = window.open("", "", "width=800,height=600");
+
+  w.document.write(content);
+
+  w.document.close();
+
+  w.print();
+}
+
+function emailShipment(index) {
+
+  const shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  const s = shipments[index];
+
+  if (!s) return;
+
+  const email = prompt("Enter recipient email:");
+
+  if (!email) return;
+
+  const subject = `Shipment ${s.shipmentNo}`;
+
+  const message = `
+Shipment Details
+
+Shipment No: ${s.shipmentNo}
+
+Customer: ${s.customer}
+
+Item: ${s.item}
+
+Date: ${s.date}
+
+Origin: ${s.origin}
+
+Destination: ${s.destination}
+
+Carrier: ${s.carrier || "-"}
+
+Tracking No: ${s.trackingNo || "-"}
+`;
+
+  window.location.href =
+    `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+}
+
+function toggleSelectAllShipments() {
+
+  const checked = document.getElementById("selectAllShipments").checked;
+
+  document.querySelectorAll(".shipmentCheck").forEach(cb => {
+
+    cb.checked = checked;
+  });
+}
+
+function saveShipmentDraft() {
+
+  const draft = {
+
+    customer: document.getElementById("shipmentCustomer").value,
+
+    date: document.getElementById("shipmentDate").value,
+
+    item: document.getElementById("shipmentItem").value,
+
+    origin: document.getElementById("shipmentOrigin").value,
+
+    destination: document.getElementById("shipmentDestination").value,
+
+    carrier: document.getElementById("shipmentCarrier").value,
+
+    trackingNo: document.getElementById("shipmentTrackingNo").value
+  };
+
+  localStorage.setItem("shipmentDraft", JSON.stringify(draft));
+
+  alert("✅ Shipment draft saved.");
+}
+const shipmentOptionsBtn = document.getElementById('shipmentOptionsBtn');
+const shipmentDropdown = document.getElementById('shipmentDropdown');
+
+const shipmentFileBtn = document.getElementById('shipmentFileBtn');
+const shipmentFileDropdown = document.getElementById('shipmentFileDropdown');
+
+let shipmentTimer = null;
+
+function toggleShipmentDropdown(button, dropdown, otherDropdown, otherButton) {
+
+  const isHidden = dropdown.classList.contains('hidden');
+
+  if (!otherDropdown.classList.contains('hidden')) {
+
+    otherDropdown.classList.add('hidden');
+
+    otherButton.setAttribute('aria-expanded', 'false');
+  }
+
+  if (isHidden) {
+
+    dropdown.classList.remove('hidden');
+
+    button.setAttribute('aria-expanded', 'true');
+
+    if (shipmentTimer) clearTimeout(shipmentTimer);
+
+    shipmentTimer = setTimeout(() => {
+
+      dropdown.classList.add('hidden');
+
+      button.setAttribute('aria-expanded', 'false');
+
+    }, 3000);
+
+  } else {
+
+    dropdown.classList.add('hidden');
+
+    button.setAttribute('aria-expanded', 'false');
+
+    if (shipmentTimer) clearTimeout(shipmentTimer);
+  }
+}
+
+shipmentOptionsBtn.addEventListener('click', () => {
+
+  toggleShipmentDropdown(
+    shipmentOptionsBtn,
+    shipmentDropdown,
+    shipmentFileDropdown,
+    shipmentFileBtn
+  );
+});
+
+shipmentFileBtn.addEventListener('click', () => {
+
+  toggleShipmentDropdown(
+    shipmentFileBtn,
+    shipmentFileDropdown,
+    shipmentDropdown,
+    shipmentOptionsBtn
+  );
+});
+
+document.addEventListener('click', (event) => {
+
+  if (
+    !shipmentOptionsBtn.contains(event.target) &&
+    !shipmentDropdown.contains(event.target)
+  ) {
+
+    shipmentDropdown.classList.add('hidden');
+
+    shipmentOptionsBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  if (
+    !shipmentFileBtn.contains(event.target) &&
+    !shipmentFileDropdown.contains(event.target)
+  ) {
+
+    shipmentFileDropdown.classList.add('hidden');
+
+    shipmentFileBtn.setAttribute('aria-expanded', 'false');
+  }
+});
+
+function sortShipmentsBy(field) {
+
+  let shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  shipments.sort((a, b) => {
+
+    const valA = (a[field] || "").toString().toLowerCase();
+
+    const valB = (b[field] || "").toString().toLowerCase();
+
+    return valA.localeCompare(valB);
+  });
+
+  localStorage.setItem("shipments", JSON.stringify(shipments));
+
+  renderShipmentTable();
+}
+
+function exportShipments() {
+
+  const shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  if (shipments.length === 0) {
+
+    alert("No shipments available.");
+
+    return;
+  }
+
+  const worksheet = XLSX.utils.json_to_sheet(shipments);
+
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Shipments");
+
+  XLSX.writeFile(workbook, "Shipments.xlsx");
+}
+
+function importShipments(event) {
+
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+
+    const data = new Uint8Array(e.target.result);
+
+    const workbook = XLSX.read(data, { type: 'array' });
+
+    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+
+    const imported = XLSX.utils.sheet_to_json(firstSheet);
+
+    let shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+    imported.forEach(item => {
+
+      shipments.push({
+
+        id: crypto.randomUUID(),
+
+        shipmentNo: item.shipmentNo || item["Shipment No"] || "",
+
+        customer: item.customer || item.Customer || "",
+
+        item: item.item || item.Item || "",
+
+        date: item.date || item.Date || "",
+
+        origin: item.origin || item.Origin || "",
+
+        destination: item.destination || item.Destination || "",
+
+        carrier: item.carrier || item.Carrier || "",
+
+        trackingNo: item.trackingNo || item["Tracking No"] || ""
+      });
+    });
+
+    localStorage.setItem("shipments", JSON.stringify(shipments));
+
+    renderShipmentTable();
+
+    alert("✅ Shipments imported successfully.");
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+function resetShipmentColumns() {
+
+  const table = document.querySelector("#shipmentTableBody");
+
+  if (!table) return;
+
+  table.querySelectorAll("td, th").forEach(cell => {
+
+    cell.style.width = "";
+  });
+
+  alert("✅ Shipment column widths reset.");
+}
+
+function manageShipmentFiles() {
+
+  const input = document.createElement("input");
+
+  input.type = "file";
+
+  input.accept = ".xlsx,.xls";
+
+  input.onchange = importShipments;
+
+  input.click();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  populateShipmentCustomerDropdown();
+
+  renderShipmentTable();
+
+  generateNextShipmentNumber();
+});
+
 </script>
  <!-- BANK MODULE -->
 <div id="fundsTab" class="hidden ml-84 mr-7 p-2">
@@ -26712,92 +28195,179 @@ function addDelivery() {
   }
 }
 function renderDeliveryTable() {
+
   const deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
   const tbody = document.getElementById("deliveryTableBody");
 
   if (!tbody) return;
+
   tbody.innerHTML = "";
 
+ 
+  let shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
+
+  deliveries.forEach((delivery) => {
+
+    const exists = shipments.some(s =>
+      s.deliveryId === delivery.id
+    );
+
+    if (!exists) {
+
+      shipments.push({
+
+        id: crypto.randomUUID(),
+
+        deliveryId: delivery.id,
+
+        shipmentNo: "SH" + String(shipments.length + 1).padStart(3, "0"),
+
+        customer: delivery.customer || "",
+
+        item: delivery.items
+          .map(i => `${i.desc} (x${i.qty})`)
+          .join(", "),
+
+        date: delivery.date || "",
+
+        origin: delivery.location || "",
+
+        destination: delivery.location || "",
+
+        carrier: delivery.driver || "",
+
+        trackingNo: delivery.trackNumber || ""
+      });
+    }
+  });
+
+  localStorage.setItem("shipments", JSON.stringify(shipments));
+
   deliveries.forEach((delivery, index) => {
+
     const itemsList = delivery.items
-  .map(i => {
-    const amount = i.amount || 0;         
-    const currency = i.currency || "KES";  
-    return `${i.desc} (x${i.qty}) - ${currency} ${amount}`;
-  })
-  .join(", ");
+      .map(i => {
+
+        const amount = i.amount || 0;
+        const currency = i.currency || "KES";
+
+        return `${i.desc} (x${i.qty}) - ${currency} ${amount}`;
+      })
+      .join(", ");
+
     const row = document.createElement("tr");
-   row.innerHTML = `
+
+    row.innerHTML = `
+
       <td class="p-2 border-t">
-        <input type="checkbox" class="deliveryCheck" data-id="${delivery.id || index}">
+        <input
+          type="checkbox"
+          class="deliveryCheck"
+          data-id="${delivery.id || index}"
+        >
       </td>
 
       <td class="p-2 border-t">${delivery.dn}</td>
+
       <td class="p-2 border-t">${delivery.customer}</td>
+
       <td class="p-2 border-t">${itemsList}</td>
+
       <td class="p-2 border-t">${delivery.date}</td>
-      <td class="p-2 border-t">${delivery.description || "-"}</td>
-      <td class="p-2 border-t">${delivery.location || "-"}</td>
-      <td class="p-2 border-t">${delivery.truckNumber || "-"}</td>
-      <td class="p-2 border-t">${delivery.driver || "-"}</td>
 
       <td class="p-2 border-t">
-        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(delivery.trackNumber)}"
-           target="_blank"
-           class="text-blue-600 underline">
+        ${delivery.description || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${delivery.location || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${delivery.truckNumber || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${delivery.driver || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        <a
+          href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(delivery.trackNumber)}"
+          target="_blank"
+          class="text-blue-600 underline"
+        >
           ${delivery.trackNumber || "-"}
         </a>
       </td>
 
       <td class="p-2 border-t space-x-1">
 
-        <!-- KEEP MAIN ACTIONS -->
-        <button onclick="previewDelivery(${index})"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        <button
+          onclick="previewDelivery(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+        >
           Preview
         </button>
 
-        <button onclick="editDelivery(${index})"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        <button
+          onclick="editDelivery(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+        >
           Edit
         </button>
 
-        <button onclick="deleteDelivery(${index})"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        <button
+          onclick="deleteDelivery(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+        >
           Delete
         </button>
 
         <div class="relative inline-block">
 
-          <button onclick="toggleDeliveryMore(${index})"
-            class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+          <button
+            onclick="toggleDeliveryMore(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800"
+          >
             More ▾
           </button>
 
-          <div id="delivery-more-${index}"
-            class="hidden absolute right-0 mt-1 w-40 bg-white border rounded shadow z-50 flex flex-col">
+          <div
+            id="delivery-more-${index}"
+            class="hidden absolute right-0 mt-1 w-40 bg-white border rounded shadow z-50 flex flex-col"
+          >
 
-            <button onclick="cloneDelivery(${index})"
-              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+            <button
+              onclick="cloneDelivery(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"
+            >
               Clone
             </button>
 
-            <button onclick="downloadDelivery(${index})"
-              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+            <button
+              onclick="downloadDelivery(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"
+            >
               Download
             </button>
 
-            <button onclick="printDelivery(${index})"
-              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+            <button
+              onclick="printDelivery(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"
+            >
               Print
             </button>
 
-            <button onclick="emailDelivery(${index})"
-              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
+            <button
+              onclick="emailDelivery(${index})"
+              class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white"
+            >
               Email
             </button>
 
           </div>
+
         </div>
 
       </td>
@@ -26805,6 +28375,10 @@ function renderDeliveryTable() {
 
     tbody.appendChild(row);
   });
+
+  if (typeof renderShipmentTable === "function") {
+    renderShipmentTable();
+  }
 }
 function toggleDeliveryMore(index) {
   document.querySelectorAll("[id^='delivery-more-']").forEach(menu => {
