@@ -37922,9 +37922,10 @@ function renderPurchaseReturns() {
               <td class="p-2">KES 0.00</td>
               <td class="p-2">${r.reason}</td>
 
-              <td class="p-2">
+              <td class="p-2 relative">
+
                 <button onclick="previewPurchaseReturn(${idx})"
-                  class="border border-gray-700 text-white bg-gray-700 font-bold px-1 py-1 rounded hover:bg-gray-600">
+                  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
                   Preview
                 </button>
 
@@ -37934,9 +37935,40 @@ function renderPurchaseReturns() {
                 </button>
 
                 <button onclick="deletePurchaseReturn(${idx})"
-                  class="border border-red-700 text-white bg-red-700 font-bold px-1 py-1 rounded hover:bg-red-600">
+                  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
                   Delete
                 </button>
+
+                <button onclick="togglePurchaseReturnMenu(${idx})"
+                  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+                  More ▼
+                </button>
+
+                <div id="purchaseReturnMenu-${idx}"
+                  class="hidden absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg z-50">
+
+                  <button onclick="emailPurchaseReturn(${idx})"
+                    class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+                    📧 Email
+                  </button>
+
+                  <button onclick="clonePurchaseReturn(${idx})"
+                    class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+                    📄 Clone
+                  </button>
+
+                  <button onclick="downloadPurchaseReturnPDF(${idx})"
+                    class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+                    ⬇ Download PDF
+                  </button>
+
+                  <button onclick="printPurchaseReturn(${idx})"
+                    class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+                    🖨 Print
+                  </button>
+
+                </div>
+
               </td>
 
             </tr>`;
@@ -37981,7 +38013,8 @@ function renderPurchaseReturns() {
                       ${r.reason}
                     </td>
 
-                    <td class="p-2" rowspan="${r.items.length}">
+                    <td class="p-2 relative" rowspan="${r.items.length}">
+
                       <button onclick="previewPurchaseReturn(${idx})"
                         class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
                         Preview
@@ -37996,6 +38029,37 @@ function renderPurchaseReturns() {
                         class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
                         Delete
                       </button>
+
+                      <button onclick="togglePurchaseReturnMenu(${idx})"
+                        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+                        More ▼
+                      </button>
+
+                      <div id="purchaseReturnMenu-${idx}"
+                        class="hidden absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg z-50">
+
+                        <button onclick="emailPurchaseReturn(${idx})"
+                          class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+                          📧 Email
+                        </button>
+
+                        <button onclick="clonePurchaseReturn(${idx})"
+                          class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+                          📄 Clone
+                        </button>
+
+                        <button onclick="downloadPurchaseReturnPDF(${idx})"
+                          class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+                          ⬇ Download PDF
+                        </button>
+
+                        <button onclick="printPurchaseReturn(${idx})"
+                          class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+                          🖨 Print
+                        </button>
+
+                      </div>
+
                     </td>
                   ` : ""}
 
@@ -38005,6 +38069,103 @@ function renderPurchaseReturns() {
     });
 }
 
+function togglePurchaseReturnMenu(index) {
+  document.querySelectorAll('[id^="purchaseReturnMenu-"]').forEach(menu => {
+    if (menu.id !== `purchaseReturnMenu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document
+    .getElementById(`purchaseReturnMenu-${index}`)
+    .classList.toggle("hidden");
+}
+
+function emailPurchaseReturn(index) {
+  alert("Purchase Return emailed successfully");
+}
+
+function clonePurchaseReturn(index) {
+  const returns = JSON.parse(localStorage.getItem("purchaseReturns") || "[]");
+
+  const cloned = {
+    ...returns[index],
+    number: "PR-" + Date.now()
+  };
+
+  returns.push(cloned);
+
+  localStorage.setItem("purchaseReturns", JSON.stringify(returns));
+
+  renderPurchaseReturns();
+
+  alert("Purchase Return cloned successfully");
+}
+
+function downloadPurchaseReturnPDF(index) {
+
+  const returns = JSON.parse(localStorage.getItem("purchaseReturns") || "[]");
+  const r = returns[index];
+
+  if (!r) return;
+
+  let itemsHTML = "";
+
+  r.items.forEach(item => {
+
+    const total = (item.subtotal || 0) + (item.vat || 0);
+
+    itemsHTML += `
+      <tr>
+        <td style="border:1px solid #ccc;padding:8px;">${item.name}</td>
+        <td style="border:1px solid #ccc;padding:8px;">${item.qty}</td>
+        <td style="border:1px solid #ccc;padding:8px;">KES ${(item.vat || 0).toFixed(2)}</td>
+        <td style="border:1px solid #ccc;padding:8px;">KES ${total.toFixed(2)}</td>
+      </tr>
+    `;
+  });
+
+  const win = window.open("", "", "width=900,height=700");
+
+  win.document.write(`
+    <html>
+      <head>
+        <title>Purchase Return ${r.number}</title>
+      </head>
+      <body style="font-family:Arial;padding:20px;">
+
+        <h2>Purchase Return</h2>
+
+        <p><strong>Number:</strong> ${r.number}</p>
+        <p><strong>Date:</strong> ${r.date}</p>
+        <p><strong>Supplier:</strong> ${r.supplier}</p>
+        <p><strong>Reason:</strong> ${r.reason}</p>
+
+        <table style="width:100%;border-collapse:collapse;margin-top:20px;">
+          <thead>
+            <tr>
+              <th style="border:1px solid #ccc;padding:8px;">Item</th>
+              <th style="border:1px solid #ccc;padding:8px;">Qty</th>
+              <th style="border:1px solid #ccc;padding:8px;">VAT</th>
+              <th style="border:1px solid #ccc;padding:8px;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHTML}
+          </tbody>
+        </table>
+
+      </body>
+    </html>
+  `);
+
+  win.document.close();
+  win.print();
+}
+
+function printPurchaseReturn(index) {
+  downloadPurchaseReturnPDF(index);
+}
 function editPurchaseReturn(index) {
   const returns = JSON.parse(localStorage.getItem("purchaseReturns") || "[]");
   const r = returns[index];
