@@ -35209,54 +35209,76 @@ function clearBulkBillItemForm(){
   document.getElementById('bulkBillItemTax').value='16';
 }
 
+function saveBulkBill() {
+  const date = document.getElementById('bulkBillDate').value;
+  const suppliers = [...document.getElementById('bulkBillingSupplier').selectedOptions].map(opt => opt.value);
+  const chartOfAccount = document.getElementById('bulkBillChartOfAccount').value;
+  const termDays = parseInt(document.getElementById('bulkBillTermDays').value) || 0;
+  const currency = document.getElementById('bulkBillCurrency').value;
+  const currencyRate = parseFloat(document.getElementById('bulkBillCurrencyRate').value) || 1;
 
-function saveBulkBill(){
-  const date=document.getElementById('bulkBillDate').value;
-  const suppliers=[...document.getElementById('bulkBillingSupplier').selectedOptions].map(opt=>opt.value);
-  const chartOfAccount=document.getElementById('bulkBillChartOfAccount').value;
-  const billNumber=document.getElementById('bulkBillNumber').value;
-  const termDays=parseInt(document.getElementById('bulkBillTermDays').value)||0;
-  const currency=document.getElementById('bulkBillCurrency').value;
-  const currencyRate=parseFloat(document.getElementById('bulkBillCurrencyRate').value)||1;
-
-  if(!date || suppliers.length===0 || !chartOfAccount || bulkBillItems.length===0){
+  if (!date || suppliers.length === 0 || !chartOfAccount || bulkBillItems.length === 0) {
     alert('Fill all fields and add at least one item.');
     return;
   }
 
-  const subtotal=bulkBillItems.reduce((sum,i)=>sum+i.subtotal,0);
-  const vat=bulkBillItems.reduce((sum,i)=>sum+i.vat,0);
-  const total=(subtotal+vat)*currencyRate;
+  let bulkBills = JSON.parse(localStorage.getItem('bulkBills') || '[]');
 
-  const bill={
-    billNumber,date,suppliers,chartOfAccount,termDays,items:bulkBillItems,
-    subtotal,vat,total,currency,currencyRate
-  };
+  suppliers.forEach((supplier, index) => {
 
-  let bulkBills=JSON.parse(localStorage.getItem('bulkBills')||'[]');
-  if(typeof currentBulkEditingIndex==='number' && currentBulkEditingIndex>-1){
-    bulkBills[currentBulkEditingIndex]=bill;
-    currentBulkEditingIndex=-1;
-  } else {
+    let nextNumber = 1;
+
+    if (bulkBills.length > 0) {
+      const nums = bulkBills
+        .map(b => parseInt((b.billNumber || '').replace(/\D/g, '')))
+        .filter(n => !isNaN(n));
+
+      nextNumber = nums.length ? Math.max(...nums) + 1 : 1;
+    }
+
+    const billNumber = String(nextNumber).padStart(3, '0');
+
+    const subtotal = bulkBillItems.reduce((sum, i) => sum + i.subtotal, 0);
+    const vat = bulkBillItems.reduce((sum, i) => sum + i.vat, 0);
+    const total = (subtotal + vat) * currencyRate;
+
+    const bill = {
+      billNumber,
+      date,
+      supplier,
+      chartOfAccount,
+      termDays,
+      items: [...bulkBillItems],
+      subtotal,
+      vat,
+      total,
+      currency,
+      currencyRate
+    };
+
     bulkBills.push(bill);
-  }
-  localStorage.setItem('bulkBills',JSON.stringify(bulkBills));
+  });
 
-  
-  bulkBillItems=[];
+  localStorage.setItem('bulkBills', JSON.stringify(bulkBills));
+
+  bulkBillItems = [];
+
   renderBulkBillItems();
-  document.getElementById('bulkBillDate').value='';
-  document.getElementById('bulkBillingSupplier').value='';
-  document.getElementById('bulkBillTermDays').value='';
-  document.getElementById('bulkBillChartOfAccount').value='';
-  document.getElementById('bulkBillNumber').value=generateBulkBillNumber();
+
+  document.getElementById('bulkBillDate').value = '';
+  document.getElementById('bulkBillingSupplier').value = '';
+  document.getElementById('bulkBillTermDays').value = '';
+  document.getElementById('bulkBillChartOfAccount').value = '';
 
   loadBulkBills();
-  alert('Bulk Bill saved ✅');
+
+  alert('Bulk Bills saved ✅');
 }
 
 
+
 function loadBulkBills() {
+
   const tbody = document.getElementById('bulkBillsList');
   const bills = JSON.parse(localStorage.getItem('bulkBills') || '[]');
 
@@ -35273,7 +35295,7 @@ function loadBulkBills() {
 
       <td class="p-2">${b.date}</td>
 
-      <td class="p-2">${b.suppliers.join(', ')}</td>
+      <td class="p-2">${b.supplier}</td>
 
       <td class="p-2">${b.termDays}</td>
 
@@ -35310,9 +35332,72 @@ function loadBulkBills() {
           Preview
         </button>
 
+      </td>
+
+    </tr>
+    `;
+  }).join('');
+}
+function loadBulkBills() {
+
+  const tbody = document.getElementById('bulkBillsList');
+  const bills = JSON.parse(localStorage.getItem('bulkBills') || '[]');
+
+  tbody.innerHTML = bills.map((b, i) => {
+
+    return `
+    <tr class="border-t">
+
+      <td class="p-2">
+        <input type="checkbox" class="bulk-bill-checkbox" value="${i}">
+      </td>
+
+      <td class="p-2">${b.billNumber || ''}</td>
+
+      <td class="p-2">${b.date || ''}</td>
+
+      <td class="p-2">
+        ${b.supplier || (Array.isArray(b.suppliers) ? b.suppliers.join(', ') : '')}
+      </td>
+
+      <td class="p-2">${b.termDays || 0}</td>
+
+      <td class="p-2">
+        ${b.date
+          ? new Date(
+              new Date(b.date).setDate(
+                new Date(b.date).getDate() + (b.termDays || 0)
+              )
+            ).toISOString().split('T')[0]
+          : ''}
+      </td>
+
+      <td class="p-2">${b.currency || ''}</td>
+
+      <td class="p-2">${(b.total || 0).toFixed(2)}</td>
+
+      <td class="p-2">${(b.vat || 0).toFixed(2)}</td>
+
+      <td class="p-2 space-x-1">
+
+        <button onclick="editBulkBill(${i})"
+          class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteBulkBill(${i})"
+          class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button onclick="previewBulkBill(${i})"
+          class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
         <button onclick="pushBulkBillETR(${i})"
-          class="border border-green-700 text-white bg-green-700 px-2 py-1 rounded hover:bg-green-600">
-          Push to ETIMS/ETR
+          class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
+          Push to Etims
         </button>
 
         <button onclick="shareBulkBill(${i})"
