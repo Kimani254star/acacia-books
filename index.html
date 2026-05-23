@@ -15171,6 +15171,12 @@ function getTransactionEffect(tx, bankName) {
   let debit = 0;
   let credit = 0;
 
+  const txType =
+    String(tx.type || "").toLowerCase();
+
+  const direction =
+    String(tx.direction || "").toLowerCase();
+
   let typeLabel =
     tx.direction ||
     tx.type ||
@@ -15183,8 +15189,8 @@ function getTransactionEffect(tx, bankName) {
       credit =
         Number(tx.amount) || 0;
 
-      typeLabel =
-        "Transfer Out";
+      typeLabel = "Transfer Out";
+
     }
 
     if (tx.toBank === bankName) {
@@ -15192,30 +15198,30 @@ function getTransactionEffect(tx, bankName) {
       debit =
         Number(tx.convertedAmount || tx.amount) || 0;
 
-      typeLabel =
-        "Transfer In";
+      typeLabel = "Transfer In";
+
     }
 
-  }
+  } else {
 
-  else {
+    const isDeposit =
+      direction === "deposit" ||
+      txType === "deposit" ||
+      txType === "credit" ||
+      moneyInTypes.includes(tx.type);
 
-    if (
-      moneyInTypes.includes(tx.type) ||
-      tx.direction === "Deposit"
-    ) {
+    const isWithdraw =
+      direction === "withdraw" ||
+      txType === "withdraw" ||
+      txType === "debit" ||
+      moneyOutTypes.includes(tx.type);
 
-      debit =
-        Number(tx.amount) || 0;
+    if (isDeposit) {
+      debit = Number(tx.amount) || 0;
     }
 
-    if (
-      moneyOutTypes.includes(tx.type) ||
-      tx.direction === "Withdraw"
-    ) {
-
-      credit =
-        Number(tx.amount) || 0;
+    if (isWithdraw) {
+      credit = Number(tx.amount) || 0;
     }
 
   }
@@ -33383,7 +33389,6 @@ function addSupplierPayment() {
 
     payments.push(payment);
 
-    // UPDATE BILL PAYMENT
     if (selectedBillIndex !== "") {
 
       let bills = JSON.parse(localStorage.getItem("bills") || "[]");
@@ -33444,7 +33449,6 @@ function addSupplierPayment() {
       billIndex: selectedBillIndex
     };
 
-    // UPDATE BILL PAYMENT
     if (selectedBillIndex !== "") {
 
       let bills = JSON.parse(localStorage.getItem("bills") || "[]");
@@ -33507,8 +33511,6 @@ function addSupplierPayment() {
 
 }
 
-
-
 function renderSupplierPayments() {
 
   const payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
@@ -33522,6 +33524,14 @@ function renderSupplierPayments() {
 
     total += parseFloat(payment.amount);
 
+    const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+
+    const billText =
+      payment.billIndex !== "" &&
+      bills[payment.billIndex]
+        ? bills[payment.billIndex].billNumber
+        : "-";
+
     const row = document.createElement("tr");
 
     row.innerHTML = `
@@ -33532,6 +33542,8 @@ function renderSupplierPayments() {
       <td class="p-2">${payment.date}</td>
 
       <td class="p-2">${payment.supplier}</td>
+
+      <td class="p-2">${billText}</td>
 
       <td class="p-2">
         KES ${parseFloat(payment.amount).toFixed(2)}
@@ -33597,7 +33609,7 @@ function renderSupplierPayments() {
   const totalRow = document.createElement("tr");
 
   totalRow.innerHTML = `
-    <td class="p-2 font-bold" colspan="3">
+    <td class="p-2 font-bold" colspan="4">
       Total
     </td>
 
@@ -39333,9 +39345,8 @@ function populateTaxTypeFromChartOfAccounts() {
     dropdown.appendChild(opt);
   });
 }
-
-
 function addTaxPayment() {
+
   const date = document.getElementById('taxDate').value;
   const type = document.getElementById('taxType').value;
   const method = document.getElementById('taxPaymentMode').value;
@@ -39348,54 +39359,81 @@ function addTaxPayment() {
     return;
   }
 
-  
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
-  const taxAccount = accounts.find(acc => acc.name === type);
+
+  const taxAccount =
+    accounts.find(acc => acc.name === type);
+
   if (!taxAccount) {
     alert("⚠️ Tax type not found in Chart of Accounts!");
     return;
   }
 
-  let taxPayments = JSON.parse(localStorage.getItem('taxPayments') || "[]");
-  const banks = JSON.parse(localStorage.getItem('banks') || "[]");
+  let taxPayments =
+    JSON.parse(localStorage.getItem('taxPayments') || "[]");
+
+  const banks =
+    JSON.parse(localStorage.getItem('banks') || "[]");
+
   const bank = banks[bankIndex];
+
   if (!bank) {
     alert("⚠️ Bank not found!");
     return;
   }
 
-  let manualTransactions = JSON.parse(localStorage.getItem('manualTransactions') || "[]");
-  let allTransactions = JSON.parse(localStorage.getItem('transactions') || "[]");
+  let manualTransactions =
+    JSON.parse(localStorage.getItem('manualTransactions') || "[]");
+
+  let allTransactions =
+    JSON.parse(localStorage.getItem('transactions') || "[]");
 
   if (editingTaxPaymentIndex !== null) {
-    
-    const oldPayment = taxPayments[editingTaxPaymentIndex];
-    const oldBank = banks[oldPayment.bankIndex];
-    if (oldBank) oldBank.balance += oldPayment.amount;
+
+    const oldPayment =
+      taxPayments[editingTaxPaymentIndex];
+
+    const oldBank =
+      banks[oldPayment.bankIndex];
+
+    if (oldBank) {
+      oldBank.balance += oldPayment.amount;
+    }
+
     bank.balance -= amount;
 
-    const refText = reference || `Tax Payment (${taxAccount.name}) via ${method}`;
+    const refText =
+      reference || `Tax Payment (${taxAccount.name}) via ${method}`;
 
-    
-    const txIndex = manualTransactions.findIndex(tx => tx.taxPaymentId === oldPayment.id);
+    const txIndex =
+      manualTransactions.findIndex(
+        tx => tx.taxPaymentId === oldPayment.id
+      );
+
     const txData = {
+      id: oldPayment.id,
       date,
       bank: bank.name,
-      bankIndex,
       amount,
+      type,
+      account: taxAccount.name,
       ref: refText,
-      method,
-      taxPaymentId: oldPayment.id,
-      accountName: taxAccount.name,
-      accountCode: taxAccount.code,
-      type: "Debit",
-      source: "taxPayment"
+      source: "taxPayment",
+      direction: "Withdraw",
+      taxPaymentId: oldPayment.id
     };
-    if (txIndex !== -1) manualTransactions[txIndex] = txData;
-    else manualTransactions.push(txData);
 
-    
-    const allTxIndex = allTransactions.findIndex(tx => tx.taxPaymentId === oldPayment.id);
+    if (txIndex !== -1) {
+      manualTransactions[txIndex] = txData;
+    } else {
+      manualTransactions.push(txData);
+    }
+
+    const allTxIndex =
+      allTransactions.findIndex(
+        tx => tx.taxPaymentId === oldPayment.id
+      );
+
     const allTxData = {
       id: `TXN-${Date.now()}`,
       date,
@@ -39405,8 +39443,12 @@ function addTaxPayment() {
       ref: refText,
       taxPaymentId: oldPayment.id
     };
-    if (allTxIndex !== -1) allTransactions[allTxIndex] = allTxData;
-    else allTransactions.push(allTxData);
+
+    if (allTxIndex !== -1) {
+      allTransactions[allTxIndex] = allTxData;
+    } else {
+      allTransactions.push(allTxData);
+    }
 
     taxPayments[editingTaxPaymentIndex] = {
       id: oldPayment.id,
@@ -39417,28 +39459,39 @@ function addTaxPayment() {
       amount,
       reference
     };
+
     editingTaxPaymentIndex = null;
 
   } else {
-    
-    const paymentId = Date.now();
-    const refText = reference || `Tax Payment (${taxAccount.name}) via ${method}`;
 
-    taxPayments.push({ id: paymentId, date, type, method, bankIndex, amount, reference });
+    const paymentId = Date.now();
+
+    const refText =
+      reference || `Tax Payment (${taxAccount.name}) via ${method}`;
+
+    taxPayments.push({
+      id: paymentId,
+      date,
+      type,
+      method,
+      bankIndex,
+      amount,
+      reference
+    });
+
     bank.balance -= amount;
 
     manualTransactions.push({
+      id: paymentId,
       date,
       bank: bank.name,
-      bankIndex,
       amount,
+      type,
+      account: taxAccount.name,
       ref: refText,
-      method,
-      taxPaymentId: paymentId,
-      accountName: taxAccount.name,
-      accountCode: taxAccount.code,
-      type: "Debit",
-      source: "taxPayment"
+      source: "taxPayment",
+      direction: "Withdraw",
+      taxPaymentId: paymentId
     });
 
     allTransactions.push({
@@ -39450,15 +39503,14 @@ function addTaxPayment() {
       ref: refText,
       taxPaymentId: paymentId
     });
+
   }
 
-  
   localStorage.setItem('taxPayments', JSON.stringify(taxPayments));
   localStorage.setItem('manualTransactions', JSON.stringify(manualTransactions));
   localStorage.setItem('transactions', JSON.stringify(allTransactions));
   localStorage.setItem('banks', JSON.stringify(banks));
 
- 
   renderTaxPayments?.();
   renderManualTransactions?.();
   renderReconciliationTransactions?.();
@@ -39468,8 +39520,6 @@ function addTaxPayment() {
 
   alert("✅ Tax payment recorded successfully!");
 }
-
-
 function renderTaxPayments() {
 
   const payments = JSON.parse(localStorage.getItem('taxPayments') || "[]");
@@ -39903,7 +39953,9 @@ function addBulkTaxRow() {
 }
 
 function saveBulkTaxPayments() {
+
   const rows = document.querySelectorAll("#bulkTaxBody tr");
+
   if (rows.length === 0) {
     alert("⚠️ Please add at least one row.");
     return;
@@ -39916,6 +39968,7 @@ function saveBulkTaxPayments() {
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
 
   rows.forEach(row => {
+
     const cells = row.querySelectorAll("td");
 
     const date = cells[0].querySelector("input").value;
@@ -39931,19 +39984,24 @@ function saveBulkTaxPayments() {
     }
 
     const taxAccount = accounts.find(acc => acc.name === type);
+
     if (!taxAccount) {
       alert(`⚠️ Tax type ${type} not found!`);
       return;
     }
 
     const bank = banks[bankIndex];
+
     if (!bank) {
       alert("⚠️ Bank not found for one of the rows!");
       return;
     }
 
-    const paymentId = Date.now() + Math.floor(Math.random() * 1000); 
-    const refText = reference || `Tax Payment (${taxAccount.name}) via ${method}`;
+    const paymentId =
+      Date.now() + Math.floor(Math.random() * 1000);
+
+    const refText =
+      reference || `Tax Payment (${taxAccount.name}) via ${method}`;
 
     bank.balance -= amount;
 
@@ -39958,17 +40016,16 @@ function saveBulkTaxPayments() {
     });
 
     manualTransactions.push({
+      id: paymentId,
       date,
       bank: bank.name,
-      bankIndex,
       amount,
+      type,
+      account: taxAccount.name,
       ref: refText,
-      method,
-      taxPaymentId: paymentId,
-      accountName: taxAccount.name,
-      accountCode: taxAccount.code,
-      type: "Debit",
-      source: "taxPayment"
+      source: "taxPayment",
+      direction: "Withdraw",
+      taxPaymentId: paymentId
     });
 
     allTransactions.push({
@@ -39980,6 +40037,7 @@ function saveBulkTaxPayments() {
       ref: refText,
       taxPaymentId: paymentId
     });
+
   });
 
   localStorage.setItem('taxPayments', JSON.stringify(taxPayments));
@@ -40079,22 +40137,68 @@ function addOperationalCost() {
   const banks = JSON.parse(localStorage.getItem("banks") || "[]");
 
   const bankIndex = banks.findIndex(b => b.name === bank);
-  if (bankIndex === -1) { alert("Bank not found!"); return; }
+
+  if (bankIndex === -1) {
+    alert("Bank not found!");
+    return;
+  }
 
   if (editingOperationalCostIndex !== null) {
+
     const oldCost = costs[editingOperationalCostIndex];
+
     const oldBankIndex = banks.findIndex(b => b.name === oldCost.bank);
-    if (oldBankIndex !== -1) banks[oldBankIndex].balance += parseFloat(oldCost.amount);
-    banks[bankIndex].balance -= amount;
-    const txIndex = manualTransactions.findIndex(tx => tx.operationalCostId === oldCost.id);
-    if (txIndex !== -1) {
-      manualTransactions[txIndex] = { date, description, category, method, bank, bankIndex, amount, operationalCostId: oldCost.id };
-    } else {
-      manualTransactions.push({ date, description, category, method, bank, bankIndex, amount, operationalCostId: oldCost.id });
+
+    if (oldBankIndex !== -1) {
+      banks[oldBankIndex].balance += parseFloat(oldCost.amount);
     }
 
-    const allTxIndex = allTransactions.findIndex(tx => tx.operationalCostId === oldCost.id);
+    banks[bankIndex].balance -= amount;
+
+    const txIndex =
+      manualTransactions.findIndex(
+        tx => tx.operationalCostId === oldCost.id
+      );
+
+    if (txIndex !== -1) {
+
+      manualTransactions[txIndex] = {
+        id: oldCost.id,
+        date,
+        bank,
+        type: description,
+        account: category,
+        amount,
+        ref: `Operational Cost via ${method}`,
+        source: "operationalCost",
+        direction: "Withdraw",
+        operationalCostId: oldCost.id
+      };
+
+    } else {
+
+      manualTransactions.push({
+        id: oldCost.id,
+        date,
+        bank,
+        type: description,
+        account: category,
+        amount,
+        ref: `Operational Cost via ${method}`,
+        source: "operationalCost",
+        direction: "Withdraw",
+        operationalCostId: oldCost.id
+      });
+
+    }
+
+    const allTxIndex =
+      allTransactions.findIndex(
+        tx => tx.operationalCostId === oldCost.id
+      );
+
     if (allTxIndex !== -1) {
+
       allTransactions[allTxIndex] = {
         id: `TXN-${Date.now()}`,
         date,
@@ -40104,7 +40208,9 @@ function addOperationalCost() {
         ref: `Operational Cost (${category}) via ${method}`,
         operationalCostId: oldCost.id
       };
+
     } else {
+
       allTransactions.push({
         id: `TXN-${Date.now()}`,
         date,
@@ -40114,16 +40220,52 @@ function addOperationalCost() {
         ref: `Operational Cost (${category}) via ${method}`,
         operationalCostId: oldCost.id
       });
+
     }
 
-    costs[editingOperationalCostIndex] = { id: oldCost.id, date, description, category, method, bank, bankIndex, amount };
+    costs[editingOperationalCostIndex] = {
+      id: oldCost.id,
+      date,
+      description,
+      category,
+      method,
+      bank,
+      bankIndex,
+      amount
+    };
+
     editingOperationalCostIndex = null;
+
   } else {
+
     const costId = Date.now();
-    costs.push({ id: costId, date, description, category, method, bank, bankIndex, amount });
+
+    costs.push({
+      id: costId,
+      date,
+      description,
+      category,
+      method,
+      bank,
+      bankIndex,
+      amount
+    });
+
     banks[bankIndex].balance -= amount;
 
-    manualTransactions.push({ date, description, category, method, bank, bankIndex, amount, operationalCostId: costId });
+    manualTransactions.push({
+      id: costId,
+      date,
+      bank,
+      type: description,
+      account: category,
+      amount,
+      ref: `Operational Cost via ${method}`,
+      source: "operationalCost",
+      direction: "Withdraw",
+      operationalCostId: costId
+    });
+
     allTransactions.push({
       id: `TXN-${Date.now()}`,
       date,
@@ -40133,6 +40275,7 @@ function addOperationalCost() {
       ref: `Operational Cost (${category}) via ${method}`,
       operationalCostId: costId
     });
+
   }
 
   localStorage.setItem("operationalCosts", JSON.stringify(costs));
@@ -40654,7 +40797,9 @@ function addBulkRow() {
   table.appendChild(row);
 }
 function saveBulkExpenses() {
+
   const rows = document.querySelectorAll("#bulkExpenseBody tr");
+
   if (rows.length === 0) {
     alert("Please add at least one bulk expense row.");
     return;
@@ -40666,6 +40811,7 @@ function saveBulkExpenses() {
   let banks = JSON.parse(localStorage.getItem("banks") || "[]");
 
   for (const row of rows) {
+
     const date = row.querySelector(".expense-date").value;
     const description = row.querySelector(".description").value.trim();
     const category = row.querySelector(".category").value.trim();
@@ -40680,6 +40826,7 @@ function saveBulkExpenses() {
     }
 
     const bankIndex = banks.findIndex(b => b.name === bank);
+
     if (bankIndex === -1) {
       alert(`Bank "${bank}" not found!`);
       return;
@@ -40694,9 +40841,29 @@ function saveBulkExpenses() {
 
     const costId = Date.now() + Math.floor(Math.random() * 1000);
 
-    costs.push({ id: costId, date, description, category, method, bank, bankIndex, amount });
+    costs.push({
+      id: costId,
+      date,
+      description,
+      category,
+      method,
+      bank,
+      bankIndex,
+      amount
+    });
 
-    manualTransactions.push({ date, description, category, method, bank, bankIndex, amount, operationalCostId: costId });
+    manualTransactions.push({
+      id: costId,
+      date,
+      bank,
+      type: description,
+      account: category,
+      amount,
+      ref: `Operational Cost via ${method}`,
+      source: "operationalCost",
+      direction: "Withdraw",
+      operationalCostId: costId
+    });
 
     allTransactions.push({
       id: `TXN-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -40707,6 +40874,7 @@ function saveBulkExpenses() {
       ref: `Operational Cost (${category}) via ${method}`,
       operationalCostId: costId
     });
+
   }
 
   localStorage.setItem("operationalCosts", JSON.stringify(costs));
@@ -42175,7 +42343,7 @@ document.addEventListener('DOMContentLoaded', () => {
  <!-- Manual Journals -->
 <div id="manualJournalsTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-1xl font-bold mb-4 text-left">Manual Journals</h2>
-  <!-- Manual Journals Search -->
+  
 <div class="relative mb-4 mt-2">
   <input 
     type="text" 
@@ -54972,8 +55140,15 @@ function resetEarnings() {
     </div>
 
     <table class="w-full text-sm border">
+      <div class="mb-2">
+    <button onclick="bulkDeleteGrossPayroll()"  class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">  Bulk Delete  </button>
+    </div>
       <thead class="bg-gray-100">
         <tr>
+          <th class="p-2 border">
+          <input type="checkbox"
+          onclick="toggleAllGrossPayroll(this)">
+          </th>
           <th class="p-2">Employee ID</th>
           <th class="p-2">Bank</th>
           <th class="p-2">Chart of Account</th>
@@ -57041,7 +57216,8 @@ function bulkAddGrossPay() {
 }
 function createPayrollBankTransaction(empID, netPay, month) {
   const selectedBankName = document.getElementById("payrollBank")?.value;
-  if (!selectedBankName) return; 
+  if (!selectedBankName) return;
+
   let banks = JSON.parse(localStorage.getItem("banks") || "[]");
   let bank = banks.find(b => b.name === selectedBankName);
 
@@ -57052,9 +57228,13 @@ function createPayrollBankTransaction(empID, netPay, month) {
 
   bank.balance -= netPay;
   localStorage.setItem("banks", JSON.stringify(banks));
+
   let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
   let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
 
+  const ref = `Payroll-${selectedBankName}-${month}`;
+
+ 
   const tx = {
     bank: selectedBankName,
     type: "Salary Payment",
@@ -57062,7 +57242,7 @@ function createPayrollBankTransaction(empID, netPay, month) {
     code: "PAYROLL",
     amount: netPay,
     date: new Date().toISOString().split("T")[0],
-    ref: `Payroll-${empID}-${month}`,
+    ref: ref,
     source: "payroll",
     direction: "Withdraw"
   };
@@ -57072,8 +57252,38 @@ function createPayrollBankTransaction(empID, netPay, month) {
 
   localStorage.setItem("manualTransactions", JSON.stringify(manualTransactions));
   localStorage.setItem("transactions", JSON.stringify(allTx));
+
   if (typeof renderBankTable === "function") renderBankTable();
   if (typeof renderManualTransactions === "function") renderManualTransactions();
+}
+function renderPayrollReconciliation(month, bankName) {
+  const table = document.getElementById("reconTable");
+  if (!table) return;
+
+  const manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+
+  const ref = `Payroll-${bankName}-${month}`;
+
+  const txs = manualTransactions.filter(t => t.ref === ref);
+
+  if (txs.length === 0) {
+    table.innerHTML = `<tr><td colspan="5">No payroll found</td></tr>`;
+    return;
+  }
+
+  const totalAmount = txs.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+  const row = `
+    <tr>
+      <td>${bankName}</td>
+      <td>${month}</td>
+      <td>${txs.length} Employees</td>
+      <td class="font-bold">KES ${totalAmount.toFixed(2)}</td>
+      <td>Salary Payment (Total)</td>
+    </tr>
+  `;
+
+  table.innerHTML = row;
 }
 function updateProfitAndLoss() {
   const payroll = JSON.parse(localStorage.getItem("payrollRecords") || "[]");
@@ -57112,44 +57322,94 @@ function deletePayrollRecord(id) {
   const recordToDelete = payrollRecords.find(p => p.id === id);
   if (!recordToDelete) return;
 
-  if (!confirm("⚠️ Are you sure you want to delete this payroll record? This will reverse the payment.")) return;
+  if (!confirm("⚠️ Are you sure you want to delete this payroll record?")) return;
 
-  const transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
-  const allTransactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+  let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+  let allTransactions = JSON.parse(localStorage.getItem("transactions") || "[]");
 
-  const txIndex = transactions.findIndex(t => t.account === recordToDelete.empID && t.ref === `Payroll-${recordToDelete.empID}-${recordToDelete.month}`);
+  const ref = `Payroll-${recordToDelete.empID}-${recordToDelete.month}`;
+
+  const txIndex = manualTransactions.findIndex(t => t.ref === ref);
+
   if (txIndex !== -1) {
-    const tx = transactions[txIndex];
+    const tx = manualTransactions[txIndex];
 
     let banks = JSON.parse(localStorage.getItem("banks") || "[]");
     const bank = banks.find(b => b.name === tx.bank);
+
     if (bank) {
-      bank.balance += recordToDelete.net; 
+      bank.balance += tx.amount;
       localStorage.setItem("banks", JSON.stringify(banks));
     }
 
-    transactions.splice(txIndex, 1);
-    const allTxIndex = allTransactions.findIndex(t => t.ref === tx.ref && t.account === tx.account);
-    if (allTxIndex !== -1) allTransactions.splice(allTxIndex, 1);
-
-    localStorage.setItem("manualTransactions", JSON.stringify(transactions));
-    localStorage.setItem("transactions", JSON.stringify(allTransactions));
+    manualTransactions.splice(txIndex, 1);
+    allTransactions = allTransactions.filter(t => t.ref !== ref);
   }
+
+  localStorage.setItem("manualTransactions", JSON.stringify(manualTransactions));
+  localStorage.setItem("transactions", JSON.stringify(allTransactions));
 
   payrollRecords = payrollRecords.filter(p => p.id !== id);
   localStorage.setItem("payrollRecords", JSON.stringify(payrollRecords));
+
   let payrollPayments = JSON.parse(localStorage.getItem("payrollPayments") || "[]");
-  payrollPayments = payrollPayments.filter(pay => !(pay.name === recordToDelete.empID && pay.month === recordToDelete.month));
+  payrollPayments = payrollPayments.filter(p => !(p.name === recordToDelete.empID && p.month === recordToDelete.month));
   localStorage.setItem("payrollPayments", JSON.stringify(payrollPayments));
 
-  updateProfitAndLoss();  
+  updateProfitAndLoss();
   renderGrossPayroll?.();
   renderPayrollReports?.();
   renderPayrollSummary?.();
   renderReports?.();
   calculateTotalPayroll?.();
 
-  alert("✅ Payroll record deleted and payment reversed successfully.");
+  alert("✅ Deleted successfully.");
+}
+function bulkDeleteGrossPayroll() {
+  let list = JSON.parse(localStorage.getItem("payrollRecords") || "[]");
+
+  const selected = document.querySelectorAll(".gross-payroll-select:checked");
+
+  if (selected.length === 0) {
+    alert("Select at least one payroll record.");
+    return;
+  }
+
+  const ids = Array.from(selected).map(cb => cb.dataset.id);
+
+  if (!confirm(`Delete ${ids.length} records?`)) return;
+  if (!confirm("Final warning: This cannot be undone.")) return;
+
+  const toDelete = list.filter(p => ids.includes(String(p.id)));
+
+  let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+  let allTransactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+  let banks = JSON.parse(localStorage.getItem("banks") || "[]");
+
+  toDelete.forEach(record => {
+    const ref = `Payroll-${record.empID}-${record.month}`;
+
+    const txIndex = manualTransactions.findIndex(t => t.ref === ref);
+
+    if (txIndex !== -1) {
+      const tx = manualTransactions[txIndex];
+
+      const bank = banks.find(b => b.name === tx.bank);
+      if (bank) bank.balance += tx.amount;
+
+      manualTransactions.splice(txIndex, 1);
+      allTransactions = allTransactions.filter(t => t.ref !== ref);
+    }
+  });
+
+  localStorage.setItem("banks", JSON.stringify(banks));
+  localStorage.setItem("manualTransactions", JSON.stringify(manualTransactions));
+  localStorage.setItem("transactions", JSON.stringify(allTransactions));
+
+  list = list.filter(p => !ids.includes(String(p.id)));
+  localStorage.setItem("payrollRecords", JSON.stringify(list));
+
+  renderGrossPayroll();
 }
 function renderGrossPayroll() {
   const list = JSON.parse(localStorage.getItem("payrollRecords") || "[]");
@@ -57215,6 +57475,11 @@ function renderGrossPayroll() {
 
       return `
         <tr>
+           <td class="p-2 border">
+           <input type="checkbox"
+          class="gross-payroll-select"
+          data-id="${p.id}">
+          </td>
           <td class="p-2 border">${p.empID}</td>
           <td class="p-2 border">${bankName}</td>
           <td class="p-2 border">${p.account || "-"}</td>
@@ -57228,8 +57493,28 @@ function renderGrossPayroll() {
           <td class="p-2 border font-semibold text-blue-900">KES ${parseFloat(p.deductions).toFixed(2)}</td>
           <td class="p-2 border font-semibold text-blue-900">KES ${parseFloat(p.net).toFixed(2)}</td>
           <td class="p-2 border text-center">
-            <button onclick="deletePayrollRecord(${p.id})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-          </td>
+          <button onclick="deletePayrollRecord(${p.id})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800"> Delete </button>
+
+        <div class="relative inline-block">
+
+        <button onclick="togglePayrollMenu(${p.id})" class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600"> More ▾  </button>
+
+        <div id="payroll-menu-${p.id}" class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+         <button onclick="clonePayroll(${p.id})"  class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white"> Clone  </button>
+
+       <button onclick="downloadPayroll(${p.id})" class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">   Download </button>
+
+      <button onclick="printPayroll(${p.id})"
+        class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+        Print
+      </button>
+
+    </div>
+
+  </div>
+
+</td>
         </tr>
       `;
     }).join("");
@@ -57253,6 +57538,14 @@ function renderGrossPayroll() {
   });
 
   table.innerHTML = html;
+}
+function toggleAllGrossPayroll(master) {
+
+  document.querySelectorAll(".gross-payroll-select")
+    .forEach(cb => {
+      cb.checked = master.checked;
+    });
+
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -57513,6 +57806,109 @@ function renderPayrollReports() {
 `;
 
   tbody.innerHTML = html;
+}
+function togglePayrollMenu(id) {
+
+  document.querySelectorAll("[id^='payroll-menu-']").forEach(m => {
+    if (m.id !== `payroll-menu-${id}`) m.classList.add("hidden");
+  });
+
+  document.getElementById(`payroll-menu-${id}`).classList.toggle("hidden");
+}
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".relative")) {
+    document.querySelectorAll("[id^='payroll-menu-']").forEach(m => {
+      m.classList.add("hidden");
+    });
+  }
+});
+
+function clonePayroll(id) {
+
+  let list = JSON.parse(localStorage.getItem("payrollRecords") || "[]");
+
+  const record = list.find(p => p.id === id);
+
+  if (!record) return;
+
+  const cloned = {
+    ...record,
+    id: Date.now()
+  };
+
+  list.push(cloned);
+
+  localStorage.setItem("payrollRecords", JSON.stringify(list));
+
+  renderGrossPayroll();
+}
+
+function downloadPayroll(id) {
+
+  let list = JSON.parse(localStorage.getItem("payrollRecords") || "[]");
+
+  const p = list.find(r => r.id === id);
+
+  if (!p) return;
+
+  const data = `
+PAYROLL RECORD
+
+Employee: ${p.empID}
+Month: ${p.month}
+Gross: ${p.gross}
+PAYE: ${p.paye}
+SHIF: ${p.shif}
+NSSF: ${p.nssf}
+Housing: ${p.housing}
+NITA: ${p.nita}
+Deductions: ${p.deductions}
+Net: ${p.net}
+`;
+
+  const blob = new Blob([data], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Payroll_${p.empID}_${p.month}.txt`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function printPayroll(id) {
+
+  let list = JSON.parse(localStorage.getItem("payrollRecords") || "[]");
+
+  const p = list.find(r => r.id === id);
+
+  if (!p) return;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head><title>Payroll Print</title></head>
+    <body>
+      <h2>Payroll Record</h2>
+      <p>Employee: ${p.empID}</p>
+      <p>Month: ${p.month}</p>
+      <p>Gross: ${p.gross}</p>
+      <p>PAYE: ${p.paye}</p>
+      <p>SHIF: ${p.shif}</p>
+      <p>NSSF: ${p.nssf}</p>
+      <p>Housing: ${p.housing}</p>
+      <p>NITA: ${p.nita}</p>
+      <p>Deductions: ${p.deductions}</p>
+      <p>Net: ${p.net}</p>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+  win.print();
 }
 function updateChartAccountBalance(accountCode, amount, direction = "debit") {
   let accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
