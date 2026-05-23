@@ -15167,37 +15167,65 @@ function getAllTransactions() {
 }
 
 function getTransactionEffect(tx, bankName) {
+
   let debit = 0;
   let credit = 0;
-  let typeLabel = tx.type;
+
+  let typeLabel =
+    tx.direction ||
+    tx.type ||
+    "";
 
   if (tx.isTransfer) {
 
-    if (tx.bank === bankName) {
-      credit = Number(tx.amount);
-      typeLabel = "Transfer Out";
+    if (tx.fromBank === bankName) {
+
+      credit =
+        Number(tx.amount) || 0;
+
+      typeLabel =
+        "Transfer Out";
     }
 
     if (tx.toBank === bankName) {
-      debit = Number(tx.amount);
-      typeLabel = "Transfer In";
-    }
 
-  } else {
+      debit =
+        Number(tx.convertedAmount || tx.amount) || 0;
 
-    if (moneyInTypes.includes(tx.type)) {
-      debit = Number(tx.amount);
-    }
-
-    if (moneyOutTypes.includes(tx.type)) {
-      credit = Number(tx.amount);
+      typeLabel =
+        "Transfer In";
     }
 
   }
 
-  return { debit, credit, typeLabel };
-}
+  else {
 
+    if (
+      moneyInTypes.includes(tx.type) ||
+      tx.direction === "Deposit"
+    ) {
+
+      debit =
+        Number(tx.amount) || 0;
+    }
+
+    if (
+      moneyOutTypes.includes(tx.type) ||
+      tx.direction === "Withdraw"
+    ) {
+
+      credit =
+        Number(tx.amount) || 0;
+    }
+
+  }
+
+  return {
+    debit,
+    credit,
+    typeLabel
+  };
+}
 function updateSummary() {
   const bankName = document.getElementById("reconcileBank").value;
 
@@ -15905,6 +15933,7 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
      <button id="draftBtn" onclick="saveDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button>
     <button id="customerBtn" onclick="addCustomer()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save Customer</button>
+    <button id="cancelBtn" onclick="cancelCustomer()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Cancel</button>
   </div>
 
   <div class="bg-white p-1 rounded shadow">
@@ -19847,6 +19876,44 @@ function updateCustomerPlaceholder() {
     tbody.appendChild(placeholder);
   }
 }
+function saveCustomerDraft() {
+  const salutation = document.getElementById("customersalutation").value;
+  const name = document.getElementById("customerName").value;
+  const primaryEmail = document.getElementById("customerEmailPrimary").value;
+  const secondaryEmail = document.getElementById("customerEmailSecondary").value;
+  const phone = document.getElementById("customerPhone").value;
+  const kraPin = document.getElementById("customerkrapin").value;
+  const billingAddress = document.getElementById("billingAddress").value;
+  const shippingAddress = document.getElementById("shippingAddress").value;
+  const creditLimit = document.getElementById("creditLimit").value;
+  const statementDate = document.getElementById("statementDate").value;
+
+  let drafts = JSON.parse(localStorage.getItem("customerDrafts") || "[]");
+
+  const draftData = {
+    id: crypto.randomUUID(),
+    salutation,
+    name,
+    primaryEmail,
+    secondaryEmail,
+    phone,
+    kraPin,
+    billingAddress,
+    shippingAddress,
+    creditLimit,
+    statementDate,
+    status: "Draft",
+    createdAt: new Date().toISOString()
+  };
+
+  drafts.push(draftData);
+
+  localStorage.setItem("customerDrafts", JSON.stringify(drafts));
+
+  alert("Customer draft saved successfully");
+
+  resetForm();
+}
 function addCustomer() {
   const salutation = document.getElementById("customersalutation").value;
   const name = document.getElementById("customerName").value;
@@ -19905,7 +19972,20 @@ if (editingCustomerIndex !== null) {
   resetForm();
   renderCustomers();
 }
-
+function cancelCustomer() {
+  document.getElementById("customersalutation").value = "";
+  document.getElementById("customerName").value = "";
+  document.getElementById("customerEmailPrimary").value = "";
+  document.getElementById("customerEmailSecondary").value = "";
+  document.getElementById("customerPhone").value = "";
+  document.getElementById("customerkrapin").value = "";
+  document.getElementById("billingAddress").value = "";
+  document.getElementById("shippingAddress").value = "";
+  document.getElementById("creditLimit").value = "";
+  document.getElementById("statementDate").value = "";
+  editingCustomerIndex = null;
+  document.getElementById("customerBtn").textContent = "Save Customer";
+}
 function resetForm() {
   document.getElementById("customersalutation").value = "";
   document.getElementById("customerName").value = "";
@@ -19936,35 +20016,218 @@ function formatDate(dateStr) {
 }
 
 function renderCustomers() {
+
   const customers = JSON.parse(localStorage.getItem("customers") || "[]");
   const table = document.getElementById("customerTable");
+
   table.innerHTML = "";
-  
+
   customers.forEach((c, index) => {
+
     const row = document.createElement("tr");
-    
-      row.innerHTML = `
+
+    row.innerHTML = `
       <td class="p-2 border">
         <input type="checkbox" class="customerCheck" data-id="${c.id}">
       </td>
+
       <td class="p-2 border">${c.salutation || ""}</td>
+
       <td class="p-2 border">${c.name}</td>
+
       <td class="p-2 border">${c.primaryEmail}</td>
+
       <td class="p-2 border">${c.secondaryEmail || ""}</td>
+
       <td class="p-2 border">${c.phone}</td>
+
       <td class="p-2 border">${c.billingAddress}</td>
+
       <td class="p-2 border">${c.shippingAddress}</td>
+
       <td class="p-2 border">${c.kraPin}</td>
-      <td class="p-2 border" data-amount="${c.receivables || 0}">${formatCurrency(c.receivables || 0)}</td>
-      <td class="p-2 border" data-amount="${c.creditLimit || 0}">${formatCurrency(c.creditLimit || 0)}</td>
-      <td class="p-2 border" data-date="${c.statementDate || ""}">${formatDate(c.statementDate || "")}</td>
-      <td class="p-2 border">
-        <button onclick="editCustomer(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="deleteCustomer(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-        <button onclick="viewCustomer(${index})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">View</button></td>
+
+      <td class="p-2 border" data-amount="${c.receivables || 0}">
+        ${formatCurrency(c.receivables || 0)}
+      </td>
+
+      <td class="p-2 border" data-amount="${c.creditLimit || 0}">
+        ${formatCurrency(c.creditLimit || 0)}
+      </td>
+
+      <td class="p-2 border" data-date="${c.statementDate || ""}">
+        ${formatDate(c.statementDate || "")}
+      </td>
+
+      <td class="p-2 border space-x-1">
+
+        <button onclick="editCustomer(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteCustomer(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button onclick="viewCustomer(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          View
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleCustomerMenu(${index})"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            More ▾
+          </button>
+
+          <div id="customer-menu-${index}"
+            class="hidden absolute right-0 mt-1 w-48 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneCustomer(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="shareCustomerStatement(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Share Statement
+            </button>
+
+            <button onclick="emailCustomer(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Email
+            </button>
+            <button onclick="openCustomerCRM(${index})"
+               class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+               CRM
+            </button>
+
+          </div>
+
+        </div>
+
+      </td>
     `;
+
     table.appendChild(row);
+
   });
+
+}
+function toggleCustomerMenu(index) {
+  document.querySelectorAll("[id^='customer-menu-']").forEach(menu => {
+    if (menu.id !== `customer-menu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document
+    .getElementById(`customer-menu-${index}`)
+    .classList.toggle("hidden");
+}
+
+document.addEventListener("click", function(e) {
+  if (!e.target.closest(".relative")) {
+    document.querySelectorAll("[id^='customer-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+  }
+});
+
+function cloneCustomer(index) {
+  let customers = JSON.parse(localStorage.getItem("customers") || "[]");
+
+  const cloned = {
+    ...customers[index],
+    id: Date.now()
+  };
+
+  customers.push(cloned);
+
+  localStorage.setItem("customers", JSON.stringify(customers));
+
+  renderCustomers();
+
+  alert("Customer cloned successfully");
+}
+
+function shareCustomerStatement(index) {
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+
+  const c = customers[index];
+
+  const text = `
+Customer Statement
+
+Name: ${c.name}
+Email: ${c.primaryEmail}
+Phone: ${c.phone}
+Receivables: ${formatCurrency(c.receivables || 0)}
+Credit Limit: ${formatCurrency(c.creditLimit || 0)}
+Statement Date: ${formatDate(c.statementDate || "")}
+`;
+
+  if (navigator.share) {
+    navigator.share({
+      title: "Customer Statement",
+      text: text
+    });
+  } else {
+    navigator.clipboard.writeText(text);
+    alert("Statement copied to clipboard");
+  }
+}
+
+function emailCustomer(index) {
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+
+  const c = customers[index];
+
+  const subject = encodeURIComponent("Customer Statement");
+
+  const body = encodeURIComponent(
+`Customer Statement
+
+Name: ${c.name}
+Phone: ${c.phone}
+Receivables: ${formatCurrency(c.receivables || 0)}
+Credit Limit: ${formatCurrency(c.creditLimit || 0)}
+Statement Date: ${formatDate(c.statementDate || "")}
+`
+  );
+
+  window.location.href = `mailto:${c.primaryEmail}?subject=${subject}&body=${body}`;
+}
+function openCustomerCRM(index) {
+
+  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+
+  const customer = customers[index];
+
+  localStorage.setItem("selectedCRMCustomer", JSON.stringify(customer));
+
+  document.querySelectorAll(".tab-content").forEach(tab => {
+    tab.classList.add("hidden");
+  });
+
+  document.getElementById("crmTab").classList.remove("hidden");
+
+  renderCustomerCRM();
+}
+
+function renderCustomerCRM() {
+
+  const customer = JSON.parse(localStorage.getItem("selectedCRMCustomer") || "{}");
+
+  document.getElementById("crmCustomerName").innerText = customer.name || "";
+  document.getElementById("crmCustomerEmail").innerText = customer.primaryEmail || "";
+  document.getElementById("crmCustomerPhone").innerText = customer.phone || "";
+  document.getElementById("crmCustomerReceivables").innerText = formatCurrency(customer.receivables || 0);
+  document.getElementById("crmCustomerLimit").innerText = formatCurrency(customer.creditLimit || 0);
+  document.getElementById("crmCustomerAddress").innerText = customer.billingAddress || "";
 }
 function updateCustomerReceivables(customerName, amountToAdd) {
     let customers = JSON.parse(localStorage.getItem("customers") || "[]");
@@ -33072,13 +33335,14 @@ function searchSupplierPayments() {
 }
 
 function addSupplierPayment() {
+
   const date = document.getElementById("paymentDate").value;
   const supplier = document.getElementById("paymentSupplierName").value.trim();
   const amount = parseFloat(document.getElementById("paymentAmount").value);
-  const mode = document.getElementById("paymentMode").value.trim();     
-  const bank = document.getElementById("paymentMethod").value.trim();   
+  const mode = document.getElementById("paymentMode").value.trim();
+  const bank = document.getElementById("paymentMethod").value.trim();
+  const selectedBillIndex = document.getElementById("payBill").value;
 
-  
   if (!date || !supplier || isNaN(amount) || !mode || !bank) {
     alert("Please fill in all required fields.");
     return;
@@ -33086,27 +33350,59 @@ function addSupplierPayment() {
 
   const payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
   const banks = JSON.parse(localStorage.getItem("banks") || "[]");
-  const bankIndex = banks.findIndex(b => b.name === bank);
-  if (bankIndex === -1) { 
-    alert("Selected bank not found."); 
-    return; 
-  }
-
   let transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
   let manualTx = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
 
+  const bankIndex = banks.findIndex(b => b.name === bank);
+
+  if (bankIndex === -1) {
+    alert("Selected bank not found.");
+    return;
+  }
+
   if (editingPaymentIndex === null) {
-    
-    if (banks[bankIndex].balance < amount) { 
-      alert("Insufficient funds in selected bank."); 
-      return; 
+
+    if (banks[bankIndex].balance < amount) {
+      alert("Insufficient funds in selected bank.");
+      return;
     }
 
-    banks[bankIndex].balance -= amount;
-    payments.push({ date, supplier, amount, mode, bank });
+    const id = crypto.randomUUID();
 
-    
-    const newTx = {
+    banks[bankIndex].balance -= amount;
+
+    const payment = {
+      id,
+      date,
+      supplier,
+      amount,
+      mode,
+      bank,
+      billIndex: selectedBillIndex
+    };
+
+    payments.push(payment);
+
+    // UPDATE BILL PAYMENT
+    if (selectedBillIndex !== "") {
+
+      let bills = JSON.parse(localStorage.getItem("bills") || "[]");
+
+      const bill = bills[selectedBillIndex];
+
+      if (bill) {
+
+        bill.paidAmount =
+          (parseFloat(bill.paidAmount || 0) + amount);
+
+        localStorage.setItem("bills", JSON.stringify(bills));
+
+      }
+
+    }
+
+    const tx = {
+      id,
       bank,
       type: "Vendor Payment",
       account: supplier,
@@ -33117,39 +33413,60 @@ function addSupplierPayment() {
       source: "supplierPayment",
       direction: "Withdraw"
     };
-    transactions.push(newTx);
-    manualTx.push(newTx);
+
+    transactions.push(tx);
+    manualTx.push(tx);
 
   } else {
-    
+
     const oldPayment = payments[editingPaymentIndex];
 
-    
     const oldBankIndex = banks.findIndex(b => b.name === oldPayment.bank);
-    if (oldBankIndex !== -1) banks[oldBankIndex].balance += parseFloat(oldPayment.amount);
 
-    
-    if (banks[bankIndex].balance < amount) { 
-      alert("Insufficient funds in selected bank."); 
-      return; 
+    if (oldBankIndex !== -1) {
+      banks[oldBankIndex].balance += parseFloat(oldPayment.amount);
     }
+
+    if (banks[bankIndex].balance < amount) {
+      alert("Insufficient funds in selected bank.");
+      return;
+    }
+
     banks[bankIndex].balance -= amount;
 
-    
-    payments[editingPaymentIndex] = { date, supplier, amount, mode, bank };
+    payments[editingPaymentIndex] = {
+      id: oldPayment.id,
+      date,
+      supplier,
+      amount,
+      mode,
+      bank,
+      billIndex: selectedBillIndex
+    };
 
-    
-    const filterFn = t =>
-      !(t.date === oldPayment.date &&
-        t.bank === oldPayment.bank &&
-        t.amount === oldPayment.amount &&
-        t.ref === `Payment to ${oldPayment.supplier}` &&
-        t.source === "supplierPayment");
+    // UPDATE BILL PAYMENT
+    if (selectedBillIndex !== "") {
 
-    transactions = transactions.filter(filterFn);
-    manualTx = manualTx.filter(filterFn);
+      let bills = JSON.parse(localStorage.getItem("bills") || "[]");
+
+      const bill = bills[selectedBillIndex];
+
+      if (bill) {
+
+        bill.paidAmount =
+          (parseFloat(bill.paidAmount || 0) + amount);
+
+        localStorage.setItem("bills", JSON.stringify(bills));
+
+      }
+
+    }
+
+    transactions = transactions.filter(t => t.id !== oldPayment.id);
+    manualTx = manualTx.filter(t => t.id !== oldPayment.id);
 
     const updatedTx = {
+      id: oldPayment.id,
       bank,
       type: "Vendor Payment",
       account: supplier,
@@ -33160,66 +33477,236 @@ function addSupplierPayment() {
       source: "supplierPayment",
       direction: "Withdraw"
     };
+
     transactions.push(updatedTx);
     manualTx.push(updatedTx);
 
     editingPaymentIndex = null;
+
     document.getElementById("paymentSubmitBtn").textContent = "Save Payment";
+
   }
 
-  
   localStorage.setItem("billPayments", JSON.stringify(payments));
   localStorage.setItem("banks", JSON.stringify(banks));
   localStorage.setItem("transactions", JSON.stringify(transactions));
   localStorage.setItem("manualTransactions", JSON.stringify(manualTx));
 
-  
   renderSupplierPayments();
   renderManualTransactions?.();
   renderReconciliationTransactions?.();
+
   clearPaymentForm();
-  updateAccountsPayable(); 
-  renderAccountsPayable?.(); 
+
+  updateAccountsPayable?.();
+  renderAccountsPayable?.();
+  loadSupplierBills?.();
+
   renderCreditcontrolAnalysis?.();
   loadDashboard?.();
+
 }
 
 
+
 function renderSupplierPayments() {
+
   const payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
   const table = document.getElementById("supplierPaymentsTable");
+
   table.innerHTML = "";
 
   let total = 0;
 
   payments.forEach((payment, index) => {
+
     total += parseFloat(payment.amount);
 
     const row = document.createElement("tr");
+
     row.innerHTML = `
-       <td class="p-2"><input type="checkbox" class="supplier-payment-checkbox" value="${index}"></td>
+      <td class="p-2">
+        <input type="checkbox" class="supplier-payment-checkbox" value="${index}">
+      </td>
+
       <td class="p-2">${payment.date}</td>
+
       <td class="p-2">${payment.supplier}</td>
-      <td class="p-2">KES ${parseFloat(payment.amount).toFixed(2)}</td>
-      <td class="p-2">${payment.mode}</td> 
-      <td class="p-2">${payment.bank}</td> 
-      <td class="p-2 flex gap-1">
-        <button onclick="editSupplierPayment(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="deleteSupplierPayment(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
-        <button onclick="previewSupplierPayment(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Preview</button>
+
+      <td class="p-2">
+        KES ${parseFloat(payment.amount).toFixed(2)}
+      </td>
+
+      <td class="p-2">${payment.mode}</td>
+
+      <td class="p-2">${payment.bank}</td>
+
+      <td class="p-2 flex gap-1 flex-wrap">
+
+        <button onclick="editSupplierPayment(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteSupplierPayment(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <button onclick="previewSupplierPayment(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Preview
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleSupplierPaymentMenu(${index})"
+            class="border border-gray-700 text-white bg-gray-700 font-bold px-2 py-1 rounded hover:bg-gray-600">
+            More ▾
+          </button>
+
+          <div id="supplier-payment-menu-${index}"
+            class="hidden absolute right-0 mt-1 w-48 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneSupplierPayment(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="shareSupplierPaymentStatement(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Share Statement
+            </button>
+
+            <button onclick="emailSupplierPayment(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Email
+            </button>
+
+          </div>
+
+        </div>
+
       </td>
     `;
+
     table.appendChild(row);
+
   });
 
- 
   const totalRow = document.createElement("tr");
+
   totalRow.innerHTML = `
-    <td class="p-2 font-bold" colspan="2">Total</td>
-    <td class="p-2 font-bold">KES ${total.toFixed(2)}</td>
+    <td class="p-2 font-bold" colspan="3">
+      Total
+    </td>
+
+    <td class="p-2 font-bold">
+      KES ${total.toFixed(2)}
+    </td>
+
     <td colspan="3"></td>
   `;
+
   table.appendChild(totalRow);
+}
+function toggleSupplierPaymentMenu(index) {
+
+  document.querySelectorAll("[id^='supplier-payment-menu-']").forEach(menu => {
+    if (menu.id !== `supplier-payment-menu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document
+    .getElementById(`supplier-payment-menu-${index}`)
+    .classList.toggle("hidden");
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='supplier-payment-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function cloneSupplierPayment(index) {
+
+  let payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
+
+  const cloned = {
+    ...payments[index]
+  };
+
+  payments.push(cloned);
+
+  localStorage.setItem("billPayments", JSON.stringify(payments));
+
+  renderSupplierPayments();
+
+  alert("Supplier payment cloned successfully");
+
+}
+
+function shareSupplierPaymentStatement(index) {
+
+  const payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
+
+  const payment = payments[index];
+
+  const text = `
+Supplier Payment Statement
+
+Supplier: ${payment.supplier}
+Date: ${payment.date}
+Amount: KES ${parseFloat(payment.amount).toFixed(2)}
+Mode: ${payment.mode}
+Bank: ${payment.bank}
+`;
+
+  if (navigator.share) {
+
+    navigator.share({
+      title: "Supplier Payment Statement",
+      text: text
+    });
+
+  } else {
+
+    navigator.clipboard.writeText(text);
+
+    alert("Statement copied to clipboard");
+
+  }
+
+}
+
+function emailSupplierPayment(index) {
+
+  const payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
+
+  const payment = payments[index];
+
+  const subject = encodeURIComponent("Supplier Payment Statement");
+
+  const body = encodeURIComponent(
+`Supplier Payment Statement
+
+Supplier: ${payment.supplier}
+Date: ${payment.date}
+Amount: KES ${parseFloat(payment.amount).toFixed(2)}
+Mode: ${payment.mode}
+Bank: ${payment.bank}
+`
+  );
+
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+
 }
 function previewSupplierPayment(index) {
   const payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
@@ -33329,6 +33816,8 @@ function editSupplierPayment(index) {
   const payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
   const payment = payments[index];
 
+  if (!payment) return;
+
   document.getElementById("paymentDate").value = payment.date;
   document.getElementById("paymentSupplierName").value = payment.supplier;
   document.getElementById("paymentAmount").value = payment.amount;
@@ -33338,8 +33827,6 @@ function editSupplierPayment(index) {
   editingPaymentIndex = index;
   document.getElementById("paymentSubmitBtn").textContent = "Update Payment";
 }
-
-
 function deleteSupplierPayment(index) {
   if (!confirm("Are you sure you want to delete this payment?")) return;
 
@@ -33351,7 +33838,9 @@ function deleteSupplierPayment(index) {
   const payment = payments[index];
   if (!payment) return;
 
-  if (!payment.id) payment.id = crypto.randomUUID();
+  const id = payment.id;
+
+  if (!id) return;
 
   moveToRecycle(payment, "File", "SupplierPayments");
 
@@ -33360,21 +33849,8 @@ function deleteSupplierPayment(index) {
     banks[bankIndex].balance += parseFloat(payment.amount);
   }
 
-  transactions = transactions.filter(t =>
-    !(t.date === payment.date &&
-      t.bank === payment.bank &&
-      t.amount === payment.amount &&
-      t.ref === `Payment to ${payment.supplier}` &&
-      t.source === "supplierPayment")
-  );
-
-  manualTx = manualTx.filter(t =>
-    !(t.date === payment.date &&
-      t.bank === payment.bank &&
-      t.amount === payment.amount &&
-      t.ref === `Payment to ${payment.supplier}` &&
-      t.source === "supplierPayment")
-  );
+  transactions = transactions.filter(t => t.id !== id);
+  manualTx = manualTx.filter(t => t.id !== id);
 
   payments.splice(index, 1);
 
@@ -33382,8 +33858,6 @@ function deleteSupplierPayment(index) {
   localStorage.setItem("banks", JSON.stringify(banks));
   localStorage.setItem("transactions", JSON.stringify(transactions));
   localStorage.setItem("manualTransactions", JSON.stringify(manualTx));
-
- 
 
   renderSupplierPayments();
   renderManualTransactions?.();
@@ -33394,9 +33868,7 @@ function deleteSupplierPayment(index) {
 
   alert("♻️ Supplier payment moved to Recycle Bin & accounts rolled back.");
 }
-
 function deleteSelectedSupplierPayments() {
-
   let payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
   let banks = JSON.parse(localStorage.getItem("banks") || "[]");
   let transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
@@ -33412,42 +33884,26 @@ function deleteSelectedSupplierPayments() {
   }
 
   if (!confirm(`You selected ${selected.length} payment(s). Proceed?`)) return;
-
   if (!confirm("This action cannot be undone. Confirm delete?")) return;
 
   selected.sort((a, b) => b - a).forEach(index => {
-
     const payment = payments[index];
     if (!payment) return;
 
-    if (!payment.id) payment.id = crypto.randomUUID();
+    const id = payment.id;
+    if (!id) return;
 
     moveToRecycle(payment, "File", "SupplierPayments");
 
     const bankIndex = banks.findIndex(b => b.name === payment.bank);
-
     if (bankIndex !== -1) {
       banks[bankIndex].balance += parseFloat(payment.amount);
     }
 
-    transactions = transactions.filter(t =>
-      !(t.date === payment.date &&
-        t.bank === payment.bank &&
-        t.amount === payment.amount &&
-        t.ref === `Payment to ${payment.supplier}` &&
-        t.source === "supplierPayment")
-    );
-
-    manualTx = manualTx.filter(t =>
-      !(t.date === payment.date &&
-        t.bank === payment.bank &&
-        t.amount === payment.amount &&
-        t.ref === `Payment to ${payment.supplier}` &&
-        t.source === "supplierPayment")
-    );
+    transactions = transactions.filter(t => t.id !== id);
+    manualTx = manualTx.filter(t => t.id !== id);
 
     payments.splice(index, 1);
-
   });
 
   localStorage.setItem("billPayments", JSON.stringify(payments));
@@ -33485,17 +33941,98 @@ function clearPaymentForm() {
 
 
 function populateSupplierDropdownById(id) {
+
   const dropdown = document.getElementById(id);
+
   dropdown.innerHTML = '<option value="">Select Supplier</option>';
+
   const suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
+
   suppliers.forEach(s => {
+
     const option = document.createElement("option");
+
     option.value = s.name;
     option.textContent = s.name;
-    dropdown.appendChild(option);
-  });
-}
 
+    dropdown.appendChild(option);
+
+  });
+
+  dropdown.addEventListener("change", function () {
+
+    const supplier = this.value;
+
+    const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+
+    const payBill = document.getElementById("payBill");
+
+    if (!payBill) return;
+
+    payBill.innerHTML =
+      '<option value="">Select Bill (optional)</option>';
+
+    bills
+      .filter(b =>
+        b.supplier === supplier &&
+        (parseFloat(b.paidAmount || 0) < parseFloat(b.total || 0))
+      )
+      .forEach((bill, index) => {
+
+        const due =
+          parseFloat(bill.total || 0) -
+          parseFloat(bill.paidAmount || 0);
+
+        const option = document.createElement("option");
+
+        option.value = index;
+
+        option.textContent =
+          `${bill.billNumber} | Due: KES ${due.toFixed(2)}`;
+
+        payBill.appendChild(option);
+
+      });
+
+  });
+
+}
+function populateBillsBySupplier() {
+
+  const supplier = document.getElementById("paymentSupplierName").value;
+
+  const billDropdown = document.getElementById("payBill");
+
+  billDropdown.innerHTML =
+    '<option value="">Select Bill (optional)</option>';
+
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+
+  bills.forEach((bill, index) => {
+
+    const paidAmount = parseFloat(bill.paidAmount || 0);
+
+    const balance = parseFloat(bill.total || 0) - paidAmount;
+
+    if (
+      bill.supplier === supplier &&
+      balance > 0
+    ) {
+
+      const option = document.createElement("option");
+
+      option.value = index;
+
+      option.textContent =
+        `${bill.billNumber} - Balance: KES ${balance.toFixed(2)}`;
+
+      billDropdown.appendChild(option);
+
+    }
+
+  });
+
+}
 function populateBankDropdown() {
   const dropdown = document.getElementById("paymentMethod");
   dropdown.innerHTML = '<option value="">Select Bank</option>';
@@ -33508,7 +34045,39 @@ function populateBankDropdown() {
   });
 }
 
+document.getElementById("paymentSupplierName").addEventListener("change", function () {
 
+  const supplier = this.value;
+
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+
+  const payBill = document.getElementById("payBill");
+
+  payBill.innerHTML = '<option value="">Select Bill (optional)</option>';
+
+  bills
+    .filter(b =>
+      b.supplier === supplier &&
+      (parseFloat(b.paidAmount || 0) < parseFloat(b.total || 0))
+    )
+    .forEach((bill, index) => {
+
+      const due =
+        parseFloat(bill.total || 0) -
+        parseFloat(bill.paidAmount || 0);
+
+      const option = document.createElement("option");
+
+      option.value = index;
+
+      option.textContent =
+        `${bill.billNumber} | Due: KES ${due.toFixed(2)} | Due Date: ${bill.due || "-"}`;
+
+      payBill.appendChild(option);
+
+    });
+
+});
 document.addEventListener("DOMContentLoaded", () => {
   populateSupplierDropdownById("paymentSupplierName");
   populateBankDropdown();
