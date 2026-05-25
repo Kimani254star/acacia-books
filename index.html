@@ -16368,314 +16368,1055 @@ document.addEventListener("DOMContentLoaded", () => {
    <button onclick="closeInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Close</button> 
   </div>
  </div>
+<div id="templateEditor" class="hidden fixed inset-0 bg-black/60 z-100 overflow-y-auto">
 
-    <div id="templateEditor" class="hidden fixed inset-0 bg-black/60 z-50 overflow-y-auto">
+  <div class="min-h-screen flex items-start justify-center p-6">
 
-      <div class="min-h-screen flex items-start justify-center p-6">
+    <div class="bg-white w-full max-w-6xl rounded-2xl shadow-2xl overflow-hidden flex">
 
-        <div class="bg-white w-full max-w-6xl rounded-2xl shadow-2xl overflow-hidden flex">
+      <div class="w-24 bg-slate-900 text-white flex flex-col items-center py-5 space-y-5">
 
-          <div class="w-24 bg-slate-900 text-white flex flex-col items-center py-5 space-y-5">
+        <button onclick="showTemplateTab('generalTab', this)"
+          class="templateTabBtn bg-orange-500 w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px]">
 
-            <button onclick="showTemplateTab('generalTab', this)"
-              class="templateTabBtn bg-orange-500 w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px]">
+          ⚙️
+          <span>General</span>
 
-              ⚙️
-              <span>General</span>
+        </button>
 
+        <button onclick="showTemplateTab('headerFooterTab', this)"
+          class="templateTabBtn w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px] hover:bg-slate-700">
+
+          📄
+          <span>Header & Footer</span>
+
+        </button>
+
+        <button onclick="showTemplateTab('transactionTab', this)"
+          class="templateTabBtn w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px] hover:bg-slate-700">
+
+          🔁
+          <span>Transaction</span>
+
+        </button>
+
+        <button onclick="showTemplateTab('tableTab', this)"
+          class="templateTabBtn w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px] hover:bg-slate-700">
+
+          📊
+          <span>Table</span>
+
+        </button>
+
+        <button onclick="showTemplateTab('totalTab', this)"
+          class="templateTabBtn w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px] hover:bg-slate-700">
+
+          🧾
+          <span>Total</span>
+
+        </button>
+
+        <button onclick="showTemplateTab('otherDetailsTab', this)"
+          class="templateTabBtn w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px] hover:bg-slate-700">
+
+          📝
+          <span>Other</span>
+
+        </button>
+
+        <button onclick="showTemplateTab('fontTab', this)"
+          class="templateTabBtn w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px] hover:bg-slate-700">
+
+          🔤
+          <span>Font</span>
+
+        </button>
+
+        <button onclick="showTemplateTab('colorTab', this)"
+          class="templateTabBtn w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px] hover:bg-slate-700">
+
+          🎨
+          <span>Colors</span>
+
+        </button>
+
+      </div>
+
+      <div class="flex-1 bg-white">
+
+        <div class="flex justify-between items-center border-b px-6 py-5">
+
+          <h2 class="text-2xl font-bold text-slate-800">
+            Edit Template
+          </h2>
+
+          <div class="flex gap-3">
+
+            <button
+              onclick="applyTemplateChanges()"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-2 rounded hover:bg-blue-800">
+              Save Changes
             </button>
 
-            <button onclick="showTemplateTab('fontTab', this)"
-              class="templateTabBtn w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px] hover:bg-slate-700">
-
-              🔤
-              <span>Font</span>
-
-            </button>
-
-            <button onclick="showTemplateTab('colorTab', this)"
-              class="templateTabBtn w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px] hover:bg-slate-700">
-
-              🎨
-              <span>Colors</span>
-
+            <button
+              onclick="closeTemplateEditor()"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-2 rounded hover:bg-blue-800">
+              Close
             </button>
 
           </div>
 
-          <div class="flex-1 bg-white">
+        </div>
 
-            <div class="flex justify-between items-center border-b px-6 py-5">
+   <div class="p-6">
 
-              <h2 class="text-2xl font-bold text-slate-800">
-                Edit Template
-              </h2>
+    <div id="generalTab" class="templateTab">
 
-              <div class="flex gap-3">
+   <h3 class="text-lg font-bold mb-6">
+  Template Properties
+</h3>
 
-                <button
-                  onclick="applyTemplateChanges()"
-                 class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
-                  Save Changes
-
-                </button>
-
-                <button
-                  onclick="closeTemplateEditor()"
-                  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
-                  Close
-
-                </button>
-
-              </div>
-
-            </div>
-
-            <div class="p-6">
-
-              <div id="generalTab" class="templateTab">
-
-                <h3 class="text-lg font-bold mb-6">
-                  Template Properties
-                </h3>
-
-                <div class="grid md:grid-cols-2 gap-6">
-
-                  <div>
-                    <label class="block font-semibold mb-2">
-                      Template Name
-                    </label>
-
-                    <input
-                      type="text"
-                      id="templateName"
-                      class="border border-gray-300 p-3 rounded-lg w-full">
-                  </div>
-
-                  <div>
-                    <label class="block font-semibold mb-2">
-                      Paper Size
-                    </label>
-
-                    <select
-                      id="paperSize"
-                      class="border border-gray-300 p-3 rounded-lg w-full">
-
-                      <option value="A4">A4</option>
-                      <option value="Letter">Letter</option>
-                      <option value="A5">A5</option>
-
-                    </select>
-                  </div>
-
-                  <div>
-                    <label class="block font-semibold mb-2">
-                      Orientation
-                    </label>
-
-                    <select
-                      id="orientation"
-                      class="border border-gray-300 p-3 rounded-lg w-full">
-
-                      <option value="portrait">Portrait</option>
-                      <option value="landscape">Landscape</option>
-
-                    </select>
-                  </div>
-
-                  <div>
-                    <label class="block font-semibold mb-2">
-                      Border Radius
-                    </label>
-
-                    <input
-                      type="range"
-                      id="editRadius"
-                      min="0"
-                      max="40"
-                      class="w-full">
-                  </div>
-
-                </div>
-
-                <div class="mt-8">
-
-                  <label class="block font-semibold mb-4">
-                    Margins (inches)
-                  </label>
-
-                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-
-                    <input id="marginTop" placeholder="Top"
-                      class="border border-gray-300 p-3 rounded-lg w-full">
-
-                    <input id="marginBottom" placeholder="Bottom"
-                      class="border border-gray-300 p-3 rounded-lg w-full">
-
-                    <input id="marginLeft" placeholder="Left"
-                      class="border border-gray-300 p-3 rounded-lg w-full">
-
-                    <input id="marginRight" placeholder="Right"
-                      class="border border-gray-300 p-3 rounded-lg w-full">
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              <div id="fontTab" class="templateTab hidden">
-
-                <h3 class="text-lg font-bold mb-6">
-                  Font Settings
-                </h3>
-
-                <div class="grid md:grid-cols-2 gap-6">
-
-                  <div>
-                    <label class="block font-semibold mb-2">
-                      Font Family
-                    </label>
-
-                    <select
-                      id="editFont"
-                      class="border border-gray-300 p-3 rounded-lg w-full">
-
-                      <option value="Arial">Arial</option>
-                      <option value="Poppins">Poppins</option>
-                      <option value="Georgia">Georgia</option>
-                      <option value="Courier New">Courier New</option>
-
-                    </select>
-                  </div>
-
-                  <div>
-                    <label class="block font-semibold mb-2">
-                      Font Size
-                    </label>
-
-                    <input
-                      type="number"
-                      id="fontSize"
-                      class="border border-gray-300 p-3 rounded-lg w-full">
-                  </div>
-
-                </div>
-
-              </div>
-
-              <div id="colorTab" class="templateTab hidden">
-
-                <h3 class="text-lg font-bold mb-6">
-                  Colors
-                </h3>
-
-                <div class="grid md:grid-cols-2 gap-6">
-
-              <div class="grid md:grid-cols-2 gap-6">
+<div class="grid md:grid-cols-2 gap-6">
 
   <div>
     <label class="block font-semibold mb-2">
-      Primary Color
+      Template Name
     </label>
 
     <input
-      type="color"
-      id="editColor"
-      class="w-full h-12 border rounded-lg">
+      type="text"
+      id="templateName"
+      class="border border-gray-300 p-3 rounded-lg w-full">
   </div>
 
   <div>
     <label class="block font-semibold mb-2">
-      Text Color
+      Template Type
     </label>
 
-    <input
-      type="color"
-      id="textColor"
-      value="#111111"
-      class="w-full h-12 border rounded-lg">
+    <select
+      id="templateType"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+
+      <option value="invoice">Invoice</option>
+      <option value="quotation">Quotation</option>
+      <option value="receipt">Receipt</option>
+      <option value="delivery_note">Delivery Note</option>
+      <option value="purchase_order">Purchase Order</option>
+      <option value="credit_note">Credit Note</option>
+
+    </select>
   </div>
 
   <div>
     <label class="block font-semibold mb-2">
-      Background Color
+      Paper Size
     </label>
 
-    <input
-      type="color"
-      id="backgroundColor"
-      value="#ffffff"
-      class="w-full h-12 border rounded-lg">
+    <select
+      id="paperSize"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+
+      <option value="A4">A4</option>
+      <option value="Letter">Letter</option>
+      <option value="A5">A5</option>
+      <option value="Legal">Legal</option>
+
+    </select>
   </div>
 
   <div>
     <label class="block font-semibold mb-2">
-      Table Header Color
+      Orientation
     </label>
 
-    <input
-      type="color"
-      id="tableHeaderColor"
-      value="#2563eb"
-      class="w-full h-12 border rounded-lg">
+    <select
+      id="orientation"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+
+      <option value="portrait">Portrait</option>
+      <option value="landscape">Landscape</option>
+
+    </select>
   </div>
 
   <div>
     <label class="block font-semibold mb-2">
-      Table Border Color
+      Border Radius
     </label>
 
     <input
-      type="color"
-      id="tableBorderColor"
-      value="#d1d5db"
-      class="w-full h-12 border rounded-lg">
+      type="range"
+      id="editRadius"
+      min="0"
+      max="40"
+      class="w-full">
   </div>
 
   <div>
     <label class="block font-semibold mb-2">
-      Accent Color
+      Shadow Intensity
     </label>
 
     <input
-      type="color"
-      id="accentColor"
-      value="#9333ea"
-      class="w-full h-12 border rounded-lg">
+      type="range"
+      id="shadowIntensity"
+      min="0"
+      max="50"
+      class="w-full">
   </div>
 
   <div>
     <label class="block font-semibold mb-2">
-      Footer Background
+      Layout Style
     </label>
 
-    <input
-      type="color"
-      id="footerBgColor"
-      value="#f3f4f6"
-      class="w-full h-12 border rounded-lg">
+    <select
+      id="layoutStyle"
+      class="border border-gray-800 p-3 rounded-lg w-full">
+
+      <option value="modern">Modern</option>
+      <option value="classic">Classic</option>
+      <option value="minimal">Minimal</option>
+      <option value="corporate">Corporate</option>
+
+    </select>
   </div>
 
   <div>
     <label class="block font-semibold mb-2">
-      Footer Text Color
+      Logo Size
     </label>
 
     <input
-      type="color"
-      id="footerTextColor"
-      value="#374151"
-      class="w-full h-12 border rounded-lg">
+      type="number"
+      id="logoSize"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+  </div>
+
+  <div>
+    <label class="block font-semibold mb-2">
+      Watermark Opacity
+    </label>
+
+    <input
+      type="range"
+      id="watermarkOpacity"
+      min="0"
+      max="100"
+      class="w-full">
+  </div>
+
+  <div>
+    <label class="block font-semibold mb-2">
+      Content Width
+    </label>
+
+    <input
+      type="number"
+      id="contentWidth"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+  </div>
+</div>
+<div class="mt-8">
+
+  <label class="block font-semibold mb-4">
+    Margins (inches)
+  </label>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+    <input id="marginTop" placeholder="Top"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+
+    <input id="marginBottom" placeholder="Bottom"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+
+    <input id="marginLeft" placeholder="Left"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+
+    <input id="marginRight" placeholder="Right"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+  </div>
+</div>
+
+<div class="mt-8">
+
+  <label class="block font-semibold mb-4">
+    Padding (px)
+  </label>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+    <input id="paddingTop" placeholder="Top Padding"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+
+    <input id="paddingBottom" placeholder="Bottom Padding"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+
+    <input id="paddingLeft" placeholder="Left Padding"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+
+    <input id="paddingRight" placeholder="Right Padding"
+      class="border border-gray-300 p-3 rounded-lg w-full">
+
+  </div>
+</div>
+</div>
+<div id="headerFooterTab" class="templateTab hidden">
+
+  <h3 class="text-lg font-bold mb-6">
+    Header & Footer
+  </h3>
+
+  <div class="grid md:grid-cols-2 gap-6">
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Header Height
+      </label>
+
+      <input
+        type="number"
+        id="headerHeight"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Footer Height
+      </label>
+
+      <input
+        type="number"
+        id="footerHeight"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Header Alignment
+      </label>
+
+      <select
+        id="headerAlignment"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+
+        <option value="left">Left</option>
+        <option value="center">Center</option>
+        <option value="right">Right</option>
+
+      </select>
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Footer Alignment
+      </label>
+
+      <select
+        id="footerAlignment"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+
+        <option value="left">Left</option>
+        <option value="center">Center</option>
+        <option value="right">Right</option>
+
+      </select>
+    </div>
+
   </div>
 
 </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+
+<div id="transactionTab" class="templateTab hidden">
+
+  <h3 class="text-lg font-bold mb-6">
+    Transaction Details
+  </h3>
+
+  <div class="grid md:grid-cols-2 gap-6">
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showInvoiceNumber">
+      <span>Show Invoice Number</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showInvoiceDate">
+      <span>Show Invoice Date</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showDueDate">
+      <span>Show Due Date</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showCustomerName">
+      <span>Show Customer Name</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showCustomerPhone">
+      <span>Show Customer Phone</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showCustomerEmail">
+      <span>Show Customer Email</span>
+    </label>
+
+  </div>
+
+</div>
+
+<div id="tableTab" class="templateTab hidden">
+
+  <h3 class="text-lg font-bold mb-6">
+    Table Settings
+  </h3>
+
+  <div class="grid md:grid-cols-2 gap-6">
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Table Border Width
+      </label>
+
+      <input
+        type="number"
+        id="tableBorderWidth"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Row Padding
+      </label>
+
+      <input
+        type="number"
+        id="rowPadding"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Header Font Size
+      </label>
+
+      <input
+        type="number"
+        id="tableHeaderFontSize"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Row Font Size
+      </label>
+
+      <input
+        type="number"
+        id="tableRowFontSize"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+  </div>
+
+</div>
+
+<div id="totalTab" class="templateTab hidden">
+
+  <h3 class="text-lg font-bold mb-6">
+    Total Section
+  </h3>
+
+  <div class="grid md:grid-cols-2 gap-6">
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showSubtotal">
+      <span>Show Subtotal</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showTax">
+      <span>Show Tax</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showDiscount">
+      <span>Show Discount</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showGrandTotal">
+      <span>Show Grand Total</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showAmountPaid">
+      <span>Show Amount Paid</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showBalance">
+      <span>Show Balance</span>
+    </label>
+
+  </div>
+
+</div>
+
+<div id="otherDetailsTab" class="templateTab hidden">
+
+  <h3 class="text-lg font-bold mb-6">
+    Other Details
+  </h3>
+
+  <div class="grid gap-6">
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Notes
+      </label>
+
+      <textarea
+        id="otherNotes"
+        rows="4"
+        class="border border-gray-300 p-3 rounded-lg w-full"
+        placeholder="Enter notes"></textarea>
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Terms & Conditions
+      </label>
+
+      <textarea
+        id="termsConditions"
+        rows="4"
+        class="border border-gray-300 p-3 rounded-lg w-full"
+        placeholder="Enter terms and conditions"></textarea>
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Footer Message
+      </label>
+
+      <input
+        type="text"
+        id="footerMessage"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+  </div>
+
+</div>
+<div id="transactionTab" class="templateTab hidden">
+
+  <h3 class="text-lg font-bold mb-6">
+    Transaction Details
+  </h3>
+
+  <div class="grid md:grid-cols-2 gap-6">
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showInvoiceNumber">
+      <span>Show Invoice Number</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showInvoiceDate">
+      <span>Show Invoice Date</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showDueDate">
+      <span>Show Due Date</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showCustomerName">
+      <span>Show Customer Name</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showCustomerPhone">
+      <span>Show Customer Phone</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showCustomerEmail">
+      <span>Show Customer Email</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showPaymentTerms">
+      <span>Show Payment Terms</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showReferenceNumber">
+      <span>Show Reference Number</span>
+    </label>
+
+  </div>
+
+</div>
+
+<div id="tableTab" class="templateTab hidden">
+
+  <h3 class="text-lg font-bold mb-6">
+    Table Settings
+  </h3>
+
+  <div class="grid md:grid-cols-2 gap-6">
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Table Border Width
+      </label>
+
+      <input
+        type="number"
+        id="tableBorderWidth"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Row Padding
+      </label>
+
+      <input
+        type="number"
+        id="rowPadding"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Header Font Size
+      </label>
+
+      <input
+        type="number"
+        id="tableHeaderFontSize"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Row Font Size
+      </label>
+
+      <input
+        type="number"
+        id="tableRowFontSize"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Table Radius
+      </label>
+
+      <input
+        type="number"
+        id="tableRadius"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Cell Spacing
+      </label>
+
+      <input
+        type="number"
+        id="cellSpacing"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+  </div>
+
+</div>
+
+<div id="totalTab" class="templateTab hidden">
+
+  <h3 class="text-lg font-bold mb-6">
+    Total Section
+  </h3>
+
+  <div class="grid md:grid-cols-2 gap-6">
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showSubtotal">
+      <span>Show Subtotal</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showTax">
+      <span>Show Tax</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showDiscount">
+      <span>Show Discount</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showGrandTotal">
+      <span>Show Grand Total</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showPaidAmount">
+      <span>Show Paid Amount</span>
+    </label>
+
+    <label class="flex items-center gap-3">
+      <input type="checkbox" id="showBalance">
+      <span>Show Balance</span>
+    </label>
+
+  </div>
+
+</div>
+
+<div id="otherDetailsTab" class="templateTab hidden">
+
+  <h3 class="text-lg font-bold mb-6">
+    Other Details
+  </h3>
+
+  <div class="grid gap-6">
+
+    <textarea
+      id="otherNotes"
+      rows="5"
+      class="border border-gray-300 p-3 rounded-lg w-full"
+      placeholder="Enter additional notes"></textarea>
+
+    <textarea
+      id="termsConditions"
+      rows="5"
+      class="border border-gray-300 p-3 rounded-lg w-full"
+      placeholder="Enter terms and conditions"></textarea>
+
+    <input
+      type="text"
+      id="footerMessage"
+      class="border border-gray-300 p-3 rounded-lg w-full"
+      placeholder="Footer message">
+
+  </div>
+
+</div>
+
+<div id="fontTab" class="templateTab hidden">
+
+  <h3 class="text-lg font-bold mb-6">
+    Font Settings
+  </h3>
+
+  <div class="grid md:grid-cols-2 gap-6">
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Font Family
+      </label>
+
+      <select
+        id="editFont"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+
+        <option value="Arial">Arial</option>
+        <option value="Poppins">Poppins</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Roboto">Roboto</option>
+        <option value="Montserrat">Montserrat</option>
+        <option value="Lato">Lato</option>
+        <option value="Open Sans">Open Sans</option>
+        <option value="Nunito">Nunito</option>
+        <option value="Raleway">Raleway</option>
+        <option value="Ubuntu">Ubuntu</option>
+        <option value="Merriweather">Merriweather</option>
+        <option value="Playfair Display">Playfair Display</option>
+        <option value="Inter">Inter</option>
+        <option value="Oswald">Oswald</option>
+        <option value="Fira Sans">Fira Sans</option>
+        <option value="PT Sans">PT Sans</option>
+        <option value="Source Sans Pro">Source Sans Pro</option>
+        <option value="Mukta">Mukta</option>
+        <option value="Rubik">Rubik</option>
+
+      </select>
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Font Size
+      </label>
+
+      <input
+        type="number"
+        id="fontSize"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Font Weight
+      </label>
+
+      <select
+        id="fontWeight"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+
+        <option value="300">Light</option>
+        <option value="400">Regular</option>
+        <option value="500">Medium</option>
+        <option value="600">Semi Bold</option>
+        <option value="700">Bold</option>
+
+      </select>
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Line Height
+      </label>
+
+      <input
+        type="number"
+        step="0.1"
+        id="lineHeight"
+        class="border border-gray-300 p-3 rounded-lg w-full">
+    </div>
+
+  </div>
+
+</div>
+ <div id="colorTab" class="templateTab hidden">
+
+  <h3 class="text-lg font-bold mb-6">
+    Colors
+  </h3>
+
+  <div class="grid md:grid-cols-2 gap-6">
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Primary Color
+      </label>
+
+      <input
+        type="color"
+        id="editColor"
+        class="w-full h-12 border rounded-lg">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Secondary Color
+      </label>
+
+      <input
+        type="color"
+        id="secondaryColor"
+        value="#1e40af"
+        class="w-full h-12 border rounded-lg">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Text Color
+      </label>
+
+      <input
+        type="color"
+        id="textColor"
+        value="#111111"
+        class="w-full h-12 border rounded-lg">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Heading Color
+      </label>
+
+      <input
+        type="color"
+        id="headingColor"
+        value="#000000"
+        class="w-full h-12 border rounded-lg">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Background Color
+      </label>
+
+      <input
+        type="color"
+        id="backgroundColor"
+        value="#ffffff"
+        class="w-full h-12 border rounded-lg">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Card Background
+      </label>
+
+      <input
+        type="color"
+        id="cardBackground"
+        value="#f9fafb"
+        class="w-full h-12 border rounded-lg">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Table Header Color
+      </label>
+
+      <input
+        type="color"
+        id="tableHeaderColor"
+        value="#2563eb"
+        class="w-full h-12 border rounded-lg">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Table Row Color
+      </label>
+
+      <input
+        type="color"
+        id="tableRowColor"
+        value="#ffffff"
+        class="w-full h-12 border rounded-lg">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        Alternate Row Color
+      </label>
+
+      <input
+        type="color"
+        id="alternateRowColor"
+        value="#f3f4f6"
+        class="w-full h-12 border rounded-lg">
+    </div>
+    <div>
+      <label class="block font-semibold mb-2">
+        Table Border Color
+      </label>
+
+      <input
+        type="color"
+        id="tableBorderColor"
+        value="#d1d5db"
+        class="w-full h-12 border rounded-lg">
+    </div>
+    <div>
+      <label class="block font-semibold mb-2">
+        Accent Color
+      </label>
+
+      <input
+        type="color"
+        id="accentColor"
+        value="#9333ea"
+        class="w-full h-12 border rounded-lg">
+    </div>
+    <div>
+      <label class="block font-semibold mb-2">
+        Highlight Color
+      </label>
+
+      <input
+        type="color"
+        id="highlightColor"
+        value="#f59e0b"
+        class="w-full h-12 border rounded-lg">
+    </div>
+    <div>
+      <label class="block font-semibold mb-2">
+        Footer Background
+      </label>
+      <input
+        type="color"
+        id="footerBgColor"
+        value="#f3f4f6"
+        class="w-full h-12 border rounded-lg">
+    </div>
+    <div>
+      <label class="block font-semibold mb-2">
+        Footer Text Color
+      </label>
+      <input
+        type="color"
+        id="footerTextColor"
+        value="#374151"
+        class="w-full h-12 border rounded-lg">
+    </div>
+    <div>
+      <label class="block font-semibold mb-2">
+        Header Background
+      </label>
+
+      <input
+        type="color"
+        id="headerBgColor"
+        value="#ffffff"
+        class="w-full h-12 border rounded-lg">
+    </div>
+    <div>
+      <label class="block font-semibold mb-2">
+        Header Text Color
+      </label>
+
+      <input
+        type="color"
+        id="headerTextColor"
+        value="#111827"
+        class="w-full h-12 border rounded-lg">
+    </div>
+    <div>
+      <label class="block font-semibold mb-2">
+        Border Color
+      </label>
+      <input
+        type="color"
+        id="borderColor"
+        value="#e5e7eb"
+        class="w-full h-12 border rounded-lg">
+    </div>
+    <div>
+      <label class="block font-semibold mb-2">
+        Watermark Color
+      </label>
+      <input
+        type="color"
+        id="watermarkColor"
+        value="#d1d5db"
+        class="w-full h-12 border rounded-lg">
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
     </div>
 
     <div id="invoiceTemplateWrapper" class="template-default bg-white p-6 rounded-xl">
@@ -16709,35 +17450,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
       </div>
 
-      <div class="grid md:grid-cols-2 gap-8 mb-6">
+      <div class="mb-6">
 
-        <div class="text-left">
+  <div class="text-right mb-6">
+   <h4 class="font-bold mb-2">
+      Company
+    </h4>
 
-          <h4 class="font-bold mb-2">
-            Customer
-          </h4>
+    <p id="previewInvoiceCompanyName"></p>
+    <p id="previewInvoiceCompanyAddress"></p>
+    <p id="previewInvoiceCompanyPhone"></p>
+    <p id="previewInvoiceCompanyPIN"></p>
 
-          <p id="previewInvoiceCustomerName"></p>
-          <p id="previewInvoiceCustomerAddress"></p>
-          <p id="previewInvoiceCustomerPhone"></p>
-          <p id="previewInvoiceCustomerPIN"></p>
+  </div>
+    
 
-        </div>
+  <div class="text-left">
 
-        <div class="text-right">
+   <h4 class="font-bold mb-2">
+      Customer
+    </h4>
 
-          <h4 class="font-bold mb-2">
-            Company
-          </h4>
+    <p id="previewInvoiceCustomerName"></p>
+    <p id="previewInvoiceCustomerAddress"></p>
+    <p id="previewInvoiceCustomerPhone"></p>
+    <p id="previewInvoiceCustomerPIN"></p>
 
-          <p id="previewInvoiceCompanyName"></p>
-          <p id="previewInvoiceCompanyAddress"></p>
-          <p id="previewInvoiceCompanyPhone"></p>
-          <p id="previewInvoiceCompanyPIN"></p>
+  </div>
 
-        </div>
-
-      </div>
+</div>
 
       <table class="w-full text-sm border border-collapse">
 
@@ -17007,10 +17748,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (totalField) totalField.addEventListener("input", updateConvertedTotal);
   if (currencySelect) currencySelect.addEventListener("change", updateConvertedTotal);
 });
-
 function changeTemplate(template) {
 
-  const wrapper = document.getElementById("invoiceTemplateWrapper");
+  const wrapper =
+    document.getElementById("invoiceTemplateWrapper");
 
   wrapper.className = "";
   wrapper.classList.add(template);
@@ -17036,7 +17777,7 @@ function closeTemplateEditor() {
 
 }
 
-function showTemplateTab(tabId) {
+function showTemplateTab(tabId, btn = null) {
 
   document.querySelectorAll(".templateTab")
     .forEach(tab => {
@@ -17045,8 +17786,23 @@ function showTemplateTab(tabId) {
 
     });
 
+  document.querySelectorAll(".templateTabBtn")
+    .forEach(button => {
+
+      button.classList.remove("bg-orange-500");
+
+      button.classList.add("hover:bg-slate-700");
+
+    });
+
   document.getElementById(tabId)
     .classList.remove("hidden");
+
+  if (btn) {
+
+    btn.classList.add("bg-orange-500");
+
+  }
 
 }
 
@@ -17055,117 +17811,246 @@ function applyTemplateChanges() {
   const wrapper =
     document.getElementById("invoiceTemplateWrapper");
 
-  const templateName =
-    document.getElementById("templateName").value;
+  const settings = {
 
-  const paperSize =
-    document.getElementById("paperSize")?.value ||
-    document.querySelector('input[name="paperSize"]:checked')?.value;
+    templateName:
+      document.getElementById("templateName")?.value || "",
 
-  const orientation =
-    document.getElementById("orientation")?.value ||
-    document.querySelector('input[name="orientation"]:checked')?.value;
+    templateType:
+      document.getElementById("templateType")?.value || "invoice",
 
-  const marginTop =
-    document.getElementById("marginTop").value || 0;
+    paperSize:
+      document.getElementById("paperSize")?.value || "A4",
 
-  const marginBottom =
-    document.getElementById("marginBottom").value || 0;
+    orientation:
+      document.getElementById("orientation")?.value || "portrait",
 
-  const marginLeft =
-    document.getElementById("marginLeft").value || 0;
+    marginTop:
+      document.getElementById("marginTop")?.value || 0,
 
-  const marginRight =
-    document.getElementById("marginRight").value || 0;
+    marginBottom:
+      document.getElementById("marginBottom")?.value || 0,
 
-  const fontFamily =
-    document.getElementById("editFont").value;
+    marginLeft:
+      document.getElementById("marginLeft")?.value || 0,
 
-  const fontSize =
-    document.getElementById("fontSize").value || 14;
+    marginRight:
+      document.getElementById("marginRight")?.value || 0,
 
-  const primaryColor =
-    document.getElementById("editColor").value;
+    paddingTop:
+      document.getElementById("paddingTop")?.value || 0,
 
-  const textColor =
-    document.getElementById("textColor")?.value || "#111827";
+    paddingBottom:
+      document.getElementById("paddingBottom")?.value || 0,
 
-  const backgroundColor =
-    document.getElementById("backgroundColor")?.value || "#ffffff";
+    paddingLeft:
+      document.getElementById("paddingLeft")?.value || 0,
 
-  const tableHeaderColor =
-    document.getElementById("tableHeaderColor")?.value || primaryColor;
+    paddingRight:
+      document.getElementById("paddingRight")?.value || 0,
 
-  const tableTextColor =
-    document.getElementById("tableTextColor")?.value || "#ffffff";
+    fontFamily:
+      document.getElementById("editFont")?.value || "Arial",
 
-  const borderColor =
-    document.getElementById("borderColor")?.value || "#d1d5db";
+    fontSize:
+      document.getElementById("fontSize")?.value || 14,
 
-  const radius =
-    document.getElementById("editRadius").value || 0;
+    fontWeight:
+      document.getElementById("fontWeight")?.value || 400,
 
-  wrapper.style.fontFamily = fontFamily;
+    lineHeight:
+      document.getElementById("lineHeight")?.value || 1.5,
+
+    radius:
+      document.getElementById("editRadius")?.value || 0,
+
+    shadowIntensity:
+      document.getElementById("shadowIntensity")?.value || 0,
+
+    logoSize:
+      document.getElementById("logoSize")?.value || 100,
+
+    contentWidth:
+      document.getElementById("contentWidth")?.value || 100,
+
+    watermarkOpacity:
+      document.getElementById("watermarkOpacity")?.value || 10,
+
+    primaryColor:
+      document.getElementById("editColor")?.value || "#2563eb",
+
+    secondaryColor:
+      document.getElementById("secondaryColor")?.value || "#1e40af",
+
+    textColor:
+      document.getElementById("textColor")?.value || "#111827",
+
+    headingColor:
+      document.getElementById("headingColor")?.value || "#000000",
+
+    backgroundColor:
+      document.getElementById("backgroundColor")?.value || "#ffffff",
+
+    cardBackground:
+      document.getElementById("cardBackground")?.value || "#f9fafb",
+
+    tableHeaderColor:
+      document.getElementById("tableHeaderColor")?.value || "#2563eb",
+
+    tableRowColor:
+      document.getElementById("tableRowColor")?.value || "#ffffff",
+
+    alternateRowColor:
+      document.getElementById("alternateRowColor")?.value || "#f3f4f6",
+
+    tableBorderColor:
+      document.getElementById("tableBorderColor")?.value || "#d1d5db",
+
+    accentColor:
+      document.getElementById("accentColor")?.value || "#9333ea",
+
+    highlightColor:
+      document.getElementById("highlightColor")?.value || "#f59e0b",
+
+    footerBgColor:
+      document.getElementById("footerBgColor")?.value || "#f3f4f6",
+
+    footerTextColor:
+      document.getElementById("footerTextColor")?.value || "#374151",
+
+    headerBgColor:
+      document.getElementById("headerBgColor")?.value || "#ffffff",
+
+    headerTextColor:
+      document.getElementById("headerTextColor")?.value || "#111827",
+
+    borderColor:
+      document.getElementById("borderColor")?.value || "#e5e7eb",
+
+    watermarkColor:
+      document.getElementById("watermarkColor")?.value || "#d1d5db",
+
+    tableBorderWidth:
+      document.getElementById("tableBorderWidth")?.value || 1,
+
+    rowPadding:
+      document.getElementById("rowPadding")?.value || 10,
+
+    tableHeaderFontSize:
+      document.getElementById("tableHeaderFontSize")?.value || 14,
+
+    tableRowFontSize:
+      document.getElementById("tableRowFontSize")?.value || 13,
+
+    tableRadius:
+      document.getElementById("tableRadius")?.value || 0,
+
+    cellSpacing:
+      document.getElementById("cellSpacing")?.value || 0
+
+  };
+
+  wrapper.style.fontFamily =
+    settings.fontFamily;
 
   wrapper.style.fontSize =
-    fontSize + "px";
+    settings.fontSize + "px";
+
+  wrapper.style.fontWeight =
+    settings.fontWeight;
+
+  wrapper.style.lineHeight =
+    settings.lineHeight;
 
   wrapper.style.borderRadius =
-    radius + "px";
+    settings.radius + "px";
 
   wrapper.style.paddingTop =
-    marginTop + "in";
+    settings.paddingTop + "px";
 
   wrapper.style.paddingBottom =
-    marginBottom + "in";
+    settings.paddingBottom + "px";
 
   wrapper.style.paddingLeft =
-    marginLeft + "in";
+    settings.paddingLeft + "px";
 
   wrapper.style.paddingRight =
-    marginRight + "in";
+    settings.paddingRight + "px";
 
-  if (paperSize === "A4") {
+  wrapper.style.marginTop =
+    settings.marginTop + "in";
+
+  wrapper.style.marginBottom =
+    settings.marginBottom + "in";
+
+  wrapper.style.marginLeft =
+    settings.marginLeft + "in";
+
+  wrapper.style.marginRight =
+    settings.marginRight + "in";
+
+  wrapper.style.backgroundColor =
+    settings.backgroundColor;
+
+  wrapper.style.color =
+    settings.textColor;
+
+  wrapper.style.border =
+    settings.tableBorderWidth + "px solid " + settings.borderColor;
+
+  wrapper.style.boxShadow =
+    "0 0 " + settings.shadowIntensity + "px rgba(0,0,0,0.2)";
+
+  wrapper.style.maxWidth =
+    settings.contentWidth + "%";
+
+  if (settings.paperSize === "A4") {
 
     wrapper.style.width = "210mm";
     wrapper.style.minHeight = "297mm";
 
   }
 
-  if (paperSize === "Letter") {
+  if (settings.paperSize === "Letter") {
 
     wrapper.style.width = "216mm";
     wrapper.style.minHeight = "279mm";
 
   }
 
-  if (paperSize === "A5") {
+  if (settings.paperSize === "A5") {
 
     wrapper.style.width = "148mm";
     wrapper.style.minHeight = "210mm";
 
   }
 
-  if (orientation === "landscape") {
+  if (settings.paperSize === "Legal") {
+
+    wrapper.style.width = "216mm";
+    wrapper.style.minHeight = "356mm";
+
+  }
+
+  if (settings.orientation === "landscape") {
 
     wrapper.style.width = "100%";
 
   }
 
-  wrapper.style.backgroundColor =
-    backgroundColor;
-
-  wrapper.style.color =
-    textColor;
-
-  wrapper.style.border =
-    "1px solid " + borderColor;
-
   wrapper.querySelectorAll("table")
     .forEach(table => {
 
+      table.style.borderCollapse = "collapse";
+
+      table.style.borderSpacing =
+        settings.cellSpacing + "px";
+
       table.style.borderColor =
-        borderColor;
+        settings.tableBorderColor;
+
+      table.style.borderRadius =
+        settings.tableRadius + "px";
 
     });
 
@@ -17173,26 +18058,44 @@ function applyTemplateChanges() {
     .forEach(th => {
 
       th.style.backgroundColor =
-        tableHeaderColor;
+        settings.tableHeaderColor;
 
       th.style.color =
-        tableTextColor;
+        "#ffffff";
 
-      th.style.borderColor =
-        borderColor;
+      th.style.fontSize =
+        settings.tableHeaderFontSize + "px";
+
+      th.style.border =
+        settings.tableBorderWidth + "px solid " + settings.tableBorderColor;
+
+      th.style.padding =
+        settings.rowPadding + "px";
 
     });
 
   wrapper.querySelectorAll("td")
     .forEach(td => {
 
-      td.style.padding = "10px";
+      td.style.fontSize =
+        settings.tableRowFontSize + "px";
 
-      td.style.borderColor =
-        borderColor;
+      td.style.border =
+        settings.tableBorderWidth + "px solid " + settings.tableBorderColor;
+
+      td.style.padding =
+        settings.rowPadding + "px";
 
       td.style.color =
-        textColor;
+        settings.textColor;
+
+    });
+
+  wrapper.querySelectorAll("tr:nth-child(even)")
+    .forEach(row => {
+
+      row.style.backgroundColor =
+        settings.alternateRowColor;
 
     });
 
@@ -17200,30 +18103,25 @@ function applyTemplateChanges() {
     .forEach(el => {
 
       el.style.color =
-        primaryColor;
+        settings.headingColor;
 
     });
 
-  const settings = {
+  wrapper.querySelectorAll(".primary-color")
+    .forEach(el => {
 
-    templateName,
-    paperSize,
-    orientation,
-    marginTop,
-    marginBottom,
-    marginLeft,
-    marginRight,
-    fontFamily,
-    fontSize,
-    primaryColor,
-    textColor,
-    backgroundColor,
-    tableHeaderColor,
-    tableTextColor,
-    borderColor,
-    radius
+      el.style.color =
+        settings.primaryColor;
 
-  };
+    });
+
+  wrapper.querySelectorAll(".accent-color")
+    .forEach(el => {
+
+      el.style.color =
+        settings.accentColor;
+
+    });
 
   localStorage.setItem(
     "invoiceTemplateSettings",
@@ -17246,81 +18144,20 @@ function loadTemplateSettings() {
 
   if (!settings) return;
 
-  document.getElementById("templateName").value =
-    settings.templateName || "";
+  Object.keys(settings)
+    .forEach(key => {
 
-  if (document.getElementById("paperSize")) {
+      const element =
+        document.getElementById(key);
 
-    document.getElementById("paperSize").value =
-      settings.paperSize || "A4";
+      if (element) {
 
-  }
+        element.value =
+          settings[key];
 
-  if (document.getElementById("orientation")) {
+      }
 
-    document.getElementById("orientation").value =
-      settings.orientation || "portrait";
-
-  }
-
-  document.getElementById("marginTop").value =
-    settings.marginTop || 0;
-
-  document.getElementById("marginBottom").value =
-    settings.marginBottom || 0;
-
-  document.getElementById("marginLeft").value =
-    settings.marginLeft || 0;
-
-  document.getElementById("marginRight").value =
-    settings.marginRight || 0;
-
-  document.getElementById("editFont").value =
-    settings.fontFamily || "Arial";
-
-  document.getElementById("fontSize").value =
-    settings.fontSize || 14;
-
-  document.getElementById("editColor").value =
-    settings.primaryColor || "#2563eb";
-
-  if (document.getElementById("textColor")) {
-
-    document.getElementById("textColor").value =
-      settings.textColor || "#111827";
-
-  }
-
-  if (document.getElementById("backgroundColor")) {
-
-    document.getElementById("backgroundColor").value =
-      settings.backgroundColor || "#ffffff";
-
-  }
-
-  if (document.getElementById("tableHeaderColor")) {
-
-    document.getElementById("tableHeaderColor").value =
-      settings.tableHeaderColor || "#2563eb";
-
-  }
-
-  if (document.getElementById("tableTextColor")) {
-
-    document.getElementById("tableTextColor").value =
-      settings.tableTextColor || "#ffffff";
-
-  }
-
-  if (document.getElementById("borderColor")) {
-
-    document.getElementById("borderColor").value =
-      settings.borderColor || "#d1d5db";
-
-  }
-
-  document.getElementById("editRadius").value =
-    settings.radius || 0;
+    });
 
   applyTemplateChanges();
 
