@@ -16320,95 +16320,496 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </div>
 
-<div id="invoicePreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white p-6 rounded shadow w-full max-w-3xl relative overflow-y-auto max-h-[90vh]">
-    
-    <h3 class="text-xl font-semibold mb-4 text-center">📄 Invoice Preview</h3>
+<div id="invoicePreviewModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 
-<div class="mb-3 flex justify-between items-center">
+  <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-5xl relative overflow-y-auto max-h-[95vh]">
+
+    <h3 class="text-2xl font-bold mb-6 text-center text-slate-800">
+      📄 Invoice Preview
+    </h3>
+
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+
+      <div class="flex flex-wrap items-end gap-3">
+
+        <div>
+          <label for="templateSelect" class="font-semibold block mb-1">
+            Choose Template
+          </label>
+
+          <select
+            id="templateSelect"
+            onchange="changeTemplate(this.value)"
+            class="border border-gray-300 p-2 rounded-lg">
+
+            <option value="template-default">Default</option>
+            <option value="template-minimal">Minimal</option>
+            <option value="template-modern">Modern</option>
+            <option value="template-elegant">Elegant</option>
+            <option value="template-bold">Bold</option>
+            <option value="template-corporate">Corporate</option>
+            <option value="template-creative">Creative</option>
+
+          </select>
+        </div>
+
+        <button
+          onclick="openTemplateEditor()"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+
+          Edit Template
+
+        </button>
+
+      </div>
+   <div class="space-x-3"> <button onclick="printPreview()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Print</button>
+     <button onclick="downloadInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Download</button> 
+     <button onclick="emailInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Email</button>
+   <button onclick="closeInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Close</button> 
+  </div>
+ </div>
+
+    <div id="templateEditor" class="hidden fixed inset-0 bg-black/60 z-50 overflow-y-auto">
+
+      <div class="min-h-screen flex items-start justify-center p-6">
+
+        <div class="bg-white w-full max-w-6xl rounded-2xl shadow-2xl overflow-hidden flex">
+
+          <div class="w-24 bg-slate-900 text-white flex flex-col items-center py-5 space-y-5">
+
+            <button onclick="showTemplateTab('generalTab', this)"
+              class="templateTabBtn bg-orange-500 w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px]">
+
+              ⚙️
+              <span>General</span>
+
+            </button>
+
+            <button onclick="showTemplateTab('fontTab', this)"
+              class="templateTabBtn w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px] hover:bg-slate-700">
+
+              🔤
+              <span>Font</span>
+
+            </button>
+
+            <button onclick="showTemplateTab('colorTab', this)"
+              class="templateTabBtn w-16 h-16 rounded-xl flex flex-col items-center justify-center text-[11px] hover:bg-slate-700">
+
+              🎨
+              <span>Colors</span>
+
+            </button>
+
+          </div>
+
+          <div class="flex-1 bg-white">
+
+            <div class="flex justify-between items-center border-b px-6 py-5">
+
+              <h2 class="text-2xl font-bold text-slate-800">
+                Edit Template
+              </h2>
+
+              <div class="flex gap-3">
+
+                <button
+                  onclick="applyTemplateChanges()"
+                 class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+                  Save Changes
+
+                </button>
+
+                <button
+                  onclick="closeTemplateEditor()"
+                  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
+                  Close
+
+                </button>
+
+              </div>
+
+            </div>
+
+            <div class="p-6">
+
+              <div id="generalTab" class="templateTab">
+
+                <h3 class="text-lg font-bold mb-6">
+                  Template Properties
+                </h3>
+
+                <div class="grid md:grid-cols-2 gap-6">
+
+                  <div>
+                    <label class="block font-semibold mb-2">
+                      Template Name
+                    </label>
+
+                    <input
+                      type="text"
+                      id="templateName"
+                      class="border border-gray-300 p-3 rounded-lg w-full">
+                  </div>
+
+                  <div>
+                    <label class="block font-semibold mb-2">
+                      Paper Size
+                    </label>
+
+                    <select
+                      id="paperSize"
+                      class="border border-gray-300 p-3 rounded-lg w-full">
+
+                      <option value="A4">A4</option>
+                      <option value="Letter">Letter</option>
+                      <option value="A5">A5</option>
+
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block font-semibold mb-2">
+                      Orientation
+                    </label>
+
+                    <select
+                      id="orientation"
+                      class="border border-gray-300 p-3 rounded-lg w-full">
+
+                      <option value="portrait">Portrait</option>
+                      <option value="landscape">Landscape</option>
+
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block font-semibold mb-2">
+                      Border Radius
+                    </label>
+
+                    <input
+                      type="range"
+                      id="editRadius"
+                      min="0"
+                      max="40"
+                      class="w-full">
+                  </div>
+
+                </div>
+
+                <div class="mt-8">
+
+                  <label class="block font-semibold mb-4">
+                    Margins (inches)
+                  </label>
+
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+                    <input id="marginTop" placeholder="Top"
+                      class="border border-gray-300 p-3 rounded-lg w-full">
+
+                    <input id="marginBottom" placeholder="Bottom"
+                      class="border border-gray-300 p-3 rounded-lg w-full">
+
+                    <input id="marginLeft" placeholder="Left"
+                      class="border border-gray-300 p-3 rounded-lg w-full">
+
+                    <input id="marginRight" placeholder="Right"
+                      class="border border-gray-300 p-3 rounded-lg w-full">
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div id="fontTab" class="templateTab hidden">
+
+                <h3 class="text-lg font-bold mb-6">
+                  Font Settings
+                </h3>
+
+                <div class="grid md:grid-cols-2 gap-6">
+
+                  <div>
+                    <label class="block font-semibold mb-2">
+                      Font Family
+                    </label>
+
+                    <select
+                      id="editFont"
+                      class="border border-gray-300 p-3 rounded-lg w-full">
+
+                      <option value="Arial">Arial</option>
+                      <option value="Poppins">Poppins</option>
+                      <option value="Georgia">Georgia</option>
+                      <option value="Courier New">Courier New</option>
+
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block font-semibold mb-2">
+                      Font Size
+                    </label>
+
+                    <input
+                      type="number"
+                      id="fontSize"
+                      class="border border-gray-300 p-3 rounded-lg w-full">
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div id="colorTab" class="templateTab hidden">
+
+                <h3 class="text-lg font-bold mb-6">
+                  Colors
+                </h3>
+
+                <div class="grid md:grid-cols-2 gap-6">
+
+              <div class="grid md:grid-cols-2 gap-6">
+
   <div>
-    <label for="templateSelect" class="font-semibold">Choose Template:</label>
-    <select id="templateSelect" onchange="changeTemplate(this.value)" class="border p-1 rounded">
-      <option value="template-default">Default</option>
-      <option value="template-minimal">Minimal</option>
-      <option value="template-modern">Modern</option>
-      <option value="template-elegant">Elegant</option>
-      <option value="template-bold">Bold</option>
-      <option value="template-corporate">Corporate</option>
-      <option value="template-creative">Creative</option>
-    </select>
+    <label class="block font-semibold mb-2">
+      Primary Color
+    </label>
+
+    <input
+      type="color"
+      id="editColor"
+      class="w-full h-12 border rounded-lg">
   </div>
 
-  <div class="space-x-3">
-    <button onclick="printPreview()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Print</button>
-    <button onclick="downloadInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Download</button>
-    <button onclick="emailInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Email</button>
-    <button onclick="closeInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Close</button>
+  <div>
+    <label class="block font-semibold mb-2">
+      Text Color
+    </label>
+
+    <input
+      type="color"
+      id="textColor"
+      value="#111111"
+      class="w-full h-12 border rounded-lg">
   </div>
+
+  <div>
+    <label class="block font-semibold mb-2">
+      Background Color
+    </label>
+
+    <input
+      type="color"
+      id="backgroundColor"
+      value="#ffffff"
+      class="w-full h-12 border rounded-lg">
+  </div>
+
+  <div>
+    <label class="block font-semibold mb-2">
+      Table Header Color
+    </label>
+
+    <input
+      type="color"
+      id="tableHeaderColor"
+      value="#2563eb"
+      class="w-full h-12 border rounded-lg">
+  </div>
+
+  <div>
+    <label class="block font-semibold mb-2">
+      Table Border Color
+    </label>
+
+    <input
+      type="color"
+      id="tableBorderColor"
+      value="#d1d5db"
+      class="w-full h-12 border rounded-lg">
+  </div>
+
+  <div>
+    <label class="block font-semibold mb-2">
+      Accent Color
+    </label>
+
+    <input
+      type="color"
+      id="accentColor"
+      value="#9333ea"
+      class="w-full h-12 border rounded-lg">
+  </div>
+
+  <div>
+    <label class="block font-semibold mb-2">
+      Footer Background
+    </label>
+
+    <input
+      type="color"
+      id="footerBgColor"
+      value="#f3f4f6"
+      class="w-full h-12 border rounded-lg">
+  </div>
+
+  <div>
+    <label class="block font-semibold mb-2">
+      Footer Text Color
+    </label>
+
+    <input
+      type="color"
+      id="footerTextColor"
+      value="#374151"
+      class="w-full h-12 border rounded-lg">
+  </div>
+
 </div>
-    
-    <div id="invoiceTemplateWrapper" class="template-default">
-
-      <div class="flex justify-between mb-4">
-        <div><strong>Invoice Number:</strong> <span id="previewInvoiceNumber"></span></div>
-        <div><strong>TAX INVOICE</strong> <span id="previewinvoiceTax"></span></div>
-        <div><strong>Date:</strong> <span id="previewInvoiceDate"></span></div>
-      </div>
-
-      <div class="text-center mb-4">
-        <img id="companyLogo" src="your-company-logo-url.png" alt="Company Logo" class="max-w-[300px] mx-auto" />
-      </div>
-
-      <div class="mb-4">
-    
-         <div class="text-right mb-4">
-        <h4 class="font-semibold">Company</h4>
-        <p id="previewInvoiceCompanyName"></p>
-        <p id="previewInvoiceDate"></p>
-        <p id="previewInvoiceCompanyAddress"></p>
-        <p id="previewInvoiceCompanyPhone"></p>
-        <p><span id="previewInvoiceCompanyPIN"></span></p>
-       </div>
-       
-        <div class="text-left mb-4">
-          <h4 class="font-semibold">Customer</h4>
-          <p id="previewInvoiceCustomerName"></p>
-         <p> <span id="previewInvoiceCustomerAddress"></span></p>
-        <p> <span id="previewInvoiceCustomerPhone"></span></p>
-        <p><span id="previewInvoiceCustomerPIN"></span></p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
 
-      <table class="w-full text-sm border mt-4 border-collapse">
+    <div id="invoiceTemplateWrapper" class="template-default bg-white p-6 rounded-xl">
+
+      <div class="flex justify-between mb-6 text-sm">
+
+        <div>
+          <strong>Invoice Number:</strong>
+          <span id="previewInvoiceNumber"></span>
+        </div>
+
+        <div>
+          <strong>TAX INVOICE</strong>
+          <span id="previewinvoiceTax"></span>
+        </div>
+
+        <div>
+          <strong>Date:</strong>
+          <span id="previewInvoiceDate"></span>
+        </div>
+
+      </div>
+
+      <div class="text-center mb-6">
+
+        <img
+          id="companyLogo"
+          src="your-company-logo-url.png"
+          alt="Company Logo"
+          class="max-w-[300px] mx-auto">
+
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8 mb-6">
+
+        <div class="text-left">
+
+          <h4 class="font-bold mb-2">
+            Customer
+          </h4>
+
+          <p id="previewInvoiceCustomerName"></p>
+          <p id="previewInvoiceCustomerAddress"></p>
+          <p id="previewInvoiceCustomerPhone"></p>
+          <p id="previewInvoiceCustomerPIN"></p>
+
+        </div>
+
+        <div class="text-right">
+
+          <h4 class="font-bold mb-2">
+            Company
+          </h4>
+
+          <p id="previewInvoiceCompanyName"></p>
+          <p id="previewInvoiceCompanyAddress"></p>
+          <p id="previewInvoiceCompanyPhone"></p>
+          <p id="previewInvoiceCompanyPIN"></p>
+
+        </div>
+
+      </div>
+
+      <table class="w-full text-sm border border-collapse">
+
         <thead class="bg-gray-100">
+
           <tr>
+
             <th class="p-2 border">#</th>
             <th class="p-2 border">Item Name</th>
             <th class="p-2 border">Qty</th>
             <th class="p-2 border">Price (Before VAT)</th>
             <th class="p-2 border">VAT</th>
             <th class="p-2 border">Total</th>
+
           </tr>
+
         </thead>
+
         <tbody id="previewInvoiceItems"></tbody>
+
       </table>
 
-      <div class="mt-2 text-right text-sm font-semibold">
-        <p>Amount (Before VAT): <span id="previewInvoiceSubtotal">KES 0.00</span></p>
-        <p>VAT: <span id="previewInvoiceVAT">KES 0.00</span></p>
-        <p>Total Amount: <span id="previewInvoiceTotal">KES 0.00</span></p>
-        <p>Payment Made: <span id="previewInvoicePaymentMade">KES 0.00</span></p>
-        <p>Balance Due: <span id="previewInvoiceBalance">KES 0.00</span></p>
-        <p>Status: <span id="previewInvoicePaymentStatus" class="text-blue-600">Pending</span></p>
+      <div class="mt-6 text-right text-sm font-semibold space-y-1">
+
+        <p>
+          Amount (Before VAT):
+          <span id="previewInvoiceSubtotal">KES 0.00</span>
+        </p>
+
+        <p>
+          VAT:
+          <span id="previewInvoiceVAT">KES 0.00</span>
+        </p>
+
+        <p>
+          Total Amount:
+          <span id="previewInvoiceTotal">KES 0.00</span>
+        </p>
+
+        <p>
+          Payment Made:
+          <span id="previewInvoicePaymentMade">KES 0.00</span>
+        </p>
+
+        <p>
+          Balance Due:
+          <span id="previewInvoiceBalance">KES 0.00</span>
+        </p>
+
+        <p>
+          Status:
+          <span id="previewInvoicePaymentStatus" class="text-blue-600">
+            Pending
+          </span>
+        </p>
+
       </div>
-      
-    <input type="hidden" id="previewInvoiceId">
-    <div class="mt-4 text-sm text-gray-700">
-  <label class="font-semibold">Notes:</label>
-  <textarea id="previewInvoiceNotesInput"
-            class="w-full mt-1 p-1 border rounded text-sm"
-            rows="1"
-            placeholder="Add notes here..."></textarea>
+
+      <input type="hidden" id="previewInvoiceId">
+
+      <div class="mt-6 text-sm text-gray-700">
+
+        <label class="font-semibold">
+          Notes:
+        </label>
+
+        <textarea
+          id="previewInvoiceNotesInput"
+          class="w-full mt-2 p-3 border rounded-lg text-sm"
+          rows="3"
+          placeholder="Add notes here..."></textarea>
+
 </div>
 <script>
 
@@ -16606,228 +17007,515 @@ document.addEventListener("DOMContentLoaded", () => {
   if (totalField) totalField.addEventListener("input", updateConvertedTotal);
   if (currencySelect) currencySelect.addEventListener("change", updateConvertedTotal);
 });
-</script>
 
-<script>
 function changeTemplate(template) {
-  const wrapper = document.getElementById("invoiceTemplateWrapper");
-  wrapper.className = ""; 
-  wrapper.classList.add("template-" + template);
-}
-</script>
 
+  const wrapper = document.getElementById("invoiceTemplateWrapper");
+
+  wrapper.className = "";
+  wrapper.classList.add(template);
+
+  localStorage.setItem(
+    "selectedInvoiceTemplate",
+    template
+  );
+
+}
+
+function openTemplateEditor() {
+
+  document.getElementById("templateEditor")
+    .classList.remove("hidden");
+
+}
+
+function closeTemplateEditor() {
+
+  document.getElementById("templateEditor")
+    .classList.add("hidden");
+
+}
+
+function showTemplateTab(tabId) {
+
+  document.querySelectorAll(".templateTab")
+    .forEach(tab => {
+
+      tab.classList.add("hidden");
+
+    });
+
+  document.getElementById(tabId)
+    .classList.remove("hidden");
+
+}
+
+function applyTemplateChanges() {
+
+  const wrapper =
+    document.getElementById("invoiceTemplateWrapper");
+
+  const templateName =
+    document.getElementById("templateName").value;
+
+  const paperSize =
+    document.getElementById("paperSize")?.value ||
+    document.querySelector('input[name="paperSize"]:checked')?.value;
+
+  const orientation =
+    document.getElementById("orientation")?.value ||
+    document.querySelector('input[name="orientation"]:checked')?.value;
+
+  const marginTop =
+    document.getElementById("marginTop").value || 0;
+
+  const marginBottom =
+    document.getElementById("marginBottom").value || 0;
+
+  const marginLeft =
+    document.getElementById("marginLeft").value || 0;
+
+  const marginRight =
+    document.getElementById("marginRight").value || 0;
+
+  const fontFamily =
+    document.getElementById("editFont").value;
+
+  const fontSize =
+    document.getElementById("fontSize").value || 14;
+
+  const primaryColor =
+    document.getElementById("editColor").value;
+
+  const textColor =
+    document.getElementById("textColor")?.value || "#111827";
+
+  const backgroundColor =
+    document.getElementById("backgroundColor")?.value || "#ffffff";
+
+  const tableHeaderColor =
+    document.getElementById("tableHeaderColor")?.value || primaryColor;
+
+  const tableTextColor =
+    document.getElementById("tableTextColor")?.value || "#ffffff";
+
+  const borderColor =
+    document.getElementById("borderColor")?.value || "#d1d5db";
+
+  const radius =
+    document.getElementById("editRadius").value || 0;
+
+  wrapper.style.fontFamily = fontFamily;
+
+  wrapper.style.fontSize =
+    fontSize + "px";
+
+  wrapper.style.borderRadius =
+    radius + "px";
+
+  wrapper.style.paddingTop =
+    marginTop + "in";
+
+  wrapper.style.paddingBottom =
+    marginBottom + "in";
+
+  wrapper.style.paddingLeft =
+    marginLeft + "in";
+
+  wrapper.style.paddingRight =
+    marginRight + "in";
+
+  if (paperSize === "A4") {
+
+    wrapper.style.width = "210mm";
+    wrapper.style.minHeight = "297mm";
+
+  }
+
+  if (paperSize === "Letter") {
+
+    wrapper.style.width = "216mm";
+    wrapper.style.minHeight = "279mm";
+
+  }
+
+  if (paperSize === "A5") {
+
+    wrapper.style.width = "148mm";
+    wrapper.style.minHeight = "210mm";
+
+  }
+
+  if (orientation === "landscape") {
+
+    wrapper.style.width = "100%";
+
+  }
+
+  wrapper.style.backgroundColor =
+    backgroundColor;
+
+  wrapper.style.color =
+    textColor;
+
+  wrapper.style.border =
+    "1px solid " + borderColor;
+
+  wrapper.querySelectorAll("table")
+    .forEach(table => {
+
+      table.style.borderColor =
+        borderColor;
+
+    });
+
+  wrapper.querySelectorAll("th")
+    .forEach(th => {
+
+      th.style.backgroundColor =
+        tableHeaderColor;
+
+      th.style.color =
+        tableTextColor;
+
+      th.style.borderColor =
+        borderColor;
+
+    });
+
+  wrapper.querySelectorAll("td")
+    .forEach(td => {
+
+      td.style.padding = "10px";
+
+      td.style.borderColor =
+        borderColor;
+
+      td.style.color =
+        textColor;
+
+    });
+
+  wrapper.querySelectorAll("h1,h2,h3,h4,h5,h6,strong")
+    .forEach(el => {
+
+      el.style.color =
+        primaryColor;
+
+    });
+
+  const settings = {
+
+    templateName,
+    paperSize,
+    orientation,
+    marginTop,
+    marginBottom,
+    marginLeft,
+    marginRight,
+    fontFamily,
+    fontSize,
+    primaryColor,
+    textColor,
+    backgroundColor,
+    tableHeaderColor,
+    tableTextColor,
+    borderColor,
+    radius
+
+  };
+
+  localStorage.setItem(
+    "invoiceTemplateSettings",
+    JSON.stringify(settings)
+  );
+
+  closeTemplateEditor();
+
+}
+
+function loadTemplateSettings() {
+
+  const settings = JSON.parse(
+
+    localStorage.getItem(
+      "invoiceTemplateSettings"
+    )
+
+  );
+
+  if (!settings) return;
+
+  document.getElementById("templateName").value =
+    settings.templateName || "";
+
+  if (document.getElementById("paperSize")) {
+
+    document.getElementById("paperSize").value =
+      settings.paperSize || "A4";
+
+  }
+
+  if (document.getElementById("orientation")) {
+
+    document.getElementById("orientation").value =
+      settings.orientation || "portrait";
+
+  }
+
+  document.getElementById("marginTop").value =
+    settings.marginTop || 0;
+
+  document.getElementById("marginBottom").value =
+    settings.marginBottom || 0;
+
+  document.getElementById("marginLeft").value =
+    settings.marginLeft || 0;
+
+  document.getElementById("marginRight").value =
+    settings.marginRight || 0;
+
+  document.getElementById("editFont").value =
+    settings.fontFamily || "Arial";
+
+  document.getElementById("fontSize").value =
+    settings.fontSize || 14;
+
+  document.getElementById("editColor").value =
+    settings.primaryColor || "#2563eb";
+
+  if (document.getElementById("textColor")) {
+
+    document.getElementById("textColor").value =
+      settings.textColor || "#111827";
+
+  }
+
+  if (document.getElementById("backgroundColor")) {
+
+    document.getElementById("backgroundColor").value =
+      settings.backgroundColor || "#ffffff";
+
+  }
+
+  if (document.getElementById("tableHeaderColor")) {
+
+    document.getElementById("tableHeaderColor").value =
+      settings.tableHeaderColor || "#2563eb";
+
+  }
+
+  if (document.getElementById("tableTextColor")) {
+
+    document.getElementById("tableTextColor").value =
+      settings.tableTextColor || "#ffffff";
+
+  }
+
+  if (document.getElementById("borderColor")) {
+
+    document.getElementById("borderColor").value =
+      settings.borderColor || "#d1d5db";
+
+  }
+
+  document.getElementById("editRadius").value =
+    settings.radius || 0;
+
+  applyTemplateChanges();
+
+}
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    loadTemplateSettings();
+
+    const savedTemplate =
+
+      localStorage.getItem(
+        "selectedInvoiceTemplate"
+      );
+
+    if (savedTemplate) {
+
+      document.getElementById(
+        "templateSelect"
+      ).value = savedTemplate;
+
+      changeTemplate(savedTemplate);
+
+    }
+
+  }
+);
+</script>
 <style>
 
 .template-default {
+
   font-family: Arial, sans-serif;
   color: #111;
+  background: #fff;
+
 }
+
 .template-default table {
-  border-collapse: collapse;
+
   width: 100%;
+  border-collapse: collapse;
+
 }
-.template-default th, .template-default td {
+
+.template-default th,
+.template-default td {
+
   border: 1px solid #ddd;
-  padding: 8px;
-  transition: background-color 0.3s ease;
-}
-.template-default th:hover, .template-default td:hover {
-  background-color: #f0f0f0;
+  padding: 10px;
+
 }
 
 .template-minimal {
+
   font-family: 'Courier New', monospace;
   background: #fafafa;
   color: #333;
-  border: none;
+
 }
+
 .template-minimal table {
-  border-collapse: collapse;
+
   width: 100%;
+  border-collapse: collapse;
+
 }
-.template-minimal th, .template-minimal td {
-  border-bottom: 1px solid #ccc;
-  padding: 6px;
-  transition: transform 0.3s ease, background-color 0.2s ease;
-}
-.template-minimal th:hover, .template-minimal td:hover {
-  background-color: #f3f3f3;
-  transform: scale(1.05);
+
+.template-minimal th,
+.template-minimal td {
+
+  border-bottom: 1px solid #ddd;
+  padding: 8px;
+
 }
 
 .template-modern {
+
   font-family: 'Poppins', sans-serif;
+  background: #f8fbff;
   border: 2px solid #2563eb;
-  padding: 1.5rem;
-  background: #f0f8ff;
-  border-radius: 12px;
+  border-radius: 16px;
+  padding: 30px;
   color: #1e293b;
-  transition: all 0.4s ease;
+
 }
-.template-modern h2 {
-  color: #2563eb;
-  margin-bottom: 1rem;
-}
-.template-modern table {
-  border-collapse: collapse;
-  width: 100%;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
+
 .template-modern th {
+
   background: #2563eb;
-  color: #fff;
-  text-align: left;
-  padding: 10px;
-  transition: background-color 0.3s ease;
-}
-.template-modern th:hover {
-  background-color: #1e40af;
-}
-.template-modern td {
-  border-bottom: 1px solid #ddd;
-  padding: 10px;
-}
-.template-modern:hover {
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  color: white;
+
 }
 
 .template-elegant {
-  font-family: 'Georgia', serif;
+
+  font-family: Georgia, serif;
   background: #fff;
-  color: #222;
   border: 1px solid #ccc;
-  padding: 2rem;
-  transition: transform 0.3s ease;
+  padding: 30px;
+
 }
-.template-elegant h2 {
-  font-style: italic;
-  border-bottom: 2px solid #999;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-}
-.template-elegant table {
-  border-collapse: collapse;
-  width: 100%;
-}
+
 .template-elegant th {
+
   background: #f5f5f5;
-  font-weight: normal;
-  text-align: left;
-  padding: 8px;
-}
-.template-elegant td {
-  border-bottom: 1px solid #eee;
-  padding: 8px;
-}
-.template-elegant:hover {
-  transform: scale(1.03);
+
 }
 
 .template-bold {
-  font-family: 'Roboto', sans-serif;
-  color: #111;
-  border: 3px solid #000;
-  padding: 1.5rem;
-  background: #fff;
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+
+  font-family: Arial, sans-serif;
+  border: 4px solid #111;
+  padding: 30px;
+
 }
-.template-bold h2 {
-  background: #000;
-  color: #fff;
-  padding: 0.5rem;
-  text-transform: uppercase;
-}
-.template-bold table {
-  width: 100%;
-  border-collapse: collapse;
-}
+
 .template-bold th {
-  background: #000;
+
+  background: #111;
   color: #fff;
-  padding: 8px;
-  transition: background-color 0.3s ease;
-}
-.template-bold th:hover {
-  background-color: #444;
-}
-.template-bold td {
-  border: 1px solid #333;
-  padding: 8px;
-}
-.template-bold:hover {
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-  transform: scale(1.05);
+
 }
 
 .template-corporate {
+
   font-family: 'Segoe UI', sans-serif;
+  border-left: 8px solid #1e40af;
   background: #f8fafc;
-  border-left: 6px solid #1e40af;
-  padding: 1.5rem;
-  color: #1e293b;
-  transition: all 0.3s ease;
+  padding: 30px;
+
 }
-.template-corporate h2 {
-  color: #1e40af;
-  margin-bottom: 1rem;
-}
-.template-corporate table {
-  width: 100%;
-  border-collapse: collapse;
-}
+
 .template-corporate th {
+
   background: #1e40af;
-  color: #fff;
-  padding: 10px;
-}
-.template-corporate td {
-  border-bottom: 1px solid #ccc;
-  padding: 8px;
-}
-.template-corporate:hover {
-  background-color: #e2e8f0;
+  color: white;
+
 }
 
 .template-creative {
-  font-family: 'Nunito', sans-serif;
-  background: #fff;
+
+  font-family: 'Poppins', sans-serif;
   border: 2px solid #9333ea;
-  border-radius: 10px;
-  overflow: hidden;
-  color: #4b5563;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 20px;
+  padding: 30px;
+  background: #fff;
+
 }
-.template-creative h2 {
-  background: linear-gradient(to right, #9333ea, #ec4899);
-  color: #fff;
-  padding: 1rem;
-  margin: -1rem -1rem 1rem -1rem;
-}
-.template-creative table {
-  width: 100%;
-  border-collapse: collapse;
-}
+
 .template-creative th {
-  background: #f3e8ff;
-  color: #6b21a8;
-  padding: 8px;
+
+  background: linear-gradient(to right, #9333ea, #ec4899);
+  color: white;
+
 }
-.template-creative td {
-  border-bottom: 1px solid #eee;
-  padding: 8px;
+
+.templateTab {
+
+  animation: fadeIn .3s ease;
+
 }
-.template-creative:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+@keyframes fadeIn {
+
+  from {
+
+    opacity: 0;
+    transform: translateY(10px);
+
+  }
+
+  to {
+
+    opacity: 1;
+    transform: translateY(0);
+
+  }
+
 }
 
 button {
-  transition: background-color 0.3s ease, transform 0.2s ease;
+
+  transition: all .3s ease;
+
 }
+
 button:hover {
-  background-color: #2563eb;
+
   transform: translateY(-2px);
+
 }
+
 </style>
 </div>
 <!-- ✅ ORDER MODULE -->
@@ -17059,56 +17747,442 @@ button:hover {
 </div>
 
 <div id="orderPreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+
   <div class="bg-white p-6 rounded shadow w-full max-w-3xl relative overflow-y-auto max-h-[90vh]">
 
-    <h3 class="text-xl font-semibold mb-4 text-center">📦 Order Preview</h3>
+    <h3 class="text-xl font-semibold mb-4 text-center">
+      📦 Order Preview
+    </h3>
 
     <div class="mb-3 flex justify-between items-center">
-      <div>
-        <label for="orderTemplateSelect" class="font-semibold">Choose Template:</label>
-        <select id="orderTemplateSelect" onchange="changeOrderTemplate(this.value)" class="border p-1 rounded">
-          <option value="template-default">Default</option>
-          <option value="template-minimal">Minimal</option>
-          <option value="template-modern">Modern</option>
-          <option value="template-elegant">Elegant</option>
-        </select>
+
+      <div class="flex items-center gap-2">
+
+        <div>
+
+          <label for="orderTemplateSelect" class="font-semibold block mb-1">
+            Choose Template:
+          </label>
+
+          <select
+            id="orderTemplateSelect"
+            onchange="changeOrderTemplate(this.value)"
+            class="border p-2 rounded">
+
+            <option value="template-default">Default</option>
+            <option value="template-minimal">Minimal</option>
+            <option value="template-modern">Modern</option>
+            <option value="template-elegant">Elegant</option>
+            <option value="template-bold">Bold</option>
+            <option value="template-corporate">Corporate</option>
+            <option value="template-creative">Creative</option>
+
+          </select>
+
+        </div>
+
+        <button
+          onclick="openOrderTemplateEditor()"
+          class="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+
+          Edit Template
+
+        </button>
+
       </div>
 
       <div class="space-x-3">
-        <button onclick="printOrderPreview()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">Print</button>
-        <button onclick="downloadOrder()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">Download</button>
-        <button onclick="emailOrder()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">Email</button>
-        <button onclick="closeOrderPreview()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Close</button>
+
+        <button
+          onclick="printOrderPreview()"
+          class="px-2 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+
+          Print
+
+        </button>
+
+        <button
+          onclick="downloadOrder()"
+          class="px-2 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+
+          Download
+
+        </button>
+
+        <button
+          onclick="emailOrder()"
+          class="px-2 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+
+          Email
+
+        </button>
+
+        <button
+          onclick="closeOrderPreview()"
+          class="px-2 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">
+
+          Close
+
+        </button>
+
       </div>
+
+    </div>
+
+    <div
+      id="orderTemplateEditor"
+      class="hidden fixed inset-0 bg-black/50 z-50 overflow-auto">
+
+      <div class="bg-white w-full max-w-6xl mx-auto min-h-screen flex">
+
+        <div class="w-20 bg-slate-900 text-white flex flex-col items-center py-4 space-y-4">
+
+          <button
+            onclick="showOrderTemplateTab('orderGeneralTab')"
+            class="templateTabBtn bg-orange-500 w-14 h-14 rounded-lg text-[11px] flex flex-col items-center justify-center">
+
+            ⚙️
+            <span>General</span>
+
+          </button>
+
+          <button
+            onclick="showOrderTemplateTab('orderFontTab')"
+            class="templateTabBtn w-14 h-14 rounded-lg text-[11px] flex flex-col items-center justify-center hover:bg-slate-700">
+
+            🔤
+            <span>Font</span>
+
+          </button>
+
+          <button
+            onclick="showOrderTemplateTab('orderColorTab')"
+            class="templateTabBtn w-14 h-14 rounded-lg text-[11px] flex flex-col items-center justify-center hover:bg-slate-700">
+
+            🎨
+            <span>Colors</span>
+
+          </button>
+
+        </div>
+
+        <div class="flex-1">
+
+          <div class="flex justify-between items-center border-b px-6 py-4">
+
+            <h2 class="text-2xl font-bold">
+              Edit Order Template
+            </h2>
+
+            <div class="flex gap-3">
+
+              <button
+                onclick="applyOrderTemplateChanges()"
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+
+                Save
+
+              </button>
+
+              <button
+                onclick="closeOrderTemplateEditor()"
+                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+
+                Close
+
+              </button>
+
+            </div>
+
+          </div>
+
+          <div class="p-6">
+
+            <div id="orderGeneralTab" class="templateTab">
+
+              <h3 class="text-lg font-bold mb-5">
+                Template Properties
+              </h3>
+
+              <div class="grid md:grid-cols-2 gap-5">
+
+                <div>
+
+                  <label class="font-semibold block mb-2">
+                    Template Name
+                  </label>
+
+                  <input
+                    type="text"
+                    id="orderTemplateName"
+                    class="border rounded p-2 w-full">
+
+                </div>
+
+                <div>
+
+                  <label class="font-semibold block mb-2">
+                    Border Radius
+                  </label>
+
+                  <input
+                    type="range"
+                    id="orderEditRadius"
+                    min="0"
+                    max="40"
+                    class="w-full">
+
+                </div>
+
+                <div>
+
+                  <label class="font-semibold block mb-2">
+                    Top Margin
+                  </label>
+
+                  <input
+                    type="number"
+                    id="orderMarginTop"
+                    class="border rounded p-2 w-full">
+
+                </div>
+
+                <div>
+
+                  <label class="font-semibold block mb-2">
+                    Bottom Margin
+                  </label>
+
+                  <input
+                    type="number"
+                    id="orderMarginBottom"
+                    class="border rounded p-2 w-full">
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div id="orderFontTab" class="templateTab hidden">
+
+              <h3 class="text-lg font-bold mb-5">
+                Font Settings
+              </h3>
+
+              <div class="grid md:grid-cols-2 gap-5">
+
+                <div>
+
+                  <label class="font-semibold block mb-2">
+                    Font Family
+                  </label>
+
+                  <select
+                    id="orderEditFont"
+                    class="border rounded p-2 w-full">
+
+                    <option value="Arial">Arial</option>
+                    <option value="Poppins">Poppins</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Courier New">Courier New</option>
+
+                  </select>
+
+                </div>
+
+                <div>
+
+                  <label class="font-semibold block mb-2">
+                    Font Size
+                  </label>
+
+                  <input
+                    type="number"
+                    id="orderFontSize"
+                    class="border rounded p-2 w-full">
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div id="orderColorTab" class="templateTab hidden">
+
+              <h3 class="text-lg font-bold mb-5">
+                Colors
+              </h3>
+
+              <div class="grid md:grid-cols-2 gap-5">
+
+                <div>
+
+                  <label class="block font-semibold mb-2">
+                    Primary Color
+                  </label>
+
+                  <input
+                    type="color"
+                    id="orderEditColor"
+                    class="w-full h-12 border rounded-lg">
+
+                </div>
+
+                <div>
+
+                  <label class="block font-semibold mb-2">
+                    Text Color
+                  </label>
+
+                  <input
+                    type="color"
+                    id="orderTextColor"
+                    class="w-full h-12 border rounded-lg">
+
+                </div>
+
+                <div>
+
+                  <label class="block font-semibold mb-2">
+                    Background Color
+                  </label>
+
+                  <input
+                    type="color"
+                    id="orderBackgroundColor"
+                    class="w-full h-12 border rounded-lg">
+
+                </div>
+
+                <div>
+
+                  <label class="block font-semibold mb-2">
+                    Table Header Color
+                  </label>
+
+                  <input
+                    type="color"
+                    id="orderTableHeaderColor"
+                    class="w-full h-12 border rounded-lg">
+
+                </div>
+
+                <div>
+
+                  <label class="block font-semibold mb-2">
+                    Table Header Text
+                  </label>
+
+                  <input
+                    type="color"
+                    id="orderTableTextColor"
+                    class="w-full h-12 border rounded-lg">
+
+                </div>
+
+                <div>
+
+                  <label class="block font-semibold mb-2">
+                    Border Color
+                  </label>
+
+                  <input
+                    type="color"
+                    id="orderBorderColor"
+                    class="w-full h-12 border rounded-lg">
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
 
     <div id="orderTemplateWrapper" class="template-default">
 
       <div class="flex justify-between mb-4">
-        <div><strong>Order Number:</strong> <span id="previewOrderNumber"></span></div>
-        <div><strong>Date:</strong> <span id="previewOrderDate"></span></div>
+
+        <div>
+          <strong>Order Number:</strong>
+          <span id="previewOrderNumber"></span>
+        </div>
+
+        <div>
+          <strong>Date:</strong>
+          <span id="previewOrderDate"></span>
+        </div>
+
       </div>
 
       <div class="mb-4">
+
         <div class="text-right">
-          <h4 class="font-semibold">Company</h4>
-          <p id="previewOrderCompanyName">My Company Ltd</p>
-          <p>PIN: <span id="previewOrderCompanyPIN">P00000000</span></p>
-          <p>Address: <span id="previewOrderCompanyAddress">123 Business Rd, Nairobi</span></p>
+
+          <h4 class="font-semibold">
+            Company
+          </h4>
+
+          <p id="previewOrderCompanyName">
+            My Company Ltd
+          </p>
+
+          <p>
+            PIN:
+            <span id="previewOrderCompanyPIN">
+              P00000000
+            </span>
+          </p>
+
+          <p>
+            Address:
+            <span id="previewOrderCompanyAddress">
+              123 Business Rd, Nairobi
+            </span>
+          </p>
+
         </div>
 
         <div class="text-left mb-4">
-          <h4 class="font-semibold">Customer</h4>
+
+          <h4 class="font-semibold">
+            Customer
+          </h4>
+
           <p id="previewOrderCustomerName"></p>
-          <p>Address: <span id="previewOrderCustomerAddress"></span></p>
-          <p>Phone: <span id="previewOrderCustomerPhone"></span></p>
-          <p>PIN: <span id="previewOrderCustomerPIN"></span></p>
+
+          <p>
+            Address:
+            <span id="previewOrderCustomerAddress"></span>
+          </p>
+
+          <p>
+            Phone:
+            <span id="previewOrderCustomerPhone"></span>
+          </p>
+
+          <p>
+            PIN:
+            <span id="previewOrderCustomerPIN"></span>
+          </p>
+
         </div>
+
       </div>
 
       <table class="w-full text-sm border mt-4 border-collapse">
+
         <thead class="bg-gray-100">
+
           <tr>
+
             <th class="p-2 border">#</th>
             <th class="p-2 border">Item Name</th>
             <th class="p-2 border">Qty</th>
@@ -17116,46 +18190,548 @@ button:hover {
             <th class="p-2 border">Discount</th>
             <th class="p-2 border">VAT</th>
             <th class="p-2 border">Total</th>
+
           </tr>
+
         </thead>
+
         <tbody id="orderPreviewItems"></tbody>
+
       </table>
 
       <div class="mt-2 text-right text-sm font-semibold">
-        <p>Subtotal: <span id="previewOrderSubtotal">KES 0.00</span></p>
-        <p>VAT: <span id="previewOrderVAT">KES 0.00</span></p>
-        <p>Total: <span id="previewOrderTotal">KES 0.00</span></p>
-        <p>Paid: <span id="previewOrderPaid">KES 0.00</span></p>
-        <p>Balance: <span id="previewOrderBalance">KES 0.00</span></p>
-        <p>Status: <span id="previewOrderStatus" class="text-blue-600">Pending</span></p>
+
+        <p>
+          Subtotal:
+          <span id="previewOrderSubtotal">
+            KES 0.00
+          </span>
+        </p>
+
+        <p>
+          VAT:
+          <span id="previewOrderVAT">
+            KES 0.00
+          </span>
+        </p>
+
+        <p>
+          Total:
+          <span id="previewOrderTotal">
+            KES 0.00
+          </span>
+        </p>
+
+        <p>
+          Paid:
+          <span id="previewOrderPaid">
+            KES 0.00
+          </span>
+        </p>
+
+        <p>
+          Balance:
+          <span id="previewOrderBalance">
+            KES 0.00
+          </span>
+        </p>
+
+        <p>
+          Status:
+          <span id="previewOrderStatus" class="text-blue-600">
+            Pending
+          </span>
+        </p>
+
       </div>
 
       <table class="bank-details mt-4 w-full text-sm border">
+
         <thead>
+
           <tr>
+
             <th>BANK NAME</th>
             <th>BRANCH</th>
             <th>SWIFT</th>
             <th>KSH ACC</th>
             <th>USD ACC</th>
             <th>EUR ACC</th>
+
           </tr>
+
         </thead>
+
         <tbody>
+
           <tr>
-            <td></td><td></td><td></td><td></td><td></td><td></td>
+
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+
           </tr>
+
         </tbody>
+
       </table>
 
       <div id="orderQRCode" class="mt-4 text-center">
-        <canvas></canvas>
-        <p class="text-xs text-gray-500 hidden">QR will be generated after submission</p>
-      </div>
 
+        <canvas></canvas>
+
+        <p class="text-xs text-gray-500 hidden">
+          QR will be generated after submission
+        </p>
+
+      </div>
     </div>
   </div>
 </div>
+<script>
+
+function changeOrderTemplate(template) {
+
+  const wrapper =
+    document.getElementById("orderTemplateWrapper");
+
+  wrapper.className = "";
+
+  wrapper.classList.add(template);
+
+  localStorage.setItem(
+    "selectedOrderTemplate",
+    template
+  );
+
+}
+
+function openOrderTemplateEditor() {
+
+  document.getElementById("orderTemplateEditor")
+    .classList.remove("hidden");
+
+}
+
+function closeOrderTemplateEditor() {
+
+  document.getElementById("orderTemplateEditor")
+    .classList.add("hidden");
+
+}
+
+function showOrderTemplateTab(tabId) {
+
+  document.querySelectorAll(".templateTab")
+    .forEach(tab => {
+
+      tab.classList.add("hidden");
+
+    });
+
+  document.getElementById(tabId)
+    .classList.remove("hidden");
+
+}
+
+function applyOrderTemplateChanges() {
+
+  const wrapper =
+    document.getElementById("orderTemplateWrapper");
+
+  const templateName =
+    document.getElementById("orderTemplateName").value;
+
+  const marginTop =
+    document.getElementById("orderMarginTop").value || 0;
+
+  const marginBottom =
+    document.getElementById("orderMarginBottom").value || 0;
+
+  const fontFamily =
+    document.getElementById("orderEditFont").value;
+
+  const fontSize =
+    document.getElementById("orderFontSize").value || 14;
+
+  const primaryColor =
+    document.getElementById("orderEditColor").value;
+
+  const textColor =
+    document.getElementById("orderTextColor").value;
+
+  const backgroundColor =
+    document.getElementById("orderBackgroundColor").value;
+
+  const tableHeaderColor =
+    document.getElementById("orderTableHeaderColor").value;
+
+  const tableTextColor =
+    document.getElementById("orderTableTextColor").value;
+
+  const borderColor =
+    document.getElementById("orderBorderColor").value;
+
+  const radius =
+    document.getElementById("orderEditRadius").value || 0;
+
+  wrapper.style.fontFamily =
+    fontFamily;
+
+  wrapper.style.fontSize =
+    fontSize + "px";
+
+  wrapper.style.borderRadius =
+    radius + "px";
+
+  wrapper.style.paddingTop =
+    marginTop + "in";
+
+  wrapper.style.paddingBottom =
+    marginBottom + "in";
+
+  wrapper.style.backgroundColor =
+    backgroundColor;
+
+  wrapper.style.color =
+    textColor;
+
+  wrapper.style.border =
+    "1px solid " + borderColor;
+
+  wrapper.querySelectorAll("table")
+    .forEach(table => {
+
+      table.style.borderColor =
+        borderColor;
+
+    });
+
+  wrapper.querySelectorAll("th")
+    .forEach(th => {
+
+      th.style.backgroundColor =
+        tableHeaderColor;
+
+      th.style.color =
+        tableTextColor;
+
+      th.style.borderColor =
+        borderColor;
+
+    });
+
+  wrapper.querySelectorAll("td")
+    .forEach(td => {
+
+      td.style.padding = "10px";
+
+      td.style.borderColor =
+        borderColor;
+
+      td.style.color =
+        textColor;
+
+    });
+
+  wrapper.querySelectorAll("h1,h2,h3,h4,h5,h6,strong")
+    .forEach(el => {
+
+      el.style.color =
+        primaryColor;
+
+    });
+
+  const settings = {
+
+    templateName,
+    marginTop,
+    marginBottom,
+    fontFamily,
+    fontSize,
+    primaryColor,
+    textColor,
+    backgroundColor,
+    tableHeaderColor,
+    tableTextColor,
+    borderColor,
+    radius
+
+  };
+
+  localStorage.setItem(
+    "orderTemplateSettings",
+    JSON.stringify(settings)
+  );
+
+  closeOrderTemplateEditor();
+
+}
+
+function loadOrderTemplateSettings() {
+
+  const settings = JSON.parse(
+
+    localStorage.getItem(
+      "orderTemplateSettings"
+    )
+
+  );
+
+  if (!settings) return;
+
+  document.getElementById("orderTemplateName").value =
+    settings.templateName || "";
+
+  document.getElementById("orderMarginTop").value =
+    settings.marginTop || 0;
+
+  document.getElementById("orderMarginBottom").value =
+    settings.marginBottom || 0;
+
+  document.getElementById("orderEditFont").value =
+    settings.fontFamily || "Arial";
+
+  document.getElementById("orderFontSize").value =
+    settings.fontSize || 14;
+
+  document.getElementById("orderEditColor").value =
+    settings.primaryColor || "#2563eb";
+
+  document.getElementById("orderTextColor").value =
+    settings.textColor || "#111827";
+
+  document.getElementById("orderBackgroundColor").value =
+    settings.backgroundColor || "#ffffff";
+
+  document.getElementById("orderTableHeaderColor").value =
+    settings.tableHeaderColor || "#2563eb";
+
+  document.getElementById("orderTableTextColor").value =
+    settings.tableTextColor || "#ffffff";
+
+  document.getElementById("orderBorderColor").value =
+    settings.borderColor || "#d1d5db";
+
+  document.getElementById("orderEditRadius").value =
+    settings.radius || 0;
+
+  applyOrderTemplateChanges();
+
+}
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    loadOrderTemplateSettings();
+
+    const savedTemplate =
+
+      localStorage.getItem(
+        "selectedOrderTemplate"
+      );
+
+    if (savedTemplate) {
+
+      document.getElementById(
+        "orderTemplateSelect"
+      ).value = savedTemplate;
+
+      changeOrderTemplate(savedTemplate);
+
+    }
+
+  }
+);
+
+</script>
+
+<style>
+
+.template-default {
+
+  font-family: Arial, sans-serif;
+  color: #111;
+  background: #fff;
+  transition: all 0.3s ease;
+
+}
+
+.template-default table {
+
+  border-collapse: collapse;
+  width: 100%;
+
+}
+
+.template-default th,
+.template-default td {
+
+  border: 1px solid #ddd;
+  padding: 8px;
+
+}
+
+.template-minimal {
+
+  font-family: "Courier New", monospace;
+  background: #fafafa;
+  color: #333;
+
+}
+
+.template-minimal table {
+
+  border-collapse: collapse;
+  width: 100%;
+
+}
+
+.template-minimal th,
+.template-minimal td {
+
+  border-bottom: 1px solid #ccc;
+  padding: 6px;
+
+}
+
+.template-modern {
+
+  font-family: "Poppins", sans-serif;
+  border: 2px solid #2563eb;
+  padding: 1.5rem;
+  background: #f0f8ff;
+  border-radius: 12px;
+  color: #1e293b;
+
+}
+
+.template-modern table {
+
+  border-collapse: collapse;
+  width: 100%;
+
+}
+
+.template-modern th {
+
+  background: #2563eb;
+  color: #fff;
+
+}
+
+.template-modern td {
+
+  border-bottom: 1px solid #ddd;
+
+}
+
+.template-elegant {
+
+  font-family: "Georgia", serif;
+  background: #fff;
+  color: #222;
+  border: 1px solid #ccc;
+  padding: 2rem;
+
+}
+
+.template-elegant table {
+
+  border-collapse: collapse;
+  width: 100%;
+
+}
+
+.template-elegant th {
+
+  background: #f5f5f5;
+
+}
+
+.template-elegant td {
+
+  border-bottom: 1px solid #eee;
+
+}
+
+.template-bold {
+
+  font-family: "Roboto", sans-serif;
+  color: #111;
+  border: 3px solid #000;
+  padding: 1.5rem;
+  background: #fff;
+
+}
+
+.template-bold th {
+
+  background: #000;
+  color: #fff;
+
+}
+
+.template-bold td {
+
+  border: 1px solid #333;
+
+}
+
+.template-corporate {
+
+  font-family: "Segoe UI", sans-serif;
+  background: #f8fafc;
+  border-left: 6px solid #1e40af;
+  padding: 1.5rem;
+  color: #1e293b;
+
+}
+
+.template-corporate th {
+
+  background: #1e40af;
+  color: #fff;
+
+}
+
+.template-creative {
+
+  font-family: "Nunito", sans-serif;
+  background: #fff;
+  border: 2px solid #9333ea;
+  border-radius: 10px;
+  overflow: hidden;
+  color: #4b5563;
+
+}
+
+.template-creative th {
+
+  background: #f3e8ff;
+  color: #6b21a8;
+
+}
+
+button {
+
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
+
+}
+
+button:hover {
+
+  transform: translateY(-2px);
+
+}
+
+</style>
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <!-- ======= BULK INVOICE MODULE ======= -->
 <div id="bulkInvoicesTab" class="hidden ml-84 mr-7 p-2">
@@ -17509,129 +19085,1061 @@ button:hover {
 </div>
 
 <div id="bulkInvoicePreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white p-6 rounded shadow w-full max-w-3xl relative overflow-y-auto max-h-[90vh]">
-    
-    
-    <h3 class="text-xl font-semibold mb-4 text-center">📄 Bulk Invoice Preview</h3>
 
-    <div class="mb-3 flex justify-between items-center">
-      <div>
-        <label for="bulkTemplateSelect" class="font-semibold">Choose Template:</label>
-        <select id="bulkTemplateSelect" onchange="changeBulkTemplate(this.value)" class="border p-1 rounded">
-          <option value="template-default">Default</option>
-          <option value="template-minimal">Minimal</option>
-          <option value="template-modern">Modern</option>
-          <option value="template-elegant">Elegant</option>
-          <option value="template-bold">Bold</option>
-          <option value="template-corporate">Corporate</option>
-          <option value="template-creative">Creative</option>
-        </select>
+  <div class="bg-white p-6 rounded shadow w-full max-w-5xl relative overflow-y-auto max-h-[95vh]">
+
+    <h3 class="text-2xl font-bold mb-4 text-center">
+      📄 Bulk Invoice Preview
+    </h3>
+
+    <div class="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+
+      <div class="flex items-end gap-3 flex-wrap">
+
+        <div>
+          <label for="bulkTemplateSelect" class="font-semibold block mb-1">
+            Choose Template:
+          </label>
+
+          <select
+            id="bulkTemplateSelect"
+            onchange="changeBulkTemplate(this.value)"
+            class="border p-2 rounded-lg">
+
+            <option value="template-default">Default</option>
+            <option value="template-minimal">Minimal</option>
+            <option value="template-modern">Modern</option>
+            <option value="template-elegant">Elegant</option>
+            <option value="template-bold">Bold</option>
+            <option value="template-corporate">Corporate</option>
+            <option value="template-creative">Creative</option>
+
+          </select>
+        </div>
+
+        <button
+          onclick="openBulkTemplateEditor()"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+
+          Edit Template
+
+        </button>
+
       </div>
-      <div class="space-x-3">
-        <button onclick="printBulkPreview()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">Print</button>
-        <button onclick="downloadBulkInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">Download</button>
-        <button onclick="emailBulkInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">Email</button>
-        <button onclick="closeBulkPreview()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Close</button>
+
+      <div class="flex flex-wrap gap-2">
+
+        <button
+          onclick="printBulkPreview()"
+          class="px-3 py-2 bg-blue-900 text-white rounded hover:bg-blue-800">
+
+          Print
+
+        </button>
+
+        <button
+          onclick="downloadBulkInvoice()"
+          class="px-3 py-2 bg-blue-900 text-white rounded hover:bg-blue-800">
+
+          Download
+
+        </button>
+
+        <button
+          onclick="emailBulkInvoice()"
+          class="px-3 py-2 bg-blue-900 text-white rounded hover:bg-blue-800">
+
+          Email
+
+        </button>
+
+        <button
+          onclick="closeBulkPreview()"
+          class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+
+          Close
+
+        </button>
+
       </div>
+
+    </div>
+
+    <div
+      id="bulkTemplateEditor"
+      class="hidden fixed inset-0 bg-black/50 z-50 overflow-auto">
+
+      <div class="bg-white w-full max-w-6xl mx-auto min-h-screen flex">
+
+        <div class="w-20 bg-slate-900 text-white flex flex-col items-center py-4 space-y-4">
+
+          <button
+            onclick="showBulkTemplateTab('bulkGeneralTab', this)"
+            class="bulkTemplateTabBtn bg-orange-500 w-14 h-14 rounded-lg text-[11px] flex flex-col items-center justify-center">
+
+            ⚙️
+            <span>General</span>
+
+          </button>
+
+          <button
+            onclick="showBulkTemplateTab('bulkFontTab', this)"
+            class="bulkTemplateTabBtn w-14 h-14 rounded-lg text-[11px] flex flex-col items-center justify-center hover:bg-slate-700">
+
+            🔤
+            <span>Fonts</span>
+
+          </button>
+
+          <button
+            onclick="showBulkTemplateTab('bulkColorTab', this)"
+            class="bulkTemplateTabBtn w-14 h-14 rounded-lg text-[11px] flex flex-col items-center justify-center hover:bg-slate-700">
+
+            🎨
+            <span>Colors</span>
+
+          </button>
+
+        </div>
+
+        <div class="flex-1">
+
+          <div class="flex justify-between items-center border-b px-6 py-4">
+
+            <h2 class="text-2xl font-bold">
+              Edit Bulk Invoice Template
+            </h2>
+
+            <div class="flex gap-3">
+
+              <button
+                onclick="applyBulkTemplateChanges()"
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+
+                Save
+
+              </button>
+
+              <button
+                onclick="closeBulkTemplateEditor()"
+                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+
+                Close
+
+              </button>
+
+            </div>
+
+          </div>
+
+          <div class="p-6">
+
+            <div id="bulkGeneralTab" class="bulkTemplateTab">
+
+              <h3 class="text-lg font-bold mb-5">
+                General Settings
+              </h3>
+
+              <div class="grid md:grid-cols-2 gap-5">
+
+                <div>
+                  <label class="font-semibold block mb-2">
+                    Template Name
+                  </label>
+
+                  <input
+                    type="text"
+                    id="bulkTemplateName"
+                    class="border rounded p-2 w-full">
+                </div>
+
+                <div>
+                  <label class="font-semibold block mb-2">
+                    Paper Size
+                  </label>
+
+                  <select
+                    id="bulkPaperSize"
+                    class="border rounded p-2 w-full">
+
+                    <option value="A4">A4</option>
+                    <option value="Letter">Letter</option>
+                    <option value="A5">A5</option>
+
+                  </select>
+                </div>
+
+                <div>
+                  <label class="font-semibold block mb-2">
+                    Orientation
+                  </label>
+
+                  <select
+                    id="bulkOrientation"
+                    class="border rounded p-2 w-full">
+
+                    <option value="portrait">Portrait</option>
+                    <option value="landscape">Landscape</option>
+
+                  </select>
+                </div>
+
+                <div>
+                  <label class="font-semibold block mb-2">
+                    Border Radius
+                  </label>
+
+                  <input
+                    type="range"
+                    id="bulkEditRadius"
+                    min="0"
+                    max="40"
+                    class="w-full">
+                </div>
+
+              </div>
+
+              <div class="mt-6">
+
+                <label class="font-semibold block mb-3">
+                  Margins (inches)
+                </label>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+                  <input
+                    type="number"
+                    id="bulkMarginTop"
+                    placeholder="Top"
+                    step="0.1"
+                    class="border rounded p-2 w-full">
+
+                  <input
+                    type="number"
+                    id="bulkMarginBottom"
+                    placeholder="Bottom"
+                    step="0.1"
+                    class="border rounded p-2 w-full">
+
+                  <input
+                    type="number"
+                    id="bulkMarginLeft"
+                    placeholder="Left"
+                    step="0.1"
+                    class="border rounded p-2 w-full">
+
+                  <input
+                    type="number"
+                    id="bulkMarginRight"
+                    placeholder="Right"
+                    step="0.1"
+                    class="border rounded p-2 w-full">
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <div id="bulkFontTab" class="bulkTemplateTab hidden">
+
+              <h3 class="text-lg font-bold mb-5">
+                Font Settings
+              </h3>
+
+              <div class="grid md:grid-cols-2 gap-5">
+
+                <div>
+                  <label class="font-semibold block mb-2">
+                    Font Family
+                  </label>
+
+                  <select
+                    id="bulkEditFont"
+                    class="border rounded p-2 w-full">
+
+                    <option value="Arial">Arial</option>
+                    <option value="Poppins">Poppins</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Tahoma">Tahoma</option>
+                    <option value="Verdana">Verdana</option>
+
+                  </select>
+                </div>
+
+                <div>
+                  <label class="font-semibold block mb-2">
+                    Font Size
+                  </label>
+
+                  <input
+                    type="number"
+                    id="bulkFontSize"
+                    class="border rounded p-2 w-full">
+                </div>
+
+              </div>
+
+            </div>
+
+            <div id="bulkColorTab" class="bulkTemplateTab hidden">
+
+              <h3 class="text-lg font-bold mb-5">
+                Color Settings
+              </h3>
+
+              <div class="grid md:grid-cols-2 gap-5">
+
+                <div>
+                  <label class="font-semibold block mb-2">
+                    Primary Color
+                  </label>
+
+                  <input
+                    type="color"
+                    id="bulkEditColor"
+                    class="w-full h-12 border rounded-lg">
+                </div>
+
+                <div>
+                  <label class="font-semibold block mb-2">
+                    Secondary Color
+                  </label>
+
+                  <input
+                    type="color"
+                    id="bulkSecondaryColor"
+                    class="w-full h-12 border rounded-lg">
+                </div>
+
+                <div>
+                  <label class="font-semibold block mb-2">
+                    Text Color
+                  </label>
+
+                  <input
+                    type="color"
+                    id="bulkTextColor"
+                    class="w-full h-12 border rounded-lg">
+                </div>
+
+                <div>
+                  <label class="font-semibold block mb-2">
+                    Background Color
+                  </label>
+
+                  <input
+                    type="color"
+                    id="bulkBackgroundColor"
+                    class="w-full h-12 border rounded-lg">
+                </div>
+
+                <div>
+                  <label class="font-semibold block mb-2">
+                    Table Header Color
+                  </label>
+
+                  <input
+                    type="color"
+                    id="bulkTableHeaderColor"
+                    class="w-full h-12 border rounded-lg">
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
 
     <div id="bulkInvoiceTemplateWrapper" class="template-default">
 
-      <div class="flex justify-between mb-4">
-        <div><strong>Invoice Number:</strong> <span id="bulkPreviewInvoiceNumber"></span></div>
-        <div><strong>Date:</strong> <span id="bulkPreviewInvoiceDate"></span></div>
+      <div class="flex justify-between mb-6">
+
+        <div>
+          <strong>Invoice Number:</strong>
+          <span id="bulkPreviewInvoiceNumber"></span>
+        </div>
+
+        <div>
+          <strong>Date:</strong>
+          <span id="bulkPreviewInvoiceDate"></span>
+        </div>
+
       </div>
 
-<div class="mb-4">
- 
-  <div class="text-right">
-    <h4 class="font-semibold">Company</h4>
-    <p id="bulkPreviewInvoiceCompanyName">My Company Ltd</p>
-    <p>PIN: <span id="bulkPreviewInvoiceCompanyPIN">P00000000</span></p>
-    <p>Address: <span id="bulkPreviewInvoiceCompanyAddress">123 Business Rd, Nairobi</span></p>
-  </div>
-  
-<div class="text-left mb-4">
-  <h4 class="font-semibold">Customer</h4>
-  <p id="previewInvoiceCustomerName"></p>
-  <p>Billing Address: <span id="previewInvoiceCustomerAddress"></span></p>
-  <p>Phone Number: <span id="previewInvoiceCustomerPhone"></span></p>
-  <p>PIN: <span id="previewInvoiceCustomerPIN"></span></p>
-</div>
-</div>
+      <div class="flex justify-between gap-6 mb-6">
+
+        <div class="text-left">
+
+          <h4 class="font-semibold text-lg mb-2">
+            Customer
+          </h4>
+
+          <p id="previewInvoiceCustomerName"></p>
+
+          <p>
+            Billing Address:
+            <span id="previewInvoiceCustomerAddress"></span>
+          </p>
+
+          <p>
+            Phone Number:
+            <span id="previewInvoiceCustomerPhone"></span>
+          </p>
+
+          <p>
+            PIN:
+            <span id="previewInvoiceCustomerPIN"></span>
+          </p>
+
+        </div>
+
+        <div class="text-right">
+
+          <h4 class="font-semibold text-lg mb-2">
+            Company
+          </h4>
+
+          <p id="bulkPreviewInvoiceCompanyName">
+            My Company Ltd
+          </p>
+
+          <p>
+            PIN:
+            <span id="bulkPreviewInvoiceCompanyPIN">
+              P00000000
+            </span>
+          </p>
+
+          <p>
+            Address:
+            <span id="bulkPreviewInvoiceCompanyAddress">
+              123 Business Rd, Nairobi
+            </span>
+          </p>
+
+        </div>
+
+      </div>
 
       <table class="w-full text-sm border mt-4 border-collapse">
+
         <thead class="bg-gray-100">
+
           <tr>
+
             <th class="p-2 border">#</th>
             <th class="p-2 border">Item Name</th>
             <th class="p-2 border">Qty</th>
             <th class="p-2 border">Price (Before VAT)</th>
             <th class="p-2 border">VAT</th>
             <th class="p-2 border">Total</th>
+
           </tr>
+
         </thead>
+
         <tbody id="bulkPreviewInvoiceItems"></tbody>
+
       </table>
 
-      <div class="mt-2 text-right text-sm font-semibold">
-        <p>Amount (Before VAT): <span id="bulkPreviewInvoiceSubtotal">KES 0.00</span></p>
-        <p>VAT: <span id="bulkPreviewInvoiceVAT">KES 0.00</span></p>
-        <p>Total Amount: <span id="bulkPreviewInvoiceTotal">KES 0.00</span></p>
-        <p>Payment Made: <span id="bulkPreviewInvoicePaymentMade">KES 0.00</span></p>
-        <p>Balance Due: <span id="bulkPreviewInvoiceBalance">KES 0.00</span></p>
-        <p>Status: <span id="bulkPreviewInvoicePaymentStatus" class="text-blue-600">Pending</span></p>
-      </div>
-      
-  <table class="bank-details">
-    <thead>
-      <tr>
-        <th>BANK NAME</th>
-        <th>BRANCH</th>
-        <th>SWIFT CODE</th>
-        <th>KSH ACC</th>
-        <th>USD ACC</th>
-        <th>EURO ACC</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-    </tbody>
-  </table>
+      <div class="mt-4 text-right text-sm font-semibold space-y-1">
 
-<div id="invoiceQRCode" class="mt-4 text-center">
-<canvas></canvas>
-<p id="qrPlaceholder" class="text-xs text-gray-500 text-center hidden">
-    QR will be generated after ETIMS submission
-</p>
+        <p>
+          Amount (Before VAT):
+          <span id="bulkPreviewInvoiceSubtotal">
+            KES 0.00
+          </span>
+        </p>
+
+        <p>
+          VAT:
+          <span id="bulkPreviewInvoiceVAT">
+            KES 0.00
+          </span>
+        </p>
+
+        <p>
+          Total Amount:
+          <span id="bulkPreviewInvoiceTotal">
+            KES 0.00
+          </span>
+        </p>
+
+        <p>
+          Payment Made:
+          <span id="bulkPreviewInvoicePaymentMade">
+            KES 0.00
+          </span>
+        </p>
+
+        <p>
+          Balance Due:
+          <span id="bulkPreviewInvoiceBalance">
+            KES 0.00
+          </span>
+        </p>
+
+        <p>
+          Status:
+          <span
+            id="bulkPreviewInvoicePaymentStatus"
+            class="text-blue-600">
+
+            Pending
+
+          </span>
+        </p>
+
+      </div>
+
+      <table class="bank-details mt-6">
+
+        <thead>
+
+          <tr>
+
+            <th>BANK NAME</th>
+            <th>BRANCH</th>
+            <th>SWIFT CODE</th>
+            <th>KSH ACC</th>
+            <th>USD ACC</th>
+            <th>EURO ACC</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+      <div id="invoiceQRCode" class="mt-6 text-center">
+
+        <canvas></canvas>
+
+        <p
+          id="qrPlaceholder"
+          class="text-xs text-gray-500 text-center hidden">
+
+          QR will be generated after ETIMS submission
+
+        </p>
+
+     </div>
+    </div>
+  </div>
 </div>
 </div>
-</div>
-</div>
-</div>
+<script>
+
+function changeBulkTemplate(template) {
+
+  const wrapper =
+    document.getElementById("bulkInvoiceTemplateWrapper");
+
+  wrapper.className = "";
+  wrapper.classList.add(template);
+
+  localStorage.setItem(
+    "selectedBulkInvoiceTemplate",
+    template
+  );
+
+}
+
+function openBulkTemplateEditor() {
+
+  document.getElementById("bulkTemplateEditor")
+    .classList.remove("hidden");
+
+}
+
+function closeBulkTemplateEditor() {
+
+  document.getElementById("bulkTemplateEditor")
+    .classList.add("hidden");
+
+}
+
+function applyBulkTemplateChanges() {
+
+  const wrapper =
+    document.getElementById("bulkInvoiceTemplateWrapper");
+
+  const templateName =
+    document.getElementById("bulkTemplateName").value;
+
+  const paperSize =
+    document.getElementById("bulkPaperSize").value;
+
+  const orientation =
+    document.getElementById("bulkOrientation").value;
+
+  const marginTop =
+    document.getElementById("bulkMarginTop").value || 0;
+
+  const marginBottom =
+    document.getElementById("bulkMarginBottom").value || 0;
+
+  const marginLeft =
+    document.getElementById("bulkMarginLeft").value || 0;
+
+  const marginRight =
+    document.getElementById("bulkMarginRight").value || 0;
+
+  const fontFamily =
+    document.getElementById("bulkEditFont").value;
+
+  const fontSize =
+    document.getElementById("bulkFontSize").value || 14;
+
+  const primaryColor =
+    document.getElementById("bulkEditColor").value;
+
+  const secondaryColor =
+    document.getElementById("bulkSecondaryColor").value;
+
+  const textColor =
+    document.getElementById("bulkTextColor").value;
+
+  const backgroundColor =
+    document.getElementById("bulkBackgroundColor").value;
+
+  const tableHeaderColor =
+    document.getElementById("bulkTableHeaderColor").value;
+
+  const radius =
+    document.getElementById("bulkEditRadius").value || 0;
+
+  wrapper.style.fontFamily = fontFamily;
+  wrapper.style.fontSize = fontSize + "px";
+  wrapper.style.borderRadius = radius + "px";
+
+  wrapper.style.paddingTop = marginTop + "in";
+  wrapper.style.paddingBottom = marginBottom + "in";
+  wrapper.style.paddingLeft = marginLeft + "in";
+  wrapper.style.paddingRight = marginRight + "in";
+
+  wrapper.style.backgroundColor = backgroundColor;
+  wrapper.style.color = textColor;
+  wrapper.style.borderColor = primaryColor;
+
+  if (paperSize === "A4") {
+
+    wrapper.style.width = "210mm";
+    wrapper.style.minHeight = "297mm";
+
+  }
+
+  if (paperSize === "Letter") {
+
+    wrapper.style.width = "216mm";
+    wrapper.style.minHeight = "279mm";
+
+  }
+
+  if (paperSize === "A5") {
+
+    wrapper.style.width = "148mm";
+    wrapper.style.minHeight = "210mm";
+
+  }
+
+  if (orientation === "landscape") {
+
+    wrapper.style.width = "100%";
+
+  }
+
+  wrapper.querySelectorAll("th").forEach(th => {
+
+    th.style.backgroundColor = tableHeaderColor;
+    th.style.color = "#fff";
+    th.style.borderColor = primaryColor;
+
+  });
+
+  wrapper.querySelectorAll("td").forEach(td => {
+
+    td.style.borderColor = secondaryColor;
+    td.style.padding = "10px";
+
+  });
+
+  wrapper.querySelectorAll("table").forEach(table => {
+
+    table.style.borderColor = primaryColor;
+
+  });
+
+  const settings = {
+
+    templateName,
+    paperSize,
+    orientation,
+    marginTop,
+    marginBottom,
+    marginLeft,
+    marginRight,
+    fontFamily,
+    fontSize,
+    primaryColor,
+    secondaryColor,
+    textColor,
+    backgroundColor,
+    tableHeaderColor,
+    radius
+
+  };
+
+  localStorage.setItem(
+    "bulkInvoiceTemplateSettings",
+    JSON.stringify(settings)
+  );
+
+  closeBulkTemplateEditor();
+
+}
+
+function loadBulkTemplateSettings() {
+
+  const settings = JSON.parse(
+    localStorage.getItem(
+      "bulkInvoiceTemplateSettings"
+    )
+  );
+
+  if (!settings) return;
+
+  document.getElementById("bulkTemplateName").value =
+    settings.templateName || "";
+
+  document.getElementById("bulkPaperSize").value =
+    settings.paperSize || "A4";
+
+  document.getElementById("bulkOrientation").value =
+    settings.orientation || "portrait";
+
+  document.getElementById("bulkMarginTop").value =
+    settings.marginTop || 0;
+
+  document.getElementById("bulkMarginBottom").value =
+    settings.marginBottom || 0;
+
+  document.getElementById("bulkMarginLeft").value =
+    settings.marginLeft || 0;
+
+  document.getElementById("bulkMarginRight").value =
+    settings.marginRight || 0;
+
+  document.getElementById("bulkEditFont").value =
+    settings.fontFamily || "Arial";
+
+  document.getElementById("bulkFontSize").value =
+    settings.fontSize || 14;
+
+  document.getElementById("bulkEditColor").value =
+    settings.primaryColor || "#2563eb";
+
+  document.getElementById("bulkSecondaryColor").value =
+    settings.secondaryColor || "#1e40af";
+
+  document.getElementById("bulkTextColor").value =
+    settings.textColor || "#111827";
+
+  document.getElementById("bulkBackgroundColor").value =
+    settings.backgroundColor || "#ffffff";
+
+  document.getElementById("bulkTableHeaderColor").value =
+    settings.tableHeaderColor || "#2563eb";
+
+  document.getElementById("bulkEditRadius").value =
+    settings.radius || 0;
+
+  applyBulkTemplateChanges();
+
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  loadBulkTemplateSettings();
+
+  const savedTemplate =
+    localStorage.getItem(
+      "selectedBulkInvoiceTemplate"
+    );
+
+  if (savedTemplate) {
+
+    document.getElementById("bulkTemplateSelect").value =
+      savedTemplate;
+
+    changeBulkTemplate(savedTemplate);
+
+  }
+
+});
+
+</script>
+
+<style>
+
+.template-default {
+
+  font-family: Arial, sans-serif;
+  color: #111827;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  padding: 20px;
+
+}
+
+.template-default table {
+
+  width: 100%;
+  border-collapse: collapse;
+
+}
+
+.template-default th {
+
+  background: #2563eb;
+  color: #fff;
+  padding: 10px;
+
+}
+
+.template-default td {
+
+  border: 1px solid #d1d5db;
+  padding: 10px;
+
+}
+
+.template-minimal {
+
+  font-family: "Courier New", monospace;
+  background: #fafafa;
+  color: #374151;
+  padding: 20px;
+
+}
+
+.template-minimal th {
+
+  border-bottom: 2px solid #d1d5db;
+  padding: 8px;
+
+}
+
+.template-minimal td {
+
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px;
+
+}
+
+.template-modern {
+
+  font-family: Poppins, sans-serif;
+  background: #eff6ff;
+  border: 2px solid #2563eb;
+  border-radius: 14px;
+  padding: 24px;
+  color: #1e293b;
+
+}
+
+.template-modern th {
+
+  background: #2563eb;
+  color: #fff;
+  padding: 12px;
+
+}
+
+.template-modern td {
+
+  border-bottom: 1px solid #cbd5e1;
+  padding: 12px;
+
+}
+
+.template-elegant {
+
+  font-family: Georgia, serif;
+  background: #ffffff;
+  border: 1px solid #d4d4d4;
+  padding: 30px;
+  color: #111827;
+
+}
+
+.template-elegant th {
+
+  background: #f3f4f6;
+  color: #111827;
+  padding: 10px;
+
+}
+
+.template-elegant td {
+
+  border-bottom: 1px solid #e5e7eb;
+  padding: 10px;
+
+}
+
+.template-bold {
+
+  font-family: Roboto, sans-serif;
+  background: #ffffff;
+  border: 4px solid #111827;
+  padding: 25px;
+  color: #111827;
+
+}
+
+.template-bold th {
+
+  background: #111827;
+  color: #ffffff;
+  padding: 12px;
+
+}
+
+.template-bold td {
+
+  border: 1px solid #111827;
+  padding: 12px;
+
+}
+
+.template-corporate {
+
+  font-family: "Segoe UI", sans-serif;
+  background: #f8fafc;
+  border-left: 8px solid #1d4ed8;
+  padding: 24px;
+  color: #1e293b;
+
+}
+
+.template-corporate th {
+
+  background: #1d4ed8;
+  color: #ffffff;
+  padding: 10px;
+
+}
+
+.template-corporate td {
+
+  border-bottom: 1px solid #cbd5e1;
+  padding: 10px;
+
+}
+
+.template-creative {
+
+  font-family: Nunito, sans-serif;
+  background: #ffffff;
+  border: 3px solid #9333ea;
+  border-radius: 18px;
+  padding: 24px;
+  color: #4b5563;
+
+}
+
+.template-creative th {
+
+  background: linear-gradient(
+    to right,
+    #9333ea,
+    #ec4899
+  );
+
+  color: #ffffff;
+  padding: 10px;
+
+}
+
+.template-creative td {
+
+  border-bottom: 1px solid #f3e8ff;
+  padding: 10px;
+
+}
+
+.bank-details {
+
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+
+}
+
+.bank-details th,
+.bank-details td {
+
+  border: 1px solid #d1d5db;
+  padding: 8px;
+  text-align: center;
+
+}
+
+button {
+
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
+
+}
+
+button:hover {
+
+  transform: translateY(-2px);
+
+}
+
+</style>
  <!-- ✅ CUSTOMER QUOTES MODULE -->
 <div id="quotesTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-2xl font-bold mb-6 text-left">📄 Customer Quotes</h2>
@@ -17954,130 +20462,449 @@ button:hover {
   </div>
 
 <div id="quotePreviewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-  <div class="bg-white p-6 rounded-lg w-11/12 max-w-3xl shadow-lg">
+
+  <div class="bg-white p-6 rounded-lg w-11/12 max-w-5xl shadow-lg overflow-y-auto max-h-[95vh]">
+
     <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold">Quote Preview</h2>
-      <button onclick="closeQuotePreview()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">&times;</button>
+      <h2 class="text-2xl font-bold">📄 Quote Preview</h2>
+
+      <button
+        onclick="closeQuotePreview()"
+        class="border border-red-600 text-red-600 font-bold px-3 py-1 rounded hover:bg-red-600 hover:text-white">
+        close
+      </button>
     </div>
 
-<div class="mb-3 flex justify-between items-center">
-  <div>
-    <label for="templateSelect" class="font-semibold">Choose Template:</label>
-    <select id="templateSelect" onchange="changeTemplate(this.value)" class="border p-1 rounded">
-      <option value="template-default">Default</option>
-      <option value="template-minimal">Minimal</option>
-      <option value="template-modern">Modern</option>
-      <option value="template-elegant">Elegant</option>
-      <option value="template-bold">Bold</option>
-      <option value="template-corporate">Corporate</option>
-      <option value="template-creative">Creative</option>
-    </select>
+    <div class="mb-4 flex flex-wrap justify-between items-center gap-3">
+
+      <div class="flex items-center gap-3 flex-wrap">
+
+        <div>
+          <label for="quoteTemplateSelect" class="font-semibold block mb-1">
+            Choose Template:
+          </label>
+
+          <select
+            id="quoteTemplateSelect"
+            onchange="changeQuoteTemplate(this.value)"
+            class="border p-2 rounded">
+
+            <option value="template-default">Default</option>
+            <option value="template-minimal">Minimal</option>
+            <option value="template-modern">Modern</option>
+            <option value="template-elegant">Elegant</option>
+            <option value="template-bold">Bold</option>
+            <option value="template-corporate">Corporate</option>
+            <option value="template-creative">Creative</option>
+
+          </select>
+        </div>
+
+        <button
+          onclick="openQuoteTemplateEditor()"
+          class="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+
+          Edit Template
+
+        </button>
+
+      </div>
+
+      <div class="space-x-3">
+
+        <button
+          onclick="printPreview()"
+          class="px-3 py-2 bg-blue-900 text-white rounded hover:bg-blue-800">
+          Print
+        </button>
+
+        <button
+          onclick="downloadInvoice()"
+          class="px-3 py-2 bg-blue-900 text-white rounded hover:bg-blue-800">
+          Download
+        </button>
+
+        <button
+          onclick="emailInvoice()"
+          class="px-3 py-2 bg-blue-900 text-white rounded hover:bg-blue-800">
+          Email
+        </button>
+
+      </div>
+
+    </div>
+
+    <div
+      id="quoteTemplateWrapper"
+      class="template-default p-6 border rounded bg-white transition-all duration-300">
+
+      <div class="flex justify-between mb-4">
+
+        <div>
+          <strong>Quote Number:</strong>
+          <span id="previewQuoteNumber"></span>
+        </div>
+
+        <div>
+          <strong>Date:</strong>
+          <span id="previewQuoteDate"></span>
+        </div>
+
+      </div>
+
+      <div class="text-center mb-4">
+
+        <img
+          id="companyLogo"
+          src="your-company-logo-url.png"
+          alt="Company Logo"
+          class="max-w-[220px] mx-auto" />
+
+      </div>
+
+      <div class="mb-6 flex flex-wrap justify-between gap-5">
+
+        <div class="text-left">
+
+          <h4 class="font-semibold mb-2">Company Info</h4>
+
+          <p>
+            <strong>Name:</strong>
+            <span id="previewQuoteCompanyName"></span>
+          </p>
+
+          <p>
+            <strong>KRA PIN:</strong>
+            <span id="previewQuoteCompanyPIN"></span>
+          </p>
+
+          <p>
+            <strong>Address:</strong>
+            <span id="previewQuoteCompanyAddress"></span>
+          </p>
+
+        </div>
+
+        <div class="text-left">
+
+          <h4 class="font-semibold mb-2">Customer Info</h4>
+
+          <p>
+            <strong>Name:</strong>
+            <span id="previewQuoteCustomerName"></span>
+          </p>
+
+          <p>
+            <strong>KRA PIN:</strong>
+            <span id="previewQuoteCustomerPIN"></span>
+          </p>
+
+          <p>
+            <strong>Address:</strong>
+            <span id="previewQuoteCustomerAddress"></span>
+          </p>
+
+        </div>
+
+      </div>
+
+      <table class="w-full border-collapse border text-sm mb-4">
+
+        <thead class="bg-gray-100">
+
+          <tr>
+
+            <th class="p-2 border">#</th>
+            <th class="p-2 border">Description</th>
+            <th class="p-2 border">Qty</th>
+            <th class="p-2 border">Price</th>
+            <th class="p-2 border">VAT</th>
+            <th class="p-2 border">Total</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="previewQuoteItems"></tbody>
+
+      </table>
+
+      <div class="text-right mb-4 text-sm font-semibold">
+
+        <p>
+          Subtotal:
+          <span id="previewQuoteSubtotal">KES 0.00</span>
+        </p>
+
+        <p>
+          VAT:
+          <span id="previewQuoteVAT">KES 0.00</span>
+        </p>
+
+        <p>
+          Total:
+          <span id="previewQuoteTotal">KES 0.00</span>
+        </p>
+
+        <p>
+          Payment Made:
+          <span id="previewQuotePaymentMade">KES 0.00</span>
+        </p>
+
+        <p>
+          Balance Due:
+          <span id="previewQuoteBalance">KES 0.00</span>
+        </p>
+
+        <p>
+          Status:
+          <span id="previewQuotePaymentStatus" class="text-blue-600">
+            Pending
+          </span>
+        </p>
+
+      </div>
+
+      <table class="bank-details w-full border text-sm mb-4">
+
+        <thead>
+
+          <tr>
+
+            <th>BANK NAME</th>
+            <th>BRANCH</th>
+            <th>SWIFT CODE</th>
+            <th>KSH ACC</th>
+            <th>USD ACC</th>
+            <th>EURO ACC</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+      <div class="mb-4 text-center">
+        <canvas id="quoteQRCode"></canvas>
+      </div>
+
+      <p class="mt-4 text-sm text-center text-gray-700">
+        Thank you for doing business with us.
+      </p>
+
+    </div>
+
   </div>
 
-  <div class="space-x-3">
-    <button onclick="printPreview()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">Print</button>
-    <button onclick="downloadInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">Download</button>
-    <button onclick="emailInvoice()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">Email</button>
-  </div>
 </div>
 
-<div id="invoiceTemplateWrapper" class="template-default p-4 border rounded bg-white">
+<div
+  id="quoteTemplateEditor"
+  class="hidden fixed inset-0 bg-black/50 z-50 overflow-auto">
 
-  <div class="flex justify-between mb-4">
-    <div><strong>Quote Number:</strong> <span id="previewQuoteNumber"></span></div>
-    <div><strong>Date:</strong> <span id="previewQuoteDate"></span></div>
-  </div>
+  <div class="bg-white w-full max-w-6xl mx-auto min-h-screen flex">
 
-  <div class="text-center mb-4">
-    <img id="companyLogo" src="your-company-logo-url.png" alt="Company Logo" class="max-w-[200px] mx-auto" />
-  </div>
+    <div class="w-20 bg-slate-900 text-white flex flex-col items-center py-4 space-y-4">
 
-  <div class="mb-4 flex justify-between">
-    
-    <div class="text-left">
-      <h4 class="font-semibold">Company Info</h4>
-      <p><strong>Name:</strong> <span id="previewQuoteCompanyName"></span></p>
-      <p><strong>KRA PIN:</strong> <span id="previewQuoteCompanyPIN"></span></p>
-      <p><strong>Address:</strong> <span id="previewQuoteCompanyAddress"></span></p>
+      <button
+        onclick="showQuoteTemplateTab('generalQuoteTab', this)"
+        class="quoteTemplateTabBtn bg-orange-500 w-14 h-14 rounded-lg text-[11px] flex flex-col items-center justify-center">
+
+        ⚙️
+        <span>General</span>
+
+      </button>
+
+      <button
+        onclick="showQuoteTemplateTab('fontQuoteTab', this)"
+        class="quoteTemplateTabBtn w-14 h-14 rounded-lg text-[11px] flex flex-col items-center justify-center hover:bg-slate-700">
+
+        🔤
+        <span>Font</span>
+
+      </button>
+
+      <button
+        onclick="showQuoteTemplateTab('colorQuoteTab', this)"
+        class="quoteTemplateTabBtn w-14 h-14 rounded-lg text-[11px] flex flex-col items-center justify-center hover:bg-slate-700">
+
+        🎨
+        <span>Colors</span>
+
+      </button>
+
     </div>
 
-    <div class="text-left">
-      <h4 class="font-semibold">Customer Info</h4>
-      <p><strong>Name:</strong> <span id="previewQuoteCustomerName"></span></p>
-      <p><strong>KRA PIN:</strong> <span id="previewQuoteCustomerPIN"></span></p>
-      <p><strong>Address:</strong> <span id="previewQuoteCustomerAddress"></span></p>
+    <div class="flex-1">
+
+      <div class="flex justify-between items-center border-b px-6 py-4">
+
+        <h2 class="text-2xl font-bold">
+          Edit Quote Template
+        </h2>
+
+        <div class="flex gap-3">
+
+          <button
+            onclick="applyQuoteTemplateChanges()"
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+
+            Save
+
+          </button>
+
+          <button
+            onclick="closeQuoteTemplateEditor()"
+            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+
+            Close
+
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="p-6">
+
+        <div id="generalQuoteTab" class="quoteTemplateTab">
+
+          <div class="grid md:grid-cols-2 gap-5">
+
+            <div>
+              <label class="font-semibold block mb-2">
+                Paper Size
+              </label>
+
+              <select id="quotePaperSize" class="border rounded p-2 w-full">
+
+                <option value="A4">A4</option>
+                <option value="Letter">Letter</option>
+                <option value="A5">A5</option>
+
+              </select>
+            </div>
+
+            <div>
+              <label class="font-semibold block mb-2">
+                Border Radius
+              </label>
+
+              <input
+                type="range"
+                id="quoteRadius"
+                min="0"
+                max="40"
+                class="w-full">
+            </div>
+
+          </div>
+
+        </div>
+
+        <div id="fontQuoteTab" class="quoteTemplateTab hidden">
+
+          <div class="grid md:grid-cols-2 gap-5">
+
+            <div>
+
+              <label class="font-semibold block mb-2">
+                Font Family
+              </label>
+
+              <select id="quoteFont" class="border rounded p-2 w-full">
+
+                <option value="Arial">Arial</option>
+                <option value="Poppins">Poppins</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Courier New">Courier New</option>
+
+              </select>
+
+            </div>
+
+            <div>
+
+              <label class="font-semibold block mb-2">
+                Font Size
+              </label>
+
+              <input
+                type="number"
+                id="quoteFontSize"
+                class="border rounded p-2 w-full">
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div id="colorQuoteTab" class="quoteTemplateTab hidden">
+
+          <div class="grid md:grid-cols-2 gap-5">
+
+            <div>
+
+              <label class="font-semibold block mb-2">
+                Primary Color
+              </label>
+
+              <input
+                type="color"
+                id="quotePrimaryColor"
+                class="w-full h-12 border rounded">
+
+            </div>
+
+            <div>
+
+              <label class="font-semibold block mb-2">
+                Background Color
+              </label>
+
+              <input
+                type="color"
+                id="quoteBackgroundColor"
+                class="w-full h-12 border rounded">
+
+            </div>
+
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-
-  <table class="w-full border-collapse border text-sm mb-4">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="p-2 border">#</th>
-        <th class="p-2 border">Description</th>
-        <th class="p-2 border">Qty</th>
-        <th class="p-2 border">Price</th>
-        <th class="p-2 border">VAT</th>
-        <th class="p-2 border">Total</th>
-      </tr>
-    </thead>
-    <tbody id="previewQuoteItems"></tbody>
-  </table>
-
-  <div class="text-right mb-4 text-sm font-semibold">
-    <p>Subtotal: <span id="previewQuoteSubtotal">KES 0.00</span></p>
-    <p>VAT: <span id="previewQuoteVAT">KES 0.00</span></p>
-    <p>Total: <span id="previewQuoteTotal">KES 0.00</span></p>
-    <p>Payment Made: <span id="previewQuotePaymentMade">KES 0.00</span></p>
-    <p>Balance Due: <span id="previewQuoteBalance">KES 0.00</span></p>
-    <p>Status: <span id="previewQuotePaymentStatus" class="text-blue-600">Pending</span></p>
-  </div>
-  
-  <table class="bank-details">
-    <thead>
-      <tr>
-        <th>BANK NAME</th>
-        <th>BRANCH</th>
-        <th>SWIFT CODE</th>
-        <th>KSH ACC</th>
-        <th>USD ACC</th>
-        <th>EURO ACC</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-    <div class="mb-4 text-center">
-      <canvas id="quoteQRCode"></canvas>
-    </div>
-  <p class="mt-4 text-sm text-center text-gray-700">
-  Thank you for doing business with us.
-</p>
   </div>
 </div>
 
@@ -18102,6 +20929,172 @@ button:hover {
   </div>
 </div>
 </div>
+<script>
+
+function changeQuoteTemplate(template) {
+
+  const wrapper = document.getElementById("quoteTemplateWrapper");
+
+  wrapper.className = "";
+  wrapper.classList.add(template);
+
+  localStorage.setItem("selectedQuoteTemplate", template);
+
+}
+
+function openQuoteTemplateEditor() {
+
+  document.getElementById("quoteTemplateEditor")
+    .classList.remove("hidden");
+
+}
+
+function closeQuoteTemplateEditor() {
+
+  document.getElementById("quoteTemplateEditor")
+    .classList.add("hidden");
+
+}
+
+function showQuoteTemplateTab(tabId, btn) {
+
+  document.querySelectorAll(".quoteTemplateTab")
+    .forEach(tab => tab.classList.add("hidden"));
+
+  document.getElementById(tabId)
+    .classList.remove("hidden");
+
+  document.querySelectorAll(".quoteTemplateTabBtn")
+    .forEach(b => {
+      b.classList.remove("bg-orange-500");
+      b.classList.add("hover:bg-slate-700");
+    });
+
+  btn.classList.add("bg-orange-500");
+
+}
+
+function applyQuoteTemplateChanges() {
+
+  const wrapper = document.getElementById("quoteTemplateWrapper");
+
+  const paperSize =
+    document.getElementById("quotePaperSize").value;
+
+  const radius =
+    document.getElementById("quoteRadius").value || 0;
+
+  const fontFamily =
+    document.getElementById("quoteFont").value;
+
+  const fontSize =
+    document.getElementById("quoteFontSize").value || 14;
+
+  const primaryColor =
+    document.getElementById("quotePrimaryColor").value;
+
+  const backgroundColor =
+    document.getElementById("quoteBackgroundColor").value;
+
+  wrapper.style.fontFamily = fontFamily;
+  wrapper.style.fontSize = fontSize + "px";
+  wrapper.style.borderRadius = radius + "px";
+  wrapper.style.backgroundColor = backgroundColor;
+
+  if (paperSize === "A4") {
+    wrapper.style.width = "210mm";
+    wrapper.style.minHeight = "297mm";
+  }
+
+  if (paperSize === "Letter") {
+    wrapper.style.width = "216mm";
+    wrapper.style.minHeight = "279mm";
+  }
+
+  if (paperSize === "A5") {
+    wrapper.style.width = "148mm";
+    wrapper.style.minHeight = "210mm";
+  }
+
+  wrapper.querySelectorAll("th").forEach(th => {
+    th.style.backgroundColor = primaryColor;
+    th.style.color = "#fff";
+  });
+
+  wrapper.querySelectorAll("td").forEach(td => {
+    td.style.padding = "10px";
+  });
+
+  const settings = {
+
+    paperSize,
+    radius,
+    fontFamily,
+    fontSize,
+    primaryColor,
+    backgroundColor
+
+  };
+
+  localStorage.setItem(
+    "quoteTemplateSettings",
+    JSON.stringify(settings)
+  );
+
+  closeQuoteTemplateEditor();
+
+}
+
+function loadQuoteTemplateSettings() {
+
+  const settings = JSON.parse(
+    localStorage.getItem("quoteTemplateSettings")
+  );
+
+  if (!settings) return;
+
+  document.getElementById("quotePaperSize").value =
+    settings.paperSize || "A4";
+
+  document.getElementById("quoteRadius").value =
+    settings.radius || 0;
+
+  document.getElementById("quoteFont").value =
+    settings.fontFamily || "Arial";
+
+  document.getElementById("quoteFontSize").value =
+    settings.fontSize || 14;
+
+  document.getElementById("quotePrimaryColor").value =
+    settings.primaryColor || "#2563eb";
+
+  document.getElementById("quoteBackgroundColor").value =
+    settings.backgroundColor || "#ffffff";
+
+  applyQuoteTemplateChanges();
+
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  loadQuoteTemplateSettings();
+
+  const savedTemplate =
+    localStorage.getItem("selectedQuoteTemplate");
+
+  if (savedTemplate) {
+
+    const select = document.getElementById("quoteTemplateSelect");
+
+    if (select) select.value = savedTemplate;
+
+    changeQuoteTemplate(savedTemplate);
+
+  }
+
+});
+
+</script>
 <style>
 
 .template-default {
@@ -25256,17 +28249,159 @@ function renderBulkInvoices() {
         <td class="p-2 border">${formatCurrency(vatInBase)}</td>
 
         <td class="p-2 border text-center">${pushStatus}</td>
-        <td class="p-2 border text-center">
-          <button onclick="previewBulkInvoice('${inv.invoiceNo}')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded mb-1 hover:bg-blue-800">Preview</button>
-          <button onclick="editBulkInvoice('${inv.invoiceNo}')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded mb-1 hover:bg-blue-800">Edit</button>
-          <button onclick="deleteBulkInvoice('${inv.invoiceNo}')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded mb-1 hover:bg-blue-800">Delete</button>
-          <button onclick="pushBulkInvoiceToETIMS('${inv.invoiceNo}')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded mb-1 hover:bg-blue-800">Push to ETIMS</button>
-        </td>
+       <td class="p-2 border text-center">
+
+  <button onclick="previewBulkInvoice('${inv.invoiceNo}')"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800 mb-1">
+    Preview
+  </button>
+
+  <button onclick="editBulkInvoice('${inv.invoiceNo}')"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800 mb-1">
+    Edit
+  </button>
+
+  <button onclick="deleteBulkInvoice('${inv.invoiceNo}')"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800 mb-1">
+    Delete
+  </button>
+
+  <button onclick="pushBulkInvoiceToETIMS('${inv.invoiceNo}')"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800 mb-1">
+    Push to ETIMS
+  </button>
+
+  <div class="relative inline-block">
+
+    <button onclick="toggleBulkInvoiceMenu('${inv.invoiceNo}')"
+      class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+      More ▾
+    </button>
+
+    <div id="bulk-invoice-menu-${inv.invoiceNo}"
+      class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+      <button onclick="cloneBulkInvoice('${inv.invoiceNo}')"
+        class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+        Clone
+      </button>
+
+      <button onclick="downloadBulkInvoice('${inv.invoiceNo}')"
+        class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+        Download
+      </button>
+
+      <button onclick="printBulkInvoice('${inv.invoiceNo}')"
+        class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+        Print
+      </button>
+
+    </div>
+
+  </div>
+
+</td>
       </tr>
     `;
   });
 }
+function toggleBulkInvoiceMenu(no) {
 
+  document.querySelectorAll("[id^='bulk-invoice-menu-']").forEach(m => {
+    if (m.id !== `bulk-invoice-menu-${no}`) m.classList.add("hidden");
+  });
+
+  document.getElementById(`bulk-invoice-menu-${no}`).classList.toggle("hidden");
+}
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".relative")) {
+    document.querySelectorAll("[id^='bulk-invoice-menu-']").forEach(m => {
+      m.classList.add("hidden");
+    });
+  }
+});
+
+function cloneBulkInvoice(no) {
+
+  let invoices = JSON.parse(localStorage.getItem("bulkInvoices") || "[]");
+
+  const inv = invoices.find(i => i.invoiceNo === no);
+
+  if (!inv) return;
+
+  const cloned = {
+    ...inv,
+    invoiceNo: `${inv.invoiceNo}-CLONE-${Date.now()}`
+  };
+
+  invoices.push(cloned);
+
+  localStorage.setItem("bulkInvoices", JSON.stringify(invoices));
+
+  renderBulkInvoices();
+}
+
+function downloadBulkInvoice(no) {
+
+  let invoices = JSON.parse(localStorage.getItem("bulkInvoices") || "[]");
+
+  const inv = invoices.find(i => i.invoiceNo === no);
+
+  if (!inv) return;
+
+  const data = `
+BULK INVOICE
+
+Invoice No: ${inv.invoiceNo}
+Date: ${inv.date}
+Customers: ${inv.customers.join(", ")}
+Net Days: ${inv.netDays}
+Due Date: ${inv.dueDate}
+Total: ${inv.total}
+VAT: ${inv.vat}
+`;
+
+  const blob = new Blob([data], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Invoice_${inv.invoiceNo}.txt`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function printBulkInvoice(no) {
+
+  let invoices = JSON.parse(localStorage.getItem("bulkInvoices") || "[]");
+
+  const inv = invoices.find(i => i.invoiceNo === no);
+
+  if (!inv) return;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head><title>Invoice Print</title></head>
+    <body>
+      <h2>Bulk Invoice</h2>
+      <p>Invoice No: ${inv.invoiceNo}</p>
+      <p>Date: ${inv.date}</p>
+      <p>Customers: ${inv.customers.join(", ")}</p>
+      <p>Net Days: ${inv.netDays}</p>
+      <p>Due Date: ${inv.dueDate}</p>
+      <p>Total: ${inv.total}</p>
+      <p>VAT: ${inv.vat}</p>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+  win.print();
+}
 function getCurrencyRate(from, to) {
   const rates = { KES: 1, USD: 0.0075, GBP: 0.0058, EUR: 0.0069 }; 
   const fromRate = rates[from] || 1;
@@ -56797,20 +59932,57 @@ function loadPayrollBanks() {
 }
 function loadPayrollAccounts() {
   const accountSelect = document.getElementById("payrollAccount");
-  if (!accountSelect) return;
 
-  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+  if (!accountSelect) {
+    console.log("payrollAccount select element not found");
+    return;
+  }
 
-  accountSelect.innerHTML = `<option value="">-- Select Chart of Account --</option>`;
+  const accounts = JSON.parse(
+    localStorage.getItem("chartOfAccounts") || "[]"
+  );
 
-  accounts
-    .filter(acc => (acc.type || "").toLowerCase().includes("expense"))
-    .forEach(acc => {
-      const opt = document.createElement("option");
-      opt.value = acc.code;
-      opt.textContent = `${acc.name} (${acc.code})`;
-      accountSelect.appendChild(opt);
-    });
+  console.log("Loaded Accounts:", accounts);
+
+  accountSelect.innerHTML =
+    `<option value="">-- Select Chart of Account --</option>`;
+
+  if (!Array.isArray(accounts) || accounts.length === 0) {
+    console.log("No accounts found in localStorage");
+    return;
+  }
+
+  const expenseAccounts = accounts.filter(acc => {
+    console.log("Checking Account:", acc);
+
+    const type = String(
+      acc.type ||
+      acc.accountType ||
+      acc.category ||
+      ""
+    ).toLowerCase().trim();
+
+    console.log("Detected Type:", type);
+
+    return (
+      type === "expense" ||
+      type === "expenses" ||
+      type.includes("expense")
+    );
+  });
+
+  console.log("Filtered Expense Accounts:", expenseAccounts);
+
+  expenseAccounts.forEach(acc => {
+    const opt = document.createElement("option");
+
+    opt.value = acc.code || "";
+    opt.textContent = `${acc.name || "Unnamed"} (${acc.code || "-"})`;
+
+    accountSelect.appendChild(opt);
+  });
+
+  console.log("Payroll accounts loaded successfully");
 }
 function calculateNSSF(gross) {
   const rate = 0.06;
