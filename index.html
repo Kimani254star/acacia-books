@@ -21853,79 +21853,731 @@ button:hover {
   </div>
 </div>
 
-<div id="salesReturnPreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-  <div class="bg-white rounded shadow max-w-4xl w-full max-h-[95vh] flex flex-col">
-    
-    <div class="border-b p-4">
-      <h2 class="text-xl font-bold">Sales Return Preview</h2>
+<div id="salesReturnPreviewModal"
+class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+
+  <div class="bg-white rounded-lg shadow-lg w-11/12 max-w-5xl max-h-[95vh] overflow-hidden flex flex-col">
+
+    <div class="flex justify-between items-center border-b p-4">
+
+      <h2 class="text-2xl font-bold">
+        📄 Sales Return Preview
+      </h2>
+
+      <button
+        onclick="closeSalesReturnPreview()"
+        class="border border-red-600 text-red-600 px-3 py-1 rounded hover:bg-red-600 hover:text-white">
+close
+
+      </button>
+
     </div>
 
-    <div class="p-4 flex-1 overflow-y-auto" id="salesReturnPreviewContent">
-      
-      
-      <div class="flex justify-between items-center border-b pb-3 mb-3">
-        <div class="w-1/2">
-          <h3 class="font-semibold mb-1">Company Info</h3>
-          <p><strong>Name:</strong> <span id="previewSRCompanyName"></span></p>
-          <p><strong>KRA PIN:</strong> <span id="previewSRCompanyPIN"></span></p>
-          <p><strong>Address:</strong> <span id="previewSRCompanyAddress"></span></p>
+    <div class="p-4 flex flex-wrap justify-between items-center gap-3 border-b">
+
+      <div class="flex items-center gap-3 flex-wrap">
+
+        <div>
+
+          <label
+            for="salesReturnTemplateSelect"
+            class="font-semibold block mb-1">
+
+            Choose Template
+
+          </label>
+
+          <select
+            id="salesReturnTemplateSelect"
+            onchange="changeSalesReturnTemplate(this.value)"
+            class="border p-2 rounded">
+
+            <option value="template-default">Default</option>
+            <option value="template-minimal">Minimal</option>
+            <option value="template-modern">Modern</option>
+            <option value="template-elegant">Elegant</option>
+            <option value="template-bold">Bold</option>
+            <option value="template-corporate">Corporate</option>
+            <option value="template-creative">Creative</option>
+
+          </select>
+
         </div>
-        <div class="w-1/2 flex justify-center">
-          <img id="previewSRLogo" class="h-20 hidden" alt="Company Logo">
-        </div>
+
+        <button
+          onclick="openSalesReturnTemplateEditor()"
+          class="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+
+          Edit Template
+
+        </button>
+
       </div>
 
-      <div class="flex justify-end border-b pb-3 mb-3">
-        <div class="w-1/2 text-right">
-          <h3 class="font-semibold mb-1">Customer Info</h3>
-          <p><strong>Name:</strong> <span id="previewSRCustomerName"></span></p>
-          <p><strong>KRA PIN:</strong> <span id="previewSRCustomerPIN"></span></p>
-          <p><strong>Address:</strong> <span id="previewSRCustomerAddress"></span></p>
+      <div class="flex gap-2 flex-wrap">
+
+        <button
+          onclick="printSalesReturnPreview()"
+          class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
+
+          Print
+
+        </button>
+
+        <button
+          onclick="downloadSalesReturn()"
+          class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
+
+          Download
+
+        </button>
+
+        <button
+          onclick="emailSalesReturn()"
+          class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
+
+          Email
+
+        </button>
+
+      </div>
+
+    </div>
+
+    <div
+      id="salesReturnPreviewContent"
+      class="template-default p-6 overflow-y-auto flex-1 transition-all duration-300">
+
+      <div class="flex justify-between items-center border-b pb-4 mb-5">
+
+        <div>
+
+          <h3 class="font-semibold text-lg mb-2">
+            Company Info
+          </h3>
+
+          <p>
+            <strong>Name:</strong>
+            <span id="previewSRCompanyName"></span>
+          </p>
+
+          <p>
+            <strong>KRA PIN:</strong>
+            <span id="previewSRCompanyPIN"></span>
+          </p>
+
+          <p>
+            <strong>Address:</strong>
+            <span id="previewSRCompanyAddress"></span>
+          </p>
+
         </div>
+
+        <div>
+
+          <img
+            id="previewSRLogo"
+            class="h-24 hidden"
+            alt="Company Logo">
+
+        </div>
+
       </div>
 
-      <div class="mb-4">
-        <p><strong>Return Number:</strong> <span id="previewSRNumber"></span></p>
-        <p><strong>Date:</strong> <span id="previewSRDate"></span></p>
+      <div class="flex justify-between flex-wrap gap-5 mb-5">
+
+        <div>
+
+          <h3 class="font-semibold text-lg mb-2">
+            Customer Info
+          </h3>
+
+          <p>
+            <strong>Name:</strong>
+            <span id="previewSRCustomerName"></span>
+          </p>
+
+          <p>
+            <strong>KRA PIN:</strong>
+            <span id="previewSRCustomerPIN"></span>
+          </p>
+
+          <p>
+            <strong>Address:</strong>
+            <span id="previewSRCustomerAddress"></span>
+          </p>
+
+        </div>
+
+        <div class="text-right">
+
+          <p>
+            <strong>Return Number:</strong>
+            <span id="previewSRNumber"></span>
+          </p>
+
+          <p>
+            <strong>Date:</strong>
+            <span id="previewSRDate"></span>
+          </p>
+
+        </div>
+
       </div>
 
-      <table class="w-full border-collapse border mb-4">
-        <thead>
-          <tr class="bg-gray-200">
-            <th class="p-2 border">Description</th>
-            <th class="p-2 border">Qty</th>
-            <th class="p-2 border">Price</th>
-            <th class="p-2 border">VAT</th>
-            <th class="p-2 border">Total</th>
+      <table class="w-full border-collapse border text-sm mb-5">
+
+        <thead class="bg-gray-100">
+
+          <tr>
+
+            <th class="border p-2">#</th>
+            <th class="border p-2">Description</th>
+            <th class="border p-2">Qty</th>
+            <th class="border p-2">Price</th>
+            <th class="border p-2">VAT</th>
+            <th class="border p-2">Total</th>
+
           </tr>
+
         </thead>
+
         <tbody id="previewSRItems"></tbody>
+
       </table>
 
-      <div class="mb-4 text-right">
-        <p><strong>Subtotal:</strong> <span id="previewSRSubtotal"></span></p>
-        <p><strong>VAT:</strong> <span id="previewSRVAT"></span></p>
-        <p><strong>Total:</strong> <span id="previewSRTotal"></span></p>
+      <div class="text-right text-sm font-semibold mb-5">
+
+        <p>
+          Subtotal:
+          <span id="previewSRSubtotal">KES 0.00</span>
+        </p>
+
+        <p>
+          VAT:
+          <span id="previewSRVAT">KES 0.00</span>
+        </p>
+
+        <p>
+          Total:
+          <span id="previewSRTotal">KES 0.00</span>
+        </p>
+
       </div>
 
-      <div class="mb-4 text-center">
+      <table class="w-full border text-sm mb-5">
+
+        <thead>
+
+          <tr>
+
+            <th class="border p-2">BANK NAME</th>
+            <th class="border p-2">BRANCH</th>
+            <th class="border p-2">SWIFT CODE</th>
+            <th class="border p-2">KSH ACC</th>
+            <th class="border p-2">USD ACC</th>
+            <th class="border p-2">EURO ACC</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td class="border p-2"></td>
+            <td class="border p-2"></td>
+            <td class="border p-2"></td>
+            <td class="border p-2"></td>
+            <td class="border p-2"></td>
+            <td class="border p-2"></td>
+          </tr>
+
+          <tr>
+            <td class="border p-2"></td>
+            <td class="border p-2"></td>
+            <td class="border p-2"></td>
+            <td class="border p-2"></td>
+            <td class="border p-2"></td>
+            <td class="border p-2"></td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+      <div class="flex justify-center mb-4">
+
         <canvas id="salesReturnQRCode"></canvas>
+
       </div>
-      <p class="mt-4 text-sm text-center text-gray-700">
-  Thank you for doing business with us.
-</p>
+
+      <p class="text-center text-sm text-gray-600 mt-6">
+
+        Thank you for doing business with us.
+
+      </p>
+
     </div>
 
-   
-    <div id="salesReturnButtons" class="flex gap-2 p-4 border-t">
-      <button onclick="closeSalesReturnPreview()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800 flex-1">Close</button>
-      <button onclick="printSalesReturnPreview()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800 flex-1">Print</button>
-      <button onclick="downloadSalesReturn()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800 flex-1">Download</button>
-      <button onclick="emailSalesReturn()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800 flex-1">Email</button>
+    <div class="border-t p-4 flex gap-3">
+
+      <button
+        onclick="closeSalesReturnPreview()"
+         class="flex-1 bg-blue-900 text-white py-2 rounded hover:bg-blue-800">
+
+        Close
+
+      </button>
+
+      <button
+        onclick="printSalesReturnPreview()"
+        class="flex-1 bg-blue-900 text-white py-2 rounded hover:bg-blue-800">
+
+        Print
+
+      </button>
+
+      <button
+        onclick="downloadSalesReturn()"
+          class="flex-1 bg-blue-900 text-white py-2 rounded hover:bg-blue-800">
+
+        Download
+
+      </button>
+
+      <button
+        onclick="emailSalesReturn()"
+         class="flex-1 bg-blue-900 text-white py-2 rounded hover:bg-blue-800">
+
+        Email
+
+      </button>
+
     </div>
+
   </div>
+
 </div>
 </div>
+<script>
+
+function openSalesReturnPreview() {
+
+  document.getElementById("salesReturnPreviewModal")
+    .classList.remove("hidden");
+
+}
+
+function closeSalesReturnPreview() {
+
+  document.getElementById("salesReturnPreviewModal")
+    .classList.add("hidden");
+
+}
+
+function changeSalesReturnTemplate(template) {
+
+  const wrapper =
+    document.getElementById("salesReturnPreviewContent");
+
+  wrapper.className = "";
+  wrapper.classList.add(template);
+
+  localStorage.setItem(
+    "selectedSalesReturnTemplate",
+    template
+  );
+
+}
+
+function openSalesReturnTemplateEditor() {
+
+  document.getElementById("salesReturnTemplateEditor")
+    .classList.remove("hidden");
+
+}
+
+function closeSalesReturnTemplateEditor() {
+
+  document.getElementById("salesReturnTemplateEditor")
+    .classList.add("hidden");
+
+}
+
+function showSalesReturnTemplateTab(tabId, btn) {
+
+  document.querySelectorAll(".salesReturnTemplateTab")
+    .forEach(tab => tab.classList.add("hidden"));
+
+  document.getElementById(tabId)
+    .classList.remove("hidden");
+
+  document.querySelectorAll(".salesReturnTemplateTabBtn")
+    .forEach(b => {
+
+      b.classList.remove("bg-orange-500");
+      b.classList.add("hover:bg-slate-700");
+
+    });
+
+  btn.classList.add("bg-orange-500");
+
+}
+
+function applySalesReturnTemplateChanges() {
+
+  const wrapper =
+    document.getElementById("salesReturnPreviewContent");
+
+  const paperSize =
+    document.getElementById("salesReturnPaperSize")?.value || "A4";
+
+  const radius =
+    document.getElementById("salesReturnRadius")?.value || 0;
+
+  const fontFamily =
+    document.getElementById("salesReturnFont")?.value || "Arial";
+
+  const fontSize =
+    document.getElementById("salesReturnFontSize")?.value || 14;
+
+  const primaryColor =
+    document.getElementById("salesReturnPrimaryColor")?.value || "#1e3a8a";
+
+  const backgroundColor =
+    document.getElementById("salesReturnBackgroundColor")?.value || "#ffffff";
+
+  wrapper.style.fontFamily = fontFamily;
+  wrapper.style.fontSize = fontSize + "px";
+  wrapper.style.borderRadius = radius + "px";
+  wrapper.style.backgroundColor = backgroundColor;
+
+  if (paperSize === "A4") {
+
+    wrapper.style.width = "210mm";
+    wrapper.style.minHeight = "297mm";
+
+  }
+
+  if (paperSize === "Letter") {
+
+    wrapper.style.width = "216mm";
+    wrapper.style.minHeight = "279mm";
+
+  }
+
+  if (paperSize === "A5") {
+
+    wrapper.style.width = "148mm";
+    wrapper.style.minHeight = "210mm";
+
+  }
+
+  wrapper.querySelectorAll("th").forEach(th => {
+
+    th.style.backgroundColor = primaryColor;
+    th.style.color = "#fff";
+
+  });
+
+  wrapper.querySelectorAll("td").forEach(td => {
+
+    td.style.padding = "10px";
+
+  });
+
+  const settings = {
+
+    paperSize,
+    radius,
+    fontFamily,
+    fontSize,
+    primaryColor,
+    backgroundColor
+
+  };
+
+  localStorage.setItem(
+    "salesReturnTemplateSettings",
+    JSON.stringify(settings)
+  );
+
+  closeSalesReturnTemplateEditor();
+
+}
+
+function loadSalesReturnTemplateSettings() {
+
+  const settings = JSON.parse(
+    localStorage.getItem("salesReturnTemplateSettings")
+  );
+
+  if (!settings) return;
+
+  if (document.getElementById("salesReturnPaperSize")) {
+
+    document.getElementById("salesReturnPaperSize").value =
+      settings.paperSize || "A4";
+
+  }
+
+  if (document.getElementById("salesReturnRadius")) {
+
+    document.getElementById("salesReturnRadius").value =
+      settings.radius || 0;
+
+  }
+
+  if (document.getElementById("salesReturnFont")) {
+
+    document.getElementById("salesReturnFont").value =
+      settings.fontFamily || "Arial";
+
+  }
+
+  if (document.getElementById("salesReturnFontSize")) {
+
+    document.getElementById("salesReturnFontSize").value =
+      settings.fontSize || 14;
+
+  }
+
+  if (document.getElementById("salesReturnPrimaryColor")) {
+
+    document.getElementById("salesReturnPrimaryColor").value =
+      settings.primaryColor || "#1e3a8a";
+
+  }
+
+  if (document.getElementById("salesReturnBackgroundColor")) {
+
+    document.getElementById("salesReturnBackgroundColor").value =
+      settings.backgroundColor || "#ffffff";
+
+  }
+
+  applySalesReturnTemplateChanges();
+
+}
+
+function printSalesReturnPreview() {
+
+  const content =
+    document.getElementById("salesReturnPreviewContent")
+    .innerHTML;
+
+  const win = window.open("", "", "width=1200,height=800");
+
+  win.document.write(`
+    <html>
+      <head>
+        <title>Sales Return</title>
+        <style>
+          body{
+            font-family: Arial;
+            padding:20px;
+          }
+
+          table{
+            width:100%;
+            border-collapse:collapse;
+          }
+
+          th,td{
+            border:1px solid #ccc;
+            padding:8px;
+          }
+
+          th{
+            background:#1e3a8a;
+            color:#fff;
+          }
+        </style>
+      </head>
+
+      <body>
+        ${content}
+      </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  loadSalesReturnTemplateSettings();
+
+  const savedTemplate =
+    localStorage.getItem("selectedSalesReturnTemplate");
+
+  if (savedTemplate) {
+
+    const select =
+      document.getElementById("salesReturnTemplateSelect");
+
+    if (select) {
+
+      select.value = savedTemplate;
+
+    }
+
+    changeSalesReturnTemplate(savedTemplate);
+
+  }
+
+});
+
+</script>
+<style>
+
+.template-default {
+
+  font-family: Arial, sans-serif;
+  color: #111;
+  background: #fff;
+
+}
+
+.template-default table {
+
+  width: 100%;
+  border-collapse: collapse;
+
+}
+
+.template-default th,
+.template-default td {
+
+  border: 1px solid #ddd;
+  padding: 10px;
+
+}
+.template-minimal {
+
+  font-family: 'Courier New', monospace;
+  background: #fafafa;
+  color: #333;
+
+}
+.template-minimal table {
+
+  width: 100%;
+  border-collapse: collapse;
+
+}
+.template-minimal th,
+.template-minimal td {
+
+  border-bottom: 1px solid #ddd;
+  padding: 8px;
+
+}
+.template-modern {
+
+  font-family: 'Poppins', sans-serif;
+  background: #f8fbff;
+  border: 2px solid #2563eb;
+  border-radius: 16px;
+  padding: 30px;
+  color: #1e293b;
+
+}
+.template-modern th {
+
+  background: #2563eb;
+  color: white;
+
+}
+.template-elegant {
+
+  font-family: Georgia, serif;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 30px;
+
+}
+.template-elegant th {
+
+  background: #f5f5f5;
+
+}
+.template-bold {
+
+  font-family: Arial, sans-serif;
+  border: 4px solid #111;
+  padding: 30px;
+
+}
+.template-bold th {
+
+  background: #111;
+  color: #fff;
+
+}
+.template-corporate {
+
+  font-family: 'Segoe UI', sans-serif;
+  border-left: 8px solid #1e40af;
+  background: #f8fafc;
+  padding: 30px;
+
+}
+.template-corporate th {
+
+  background: #1e40af;
+  color: white;
+
+}
+.template-creative {
+
+  font-family: 'Poppins', sans-serif;
+  border: 2px solid #9333ea;
+  border-radius: 20px;
+  padding: 30px;
+  background: #fff;
+
+}
+.template-creative th {
+
+  background: linear-gradient(to right, #9333ea, #ec4899);
+  color: white;
+
+}
+
+.salesReturnTemplateTab {
+
+  animation: fadeIn .3s ease;
+
+}
+@keyframes fadeIn {
+
+  from {
+
+    opacity: 0;
+    transform: translateY(10px);
+
+  }
+  to {
+
+    opacity: 1;
+    transform: translateY(0);
+
+  }
+}
+button {
+  transition: all .3s ease;
+
+}
+button:hover {
+  transform: translateY(-2px);
+
+}
+</style>
 <!-- ✅ CUSTOMER RECEIPTS MODULE -->
 <div id="receiptsTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-2xl font-bold mb-6 text-center">Receipts</h2>
