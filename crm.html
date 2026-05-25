@@ -1,0 +1,1733 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Acacia books CRM Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+ 
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville&display=swap" rel="stylesheet">
+<style>
+  
+  html, body {
+    font-family: 'Cambria', 'Libre Baskerville', serif !important;
+  }
+
+  html body * {
+    font-family: 'Cambria', 'Libre Baskerville', serif !important;
+    font-style: normal !important;
+    
+  }
+
+  b, strong, th, h1, h2, h3, h4, h5, h6, .font-bold, .font-semibold {
+    font-weight: 700 !important;
+  }
+
+  input, select, textarea, button, ::placeholder {
+    font-family: 'Cambria', 'Libre Baskerville', serif !important;
+  }
+
+  table, th, td {
+    border: 1px solid #ccc;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 8px 8px;
+  }
+
+  thead {
+    background-color: #f8f8f8;
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: #fafafa;
+  }
+</style>
+</head>
+<body>
+ 
+  <header class="bg-black text-white border-b sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-1 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-1xl">📇</span>
+        <h1 class="text-xl font-bold">Acacia books CRM Portal</h1>
+        <span id="envBadge" class="ml-3 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Local</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-sm">Signed in as <b id="navUser">-</b></span>
+       
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-10xl mx-auto px-1 py-1 grid grid-cols-12 gap-30">
+
+ <aside class="w-25 bg-black text-white shadow p-4 flex flex-col">
+    <img src="acaciabooks-logo.png" alt="Logo" class="w-24 mb-4 mx-auto" />
+    
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showView('dashboardView')">🏠 Dashboard</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showView('contactsView')">👤 Contacts</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showView('leadsView')">🧲 Leads</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showView('dealsView')">💼 Deals</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showView('activitiesView')">🗓️ Activities</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showView('emailsView')">📧 Emails</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showView('reportsView')">📊 Reports</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showView('invoicesView')">💰 Invoices</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showSection('messages')">💬 Messages</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showSection('documents')">📂 Documents</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showView('botlogsView')">🤖 Bot Logs</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showView('funnelView')">📊 Sales Funnel</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showView('metricsView')">📈 KPIs</button>
+    <button class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="showView('settingsView')">⚙️ Settings</button>
+    <button id="logoutBtn" class="w-full text-left px-3 py-2 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg" onclick="logout()">Logout</button>
+    <div class="mt-4 bg-black text-white border border-gray-800 rounded p-2 text-sm text-center">
+    @Acacia books 2025<br>
+    developer Joseph Kimani
+  </div>
+</aside>
+
+<section class="col-span-12 md:col-span-9 lg:col-span-10 space-y-6">
+ <main class="flex-1 p-6 space-y-6 overflow-y-auto">
+<h2 class="text-xl font-italic mb-1 text-left flex items-center gap-2">
+  <img id="userAvatar" src="https://via.placeholder.com/32" alt="User Avatar" class="w-8 h-8 rounded-full" onclick="triggerFileInput()">
+  Welcome, <span id="currentUser">User</span>
+</h2>
+
+<input type="file" id="fileInput" class="hidden" accept="image/*" onchange="previewImage(event)">
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+  if (!session) return;
+
+  const username = session.username;
+
+  document.getElementById("currentUser").textContent = username;
+
+  const savedAvatar = localStorage.getItem(`userAvatar_${username}`);
+  if (savedAvatar) {
+    document.getElementById("userAvatar").src = savedAvatar;
+  }
+});
+
+function triggerFileInput() {
+  document.getElementById("fileInput").click();
+}
+
+function previewImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const session = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+  if (!session) return;
+
+  const username = session.username;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const imageUrl = e.target.result;
+    document.getElementById("userAvatar").src = imageUrl;
+    localStorage.setItem(`userAvatar_${username}`, imageUrl);
+  };
+
+  reader.readAsDataURL(file);
+}
+</script>
+      <!-- DASHBOARD -->
+      <div id="dashboardView" class="bg-white rounded-xl shadow p-4">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold">Dashboard</h2>
+          <div class="flex gap-2">
+            <input id="globalSearch" oninput="globalQuickSearch(this.value)" type="search" placeholder="Search contacts, leads, deals…" class="border rounded px-3 py-1.5 w-64" />
+            </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="p-4 rounded-xl border bg-gradient-to-br from-blue-50 to-white">
+            <p class="text-sm text-gray-600">Contacts</p>
+            <p id="kpiContacts" class="text-2xl font-bold">0</p>
+          </div>
+          <div class="p-4 rounded-xl border bg-gradient-to-br from-emerald-50 to-white">
+            <p class="text-sm text-gray-600">Open Leads</p>
+            <p id="kpiLeads" class="text-2xl font-bold">0</p>
+          </div>
+          <div class="p-4 rounded-xl border bg-gradient-to-br from-amber-50 to-white">
+            <p class="text-sm text-gray-600">Active Deals</p>
+            <p id="kpiDeals" class="text-2xl font-bold">0</p>
+          </div>
+          <div class="p-4 rounded-xl border bg-gradient-to-br from-fuchsia-50 to-white">
+            <p class="text-sm text-gray-600">This Month Value</p>
+            <p id="kpiThisMonth" class="text-2xl font-bold">KES 0</p>
+          </div>
+        </div>
+
+        <div class="mt-6 bg-gray-50 border rounded-xl p-4">
+          <h3 class="font-semibold mb-3">Recent Activity</h3>
+          <ul id="recentActivity" class="space-y-2 text-sm"></ul>
+        </div>
+      </div>
+      <!-- ========================= 📌 CUSTOMER PORTAL ========================= -->
+<div id="customerPortal" class="hidden p-6">
+  <h2 class="text-xl font-bold mb-4">👤 Customer Portal</h2>
+
+  <!-- Navigation Tabs -->
+  <div class="flex gap-4 mb-4">
+    <button onclick="showCustomerTab('profileTab')" class="px-4 py-2 bg-blue-600 text-white rounded">My Profile</button>
+    <button onclick="showCustomerTab('dealsTab')" class="px-4 py-2 bg-blue-600 text-white rounded">My Deals</button>
+    <button onclick="showCustomerTab('ticketsTab')" class="px-4 py-2 bg-blue-600 text-white rounded">My Support Tickets</button>
+  </div>
+
+  <!-- Profile -->
+  <div id="profileTab" class="customer-tab">
+    <h3 class="font-semibold text-lg mb-2">My Profile</h3>
+    <div id="customerProfile"></div>
+  </div>
+
+  <!-- Deals -->
+  <div id="dealsTab" class="customer-tab hidden">
+    <h3 class="font-semibold text-lg mb-2">My Deals / Orders</h3>
+    <table class="w-full border">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Date</th>
+          <th class="p-2 text-left">Description</th>
+          <th class="p-2 text-left">Amount</th>
+          <th class="p-2 text-left">Status</th>
+        </tr>
+      </thead>
+      <tbody id="customerDeals"></tbody>
+    </table>
+  </div>
+
+  <!-- Tickets -->
+  <div id="ticketsTab" class="customer-tab hidden">
+    <h3 class="font-semibold text-lg mb-2">My Support Tickets</h3>
+    <table class="w-full border">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="p-2 text-left">Ticket #</th>
+          <th class="p-2 text-left">Subject</th>
+          <th class="p-2 text-left">Status</th>
+        </tr>
+      </thead>
+      <tbody id="customerTickets"></tbody>
+    </table>
+  </div>
+</div>
+
+     <!-- CONTACTS -->
+<div id="contactsView" class="bg-white rounded-xl shadow p-4 hidden">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-lg font-semibold">Contacts</h2>
+    <div class="flex items-center gap-2">
+      <input id="contactSearch" oninput="renderContacts()" placeholder="Search name/company/email" class="border rounded px-3 py-1.5" />
+      <button class="px-3 py-1.5 rounded bg-gray-200" onclick="exportCSV('contacts')">Export CSV</button>
+      <label class="px-3 py-1.5 rounded bg-gray-200 cursor-pointer">
+        Import CSV
+        <input type="file" accept=".csv" class="hidden" onchange="importCSV(event,'contacts')" />
+      </label>
+      <button class="px-3 py-1.5 rounded bg-blue-600 text-white" onclick="openContactModal()">+ New Contact</button>
+    </div>
+  </div>
+  <table class="w-full text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-2 text-left">Name</th>
+        <th class="p-2 text-left">Company</th>
+        <th class="p-2 text-left">Email</th>
+        <th class="p-2 text-left">Phone</th>
+        <th class="p-2 text-left">Owner</th>
+        <th class="p-2 text-left">Stage</th>
+        <th class="p-2 text-left">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="contactsTable"></tbody>
+  </table>
+</div>
+
+
+      <!-- LEADS -->
+      <div id="leadsView" class="bg-white rounded-xl shadow p-4 hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold">Leads</h2>
+          <div class="flex items-center gap-2">
+            <input id="leadSearch" oninput="renderLeads()" placeholder="Search lead…" class="border rounded px-3 py-1.5" />
+            <button class="px-3 py-1.5 rounded bg-gray-200" onclick="exportCSV('leads')">Export CSV</button>
+            <label class="px-3 py-1.5 rounded bg-gray-200 cursor-pointer">
+              Import CSV
+              <input type="file" accept=".csv" class="hidden" onchange="importCSV(event,'leads')" />
+            </label>
+            <button class="px-3 py-1.5 rounded bg-blue-600 text-white" onclick="openLeadModal()">+ New Lead</button>
+          </div>
+        </div>
+        <table class="w-full text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="p-2 text-left">Title</th>
+              <th class="p-2 text-left">Source</th>
+              <th class="p-2 text-left">Status</th>
+              <th class="p-2 text-left">Owner</th>
+              <th class="p-2 text-left">Created</th>
+              <th class="p-2 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="leadsTable"></tbody>
+        </table>
+      </div>
+
+      <!-- DEALS (KANBAN) -->
+      <div id="dealsView" class="bg-white rounded-xl shadow p-4 hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold">Deals Pipeline</h2>
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-1.5 rounded bg-gray-200" onclick="exportCSV('deals')">Export CSV</button>
+            <button class="px-3 py-1.5 rounded bg-blue-600 text-white" onclick="openDealModal()">+ New Deal</button>
+          </div>
+        </div>
+        <div id="kanban" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <!-- Columns injected by JS -->
+        </div>
+      </div>
+
+      
+<!-- EMAILS -->
+<div id="tab-emails" class="hidden">
+  <h2 class="text-xl font-bold mb-4">Emails</h2>
+  <form id="crmComposeForm" class="space-y-2 bg-white dark:bg-gray-700 p-4 rounded shadow mb-4">
+    <input type="text" id="crmToEmail" placeholder="To" class="w-full p-2 border rounded" required>
+    <input type="text" id="crmSubjectEmail" placeholder="Subject" class="w-full p-2 border rounded font-semibold">
+    <textarea id="crmBodyEmail" placeholder="Message" class="w-full p-2 border rounded h-32"></textarea>
+    <button type="submit" class="px-4 py-2 bg-green-700 text-white rounded">Send</button>
+  </form>
+  <div id="emailsList" class="space-y-2"></div>
+</div>
+
+
+        <!-- ACTIVITIES -->
+      <div id="activitiesView" class="bg-white rounded-xl shadow p-4 hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold">Activities</h2>
+          <div class="flex items-center gap-2">
+            <select id="activityFilter" class="border rounded px-3 py-1.5" onchange="renderActivities()">
+              <option value="all">All</option>
+              <option value="todo">To-do</option>
+              <option value="done">Completed</option>
+              <option value="overdue">Overdue</option>
+            </select>
+            <button class="px-3 py-1.5 rounded bg-blue-600 text-white" onclick="openActivityModal()">+ New Activity</button>
+          </div>
+        </div>
+        <table class="w-full text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="p-2 text-left">Type</th>
+              <th class="p-2 text-left">Subject</th>
+              <th class="p-2 text-left">Due</th>
+              <th class="p-2 text-left">Status</th>
+              <th class="p-2 text-left">Owner</th>
+              <th class="p-2 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="activitiesTable"></tbody>
+        </table>
+      </div>
+      <!-- EMAILS -->
+<div id="emailsView" class="bg-white rounded-xl shadow p-4 hidden">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-lg font-semibold">📧 Emails</h2>
+    <div class="flex items-center gap-2">
+      <input id="emailSearch" oninput="renderEmails()" placeholder="Search subject/sender…" class="border rounded px-3 py-1.5" />
+      <button class="px-3 py-1.5 rounded bg-blue-600 text-white" onclick="composeEmail()">+ New Email</button>
+    </div>
+  </div>
+  
+  <table class="w-full text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-2 text-left">From</th>
+        <th class="p-2 text-left">To</th>
+        <th class="p-2 text-left">Subject</th>
+        <th class="p-2 text-left">Date</th>
+        <th class="p-2 text-left">Status</th>
+        <th class="p-2 text-left">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="emailsTable"></tbody>
+  </table>
+</div>
+<!-- MESSAGES -->
+<div id="messages" class="bg-white rounded-xl shadow p-4 hidden">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-lg font-semibold">💬 Messages</h2>
+    <div class="flex items-center gap-2">
+      <input id="messageSearch" oninput="renderMessages()" placeholder="Search messages…" class="border rounded px-3 py-1.5 flex-1" />
+      <button class="px-3 py-1.5 rounded bg-blue-600 text-white" onclick="composeMessage()">+ New Message</button>
+    </div>
+  </div>
+
+  <!-- Message List -->
+  <table class="w-full text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-2 text-left">From</th>
+        <th class="p-2 text-left">To</th>
+        <th class="p-2 text-left">Message</th>
+        <th class="p-2 text-left">Date</th>
+        <th class="p-2 text-left">Status</th>
+        <th class="p-2 text-left">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="messagesTable"></tbody>
+  </table>
+</div>
+<!-- 📂 DOCUMENTS SECTION -->
+<div id="documents" class="hidden bg-white rounded-xl shadow p-4">
+  <h2 class="text-lg font-semibold mb-4">📂 Documents</h2>
+
+  <!-- Upload new document -->
+  <div class="mb-4 flex space-x-2">
+    <input type="file" id="documentUpload" class="border p-2 rounded w-full" />
+    <button onclick="uploadDocument()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+      Upload
+    </button>
+  </div>
+
+  <!-- Document list -->
+  <div id="documentsList" class="space-y-2 text-sm">
+    <p class="text-gray-500">No documents uploaded yet.</p>
+  </div>
+</div>
+<!-- 💰 INVOICES -->
+<div id="invoicesView" class="bg-white rounded-xl shadow p-4 hidden">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-lg font-semibold">💰 Invoices</h2>
+    <div class="flex items-center gap-2">
+      <select id="invoiceDealSelect" class="border rounded px-3 py-1.5">
+        <!-- Options dynamically loaded from Deals -->
+      </select>
+      <button class="px-3 py-1.5 rounded bg-blue-600 text-white" onclick="openInvoiceModal()">+ New Invoice</button>
+    </div>
+  </div>
+
+  <!-- Invoice Table -->
+  <table class="w-full text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-2 text-left">Invoice #</th>
+        <th class="p-2 text-left">Deal</th>
+        <th class="p-2 text-left">Amount</th>
+        <th class="p-2 text-left">Date</th>
+        <th class="p-2 text-left">Status</th>
+        <th class="p-2 text-left">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="invoicesTable"></tbody>
+  </table>
+</div>
+<!-- 🤖 BOT LOGS -->
+<div id="botlogsView" class="bg-white rounded-xl shadow p-4 hidden">
+  <h2 class="text-lg font-semibold mb-4">🤖 Bot Logs</h2>
+
+  <!-- Filter & Clear -->
+  <div class="flex items-center gap-2 mb-3">
+    <select id="botLogFilter" class="border rounded px-3 py-1.5" onchange="renderBotLogs()">
+      <option value="all">All</option>
+      <option value="info">ℹ️ Info</option>
+      <option value="success">✅ Success</option>
+      <option value="error">❌ Error</option>
+    </select>
+    <button onclick="clearBotLogs()" class="px-3 py-1.5 bg-red-600 text-white rounded">Clear Logs</button>
+  </div>
+
+  <!-- Logs Table -->
+  <table class="w-full text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-2 text-left">Time</th>
+        <th class="p-2 text-left">Type</th>
+        <th class="p-2 text-left">Message</th>
+      </tr>
+    </thead>
+    <tbody id="botLogsTable"></tbody>
+  </table>
+</div>
+<!-- 📊 SALES FUNNEL -->
+<div id="funnelView" class="bg-white rounded-xl shadow p-4 hidden">
+  <h2 class="text-lg font-semibold mb-4">📊 Sales Funnel</h2>
+
+  <!-- Funnel Chart -->
+  <div class="w-full h-96">
+    <canvas id="salesFunnelChart"></canvas>
+  </div>
+</div>
+      <!-- REPORTS -->
+      <div id="reportsView" class="bg-white rounded-xl shadow p-4 hidden">
+        <h2 class="text-lg font-semibold mb-4">Reports</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="border rounded-xl p-4">
+            <h3 class="font-semibold mb-2">Deals by Stage</h3>
+            <div id="reportDealsByStage" class="text-sm"></div>
+          </div>
+          <div class="border rounded-xl p-4">
+            <h3 class="font-semibold mb-2">Activities Summary (This Month)</h3>
+            <div id="reportActivities" class="text-sm"></div>
+          </div>
+        </div>
+      </div>
+<!-- ================= KPIs Section ================= -->
+<div id="kpiSection" class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white rounded-xl shadow p-4 text-center">
+    <h3 class="text-gray-600 text-sm">Total Leads</h3>
+    <div class="text-2xl font-bold" id="kpiLeads">0</div>
+  </div>
+  <div class="bg-white rounded-xl shadow p-4 text-center">
+    <h3 class="text-gray-600 text-sm">Total Contacts</h3>
+    <div class="text-2xl font-bold" id="kpiContacts">0</div>
+  </div>
+  <div class="bg-white rounded-xl shadow p-4 text-center">
+    <h3 class="text-gray-600 text-sm">Active Deals</h3>
+    <div class="text-2xl font-bold" id="kpiDeals">0</div>
+  </div>
+  <div class="bg-white rounded-xl shadow p-4 text-center">
+    <h3 class="text-gray-600 text-sm">Total Revenue</h3>
+    <div class="text-2xl font-bold" id="kpiRevenue">$0</div>
+  </div>
+</div>
+
+      <!-- SETTINGS -->
+<div id="settingsView" class="bg-white rounded-xl shadow p-4 hidden">
+  <h2 class="text-lg font-semibold mb-4">Settings</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+    <!-- USER MANAGEMENT -->
+    <div class="border rounded-xl p-4">
+      <h3 class="font-semibold mb-2">User Management</h3>
+      <p class="text-sm text-gray-600 mb-3">Manage CRM users. Stored in <code>localStorage</code> for demo purposes.</p>
+
+      <!-- Add User -->
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <input id="newUserName" placeholder="username" class="border rounded px-3 py-1.5 flex-1" />
+        <input id="newUserPass" placeholder="password" type="password" class="border rounded px-3 py-1.5 flex-1" />
+        <select id="newUserRole" class="border rounded px-3 py-1.5">
+          <option value="admin">admin</option>
+          <option value="sales">sales</option>
+          <option value="account">account</option>
+          <option value="customer">customer</option>
+        </select>
+        <input id="newUserCompany" placeholder="company (optional)" class="border rounded px-3 py-1.5 flex-1" />
+        <button class="px-3 py-1.5 rounded bg-blue-600 text-white" onclick="addLocalUser()">Add</button>
+      </div>
+
+      <!-- User List -->
+      <ul id="usersList" class="text-sm space-y-2"></ul>
+    </div>
+
+    <!-- DATA BACKUP -->
+    <div class="border rounded-xl p-4">
+      <h3 class="font-semibold mb-2">Data</h3>
+      <div class="flex flex-wrap gap-2">
+        <button class="px-3 py-1.5 rounded bg-gray-200" onclick="backupJSON()">Download Backup</button>
+        <label class="px-3 py-1.5 rounded bg-gray-200 cursor-pointer">
+          Restore Backup
+          <input type="file" accept="application/json" class="hidden" onchange="restoreJSON(event)" />
+        </label>
+        <button class="px-3 py-1.5 rounded bg-blue-900 text-white" onclick="wipeAll()">Wipe All</button>
+      </div>
+    </div>
+    
+
+  </div>
+</div>
+
+    </section>
+  </main>
+  <!-- ✅ Floating Support Button -->
+<div id="supportWidget" class="fixed bottom-6 right-6 z-50 text-sm">
+  <!-- Main Button -->
+  <button onclick="toggleSupportPopup()" class="bg-blue-900 hover:bg-blue-900 text-white px-4 py-2 rounded-full shadow-lg flex items-center space-x-2">
+    <i class="fas fa-headset"></i>
+    <span>Support</span>
+  </button>
+</div>
+
+<!-- ✅ Support Popup -->
+<div id="supportPopup" class="hidden fixed bottom-20 right-6 w-64 bg-white border border-gray-200 rounded shadow-lg p-4 text-gray-800 space-y-3">
+  <p class="font-semibold text-gray-700">Contact Support</p>
+
+  <a href="https://wa.me/254717346231" target="_blank" class="flex items-center space-x-2 hover:text-green-600">
+    <i class="fab fa-whatsapp text-green-500"></i>
+    <span>WhatsApp: 254717346231</span>
+  </a>
+
+  <a href="mailto:info@acaciabooks.ke" class="flex items-center space-x-2 hover:text-yellow-600">
+    <i class="fas fa-envelope text-yellow-500"></i>
+    <span>Email: info@acaciabooks.ke</span>
+  </a>
+
+  <button onclick="toggleTawkChat()" class="flex items-center space-x-2 hover:text-blue-600">
+    <i class="fas fa-comments text-blue-500"></i>
+    <span>Live Chat</span>
+  </button>
+</div>
+
+
+  <!-- MODALS -->
+  <div id="modalBackdrop" class="hidden fixed inset-0 bg-black/40 z-50 items-center justify-center p-4">
+    <div id="modalCard" class="bg-white w-full max-w-lg rounded-xl shadow p-4"></div>
+  </div>
+
+  <!-- AUTH OVERLAY (if no session) -->
+  <div id="authOverlay" class="hidden fixed inset-0 z-[60] bg-white grid place-items-center p-4">
+    <div class="w-full max-w-md bg-white border rounded-xl shadow p-6">
+      <h2 class="text-xl font-semibold mb-4 text-center">CRM Login</h2>
+      <input id="loginUser" placeholder="Username" class="w-full border rounded px-3 py-2 mb-2" />
+      <input id="loginPass" type="password" placeholder="Password" class="w-full border rounded px-3 py-2 mb-3" />
+      <button class="w-full px-3 py-2 rounded bg-blue-600 text-white" onclick="handleLogin()">Login</button>
+      <p class="text-xs text-center mt-3 text-gray-600">If you don't have an account yet, create one from Settings → User Management after an admin logs in.</p>
+    </div>
+  </div>
+  
+
+<script>
+  let crmCompany = null;
+
+function loadCRMCompany() {
+  const params = new URLSearchParams(window.location.search);
+  const fromBooks = params.get("from") === "books";
+
+  if (fromBooks) {
+    const booksCompany = JSON.parse(localStorage.getItem("orgInfo"));
+    if (booksCompany) {
+      localStorage.setItem("activeCRMCompany", JSON.stringify(booksCompany));
+      localStorage.setItem("crmAccessSource", "books");
+      return booksCompany;
+    }
+  }
+
+  const standaloneCRM = JSON.parse(localStorage.getItem("crmCompanyInfo"));
+  if (standaloneCRM) {
+    localStorage.setItem("activeCRMCompany", JSON.stringify(standaloneCRM));
+    localStorage.setItem("crmAccessSource", "standalone");
+    return standaloneCRM;
+  }
+
+  return null;
+}
+
+function getCRMAccessSource() {
+  return localStorage.getItem("crmAccessSource");
+}
+
+function isCRMUnlocked() {
+  const source = getCRMAccessSource();
+  if (source === "books") return true;
+
+  const plan = JSON.parse(localStorage.getItem("crmPaymentPlan"));
+  if (!plan) return false;
+
+  const today = new Date().getTime();
+  return plan.expiry && new Date(plan.expiry).getTime() > today;
+}
+
+function lockCRMInterface() {
+  document.body.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Cambria,serif;">
+      <div style="text-align:center;">
+        <h2>CRM Subscription Required</h2>
+        <p>Please activate your CRM plan to continue.</p>
+      </div>
+    </div>
+  `;
+}
+
+function applyCRMCompanyToUI(company) {
+  if (!company) return;
+
+  const nameEl = document.getElementById("crmCompanyName");
+  const emailEl = document.getElementById("crmCompanyEmail");
+  const phoneEl = document.getElementById("crmCompanyPhone");
+  const addressEl = document.getElementById("crmCompanyAddress");
+
+  if (nameEl) nameEl.textContent = company.name || "";
+  if (emailEl) emailEl.textContent = company.email || "";
+  if (phoneEl) phoneEl.textContent = company.phone || "";
+  if (addressEl) addressEl.textContent = company.address || "";
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  crmCompany = loadCRMCompany();
+
+  if (!crmCompany) {
+    const existing = JSON.parse(localStorage.getItem("crmCompanyInfo"));
+    if (existing) {
+      localStorage.setItem("activeCRMCompany", JSON.stringify(existing));
+      crmCompany = existing;
+    }
+  }
+
+  if (!crmCompany) return;
+
+  if (!isCRMUnlocked()) {
+    lockCRMInterface();
+    return;
+  }
+
+  initializeCRMCompany();
+});
+
+const store = {
+  get k() {
+    return {
+      users: 'crm_users',
+      session: 'loggedInUser',
+      contacts: 'crm_contacts',
+      leads: 'crm_leads',
+      deals: 'crm_deals',
+      activities: 'crm_activities',
+      recent: 'crm_recent',
+    };
+  },
+  read(key){ return JSON.parse(localStorage.getItem(key) || '[]'); },
+  write(key, val){ localStorage.setItem(key, JSON.stringify(val)); },
+  session(){ return JSON.parse(localStorage.getItem(store.k.session) || 'null'); },
+  setSession(u){ localStorage.setItem(store.k.session, JSON.stringify(u)); },
+  clear(){ Object.values(store.k).forEach(k=>localStorage.removeItem(k)); }
+};
+const uid = () => Math.random().toString(36).slice(2,9);
+const nowISO = () => new Date().toISOString();
+
+function saveCRMCompanyInfo(data) {
+  localStorage.setItem("crmCompanyInfo", JSON.stringify(data));
+  localStorage.setItem("activeCRMCompany", JSON.stringify(data));
+  localStorage.setItem("crmAccessSource", "standalone");
+}
+
+function getActiveCRMCompany() {
+  return JSON.parse(localStorage.getItem("activeCRMCompany"));
+}
+
+function initializeCRMCompany() {
+  const active = getActiveCRMCompany();
+  if (!active) return;
+
+  applyCRMCompanyToUI(active);
+}
+
+function ensureAuth(){
+  const s = store.session();
+  const overlay = document.getElementById('authOverlay');
+  const navUser = document.getElementById('navUser');
+  if(!s){ overlay.classList.remove('hidden'); navUser.textContent='-'; }
+  else { overlay.classList.add('hidden'); navUser.textContent = s.username; }
+}
+function ensureAuth(){
+  const s = store.session();
+  const overlay = document.getElementById('authOverlay');
+  const navUser = document.getElementById('navUser');
+
+  if(!s){
+    overlay.classList.remove('hidden');
+    navUser.textContent='-';
+  } else {
+    overlay.classList.add('hidden');
+    navUser.textContent = s.username;
+  }
+}
+
+function handleLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  const users = store.read(store.k.users);
+
+  const found = users.find(x => x.username === u && x.password === p);
+  if (!found) { 
+    alert('Invalid credentials'); 
+    return; 
+  }
+
+  store.setSession(found);
+  ensureAuth();
+  loadAll();
+}
+
+function logout(){ 
+  store.setSession(null); 
+  localStorage.removeItem(store.k.session); 
+  ensureAuth(); 
+}
+
+function ensureUsers(){
+  let users = store.read(store.k.users);
+
+  renderUsers();
+}
+
+function renderUsers(){
+  const users = store.read(store.k.users);
+  const ul = document.getElementById('usersList');
+  if(!ul) return;
+
+  ul.innerHTML = users.map((u, i) => `
+    <li class="flex justify-between items-center border-b py-1">
+      <span>${u.username} — <span class="text-xs uppercase text-gray-600">${u.role}</span></span>
+      <button class="text-blue-900 text-xs" onclick="deleteUser(${i})">Delete</button>
+    </li>
+  `).join('');
+}
+
+function addLocalUser(){
+  const u = document.getElementById('newUserName').value.trim();
+  const p = document.getElementById('newUserPass').value.trim();
+  const r = document.getElementById('newUserRole').value;
+
+  if(!u || !p){ alert('Username & password required'); return; }
+
+  let users = store.read(store.k.users);
+  if(users.find(x => x.username === u)){ 
+    alert('Username already exists'); 
+    return; 
+  }
+
+  users.push({ username:u, password:p, role:r, company: document.getElementById('newUserCompany')?.value?.trim() || '' });
+  store.write(store.k.users, users);
+
+  document.getElementById('newUserName').value = '';
+  document.getElementById('newUserPass').value = '';
+  renderUsers();
+}
+
+function deleteUser(index){
+  let users = store.read(store.k.users);
+  if(!confirm(`Delete user ${users[index].username}?`)) return;
+  users.splice(index, 1);
+  store.write(store.k.users, users);
+  renderUsers();
+}
+
+function showView(id){
+  document.querySelectorAll('section > div').forEach(el=>el.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  if(id==='dealsView') renderKanban();
+}
+
+function globalQuickSearch(q){
+  q = (q||'').toLowerCase();
+  const contacts = store.read(store.k.contacts);
+  const leads = store.read(store.k.leads);
+  const deals = store.read(store.k.deals).filter(d=> { const s = store.session(); if(d.company && s?.company && d.company !== s.company) return false; return true; });
+  const results = [];
+  contacts.forEach(c=>{ if(Object.values(c).join(' ').toLowerCase().includes(q)) results.push(`Contact: ${c.name}`); });
+  leads.forEach(l=>{ if(Object.values(l).join(' ').toLowerCase().includes(q)) results.push(`Lead: ${l.title}`); });
+  deals.forEach(d=>{ if(Object.values(d).join(' ').toLowerCase().includes(q)) results.push(`Deal: ${d.title}`); });
+  const ul = document.getElementById('recentActivity');
+  ul.innerHTML = results.slice(0,8).map(r=>`<li>🔎 ${r}</li>`).join('') || '<li>No matches</li>';
+}
+function refreshKpis(){
+  const contacts = store.read(store.k.contacts);
+  const leads = store.read(store.k.leads).filter(l=>l.status!=='closed');
+  const deals = store.read(store.k.deals).filter(d=>d.stage!=='Won' && d.stage!=='Lost');
+  const thisMonth = new Date().toISOString().slice(0,7);
+  const monthVal = store.read(store.k.deals)
+    .filter(d=> (d.createdAt||'').slice(0,7)===thisMonth)
+    .reduce((s,d)=> s + Number(d.value||0), 0);
+  document.getElementById('kpiContacts').textContent = contacts.length;
+  document.getElementById('kpiLeads').textContent = leads.length;
+  document.getElementById('kpiDeals').textContent = deals.length;
+  document.getElementById('kpiThisMonth').textContent = 'KES ' + monthVal.toLocaleString();
+}
+function pushRecent(text){
+  const arr = store.read(store.k.recent);
+  arr.unshift({ id: uid(), text, at: nowISO() });
+  store.write(store.k.recent, arr.slice(0,20));
+  renderRecent();
+}
+function renderRecent(){
+  const arr = store.read(store.k.recent);
+  const ul = document.getElementById('recentActivity');
+  ul.innerHTML = arr.map(a=>`<li>${new Date(a.at).toLocaleString()} — ${a.text}</li>`).join('') || '<li>No activity yet</li>';
+}
+
+function renderContacts() {
+  const q = (document.getElementById('contactSearch').value || '').toLowerCase();
+  const me = store.session();
+  const rows = store.read(store.k.contacts)
+    .filter(c => {
+      const s = store.session();
+      if (c.company && s?.company && c.company !== s.company) return false;
+      return Object.values(c).join(' ').toLowerCase().includes(q);
+    })
+    .map(c => `<tr class="border-b">
+      <td class="p-2">${c.name}</td>
+      <td class="p-2">${c.company || ''}</td>
+      <td class="p-2">${c.email || ''}</td>
+      <td class="p-2">${c.phone || ''}</td>
+      <td class="p-2">${c.owner || ''}</td>
+      <td class="p-2">${c.stage || 'New'}</td>
+      <td class="p-2 space-x-2">
+        <button class="text-blue-600" onclick="openContactModal('${c.id}')">Edit</button>
+        <button class="text-blue-900" onclick="delRecord('contacts','${c.id}')">Delete</button>
+      </td>
+    </tr>`).join('');
+  document.getElementById('contactsTable').innerHTML = rows || '<tr><td class="p-3" colspan="7">No contacts</td></tr>';
+}
+
+function openContactModal(id) {
+  const rec = store.read(store.k.contacts).find(x => x.id === id) || { id:'', name:'', company:'', email:'', phone:'', owner: (store.session()?.username||''), stage:'New' };
+  modal(`<h3 class='text-lg font-semibold mb-3'>${rec.id ? 'Edit' : 'New'} Contact</h3>
+    <div class='grid grid-cols-2 gap-2'>
+      <input id='c_name' placeholder='Full name' class='border rounded px-3 py-2' value='${esc(rec.name)}' />
+      <input id='c_company' placeholder='Company' class='border rounded px-3 py-2' value='${esc(rec.company)}' />
+      <input id='c_email' placeholder='Email' class='border rounded px-3 py-2' value='${esc(rec.email)}' />
+      <input id='c_phone' placeholder='Phone' class='border rounded px-3 py-2' value='${esc(rec.phone)}' />
+      <input id='c_owner' placeholder='Owner' class='border rounded px-3 py-2' value='${esc(rec.owner)}' />
+      <select id='c_stage' class='border rounded px-3 py-2'>
+        ${['New','Qualified','Customer'].map(s=>`<option ${rec.stage===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class='mt-4 flex justify-end gap-2'>
+      <button class='px-3 py-1.5 rounded bg-gray-200' onclick='closeModal()'>Cancel</button>
+      <button class='px-3 py-1.5 rounded bg-blue-600 text-white' onclick="saveContact('${rec.id}')">Save</button>
+    </div>`);
+}
+
+function saveContact(id) {
+  const list = store.read(store.k.contacts);
+  const exists = list.find(x => x.id === id);
+  const data = {
+    id: exists ? exists.id : uid(),
+    name: document.getElementById('c_name').value.trim(),
+    company: document.getElementById('c_company').value.trim(),
+    email: document.getElementById('c_email').value.trim(),
+    phone: document.getElementById('c_phone').value.trim(),
+    owner: document.getElementById('c_owner').value.trim() || (store.session()?.username || ''),
+    stage: document.getElementById('c_stage').value,
+    createdAt: exists ? exists.createdAt : nowISO(),
+    company: (store.session()?.company || ''),
+    updatedAt: nowISO()
+  };
+  if (!data.name) { alert('Name is required'); return; }
+  if (exists) { Object.assign(exists, data); }
+  else { list.push(data); pushRecent(`Contact added: ${data.name}`); }
+  store.write(store.k.contacts, list);
+  closeModal(); renderContacts(); refreshKpis();
+}
+
+function addExternalContact(data) {
+  if (!data || !data.name || !data.email) return;
+
+  const list = store.read(store.k.contacts);
+  const exists = list.some(c => c.email === data.email);
+  if (exists) return; 
+
+  const newContact = {
+    id: uid(),
+    name: data.name,
+    email: data.email || '',
+    phone: data.phone || '',
+    owner: data.owner || 'Website',
+    stage: 'New',
+    company: store.session()?.company || '',
+    createdAt: nowISO(),
+    updatedAt: nowISO()
+  };
+
+  list.push(newContact);
+  store.write(store.k.contacts, list);
+
+  renderContacts();
+  refreshKpis();
+}
+window.addExternalContact = addExternalContact;
+
+function renderLeads(){
+  const q = (document.getElementById('leadSearch').value||'').toLowerCase();
+  const rows = store.read(store.k.leads)
+    .filter(l=> { const s = store.session(); if(l.company && s?.company && l.company !== s.company) return false; return Object.values(l).join(' ').toLowerCase().includes(q); })
+    .map(l=>`<tr class="border-b">
+      <td class="p-2">${l.title}</td>
+      <td class="p-2">${l.source||''}</td>
+      <td class="p-2">${l.status||'open'}</td>
+      <td class="p-2">${l.owner||''}</td>
+      <td class="p-2">${fmtDate(l.createdAt)}</td>
+      <td class="p-2 space-x-2">
+        <button class="text-blue-900" onclick="openLeadModal('${l.id}')">Edit</button>
+        <button class="text-blue-900" onclick="convertLead('${l.id}')">Convert</button>
+        <button class="text-blue-900" onclick="delRecord('leads','${l.id}')">Delete</button>
+      </td>
+    </tr>`).join('');
+  document.getElementById('leadsTable').innerHTML = rows || '<tr><td class="p-3" colspan="6">No leads</td></tr>';
+}
+function openLeadModal(id){
+  const rec = store.read(store.k.leads).find(x=>x.id===id) || { id:'', title:'', source:'Website', status:'open', owner: (store.session()?.username||''), notes:'' };
+  modal(`<h3 class='text-lg font-semibold mb-3'>${rec.id?'Edit':'New'} Lead</h3>
+    <div class='grid grid-cols-2 gap-2'>
+      <input id='l_title' placeholder='Lead title' class='border rounded px-3 py-2' value='${esc(rec.title)}' />
+      <input id='l_source' placeholder='Source' class='border rounded px-3 py-2' value='${esc(rec.source)}' />
+      <input id='l_owner' placeholder='Owner' class='border rounded px-3 py-2' value='${esc(rec.owner)}' />
+      <select id='l_status' class='border rounded px-3 py-2'>
+        ${['open','contacted','qualified','closed'].map(s=>`<option ${rec.status===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      <textarea id='l_notes' placeholder='Notes' class='border rounded px-3 py-2 col-span-2'>${esc(rec.notes||'')}</textarea>
+    </div>
+    <div class='mt-4 flex justify-end gap-2'>
+      <button class='px-3 py-1.5 rounded bg-gray-200' onclick='closeModal()'>Cancel</button>
+      <button class='px-3 py-1.5 rounded bg-blue-600 text-white' onclick="saveLead('${rec.id}')">Save</button>
+    </div>`);
+}
+function saveLead(id){
+  const list = store.read(store.k.leads);
+  const exists = list.find(x=>x.id===id);
+  const data = {
+    id: exists? exists.id : uid(),
+    title: document.getElementById('l_title').value.trim(),
+    source: document.getElementById('l_source').value.trim(),
+    owner: document.getElementById('l_owner').value.trim() || (store.session()?.username||''),
+    status: document.getElementById('l_status').value,
+    notes: document.getElementById('l_notes').value.trim(),
+    createdAt: exists? exists.createdAt : nowISO(),
+    company: (store.session()?.company||''),
+    updatedAt: nowISO()
+  };
+  if(!data.title){ alert('Title is required'); return; }
+  if(exists){ Object.assign(exists, data); }
+  else { list.push(data); pushRecent(`Lead created: ${data.title}`); }
+  store.write(store.k.leads, list);
+  closeModal(); renderLeads(); refreshKpis();
+}
+function convertLead(id){
+  const leads = store.read(store.k.leads);
+  const lead = leads.find(x=>x.id===id);
+  if(!lead) return;
+  
+  const contacts = store.read(store.k.contacts);
+  contacts.push({ id: uid(), name: lead.title, company:'', email:'', phone:'', owner: lead.owner, stage:'Qualified', createdAt: nowISO(), updatedAt: nowISO() });
+  store.write(store.k.contacts, contacts);
+  
+  lead.status = 'closed'; lead.updatedAt = nowISO();
+  store.write(store.k.leads, leads);
+  pushRecent(`Lead converted to contact: ${lead.title}`);
+  renderContacts(); renderLeads(); refreshKpis();
+}
+
+const DEAL_STAGES = ['Prospecting','Proposal','Negotiation','Won'];
+function renderKanban(){
+  const deals = store.read(store.k.deals).filter(d=> { const s = store.session(); if(d.company && s?.company && d.company !== s.company) return false; return true; });
+  const wrap = document.getElementById('kanban');
+  wrap.innerHTML = DEAL_STAGES.map(stage=>{
+    const cards = deals.filter(d=>d.stage===stage).map(d=>
+      `<div class='p-3 border rounded-xl bg-white shadow-sm'>
+        <div class='flex items-center justify-between gap-2'>
+          <b>${esc(d.title)}</b>
+          <div class='text-xs text-gray-500'>${d.owner||''}</div>
+        </div>
+        <div class='text-sm'>KES ${Number(d.value||0).toLocaleString()}</div>
+        <div class='text-xs text-gray-500'>${fmtDate(d.createdAt)}</div>
+        <div class='mt-2 flex gap-2 text-sm'>
+          <select onchange="moveDeal('${d.id}', this.value)" class='border rounded px-2 py-1'>
+            ${DEAL_STAGES.map(s=>`<option ${d.stage===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+          <button class='text-blue-900' onclick="openDealModal('${d.id}')">Edit</button>
+          <button class='text-blue-900' onclick="delRecord('deals','${d.id}', true)">Delete</button>
+        </div>
+      </div>`).join('');
+    return `<div class='bg-gray-50 border rounded-xl p-3'>
+      <div class='flex items-center justify-between mb-2'>
+        <h4 class='font-semibold'>${stage}</h4>
+        <button class='text-xs px-2 py-1 rounded bg-blue-600 text-white' onclick="openDealModal('', '${stage}')">+ Add</button>
+      </div>
+      <div class='space-y-2 min-h-[40px]'>${cards || '<div class=\'text-sm text-gray-500\'>No deals</div>'}</div>
+    </div>`;
+  }).join('');
+}
+function openDealModal(id, defaultStage){
+  const rec = store.read(store.k.deals).find(x=>x.id===id) || { id:'', title:'', value:'', stage: defaultStage || 'Prospecting', owner: (store.session()?.username||''), contactId:'' };
+  modal(`<h3 class='text-lg font-semibold mb-3'>${rec.id?'Edit':'New'} Deal</h3>
+    <div class='grid grid-cols-2 gap-2'>
+      <input id='d_title' placeholder='Deal title' class='border rounded px-3 py-2' value='${esc(rec.title)}' />
+      <input id='d_value' placeholder='Value (KES)' type='number' class='border rounded px-3 py-2' value='${esc(rec.value)}' />
+      <select id='d_stage' class='border rounded px-3 py-2'>${DEAL_STAGES.map(s=>`<option ${rec.stage===s?'selected':''}>${s}</option>`).join('')}</select>
+      <input id='d_owner' placeholder='Owner' class='border rounded px-3 py-2' value='${esc(rec.owner)}' />
+      <input id='d_contact' placeholder='Related contact (optional)' class='border rounded px-3 py-2 col-span-2' value='${esc(rec.contactId)}' />
+    </div>
+    <div class='mt-4 flex justify-end gap-2'>
+      <button class='px-3 py-1.5 rounded bg-gray-200' onclick='closeModal()'>Cancel</button>
+      <button class='px-3 py-1.5 rounded bg-blue-600 text-white' onclick="saveDeal('${rec.id}')">Save</button>
+    </div>`);
+}
+function saveDeal(id){
+  const list = store.read(store.k.deals);
+  const exists = list.find(x=>x.id===id);
+  const data = {
+    id: exists? exists.id : uid(),
+    title: document.getElementById('d_title').value.trim(),
+    value: Number(document.getElementById('d_value').value||0),
+    stage: document.getElementById('d_stage').value,
+    owner: document.getElementById('d_owner').value.trim() || (store.session()?.username||''),
+    contactId: document.getElementById('d_contact').value.trim(),
+    createdAt: exists? exists.createdAt : nowISO(),
+    company: (store.session()?.company||''),
+    company: (store.session()?.company||''),
+    updatedAt: nowISO()
+  };
+  if(!data.title){ alert('Title is required'); return; }
+  if(exists){ Object.assign(exists, data); }
+  else { list.push(data); pushRecent(`Deal added: ${data.title}`); }
+  store.write(store.k.deals, list);
+  closeModal(); renderKanban(); refreshKpis(); renderReports();
+}
+function moveDeal(id, stage){
+  const deals = store.read(store.k.deals).filter(d=> { const s = store.session(); if(d.company && s?.company && d.company !== s.company) return false; return true; });
+  const d = deals.find(x=>x.id===id);
+  if(!d) return;
+  d.stage = stage; d.updatedAt = nowISO();
+  store.write(store.k.deals, deals);
+  renderKanban(); renderReports();
+}
+
+function renderActivities(){
+  const filter = document.getElementById('activityFilter').value;
+  const list = store.read(store.k.activities).filter(a=> { const s = store.session(); if(a.company && s?.company && a.company !== s.company) return false; return true; });
+  const today = new Date();
+  const rows = list.filter(a=>{
+      if(filter==='done') return a.status==='done';
+      if(filter==='todo') return a.status!=='done';
+      if(filter==='overdue') return a.status!=='done' && new Date(a.due) < today;
+      return true;
+    }).map(a=>`<tr class='border-b'>
+      <td class='p-2'>${a.type}</td>
+      <td class='p-2'>${a.subject}</td>
+      <td class='p-2'>${fmtDate(a.due)}</td>
+      <td class='p-2'>${a.status}</td>
+      <td class='p-2'>${a.owner||''}</td>
+      <td class='p-2 space-x-2'>
+        <button class='text-blue-900' onclick="openActivityModal('${a.id}')">Edit</button>
+        <button class='text-blue-900' onclick="toggleDone('${a.id}')">${a.status==='done'?'Undo':'Done'}</button>
+        <button class='text-blue-900' onclick="delRecord('activities','${a.id}')">Delete</button>
+      </td>
+    </tr>`).join('');
+  document.getElementById('activitiesTable').innerHTML = rows || '<tr><td class="p-3" colspan="6">No activities</td></tr>';
+}
+function openActivityModal(id){
+  const rec = store.read(store.k.activities).find(x=>x.id===id) || { id:'', type:'Call', subject:'', due: new Date().toISOString().slice(0,10), status:'todo', owner:(store.session()?.username||'') };
+  modal(`<h3 class='text-lg font-semibold mb-3'>${rec.id?'Edit':'New'} Activity</h3>
+    <div class='grid grid-cols-2 gap-2'>
+      <select id='a_type' class='border rounded px-3 py-2'>${['Call','Meeting','Email','Task'].map(t=>`<option ${rec.type===t?'selected':''}>${t}</option>`)}</select>
+      <input id='a_due' type='date' class='border rounded px-3 py-2' value='${rec.due}' />
+      <input id='a_subject' placeholder='Subject' class='border rounded px-3 py-2 col-span-2' value='${esc(rec.subject)}' />
+      <select id='a_status' class='border rounded px-3 py-2'>${['todo','done'].map(s=>`<option ${rec.status===s?'selected':''}>${s}</option>`)}</select>
+      <input id='a_owner' placeholder='Owner' class='border rounded px-3 py-2' value='${esc(rec.owner)}' />
+    </div>
+    <div class='mt-4 flex justify-end gap-2'>
+      <button class='px-3 py-1.5 rounded bg-gray-200' onclick='closeModal()'>Cancel</button>
+      <button class='px-3 py-1.5 rounded bg-blue-600 text-white' onclick="saveActivity('${rec.id}')">Save</button>
+    </div>`);
+}
+function saveActivity(id){
+  const list = store.read(store.k.activities).filter(a=> { const s = store.session(); if(a.company && s?.company && a.company !== s.company) return false; return true; });
+  const exists = list.find(x=>x.id===id);
+  const data = {
+    id: exists? exists.id : uid(),
+    type: document.getElementById('a_type').value,
+    subject: document.getElementById('a_subject').value.trim(),
+    due: document.getElementById('a_due').value,
+    status: document.getElementById('a_status').value,
+    owner: document.getElementById('a_owner').value.trim() || (store.session()?.username||''),
+    createdAt: exists? exists.createdAt : nowISO(),
+    company: (store.session()?.company||''),
+    updatedAt: nowISO()
+  };
+  if(!data.subject){ alert('Subject is required'); return; }
+  if(exists){ Object.assign(exists, data); }
+  else { list.push(data); pushRecent(`Activity added: ${data.type} — ${data.subject}`); }
+  store.write(store.k.activities, list);
+  closeModal(); renderActivities(); renderReports();
+}
+function toggleDone(id){
+  const list = store.read(store.k.activities).filter(a=> { const s = store.session(); if(a.company && s?.company && a.company !== s.company) return false; return true; });
+  const a = list.find(x=>x.id===id); if(!a) return;
+  a.status = a.status==='done'?'todo':'done'; a.updatedAt = nowISO();
+  store.write(store.k.activities, list); renderActivities(); renderReports();
+}
+
+function renderReports(){
+  const deals = store.read(store.k.deals).filter(d=> { const s = store.session(); if(d.company && s?.company && d.company !== s.company) return false; return true; });
+  const byStage = DEAL_STAGES.map(s=>({ stage:s, count: deals.filter(d=>d.stage===s).length, total: deals.filter(d=>d.stage===s).reduce((sum,d)=>sum+Number(d.value||0),0) }));
+  document.getElementById('reportDealsByStage').innerHTML = byStage.map(r=>`<div class='flex justify-between border-b py-1'><span>${r.stage}</span><span>${r.count} deals • KES ${r.total.toLocaleString()}</span></div>`).join('') || 'No deals';
+
+  const acts = store.read(store.k.activities);
+  const m = new Date().toISOString().slice(0,7);
+  const thisMonth = acts.filter(a=> (a.due||'').slice(0,7)===m);
+  const sum = ['Call','Meeting','Email','Task'].map(t=>({ type:t, count: thisMonth.filter(a=>a.type===t).length }));
+  document.getElementById('reportActivities').innerHTML = sum.map(r=>`<div class='flex justify-between border-b py-1'><span>${r.type}</span><span>${r.count}</span></div>`).join('') || 'No activities';
+}
+
+function esc(s){ return (s||'').toString().replace(/["&'<>]/g, c=>({ '"':'&quot;','&':'&amp;','\'':'&#39;','<':'&lt;','>':'&gt;' }[c])); }
+function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso); return d.toLocaleDateString(); }
+function delRecord(kind,id,confirmIt=false){ if(confirmIt && !confirm('Delete this record?')) return; const key = store.k[kind]; const arr = store.read(key).filter(x=>x.id!==id); store.write(key, arr); loadAll(); }
+
+function exportCSV(kind){
+  const key = store.k[kind]; const arr = store.read(key);
+  if(!arr.length){ alert('Nothing to export'); return; }
+  const headers = Object.keys(arr[0]);
+  let csv = headers.join(',') + '\n';
+  arr.forEach(o=>{ csv += headers.map(h=>`"${(o[h]??'').toString().replace(/"/g,'\"')}"`).join(',') + '\n'; });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`${kind}.csv`; a.click(); URL.revokeObjectURL(url);
+}
+function importCSV(ev, kind){
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader(); reader.onload = () => {
+    const lines = reader.result.split(/\r?\n/).filter(Boolean);
+    const headers = lines.shift().split(',').map(h=>h.trim());
+    const arr = lines.map(l=>{ const cols = l.match(/("[^"]*"|[^,]+)/g)||[]; const obj={}; headers.forEach((h,i)=>{ obj[h]= (cols[i]||'').replaceAll('"',''); }); obj.id = obj.id||uid(); return obj; });
+    const existing = store.read(store.k[kind]); store.write(store.k[kind], existing.concat(arr)); loadAll();
+  }; reader.readAsText(file);
+}
+function backupJSON(){
+  const data = {
+    users: store.read(store.k.users),
+    contacts: store.read(store.k.contacts),
+    leads: store.read(store.k.leads),
+    deals: store.read(store.k.deals),
+    activities: store.read(store.k.activities),
+    recent: store.read(store.k.recent)
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='crm-backup.json'; a.click(); URL.revokeObjectURL(url);
+}
+function restoreJSON(ev){ const f=ev.target.files[0]; if(!f) return; const r = new FileReader(); r.onload=()=>{ try{ const data=JSON.parse(r.result); Object.entries(data).forEach(([k,v])=>{ const key = store.k[k] || k; store.write(key, v); }); loadAll(); }catch(e){ alert('Invalid JSON'); } }; r.readAsText(f); }
+function wipeAll(){ if(!confirm('This will clear CRM data. Continue?')) return; store.clear(); location.reload(); }
+
+function ensureUsers(){
+  let users = store.read(store.k.users);
+  if(users.length===0){
+    users = [
+      { username:'admin', password:'admin123', role:'admin' },
+      { username:'sales', password:'sales123', role:'sales' },
+      { username:'account', password:'account123', role:'account' }
+    ];
+    store.write(store.k.users, users);
+  }
+  const ul = document.getElementById('usersList');
+  ul.innerHTML = users.map(u=>`<li>${u.username} — <span class='text-xs uppercase'>${u.role}</span></li>`).join('');
+}
+function addLocalUser(){
+  const u = document.getElementById('newUserName').value.trim();
+  const p = document.getElementById('newUserPass').value.trim();
+  const r = document.getElementById('newUserRole').value;
+  if(!u||!p) return alert('Username & password required');
+  const users = store.read(store.k.users); if(users.find(x=>x.username===u)) return alert('Username exists');
+  users.push({ username:u, password:p, role:r, company: document.getElementById('newUserCompany')?.value?.trim() || '' }); store.write(store.k.users, users); ensureUsers();
+}
+
+function modal(html){ const b=document.getElementById('modalBackdrop'); const c=document.getElementById('modalCard'); c.innerHTML = html; b.classList.remove('hidden'); b.classList.add('flex'); }
+function closeModal(){ const b=document.getElementById('modalBackdrop'); b.classList.add('hidden'); b.classList.remove('flex'); }
+
+function loadAll(){ refreshKpis(); renderRecent(); renderContacts(); renderLeads(); renderKanban(); renderActivities(); renderReports(); showView('dashboardView'); }
+function seedDemo(){
+ 
+  if(store.read(store.k.contacts).length===0){
+    store.write(store.k.contacts, [
+      { id:uid(), name:'Acme CEO — Jane Doe', company:'Acme Ltd', email:'jane@acme.com', phone:'+254700000001', owner:'admin', stage:'Customer', createdAt:nowISO(), updatedAt:nowISO() },
+      { id:uid(), name:'John Buyer', company:'Kilimani Traders', email:'john@kilimani.co.ke', phone:'+254700000002', owner:'sales', stage:'Qualified', createdAt:nowISO(), updatedAt:nowISO() },
+    ]);
+  }
+  if(store.read(store.k.leads).length===0){
+    store.write(store.k.leads, [
+      { id:uid(), title:'Website form — Juma', source:'Website', owner:'sales', status:'open', notes:'Interested in POS', createdAt:nowISO(), updatedAt:nowISO() },
+      { id:uid(), title:'Referral — Mary', source:'Referral', owner:'admin', status:'contacted', notes:'Asked for quote', createdAt:nowISO(), updatedAt:nowISO() },
+    ]);
+  }
+  if(store.read(store.k.deals).length===0){
+    store.write(store.k.deals, [
+      { id:uid(), title:'POS rollout for Acme', value:600000, stage:'Negotiation', owner:'admin', contactId:'', createdAt:nowISO(), updatedAt:nowISO() },
+      { id:uid(), title:'Licenses for Kilimani', value:180000, stage:'Proposal', owner:'sales', contactId:'', createdAt:nowISO(), updatedAt:nowISO() },
+    ]);
+  }
+  if(store.read(store.k.activities).length===0){
+    const today = new Date(); const iso = (d)=> new Date(Date.now()+d*86400000).toISOString().slice(0,10);
+    store.write(store.k.activities, [
+      { id:uid(), type:'Call', subject:'Call Jane re: renewal', due: iso(2), status:'todo', owner:'admin', createdAt:nowISO(), updatedAt:nowISO() },
+      { id:uid(), type:'Meeting', subject:'Demo with Mary', due: iso(-1), status:'todo', owner:'sales', createdAt:nowISO(), updatedAt:nowISO() },
+      { id:uid(), type:'Email', subject:'Send proposal', due: iso(0), status:'done', owner:'admin', createdAt:nowISO(), updatedAt:nowISO() },
+    ]);
+  }
+  pushRecent('Demo data seeded');
+  loadAll();
+}
+
+function showCustomerPortal(){
+  document.querySelectorAll('#dashboardView, #contactsView, #dealsView, #ticketsView, #settingsView')
+    .forEach(el=>el.classList.add('hidden'));
+
+  document.getElementById('customerPortal').classList.remove('hidden');
+
+  const user = store.session();
+  if(!user) return;
+
+  document.getElementById('customerProfile').innerHTML = `
+    <p><strong>Username:</strong> ${user.username}</p>
+    <p><strong>Email:</strong> ${user.email || 'n/a'}</p>
+    <p><strong>Role:</strong> ${user.role}</p>
+    <p><strong>Company:</strong> ${user.company || 'n/a'}</p>
+  `;
+
+  const myDeals = store.read(store.k.deals).filter(d=>d.contactId===user.username);
+  document.getElementById('customerDeals').innerHTML =
+    myDeals.map(d=>`<tr><td class="p-2">${d.title}</td><td class="p-2">KES ${d.value}</td><td class="p-2">${d.stage}</td></tr>`).join('') 
+    || '<tr><td class="p-3" colspan="3">No deals found</td></tr>';
+
+  const myTickets = []; 
+  document.getElementById('customerTickets').innerHTML =
+    myTickets.map(t=>`<tr><td class="p-2">${t.id}</td><td class="p-2">${t.subject}</td><td class="p-2">${t.status}</td></tr>`).join('') 
+    || '<tr><td class="p-3" colspan="3">No tickets</td></tr>';
+
+  showCustomerTab('customerProfileTab'); 
+}
+
+function showCustomerTab(tabId){
+  document.querySelectorAll('#customerPortal .customer-tab').forEach(el=>el.classList.add('hidden'));
+  document.getElementById(tabId).classList.remove('hidden');
+}
+
+ensureUsers();
+ensureAuth();
+const s = store.session();
+if(s){
+  if(s.role === 'customer') showCustomerPortal();
+  else loadAll();
+}
+</script>
+
+<div id="supportPopup" class="hidden fixed bottom-20 right-6 w-64 bg-white border border-gray-200 rounded shadow-lg p-4 text-gray-800 space-y-3 z-50">
+  <p class="font-semibold text-gray-700">Contact Support</p>
+
+  <a href="https://wa.me/254717346231" target="_blank" class="flex items-center space-x-2 hover:text-green-600">
+    <i class="fab fa-whatsapp text-green-500"></i>
+    <span>WhatsApp: 254717346231</span>
+  </a>
+
+  <a href="mailto:info@acaciabooks.ke" class="flex items-center space-x-2 hover:text-yellow-600">
+    <i class="fas fa-envelope text-yellow-500"></i>
+    <span>Email: info@acaciabooks.ke</span>
+  </a>
+
+  <button onclick="toggleTawkChat()" class="flex items-center space-x-2 hover:text-blue-600">
+    <i class="fas fa-comments text-blue-500"></i>
+    <span>Live Chat</span>
+  </button>
+</div>
+
+<script>
+  
+  function toggleSupportPopup() {
+  const el = document.getElementById('supportPopup');
+  el.classList.toggle('hidden');
+}
+
+  document.addEventListener('click', function (e) {
+    const popup = document.getElementById('supportPopup');
+    const button = document.querySelector('#supportWidget button');
+    if (!popup.contains(e.target) && e.target !== button && !button.contains(e.target)) {
+      popup.classList.add('hidden');
+    }
+  });
+
+  function toggleTawkChat() {
+    if (window.Tawk_API && typeof window.Tawk_API.toggle === 'function') {
+      window.Tawk_API.toggle(); 
+    } else {
+      alert("💬 Live chat is still loading... please try again in a few seconds.");
+    }
+  }
+
+  window.addEventListener('load', function () {
+    var s1 = document.createElement("script"),
+        s0 = document.getElementsByTagName("script")[0];
+    s1.async = true;
+    s1.src = 'https://embed.tawk.to/YOUR_WIDGET_ID_HERE/1xxxxxxxx';
+    s1.charset = 'UTF-8';
+    s1.setAttribute('crossorigin', '*');
+    s0.parentNode.insertBefore(s1, s0);
+  });
+</script>
+<script>
+ 
+  let emails = [
+    
+  ];
+
+  function renderEmails() {
+    const tbody = document.getElementById('emailsTable');
+    const query = document.getElementById('emailSearch').value.toLowerCase();
+    tbody.innerHTML = '';
+    emails.filter(email => email.subject.toLowerCase().includes(query) || email.from.toLowerCase().includes(query))
+          .forEach(email => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="p-2">${email.from}</td>
+        <td class="p-2">${email.to}</td>
+        <td class="p-2">${email.subject}</td>
+        <td class="p-2">${email.date}</td>
+        <td class="p-2">${email.status}</td>
+        <td class="p-2">
+          <button class="px-2 py-1 text-xs rounded bg-gray-200" onclick="viewEmail('${email.subject}')">View</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  function composeEmail() {
+    alert('Compose Email popup here');
+  }
+
+  function viewEmail(subject) {
+    alert('View Email: ' + subject);
+  }
+
+  renderEmails();
+</script>
+<script>
+ 
+  let currentView = '';
+
+ function showView(viewId) {
+  const allViews = document.querySelectorAll("[id$='View']");
+
+  allViews.forEach(view => {
+    view.classList.add("hidden");
+  });
+
+  const selectedView = document.getElementById(viewId);
+  if (selectedView) {
+    selectedView.classList.remove("hidden");
+  }
+}
+
+  function showSection(sectionId) {
+    document.querySelectorAll('section > div').forEach(div => div.classList.add('hidden'));
+    document.getElementById(sectionId).classList.remove('hidden');
+
+    highlightSidebar(sectionId);
+    currentView = sectionId;
+  }
+
+  function highlightSidebar(activeId) {
+  
+    document.querySelectorAll('aside button').forEach(btn => {
+      btn.classList.remove('bg-black', 'text-white');
+      btn.classList.add('hover:bg-gray-100');
+    });
+
+    const btn = Array.from(document.querySelectorAll('aside button')).find(b => {
+      return b.getAttribute('onclick')?.includes(activeId);
+    });
+    if(btn) {
+      btn.classList.add('bg-black', 'text-white');
+      btn.classList.remove('hover:bg-gray-100');
+    }
+  }
+</script>
+<script>
+  let documents = [];
+
+  function uploadDocument() {
+    const input = document.getElementById("documentUpload");
+    if (input.files.length > 0) {
+      const file = input.files[0];
+      documents.push(file.name);
+      renderDocuments();
+      input.value = ""; 
+    }
+  }
+
+  function renderDocuments() {
+    const list = document.getElementById("documentsList");
+    if (documents.length === 0) {
+      list.innerHTML = `<p class="text-gray-500">No documents uploaded yet.</p>`;
+      return;
+    }
+
+    list.innerHTML = documents
+      .map(
+        (doc, i) => `
+        <div class="flex justify-between items-center border p-2 rounded">
+          <span>📄 ${doc}</span>
+          <button onclick="deleteDocument(${i})" class="text-red-600 hover:underline">Delete</button>
+        </div>
+      `
+      )
+      .join("");
+  }
+
+  function deleteDocument(index) {
+    documents.splice(index, 1);
+    renderDocuments();
+  }
+</script>
+<script>
+  let invoices = []; 
+
+  function renderInvoices() {
+    const tbody = document.getElementById("invoicesTable");
+    tbody.innerHTML = "";
+
+    if (invoices.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 p-3">No invoices yet</td></tr>`;
+      return;
+    }
+
+    invoices.forEach(inv => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="p-2">${inv.number}</td>
+        <td class="p-2">${getDealName(inv.dealId)}</td>
+        <td class="p-2">KES ${inv.amount}</td>
+        <td class="p-2">${inv.date}</td>
+        <td class="p-2">${inv.status}</td>
+        <td class="p-2">
+          <button class="text-blue-600" onclick="viewInvoice(${inv.id})">View</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function openInvoiceModal() {
+    const dealId = document.getElementById("invoiceDealSelect").value;
+    const number = "INV-" + (invoices.length + 1).toString().padStart(3, "0");
+    const amount = prompt("Enter invoice amount:");
+    const date = new Date().toISOString().split("T")[0];
+    if (!amount) return;
+
+    invoices.push({
+      id: Date.now(),
+      dealId,
+      number,
+      amount,
+      date,
+      status: "Unpaid"
+    });
+
+    renderInvoices();
+  }
+
+  function getDealName(dealId) {
+    const deal = deals.find(d => d.id == dealId);
+    return deal ? deal.name : "Unknown Deal";
+  }
+
+  function viewInvoice(id) {
+    const inv = invoices.find(i => i.id === id);
+    alert(`Invoice ${inv.number}\nDeal: ${getDealName(inv.dealId)}\nAmount: KES ${inv.amount}\nDate: ${inv.date}\nStatus: ${inv.status}`);
+  }
+
+function showView(viewId) {
+  document.querySelectorAll("[id$='View']").forEach(v => v.classList.add("hidden"));
+  const selected = document.getElementById(viewId);
+  if (selected) selected.classList.remove("hidden");
+  if (viewId === "invoicesView") {
+    const select = document.getElementById("invoiceDealSelect");
+    select.innerHTML = "";
+    deals.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d.id;
+      opt.textContent = d.name;
+      select.appendChild(opt);
+    });
+    renderInvoices();
+  }
+}
+</script>
+<script>
+ 
+  let botLogs = [
+    { time: new Date().toLocaleString(), type: "info", message: "Bot Logs initialized" }
+  ];
+  function renderBotLogs() {
+    const tbody = document.getElementById("botLogsTable");
+    tbody.innerHTML = "";
+
+    const filter = document.getElementById("botLogFilter").value;
+
+    const logsToShow = botLogs.filter(log => filter === "all" || log.type === filter);
+
+    if (logsToShow.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" class="text-center text-gray-500 p-3">No logs found</td></tr>`;
+      return;
+    }
+
+    logsToShow.forEach(log => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="p-2">${log.time}</td>
+        <td class="p-2">${log.type.toUpperCase()}</td>
+        <td class="p-2">${log.message}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function addBotLog(type, message) {
+    botLogs.unshift({
+      time: new Date().toLocaleString(),
+      type,
+      message
+    });
+    renderBotLogs();
+  }
+
+  function clearBotLogs() {
+    if (confirm("Clear all logs?")) {
+      botLogs = [];
+      renderBotLogs();
+    }
+  }
+
+  function logDealCreated(dealName) {
+    addBotLog("success", `New Deal created: ${dealName}`);
+  }
+
+  function logInvoiceCreated(invoiceId) {
+    addBotLog("success", `Invoice #${invoiceId} generated`);
+  }
+
+  function logMessageSent(to) {
+    addBotLog("info", `Message sent to ${to}`);
+  }
+
+  function logError(errorMsg) {
+    addBotLog("error", errorMsg);
+  }
+
+  renderBotLogs();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+
+function renderSalesFunnel(){
+  const leads = store.read(store.k.leads) || [];
+  const contacts = store.read(store.k.contacts) || [];
+  const deals = store.read(store.k.deals) || [];
+
+  const funnel = {
+    leads: leads.filter(l=>l.status!=='closed').length,
+    contacts: contacts.length,
+    deals: deals.length,
+    won: deals.filter(d=>d.stage==='Won').length
+  };
+
+  const html = `
+    <div class="grid grid-cols-4 gap-4 text-center">
+      <div class="bg-blue-100 rounded-xl p-4">
+        <div class="text-2xl font-bold">${funnel.leads}</div>
+        <div class="text-sm text-gray-600">Leads</div>
+      </div>
+      <div class="bg-green-100 rounded-xl p-4">
+        <div class="text-2xl font-bold">${funnel.contacts}</div>
+        <div class="text-sm text-gray-600">Contacts</div>
+      </div>
+      <div class="bg-yellow-100 rounded-xl p-4">
+        <div class="text-2xl font-bold">${funnel.deals}</div>
+        <div class="text-sm text-gray-600">Deals</div>
+      </div>
+      <div class="bg-purple-100 rounded-xl p-4">
+        <div class="text-2xl font-bold">${funnel.won}</div>
+        <div class="text-sm text-gray-600">Won Deals</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('funnelChart').innerHTML = html;
+}
+</script>
+<script>
+
+function refreshKpis(){
+  const leads = store.read(store.k.leads) || [];
+  const contacts = store.read(store.k.contacts) || [];
+  const deals = store.read(store.k.deals) || [];
+
+  const totalLeads = leads.length;
+  const totalContacts = contacts.length;
+  const activeDeals = deals.filter(d => d.stage !== "Won" && d.stage !== "Lost").length;
+  const totalRevenue = deals.filter(d => d.stage === "Won")
+                            .reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+
+  document.getElementById("kpiLeads").innerText = totalLeads;
+  document.getElementById("kpiContacts").innerText = totalContacts;
+  document.getElementById("kpiDeals").innerText = activeDeals;
+  document.getElementById("kpiRevenue").innerText = "$" + totalRevenue.toLocaleString();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  if(!store.read(store.k.leads) || store.read(store.k.leads).length === 0){
+    store.write(store.k.leads, [
+      {id: uid(), title:"Lead 1", source:"Website", owner:"Joseph", status:"open", createdAt: nowISO(), updatedAt: nowISO()},
+      {id: uid(), title:"Lead 2", source:"Referral", owner:"Joseph", status:"closed", createdAt: nowISO(), updatedAt: nowISO()}
+    ]);
+  }
+
+  if(!store.read(store.k.contacts) || store.read(store.k.contacts).length === 0){
+    store.write(store.k.contacts, [
+      {id: uid(), name:"Client A", stage:"Qualified", createdAt: nowISO(), updatedAt: nowISO()}
+    ]);
+  }
+
+  if(!store.read(store.k.deals) || store.read(store.k.deals).length === 0){
+    store.write(store.k.deals, [
+      {id: uid(), name:"Deal 1", stage:"Active", amount:5000, createdAt: nowISO(), updatedAt: nowISO()},
+      {id: uid(), name:"Deal 2", stage:"Won", amount:12000, createdAt: nowISO(), updatedAt: nowISO()}
+    ]);
+  }
+
+  refreshKpis();
+});
+</script>
+<script>
+
+function refreshKpis(){
+  const leads = store.read(store.k.leads) || [];
+  const contacts = store.read(store.k.contacts) || [];
+  const deals = store.read(store.k.deals) || [];
+
+  const totalLeads = leads.length;
+  const totalContacts = contacts.length;
+  const activeDeals = deals.filter(d => d.stage !== "Won" && d.stage !== "Lost").length;
+  const totalRevenue = deals.filter(d => d.stage === "Won")
+                            .reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+
+  document.getElementById("kpiLeads").innerText = totalLeads;
+  document.getElementById("kpiContacts").innerText = totalContacts;
+  document.getElementById("kpiDeals").innerText = activeDeals;
+  document.getElementById("kpiRevenue").innerText = "$" + totalRevenue.toLocaleString();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  if(!store.read(store.k.leads) || store.read(store.k.leads).length === 0){
+    store.write(store.k.leads, [
+      {id: uid(), title:"Lead 1", source:"Website", owner:"Joseph", status:"open", createdAt: nowISO(), updatedAt: nowISO()},
+      {id: uid(), title:"Lead 2", source:"Referral", owner:"Joseph", status:"closed", createdAt: nowISO(), updatedAt: nowISO()}
+    ]);
+  }
+
+  if(!store.read(store.k.contacts) || store.read(store.k.contacts).length === 0){
+    store.write(store.k.contacts, [
+      {id: uid(), name:"Client A", stage:"Qualified", createdAt: nowISO(), updatedAt: nowISO()}
+    ]);
+  }
+
+  if(!store.read(store.k.deals) || store.read(store.k.deals).length === 0){
+    store.write(store.k.deals, [
+      {id: uid(), name:"Deal 1", stage:"Active", amount:5000, createdAt: nowISO(), updatedAt: nowISO()},
+      {id: uid(), name:"Deal 2", stage:"Won", amount:12000, createdAt: nowISO(), updatedAt: nowISO()}
+    ]);
+  }
+
+  refreshKpis();
+});
+</script>
+</body>
+</html>
