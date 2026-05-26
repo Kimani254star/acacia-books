@@ -97252,25 +97252,171 @@ function saveUser() {
 }
 
 function renderUserTable() {
+
   const users = JSON.parse(localStorage.getItem('users')) || [];
+
   const tbody = document.getElementById('userTableBody');
+
   tbody.innerHTML = '';
 
   users.forEach((user, index) => {
+
     const row = document.createElement('tr');
+
     row.classList.add('border-b');
 
     row.innerHTML = `
       <td class="border p-2">${user.username}</td>
-      <td class="border p-2">${user.role === 'custom' ? user.customRole : user.role}</td>
+
+      <td class="border p-2">
+        ${user.role === 'custom' ? user.customRole : user.role}
+      </td>
+
       <td class="border p-2 space-x-2">
-        <button onclick="openCreateUserModal(${index})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
-        <button onclick="deleteUser(${index})"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
+
+        <button onclick="openCreateUserModal(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Edit
+        </button>
+
+        <button onclick="deleteUser(${index})"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Delete
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleUserMenu(${index})"
+            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            More ▾
+          </button>
+
+          <div id="user-menu-${index}"
+            class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneUser(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadUser(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Download
+            </button>
+
+            <button onclick="printUser(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+          </div>
+
+        </div>
+
       </td>
     `;
 
     tbody.appendChild(row);
+
   });
+
+}
+function toggleUserMenu(index) {
+
+  document.querySelectorAll("[id^='user-menu-']").forEach(menu => {
+    if (menu.id !== `user-menu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document.getElementById(`user-menu-${index}`).classList.toggle("hidden");
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='user-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function cloneUser(index) {
+
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+
+  const cloned = {
+    ...users[index],
+    username: users[index].username + "_copy"
+  };
+
+  users.push(cloned);
+
+  localStorage.setItem("users", JSON.stringify(users));
+
+  renderUserTable();
+
+  alert("User cloned successfully");
+
+}
+
+function downloadUser(index) {
+
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+
+  const user = users[index];
+
+  const data = `
+USER DETAILS
+
+Username: ${user.username}
+Role: ${user.role === 'custom' ? user.customRole : user.role}
+`;
+
+  const blob = new Blob([data], { type: "text/plain" });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download = `${user.username}.txt`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+function printUser(index) {
+
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+
+  const user = users[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>User Details</title>
+    </head>
+    <body>
+      <h2>User Details</h2>
+      <p>Username: ${user.username}</p>
+      <p>Role: ${user.role === 'custom' ? user.customRole : user.role}</p>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+
 }
 
 function deleteUser(index) {
@@ -97334,190 +97480,296 @@ function saveBackupLogs() {
 }
 
 async function backupZIP() {
-  console.log("🚀 backupZIP started");
   const zip = new JSZip();
+
   let company = "Company";
 
   try {
     const orgInfo = JSON.parse(localStorage.getItem("orgInfo") || "{}");
-    if (orgInfo.name) company = orgInfo.name.replace(/\s+/g, "_");
 
-  
-    const orgInfoCopy = { ...orgInfo };
-
-    if (orgInfoCopy.logo && orgInfoCopy.logo.startsWith("data:image")) {
-      const base64 = orgInfoCopy.logo.split(",")[1];
-      const logoBlob = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-      zip.file("orgLogo.png", logoBlob);
-      orgInfoCopy.logoFile = "orgLogo.png";
-      delete orgInfoCopy.logo;
-      console.log("🖼️ Added orgLogo.png");
+    if (orgInfo.name) {
+      company = orgInfo.name.replace(/\s+/g, "_");
     }
-
-    zip.file("orgInfo.json", JSON.stringify(orgInfoCopy, null, 2));
-    console.log("🏢 Added orgInfo.json");
-
-  } catch (e) {
-    console.warn("⚠️ orgInfo parse failed:", e);
-  }
+  } catch (e) {}
 
   for (let i = 0; i < localStorage.length; i++) {
+
     const key = localStorage.key(i);
-    if (key === "orgInfo") continue; 
+
+    if (!key) continue;
 
     const raw = localStorage.getItem(key);
-    if (!raw) continue;
 
-    try {
-      const parsed = JSON.parse(raw);
+    if (raw === null) continue;
 
-      if (Array.isArray(parsed)) {
-      
-        const ws = XLSX.utils.json_to_sheet(parsed);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, key);
-        const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-        zip.file(`${key}.xlsx`, wbout);
-        console.log("📊 Added:", key + ".xlsx");
-      } else if (typeof parsed === "object") {
-       
-        zip.file(`${key}.json`, JSON.stringify(parsed, null, 2));
-        console.log("📝 Added:", key + ".json");
-      }
-    } catch (err) {
-      console.warn("⚠️ Skipping key:", key, err);
-    }
+    zip.file(`${key}.txt`, raw);
   }
 
-  console.log("📦 Generating ZIP...");
-  const blob = await zip.generateAsync({ type: "blob" });
+  const blob = await zip.generateAsync({
+    type: "blob"
+  });
 
-  
   const now = new Date();
-  const timestamp = now.toISOString().replace(/[:T]/g, "-").split(".")[0];
+
+  const timestamp = now.toISOString()
+    .replace(/[:T]/g, "-")
+    .split(".")[0];
+
   const filename = `${company}_Backup_${timestamp}.zip`;
 
+  const url = URL.createObjectURL(blob);
+
   const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
+
+  link.href = url;
   link.download = filename;
+
+  document.body.appendChild(link);
+
   link.click();
 
- console.log("✅ Backup completed and download started:", filename);
+  document.body.removeChild(link);
 
+  const log = {
+    id: Date.now().toString(),
+    date: new Date().toLocaleString(),
+    user: localStorage.getItem("currentUser") || "Admin",
+    action: "Backup Created",
+    file: filename,
+    size: (blob.size / 1024).toFixed(2) + " KB",
+    status: "Success",
+    path: url
+  };
 
-const log = {
-  id: Date.now().toString(),
-  date: new Date().toLocaleString(),
-  user: "Admin",
-  action: "Backup Created",
-  file: filename,
-  size: (blob.size / 1024).toFixed(2) + " KB",
-  status: "Success"
-};
+  backupLogs.push(log);
 
-backupLogs.push(log);
-localStorage.setItem("backupLogs", JSON.stringify(backupLogs));
-renderBackupHistory();
+  saveBackupLogs();
 
-alert(`✅ Backup completed:\n${filename}`);
+  renderBackupHistory();
+
+  alert(`✅ Backup completed:\n${filename}`);
 }
 
-
 async function restoreZIP(event) {
+
   const file = event.target.files[0];
+
   if (!file) return;
+
   event.target.value = "";
 
   try {
+
     const zip = await JSZip.loadAsync(file);
-    let orgInfo = null;
-    let logoBase64 = null;
+
+    localStorage.clear();
 
     for (const fname of Object.keys(zip.files)) {
-      if (fname.endsWith(".xlsx")) {
-        const content = await zip.file(fname).async("arraybuffer");
-        const wb = XLSX.read(content, { type: "array" });
-        const sheetName = wb.SheetNames[0];
-        const data = XLSX.utils.sheet_to_json(wb.Sheets[sheetName]);
-        const key = fname.replace(".xlsx", "");
-        localStorage.setItem(key, JSON.stringify(data));
-      } else if (fname === "orgInfo.json") {
-        const content = await zip.file(fname).async("string");
-        orgInfo = JSON.parse(content);
-      } else if (fname === "orgLogo.png") {
-        const content = await zip.file(fname).async("base64");
-        logoBase64 = "data:image/png;base64," + content;
-      } else if (fname.endsWith(".json")) {
-        const content = await zip.file(fname).async("string");
-        const data = JSON.parse(content);
-        const key = fname.replace(".json", "");
-        localStorage.setItem(key, JSON.stringify(data));
-      }
+
+      if (!fname.endsWith(".txt")) continue;
+
+      const raw = await zip.file(fname).async("string");
+
+      const key = fname.replace(".txt", "");
+
+      localStorage.setItem(key, raw);
     }
 
-    if (orgInfo) {
-      if (logoBase64) orgInfo.logo = logoBase64;
-      if (orgInfo.logoFile) delete orgInfo.logoFile;
-      localStorage.setItem("orgInfo", JSON.stringify(orgInfo));
+    backupLogs = JSON.parse(localStorage.getItem("backupLogs") || "[]");
+
+    renderBackupHistory();
+
+    if (typeof loadOrgInfo === "function") {
+      loadOrgInfo();
     }
 
     if (localStorage.getItem("openingBalancesFull")) {
-      const balances = JSON.parse(localStorage.getItem("openingBalancesFull"));
-      const tbody = document.querySelector("#openingBalancesTable tbody");
+
+      const balances = JSON.parse(
+        localStorage.getItem("openingBalancesFull")
+      );
+
+      const tbody = document.querySelector(
+        "#openingBalancesTable tbody"
+      );
+
       if (tbody) {
+
         tbody.innerHTML = "";
-        balances.forEach(r => addRow(r.account, r.branch, r.category, r.debit, r.credit));
+
+        balances.forEach(r => {
+          addRow(
+            r.account,
+            r.branch,
+            r.category,
+            r.debit,
+            r.credit
+          );
+        });
       }
     }
 
-    if (typeof loadOrgInfo === "function") loadOrgInfo();
     addRestoreLog(file.name);
-    renderBackupHistory();
-    alert("✅ ZIP Backup fully restored (Organization Profile + Logo + Data).");
+
+    alert("✅ Full system restore completed.");
+
+    location.reload();
+
   } catch (err) {
-    console.error("❌ Restore failed:", err);
+
+    console.error(err);
+
     alert("❌ Restore failed: " + err.message);
   }
 }
 
 function renderBackupHistory() {
+
   const table = document.getElementById("backupHistoryTable");
+
   if (!table) return;
 
   table.innerHTML = backupLogs.map(log => `
     <tr class="border-b">
+
       <td class="p-2">${log.date}</td>
+
       <td class="p-2">${log.user}</td>
+
       <td class="p-2">${log.action}</td>
+
       <td class="p-2">${log.file}</td>
+
       <td class="p-2">${log.size}</td>
+
       <td class="p-2">${log.status}</td>
+
       <td class="p-2 text-center">
-        <button onclick="downloadBackupAgain('${log.file}','${log.path}')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Download</button>
-        <button onclick="deleteBackupLog('${log.id}')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button>
+
+        <button onclick="downloadBackupAgain('${log.file}','${log.path}')"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Download
+        </button>
+
+        <button onclick="deleteBackupLog('${log.id}')"
+          class="border border-red-900 text-white bg-red-900 font-bold px-1 py-1 rounded hover:bg-red-800">
+          Delete
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleBackupMenu('${log.id}')"
+            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            More ▾
+          </button>
+
+          <div id="backup-menu-${log.id}"
+            class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneBackupLog('${log.id}')"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="printBackupLog('${log.id}')"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+          </div>
+
+        </div>
+
       </td>
+
     </tr>
   `).join("");
-}
 
-function addBackupLog(filename, size, path) {
-  backupLogs.push({
-    id: Date.now(),
-    date: new Date().toLocaleString(),
-    user: localStorage.getItem("currentUser") || "Admin",
-    action: "Backup Created",
-    file: filename,
-    size: size,
-    status: "Success",
-    path: path
+}
+function toggleBackupMenu(id) {
+
+  document.querySelectorAll("[id^='backup-menu-']").forEach(menu => {
+    if (menu.id !== `backup-menu-${id}`) {
+      menu.classList.add("hidden");
+    }
   });
-  saveBackupLogs();
-  renderBackupHistory();
+
+  document.getElementById(`backup-menu-${id}`).classList.toggle("hidden");
 }
 
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='backup-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function cloneBackupLog(id) {
+
+  let logs = JSON.parse(localStorage.getItem("backupLogs") || "[]");
+
+  const log = logs.find(l => l.id == id);
+
+  if (!log) return;
+
+  const cloned = {
+    ...log,
+    id: Date.now()
+  };
+
+  logs.push(cloned);
+
+  localStorage.setItem("backupLogs", JSON.stringify(logs));
+
+  backupLogs = logs;
+
+  renderBackupHistory();
+
+  alert("Backup log cloned successfully");
+
+}
+
+function printBackupLog(id) {
+
+  let logs = JSON.parse(localStorage.getItem("backupLogs") || "[]");
+
+  const log = logs.find(l => l.id == id);
+
+  if (!log) return;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Backup Log</title>
+    </head>
+    <body>
+      <h2>Backup Log</h2>
+      <p>Date: ${log.date}</p>
+      <p>User: ${log.user}</p>
+      <p>Action: ${log.action}</p>
+      <p>File: ${log.file}</p>
+      <p>Size: ${log.size}</p>
+      <p>Status: ${log.status}</p>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+
+}
 function addRestoreLog(filename) {
+
   backupLogs.push({
-    id: Date.now(),
+    id: Date.now().toString(),
     date: new Date().toLocaleString(),
     user: localStorage.getItem("currentUser") || "Admin",
     action: "Backup Restored",
@@ -97526,44 +97778,88 @@ function addRestoreLog(filename) {
     status: "Restored",
     path: ""
   });
+
   saveBackupLogs();
+
   renderBackupHistory();
 }
 
 function downloadBackupAgain(filename, path) {
+
   if (!path) {
-    alert("❌ This backup cannot be redownloaded (old record).");
+    alert("❌ Backup file unavailable.");
     return;
   }
+
   const link = document.createElement("a");
+
   link.href = path;
   link.download = filename;
+
+  document.body.appendChild(link);
+
   link.click();
+
+  document.body.removeChild(link);
 }
 
 function deleteBackupLog(id) {
-  if (!confirm("Are you sure you want to delete this backup log?")) return;
-  let backupLogs = JSON.parse(localStorage.getItem("backupLogs") || "[]");
-  const log = backupLogs.find(l => l.id === id);
-  if (!log) return;
-  backupLogs = backupLogs.filter(l => l.id !== id);
-  localStorage.setItem("backupLogs", JSON.stringify(backupLogs));
-  let recycleBin = JSON.parse(localStorage.getItem("recycleBin") || "[]");
+
+  if (!confirm("Are you sure you want to delete this backup log?")) {
+    return;
+  }
+
+  let logs = JSON.parse(
+    localStorage.getItem("backupLogs") || "[]"
+  );
+
+  const log = logs.find(l => l.id === id);
+
+  logs = logs.filter(l => l.id !== id);
+
+  localStorage.setItem(
+    "backupLogs",
+    JSON.stringify(logs)
+  );
+
+  backupLogs = logs;
+
+  let recycleBin = JSON.parse(
+    localStorage.getItem("recycleBin") || "[]"
+  );
+
   recycleBin.push({
     id: Date.now(),
     type: "Backup Log",
-    name: log.name || "Unnamed Backup",
+    name: log?.file || "Backup",
     data: log,
     deletedAt: new Date().toISOString()
   });
-  localStorage.setItem("recycleBin", JSON.stringify(recycleBin));
+
+  localStorage.setItem(
+    "recycleBin",
+    JSON.stringify(recycleBin)
+  );
+
   renderBackupHistory();
+
   alert("♻️ Backup log moved to Recycle Bin.");
 }
 
-function sendSystemMail({ subject, message, attachmentName }) {
-  const inbox = JSON.parse(localStorage.getItem("demo_inbox") || "[]");
-  const sent = JSON.parse(localStorage.getItem("demo_sent") || "[]");
+function sendSystemMail({
+  subject,
+  message,
+  attachmentName
+}) {
+
+  const inbox = JSON.parse(
+    localStorage.getItem("demo_inbox") || "[]"
+  );
+
+  const sent = JSON.parse(
+    localStorage.getItem("demo_sent") || "[]"
+  );
+
   const mail = {
     id: "_" + Date.now(),
     from: "system@acaciabooks.local",
@@ -97573,15 +97869,30 @@ function sendSystemMail({ subject, message, attachmentName }) {
     subject,
     message,
     date: new Date().toLocaleString(),
-    attachments: attachmentName ? [attachmentName] : []
+    attachments: attachmentName
+      ? [attachmentName]
+      : []
   };
+
   inbox.unshift(mail);
+
   sent.unshift(mail);
-  localStorage.setItem("demo_inbox", JSON.stringify(inbox));
-  localStorage.setItem("demo_sent", JSON.stringify(sent));
+
+  localStorage.setItem(
+    "demo_inbox",
+    JSON.stringify(inbox)
+  );
+
+  localStorage.setItem(
+    "demo_sent",
+    JSON.stringify(sent)
+  );
 }
 
-document.addEventListener("DOMContentLoaded", renderBackupHistory);
+document.addEventListener(
+  "DOMContentLoaded",
+  renderBackupHistory
+);
 </script>
 <script>
 function convertToKES(amount) {
@@ -97904,47 +98215,229 @@ function addWarehouse() {
 }
   
 function renderWarehouses() {
+
   const warehouses = JSON.parse(localStorage.getItem('warehouses')) || [];
+
   const list = document.getElementById('warehouseList');
+
   list.innerHTML = '';
 
   if (warehouses.length === 0) {
-    list.innerHTML = '<tr><td colspan="12" class="text-center p-2">No warehouses added</td></tr>';
+
+    list.innerHTML = `
+      <tr>
+        <td colspan="12" class="text-center p-2">
+          No warehouses added
+        </td>
+      </tr>
+    `;
+
     return;
+
   }
 
   warehouses.forEach((w, index) => {
+
     const stockValue = getWarehouseStockValue(w.name);
+
     const phoneText = w.phone && w.phone.trim() ? w.phone : '';
+
     const emailText = w.email && w.email.trim() ? w.email : '';
 
     const tr = document.createElement('tr');
+
     tr.setAttribute('data-index', index);
+
     tr.innerHTML = `
       <td class="border px-2 py-1">${w.name || ''}</td>
+
       <td class="border px-2 py-1">${w.branch || ''}</td>
+
       <td class="border px-2 py-1">${w.street1 || ''}</td>
+
       <td class="border px-2 py-1">${w.street2 || ''}</td>
+
       <td class="border px-2 py-1">${w.city || ''}</td>
+
       <td class="border px-2 py-1">${w.state || ''}</td>
+
       <td class="border px-2 py-1">${w.country || ''}</td>
+
       <td class="border px-2 py-1">${w.zip || ''}</td>
+
       <td class="border px-2 py-1">${phoneText}</td>
+
       <td class="border px-2 py-1">${emailText}</td>
+
       <td class="border px-2 py-1">
-        <button onclick="goToStock('${encodeURIComponent(w.name)}')" class="text-blue-700 underline">
+        <button onclick="goToStock('${encodeURIComponent(w.name)}')"
+          class="text-blue-700 underline">
           ${stockValue.toLocaleString()}
         </button>
       </td>
+
       <td class="border px-2 py-1">
-        <button onclick="editWarehouse(${index})" class="mr-1 px-1 py-1 bg-blue-900 text-white rounded">Edit</button>
-        <button onclick="deleteWarehouse(${index})" class="mr-1 px-1 py-1 bg-blue-900 text-white rounded">Delete</button>
+
+        <button onclick="editWarehouse(${index})"
+          class="mr-1 px-1 py-1 bg-blue-900 text-white rounded">
+          Edit
+        </button>
+
+        <button onclick="deleteWarehouse(${index})"
+          class="mr-1 px-1 py-1 bg-blue-900 text-white rounded">
+          Delete
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleWarehouseMenu(${index})"
+            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            More ▾
+          </button>
+
+          <div id="warehouse-menu-${index}"
+            class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneWarehouse(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadWarehouse(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Download
+            </button>
+
+            <button onclick="printWarehouse(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+          </div>
+
+        </div>
+
       </td>
     `;
+
     list.appendChild(tr);
+
   });
+
+}
+function toggleWarehouseMenu(index) {
+
+  document.querySelectorAll("[id^='warehouse-menu-']").forEach(menu => {
+    if (menu.id !== `warehouse-menu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document.getElementById(`warehouse-menu-${index}`).classList.toggle("hidden");
 }
 
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='warehouse-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function cloneWarehouse(index) {
+
+  let warehouses = JSON.parse(localStorage.getItem("warehouses") || "[]");
+
+  const cloned = {
+    ...warehouses[index],
+    name: warehouses[index].name + " Copy"
+  };
+
+  warehouses.push(cloned);
+
+  localStorage.setItem("warehouses", JSON.stringify(warehouses));
+
+  renderWarehouses();
+
+  alert("Warehouse cloned successfully");
+
+}
+
+function downloadWarehouse(index) {
+
+  let warehouses = JSON.parse(localStorage.getItem("warehouses") || "[]");
+
+  const w = warehouses[index];
+
+  const data = `
+WAREHOUSE DETAILS
+
+Name: ${w.name}
+Branch: ${w.branch}
+Street 1: ${w.street1}
+Street 2: ${w.street2}
+City: ${w.city}
+State: ${w.state}
+Country: ${w.country}
+ZIP: ${w.zip}
+Phone: ${w.phone}
+Email: ${w.email}
+`;
+
+  const blob = new Blob([data], { type: "text/plain" });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download = `${w.name}.txt`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+function printWarehouse(index) {
+
+  let warehouses = JSON.parse(localStorage.getItem("warehouses") || "[]");
+
+  const w = warehouses[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Warehouse Details</title>
+    </head>
+    <body>
+      <h2>Warehouse Details</h2>
+      <p>Name: ${w.name}</p>
+      <p>Branch: ${w.branch}</p>
+      <p>Street 1: ${w.street1}</p>
+      <p>Street 2: ${w.street2}</p>
+      <p>City: ${w.city}</p>
+      <p>State: ${w.state}</p>
+      <p>Country: ${w.country}</p>
+      <p>ZIP: ${w.zip}</p>
+      <p>Phone: ${w.phone}</p>
+      <p>Email: ${w.email}</p>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+
+}
 function goToStock(warehouseName) {
   window.location.href = `stock.html?warehouse=${warehouseName}`;
 }
@@ -98847,33 +99340,198 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderRules() {
-    const tbody = document.getElementById('rulesList');
-    tbody.innerHTML = '';
 
-    rules
-      .sort((a, b) => a.priority - b.priority)
-      .forEach((rule, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="border px-2 py-1">${rule.priority}</td>
-          <td class="border px-2 py-1">${rule.when}</td>
-          <td class="border px-2 py-1">${rule.if}</td>
-          <td class="border px-2 py-1">${rule.then}</td>
-          <td class="border px-2 py-1">${rule.value}</td>
-          <td class="border px-2 py-1">${rule.approver || '-'}</td>
-          <td class="border px-2 py-1">
-            <span class="${rule.enabled ? 'text-green-600' : 'text-gray-400'}">
-              ${rule.enabled ? 'Enabled' : 'Disabled'}
-            </span>
-          </td>
-          <td class="border px-2 py-1 flex gap-2">
-            <button class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"onclick="editRule(${rule.id})">Edit</button>
-            <button class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"onclick="deleteRule(${rule.id})">Delete</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
+  const tbody = document.getElementById('rulesList');
+
+  tbody.innerHTML = '';
+
+  rules
+    .sort((a, b) => a.priority - b.priority)
+    .forEach((rule, index) => {
+
+      const tr = document.createElement('tr');
+
+      tr.innerHTML = `
+        <td class="border px-2 py-1">${rule.priority}</td>
+
+        <td class="border px-2 py-1">${rule.when}</td>
+
+        <td class="border px-2 py-1">${rule.if}</td>
+
+        <td class="border px-2 py-1">${rule.then}</td>
+
+        <td class="border px-2 py-1">${rule.value}</td>
+
+        <td class="border px-2 py-1">
+          ${rule.approver || '-'}
+        </td>
+
+        <td class="border px-2 py-1">
+          <span class="${rule.enabled ? 'text-green-600' : 'text-gray-400'}">
+            ${rule.enabled ? 'Enabled' : 'Disabled'}
+          </span>
+        </td>
+
+        <td class="border px-2 py-1 flex gap-2 flex-wrap">
+
+          <button
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+            onclick="editRule(${rule.id})">
+            Edit
+          </button>
+
+          <button
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+            onclick="deleteRule(${rule.id})">
+            Delete
+          </button>
+
+          <div class="relative inline-block">
+
+            <button onclick="toggleRuleMenu(${rule.id})"
+              class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+              More ▾
+            </button>
+
+            <div id="rule-menu-${rule.id}"
+              class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+              <button onclick="cloneRule(${rule.id})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Clone
+              </button>
+
+              <button onclick="downloadRule(${rule.id})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Download
+              </button>
+
+              <button onclick="printRule(${rule.id})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Print
+              </button>
+
+            </div>
+
+          </div>
+
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+
+    });
+
+}
+function toggleRuleMenu(id) {
+
+  document.querySelectorAll("[id^='rule-menu-']").forEach(menu => {
+    if (menu.id !== `rule-menu-${id}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document.getElementById(`rule-menu-${id}`).classList.toggle("hidden");
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='rule-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
   }
+
+});
+
+function cloneRule(id) {
+
+  const rule = rules.find(r => r.id === id);
+
+  if (!rule) return;
+
+  const cloned = {
+    ...rule,
+    id: Date.now()
+  };
+
+  rules.push(cloned);
+
+  localStorage.setItem("approvalRules", JSON.stringify(rules));
+
+  renderRules();
+
+  alert("Rule cloned successfully");
+
+}
+
+function downloadRule(id) {
+
+  const rule = rules.find(r => r.id === id);
+
+  if (!rule) return;
+
+  const data = `
+RULE DETAILS
+
+Priority: ${rule.priority}
+When: ${rule.when}
+If: ${rule.if}
+Then: ${rule.then}
+Value: ${rule.value}
+Approver: ${rule.approver || "-"}
+Status: ${rule.enabled ? "Enabled" : "Disabled"}
+`;
+
+  const blob = new Blob([data], { type: "text/plain" });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download = `Rule_${rule.id}.txt`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+function printRule(id) {
+
+  const rule = rules.find(r => r.id === id);
+
+  if (!rule) return;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Rule Details</title>
+    </head>
+    <body>
+      <h2>Rule Details</h2>
+      <p>Priority: ${rule.priority}</p>
+      <p>When: ${rule.when}</p>
+      <p>If: ${rule.if}</p>
+      <p>Then: ${rule.then}</p>
+      <p>Value: ${rule.value}</p>
+      <p>Approver: ${rule.approver || "-"}</p>
+      <p>Status: ${rule.enabled ? "Enabled" : "Disabled"}</p>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+
+}
 
 function deleteRule(id) {
   if (!confirm('Delete this rule?')) return;
@@ -99102,43 +99760,260 @@ function saveCosting(editIndex = null) {
 }
 
 function renderCostingTable() {
+
   const tbody = document.getElementById("costingTableBody");
+
   if (!tbody) return;
 
   let costingData = JSON.parse(localStorage.getItem("costingData")) || [];
 
   if (costingData.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="13" class="text-center p-4 text-gray-500">No costing records found.</td></tr>`;
-    return;
-  }
 
-  tbody.innerHTML = costingData.map((row, index) => {
-    const eff = parseFloat(row.effMargin || 0);
-    const effClass = eff >= 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold";
-
-    return `
-      <tr class="border-b">
-        <td class="p-2">${row.product}</td>
-        <td class="p-2">KSh ${parseFloat(row.buying).toFixed(2)}</td>
-        <td class="p-2">KSh ${parseFloat(row.extra).toFixed(2)}</td>
-        <td class="p-2">KSh ${parseFloat(row.total).toFixed(2)}</td>
-        <td class="p-2">${row.margin || 0}%</td>
-        <td class="p-2">Markup: ${row.markup || 0}%<br>Target Margin: ${row.targetMargin || 0}%</td>
-        <td class="p-2">Discount: ${row.discount || 0}%</td>
-        <td class="p-2">KSh ${parseFloat(row.sellingStandard || 0).toFixed(2)}<br><small>(Standard)</small></td>
-        <td class="p-2">KSh ${parseFloat(row.sellingAdvanced || 0).toFixed(2)}<br><small>(Advanced)</small></td>
-        <td class="p-2">KSh ${parseFloat(row.discountedPrice || 0).toFixed(2)}<br><small>(After Discount)</small></td>
-        <td class="p-2 ${effClass}">${eff.toFixed(2)}%</td>
-        <td class="p-2">${row.date}</td>
-        <td class="p-2 flex gap-2">
-          <button onclick="editCosting(${index})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">✏️ Edit</button>
-          <button onclick="deleteCosting(${index})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">🗑️ Delete</button>
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="13" class="text-center p-4 text-gray-500">
+          No costing records found.
         </td>
       </tr>
     `;
+
+    return;
+
+  }
+
+  tbody.innerHTML = costingData.map((row, index) => {
+
+    const eff = parseFloat(row.effMargin || 0);
+
+    const effClass =
+      eff >= 0
+        ? "text-green-600 font-semibold"
+        : "text-red-600 font-semibold";
+
+    return `
+      <tr class="border-b">
+
+        <td class="p-2">${row.product}</td>
+
+        <td class="p-2">
+          KSh ${parseFloat(row.buying).toFixed(2)}
+        </td>
+
+        <td class="p-2">
+          KSh ${parseFloat(row.extra).toFixed(2)}
+        </td>
+
+        <td class="p-2">
+          KSh ${parseFloat(row.total).toFixed(2)}
+        </td>
+
+        <td class="p-2">
+          ${row.margin || 0}%
+        </td>
+
+        <td class="p-2">
+          Markup: ${row.markup || 0}%
+          <br>
+          Target Margin: ${row.targetMargin || 0}%
+        </td>
+
+        <td class="p-2">
+          Discount: ${row.discount || 0}%
+        </td>
+
+        <td class="p-2">
+          KSh ${parseFloat(row.sellingStandard || 0).toFixed(2)}
+          <br>
+          <small>(Standard)</small>
+        </td>
+
+        <td class="p-2">
+          KSh ${parseFloat(row.sellingAdvanced || 0).toFixed(2)}
+          <br>
+          <small>(Advanced)</small>
+        </td>
+
+        <td class="p-2">
+          KSh ${parseFloat(row.discountedPrice || 0).toFixed(2)}
+          <br>
+          <small>(After Discount)</small>
+        </td>
+
+        <td class="p-2 ${effClass}">
+          ${eff.toFixed(2)}%
+        </td>
+
+        <td class="p-2">
+          ${row.date}
+        </td>
+
+        <td class="p-2 flex gap-2 flex-wrap">
+
+          <button onclick="editCosting(${index})"
+            class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+            ✏️ Edit
+          </button>
+
+          <button onclick="deleteCosting(${index})"
+            class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+            🗑️ Delete
+          </button>
+
+          <div class="relative inline-block">
+
+            <button onclick="toggleCostingMenu(${index})"
+              class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+              More ▾
+            </button>
+
+            <div id="costing-menu-${index}"
+              class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+              <button onclick="cloneCosting(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Clone
+              </button>
+
+              <button onclick="downloadCosting(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Download
+              </button>
+
+              <button onclick="printCosting(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Print
+              </button>
+
+            </div>
+
+          </div>
+
+        </td>
+
+      </tr>
+    `;
+
   }).join('');
+
+}
+function toggleCostingMenu(index) {
+
+  document.querySelectorAll("[id^='costing-menu-']").forEach(menu => {
+    if (menu.id !== `costing-menu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document.getElementById(`costing-menu-${index}`).classList.toggle("hidden");
 }
 
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='costing-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function cloneCosting(index) {
+
+  let costingData = JSON.parse(localStorage.getItem("costingData") || "[]");
+
+  const cloned = {
+    ...costingData[index]
+  };
+
+  costingData.push(cloned);
+
+  localStorage.setItem("costingData", JSON.stringify(costingData));
+
+  renderCostingTable();
+
+  alert("Costing record cloned successfully");
+
+}
+
+function downloadCosting(index) {
+
+  let costingData = JSON.parse(localStorage.getItem("costingData") || "[]");
+
+  const row = costingData[index];
+
+  const data = `
+COSTING RECORD
+
+Product: ${row.product}
+Buying: ${row.buying}
+Extra Cost: ${row.extra}
+Total Cost: ${row.total}
+Margin: ${row.margin}%
+Markup: ${row.markup}%
+Target Margin: ${row.targetMargin}%
+Discount: ${row.discount}%
+Selling Standard: ${row.sellingStandard}
+Selling Advanced: ${row.sellingAdvanced}
+Discounted Price: ${row.discountedPrice}
+Effective Margin: ${row.effMargin}%
+Date: ${row.date}
+`;
+
+  const blob = new Blob([data], { type: "text/plain" });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download = `${row.product}_costing.txt`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+function printCosting(index) {
+
+  let costingData = JSON.parse(localStorage.getItem("costingData") || "[]");
+
+  const row = costingData[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Costing Record</title>
+    </head>
+    <body>
+      <h2>Costing Record</h2>
+      <p>Product: ${row.product}</p>
+      <p>Buying: ${row.buying}</p>
+      <p>Extra Cost: ${row.extra}</p>
+      <p>Total Cost: ${row.total}</p>
+      <p>Margin: ${row.margin}%</p>
+      <p>Markup: ${row.markup}%</p>
+      <p>Target Margin: ${row.targetMargin}%</p>
+      <p>Discount: ${row.discount}%</p>
+      <p>Selling Standard: ${row.sellingStandard}</p>
+      <p>Selling Advanced: ${row.sellingAdvanced}</p>
+      <p>Discounted Price: ${row.discountedPrice}</p>
+      <p>Effective Margin: ${row.effMargin}%</p>
+      <p>Date: ${row.date}</p>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+
+}
 function editCosting(index) {
   let costingData = JSON.parse(localStorage.getItem("costingData")) || [];
   let entry = costingData[index];
@@ -99517,38 +100392,241 @@ function saveBulkConsignment() {
 renderBulkCostingSummary();
 
 function renderBulkCostingSummary() {
+
   const tbody = document.getElementById("bulkCostingSummaryBody");
+
   if (!tbody) return;
 
   tbody.innerHTML = "";
-  const consignments = JSON.parse(localStorage.getItem("bulkConsignments") || "[]");
+
+  const consignments = JSON.parse(
+    localStorage.getItem("bulkConsignments") || "[]"
+  );
 
   if (consignments.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center p-2 text-gray-500">No consignments saved yet.</td></tr>`;
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="text-center p-2 text-gray-500">
+          No consignments saved yet.
+        </td>
+      </tr>
+    `;
+
     return;
+
   }
 
   consignments.forEach((c, i) => {
+
     const date = new Date(c.timestamp).toLocaleDateString();
+
     const row = document.createElement("tr");
+
     row.innerHTML = `
-      <td class="border p-2">${c.consignmentName || `Consignment ${i + 1}`}</td>
-      <td class="border p-2">${c.currency}</td>
-      <td class="border p-2 text-right">${c.exchangeRate}</td>
-      <td class="border p-2 text-right">${c.totalCostKES}</td>
-      <td class="border p-2 text-right">${c.totalQty}</td>
-      <td class="border p-2 text-right">${c.costPerUnit}</td>
-      <td class="border p-2">${date}</td>
-      <td class="border p-2 text-center space-x-2">
-  <button class="bg-blue-600 text-white px-1 py-1 rounded-lg hover:bg-blue-700 shadow-sm transition" onclick="editBulkConsignment(${i})"> Edit</button>
-  <button class="bg-blue-600 text-white px-1 py-1 rounded-lg hover:bg-blue-700 shadow-sm transition" onclick="deleteBulkConsignment(${i})">Delete</button>
-  <button class="bg-blue-600 text-white px-1 py-1 rounded-lg hover:bg-blue-700 shadow-sm transition" onclick="exportSingleBulkConsignment(${i})">Excel</button>
-</td>
+      <td class="border p-2">
+        ${c.consignmentName || `Consignment ${i + 1}`}
+      </td>
+
+      <td class="border p-2">
+        ${c.currency}
+      </td>
+
+      <td class="border p-2 text-right">
+        ${c.exchangeRate}
+      </td>
+
+      <td class="border p-2 text-right">
+        ${c.totalCostKES}
+      </td>
+
+      <td class="border p-2 text-right">
+        ${c.totalQty}
+      </td>
+
+      <td class="border p-2 text-right">
+        ${c.costPerUnit}
+      </td>
+
+      <td class="border p-2">
+        ${date}
+      </td>
+
+      <td class="border p-2 text-center flex gap-1 flex-wrap">
+
+        <button
+          class="bg-blue-600 text-white px-1 py-1 rounded-lg hover:bg-blue-700 shadow-sm transition"
+          onclick="editBulkConsignment(${i})">
+          Edit
+        </button>
+
+        <button
+          class="bg-blue-600 text-white px-1 py-1 rounded-lg hover:bg-blue-700 shadow-sm transition"
+          onclick="deleteBulkConsignment(${i})">
+          Delete
+        </button>
+
+        <button
+          class="bg-blue-600 text-white px-1 py-1 rounded-lg hover:bg-blue-700 shadow-sm transition"
+          onclick="exportSingleBulkConsignment(${i})">
+          Excel
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleBulkConsignmentMenu(${i})"
+            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            More ▾
+          </button>
+
+          <div id="bulk-consignment-menu-${i}"
+            class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneBulkConsignment(${i})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadBulkConsignment(${i})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Download
+            </button>
+
+            <button onclick="printBulkConsignment(${i})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+          </div>
+
+        </div>
+
+      </td>
     `;
+
     tbody.appendChild(row);
+
   });
+
+}
+function toggleBulkConsignmentMenu(index) {
+
+  document.querySelectorAll("[id^='bulk-consignment-menu-']").forEach(menu => {
+    if (menu.id !== `bulk-consignment-menu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document
+    .getElementById(`bulk-consignment-menu-${index}`)
+    .classList.toggle("hidden");
 }
 
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='bulk-consignment-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function cloneBulkConsignment(index) {
+
+  let consignments = JSON.parse(
+    localStorage.getItem("bulkConsignments") || "[]"
+  );
+
+  const cloned = {
+    ...consignments[index],
+    timestamp: Date.now()
+  };
+
+  consignments.push(cloned);
+
+  localStorage.setItem(
+    "bulkConsignments",
+    JSON.stringify(consignments)
+  );
+
+  renderBulkCostingSummary();
+
+  alert("Consignment cloned successfully");
+
+}
+
+function downloadBulkConsignment(index) {
+
+  let consignments = JSON.parse(
+    localStorage.getItem("bulkConsignments") || "[]"
+  );
+
+  const c = consignments[index];
+
+  const data = `
+BULK CONSIGNMENT
+
+Name: ${c.consignmentName}
+Currency: ${c.currency}
+Exchange Rate: ${c.exchangeRate}
+Total Cost KES: ${c.totalCostKES}
+Total Quantity: ${c.totalQty}
+Cost Per Unit: ${c.costPerUnit}
+Date: ${new Date(c.timestamp).toLocaleDateString()}
+`;
+
+  const blob = new Blob([data], { type: "text/plain" });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download = `${c.consignmentName || "consignment"}.txt`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+function printBulkConsignment(index) {
+
+  let consignments = JSON.parse(
+    localStorage.getItem("bulkConsignments") || "[]"
+  );
+
+  const c = consignments[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Bulk Consignment</title>
+    </head>
+    <body>
+      <h2>Bulk Consignment</h2>
+      <p>Name: ${c.consignmentName}</p>
+      <p>Currency: ${c.currency}</p>
+      <p>Exchange Rate: ${c.exchangeRate}</p>
+      <p>Total Cost KES: ${c.totalCostKES}</p>
+      <p>Total Quantity: ${c.totalQty}</p>
+      <p>Cost Per Unit: ${c.costPerUnit}</p>
+      <p>Date: ${new Date(c.timestamp).toLocaleDateString()}</p>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+
+}
 function deleteBulkConsignment(index) {
   if (!confirm("Are you sure you want to delete this consignment?")) return;
 
@@ -99828,16 +100906,228 @@ function createFolder() {
 }
 
 function renderFolders() {
+
   const store = getStore();
+
   const folderList = document.getElementById("folderList");
+
   if (!folderList) return;
 
-  folderList.innerHTML = store.folders.map(f => `
-    <div onclick="openFolder('${f}')"
-      class="cursor-pointer p-3 bg-white border rounded text-center hover:bg-blue-50">
-      📁 <div class="font-semibold">${f}</div>
+  folderList.innerHTML = store.folders.map((f, index) => `
+
+    <div class="relative bg-white border rounded p-3 hover:bg-blue-50">
+
+      <div onclick="openFolder('${f}')"
+        class="cursor-pointer text-center">
+
+        📁
+
+        <div class="font-semibold">
+          ${f}
+        </div>
+
+      </div>
+
+      <div class="mt-3 flex flex-wrap gap-1 justify-center">
+
+        <button onclick="editFolder(${index})"
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800 text-sm">
+          Edit
+        </button>
+
+        <button onclick="previewFolder('${f}')"
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800 text-sm">
+          Preview
+        </button>
+
+        <button onclick="deleteFolder(${index})"
+          class="bg-red-900 text-white px-2 py-1 rounded hover:bg-red-800 text-sm">
+          Delete
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleFolderMenu(${index})"
+            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600 text-sm">
+            More ▾
+          </button>
+
+          <div id="folder-menu-${index}"
+            class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneFolder('${f}')"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadFolder('${f}')"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Download
+            </button>
+
+            <button onclick="printFolder('${f}')"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
+
   `).join("");
+
+}
+function editFolder(index) {
+
+  const store = getStore();
+
+  const currentName = store.folders[index];
+
+  const newName = prompt("Edit Folder Name", currentName);
+
+  if (!newName || !newName.trim()) return;
+
+  store.folders[index] = newName.trim();
+
+  saveStore(store);
+
+  renderFolders();
+
+  alert("Folder updated successfully");
+
+}
+
+function previewFolder(name) {
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Folder Preview</title>
+    </head>
+    <body style="font-family: Arial; padding: 20px;">
+
+      <h2>📁 Folder Preview</h2>
+
+      <p><strong>Folder Name:</strong> ${name}</p>
+
+      <p><strong>Preview Date:</strong> ${new Date().toLocaleString()}</p>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function deleteFolder(index) {
+
+  const store = getStore();
+
+  if (!confirm("Delete this folder?")) return;
+
+  store.folders.splice(index, 1);
+
+  saveStore(store);
+
+  renderFolders();
+
+  alert("Folder deleted successfully");
+
+}
+function toggleFolderMenu(index) {
+
+  document.querySelectorAll("[id^='folder-menu-']").forEach(menu => {
+    if (menu.id !== `folder-menu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document
+    .getElementById(`folder-menu-${index}`)
+    .classList.toggle("hidden");
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='folder-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function cloneFolder(name) {
+
+  const store = getStore();
+
+  const clonedName = `${name} Copy`;
+
+  store.folders.push(clonedName);
+
+  saveStore(store);
+
+  renderFolders();
+
+  alert("Folder cloned successfully");
+
+}
+
+function downloadFolder(name) {
+
+  const data = `
+FOLDER DETAILS
+
+Folder Name: ${name}
+Downloaded On: ${new Date().toLocaleString()}
+`;
+
+  const blob = new Blob([data], { type: "text/plain" });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download = `${name}.txt`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+function printFolder(name) {
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Folder Details</title>
+    </head>
+    <body>
+      <h2>Folder Details</h2>
+      <p>Folder Name: ${name}</p>
+      <p>Printed On: ${new Date().toLocaleString()}</p>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+
 }
 
 function openFolder(folder) {
@@ -99876,40 +101166,247 @@ function uploadFiles(inputFiles = null) {
 }
 
 function renderFileList() {
+
   const tbody = document.getElementById("fileList");
+
   const store = getStore();
-  const search = (document.getElementById("fileSearch")?.value || "").toLowerCase();
+
+  const search =
+    (document.getElementById("fileSearch")?.value || "")
+    .toLowerCase();
 
   if (!tbody) return;
 
   const files = store.files.filter(
-    f => f.folder === store.currentFolder && f.name.toLowerCase().includes(search)
+    f =>
+      f.folder === store.currentFolder &&
+      f.name.toLowerCase().includes(search)
   );
 
   if (!files.length) {
+
     tbody.innerHTML = `
       <tr>
-        <td colspan="4" class="text-center p-3 text-gray-500">
+        <td colspan="4"
+          class="text-center p-3 text-gray-500">
           No files in this folder.
         </td>
-      </tr>`;
+      </tr>
+    `;
+
     return;
+
   }
 
   tbody.innerHTML = files.map((f, i) => `
+
     <tr>
-      <td class="border p-2">${getIcon(f.type)} ${f.name}</td>
-      <td class="border p-2 text-right">${f.size}</td>
-      <td class="border p-2">${f.date}</td>
-      <td class="border p-2 text-center space-x-1">
-        <button onclick="viewFile(${i})" class="bg-blue-900 text-white px-1 py-1 rounded">View</button>
-        <button onclick="renameFile(${i})" class="bg-blue-900 text-white px-1 py-1 rounded">Rename</button>
-        <button onclick="deleteFile(${i})" class="bg-blue-900 text-white px-1 py-1 rounded">Delete</button>
+
+      <td class="border p-2">
+        ${getIcon(f.type)} ${f.name}
       </td>
+
+      <td class="border p-2 text-right">
+        ${f.size}
+      </td>
+
+      <td class="border p-2">
+        ${f.date}
+      </td>
+
+      <td class="border p-2 text-center space-x-1">
+
+        <button onclick="viewFile(${i})"
+          class="bg-blue-900 text-white px-1 py-1 rounded">
+          View
+        </button>
+
+        <button onclick="renameFile(${i})"
+          class="bg-blue-900 text-white px-1 py-1 rounded">
+          Rename
+        </button>
+
+        <button onclick="deleteFile(${i})"
+          class="bg-blue-900 text-white px-1 py-1 rounded">
+          Delete
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleFileMenu(${i})"
+            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            More ▾
+          </button>
+
+          <div id="file-menu-${i}"
+            class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneFile(${i})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadFile(${i})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Download
+            </button>
+
+            <button onclick="printFile(${i})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+          </div>
+
+        </div>
+
+      </td>
+
     </tr>
+
   `).join("");
+
+}
+function toggleFileMenu(index) {
+
+  document.querySelectorAll("[id^='file-menu-']").forEach(menu => {
+
+    if (menu.id !== `file-menu-${index}`) {
+
+      menu.classList.add("hidden");
+
+    }
+
+  });
+
+  document
+    .getElementById(`file-menu-${index}`)
+    .classList.toggle("hidden");
+
 }
 
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='file-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function cloneFile(index) {
+
+  const store = getStore();
+
+  const files = store.files.filter(
+    f => f.folder === store.currentFolder
+  );
+
+  const file = files[index];
+
+  if (!file) return;
+
+  const cloned = {
+    ...file,
+    name: file.name + " Copy",
+    date: new Date().toLocaleDateString()
+  };
+
+  store.files.push(cloned);
+
+  saveStore(store);
+
+  renderFileList();
+
+  alert("File cloned successfully");
+
+}
+
+function downloadFile(index) {
+
+  const store = getStore();
+
+  const files = store.files.filter(
+    f => f.folder === store.currentFolder
+  );
+
+  const file = files[index];
+
+  if (!file) return;
+
+  const content = `
+FILE DETAILS
+
+Name: ${file.name}
+Type: ${file.type}
+Size: ${file.size}
+Date: ${file.date}
+Folder: ${file.folder}
+`;
+
+  const blob = new Blob([content], {
+    type: "text/plain"
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download = `${file.name}.txt`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+function printFile(index) {
+
+  const store = getStore();
+
+  const files = store.files.filter(
+    f => f.folder === store.currentFolder
+  );
+
+  const file = files[index];
+
+  if (!file) return;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>File Details</title>
+    </head>
+    <body style="font-family: Arial; padding: 20px;">
+
+      <h2>📄 File Details</h2>
+
+      <p><strong>Name:</strong> ${file.name}</p>
+
+      <p><strong>Type:</strong> ${file.type}</p>
+
+      <p><strong>Size:</strong> ${file.size}</p>
+
+      <p><strong>Date:</strong> ${file.date}</p>
+
+      <p><strong>Folder:</strong> ${file.folder}</p>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+
+}
 function viewFile(index) {
   const store = getStore();
   const files = store.files.filter(f => f.folder === store.currentFolder);
@@ -100000,38 +101497,227 @@ function moveToRecycle(item, type, originalFolder = "Home") {
 }
 
 function renderRecycleBin() {
+
   const tbody = document.getElementById("recycleList");
+
   const emptyState = document.getElementById("recycleEmpty");
+
   const recycle = getRecycleBin();
 
   if (!tbody) return;
 
   if (recycle.length === 0) {
+
     tbody.innerHTML = "";
-    if (emptyState) emptyState.classList.remove("hidden");
+
+    if (emptyState) {
+      emptyState.classList.remove("hidden");
+    }
+
     return;
+
   }
 
-  if (emptyState) emptyState.classList.add("hidden");
+  if (emptyState) {
+    emptyState.classList.add("hidden");
+  }
 
   tbody.innerHTML = recycle.map((r, i) => `
+
     <tr>
-      <td class="border p-2 font-medium">${r.name}</td>
-      <td class="border p-2">${r.type}</td>
-      <td class="border p-2">${r.originalFolder || "-"}</td>
-      <td class="border p-2">${r.deletedOn}</td>
+
+      <td class="border p-2 font-medium">
+        ${r.name}
+      </td>
+
+      <td class="border p-2">
+        ${r.type}
+      </td>
+
+      <td class="border p-2">
+        ${r.originalFolder || "-"}
+      </td>
+
+      <td class="border p-2">
+        ${r.deletedOn}
+      </td>
+
       <td class="border p-2 text-center space-x-1">
+
         <button onclick="restoreItem(${i})"
           class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">
           Restore
         </button>
+
         <button onclick="deletePermanently(${i})"
           class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">
           Delete
         </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleRecycleMenu(${i})"
+            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            More ▾
+          </button>
+
+          <div id="recycle-menu-${i}"
+            class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneRecycleItem(${i})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadRecycleItem(${i})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Download
+            </button>
+
+            <button onclick="printRecycleItem(${i})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+          </div>
+
+        </div>
+
       </td>
+
     </tr>
+
   `).join("");
+
+}
+
+function toggleRecycleMenu(index) {
+
+  document.querySelectorAll("[id^='recycle-menu-']").forEach(menu => {
+
+    if (menu.id !== `recycle-menu-${index}`) {
+
+      menu.classList.add("hidden");
+
+    }
+
+  });
+
+  document
+    .getElementById(`recycle-menu-${index}`)
+    .classList.toggle("hidden");
+
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='recycle-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function cloneRecycleItem(index) {
+
+  const recycle = getRecycleBin();
+
+  const item = recycle[index];
+
+  if (!item) return;
+
+  const cloned = {
+    ...item,
+    name: item.name + " Copy",
+    deletedOn: new Date().toLocaleString()
+  };
+
+  recycle.push(cloned);
+
+  localStorage.setItem(
+    "recycleBin",
+    JSON.stringify(recycle)
+  );
+
+  renderRecycleBin();
+
+  alert("Recycle item cloned successfully");
+
+}
+
+function downloadRecycleItem(index) {
+
+  const recycle = getRecycleBin();
+
+  const item = recycle[index];
+
+  if (!item) return;
+
+  const content = `
+RECYCLE BIN ITEM
+
+Name: ${item.name}
+Type: ${item.type}
+Original Folder: ${item.originalFolder || "-"}
+Deleted On: ${item.deletedOn}
+`;
+
+  const blob = new Blob([content], {
+    type: "text/plain"
+  });
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download = `${item.name}.txt`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+function printRecycleItem(index) {
+
+  const recycle = getRecycleBin();
+
+  const item = recycle[index];
+
+  if (!item) return;
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Recycle Bin Item</title>
+    </head>
+    <body style="font-family: Arial; padding: 20px;">
+
+      <h2>🗑️ Recycle Bin Item</h2>
+
+      <p><strong>Name:</strong> ${item.name}</p>
+
+      <p><strong>Type:</strong> ${item.type}</p>
+
+      <p><strong>Original Folder:</strong> ${item.originalFolder || "-"}</p>
+
+      <p><strong>Deleted On:</strong> ${item.deletedOn}</p>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+
 }
 
 function restoreItem(index) {
