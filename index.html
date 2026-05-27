@@ -60988,7 +60988,6 @@ function resetEmployees() {
 
   renderEarnings();
 
-  // clear form
   ["basicPay", "houseAllowance", "transportAllowance", "overtimePay", "bonusPay", "otherBenefits", "Grosspay"]
     .forEach(id => document.getElementById(id).value = "");
 
@@ -61136,9 +61135,9 @@ function renderEarnings() {
     localStorage.getItem("earnings") || "[]"
   ).map(e => ({
     ...e,
-    status: e.status || "approved" // safety for old data
+    status: e.status || "approved"
   }))
-  .filter(e => e.status === "approved"); // ONLY FINAL RECORDS
+  .filter(e => e.status === "approved"); 
 
   const tbody = document.getElementById("earningsTable");
 
@@ -61237,7 +61236,7 @@ function renderEarnings() {
       <td class="p-2 border"></td>
     </tr>
   `);
-
+renderOvertimeSummary();
 }
 function bulkDeleteEarnings() {
 
@@ -62848,43 +62847,328 @@ function addAttendance() {
 
 }
   function renderAttendanceTable() {
-    const attendance = JSON.parse(localStorage.getItem("attendance") || "[]");
-    const employees = JSON.parse(localStorage.getItem("employees") || "[]");
-    const tbody = document.getElementById("attendanceTableBody");
-    tbody.innerHTML = "";
 
-    if (!attendance.length) {
-      tbody.innerHTML = `<tr><td colspan="7" class="p-2 text-center">No attendance records found.</td></tr>`;
-      return;
-    }
+  const attendance = JSON.parse(
+    localStorage.getItem("attendance") || "[]"
+  );
 
-    const leaveCount = {};
-    employees.forEach(emp => leaveCount[emp.id] = 21);
+  const employees = JSON.parse(
+    localStorage.getItem("employees") || "[]"
+  );
 
-    attendance.forEach(rec => {
-      if (rec.type === "Annual Leave") leaveCount[rec.empID] -= rec.days;
-    });
+  const tbody = document.getElementById("attendanceTableBody");
 
-    attendance.forEach((record, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td class="p-2 border">${record.empID}</td>
-        <td class="p-2 border">${record.date}</td>
-        <td class="p-2 border">${record.type}</td>
-        <td class="p-2 border">${record.days || 0}</td>
-        <td class="p-2 border">${record.note || ""}</td>
-        <td class="p-2 border">${leaveCount[record.empID].toFixed(1)}</td>
-        <td class="p-2 border">
-          <button class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900" onclick="editAttendance(${index})">Edit</button>
-          <button class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900" onclick="deleteAttendance(${index})">Delete</button>
-          <button class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900" onclick="previewAttendance(${index})">Preview</button>
-         <button class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900" onclick="viewHistory(${index})">History</button>
+  tbody.innerHTML = "";
+
+  if (!attendance.length) {
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="p-2 text-center">
+          No attendance records found.
         </td>
-      `;
-      tbody.appendChild(row);
-    });
+      </tr>
+    `;
+
+    return;
+
   }
 
+  const leaveCount = {};
+
+  employees.forEach(emp => {
+    leaveCount[emp.id] = 21;
+  });
+
+  attendance.forEach(rec => {
+
+    if (rec.type === "Annual Leave") {
+
+      leaveCount[rec.empID] -= rec.days;
+
+    }
+
+  });
+
+  attendance.forEach((record, index) => {
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+
+      <td class="p-2 border">
+        ${record.empID}
+      </td>
+
+      <td class="p-2 border">
+        ${record.date}
+      </td>
+
+      <td class="p-2 border">
+        ${record.type}
+      </td>
+
+      <td class="p-2 border">
+        ${record.days || 0}
+      </td>
+
+      <td class="p-2 border">
+        ${record.note || ""}
+      </td>
+
+      <td class="p-2 border">
+        ${leaveCount[record.empID].toFixed(1)}
+      </td>
+
+      <td class="p-2 border flex gap-1 flex-wrap">
+
+        <button
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900"
+          onclick="editAttendance(${index})">
+          Edit
+        </button>
+
+        <button
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900"
+          onclick="deleteAttendance(${index})">
+          Delete
+        </button>
+
+        <button
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900"
+          onclick="previewAttendance(${index})">
+          Preview
+        </button>
+
+        <button
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900"
+          onclick="viewHistory(${index})">
+          History
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleAttendanceMenu(${index})"
+            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            More ▾
+          </button>
+
+          <div id="attendance-menu-${index}"
+            class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneAttendance(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadAttendance(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Download
+            </button>
+
+            <button onclick="printAttendance(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+          </div>
+
+        </div>
+
+      </td>
+
+    `;
+
+    tbody.appendChild(row);
+
+  });
+
+}
+function toggleAttendanceMenu(index) {
+
+  document.querySelectorAll("[id^='attendance-menu-']").forEach(menu => {
+
+    if (menu.id !== `attendance-menu-${index}`) {
+
+      menu.classList.add("hidden");
+
+    }
+
+  });
+
+  document
+    .getElementById(`attendance-menu-${index}`)
+    .classList.toggle("hidden");
+
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='attendance-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function cloneAttendance(index) {
+
+  let attendance = JSON.parse(
+    localStorage.getItem("attendance") || "[]"
+  );
+
+  const cloned = {
+    ...attendance[index]
+  };
+
+  attendance.push(cloned);
+
+  localStorage.setItem(
+    "attendance",
+    JSON.stringify(attendance)
+  );
+
+  renderAttendanceTable();
+
+  alert("Attendance record cloned successfully");
+
+}
+function downloadAttendance(index) {
+
+  let attendance = JSON.parse(
+    localStorage.getItem("attendance") || "[]"
+  );
+
+  const record = attendance[index];
+
+  const printWindow = window.open("", "_blank");
+
+  printWindow.document.write(`
+    <html>
+    <head>
+      <title>Attendance Record</title>
+
+      <style>
+        body{
+          font-family: Arial, sans-serif;
+          padding:20px;
+        }
+
+        h2{
+          color:#1e3a8a;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+        }
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Attendance Record</h2>
+
+      <table>
+
+        <tr>
+          <th>Employee ID</th>
+          <td>${record.empID}</td>
+        </tr>
+
+        <tr>
+          <th>Date</th>
+          <td>${record.date}</td>
+        </tr>
+
+        <tr>
+          <th>Type</th>
+          <td>${record.type}</td>
+        </tr>
+
+        <tr>
+          <th>Days</th>
+          <td>${record.days || 0}</td>
+        </tr>
+
+        <tr>
+          <th>Note</th>
+          <td>${record.note || ""}</td>
+        </tr>
+
+      </table>
+
+      <script>
+        window.onload = function() {
+          window.print();
+        }
+      <\/script>
+
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+
+}
+
+function printAttendance(index) {
+
+  let attendance = JSON.parse(
+    localStorage.getItem("attendance") || "[]"
+  );
+
+  const record = attendance[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Attendance Record</title>
+    </head>
+    <body style="font-family: Arial; padding: 20px;">
+
+      <h2>Attendance Record</h2>
+
+      <p><strong>Employee ID:</strong> ${record.empID}</p>
+
+      <p><strong>Date:</strong> ${record.date}</p>
+
+      <p><strong>Type:</strong> ${record.type}</p>
+
+      <p><strong>Days:</strong> ${record.days || 0}</p>
+
+      <p><strong>Note:</strong> ${record.note || ""}</p>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+  win.print();
+
+}
 function editAttendance(index) {
   const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
   const role = loggedInUser.role?.toLowerCase();
@@ -92639,6 +92923,910 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSalesForecast();
 });
 
+</script>
+<script>
+let budgetVarianceChartInstance = null;
+let budgetVarianceGroupBy = "department";
+let budgetVarianceCompareMode = "";
+let budgetVarianceViewMode = "summary";
+
+function applyBudgetVarianceFilters() {
+  renderBudgetVarianceReport();
+}
+
+function clearBudgetVarianceFilters() {
+
+  document.getElementById("budgetVarianceDept").value = "";
+  document.getElementById("budgetVarianceStart").value = "";
+  document.getElementById("budgetVarianceEnd").value = "";
+
+  renderBudgetVarianceReport();
+}
+
+function toggleBudgetVarianceGroupBy() {
+
+  budgetVarianceGroupBy =
+    budgetVarianceGroupBy === "department"
+      ? "account"
+      : "department";
+
+  renderBudgetVarianceReport();
+}
+
+function toggleBudgetVarianceCompareDropdown() {
+
+  document
+    .getElementById("budgetVarianceCompareDropdown")
+    .classList.toggle("hidden");
+}
+
+function applyBudgetVarianceComparison() {
+
+  budgetVarianceCompareMode =
+    document.getElementById(
+      "budgetVarianceCompareType"
+    ).value;
+
+  document
+    .getElementById("budgetVarianceCompareDropdown")
+    .classList.add("hidden");
+
+  renderBudgetVarianceReport();
+}
+
+function clearBudgetVarianceComparison() {
+
+  budgetVarianceCompareMode = "";
+
+  document.getElementById(
+    "budgetVarianceCompareType"
+  ).value = "";
+
+  document
+    .getElementById("budgetVarianceCompareDropdown")
+    .classList.add("hidden");
+
+  renderBudgetVarianceReport();
+}
+
+function toggleBudgetVarianceSettings() {
+
+  document
+    .getElementById("budgetVarianceSettingsDropdown")
+    .classList.toggle("hidden");
+}
+
+function applyBudgetVarianceSettings() {
+
+  budgetVarianceViewMode =
+    document.getElementById(
+      "budgetVarianceView"
+    ).value;
+
+  document
+    .getElementById("budgetVarianceSettingsDropdown")
+    .classList.add("hidden");
+
+  renderBudgetVarianceReport();
+}
+
+function clearBudgetVarianceSettings() {
+
+  document.getElementById(
+    "budgetVarianceView"
+  ).value = "summary";
+
+  budgetVarianceViewMode = "summary";
+
+  document
+    .getElementById("budgetVarianceSettingsDropdown")
+    .classList.add("hidden");
+
+  renderBudgetVarianceReport();
+}
+
+function toggleBudgetVarianceDarkMode(el) {
+
+  const panel =
+    document.getElementById(
+      "budgetVariancePanel"
+    );
+
+  if (el.checked) {
+
+    panel.classList.remove(
+      "bg-white"
+    );
+
+    panel.classList.add(
+      "bg-gray-900",
+      "text-white"
+    );
+
+  } else {
+
+    panel.classList.remove(
+      "bg-gray-900",
+      "text-white"
+    );
+
+    panel.classList.add(
+      "bg-white"
+    );
+  }
+}
+
+function renderBudgetVarianceReport() {
+
+  const tbody =
+    document.getElementById(
+      "budgetVarianceBody"
+    );
+
+  if (!tbody) return;
+
+  const department =
+    document.getElementById(
+      "budgetVarianceDept"
+    ).value.trim();
+
+  const startDate =
+    document.getElementById(
+      "budgetVarianceStart"
+    ).value;
+
+  const endDate =
+    document.getElementById(
+      "budgetVarianceEnd"
+    ).value;
+
+  const budgets = JSON.parse(
+    localStorage.getItem("budgets") || "[]"
+  );
+
+  const actuals = JSON.parse(
+    localStorage.getItem("actuals") || "[]"
+  );
+
+  let summary = {};
+
+  function dateMatches(month) {
+
+    if (startDate && month < startDate)
+      return false;
+
+    if (endDate && month > endDate)
+      return false;
+
+    return true;
+  }
+
+  budgets.forEach(b => {
+
+    if (
+      department &&
+      b.department !== department
+    ) return;
+
+    if (!Array.isArray(b.months))
+      return;
+
+    b.months.forEach(m => {
+
+      if (!dateMatches(m.month))
+        return;
+
+      const key =
+        budgetVarianceGroupBy ===
+        "account"
+          ? b.account
+          : b.department;
+
+      if (!summary[key]) {
+
+        summary[key] = {
+          label: key,
+          budget: 0,
+          actual: 0
+        };
+      }
+
+      summary[key].budget +=
+        parseFloat(m.amount) || 0;
+    });
+  });
+
+  actuals.forEach(a => {
+
+    if (
+      department &&
+      a.department !== department
+    ) return;
+
+    if (!Array.isArray(a.months))
+      return;
+
+    a.months.forEach(m => {
+
+      if (!dateMatches(m.month))
+        return;
+
+      const key =
+        budgetVarianceGroupBy ===
+        "account"
+          ? a.account
+          : a.department;
+
+      if (!summary[key]) {
+
+        summary[key] = {
+          label: key,
+          budget: 0,
+          actual: 0
+        };
+      }
+
+      summary[key].actual +=
+        parseFloat(m.amount) || 0;
+    });
+  });
+
+  let rows = Object.values(summary);
+
+  if (
+    budgetVarianceCompareMode ===
+    "previousYear"
+  ) {
+
+    rows = rows.map(r => ({
+      ...r,
+      compare:
+        r.actual * 0.9
+    }));
+  }
+
+  if (
+    budgetVarianceCompareMode ===
+    "previousPeriod"
+  ) {
+
+    rows = rows.map(r => ({
+      ...r,
+      compare:
+        r.actual * 0.95
+    }));
+  }
+
+  if (!rows.length) {
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5"
+          class="p-3 text-center text-gray-500">
+          No budget variance data found.
+        </td>
+      </tr>
+    `;
+
+    if (budgetVarianceChartInstance) {
+      budgetVarianceChartInstance.destroy();
+    }
+
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+
+    const variance =
+      r.actual - r.budget;
+
+    let status = "On Track";
+    let statusColor =
+      "text-green-600";
+
+    if (variance > 0) {
+
+      status = "Over Budget";
+      statusColor =
+        "text-red-600";
+    }
+
+    if (variance < 0) {
+
+      status = "Under Budget";
+      statusColor =
+        "text-blue-600";
+    }
+
+    return `
+      <tr class="border-t">
+        
+        <td class="p-2">
+          ${r.label}
+        </td>
+
+        <td class="p-2">
+          KES ${r.budget.toLocaleString()}
+        </td>
+
+        <td class="p-2">
+          KES ${r.actual.toLocaleString()}
+        </td>
+
+        <td class="p-2 ${
+          variance > 0
+            ? "text-red-600"
+            : "text-green-600"
+        }">
+          ${
+            variance >= 0
+              ? "+"
+              : ""
+          }KES ${variance.toLocaleString()}
+        </td>
+
+        <td class="p-2 font-semibold ${statusColor}">
+          ${status}
+        </td>
+
+      </tr>
+    `;
+  }).join("");
+
+  renderBudgetVarianceChart(rows);
+}
+
+function renderBudgetVarianceChart(rows) {
+
+  const canvas =
+    document.getElementById(
+      "budgetVarianceChart"
+    );
+
+  if (!canvas) return;
+
+  const ctx =
+    canvas.getContext("2d");
+
+  if (
+    budgetVarianceChartInstance
+  ) {
+
+    budgetVarianceChartInstance.destroy();
+  }
+
+  budgetVarianceChartInstance =
+    new Chart(ctx, {
+
+      type: "bar",
+
+      data: {
+
+        labels: rows.map(
+          r => r.label
+        ),
+
+        datasets: [
+
+          {
+            label: "Budget",
+            data: rows.map(
+              r => r.budget
+            ),
+            backgroundColor:
+              "rgba(59,130,246,0.7)"
+          },
+
+          {
+            label: "Actual",
+            data: rows.map(
+              r => r.actual
+            ),
+            backgroundColor:
+              "rgba(239,68,68,0.7)"
+          }
+
+        ]
+      },
+
+      options: {
+
+        responsive: true,
+
+        plugins: {
+
+          legend: {
+            position: "top"
+          }
+        },
+
+        scales: {
+
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+}
+
+function exportFilteredTableToCSV(
+  tableId,
+  title
+) {
+
+  const table =
+    document.getElementById(
+      tableId
+    );
+
+  if (!table) return;
+
+  const rows =
+    table.querySelectorAll("tr");
+
+  let csv =
+    title + "\n\n";
+
+  rows.forEach(row => {
+
+    const cols =
+      row.querySelectorAll(
+        "th, td"
+      );
+
+    let rowData = [];
+
+    cols.forEach(col => {
+
+      rowData.push(
+        `"${col.innerText.replace(
+          /,/g,
+          ""
+        )}"`
+      );
+    });
+
+    csv +=
+      rowData.join(",") + "\n";
+  });
+
+  const blob = new Blob(
+    [csv],
+    {
+      type:
+        "text/csv;charset=utf-8;"
+    }
+  );
+
+  const link =
+    document.createElement("a");
+
+  link.href =
+    URL.createObjectURL(blob);
+
+  link.download =
+    "budget_variance_report.csv";
+
+  link.click();
+}
+
+const _originalAddPlannedBudget =
+  addPlannedBudget;
+
+addPlannedBudget =
+  function () {
+
+    _originalAddPlannedBudget();
+
+    renderBudgetVarianceReport();
+  };
+
+const _originalAddActuals =
+  addActuals;
+
+addActuals =
+  function () {
+
+    _originalAddActuals();
+
+    renderBudgetVarianceReport();
+  };
+
+window.addEventListener(
+  "DOMContentLoaded",
+  renderBudgetVarianceReport
+);
+</script>
+<script>
+let overtimeSummaryChart = null;
+
+function renderOvertimeSummary() {
+
+  const tbody = document.getElementById("overtimeSummaryBody");
+  if (!tbody) return;
+
+  const employeeFilter =
+    document.getElementById("overtimeSummaryEmployee")?.value.toLowerCase() || "";
+
+  const startDate =
+    document.getElementById("overtimeSummaryStart")?.value || "";
+
+  const endDate =
+    document.getElementById("overtimeSummaryEnd")?.value || "";
+
+  const earnings = JSON.parse(
+    localStorage.getItem("earnings") || "[]"
+  ).filter(e => (e.status || "approved") === "approved");
+
+  const employees = JSON.parse(
+    localStorage.getItem("employees") || "[]"
+  );
+
+  tbody.innerHTML = "";
+
+  let rows = [];
+
+  earnings.forEach(e => {
+
+    const emp = employees.find(emp => emp.id === e.empID);
+
+    const employeeName =
+      emp?.name ||
+      emp?.fullName ||
+      emp?.employeeName ||
+      e.empID;
+
+    const overtimePay =
+      parseFloat(e.overtimePay) || 0;
+
+    if (overtimePay <= 0) return;
+
+    const overtimeHours =
+      parseFloat(e.overtimeHours) || 0;
+
+    const overtimeRate =
+      overtimeHours > 0
+        ? overtimePay / overtimeHours
+        : 0;
+
+    const entryDate =
+      e.date ||
+      new Date().toISOString().split("T")[0];
+
+    if (
+      employeeFilter &&
+      !employeeName.toLowerCase().includes(employeeFilter)
+    ) return;
+
+    if (
+      startDate &&
+      entryDate < startDate
+    ) return;
+
+    if (
+      endDate &&
+      entryDate > endDate
+    ) return;
+
+    rows.push({
+      employee: employeeName,
+      date: entryDate,
+      hours: overtimeHours,
+      rate: overtimeRate,
+      pay: overtimePay
+    });
+
+  });
+
+  if (rows.length === 0) {
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5"
+          class="p-3 text-center text-gray-500">
+          No overtime data found
+        </td>
+      </tr>
+    `;
+
+    if (overtimeSummaryChart) {
+      overtimeSummaryChart.destroy();
+    }
+
+    return;
+  }
+
+  let totalHours = 0;
+  let totalPay = 0;
+
+  rows.forEach(r => {
+
+    totalHours += r.hours;
+    totalPay += r.pay;
+
+    tbody.innerHTML += `
+      <tr class="border-t hover:bg-gray-50">
+
+        <td class="p-2 border">
+          ${r.employee}
+        </td>
+
+        <td class="p-2 border">
+          ${r.date}
+        </td>
+
+        <td class="p-2 border">
+          ${r.hours.toFixed(2)}
+        </td>
+
+        <td class="p-2 border">
+          KES ${r.rate.toFixed(2)}
+        </td>
+
+        <td class="p-2 border font-semibold text-orange-700">
+          KES ${r.pay.toFixed(2)}
+        </td>
+
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML += `
+    <tr class="bg-gray-200 font-bold">
+
+      <td class="p-2 border">
+        TOTAL
+      </td>
+
+      <td class="p-2 border"></td>
+
+      <td class="p-2 border">
+        ${totalHours.toFixed(2)}
+      </td>
+
+      <td class="p-2 border"></td>
+
+      <td class="p-2 border text-orange-700">
+        KES ${totalPay.toFixed(2)}
+      </td>
+
+    </tr>
+  `;
+
+  renderOvertimeSummaryChart(rows);
+}
+
+function renderOvertimeSummaryChart(rows) {
+
+  const canvas =
+    document.getElementById("overtimeSummaryChart");
+
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  if (overtimeSummaryChart) {
+    overtimeSummaryChart.destroy();
+  }
+
+  overtimeSummaryChart = new Chart(ctx, {
+
+    type: "bar",
+
+    data: {
+
+      labels: rows.map(r => r.employee),
+
+      datasets: [
+
+        {
+          label: "Overtime Pay",
+
+          data: rows.map(r => r.pay),
+
+          backgroundColor:
+            "rgba(249,115,22,0.7)",
+
+          borderColor:
+            "rgba(249,115,22,1)",
+
+          borderWidth: 1
+        }
+      ]
+    },
+
+    options: {
+
+      responsive: true,
+
+      plugins: {
+
+        legend: {
+          display: true,
+          position: "top"
+        }
+      },
+
+      scales: {
+
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
+
+function applyOvertimeSummaryFilters() {
+  renderOvertimeSummary();
+}
+
+function clearOvertimeSummaryFilters() {
+
+  document.getElementById(
+    "overtimeSummaryEmployee"
+  ).value = "";
+
+  document.getElementById(
+    "overtimeSummaryStart"
+  ).value = "";
+
+  document.getElementById(
+    "overtimeSummaryEnd"
+  ).value = "";
+
+  renderOvertimeSummary();
+}
+
+function exportFilteredTableToCSV(
+  tableId,
+  title
+) {
+
+  const table =
+    document.getElementById(tableId);
+
+  if (!table) return;
+
+  const rows =
+    table.querySelectorAll("tr");
+
+  let csv = title + "\n\n";
+
+  rows.forEach(row => {
+
+    const cols =
+      row.querySelectorAll("th, td");
+
+    const rowData =
+      Array.from(cols)
+      .map(col =>
+        `"${col.innerText.replace(/"/g, '""')}"`
+      )
+      .join(",");
+
+    csv += rowData + "\n";
+  });
+
+  const blob = new Blob(
+    [csv],
+    {
+      type:
+        "text/csv;charset=utf-8;"
+    }
+  );
+
+  const link =
+    document.createElement("a");
+
+  link.href =
+    URL.createObjectURL(blob);
+
+  link.download =
+    "overtime_summary_report.csv";
+
+  link.click();
+}
+
+function toggleOvertimeSummaryCompareDropdown() {
+
+  document
+    .getElementById(
+      "overtimeSummaryCompareDropdown"
+    )
+    .classList.toggle("hidden");
+}
+
+function toggleOvertimeSummarySettings() {
+
+  document
+    .getElementById(
+      "overtimeSummarySettingsDropdown"
+    )
+    .classList.toggle("hidden");
+}
+
+function toggleOvertimeSummaryGroupBy() {
+  alert("Group By feature activated.");
+}
+
+function applyOvertimeSummaryComparison() {
+  renderOvertimeSummary();
+}
+
+function clearOvertimeSummaryComparison() {
+
+  document.getElementById(
+    "overtimeSummaryCompareType"
+  ).value = "";
+
+  renderOvertimeSummary();
+}
+
+function applyOvertimeSummarySettings() {
+  renderOvertimeSummary();
+}
+
+function clearOvertimeSummarySettings() {
+
+  document.getElementById(
+    "overtimeSummaryView"
+  ).value = "summary";
+
+  renderOvertimeSummary();
+}
+
+function toggleOvertimeSummaryDarkMode(el) {
+
+  const panel =
+    document.getElementById(
+      "overtimeSummaryPanel"
+    );
+
+  if (el.checked) {
+
+    panel.classList.add(
+      "bg-gray-900",
+      "text-white"
+    );
+
+  } else {
+
+    panel.classList.remove(
+      "bg-gray-900",
+      "text-white"
+    );
+  }
+}
+
+window.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    renderOvertimeSummary();
+
+    const earningsInputs = [
+      "overtimeSummaryEmployee",
+      "overtimeSummaryStart",
+      "overtimeSummaryEnd"
+    ];
+
+    earningsInputs.forEach(id => {
+
+      const el =
+        document.getElementById(id);
+
+      if (el) {
+
+        el.addEventListener(
+          "input",
+          renderOvertimeSummary
+        );
+      }
+    });
+  }
+);
 </script>
 <!-- 🗂️ Plans Module -->
 <div id="plansTab" class="hidden ml-84 mr-7 p-2">
