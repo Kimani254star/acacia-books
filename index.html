@@ -103059,5 +103059,146 @@ function toggleSubmenu(id) {
   }
 }
 </script>
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+function getSyncUser() {
+
+  let user =
+    JSON.parse(
+      localStorage.getItem("loggedInUser") || "{}"
+    );
+
+  return (
+    user.email ||
+    user.username ||
+    user.companyName ||
+    "guest"
+  ).replace(/[^a-zA-Z0-9]/g, "_");
+}
+
+async function uploadLocalStorage() {
+
+  const syncUser = getSyncUser();
+
+  const allData = {};
+
+  for (let i = 0; i < localStorage.length; i++) {
+
+    const key = localStorage.key(i);
+
+    if (
+      key.toLowerCase().includes("password") ||
+      key.toLowerCase().includes("token")
+    ) continue;
+
+    allData[key] = localStorage.getItem(key);
+  }
+
+  await setDoc(
+    doc(db, "syncData", syncUser),
+    {
+      updatedAt: Date.now(),
+      data: allData
+    }
+  );
+
+  console.log("☁️ Synced");
+}
+
+async function downloadLocalStorage() {
+
+  const syncUser = getSyncUser();
+
+  const ref =
+    doc(db, "syncData", syncUser);
+
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) return;
+
+  const cloudData =
+    snap.data().data || {};
+
+  Object.keys(cloudData).forEach(key => {
+
+    localStorage.setItem(
+      key,
+      cloudData[key]
+    );
+  });
+
+  console.log("⬇️ Downloaded");
+}
+
+async function realtimeSync() {
+
+  const syncUser = getSyncUser();
+
+  const ref =
+    doc(db, "syncData", syncUser);
+
+  onSnapshot(ref, (snap) => {
+
+    if (!snap.exists()) return;
+
+    const cloudData =
+      snap.data().data || {};
+
+    Object.keys(cloudData).forEach(key => {
+
+      localStorage.setItem(
+        key,
+        cloudData[key]
+      );
+    });
+
+    console.log("🔄 Updated");
+  });
+}
+
+window.addEventListener("load", async () => {
+
+  await downloadLocalStorage();
+
+  await realtimeSync();
+
+  setInterval(async () => {
+
+    await uploadLocalStorage();
+
+  }, 5000);
+
+});
+
+window.addEventListener("beforeunload", async () => {
+
+  await uploadLocalStorage();
+
+});
+
+</script>
 </body>
 </html>
