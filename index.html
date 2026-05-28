@@ -49647,23 +49647,49 @@ function addManualJournal() {
   updateManualTotals();
 }
 function renderManualJournals() {
-  const journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
-  const tbody = document.getElementById("manualJournalBody");
+
+  const journals = JSON.parse(
+    localStorage.getItem("manualJournals") || "[]"
+  );
+
+  const tbody =
+    document.getElementById("manualJournalBody");
 
   if (!tbody) return;
 
   tbody.innerHTML = "";
 
   journals.forEach((j, index) => {
-    const totalDebit = j.entries.reduce((sum, e) => sum + (e.debit || 0), 0);
-    const totalCredit = j.entries.reduce((sum, e) => sum + (e.credit || 0), 0);
 
-    const accountDisplay = j.entries.length === 1 ? j.entries[0].account : "Multiple";
+    const entries = Array.isArray(j.entries)
+      ? j.entries
+      : [];
+
+    const totalDebit = entries.reduce(
+      (sum, e) => sum + (Number(e.debit) || 0),
+      0
+    );
+
+    const totalCredit = entries.reduce(
+      (sum, e) => sum + (Number(e.credit) || 0),
+      0
+    );
+
+    const accountDisplay =
+      entries.length === 1
+        ? entries[0].account
+        : entries.length > 1
+        ? "Multiple"
+        : "";
 
     const row = `
+
       <tr class="border-t">
+
         <td class="p-2">
-          <input type="checkbox" class="journal-select" data-index="${index}">
+          <input type="checkbox"
+            class="journal-select"
+            data-index="${index}">
         </td>
 
         <td class="p-2">${j.date || ""}</td>
@@ -49684,40 +49710,47 @@ function renderManualJournals() {
 
         <td class="p-2 space-x-1 relative">
 
-          <button onclick="togglePreview(${index})"
-            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">
+          <button
+            onclick="togglePreview(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded">
             Preview
           </button>
 
-          <button onclick="editJournal(${index})"
-            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">
+          <button
+            onclick="editJournal(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded">
             Edit
           </button>
 
-          <button onclick="deleteJournal(${index})"
-            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">
+          <button
+            onclick="deleteJournal(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded">
             Delete
           </button>
 
-          <button onclick="toggleJournalMenu(${index})"
-            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">
+          <button
+            onclick="toggleJournalMenu(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded">
             More ▼
           </button>
 
           <div id="journalMenu-${index}"
             class="hidden absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg z-50">
 
-            <button onclick="cloneJournal(${index})"
+            <button
+              onclick="cloneJournal(${index})"
               class="block w-full text-left px-3 py-2 hover:bg-gray-100">
               📄 Clone
             </button>
 
-            <button onclick="downloadJournalPDF(${index})"
+            <button
+              onclick="downloadJournalPDF(${index})"
               class="block w-full text-left px-3 py-2 hover:bg-gray-100">
               ⬇ Download PDF
             </button>
 
-            <button onclick="printJournalPDF(${index})"
+            <button
+              onclick="printJournalPDF(${index})"
               class="block w-full text-left px-3 py-2 hover:bg-gray-100">
               🖨 Print PDF
             </button>
@@ -49725,43 +49758,82 @@ function renderManualJournals() {
           </div>
 
         </td>
+
       </tr>
 
       <tr id="preview-${index}" class="hidden">
+
         <td colspan="8" class="bg-gray-50">
+
           <table class="w-full border mt-2 text-sm">
+
             <thead class="bg-gray-200">
+
               <tr>
                 <th class="p-2 text-left">Account</th>
                 <th class="p-2 text-left">Description</th>
                 <th class="p-2 text-right">Debit</th>
                 <th class="p-2 text-right">Credit</th>
               </tr>
+
             </thead>
 
             <tbody>
-              ${j.entries.map(e => `
+
+              ${entries.map(e => `
+
                 <tr>
-                  <td class="p-1 border">${e.account}</td>
-                  <td class="p-1 border">${e.description || ""}</td>
-                  <td class="p-1 border text-right">${(e.debit || 0).toFixed(2)}</td>
-                  <td class="p-1 border text-right">${(e.credit || 0).toFixed(2)}</td>
+
+                  <td class="p-1 border">
+                    ${e.account || ""}
+                  </td>
+
+                  <td class="p-1 border">
+                    ${e.description || ""}
+                  </td>
+
+                  <td class="p-1 border text-right">
+                    ${(Number(e.debit) || 0).toFixed(2)}
+                  </td>
+
+                  <td class="p-1 border text-right">
+                    ${(Number(e.credit) || 0).toFixed(2)}
+                  </td>
+
                 </tr>
+
               `).join("")}
 
               <tr class="font-bold border-t">
-                <td colspan="2" class="p-2 text-right">Totals</td>
-                <td class="p-2 text-right">${totalDebit.toFixed(2)}</td>
-                <td class="p-2 text-right">${totalCredit.toFixed(2)}</td>
+
+                <td colspan="2"
+                  class="p-2 text-right">
+                  Totals
+                </td>
+
+                <td class="p-2 text-right">
+                  ${totalDebit.toFixed(2)}
+                </td>
+
+                <td class="p-2 text-right">
+                  ${totalCredit.toFixed(2)}
+                </td>
+
               </tr>
+
             </tbody>
+
           </table>
+
         </td>
+
       </tr>
     `;
 
     tbody.innerHTML += row;
+
   });
+
 }
 function toggleJournalMenu(index) {
   document.querySelectorAll('[id^="journalMenu-"]').forEach(menu => {
@@ -50356,7 +50428,225 @@ function resetRecurringForm() {
   addRecurringJournalRow();
   updateRecurringTotals();
 }
+function renderRecurringJournalList() {
 
+  const recurringList = JSON.parse(
+    localStorage.getItem("recurringJournals") || "[]"
+  );
+
+  const tbody =
+    document.getElementById("recurringJournalList");
+
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  recurringList.forEach((r, index) => {
+
+    const lines = Array.isArray(r.lines)
+      ? r.lines
+      : [];
+
+    const totalDebit = lines.reduce(
+      (sum, l) => sum + (Number(l.debit) || 0),
+      0
+    );
+
+    const totalCredit = lines.reduce(
+      (sum, l) => sum + (Number(l.credit) || 0),
+      0
+    );
+
+    const accountDisplay =
+      lines.length === 1
+        ? lines[0].account
+        : lines.length > 1
+        ? "Multiple"
+        : "";
+
+    const row = `
+
+      <tr class="border-t">
+
+        <td class="p-2">
+          <input type="checkbox"
+            class="recurring-select"
+            data-index="${index}">
+        </td>
+
+        <td class="p-2">
+          ${r.startDate || ""}
+        </td>
+
+        <td class="p-2">
+          ${r.description || ""}
+        </td>
+
+        <td class="p-2 capitalize">
+          ${r.frequency || ""}
+        </td>
+
+        <td class="p-2">
+          ${accountDisplay}
+        </td>
+
+        <td class="p-2 text-right text-green-700 font-semibold">
+          ${totalDebit.toFixed(2)}
+        </td>
+
+        <td class="p-2 text-right text-red-700 font-semibold">
+          ${totalCredit.toFixed(2)}
+        </td>
+
+        <td class="p-2">
+          ${r.postedBy || ""}
+        </td>
+
+        <td class="p-2 relative space-x-1">
+
+          <button
+            onclick="toggleRecurringPreview(${index})"
+            class="bg-blue-900 text-white px-2 py-1 rounded">
+            Preview
+          </button>
+
+          <button
+            onclick="editRecurring(${index})"
+            class="bg-blue-900 text-white px-2 py-1 rounded">
+            Edit
+          </button>
+
+          <button
+            onclick="deleteRecurring(${index})"
+            class="bg-blue-900 text-white px-2 py-1 rounded">
+            Delete
+          </button>
+
+          <button
+            onclick="toggleRecurringMenu(${index})"
+            class="bg-blue-900 text-white px-2 py-1 rounded">
+            More ▼
+          </button>
+
+          <div id="recurringMenu-${index}"
+            class="hidden absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg z-50">
+
+            <button
+              onclick="cloneRecurring(${index})"
+              class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+              📄 Clone
+            </button>
+
+            <button
+              onclick="downloadRecurringPDF(${index})"
+              class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+              ⬇ Download PDF
+            </button>
+
+            <button
+              onclick="printRecurringPDF(${index})"
+              class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+              🖨 Print PDF
+            </button>
+
+            <button
+              onclick="emailRecurring(${index})"
+              class="block w-full text-left px-3 py-2 hover:bg-gray-100">
+              ✉ Email
+            </button>
+
+          </div>
+
+        </td>
+
+      </tr>
+
+      <tr id="recurringPreview-${index}" class="hidden">
+
+        <td colspan="9" class="bg-gray-50">
+
+          <table class="w-full border mt-2 text-sm">
+
+            <thead class="bg-gray-200">
+
+              <tr>
+                <th class="p-2 text-left">
+                  Account
+                </th>
+
+                <th class="p-2 text-left">
+                  Description
+                </th>
+
+                <th class="p-2 text-right">
+                  Debit
+                </th>
+
+                <th class="p-2 text-right">
+                  Credit
+                </th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              ${lines.map(line => `
+
+                <tr>
+
+                  <td class="p-1 border">
+                    ${line.account || ""}
+                  </td>
+
+                  <td class="p-1 border">
+                    ${line.lineDesc || ""}
+                  </td>
+
+                  <td class="p-1 border text-right">
+                    ${(Number(line.debit) || 0).toFixed(2)}
+                  </td>
+
+                  <td class="p-1 border text-right">
+                    ${(Number(line.credit) || 0).toFixed(2)}
+                  </td>
+
+                </tr>
+
+              `).join("")}
+
+              <tr class="font-bold border-t">
+
+                <td colspan="2"
+                  class="p-2 text-right">
+                  Totals
+                </td>
+
+                <td class="p-2 text-right">
+                  ${totalDebit.toFixed(2)}
+                </td>
+
+                <td class="p-2 text-right">
+                  ${totalCredit.toFixed(2)}
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </td>
+
+      </tr>
+
+    `;
+
+    tbody.innerHTML += row;
+
+  });
+
+}
 function toggleRecurringMenu(index) {
   const menu = document.getElementById(`recurringMenu-${index}`);
   if (!menu) return;
@@ -94414,7 +94704,7 @@ window.addEventListener(
 <!-- plan Tracking -->
 <div id="planTrackingTab" class="hidden ml-84 mr-7 p-2">
   <h2 class="text-1xl font-bold mb-4 text-left">📊 Plan Tracking Dashboard</h2>
-<!-- 🔎 Plan Tracking Search -->
+
 <div class="relative mb-2 mt-2">
   <input 
     type="text" 
@@ -94424,7 +94714,6 @@ window.addEventListener(
     oninput="searchPlanTracking()"
   />
   
-  <!-- Search Icon -->
   <svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
     <circle cx="11" cy="11" r="8"></circle>
     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -94455,8 +94744,14 @@ window.addEventListener(
   <div class="space-y-4">
     
     <div>
-      <label class="block text-sm font-medium mb-1">Plan Title</label> <input id="trackPlanTitle" placeholder="e.g., Marketing Expansion" class="border p-2 rounded" style="width: 700px;">
-    </div>
+  <label class="block text-sm font-medium mb-1">Plan Title</label>
+
+  <select
+    id="trackPlanTitle"
+    class="border p-2 rounded"
+    style="width: 700px;"
+  ></select>
+</div>
    <div>
       <label class="block text-sm font-medium mb-1">Progress (%)</label> <input id="trackProgress" type="number" placeholder="e.g., 60" class="border p-2 rounded" style="width: 700px;">
     </div>
@@ -94807,28 +95102,379 @@ function renderPlans() {
 }
 
 function renderPlansTable() {
+
   const tbody = document.getElementById("plansTableBody");
+
   if (!tbody) return;
 
   tbody.innerHTML = plans
-    .map(
-      (p, index) => `
+    .map((p, index) => `
+
       <tr>
-        <td class="border p-2">${p.title}</td>
-        <td class="border p-2">${p.department}</td>
-        <td class="border p-2">${p.goalType}</td>
-        <td class="border p-2">${p.priority}</td>
-        <td class="border p-2">${p.startDate}</td>
-        <td class="border p-2">${p.endDate}</td>
-        <td class="border p-2">${p.target}</td>
-        <td class="border p-2">${p.status}</td>
-        <td class="border p-2 flex gap-2">
-          <button onclick="editPlan(${index})"class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Edit</button>
-          <button onclick="deletePlan(${index})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Delete</button>
+
+        <td class="border p-2">
+          ${p.title}
         </td>
-      </tr>`
-    )
+
+        <td class="border p-2">
+          ${p.department}
+        </td>
+
+        <td class="border p-2">
+          ${p.goalType}
+        </td>
+
+        <td class="border p-2">
+          ${p.priority}
+        </td>
+
+        <td class="border p-2">
+          ${p.startDate}
+        </td>
+
+        <td class="border p-2">
+          ${p.endDate}
+        </td>
+
+        <td class="border p-2">
+          ${p.target}
+        </td>
+
+        <td class="border p-2">
+          ${p.status}
+        </td>
+
+        <td class="border p-2 flex gap-2 flex-wrap">
+
+          <button onclick="editPlan(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+            Edit
+          </button>
+
+          <button onclick="deletePlan(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+            Delete
+          </button>
+
+          <button onclick="previewPlan(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+            Preview
+          </button>
+
+          <div class="relative inline-block">
+
+            <button onclick="togglePlanMenu(${index})"
+              class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+              More ▾
+            </button>
+
+            <div id="plan-menu-${index}"
+              class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+              <button onclick="clonePlan(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Clone
+              </button>
+
+              <button onclick="downloadPlan(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Download PDF
+              </button>
+
+              <button onclick="printPlan(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Print
+              </button>
+
+            </div>
+
+          </div>
+
+        </td>
+
+      </tr>
+
+    `)
     .join("");
+
+}
+function togglePlanMenu(index) {
+
+  document.querySelectorAll("[id^='plan-menu-']").forEach(menu => {
+
+    if (menu.id !== `plan-menu-${index}`) {
+
+      menu.classList.add("hidden");
+
+    }
+
+  });
+
+  document
+    .getElementById(`plan-menu-${index}`)
+    .classList.toggle("hidden");
+
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='plan-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function previewPlan(index) {
+
+  const p = plans[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Plan Preview</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Plan Preview</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${p.title}</td></tr>
+        <tr><th>Department</th><td>${p.department}</td></tr>
+        <tr><th>Goal Type</th><td>${p.goalType}</td></tr>
+        <tr><th>Priority</th><td>${p.priority}</td></tr>
+        <tr><th>Start Date</th><td>${p.startDate}</td></tr>
+        <tr><th>End Date</th><td>${p.endDate}</td></tr>
+        <tr><th>Target</th><td>${p.target}</td></tr>
+        <tr><th>Status</th><td>${p.status}</td></tr>
+
+      </table>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function clonePlan(index) {
+
+  const cloned = {
+    ...plans[index]
+  };
+
+  plans.push(cloned);
+
+  localStorage.setItem(
+    "plans",
+    JSON.stringify(plans)
+  );
+
+  renderPlansTable();
+
+  alert("Plan cloned successfully");
+
+}
+
+function downloadPlan(index) {
+
+  const p = plans[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Plan PDF</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Plan Report</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${p.title}</td></tr>
+        <tr><th>Department</th><td>${p.department}</td></tr>
+        <tr><th>Goal Type</th><td>${p.goalType}</td></tr>
+        <tr><th>Priority</th><td>${p.priority}</td></tr>
+        <tr><th>Start Date</th><td>${p.startDate}</td></tr>
+        <tr><th>End Date</th><td>${p.endDate}</td></tr>
+        <tr><th>Target</th><td>${p.target}</td></tr>
+        <tr><th>Status</th><td>${p.status}</td></tr>
+
+      </table>
+
+      <script>
+
+        window.onload = function(){
+
+          window.print();
+
+        }
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function printPlan(index) {
+
+  const p = plans[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Print Plan</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Plan Report</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${p.title}</td></tr>
+        <tr><th>Department</th><td>${p.department}</td></tr>
+        <tr><th>Goal Type</th><td>${p.goalType}</td></tr>
+        <tr><th>Priority</th><td>${p.priority}</td></tr>
+        <tr><th>Start Date</th><td>${p.startDate}</td></tr>
+        <tr><th>End Date</th><td>${p.endDate}</td></tr>
+        <tr><th>Target</th><td>${p.target}</td></tr>
+        <tr><th>Status</th><td>${p.status}</td></tr>
+
+      </table>
+
+      <script>
+
+        window.onload = function(){
+
+          window.print();
+
+        }
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
 }
 function renderProgress() {
   const container = document.getElementById("planProgressList");
@@ -94946,28 +95592,356 @@ function applyRevision() {
   renderRevisionHistoryTable(); 
   renderRevisionDropdown();     
 }
-
 function renderRevisionHistoryTable() {
+
   const tbody = document.getElementById("planReviewHistory");
+
   if (!tbody) return;
 
   tbody.innerHTML = planRevisions
     .map((r, index) => `
+
       <tr>
-        <td class="border p-2">${r.title}</td>
-        <td class="border p-2">${r.action}</td>
-        <td class="border p-2">${r.comment}</td>
-        <td class="border p-2">${r.date}</td>
-        <td class="border p-2 flex gap-2">
-        <button onclick="editRevision(${index})"class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700"> Edit </button>
-        <button onclick="deleteRevision(${index})"class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Delete </button>
-        <button onclick="downloadRevision(${index})"class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Download </button>
+
+        <td class="border p-2">
+          ${r.title}
         </td>
+
+        <td class="border p-2">
+          ${r.action}
+        </td>
+
+        <td class="border p-2">
+          ${r.comment}
+        </td>
+
+        <td class="border p-2">
+          ${r.date}
+        </td>
+
+        <td class="border p-2 flex gap-2 flex-wrap">
+
+          <button onclick="editRevision(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+            Edit
+          </button>
+
+          <button onclick="deleteRevision(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+            Delete
+          </button>
+
+          <button onclick="previewRevision(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+            Preview
+          </button>
+
+          <div class="relative inline-block">
+
+            <button onclick="toggleRevisionMenu(${index})"
+              class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+              More ▾
+            </button>
+
+            <div id="revision-menu-${index}"
+              class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+              <button onclick="cloneRevision(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Clone
+              </button>
+
+              <button onclick="downloadRevision(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Download PDF
+              </button>
+
+              <button onclick="printRevision(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Print
+              </button>
+
+            </div>
+
+          </div>
+
+        </td>
+
       </tr>
+
     `)
     .join("");
+
+}
+function toggleRevisionMenu(index) {
+
+  document.querySelectorAll("[id^='revision-menu-']").forEach(menu => {
+
+    if (menu.id !== `revision-menu-${index}`) {
+
+      menu.classList.add("hidden");
+
+    }
+
+  });
+
+  document
+    .getElementById(`revision-menu-${index}`)
+    .classList.toggle("hidden");
+
 }
 
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='revision-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function previewRevision(index) {
+
+  const r = planRevisions[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Revision Preview</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Revision Preview</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${r.title}</td></tr>
+        <tr><th>Action</th><td>${r.action}</td></tr>
+        <tr><th>Comment</th><td>${r.comment}</td></tr>
+        <tr><th>Date</th><td>${r.date}</td></tr>
+
+      </table>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function cloneRevision(index) {
+
+  const cloned = {
+    ...planRevisions[index]
+  };
+
+  planRevisions.push(cloned);
+
+  localStorage.setItem(
+    "planRevisions",
+    JSON.stringify(planRevisions)
+  );
+
+  renderRevisionHistoryTable();
+
+  alert("Revision cloned successfully");
+
+}
+
+function downloadRevision(index) {
+
+  const r = planRevisions[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Revision PDF</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Revision Report</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${r.title}</td></tr>
+        <tr><th>Action</th><td>${r.action}</td></tr>
+        <tr><th>Comment</th><td>${r.comment}</td></tr>
+        <tr><th>Date</th><td>${r.date}</td></tr>
+
+      </table>
+
+      <script>
+
+        window.onload = function(){
+
+          window.print();
+
+        }
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function printRevision(index) {
+
+  const r = planRevisions[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Print Revision</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Revision Report</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${r.title}</td></tr>
+        <tr><th>Action</th><td>${r.action}</td></tr>
+        <tr><th>Comment</th><td>${r.comment}</td></tr>
+        <tr><th>Date</th><td>${r.date}</td></tr>
+
+      </table>
+
+      <script>
+
+        window.onload = function(){
+
+          window.print();
+
+        }
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
 function deleteRevision(index) {
   if (!confirm("Delete this revision record?")) return;
 
@@ -95033,26 +96007,355 @@ function resetAddPlanButton() {
   btn.onclick = addPlan;
 }
 function renderProgressTable() {
+
   const tbody = document.getElementById("progressTableBody");
+
   if (!tbody) return;
 
   tbody.innerHTML = progressUpdates
     .map((p, index) => `
+
       <tr>
-        <td class="border p-2">${p.title}</td>
-        <td class="border p-2">${p.progress}%</td>
-        <td class="border p-2">${p.comment}</td>
-        <td class="border p-2">${p.date}</td>
-        <td class="border p-2 flex gap-2">
-          <button onclick="editProgress(${index})"class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Edit</button>
-          <button onclick="deleteProgress(${index})"class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Delete</button>
-          <button onclick="downloadProgress(${index})"class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Download</button>
+
+        <td class="border p-2">
+          ${p.title}
         </td>
+
+        <td class="border p-2">
+          ${p.progress}%
+        </td>
+
+        <td class="border p-2">
+          ${p.comment}
+        </td>
+
+        <td class="border p-2">
+          ${p.date}
+        </td>
+
+        <td class="border p-2 flex gap-2 flex-wrap">
+
+          <button onclick="editProgress(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+            Edit
+          </button>
+
+          <button onclick="deleteProgress(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+            Delete
+          </button>
+
+          <button onclick="previewProgress(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+            Preview
+          </button>
+
+          <div class="relative inline-block">
+
+            <button onclick="toggleProgressMenu(${index})"
+              class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+              More ▾
+            </button>
+
+            <div id="progress-menu-${index}"
+              class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+              <button onclick="cloneProgress(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Clone
+              </button>
+
+              <button onclick="downloadProgress(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Download PDF
+              </button>
+
+              <button onclick="printProgress(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Print
+              </button>
+
+            </div>
+
+          </div>
+
+        </td>
+
       </tr>
+
     `)
     .join("");
+
+}
+function toggleProgressMenu(index) {
+
+  document.querySelectorAll("[id^='progress-menu-']").forEach(menu => {
+
+    if (menu.id !== `progress-menu-${index}`) {
+
+      menu.classList.add("hidden");
+
+    }
+
+  });
+
+  document
+    .getElementById(`progress-menu-${index}`)
+    .classList.toggle("hidden");
+
 }
 
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='progress-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function previewProgress(index) {
+
+  const p = progressUpdates[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Progress Preview</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Progress Preview</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${p.title}</td></tr>
+        <tr><th>Progress</th><td>${p.progress}%</td></tr>
+        <tr><th>Comment</th><td>${p.comment}</td></tr>
+        <tr><th>Date</th><td>${p.date}</td></tr>
+
+      </table>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function cloneProgress(index) {
+
+  const cloned = {
+    ...progressUpdates[index]
+  };
+
+  progressUpdates.push(cloned);
+
+  localStorage.setItem(
+    "progressUpdates",
+    JSON.stringify(progressUpdates)
+  );
+
+  renderProgressTable();
+
+  alert("Progress record cloned successfully");
+
+}
+
+function downloadProgress(index) {
+
+  const p = progressUpdates[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Progress PDF</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Progress Report</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${p.title}</td></tr>
+        <tr><th>Progress</th><td>${p.progress}%</td></tr>
+        <tr><th>Comment</th><td>${p.comment}</td></tr>
+        <tr><th>Date</th><td>${p.date}</td></tr>
+
+      </table>
+
+      <script>
+
+        window.onload = function(){
+
+          window.print();
+
+        }
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function printProgress(index) {
+
+  const p = progressUpdates[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Print Progress</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Progress Report</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${p.title}</td></tr>
+        <tr><th>Progress</th><td>${p.progress}%</td></tr>
+        <tr><th>Comment</th><td>${p.comment}</td></tr>
+        <tr><th>Date</th><td>${p.date}</td></tr>
+
+      </table>
+
+      <script>
+
+        window.onload = function(){
+
+          window.print();
+
+        }
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
 function editProgress(index) {
   const p = progressUpdates[index];
   if (!p) return;
@@ -95200,22 +96503,356 @@ function getEmployeeNameByID(id) {
 }
 
 function renderOwnerships() {
+
   const tbody = document.getElementById("ownershipTableBody");
+
   if (!tbody) return;
 
   tbody.innerHTML = planOwnerships.map((o, index) => `
+
     <tr>
-      <td class="border p-2">${o.owner}</td>
-      <td class="border p-2">${o.team.join(", ")}</td>
-      <td class="border p-2">${o.status}</td>
-      <td class="border p-2">${o.date}</td>
-       <td class="border p-2">${o.status}</td> 
-      <td class="border p-2 flex gap-2">
-        <button onclick="editOwnership(${index})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Edit</button>
-        <button onclick="deleteOwnership(${index})" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">Delete</button>
+
+      <td class="border p-2">
+        ${o.owner}
       </td>
+
+      <td class="border p-2">
+        ${o.team.join(", ")}
+      </td>
+
+      <td class="border p-2">
+        ${o.status}
+      </td>
+
+      <td class="border p-2">
+        ${o.date}
+      </td>
+
+      <td class="border p-2">
+        ${o.status}
+      </td>
+
+      <td class="border p-2 flex gap-2 flex-wrap">
+
+        <button onclick="editOwnership(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+          Edit
+        </button>
+
+        <button onclick="deleteOwnership(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+          Delete
+        </button>
+
+        <button onclick="previewOwnership(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+          Preview
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleOwnershipMenu(${index})"
+            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            More ▾
+          </button>
+
+          <div id="ownership-menu-${index}"
+            class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneOwnership(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadOwnership(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Download PDF
+            </button>
+
+            <button onclick="printOwnership(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+          </div>
+
+        </div>
+
+      </td>
+
     </tr>
+
   `).join("");
+
+}
+function toggleOwnershipMenu(index) {
+
+  document.querySelectorAll("[id^='ownership-menu-']").forEach(menu => {
+
+    if (menu.id !== `ownership-menu-${index}`) {
+
+      menu.classList.add("hidden");
+
+    }
+
+  });
+
+  document
+    .getElementById(`ownership-menu-${index}`)
+    .classList.toggle("hidden");
+
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='ownership-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function previewOwnership(index) {
+
+  const o = planOwnerships[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Ownership Preview</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Ownership Preview</h2>
+
+      <table>
+
+        <tr><th>Owner</th><td>${o.owner}</td></tr>
+        <tr><th>Team</th><td>${o.team.join(", ")}</td></tr>
+        <tr><th>Status</th><td>${o.status}</td></tr>
+        <tr><th>Date</th><td>${o.date}</td></tr>
+
+      </table>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function cloneOwnership(index) {
+
+  const cloned = {
+    ...planOwnerships[index]
+  };
+
+  planOwnerships.push(cloned);
+
+  localStorage.setItem(
+    "planOwnerships",
+    JSON.stringify(planOwnerships)
+  );
+
+  renderOwnerships();
+
+  alert("Ownership cloned successfully");
+
+}
+
+function downloadOwnership(index) {
+
+  const o = planOwnerships[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Ownership PDF</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Ownership Report</h2>
+
+      <table>
+
+        <tr><th>Owner</th><td>${o.owner}</td></tr>
+        <tr><th>Team</th><td>${o.team.join(", ")}</td></tr>
+        <tr><th>Status</th><td>${o.status}</td></tr>
+        <tr><th>Date</th><td>${o.date}</td></tr>
+
+      </table>
+
+      <script>
+
+        window.onload = function(){
+
+          window.print();
+
+        }
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function printOwnership(index) {
+
+  const o = planOwnerships[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Print Ownership</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Ownership Report</h2>
+
+      <table>
+
+        <tr><th>Owner</th><td>${o.owner}</td></tr>
+        <tr><th>Team</th><td>${o.team.join(", ")}</td></tr>
+        <tr><th>Status</th><td>${o.status}</td></tr>
+        <tr><th>Date</th><td>${o.date}</td></tr>
+
+      </table>
+
+      <script>
+
+        window.onload = function(){
+
+          window.print();
+
+        }
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
 }
 
 function updateOwnershipDropdowns() {
@@ -95476,25 +97113,380 @@ function addProject() {
 }
 
 function renderProjectsTable() {
+
   const tbody = document.getElementById("projectsTableBody");
+
   if (!tbody) return;
 
   tbody.innerHTML = projects.map((p, index) => `
+
     <tr>
-      <td class="border p-2">${p.title}</td>
-      <td class="border p-2">${p.department}</td>
-      <td class="border p-2">${p.type}</td>
-      <td class="border p-2">${p.priority}</td>
-      <td class="border p-2">${p.budget}</td>
-      <td class="border p-2">${p.startDate}</td>
-      <td class="border p-2">${p.endDate}</td>
-      <td class="border p-2">${p.status}</td>
-      <td class="border p-2 flex gap-2">
-        <button onclick="editProject(${index})" class="bg-blue-900 text-white px-1 py-1 rounded">Edit</button>
-        <button onclick="deleteProject(${index})" class="bg-blue-900 text-white px-1 py-1 rounded">Delete</button>
+
+      <td class="border p-2">
+        ${p.title}
       </td>
+
+      <td class="border p-2">
+        ${p.department}
+      </td>
+
+      <td class="border p-2">
+        ${p.type}
+      </td>
+
+      <td class="border p-2">
+        ${p.priority}
+      </td>
+
+      <td class="border p-2">
+        ${p.budget}
+      </td>
+
+      <td class="border p-2">
+        ${p.startDate}
+      </td>
+
+      <td class="border p-2">
+        ${p.endDate}
+      </td>
+
+      <td class="border p-2">
+        ${p.status}
+      </td>
+
+      <td class="border p-2 flex gap-2 flex-wrap">
+
+        <button onclick="editProject(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+          Edit
+        </button>
+
+        <button onclick="deleteProject(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+          Delete
+        </button>
+
+        <button onclick="previewProject(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+          Preview
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="toggleProjectMenu(${index})"
+            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            More ▾
+          </button>
+
+          <div id="project-menu-${index}"
+            class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="cloneProject(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadProject(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Download PDF
+            </button>
+
+            <button onclick="printProject(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+          </div>
+
+        </div>
+
+      </td>
+
     </tr>
+
   `).join("");
+
+}
+function toggleProjectMenu(index) {
+
+  document.querySelectorAll("[id^='project-menu-']").forEach(menu => {
+
+    if (menu.id !== `project-menu-${index}`) {
+
+      menu.classList.add("hidden");
+
+    }
+
+  });
+
+  document
+    .getElementById(`project-menu-${index}`)
+    .classList.toggle("hidden");
+
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='project-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function previewProject(index) {
+
+  const p = projects[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Project Preview</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Project Preview</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${p.title}</td></tr>
+        <tr><th>Department</th><td>${p.department}</td></tr>
+        <tr><th>Type</th><td>${p.type}</td></tr>
+        <tr><th>Priority</th><td>${p.priority}</td></tr>
+        <tr><th>Budget</th><td>${p.budget}</td></tr>
+        <tr><th>Start Date</th><td>${p.startDate}</td></tr>
+        <tr><th>End Date</th><td>${p.endDate}</td></tr>
+        <tr><th>Status</th><td>${p.status}</td></tr>
+
+      </table>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function cloneProject(index) {
+
+  const cloned = {
+    ...projects[index]
+  };
+
+  projects.push(cloned);
+
+  localStorage.setItem(
+    "projects",
+    JSON.stringify(projects)
+  );
+
+  renderProjectsTable();
+
+  alert("Project cloned successfully");
+
+}
+
+function downloadProject(index) {
+
+  const p = projects[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Project PDF</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Project Report</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${p.title}</td></tr>
+        <tr><th>Department</th><td>${p.department}</td></tr>
+        <tr><th>Type</th><td>${p.type}</td></tr>
+        <tr><th>Priority</th><td>${p.priority}</td></tr>
+        <tr><th>Budget</th><td>${p.budget}</td></tr>
+        <tr><th>Start Date</th><td>${p.startDate}</td></tr>
+        <tr><th>End Date</th><td>${p.endDate}</td></tr>
+        <tr><th>Status</th><td>${p.status}</td></tr>
+
+      </table>
+
+      <script>
+
+        window.onload = function(){
+
+          window.print();
+
+        }
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function printProject(index) {
+
+  const p = projects[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Print Project</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Project Report</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${p.title}</td></tr>
+        <tr><th>Department</th><td>${p.department}</td></tr>
+        <tr><th>Type</th><td>${p.type}</td></tr>
+        <tr><th>Priority</th><td>${p.priority}</td></tr>
+        <tr><th>Budget</th><td>${p.budget}</td></tr>
+        <tr><th>Start Date</th><td>${p.startDate}</td></tr>
+        <tr><th>End Date</th><td>${p.endDate}</td></tr>
+        <tr><th>Status</th><td>${p.status}</td></tr>
+
+      </table>
+
+      <script>
+
+        window.onload = function(){
+
+          window.print();
+
+        }
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
 }
 
 function editProject(index) {
@@ -95599,31 +97591,391 @@ function updateProjectProgress() {
 }
 
 function renderProjectProgressTable() {
+
   const tbody = document.getElementById("projectProgressTable");
+
   if (!tbody) return;
 
   tbody.innerHTML = projectProgress.map((p, index) => {
+
     const expenseText = p.expenses
       ? p.expenses.map(e => `${e.description}: ${e.amount}`).join(", ")
       : "";
 
     return `
+
       <tr>
-        <td class="border p-2">${p.title}</td>
-        <td class="border p-2">${p.progress}%</td>
-        <td class="border p-2">${p.status}</td>
-        <td class="border p-2">${p.comment}</td>
-        <td class="border p-2">${expenseText}</td>
-        <td class="border p-2">${p.date}</td>
-        <td class="border p-2 flex gap-1">
-          <button onclick="editProjectProgress(${index})" class="bg-blue-900 text-white px-1 py-1 rounded">Edit</button>
-          <button onclick="deleteProjectProgress(${index})" class="bg-blue-900 text-white px-1 py-1 rounded">Delete</button>
-          <button onclick="downloadProjectProgress(${index})" class="bg-blue-900 text-white px-1 py-1 rounded">Download</button>
-          <button onclick="emailProjectProgress(${index})" class="bg-blue-900 text-white px-1 py-1 rounded">Email</button>
+
+        <td class="border p-2">
+          ${p.title}
         </td>
+
+        <td class="border p-2">
+          ${p.progress}%
+        </td>
+
+        <td class="border p-2">
+          ${p.status}
+        </td>
+
+        <td class="border p-2">
+          ${p.comment}
+        </td>
+
+        <td class="border p-2">
+          ${expenseText}
+        </td>
+
+        <td class="border p-2">
+          ${p.date}
+        </td>
+
+        <td class="border p-2 flex gap-1 flex-wrap">
+
+          <button onclick="editProjectProgress(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+            Edit
+          </button>
+
+          <button onclick="deleteProjectProgress(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+            Delete
+          </button>
+
+          <button onclick="previewProjectProgress(${index})"
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+            Preview
+          </button>
+
+          <div class="relative inline-block">
+
+            <button onclick="toggleProjectProgressMenu(${index})"
+              class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+              More ▾
+            </button>
+
+            <div id="project-progress-menu-${index}"
+              class="hidden absolute right-0 mt-1 w-48 bg-white border rounded shadow z-50 flex flex-col">
+
+              <button onclick="cloneProjectProgress(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Clone
+              </button>
+
+              <button onclick="downloadProjectProgress(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Download PDF
+              </button>
+
+              <button onclick="printProjectProgress(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Print
+              </button>
+
+              <button onclick="emailProjectProgress(${index})"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+                Email
+              </button>
+
+            </div>
+
+          </div>
+
+        </td>
+
       </tr>
+
     `;
+
   }).join("");
+
+}
+function toggleProjectProgressMenu(index) {
+
+  document.querySelectorAll("[id^='project-progress-menu-']").forEach(menu => {
+
+    if (menu.id !== `project-progress-menu-${index}`) {
+
+      menu.classList.add("hidden");
+
+    }
+
+  });
+
+  document
+    .getElementById(`project-progress-menu-${index}`)
+    .classList.toggle("hidden");
+
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='project-progress-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function previewProjectProgress(index) {
+
+  const p = projectProgress[index];
+
+  const expenseText = p.expenses
+    ? p.expenses.map(e => `${e.description}: ${e.amount}`).join(", ")
+    : "";
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Project Progress Preview</title>
+
+      <style>
+
+        body{
+          font-family:Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Project Progress Preview</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${p.title}</td></tr>
+        <tr><th>Progress</th><td>${p.progress}%</td></tr>
+        <tr><th>Status</th><td>${p.status}</td></tr>
+        <tr><th>Comment</th><td>${p.comment}</td></tr>
+        <tr><th>Expenses</th><td>${expenseText}</td></tr>
+        <tr><th>Date</th><td>${p.date}</td></tr>
+
+      </table>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function cloneProjectProgress(index) {
+
+  const cloned = {
+    ...projectProgress[index]
+  };
+
+  projectProgress.push(cloned);
+
+  localStorage.setItem(
+    "projectProgress",
+    JSON.stringify(projectProgress)
+  );
+
+  renderProjectProgressTable();
+
+  alert("Project progress cloned successfully");
+
+}
+
+function downloadProjectProgress(index) {
+
+  const p = projectProgress[index];
+
+  const expenseText = p.expenses
+    ? p.expenses.map(e => `${e.description}: ${e.amount}`).join(", ")
+    : "";
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Project Progress PDF</title>
+
+      <style>
+
+        body{
+          font-family:Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Project Progress Report</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${p.title}</td></tr>
+        <tr><th>Progress</th><td>${p.progress}%</td></tr>
+        <tr><th>Status</th><td>${p.status}</td></tr>
+        <tr><th>Comment</th><td>${p.comment}</td></tr>
+        <tr><th>Expenses</th><td>${expenseText}</td></tr>
+        <tr><th>Date</th><td>${p.date}</td></tr>
+
+      </table>
+
+      <script>
+
+        window.onload = function(){
+
+          window.print();
+
+        }
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function printProjectProgress(index) {
+
+  const p = projectProgress[index];
+
+  const expenseText = p.expenses
+    ? p.expenses.map(e => `${e.description}: ${e.amount}`).join(", ")
+    : "";
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Print Project Progress</title>
+
+      <style>
+
+        body{
+          font-family:Arial;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:20px;
+        }
+
+        table, th, td{
+          border:1px solid #ccc;
+        }
+
+        th, td{
+          padding:10px;
+          text-align:left;
+        }
+
+        th{
+          background:#1e3a8a;
+          color:white;
+          width:30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Project Progress Report</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${p.title}</td></tr>
+        <tr><th>Progress</th><td>${p.progress}%</td></tr>
+        <tr><th>Status</th><td>${p.status}</td></tr>
+        <tr><th>Comment</th><td>${p.comment}</td></tr>
+        <tr><th>Expenses</th><td>${expenseText}</td></tr>
+        <tr><th>Date</th><td>${p.date}</td></tr>
+
+      </table>
+
+      <script>
+
+        window.onload = function(){
+
+          window.print();
+
+        }
+
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
 }
 function deleteProjectProgress(index) {
   projectProgress.splice(index, 1);
@@ -95762,32 +98114,44 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-document.getElementById('planTrackingActionsBtn').addEventListener('click', function() {
+document.getElementById('planTrackingActionsBtn').addEventListener('click', function () {
   const dropdown = document.getElementById('planTrackingDropdown');
   dropdown.classList.toggle('hidden');
 });
 
-window.addEventListener('click', function(e) {
+window.addEventListener('click', function (e) {
   const btn = document.getElementById('planTrackingActionsBtn');
   const dropdown = document.getElementById('planTrackingDropdown');
+
   if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
     dropdown.classList.add('hidden');
   }
 });
 
+let planTracking = loadFromLocalStorage("planTracking");
+let planTrackingRevisions = loadFromLocalStorage("planTrackingRevisions");
+let planTrackingChart = null;
+
 function sortPlanTracking(key) {
   planTracking.sort((a, b) => (a[key] > b[key] ? 1 : -1));
   renderPlanTracking();
+  renderPlanTrackingChart();
 }
 
 function importPlanTrackingCSV(event) {
   const file = event.target.files[0];
+
   const reader = new FileReader();
-  reader.onload = function(e) {
+
+  reader.onload = function (e) {
     const data = new Uint8Array(e.target.result);
+
     const workbook = XLSX.read(data, { type: 'array' });
+
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
     const json = XLSX.utils.sheet_to_json(sheet);
+
     planTracking = json.map(r => ({
       title: r.Title || "",
       progress: parseFloat(r.Progress) || 0,
@@ -95796,128 +98160,831 @@ function importPlanTrackingCSV(event) {
       comment: r.Comment || "",
       date: r.Date || new Date().toLocaleString()
     }));
+
     saveToLocalStorage("planTracking", planTracking);
+
     renderPlanTracking();
+    renderPlanTrackingChart();
+
     alert("✅ Excel file imported!");
   };
+
   reader.readAsArrayBuffer(file);
 }
 
 function exportPlanTrackingCSV() {
-  const ws = XLSX.utils.json_to_sheet(planTracking.map(r => ({
-    Title: r.title,
-    Progress: r.progress,
-    Status: r.status,
-    Responsible: r.person,
-    Comment: r.comment,
-    Date: r.date
-  })));
+  const ws = XLSX.utils.json_to_sheet(
+    planTracking.map(r => ({
+      Title: r.title,
+      Progress: r.progress,
+      Status: r.status,
+      Responsible: r.person,
+      Comment: r.comment,
+      Date: r.date
+    }))
+  );
+
   const wb = XLSX.utils.book_new();
+
   XLSX.utils.book_append_sheet(wb, ws, "PlanTracking");
+
   XLSX.writeFile(wb, "PlanTracking.xlsx");
 }
 
 function resetPlanTracking() {
   planTracking = [];
+
   saveToLocalStorage("planTracking", planTracking);
+
   renderPlanTracking();
+  renderPlanTrackingChart();
+
   document.getElementById('planTrackingSearch').value = '';
 }
+
 function searchPlanTracking() {
   const input = document.getElementById('planTrackingSearch').value.toLowerCase();
-  const table = document.getElementById('planTrackingTable');
-  const rows = table.getElementsByTagName('tr');
 
-  for (let row of rows) {
-    const cells = row.getElementsByTagName('td');
-    let match = false;
-    for (let cell of cells) {
-      if (cell.textContent.toLowerCase().includes(input)) {
-        match = true;
-        break;
-      }
-    }
-    row.style.display = match ? '' : 'none';
-  }
+  const rows = document.querySelectorAll('#planTrackingTable tr');
+
+  rows.forEach(row => {
+    row.style.display =
+      [...row.cells].some(cell =>
+        cell.textContent.toLowerCase().includes(input)
+      )
+        ? ''
+        : 'none';
+  });
 }
-let planTracking = loadFromLocalStorage("planTracking");
-let planTrackingRevisions = loadFromLocalStorage("planTrackingRevisions");
+
+function renderTrackPlanDropdown() {
+  const select = document.getElementById("trackPlanTitle");
+
+  if (!select) return;
+
+  select.innerHTML = `<option value="">-- Select Plan --</option>`;
+
+  plans.forEach(plan => {
+    const option = document.createElement("option");
+
+    option.value = plan.title;
+    option.textContent = plan.title;
+
+    select.appendChild(option);
+  });
+}
+
+function renderAdjustPlanDropdown() {
+  const select = document.getElementById("adjustPlanTitle");
+
+  if (!select) return;
+
+  select.innerHTML = `<option value="">-- Select Plan --</option>`;
+
+  plans.forEach(plan => {
+    const option = document.createElement("option");
+
+    option.value = plan.title;
+    option.textContent = plan.title;
+
+    select.appendChild(option);
+  });
+}
 
 function addPlanTracking() {
   const record = {
-    title: document.getElementById("trackPlanTitle").value.trim(),
-    progress: parseFloat(document.getElementById("trackProgress").value),
+    title: document.getElementById("trackPlanTitle").value,
+    progress: parseFloat(document.getElementById("trackProgress").value) || 0,
     status: document.getElementById("trackStatus").value,
     comment: document.getElementById("trackComment").value.trim(),
     person: document.getElementById("trackPerson").value.trim(),
     date: new Date().toLocaleString(),
   };
 
-  if (!record.title) return alert("Enter a plan title first!");
+  if (!record.title) {
+    return alert("Please select a plan!");
+  }
 
   planTracking.push(record);
+
   saveToLocalStorage("planTracking", planTracking);
-  alert("✅ Progress added!");
+
   renderPlanTracking();
+  renderPlanTrackingChart();
+
+  clearPlanTrackingForm();
+
+  alert("✅ Progress added!");
 }
 
 function renderPlanTracking() {
+
   const table = document.getElementById("planTrackingTable");
+
   if (!table) return;
-  table.innerHTML = planTracking.map(
-    t => `
-      <tr>
-        <td class="border p-2">${t.title}</td>
-        <td class="border p-2">${t.progress}%</td>
-        <td class="border p-2">${t.status}</td>
-        <td class="border p-2">${t.person}</td>
-        <td class="border p-2">${t.comment}</td>
-        <td class="border p-2">${t.date}</td>
-      </tr>`
-  ).join("");
+
+  table.innerHTML = planTracking.map((t, index) => `
+
+    <tr>
+
+      <td class="border p-2">
+        ${t.title}
+      </td>
+
+      <td class="border p-2">
+        ${t.progress}%
+      </td>
+
+      <td class="border p-2">
+        ${t.status}
+      </td>
+
+      <td class="border p-2">
+        ${t.person}
+      </td>
+
+      <td class="border p-2">
+        ${t.comment}
+      </td>
+
+      <td class="border p-2">
+        ${t.date}
+      </td>
+
+      <td class="border p-2 flex gap-2 flex-wrap">
+
+        <button onclick="editPlanTracking(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+          Edit
+        </button>
+
+        <button onclick="deletePlanTracking(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+          Delete
+        </button>
+
+        <button onclick="previewPlanTracking(${index})"
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+          Preview
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="togglePlanTrackingMenu(${index})"
+            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            More ▾
+          </button>
+
+          <div id="plan-tracking-menu-${index}"
+            class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="clonePlanTracking(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadPlanTracking(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Download PDF
+            </button>
+
+            <button onclick="printPlanTracking(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+            <button onclick="emailPlanTracking(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Email
+            </button>
+
+          </div>
+
+        </div>
+
+      </td>
+
+    </tr>
+
+  `).join("");
+
+}
+function togglePlanTrackingMenu(index) {
+
+  document.querySelectorAll("[id^='plan-tracking-menu-']").forEach(menu => {
+
+    if (menu.id !== `plan-tracking-menu-${index}`) {
+      menu.classList.add("hidden");
+    }
+
+  });
+
+  document
+    .getElementById(`plan-tracking-menu-${index}`)
+    .classList.toggle("hidden");
+
+}
+
+document.addEventListener("click", function(e) {
+
+  if (!e.target.closest(".relative")) {
+
+    document.querySelectorAll("[id^='plan-tracking-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+
+  }
+
+});
+
+function previewPlanTracking(index) {
+
+  const t = planTracking[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Plan Tracking Preview</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding: 20px;
+        }
+
+        table{
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+        }
+
+        table, th, td{
+          border: 1px solid #ccc;
+        }
+
+        th, td{
+          padding: 10px;
+          text-align: left;
+        }
+
+        th{
+          background: #1e3a8a;
+          color: white;
+          width: 30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Plan Tracking Preview</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${t.title}</td></tr>
+        <tr><th>Progress</th><td>${t.progress}%</td></tr>
+        <tr><th>Status</th><td>${t.status}</td></tr>
+        <tr><th>Person</th><td>${t.person}</td></tr>
+        <tr><th>Comment</th><td>${t.comment}</td></tr>
+        <tr><th>Date</th><td>${t.date}</td></tr>
+
+      </table>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function clonePlanTracking(index) {
+
+  const cloned = {
+    ...planTracking[index]
+  };
+
+  planTracking.push(cloned);
+
+  localStorage.setItem("planTracking", JSON.stringify(planTracking));
+
+  renderPlanTracking();
+
+  alert("Plan tracking cloned successfully");
+
+}
+
+function downloadPlanTracking(index) {
+
+  const t = planTracking[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Plan Tracking PDF</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding: 20px;
+        }
+
+        table{
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+        }
+
+        table, th, td{
+          border: 1px solid #ccc;
+        }
+
+        th, td{
+          padding: 10px;
+          text-align: left;
+        }
+
+        th{
+          background: #1e3a8a;
+          color: white;
+          width: 30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Plan Tracking Report</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${t.title}</td></tr>
+        <tr><th>Progress</th><td>${t.progress}%</td></tr>
+        <tr><th>Status</th><td>${t.status}</td></tr>
+        <tr><th>Person</th><td>${t.person}</td></tr>
+        <tr><th>Comment</th><td>${t.comment}</td></tr>
+        <tr><th>Date</th><td>${t.date}</td></tr>
+
+      </table>
+
+      <script>
+        window.onload = function() {
+          window.print();
+        }
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+
+function printPlanTracking(index) {
+
+  const t = planTracking[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+
+    <head>
+
+      <title>Print Plan Tracking</title>
+
+      <style>
+
+        body{
+          font-family: Arial;
+          padding: 20px;
+        }
+
+        table{
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+        }
+
+        table, th, td{
+          border: 1px solid #ccc;
+        }
+
+        th, td{
+          padding: 10px;
+          text-align: left;
+        }
+
+        th{
+          background: #1e3a8a;
+          color: white;
+          width: 30%;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h2>Plan Tracking Report</h2>
+
+      <table>
+
+        <tr><th>Title</th><td>${t.title}</td></tr>
+        <tr><th>Progress</th><td>${t.progress}%</td></tr>
+        <tr><th>Status</th><td>${t.status}</td></tr>
+        <tr><th>Person</th><td>${t.person}</td></tr>
+        <tr><th>Comment</th><td>${t.comment}</td></tr>
+        <tr><th>Date</th><td>${t.date}</td></tr>
+
+      </table>
+
+      <script>
+        window.onload = function() {
+          window.print();
+        }
+      <\/script>
+
+    </body>
+
+    </html>
+  `);
+
+  win.document.close();
+
+}
+function renderPlanTrackingChart() {
+  const ctx = document.getElementById("planTrackingChart");
+
+  if (!ctx) return;
+
+  const labels = planTracking.map(t => t.title);
+
+  const data = planTracking.map(t => t.progress);
+
+  if (planTrackingChart) {
+    planTrackingChart.destroy();
+  }
+
+  planTrackingChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Progress %",
+        data,
+        backgroundColor: "rgba(30,64,175,0.7)",
+        borderColor: "rgb(30,64,175)",
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100
+        }
+      }
+    }
+  });
+
+  renderPlanTrackingSummary();
+}
+
+function renderPlanTrackingSummary() {
+  const summary = document.getElementById("planTrackingSummary");
+
+  if (!summary) return;
+
+  const total = planTracking.length;
+
+  const completed = planTracking.filter(p => p.status === "Completed").length;
+
+  const inProgress = planTracking.filter(p => p.status === "In Progress").length;
+
+  const delayed = planTracking.filter(p => p.status === "Delayed").length;
+
+  summary.innerHTML = `
+    <div>Total Updates: <strong>${total}</strong></div>
+    <div>Completed: <strong>${completed}</strong></div>
+    <div>In Progress: <strong>${inProgress}</strong></div>
+    <div>Delayed: <strong>${delayed}</strong></div>
+  `;
 }
 
 function revisePlanTracking() {
-  const title = document.getElementById("adjustPlanTitle").value.trim();
+  const title = document.getElementById("adjustPlanTitle").value;
+
   const action = document.getElementById("adjustAction").value;
+
   const comment = document.getElementById("adjustComment").value.trim();
 
-  if (!title) return alert("Enter a plan title!");
-  planTrackingRevisions.push({
-    title, action, comment, date: new Date().toLocaleString(),
-  });
+  if (!title) {
+    return alert("Please select a plan!");
+  }
+
+  const revision = {
+    title,
+    action,
+    comment,
+    date: new Date().toLocaleString()
+  };
+
+  planTrackingRevisions.push(revision);
 
   saveToLocalStorage("planTrackingRevisions", planTrackingRevisions);
-  alert("✅ Adjustment saved!");
+
   renderPlanTrackingRevisions();
+
+  alert("✅ Adjustment saved!");
 }
 
 function renderPlanTrackingRevisions() {
+
   const container = document.getElementById("planTrackingHistory");
+
   if (!container) return;
-  container.innerHTML = planTrackingRevisions.map(
-    r => `<div><strong>${r.title}</strong> — ${r.action} (${r.comment}) <span class="text-gray-500">[${r.date}]</span></div>`
-  ).join("");
+
+  container.innerHTML = planTrackingRevisions.map((r, index) => `
+
+    <div class="border-b py-2 flex justify-between items-start gap-2">
+
+      <div>
+
+        <strong>${r.title}</strong> —
+        ${r.action}
+        (${r.comment})
+        <span class="text-gray-500">[${r.date}]</span>
+
+      </div>
+
+      <div class="flex gap-1 flex-wrap">
+
+        <button onclick="previewPlanTrackingRevision(${index})"
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">
+          Preview
+        </button>
+
+        <button onclick="deletePlanTrackingRevision(${index})"
+          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">
+          Delete
+        </button>
+
+        <div class="relative inline-block">
+
+          <button onclick="togglePlanTrackingRevisionMenu(${index})"
+            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            More ▾
+          </button>
+
+          <div id="plan-tracking-revision-menu-${index}"
+            class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="clonePlanTrackingRevision(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Clone
+            </button>
+
+            <button onclick="downloadPlanTrackingRevision(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Download PDF
+            </button>
+
+            <button onclick="printPlanTrackingRevision(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Print
+            </button>
+
+            <button onclick="emailPlanTrackingRevision(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Email
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `).join("");
+
+}
+function togglePlanTrackingMenu(index) {
+
+  document.querySelectorAll("[id^='plan-tracking-menu-']").forEach(menu => {
+    if (menu.id !== `plan-tracking-menu-${index}`) {
+      menu.classList.add("hidden");
+    }
+  });
+
+  document
+    .getElementById(`plan-tracking-menu-${index}`)
+    .classList.toggle("hidden");
+
 }
 
-function generatePlanInsights() {
-  document.getElementById("planInsights").innerText = 
-    "AI Suggestion: Focus more on high-priority plans nearing end date.";
+document.addEventListener("click", function (e) {
+  if (!e.target.closest(".relative")) {
+    document.querySelectorAll("[id^='plan-tracking-menu-']").forEach(menu => {
+      menu.classList.add("hidden");
+    });
+  }
+});
+
+function previewPlanTracking(index) {
+
+  const t = planTracking[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Plan Tracking Preview</title>
+      <style>
+        body{font-family:Arial;padding:20px;}
+        table{width:100%;border-collapse:collapse;margin-top:20px;}
+        table,th,td{border:1px solid #ccc;}
+        th,td{padding:10px;text-align:left;}
+        th{background:#1e3a8a;color:white;width:30%;}
+      </style>
+    </head>
+    <body>
+      <h2>Plan Tracking Preview</h2>
+      <table>
+        <tr><th>Title</th><td>${t.title}</td></tr>
+        <tr><th>Progress</th><td>${t.progress}%</td></tr>
+        <tr><th>Status</th><td>${t.status}</td></tr>
+        <tr><th>Person</th><td>${t.person}</td></tr>
+        <tr><th>Comment</th><td>${t.comment}</td></tr>
+        <tr><th>Date</th><td>${t.date}</td></tr>
+      </table>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
 }
 
-function generatePlanTrackingInsights() {
-  document.getElementById("planTrackingInsights").innerText =
-    "AI Insight: Projects with >70% progress are trending on time.";
-}
+function clonePlanTracking(index) {
 
-window.onload = function() {
-  renderPlans();
-  renderProgress();
-  renderRevisions();
-  renderOwnerships();
+  const cloned = { ...planTracking[index] };
+
+  planTracking.push(cloned);
+
+  localStorage.setItem("planTracking", JSON.stringify(planTracking));
+
   renderPlanTracking();
+
+}
+
+function downloadPlanTracking(index) {
+
+  const t = planTracking[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Plan Tracking PDF</title>
+      <style>
+        body{font-family:Arial;padding:20px;}
+        table{width:100%;border-collapse:collapse;margin-top:20px;}
+        table,th,td{border:1px solid #ccc;}
+        th,td{padding:10px;text-align:left;}
+        th{background:#1e3a8a;color:white;width:30%;}
+      </style>
+    </head>
+    <body>
+      <h2>Plan Tracking Report</h2>
+      <table>
+        <tr><th>Title</th><td>${t.title}</td></tr>
+        <tr><th>Progress</th><td>${t.progress}%</td></tr>
+        <tr><th>Status</th><td>${t.status}</td></tr>
+        <tr><th>Person</th><td>${t.person}</td></tr>
+        <tr><th>Comment</th><td>${t.comment}</td></tr>
+        <tr><th>Date</th><td>${t.date}</td></tr>
+      </table>
+      <script>
+        window.onload = function(){ window.print(); }
+      <\/script>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
+
+function printPlanTracking(index) {
+
+  const t = planTracking[index];
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Print Plan Tracking</title>
+      <style>
+        body{font-family:Arial;padding:20px;}
+        table{width:100%;border-collapse:collapse;margin-top:20px;}
+        table,th,td{border:1px solid #ccc;}
+        th,td{padding:10px;text-align:left;}
+        th{background:#1e3a8a;color:white;width:30%;}
+      </style>
+    </head>
+    <body>
+      <h2>Plan Tracking Report</h2>
+      <table>
+        <tr><th>Title</th><td>${t.title}</td></tr>
+        <tr><th>Progress</th><td>${t.progress}%</td></tr>
+        <tr><th>Status</th><td>${t.status}</td></tr>
+        <tr><th>Person</th><td>${t.person}</td></tr>
+        <tr><th>Comment</th><td>${t.comment}</td></tr>
+        <tr><th>Date</th><td>${t.date}</td></tr>
+      </table>
+      <script>
+        window.onload = function(){ window.print(); }
+      <\/script>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
+
+function emailPlanTracking(index) {
+  const t = planTracking[index];
+
+  const subject = encodeURIComponent(`Plan Tracking - ${t.title}`);
+  const body = encodeURIComponent(
+`Title: ${t.title}
+Progress: ${t.progress}%
+Status: ${t.status}
+Person: ${t.person}
+Comment: ${t.comment}
+Date: ${t.date}`
+  );
+
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+function generatePlanTrackingInsights() {
+  const completed = planTracking.filter(p => p.status === "Completed").length;
+
+  const delayed = planTracking.filter(p => p.status === "Delayed").length;
+
+  const average =
+    planTracking.length > 0
+      ? (
+          planTracking.reduce((sum, p) => sum + p.progress, 0) /
+          planTracking.length
+        ).toFixed(1)
+      : 0;
+
+  document.getElementById("planTrackingInsights").innerHTML = `
+    <div>Average Progress: <strong>${average}%</strong></div>
+    <div>Completed Plans: <strong>${completed}</strong></div>
+    <div>Delayed Plans: <strong>${delayed}</strong></div>
+  `;
+}
+
+function clearPlanTrackingForm() {
+  document.getElementById("trackPlanTitle").value = "";
+  document.getElementById("trackProgress").value = "";
+  document.getElementById("trackStatus").value = "Not Started";
+  document.getElementById("trackComment").value = "";
+  document.getElementById("trackPerson").value = "";
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  renderTrackPlanDropdown();
+  renderAdjustPlanDropdown();
+  renderPlanTracking();
+  renderPlanTrackingChart();
   renderPlanTrackingRevisions();
-};
+});
 </script>
 <!-- ORGPROFILE -->
 <div id="orgProfileTab" class="hidden ml-84 mr-7 p-2">
