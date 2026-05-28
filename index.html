@@ -103091,17 +103091,36 @@ function getSyncUser() {
       localStorage.getItem("loggedInUser") || "{}"
     );
 
+  let company =
+    (
+      user.companyName ||
+      "default_company"
+    )
+    .toLowerCase()
+    .trim();
+
+  const isDemo =
+    company.includes("demo") ||
+    company.includes("test") ||
+    user.demo === true;
+
+  if (isDemo) {
+
+    return (
+      "demo_" + company
+    ).replace(/[^a-zA-Z0-9]/g, "_");
+  }
+
   return (
-    user.email ||
-    user.username ||
-    user.companyName ||
-    "guest"
+    "company_" + company
   ).replace(/[^a-zA-Z0-9]/g, "_");
 }
 
 async function uploadLocalStorage() {
 
   const syncUser = getSyncUser();
+
+  if (!syncUser) return;
 
   const allData = {};
 
@@ -103114,7 +103133,8 @@ async function uploadLocalStorage() {
       key.toLowerCase().includes("token")
     ) continue;
 
-    allData[key] = localStorage.getItem(key);
+    allData[key] =
+      localStorage.getItem(key);
   }
 
   await setDoc(
@@ -103132,10 +103152,13 @@ async function downloadLocalStorage() {
 
   const syncUser = getSyncUser();
 
+  if (!syncUser) return;
+
   const ref =
     doc(db, "syncData", syncUser);
 
-  const snap = await getDoc(ref);
+  const snap =
+    await getDoc(ref);
 
   if (!snap.exists()) return;
 
@@ -103148,6 +103171,7 @@ async function downloadLocalStorage() {
       key,
       cloudData[key]
     );
+
   });
 
   console.log("⬇️ Downloaded");
@@ -103156,6 +103180,8 @@ async function downloadLocalStorage() {
 async function realtimeSync() {
 
   const syncUser = getSyncUser();
+
+  if (!syncUser) return;
 
   const ref =
     doc(db, "syncData", syncUser);
@@ -103173,10 +103199,13 @@ async function realtimeSync() {
         key,
         cloudData[key]
       );
+
     });
 
     console.log("🔄 Updated");
+
   });
+
 }
 
 window.addEventListener("load", async () => {
@@ -103194,6 +103223,22 @@ window.addEventListener("load", async () => {
 });
 
 window.addEventListener("beforeunload", async () => {
+
+  await uploadLocalStorage();
+
+});
+
+document.addEventListener("visibilitychange", async () => {
+
+  if (document.visibilityState === "hidden") {
+
+    await uploadLocalStorage();
+
+  }
+
+});
+
+window.addEventListener("storage", async () => {
 
   await uploadLocalStorage();
 
