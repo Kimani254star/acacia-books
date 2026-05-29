@@ -1723,9 +1723,11 @@ function closeQuoteModal() {
     <h2 class="text-2xl font-bold text-blue-900 mb-4 text-center">Login</h2>
     
     <div id="loginForm">
-      <input id="loginUser" type="text" placeholder="Username" class="w-full border p-2 mb-3 rounded" />
-      <input id="companyId" type="text" placeholder="Company ID" class="w-full border p-2 mb-3 rounded" />
-      <input id="loginPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" />
+     <input id="loginUser" type="text" placeholder="Email or Username" class="w-full border p-2 mb-3 rounded" />
+
+     <input id="companyId" type="text" placeholder="Company ID (optional)" class="w-full border p-2 mb-3 rounded" />
+
+    <input id="loginPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" />
 
       <select id="userRole" class="w-full border p-2 rounded mb-3">
         <option value="admin">Admin</option>
@@ -2000,110 +2002,125 @@ function renderTabsBasedOnPlan(plan) {
   }
 
 function getLoggedInUser() {
-  return JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+
+  return JSON.parse(
+    localStorage.getItem("loggedInUser") || "{}"
+  );
 }
 
 function getCompanyKey(key) {
+
   const user = getLoggedInUser();
 
-  if (!user.companyId) {
-    console.error("No companyId found for logged in user");
-    return key;
-  }
+  const companyId =
+    user.companyId ||
+    user.companyName ||
+    "default_company";
 
-  return `${key}_${user.companyId}`;
+  return `${key}_${companyId}`;
 }
 
 function saveCompanyData(key, data) {
-  localStorage.setItem(
-    getCompanyKey(key),
-    JSON.stringify(data)
-  );
+
+  try {
+
+    localStorage.setItem(
+      getCompanyKey(key),
+      JSON.stringify(data)
+    );
+
+    localStorage.setItem(
+      key,
+      JSON.stringify(data)
+    );
+
+  } catch (err) {
+
+    console.error(err);
+
+  }
 }
 
 function loadCompanyData(key) {
-  return JSON.parse(
-    localStorage.getItem(getCompanyKey(key)) || "[]"
-  );
+
+  try {
+
+    const companyData =
+      localStorage.getItem(getCompanyKey(key));
+
+    if (companyData) {
+
+      return JSON.parse(companyData);
+
+    }
+
+    return JSON.parse(
+      localStorage.getItem(key) || "[]"
+    );
+
+  } catch (err) {
+
+    console.error(err);
+
+    return [];
+  }
 }
 
 function removeCompanyData(key) {
-  localStorage.removeItem(getCompanyKey(key));
-}
 
-function signUpWithGoogle() {
-  alert("✅ Signed up with Google (simulated)");
+  localStorage.removeItem(
+    getCompanyKey(key)
+  );
+
+  localStorage.removeItem(key);
+}
+async function signUpWithGoogle() {
+
+  alert("✅ Signed up with Google");
 
   const email = prompt("Enter your Google email:");
-  if (!email) {
-    alert("❌ Google email is required.");
-    return;
-  }
+  if (!email) return alert("❌ Google email is required.");
 
   const fullName = prompt("Enter your full name:");
-  if (!fullName) {
-    alert("❌ Full name is required.");
-    return;
-  }
+  if (!fullName) return alert("❌ Full name is required.");
 
   const companyName = prompt("Enter your company name:");
-  if (!companyName) {
-    alert("❌ Company name is required.");
-    return;
-  }
+  if (!companyName) return alert("❌ Company name is required.");
 
   const password = prompt("Set a password for your account:");
-  if (!password) {
-    alert("❌ Password is required.");
-    return;
-  }
+  if (!password) return alert("❌ Password is required.");
 
   let stored = JSON.parse(localStorage.getItem("users") || "[]");
 
-  if (
-    stored.some(
-      u =>
-        u.companyName.toLowerCase() ===
-        companyName.toLowerCase()
-    )
-  ) {
-    alert("🚫 A company with this name already exists.");
+  const cleanEmail = email.trim().toLowerCase();
+  const username = cleanEmail.split("@")[0];
+
+  const existingUser = stored.find(u =>
+    (u.email || "").toLowerCase() === cleanEmail ||
+    (u.username || "").toLowerCase() === username
+  );
+
+  if (existingUser) {
+    localStorage.setItem("loggedInUser", JSON.stringify(existingUser));
+    await window.startCloudSync?.();
+    showApp();
     return;
   }
 
-  const username = email.split("@")[0];
-  const companyId = "comp_" + Date.now();
-  const role = "admin";
+  const companyId = "comp_" + companyName.toLowerCase().replace(/[^a-z0-9]/g, "_");
 
-  const plan =
-    localStorage.getItem("selectedPlan") || "Free";
+  const plan = localStorage.getItem("selectedPlan") || "Free";
+  const price = parseFloat(localStorage.getItem("selectedPrice") || 0);
 
-  const price =
-    parseFloat(localStorage.getItem("selectedPrice")) || 0;
-
-  let status;
-  let expiry;
-
-  if (plan === "Free") {
-    status = "active";
-
-    expiry = new Date(
-      Date.now() + 30 * 24 * 60 * 60 * 1000
-    ).toISOString();
-  } else {
-    status = "trial";
-
-    expiry = new Date(
-      Date.now() + 14 * 24 * 60 * 60 * 1000
-    ).toISOString();
-  }
+  const status = plan === "Free" ? "active" : "trial";
+  const expiry = new Date(Date.now() + (plan === "Free" ? 30 : 14) * 24 * 60 * 60 * 1000).toISOString();
 
   const newUser = {
     username,
-    email,
+    email: cleanEmail,
     fullName,
     password,
-    role,
+    role: "admin",
     plan,
     price,
     companyId,
@@ -2116,63 +2133,47 @@ function signUpWithGoogle() {
 
   stored.push(newUser);
 
-  localStorage.setItem(
-    "users",
-    JSON.stringify(stored)
-  );
+  localStorage.setItem("users", JSON.stringify(stored));
+  localStorage.setItem("loggedInUser", JSON.stringify(newUser));
 
-  localStorage.setItem(
-    "loggedInUser",
-    JSON.stringify(newUser)
-  );
-
-  saveCompanyData("bills", []);
-  saveCompanyData("invoices", []);
-  saveCompanyData("customers", []);
-  saveCompanyData("suppliers", []);
-  saveCompanyData("inventory", []);
-  saveCompanyData("expenses", []);
-  saveCompanyData("taxes", []);
-  saveCompanyData("payroll", []);
-  saveCompanyData("banks", []);
-
-  if (plan === "Free") {
-    showApp();
-  } else {
-    alert(
-      `🎉 Welcome! You’re now on a 14-day trial of the ${plan} plan.`
-    );
-
-    showApp();
-  }
-}
-
-function login(email, password) {
-  const users = JSON.parse(
-    localStorage.getItem("users") || "[]"
-  );
-
-  const found = users.find(
-    u =>
-      u.email === email &&
-      u.password === password
-  );
-
-  if (!found) {
-    alert("❌ Invalid email or password");
-    return;
-  }
-
-  localStorage.setItem(
-    "loggedInUser",
-    JSON.stringify(found)
-  );
-
-  alert(`✅ Welcome ${found.fullName}`);
+  await window.startCloudSync?.();
 
   showApp();
 }
+async function login(identifier, password) {
 
+  const users = JSON.parse(localStorage.getItem("users") || "[]");
+
+  const input = identifier.trim().toLowerCase();
+
+  const found = users.find(u => {
+    const email = (u.email || "").toLowerCase();
+    const username = (u.username || "").toLowerCase();
+    return (email === input || username === input);
+  });
+
+  if (!found) {
+    alert("❌ Account not found");
+    return;
+  }
+
+  if (found.password !== password) {
+    alert("❌ Incorrect password");
+    return;
+  }
+
+  if (!found.companyId) {
+    found.companyId = "comp_" + Date.now();
+  }
+
+  localStorage.setItem("loggedInUser", JSON.stringify(found));
+
+  await window.startCloudSync?.();
+
+  alert(`✅ Welcome ${found.fullName || found.username}`);
+
+  showApp();
+}
 function getLoggedInUser() {
   return JSON.parse(localStorage.getItem("loggedInUser") || "{}");
 }
@@ -2390,20 +2391,24 @@ function showApp() {
   }
 }
 
-function login(email, password) {
-  const stored = JSON.parse(
-    localStorage.getItem("users") || "[]"
-  );
+function login(identifier, password) {
 
-  const user = stored.find(
-    u =>
-      u.email.trim().toLowerCase() ===
-        email.trim().toLowerCase() &&
-      u.password === password
-  );
+  const stored =
+    JSON.parse(localStorage.getItem("users") || "[]");
+
+  const id = identifier.trim().toLowerCase();
+
+  const user =
+    stored.find(u => {
+
+      const email = (u.email || "").trim().toLowerCase();
+      const username = (u.username || "").trim().toLowerCase();
+
+      return (email === id || username === id) && u.password === password.trim();
+    });
 
   if (!user) {
-    alert("❌ Invalid email or password.");
+    alert("❌ Invalid username/email or password.");
     return;
   }
 
@@ -2411,23 +2416,17 @@ function login(email, password) {
     user.companyId = "comp_" + Date.now();
 
     const updatedUsers = stored.map(u => {
-      if (u.email === user.email) {
-        return user;
-      }
+      const match =
+        (u.email && user.email && u.email === user.email) ||
+        (u.username && user.username && u.username === user.username);
 
-      return u;
+      return match ? user : u;
     });
 
-    localStorage.setItem(
-      "users",
-      JSON.stringify(updatedUsers)
-    );
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
   }
 
-  localStorage.setItem(
-    "loggedInUser",
-    JSON.stringify(user)
-  );
+  localStorage.setItem("loggedInUser", JSON.stringify(user));
 
   const companyKeys = [
     "bills",
@@ -2445,18 +2444,14 @@ function login(email, password) {
     const companyKey = `${key}_${user.companyId}`;
 
     if (!localStorage.getItem(companyKey)) {
-      localStorage.setItem(
-        companyKey,
-        JSON.stringify([])
-      );
+      localStorage.setItem(companyKey, JSON.stringify([]));
     }
   });
 
-  alert(`✅ Welcome back, ${user.fullName}`);
+  alert(`✅ Welcome back, ${user.fullName || user.username}`);
 
-  checkUserAccess();
-
-  showApp();
+  if (typeof checkUserAccess === "function") checkUserAccess();
+  if (typeof showApp === "function") showApp();
 }
 
 setTimeout(() => {
@@ -3055,20 +3050,26 @@ function loadOrgDetails() {
 </script>
 <script>
 
+function toggleSupportPopup() {
+  const popup = document.getElementById("supportPopup");
+  popup.classList.toggle("hidden");
+}
 function toggleTawkChat() {
   if (window.Tawk_API && typeof window.Tawk_API.toggle === 'function') {
-    window.Tawk_API.toggle(); 
+    window.Tawk_API.toggle();
   } else {
     alert("💬 Live chat is still loading... please try again in a few seconds.");
   }
 }
 
 window.addEventListener('load', function () {
-  var s1 = document.createElement("script"),
-  s0 = document.getElementsByTagName("script")[0];
+  var s1 = document.createElement("script");
+  var s0 = document.getElementsByTagName("script")[0];
+
   s1.async = true;
-  s1.src = 'https://embed.tawk.to/64f1234567890abcdef/1hij2kl3m'; 
+  s1.src = 'https://embed.tawk.to/64f1234567890abcdef/1hij2kl3m';
   s1.setAttribute('crossorigin', '*');
+
   s0.parentNode.insertBefore(s1, s0);
 });
 
@@ -3222,44 +3223,6 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
-
-<script>
-function handleSearch(query) {
-  const buttons = document.querySelectorAll("ul li button");
-  const lowerQuery = query.trim().toLowerCase();
-
-  buttons.forEach(btn => {
-    const text = btn.textContent.toLowerCase();
-    const parentUl = btn.closest("ul");
-
-    btn.style.display = "block";
-
-    if (lowerQuery === "") {
-      const allSubmenus = document.querySelectorAll("ul[id$='Submenu']");
-      allSubmenus.forEach(sub => sub.classList.add("hidden"));
-      return;
-    }
-
-    if (!text.includes(lowerQuery)) {
-      btn.style.display = "none";
-    } else {
-      if (parentUl && parentUl.classList.contains("hidden")) {
-        parentUl.classList.remove("hidden");
-      }
-      const previousLi = parentUl.previousElementSibling;
-      if (previousLi && previousLi.querySelector("button")) {
-        previousLi.querySelector("button").style.display = "block";
-      }
-    }
-  });
-}
-
-function triggerSearch() {
-  const query = document.getElementById("globalSearch").value.trim();
-  handleSearch(query);
-}
-</script>
-
 <script>
 function handleSearch(query) {
   const buttons = document.querySelectorAll("ul li button");
@@ -3298,27 +3261,6 @@ function triggerSearch() {
   handleSearch(query);
 }
 
-function toggleSupportPopup() {
-  const popup = document.getElementById("supportPopup");
-  popup.classList.toggle("hidden");
-}
-
-function toggleTawkChat() {
-  if (window.Tawk_API && typeof window.Tawk_API.toggle === 'function') {
-    window.Tawk_API.toggle(); 
-  } else {
-    alert("💬 Live chat is still loading... please try again in a few seconds.");
-  }
-}
-
-window.addEventListener('load', function () {
-  var s1 = document.createElement("script"),
-  s0 = document.getElementsByTagName("script")[0];
-  s1.async = true;
-  s1.src = 'https://embed.tawk.to/64f1234567890abcdef/1hij2kl3m'; 
-  s1.setAttribute('crossorigin', '*');
-  s0.parentNode.insertBefore(s1, s0);
-});
 
 function loadNotifications() {
   let list = JSON.parse(localStorage.getItem("notifications") || "[]");
@@ -4841,146 +4783,174 @@ if (loggedInUser) {
     alert("No access permissions set for this role.");
   }
 }
+async function handleLogin() {
 
-function handleLogin() {
-  const u = document.getElementById('loginUser').value.trim();
+  const u = document.getElementById('loginUser').value.trim().toLowerCase();
   const p = document.getElementById('loginPass').value.trim();
-  const role = document.getElementById('userRole').value;  
+  const companyIdInput = document.getElementById('companyId').value.trim().toLowerCase();
 
   const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
-const user = storedUsers.find(x => x.username === u && x.password === p);
+
+  const user = storedUsers.find(x => {
+
+    const email = (x.email || "").toLowerCase();
+    const username = (x.username || "").toLowerCase();
+    const company = (x.companyId || "").toLowerCase();
+
+    const loginMatch =
+      email === u || username === u;
+
+    const companyMatch =
+      companyIdInput ? company === companyIdInput : true;
+
+    return loginMatch && companyMatch && x.password === p;
+  });
 
   if (!user) {
-    alert('❌ Invalid credentials');
+    alert("❌ Invalid username/email, company ID or password");
     return;
   }
 
-  localStorage.setItem('loggedInUser', JSON.stringify(user));
-  closeLogin(); 
+  localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-  document.getElementById("mailLink").classList.remove("hidden");
+  try {
+    await downloadLocalStorage();
+    realtimeSync();
+  } catch (err) {}
+
+  closeLogin();
+
+  document.getElementById("mailLink")?.classList.remove("hidden");
 
   const allowedRoles = ["sales", "admin", "account", "human resource"];
-  if (allowedRoles.includes(role.toLowerCase())) {
-    document.getElementById("crmLink").classList.remove("hidden");
+
+  if (allowedRoles.includes((user.role || "").toLowerCase())) {
+    document.getElementById("crmLink")?.classList.remove("hidden");
   } else {
-    document.getElementById("crmLink").classList.add("hidden");
+    document.getElementById("crmLink")?.classList.add("hidden");
   }
 
   showApp();
+  uploadLocalStorage?.();
 }
-
 function registerUser() {
-  const username = document.getElementById('registerUser').value.trim();
+
+  const input = document.getElementById('registerUser').value.trim();
   const password = document.getElementById('registerPass').value.trim();
   const role = document.getElementById('registerRole').value;
 
-  if (!username || !password) {
-    alert("⚠️ Please enter both username and password.");
-    return;
-  }
+  const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
 
-  const existing = users.find(u => u.username === username);
+  const clean = input.toLowerCase();
+
+  const existing = storedUsers.find(u =>
+    (u.username && u.username.toLowerCase() === clean) ||
+    (u.email && u.email.toLowerCase() === clean)
+  );
+
   if (existing) {
-    alert("🚫 Username already exists. Choose another.");
+    alert("🚫 User already exists");
     return;
   }
 
   const plan = localStorage.getItem("selectedPlan") || "Free";
-  const price = parseInt(localStorage.getItem("selectedPrice") || 0);
+  const price = parseFloat(localStorage.getItem("selectedPrice") || 0);
 
   const expiry = new Date();
   expiry.setDate(expiry.getDate() + 30);
 
-  const status = price === 0 ? "active" : "pending";
+  const loggedIn = JSON.parse(localStorage.getItem("loggedInUser"));
 
-const loggedIn = JSON.parse(localStorage.getItem("loggedInUser"));
+  const companyId =
+    loggedIn?.companyId ||
+    "company_" + Date.now();
 
-const companyId = loggedIn 
-  ? loggedIn.companyId              
-  : "company_" + Date.now();        
+  const isEmail = clean.includes("@");
 
-const newUser = { 
-  username, 
-  password, 
-  role, 
-  plan, 
-  price,
-  companyId,        
-  registered: new Date().toISOString(), 
-  expiry: expiry.toISOString(), 
-  status 
-};
+  const newUser = {
+    username: isEmail ? clean.split("@")[0] : clean,
+    email: isEmail ? clean : "",
+    password,
+    role,
+    plan,
+    price,
+    companyId,
+    registered: new Date().toISOString(),
+    expiry: expiry.toISOString(),
+    status: price === 0 ? "active" : "pending",
+    provider: "local"
+  };
 
-  let stored = JSON.parse(localStorage.getItem("users") || "[]");
-  stored.push(newUser);
-  localStorage.setItem("users", JSON.stringify(stored));
+  storedUsers.push(newUser);
+
+  localStorage.setItem("users", JSON.stringify(storedUsers));
   localStorage.setItem("loggedInUser", JSON.stringify(newUser));
 
   if (price === 0) {
-    alert(`✅ Free account created for ${username}. Expires on ${expiry.toDateString()}.`);
     closeLogin();
-    showApp(); 
+    showApp();
   } else {
-    alert(`💳 Account created for ${username} on ${plan} plan. Please complete payment.`);
-    window.location.href = "payment.html"; 
+    window.location.href = "payment.html";
   }
 }
-
-function showResetForm() {
-  document.getElementById("loginForm").classList.add("hidden");
-  document.getElementById("resetForm").classList.remove("hidden");
-}
-
-function hideResetForm() {
-  document.getElementById("resetForm").classList.add("hidden");
-  document.getElementById("loginForm").classList.remove("hidden");
-}
-
-function resetPassword() {
-  const email = document.getElementById("resetEmail").value;
-  alert("Reset link sent to: " + email);
-  hideResetForm();
-}
-
 function createWithGoogle() {
-  alert("🔗 Google Account creation simulated.");
-  const username = "google_user_" + Math.floor(Math.random() * 10000);
-  const role = "sales";
+
+  const email = prompt("Enter your Google email:");
+  if (!email) return alert("Email required");
+
+  const fullName = prompt("Enter your full name:");
+  if (!fullName) return alert("Name required");
+
+  const password = "google123";
 
   const plan = localStorage.getItem("selectedPlan") || "Free";
-  const price = parseInt(localStorage.getItem("selectedPrice") || 0);
+  const price = parseFloat(localStorage.getItem("selectedPrice") || 0);
 
   const expiry = new Date();
   expiry.setDate(expiry.getDate() + 30);
 
-  const status = price === 0 ? "active" : "pending";
-  const companyId = document.getElementById('registerCompany').value.trim() 
-               || "company_" + Math.floor(Math.random() * 10000);
+  const stored = JSON.parse(localStorage.getItem("users") || "[]");
 
-const newUser = { 
-  username, 
-  password, 
-  role, 
-  plan, 
-  price, 
-  companyId,  
-  registered: new Date().toISOString(), 
-  expiry: expiry.toISOString(), 
-  status 
-};
-  let stored = JSON.parse(localStorage.getItem("users") || "[]");
+  const cleanEmail = email.trim().toLowerCase();
+  const username = cleanEmail.split("@")[0];
+
+  const exists = stored.find(u =>
+    (u.email || "").toLowerCase() === cleanEmail ||
+    (u.username || "").toLowerCase() === username
+  );
+
+  if (exists) {
+    localStorage.setItem("loggedInUser", JSON.stringify(exists));
+    showApp();
+    return;
+  }
+
+  const companyId =
+    "company_" + Date.now() + "_" +
+    cleanEmail.split("@")[1].replace(/[^a-z0-9]/g, "_");
+
+  const newUser = {
+    username,
+    email: cleanEmail,
+    fullName,
+    password,
+    role: "sales",
+    plan,
+    price,
+    companyId,
+    registered: new Date().toISOString(),
+    expiry: expiry.toISOString(),
+    status: price === 0 ? "active" : "pending",
+    provider: "google"
+  };
+
   stored.push(newUser);
+
   localStorage.setItem("users", JSON.stringify(stored));
   localStorage.setItem("loggedInUser", JSON.stringify(newUser));
 
-  if (price === 0) {
-    showApp(); 
-  } else {
-    window.location.href = "payment.html"; 
-  }
+  showApp();
 }
-
 function showApp() {
   const authEl = document.getElementById('auth');
   const layoutEl = document.getElementById('layout');
@@ -79416,42 +79386,112 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div>
       <h3 class="text-lg font-bold text-gray-800">Revenue vs Expenses</h3>
     </div>
+<div class="flex flex-wrap items-right gap-3">
 
-    <div class="flex flex-wrap items-end gap-3">
-
-      <div>
-        <label class="text-xs font-semibold">Month</label>
-        <input type="month" id="revExpMonth" class="border px-2 py-1 rounded text-sm">
-      </div>
-
-      <div>
-        <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="revExpStart" class="border px-2 py-1 rounded text-sm">
-      </div>
-
-      <div>
-        <label class="text-xs font-semibold">End</label>
-        <input type="date" id="revExpEnd" class="border px-2 py-1 rounded text-sm">
-      </div>
-
-    </div>
-
+  <div>
+    <label class="text-xs font-semibold">Month</label>
+    <input type="month" id="revExpMonth"
+       class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
   </div>
+
+  <div>
+    <label class="text-xs font-semibold">Start</label>
+    <input type="date" id="revExpStart"
+       class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+  </div>
+
+  <div>
+    <label class="text-xs font-semibold">End</label>
+    <input type="date" id="revExpEnd"
+       class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+  </div>
+
+  <div class="relative">
+    
+    <button onclick="toggleMoreFilters()"
+       class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      + More Filters
+    </button>
+
+    <div id="moreFiltersDropdown"
+      class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+      <div class="mb-3">
+        <label class="text-xs font-semibold">Account</label>
+        <select class="border px-2 py-1 rounded text-sm w-full">
+          <option>Select account</option>
+          <option>Cash</option>
+          <option>Bank</option>
+          <option>Sales</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="text-xs font-semibold">Report Basis</label>
+        <select class="border px-2 py-1 rounded text-sm w-full">
+          <option>Accrual</option>
+          <option>Cash</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-2 mb-3">
+        <input type="checkbox" id="includeSubAccounts">
+        <label for="includeSubAccounts" class="text-sm">
+          Include sub-account transactions
+        </label>
+      </div>
+
+      <div class="flex gap-2">
+
+        <button
+           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Apply
+        </button>
+
+        <button onclick="resetMoreFilters()"
+           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Reset
+        </button>
+      </div>
+    </div>
+  </div>
+ </div>
+  </div>
+
+<script>
+  function toggleMoreFilters() {
+    document
+      .getElementById('moreFiltersDropdown')
+      .classList.toggle('hidden');
+  }
+
+  function resetMoreFilters() {
+    document
+      .querySelectorAll('#moreFiltersDropdown input, #moreFiltersDropdown select')
+      .forEach(el => {
+        if (el.type === 'checkbox') {
+          el.checked = false;
+        } else {
+          el.selectedIndex = 0;
+        }
+      });
+  }
+</script>
 
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyRevenueVsExpensesFilters()"
-      class="px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700">
+       class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearRevenueVsExpensesFilters()"
-      class="px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('revenueVsExpensesTable','Revenue vs Expenses Report','revExpMonth')"
-      class="px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -79460,14 +79500,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleRevExpGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+       class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
     <div class="relative">
 
       <button onclick="toggleRevExpCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+         class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Compare ▼
       </button>
 
@@ -79488,12 +79528,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyRevExpComparison()"
-            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearRevExpComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+             class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
@@ -79506,7 +79546,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="relative">
 
       <button onclick="toggleRevExpSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+         class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
@@ -79541,7 +79581,88 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         </div>
       </div>
     </div>
+    <div class="relative">
+
+  <button onclick="toggleCustomizeColumns()"
+     class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    Customize Columns ⚙️
+  </button>
+
+  <div id="customizeColumnsDropdown"
+    class="hidden absolute right-0 z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+    <h3 class="text-sm font-semibold mb-3">Customize Report Columns</h3>
+
+    <!-- Available Columns -->
+    <div>
+      <label class="text-xs text-gray-500">Available Columns</label>
+
+      <div class="border rounded mt-1 p-2 h-40 overflow-y-auto">
+
+        <div class="flex items-center gap-2 mb-2">
+          <input type="checkbox" value="amount">
+          <span class="text-sm">Amount</span>
+        </div>
+
+        <div class="flex items-center gap-2 mb-2">
+          <input type="checkbox" value="debit">
+          <span class="text-sm">Debit</span>
+        </div>
+
+        <div class="flex items-center gap-2 mb-2">
+          <input type="checkbox" value="credit">
+          <span class="text-sm">Credit</span>
+        </div>
+
+        <div class="flex items-center gap-2 mb-2">
+          <input type="checkbox" value="balance">
+          <span class="text-sm">Running Balance</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="checkbox" value="description">
+          <span class="text-sm">Description</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="flex gap-2 mt-4">
+
+      <button onclick="applyCustomizeColumns()"
+        class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+        Apply
+      </button>
+
+      <button onclick="resetCustomizeColumns()"
+        class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+        Reset
+      </button>
+
+    </div>
+
   </div>
+</div>
+
+<script>
+  function toggleCustomizeColumns() {
+    document
+      .getElementById('customizeColumnsDropdown')
+      .classList.toggle('hidden');
+  }
+
+  function applyCustomizeColumns() {
+    alert('Columns Applied');
+  }
+
+  function resetCustomizeColumns() {
+    document
+      .querySelectorAll('#customizeColumnsDropdown input[type="checkbox"]')
+      .forEach(cb => cb.checked = false);
+  }
+</script>
+  </div>
+  
   <div class="bg-white p-4 rounded-xl shadow">
     <canvas id="revenueVsExpensesChart"></canvas>
   </div>
@@ -79554,36 +79675,288 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       <h3 class="text-lg font-bold text-gray-800">Cashflow Forecast</h3>
     </div>
 
-    <div class="flex flex-wrap items-end gap-3">
+    <div class="flex flex-wrap items-right gap-3">
 
       <div>
         <label class="text-xs font-semibold">Month</label>
-        <input type="month" id="cashflowMonth" class="border px-2 py-1 rounded text-sm">
+        <input type="month" id="cashflowMonth"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="cashflowStart" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="cashflowStart"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       </div>
 
       <div>
         <label class="text-xs font-semibold">End</label>
-        <input type="date" id="cashflowEnd" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="cashflowEnd"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleCashflowMoreFilters()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          + More Filters
+        </button>
+
+        <div id="cashflowMoreFiltersDropdown"
+          class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Account</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>Select account</option>
+              <option>Cash</option>
+              <option>Bank</option>
+              <option>Forecast</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Report Basis</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>Accrual</option>
+              <option>Cash</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <input type="checkbox" id="includeCashflowSubAccounts">
+            <label for="includeCashflowSubAccounts" class="text-sm">
+              Include sub-account transactions
+            </label>
+          </div>
+
+          <div class="flex gap-2">
+
+            <button
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Apply
+            </button>
+
+            <button onclick="resetCashflowMoreFilters()"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Reset
+            </button>
+
+          </div>
+        </div>
+
       </div>
 
     </div>
 
   </div>
 
+  <script>
+    function toggleCashflowMoreFilters() {
+      document
+        .getElementById('cashflowMoreFiltersDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function resetCashflowMoreFilters() {
+      document
+        .querySelectorAll('#cashflowMoreFiltersDropdown input, #cashflowMoreFiltersDropdown select')
+        .forEach(el => {
+          if (el.type === 'checkbox') {
+            el.checked = false;
+          } else {
+            el.selectedIndex = 0;
+          }
+        });
+    }
+  </script>
+
   <div class="flex gap-2 mb-4 flex-wrap">
-    <button onclick="applyCashflowFilters()" class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+
+    <button onclick="applyCashflowFilters()"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
-    <button onclick="clearCashflowFilters()" class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+    <button onclick="clearCashflowFilters()"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
+
+    <button onclick="exportFilteredTableToCSV('cashflowTable','Cashflow Forecast Report','cashflowMonth')"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      ⬇ Export CSV
+    </button>
+
   </div>
+
+  <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
+
+    <button onclick="toggleCashflowGroupBy()"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      Group By ▼
+    </button>
+
+    <div class="relative">
+
+      <button onclick="toggleCashflowCompareDropdown()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Compare ▼
+      </button>
+
+      <div id="cashflowCompareDropdown"
+        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="font-semibold mb-3">Compare With</h3>
+
+        <select id="cashflowCompareType"
+          class="border rounded px-2 py-2 w-full">
+
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+
+        </select>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyCashflowComparison()"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Apply
+          </button>
+
+          <button onclick="clearCashflowComparison()"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Cancel
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleCashflowSettings()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Settings ⚙️
+      </button>
+
+      <div id="cashflowSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
+
+        <select id="cashflowView"
+          class="border rounded px-2 py-1 w-full">
+
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
+
+        </select>
+
+        <div class="flex items-center gap-2 mt-3">
+          <input type="checkbox" onchange="toggleCashflowDarkMode(this)">
+          <label class="text-sm">Dark Mode</label>
+        </div>
+
+        <div class="flex gap-2 mt-3">
+
+          <button onclick="applyCashflowSettings()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="clearCashflowSettings()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleCashflowCustomizeColumns()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="cashflowCustomizeColumnsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Customize Report Columns</h3>
+
+        <div>
+          <label class="text-xs text-gray-500">Available Columns</label>
+
+          <div class="border rounded mt-1 p-2 h-40 overflow-y-auto">
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="operating">
+              <span class="text-sm">Operating Cashflow</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="investing">
+              <span class="text-sm">Investing Cashflow</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="financing">
+              <span class="text-sm">Financing Cashflow</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="opening">
+              <span class="text-sm">Opening Cash</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="checkbox" value="closing">
+              <span class="text-sm">Closing Cash</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyCashflowCustomizeColumns()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="resetCashflowCustomizeColumns()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    function toggleCashflowCustomizeColumns() {
+      document
+        .getElementById('cashflowCustomizeColumnsDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function applyCashflowCustomizeColumns() {
+      alert('Columns Applied');
+    }
+
+    function resetCashflowCustomizeColumns() {
+      document
+        .querySelectorAll('#cashflowCustomizeColumnsDropdown input[type="checkbox"]')
+        .forEach(cb => cb.checked = false);
+    }
+  </script>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
@@ -107161,22 +107534,6 @@ function createPaginatedTable(config) {
   render();
 }
 </script>
-<script>
-function toggleSubmenu(id) {
-  
-  const allSubmenus = document.querySelectorAll('ul[id*="Submenu"]');
-  allSubmenus.forEach(menu => {
-    if (menu.id !== id) {
-      menu.classList.add('hidden');
-    }
-  });
-
-  const submenu = document.getElementById(id);
-  if (submenu) {
-    submenu.classList.toggle('hidden');
-  }
-}
-</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
@@ -107203,6 +107560,7 @@ const db = getFirestore(app);
 
 let syncing = false;
 let lastUpload = 0;
+let unsubscribeSync = null;
 
 function getSyncUser() {
 
@@ -107210,7 +107568,11 @@ function getSyncUser() {
     JSON.parse(localStorage.getItem("loggedInUser") || "{}");
 
   let company =
-    (user.companyName || "default_company")
+    (
+      user.companyId ||
+      user.companyName ||
+      "default_company"
+    )
       .toLowerCase()
       .trim();
 
@@ -107232,13 +107594,17 @@ function getFilteredLocalStorage() {
 
     const key = localStorage.key(i);
 
+    if (!key) continue;
+
     if (
       key.toLowerCase().includes("password") ||
       key.toLowerCase().includes("token")
     ) continue;
 
     try {
+
       data[key] = localStorage.getItem(key);
+
     } catch (e) {}
   }
 
@@ -107251,7 +107617,7 @@ async function uploadLocalStorage() {
 
   const now = Date.now();
 
-  if (now - lastUpload < 3000) return;
+  if (now - lastUpload < 1000) return;
 
   syncing = true;
 
@@ -107283,7 +107649,6 @@ async function uploadLocalStorage() {
   } finally {
 
     syncing = false;
-
   }
 }
 
@@ -107292,6 +107657,8 @@ async function downloadLocalStorage() {
   try {
 
     const syncUser = getSyncUser();
+
+    if (!syncUser) return;
 
     const ref = doc(db, "syncData", syncUser);
 
@@ -107303,10 +107670,14 @@ async function downloadLocalStorage() {
 
     Object.keys(cloudData).forEach(key => {
 
-      localStorage.setItem(
-        key,
-        cloudData[key]
-      );
+      try {
+
+        localStorage.setItem(
+          key,
+          cloudData[key]
+        );
+
+      } catch (e) {}
 
     });
 
@@ -107321,11 +107692,15 @@ async function downloadLocalStorage() {
 
 function realtimeSync() {
 
+  if (unsubscribeSync) {
+    unsubscribeSync();
+  }
+
   const syncUser = getSyncUser();
 
   const ref = doc(db, "syncData", syncUser);
 
-  onSnapshot(ref, (snap) => {
+  unsubscribeSync = onSnapshot(ref, (snap) => {
 
     if (!snap.exists()) return;
 
@@ -107341,25 +107716,50 @@ function realtimeSync() {
           key,
           cloudData[key]
         );
-
       }
-
     });
 
     console.log("🔄 Live Updated");
-
   });
 }
 
-window.addEventListener("load", async () => {
+window.startCloudSync = async function() {
 
   await downloadLocalStorage();
 
   realtimeSync();
 
+  uploadLocalStorage();
+};
+
+window.addEventListener("load", async () => {
+
+  const loggedInUser =
+    JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+
+  if (loggedInUser.username) {
+
+    await window.startCloudSync();
+
+  }
 });
 
 let saveTimer;
+
+const originalSetItem = localStorage.setItem;
+
+localStorage.setItem = function(key, value) {
+
+  originalSetItem.apply(this, [key, value]);
+
+  clearTimeout(saveTimer);
+
+  saveTimer = setTimeout(() => {
+
+    uploadLocalStorage();
+
+  }, 1000);
+};
 
 window.addEventListener("storage", () => {
 
@@ -107369,8 +107769,7 @@ window.addEventListener("storage", () => {
 
     uploadLocalStorage();
 
-  }, 1500);
-
+  }, 1000);
 });
 
 document.addEventListener("visibilitychange", () => {
@@ -107380,33 +107779,48 @@ document.addEventListener("visibilitychange", () => {
     uploadLocalStorage();
 
   }
+});
+
+window.addEventListener("beforeunload", () => {
+
+  uploadLocalStorage();
 
 });
 </script>
+
 <script>
 function debounce(fn, delay = 50) {
+
   let timer;
 
   return function (...args) {
+
     clearTimeout(timer);
 
     timer = setTimeout(() => {
+
       fn.apply(this, args);
+
     }, delay);
   };
 }
 
 function throttleRAF(callback) {
+
   let ticking = false;
 
   return function (...args) {
+
     if (ticking) return;
 
     ticking = true;
 
     requestAnimationFrame(() => {
+
       callback.apply(this, args);
+
       ticking = false;
+
     });
   };
 }
@@ -107424,6 +107838,7 @@ window.addEventListener(
 );
 
 ["touchstart", "touchmove", "wheel"].forEach((event) => {
+
   window.addEventListener(
     event,
     () => {},
@@ -107437,11 +107852,13 @@ let startX = 0;
 let startY = 0;
 
 document.addEventListener("mousedown", (e) => {
+
   const target = e.target.closest(".drag-item");
 
   if (!target) return;
 
   isDragging = true;
+
   dragElement = target;
 
   startX = e.clientX;
@@ -107454,6 +107871,7 @@ document.addEventListener("mousedown", (e) => {
 document.addEventListener(
   "mousemove",
   throttleRAF((e) => {
+
     if (!isDragging || !dragElement) return;
 
     const moveX = e.clientX - startX;
@@ -107465,6 +107883,7 @@ document.addEventListener(
 );
 
 document.addEventListener("mouseup", () => {
+
   if (!dragElement) return;
 
   dragElement.style.willChange = "auto";
@@ -107475,34 +107894,48 @@ document.addEventListener("mouseup", () => {
 });
 
 function updateUI(callback) {
+
   requestAnimationFrame(() => {
+
     callback();
+
   });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
 
   document.querySelectorAll("img").forEach((img) => {
+
     img.loading = "lazy";
     img.decoding = "async";
+
   });
 
   document.querySelectorAll("iframe").forEach((iframe) => {
+
     iframe.loading = "lazy";
+
   });
 
   if ("requestIdleCallback" in window) {
+
     requestIdleCallback(() => {
+
       console.log("Idle tasks loaded");
+
     });
   }
 });
 
 const observer = new IntersectionObserver(
   (entries) => {
+
     entries.forEach((entry) => {
+
       if (entry.isIntersecting) {
+
         entry.target.classList.add("visible");
+
       }
     });
   },
@@ -107512,50 +107945,41 @@ const observer = new IntersectionObserver(
 );
 
 document.querySelectorAll(".lazy-section").forEach((section) => {
-  observer.observe(section);
-});
 
+  observer.observe(section);
+
+});
+</script>
+
+<script>
 (() => {
 
 "use strict";
 
 const AppOptimizer = {
 
-  cache: new Map(),
-
   observers: [],
 
-  intervals: [],
-
-  animations: [],
+  sliderInterval: null,
 
   init() {
 
     this.optimizeImages();
 
-    this.lazyRenderSections();
+    this.lazySections();
 
     this.optimizeTables();
 
-    this.optimizeScrolling();
-
-    this.optimizeEvents();
-
-    this.optimizeStorage();
-
-    this.optimizeAnimations();
-
     this.optimizeDOM();
 
-    this.cleanupHidden();
-
-    this.monitorMemory();
+    this.optimizeSlider();
 
   },
 
   optimizeImages() {
 
-    const imgs = document.querySelectorAll("img");
+    const imgs =
+      document.querySelectorAll("img");
 
     imgs.forEach(img => {
 
@@ -107563,79 +107987,58 @@ const AppOptimizer = {
 
       img.decoding = "async";
 
-      if (!img.dataset.src && img.src) {
-        img.dataset.src = img.src;
-      }
-
-      img.removeAttribute("src");
-
     });
 
-    const observer = new IntersectionObserver(entries => {
+    document.querySelectorAll(
+      "iframe"
+    ).forEach(frame => {
 
-      entries.forEach(entry => {
+      frame.loading = "lazy";
 
-        if (entry.isIntersecting) {
-
-          const img = entry.target;
-
-          if (img.dataset.src) {
-            img.src = img.dataset.src;
-          }
-
-          observer.unobserve(img);
-
-        }
-
-      });
-
-    }, {
-      rootMargin: "300px"
     });
-
-    imgs.forEach(img => observer.observe(img));
-
-    this.observers.push(observer);
 
   },
 
-  lazyRenderSections() {
+  lazySections() {
 
-    const sections = document.querySelectorAll("section, .lazy-section");
+    const sections =
+      document.querySelectorAll(
+        ".lazy-section, section"
+      );
 
-    const observer = new IntersectionObserver(entries => {
+    const observer =
+      new IntersectionObserver(
+        entries => {
 
-      entries.forEach(entry => {
+          entries.forEach(entry => {
 
-        if (entry.isIntersecting) {
+            if (
+              entry.isIntersecting
+            ) {
 
-          entry.target.classList.add("loaded");
+              entry.target.classList.add(
+                "loaded"
+              );
 
-          const hidden = entry.target.querySelectorAll("[data-lazy-html]");
-
-          hidden.forEach(el => {
-
-            if (!el.dataset.rendered) {
-
-              el.innerHTML = el.dataset.lazyHtml || "";
-
-              el.dataset.rendered = "true";
+              observer.unobserve(
+                entry.target
+              );
 
             }
 
           });
 
-          observer.unobserve(entry.target);
-
+        },
+        {
+          rootMargin: "200px"
         }
+      );
 
-      });
+    sections.forEach(section => {
 
-    }, {
-      rootMargin: "400px"
+      observer.observe(section);
+
     });
-
-    sections.forEach(section => observer.observe(section));
 
     this.observers.push(observer);
 
@@ -107643,254 +108046,154 @@ const AppOptimizer = {
 
   optimizeTables() {
 
-    window.renderVirtualTable = function(id, data, page = 1, size = 50) {
-
-      const table = document.getElementById(id);
-
-      if (!table) return;
-
-      const start = (page - 1) * size;
-
-      const end = start + size;
-
-      const rows = data.slice(start, end);
-
-      const fragment = document.createDocumentFragment();
-
-      rows.forEach(row => {
-
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = Object.values(row)
-          .map(v => `<td class="border p-2">${v}</td>`)
-          .join("");
-
-        fragment.appendChild(tr);
-
-      });
-
-      table.innerHTML = "";
-
-      table.appendChild(fragment);
-
-    };
-
-  },
-
-  optimizeScrolling() {
-
-    let ticking = false;
-
-    window.addEventListener("scroll", () => {
-
-      if (!ticking) {
-
-        requestAnimationFrame(() => {
-
-          ticking = false;
-
-        });
-
-        ticking = true;
-
-      }
-
-    }, {
-      passive: true
-    });
-
-  },
-
-  optimizeEvents() {
-
-    const events = [
-      "touchstart",
-      "touchmove",
-      "wheel",
-      "scroll"
-    ];
-
-    events.forEach(event => {
-
-      window.addEventListener(event, () => {}, {
-        passive: true
-      });
-
-    });
-
-  },
-
-  optimizeStorage() {
-
-    const originalSetItem = localStorage.setItem;
-
-    const queue = {};
-
-    let timeout;
-
-    localStorage.setItem = function(key, value) {
-
-      queue[key] = value;
-
-      clearTimeout(timeout);
-
-      timeout = setTimeout(() => {
-
-        Object.entries(queue).forEach(([k, v]) => {
-          originalSetItem.call(localStorage, k, v);
-        });
-
-      }, 700);
-
-    };
-
-  },
-
-  optimizeAnimations() {
-
-    document.querySelectorAll("*").forEach(el => {
-
-      const style = getComputedStyle(el);
-
-      if (
-        style.animationDuration !== "0s" ||
-        style.transitionDuration !== "0s"
+    window.renderVirtualTable =
+      function(
+        id,
+        data,
+        page = 1,
+        size = 50
       ) {
 
-        el.style.transitionDuration = "0.08s";
+        const table =
+          document.getElementById(id);
 
-        el.style.animationDuration = "0.08s";
+        if (!table) return;
 
-        el.style.willChange = "auto";
+        const start =
+          (page - 1) * size;
 
-      }
+        const rows =
+          data.slice(
+            start,
+            start + size
+          );
 
-    });
+        const fragment =
+          document.createDocumentFragment();
+
+        rows.forEach(row => {
+
+          const tr =
+            document.createElement("tr");
+
+          tr.innerHTML =
+            Object.values(row)
+            .map(v =>
+              `<td class="border p-2">${v}</td>`
+            )
+            .join("");
+
+          fragment.appendChild(tr);
+
+        });
+
+        table.innerHTML = "";
+
+        table.appendChild(fragment);
+
+      };
 
   },
 
   optimizeDOM() {
 
-    const heavy = document.querySelectorAll(
+    document.querySelectorAll(
       ".shadow-xl,.shadow-2xl,.shadow-lg"
-    );
+    ).forEach(el => {
 
-    heavy.forEach(el => {
       el.classList.remove(
         "shadow-xl",
         "shadow-2xl",
         "shadow-lg"
       );
-      el.classList.add("shadow-sm");
+
+      el.classList.add(
+        "shadow-sm"
+      );
+
     });
 
-    document.querySelectorAll("iframe").forEach(frame => {
-      frame.loading = "lazy";
-    });
+    document.querySelectorAll(
+      "video"
+    ).forEach(video => {
 
-    document.querySelectorAll("video").forEach(video => {
       video.preload = "none";
+
     });
 
   },
 
-  cleanupHidden() {
+  optimizeSlider() {
 
-    setInterval(() => {
+    const slider =
+      document.getElementById(
+        "slider"
+      );
 
-      document.querySelectorAll(".hidden").forEach(el => {
+    if (!slider) return;
 
-        if (
-          el.children.length > 80 &&
-          !el.dataset.keep
-        ) {
+    const slides =
+      [...slider.children];
 
-          el.innerHTML = "";
+    if (slides.length <= 1) return;
 
-        }
+    let current = 0;
 
-      });
+    slides.forEach((slide, i) => {
 
-    }, 15000);
+      slide.style.opacity =
+        i === 0 ? "1" : "0";
 
-  },
+      slide.style.transition =
+        "opacity .4s ease";
 
-  monitorMemory() {
+    });
 
-    if ("memory" in performance) {
-
+    this.sliderInterval =
       setInterval(() => {
 
-        const mem = performance.memory;
+        slides[current]
+          .style.opacity = "0";
 
-        const used =
-          Math.round(mem.usedJSHeapSize / 1048576);
+        current++;
 
-        console.log("RAM Used:", used + "MB");
+        if (
+          current >= slides.length
+        ) {
 
-        if (used > 400) {
-
-          this.clearCache();
+          current = 0;
 
         }
 
-      }, 10000);
+        slides[current]
+          .style.opacity = "1";
 
-    }
-
-  },
-
-  clearCache() {
-
-    this.cache.clear();
-
-    if (window.gc) {
-      window.gc();
-    }
+      }, 8000);
 
   },
 
   destroy() {
 
-    this.observers.forEach(o => o.disconnect());
+    this.observers.forEach(
+      o => o.disconnect()
+    );
 
-    this.intervals.forEach(i => clearInterval(i));
-
-    this.animations.forEach(a => cancelAnimationFrame(a));
+    clearInterval(
+      this.sliderInterval
+    );
 
   }
 
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
-  AppOptimizer.init();
-
-  const slider = document.getElementById("slider");
-
-  if (slider) {
-
-    let slides = slider.children;
-
-    let current = 0;
-
-    setInterval(() => {
-
-      requestAnimationFrame(() => {
-
-        Array.from(slides).forEach((slide, i) => {
-          slide.style.opacity = i === current ? "1" : "0";
-        });
-
-        current = (current + 1) % slides.length;
-
-      });
-
-    }, 9000);
+    AppOptimizer.init();
 
   }
-
-});
+);
 
 })();
 </script>
