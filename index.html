@@ -107514,7 +107514,385 @@ const observer = new IntersectionObserver(
 document.querySelectorAll(".lazy-section").forEach((section) => {
   observer.observe(section);
 });
-</script>
+
+(() => {
+
+"use strict";
+
+const AppOptimizer = {
+
+  cache: new Map(),
+
+  observers: [],
+
+  intervals: [],
+
+  animations: [],
+
+  init() {
+
+    this.optimizeImages();
+
+    this.lazyRenderSections();
+
+    this.optimizeTables();
+
+    this.optimizeScrolling();
+
+    this.optimizeEvents();
+
+    this.optimizeStorage();
+
+    this.optimizeAnimations();
+
+    this.optimizeDOM();
+
+    this.cleanupHidden();
+
+    this.monitorMemory();
+
+  },
+
+  optimizeImages() {
+
+    const imgs = document.querySelectorAll("img");
+
+    imgs.forEach(img => {
+
+      img.loading = "lazy";
+
+      img.decoding = "async";
+
+      if (!img.dataset.src && img.src) {
+        img.dataset.src = img.src;
+      }
+
+      img.removeAttribute("src");
+
+    });
+
+    const observer = new IntersectionObserver(entries => {
+
+      entries.forEach(entry => {
+
+        if (entry.isIntersecting) {
+
+          const img = entry.target;
+
+          if (img.dataset.src) {
+            img.src = img.dataset.src;
+          }
+
+          observer.unobserve(img);
+
+        }
+
+      });
+
+    }, {
+      rootMargin: "300px"
+    });
+
+    imgs.forEach(img => observer.observe(img));
+
+    this.observers.push(observer);
+
+  },
+
+  lazyRenderSections() {
+
+    const sections = document.querySelectorAll("section, .lazy-section");
+
+    const observer = new IntersectionObserver(entries => {
+
+      entries.forEach(entry => {
+
+        if (entry.isIntersecting) {
+
+          entry.target.classList.add("loaded");
+
+          const hidden = entry.target.querySelectorAll("[data-lazy-html]");
+
+          hidden.forEach(el => {
+
+            if (!el.dataset.rendered) {
+
+              el.innerHTML = el.dataset.lazyHtml || "";
+
+              el.dataset.rendered = "true";
+
+            }
+
+          });
+
+          observer.unobserve(entry.target);
+
+        }
+
+      });
+
+    }, {
+      rootMargin: "400px"
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    this.observers.push(observer);
+
+  },
+
+  optimizeTables() {
+
+    window.renderVirtualTable = function(id, data, page = 1, size = 50) {
+
+      const table = document.getElementById(id);
+
+      if (!table) return;
+
+      const start = (page - 1) * size;
+
+      const end = start + size;
+
+      const rows = data.slice(start, end);
+
+      const fragment = document.createDocumentFragment();
+
+      rows.forEach(row => {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = Object.values(row)
+          .map(v => `<td class="border p-2">${v}</td>`)
+          .join("");
+
+        fragment.appendChild(tr);
+
+      });
+
+      table.innerHTML = "";
+
+      table.appendChild(fragment);
+
+    };
+
+  },
+
+  optimizeScrolling() {
+
+    let ticking = false;
+
+    window.addEventListener("scroll", () => {
+
+      if (!ticking) {
+
+        requestAnimationFrame(() => {
+
+          ticking = false;
+
+        });
+
+        ticking = true;
+
+      }
+
+    }, {
+      passive: true
+    });
+
+  },
+
+  optimizeEvents() {
+
+    const events = [
+      "touchstart",
+      "touchmove",
+      "wheel",
+      "scroll"
+    ];
+
+    events.forEach(event => {
+
+      window.addEventListener(event, () => {}, {
+        passive: true
+      });
+
+    });
+
+  },
+
+  optimizeStorage() {
+
+    const originalSetItem = localStorage.setItem;
+
+    const queue = {};
+
+    let timeout;
+
+    localStorage.setItem = function(key, value) {
+
+      queue[key] = value;
+
+      clearTimeout(timeout);
+
+      timeout = setTimeout(() => {
+
+        Object.entries(queue).forEach(([k, v]) => {
+          originalSetItem.call(localStorage, k, v);
+        });
+
+      }, 700);
+
+    };
+
+  },
+
+  optimizeAnimations() {
+
+    document.querySelectorAll("*").forEach(el => {
+
+      const style = getComputedStyle(el);
+
+      if (
+        style.animationDuration !== "0s" ||
+        style.transitionDuration !== "0s"
+      ) {
+
+        el.style.transitionDuration = "0.08s";
+
+        el.style.animationDuration = "0.08s";
+
+        el.style.willChange = "auto";
+
+      }
+
+    });
+
+  },
+
+  optimizeDOM() {
+
+    const heavy = document.querySelectorAll(
+      ".shadow-xl,.shadow-2xl,.shadow-lg"
+    );
+
+    heavy.forEach(el => {
+      el.classList.remove(
+        "shadow-xl",
+        "shadow-2xl",
+        "shadow-lg"
+      );
+      el.classList.add("shadow-sm");
+    });
+
+    document.querySelectorAll("iframe").forEach(frame => {
+      frame.loading = "lazy";
+    });
+
+    document.querySelectorAll("video").forEach(video => {
+      video.preload = "none";
+    });
+
+  },
+
+  cleanupHidden() {
+
+    setInterval(() => {
+
+      document.querySelectorAll(".hidden").forEach(el => {
+
+        if (
+          el.children.length > 80 &&
+          !el.dataset.keep
+        ) {
+
+          el.innerHTML = "";
+
+        }
+
+      });
+
+    }, 15000);
+
+  },
+
+  monitorMemory() {
+
+    if ("memory" in performance) {
+
+      setInterval(() => {
+
+        const mem = performance.memory;
+
+        const used =
+          Math.round(mem.usedJSHeapSize / 1048576);
+
+        console.log("RAM Used:", used + "MB");
+
+        if (used > 400) {
+
+          this.clearCache();
+
+        }
+
+      }, 10000);
+
+    }
+
+  },
+
+  clearCache() {
+
+    this.cache.clear();
+
+    if (window.gc) {
+      window.gc();
+    }
+
+  },
+
+  destroy() {
+
+    this.observers.forEach(o => o.disconnect());
+
+    this.intervals.forEach(i => clearInterval(i));
+
+    this.animations.forEach(a => cancelAnimationFrame(a));
+
+  }
+
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  AppOptimizer.init();
+
+  const slider = document.getElementById("slider");
+
+  if (slider) {
+
+    let slides = slider.children;
+
+    let current = 0;
+
+    setInterval(() => {
+
+      requestAnimationFrame(() => {
+
+        Array.from(slides).forEach((slide, i) => {
+          slide.style.opacity = i === current ? "1" : "0";
+        });
+
+        current = (current + 1) % slides.length;
+
+      });
+
+    }, 9000);
+
+  }
+
+});
+
+})();
 </script>
 </body>
 </html>
