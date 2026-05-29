@@ -79593,7 +79593,6 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
     <h3 class="text-sm font-semibold mb-3">Customize Report Columns</h3>
 
-    <!-- Available Columns -->
     <div>
       <label class="text-xs text-gray-500">Available Columns</label>
 
@@ -80009,41 +80008,121 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       <h3 class="text-lg font-bold text-gray-800">Project Expenses</h3>
     </div>
 
-    <div class="flex flex-wrap items-end gap-3">
+    <div class="flex flex-wrap items-right gap-3">
 
       <div>
         <label class="text-xs font-semibold">Project</label>
-        <input type="text" id="projectExpensesProject" class="border px-2 py-1 rounded text-sm" placeholder="Project name">
+        <input type="text" id="projectExpensesProject"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+          placeholder="Project name">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="projectExpensesStart" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="projectExpensesStart"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       </div>
 
       <div>
         <label class="text-xs font-semibold">End</label>
-        <input type="date" id="projectExpensesEnd" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="projectExpensesEnd"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleProjectExpensesMoreFilters()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          + More Filters
+        </button>
+
+        <div id="projectExpensesMoreFiltersDropdown"
+          class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Expense Type</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>Select expense</option>
+              <option>Materials</option>
+              <option>Labor</option>
+              <option>Transport</option>
+              <option>Utilities</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Status</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>All</option>
+              <option>Pending</option>
+              <option>Approved</option>
+              <option>Rejected</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <input type="checkbox" id="includeProjectExpensesSubProjects">
+            <label for="includeProjectExpensesSubProjects" class="text-sm">
+              Include sub-project expenses
+            </label>
+          </div>
+
+          <div class="flex gap-2">
+
+            <button
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Apply
+            </button>
+
+            <button onclick="resetProjectExpensesMoreFilters()"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Reset
+            </button>
+
+          </div>
+
+        </div>
+
       </div>
 
     </div>
 
   </div>
 
+  <script>
+    function toggleProjectExpensesMoreFilters() {
+      document
+        .getElementById('projectExpensesMoreFiltersDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function resetProjectExpensesMoreFilters() {
+      document
+        .querySelectorAll('#projectExpensesMoreFiltersDropdown input, #projectExpensesMoreFiltersDropdown select')
+        .forEach(el => {
+          if (el.type === 'checkbox') {
+            el.checked = false;
+          } else {
+            el.selectedIndex = 0;
+          }
+        });
+    }
+  </script>
+
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyProjectExpensesFilters()"
-      class="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearProjectExpensesFilters()"
-      class="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('projectExpensesTable','Project Expenses Report','projectExpensesProject')"
-      class="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -80052,14 +80131,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleProjectExpensesGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
     <div class="relative">
 
       <button onclick="toggleProjectExpensesCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Compare ▼
       </button>
 
@@ -80080,12 +80159,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyProjectExpensesComparison()"
-            class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearProjectExpensesComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
@@ -80098,36 +80177,30 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="relative">
 
       <button onclick="toggleProjectExpensesSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
       <div id="projectExpensesSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
 
-        <div class="mb-3">
+        <select id="projectExpensesView"
+          class="border rounded px-2 py-1 w-full">
 
-          <label class="text-sm font-semibold">View</label>
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
 
-          <select id="projectExpensesView"
-            class="border rounded px-2 py-1 w-full">
+        </select>
 
-            <option value="summary">Summary</option>
-            <option value="detailed">Detailed</option>
-
-          </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
+        <div class="flex items-center gap-2 mt-3">
           <input type="checkbox" onchange="toggleProjectExpensesDarkMode(this)">
           <label class="text-sm">Dark Mode</label>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 mt-3">
 
           <button onclick="applyProjectExpensesSettings()"
-            class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500">
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
             Apply
           </button>
 
@@ -80137,9 +80210,126 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           </button>
 
         </div>
+      </div>
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleProjectExpensesCustomizeColumns()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="projectExpensesCustomizeColumnsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Customize Report Columns</h3>
+
+        <div>
+          <label class="text-xs text-gray-500">Available Columns</label>
+
+          <div class="border rounded mt-1 p-2 h-40 overflow-y-auto">
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="materials">
+              <span class="text-sm">Materials</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="labor">
+              <span class="text-sm">Labor</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="transport">
+              <span class="text-sm">Transport</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="utilities">
+              <span class="text-sm">Utilities</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="checkbox" value="total">
+              <span class="text-sm">Total Expense</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyProjectExpensesCustomizeColumns()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="resetProjectExpensesCustomizeColumns()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
 
       </div>
 
+    </div>
+
+  </div>
+
+  <script>
+    function toggleProjectExpensesCustomizeColumns() {
+      document
+        .getElementById('projectExpensesCustomizeColumnsDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function applyProjectExpensesCustomizeColumns() {
+      alert('Columns Applied');
+    }
+
+    function resetProjectExpensesCustomizeColumns() {
+      document
+        .querySelectorAll('#projectExpensesCustomizeColumnsDropdown input[type="checkbox"]')
+        .forEach(cb => cb.checked = false);
+    }
+  </script>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg bg-green-50">
+      <h4 class="text-sm font-semibold">Total Expenses</h4>
+      <p id="projectExpensesTotal" class="text-lg font-bold text-green-700">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-blue-50">
+      <h4 class="text-sm font-semibold">Approved Expenses</h4>
+      <p id="projectApprovedExpenses" class="text-lg font-bold text-blue-700">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-purple-50">
+      <h4 class="text-sm font-semibold">Pending Expenses</h4>
+      <p id="projectPendingExpenses" class="text-lg font-bold text-purple-700">KES 0.00</p>
+    </div>
+
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Highest Expense</h4>
+      <p id="projectHighestExpense" class="text-lg font-bold">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Lowest Expense</h4>
+      <p id="projectLowestExpense" class="text-lg font-bold">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Average Expense</h4>
+      <p id="projectAverageExpense" class="text-lg font-bold">KES 0.00</p>
     </div>
 
   </div>
@@ -80156,13 +80346,15 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <tr>
           <th class="p-2 text-left">Month</th>
           <th class="p-2 text-left">Project</th>
+          <th class="p-2 text-left">Expense Type</th>
+          <th class="p-2 text-left">Status</th>
           <th class="p-2 text-left">Expense</th>
         </tr>
       </thead>
 
       <tbody id="projectExpensesBody">
         <tr>
-          <td colspan="3" class="p-2 text-center text-gray-500">No data yet</td>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
         </tr>
       </tbody>
 
@@ -80179,41 +80371,121 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       <h3 class="text-lg font-bold text-gray-800">Project Revenue</h3>
     </div>
 
-    <div class="flex flex-wrap items-end gap-3">
+    <div class="flex flex-wrap items-right gap-3">
 
       <div>
         <label class="text-xs font-semibold">Project</label>
-        <input type="text" id="projectRevenueProject" class="border px-2 py-1 rounded text-sm" placeholder="Project name">
+        <input type="text" id="projectRevenueProject"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+          placeholder="Project name">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="projectRevenueStart" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="projectRevenueStart"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       </div>
 
       <div>
         <label class="text-xs font-semibold">End</label>
-        <input type="date" id="projectRevenueEnd" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="projectRevenueEnd"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleProjectRevenueMoreFilters()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          + More Filters
+        </button>
+
+        <div id="projectRevenueMoreFiltersDropdown"
+          class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Revenue Type</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>Select revenue</option>
+              <option>Sales</option>
+              <option>Services</option>
+              <option>Commission</option>
+              <option>Other Income</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Status</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>All</option>
+              <option>Pending</option>
+              <option>Received</option>
+              <option>Overdue</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <input type="checkbox" id="includeProjectRevenueSubProjects">
+            <label for="includeProjectRevenueSubProjects" class="text-sm">
+              Include sub-project revenue
+            </label>
+          </div>
+
+          <div class="flex gap-2">
+
+            <button
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Apply
+            </button>
+
+            <button onclick="resetProjectRevenueMoreFilters()"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Reset
+            </button>
+
+          </div>
+
+        </div>
+
       </div>
 
     </div>
 
   </div>
 
+  <script>
+    function toggleProjectRevenueMoreFilters() {
+      document
+        .getElementById('projectRevenueMoreFiltersDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function resetProjectRevenueMoreFilters() {
+      document
+        .querySelectorAll('#projectRevenueMoreFiltersDropdown input, #projectRevenueMoreFiltersDropdown select')
+        .forEach(el => {
+          if (el.type === 'checkbox') {
+            el.checked = false;
+          } else {
+            el.selectedIndex = 0;
+          }
+        });
+    }
+  </script>
+
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyProjectRevenueFilters()"
-      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearProjectRevenueFilters()"
-      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('projectRevenueTable','Project Revenue Report','projectRevenueProject')"
-      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -80222,14 +80494,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleProjectRevenueGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
     <div class="relative">
 
       <button onclick="toggleProjectRevenueCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Compare ▼
       </button>
 
@@ -80250,12 +80522,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyProjectRevenueComparison()"
-            class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearProjectRevenueComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
@@ -80268,36 +80540,30 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="relative">
 
       <button onclick="toggleProjectRevenueSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
       <div id="projectRevenueSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
 
-        <div class="mb-3">
+        <select id="projectRevenueView"
+          class="border rounded px-2 py-1 w-full">
 
-          <label class="text-sm font-semibold">View</label>
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
 
-          <select id="projectRevenueView"
-            class="border rounded px-2 py-1 w-full">
+        </select>
 
-            <option value="summary">Summary</option>
-            <option value="detailed">Detailed</option>
-
-          </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
+        <div class="flex items-center gap-2 mt-3">
           <input type="checkbox" onchange="toggleProjectRevenueDarkMode(this)">
           <label class="text-sm">Dark Mode</label>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 mt-3">
 
           <button onclick="applyProjectRevenueSettings()"
-            class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-500">
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
             Apply
           </button>
 
@@ -80307,9 +80573,126 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           </button>
 
         </div>
+      </div>
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleProjectRevenueCustomizeColumns()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="projectRevenueCustomizeColumnsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Customize Report Columns</h3>
+
+        <div>
+          <label class="text-xs text-gray-500">Available Columns</label>
+
+          <div class="border rounded mt-1 p-2 h-40 overflow-y-auto">
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="sales">
+              <span class="text-sm">Sales Revenue</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="services">
+              <span class="text-sm">Service Revenue</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="commission">
+              <span class="text-sm">Commission</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="other">
+              <span class="text-sm">Other Income</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="checkbox" value="total">
+              <span class="text-sm">Total Revenue</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyProjectRevenueCustomizeColumns()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="resetProjectRevenueCustomizeColumns()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
 
       </div>
 
+    </div>
+
+  </div>
+
+  <script>
+    function toggleProjectRevenueCustomizeColumns() {
+      document
+        .getElementById('projectRevenueCustomizeColumnsDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function applyProjectRevenueCustomizeColumns() {
+      alert('Columns Applied');
+    }
+
+    function resetProjectRevenueCustomizeColumns() {
+      document
+        .querySelectorAll('#projectRevenueCustomizeColumnsDropdown input[type="checkbox"]')
+        .forEach(cb => cb.checked = false);
+    }
+  </script>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg bg-green-50">
+      <h4 class="text-sm font-semibold">Total Revenue</h4>
+      <p id="projectRevenueTotal" class="text-lg font-bold text-green-700">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-blue-50">
+      <h4 class="text-sm font-semibold">Received Revenue</h4>
+      <p id="projectReceivedRevenue" class="text-lg font-bold text-blue-700">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-purple-50">
+      <h4 class="text-sm font-semibold">Pending Revenue</h4>
+      <p id="projectPendingRevenue" class="text-lg font-bold text-purple-700">KES 0.00</p>
+    </div>
+
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Highest Revenue</h4>
+      <p id="projectHighestRevenue" class="text-lg font-bold">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Lowest Revenue</h4>
+      <p id="projectLowestRevenue" class="text-lg font-bold">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Average Revenue</h4>
+      <p id="projectAverageRevenue" class="text-lg font-bold">KES 0.00</p>
     </div>
 
   </div>
@@ -80326,18 +80709,22 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <tr>
           <th class="p-2 text-left">Month</th>
           <th class="p-2 text-left">Project</th>
+          <th class="p-2 text-left">Revenue Type</th>
+          <th class="p-2 text-left">Status</th>
           <th class="p-2 text-left">Revenue</th>
         </tr>
       </thead>
 
       <tbody id="projectRevenueBody">
         <tr>
-          <td colspan="3" class="p-2 text-center text-gray-500">No data yet</td>
+          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
         </tr>
       </tbody>
 
     </table>
+
   </div>
+
 </div>
 <div id="projectBudgetVariancePanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
 
@@ -80347,41 +80734,120 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       <h3 class="text-lg font-bold text-gray-800">Project Budget Variance</h3>
     </div>
 
-    <div class="flex flex-wrap items-end gap-3">
+    <div class="flex flex-wrap items-right gap-3">
 
       <div>
         <label class="text-xs font-semibold">Project</label>
-        <input type="text" id="projectBudgetVarianceProject" class="border px-2 py-1 rounded text-sm" placeholder="Project name">
+        <input type="text" id="projectBudgetVarianceProject"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+          placeholder="Project name">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="projectBudgetVarianceStart" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="projectBudgetVarianceStart"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       </div>
 
       <div>
         <label class="text-xs font-semibold">End</label>
-        <input type="date" id="projectBudgetVarianceEnd" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="projectBudgetVarianceEnd"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleProjectBudgetVarianceMoreFilters()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          + More Filters
+        </button>
+
+        <div id="projectBudgetVarianceMoreFiltersDropdown"
+          class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Variance Type</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>Select variance</option>
+              <option>Positive</option>
+              <option>Negative</option>
+              <option>Balanced</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Status</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>All</option>
+              <option>Within Budget</option>
+              <option>Over Budget</option>
+              <option>Under Budget</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <input type="checkbox" id="includeProjectBudgetVarianceSubProjects">
+            <label for="includeProjectBudgetVarianceSubProjects" class="text-sm">
+              Include sub-project variance
+            </label>
+          </div>
+
+          <div class="flex gap-2">
+
+            <button
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Apply
+            </button>
+
+            <button onclick="resetProjectBudgetVarianceMoreFilters()"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Reset
+            </button>
+
+          </div>
+
+        </div>
+
       </div>
 
     </div>
 
   </div>
 
+  <script>
+    function toggleProjectBudgetVarianceMoreFilters() {
+      document
+        .getElementById('projectBudgetVarianceMoreFiltersDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function resetProjectBudgetVarianceMoreFilters() {
+      document
+        .querySelectorAll('#projectBudgetVarianceMoreFiltersDropdown input, #projectBudgetVarianceMoreFiltersDropdown select')
+        .forEach(el => {
+          if (el.type === 'checkbox') {
+            el.checked = false;
+          } else {
+            el.selectedIndex = 0;
+          }
+        });
+    }
+  </script>
+
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyProjectBudgetVarianceFilters()"
-      class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-500">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearProjectBudgetVarianceFilters()"
-      class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-500">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('projectBudgetVarianceTable','Project Budget Variance Report','projectBudgetVarianceProject')"
-      class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-500">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -80390,14 +80856,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleProjectBudgetVarianceGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
     <div class="relative">
 
       <button onclick="toggleProjectBudgetVarianceCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Compare ▼
       </button>
 
@@ -80418,12 +80884,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyProjectBudgetVarianceComparison()"
-            class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-500">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearProjectBudgetVarianceComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
@@ -80436,36 +80902,30 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="relative">
 
       <button onclick="toggleProjectBudgetVarianceSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
       <div id="projectBudgetVarianceSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
 
-        <div class="mb-3">
+        <select id="projectBudgetVarianceView"
+          class="border rounded px-2 py-1 w-full">
 
-          <label class="text-sm font-semibold">View</label>
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
 
-          <select id="projectBudgetVarianceView"
-            class="border rounded px-2 py-1 w-full">
+        </select>
 
-            <option value="summary">Summary</option>
-            <option value="detailed">Detailed</option>
-
-          </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
+        <div class="flex items-center gap-2 mt-3">
           <input type="checkbox" onchange="toggleProjectBudgetVarianceDarkMode(this)">
           <label class="text-sm">Dark Mode</label>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 mt-3">
 
           <button onclick="applyProjectBudgetVarianceSettings()"
-            class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-500">
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
             Apply
           </button>
 
@@ -80475,9 +80935,126 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           </button>
 
         </div>
+      </div>
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleProjectBudgetVarianceCustomizeColumns()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="projectBudgetVarianceCustomizeColumnsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Customize Report Columns</h3>
+
+        <div>
+          <label class="text-xs text-gray-500">Available Columns</label>
+
+          <div class="border rounded mt-1 p-2 h-40 overflow-y-auto">
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="budget">
+              <span class="text-sm">Budget Amount</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="actual">
+              <span class="text-sm">Actual Amount</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="variance">
+              <span class="text-sm">Variance</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="percentage">
+              <span class="text-sm">Variance %</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="checkbox" value="status">
+              <span class="text-sm">Budget Status</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyProjectBudgetVarianceCustomizeColumns()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="resetProjectBudgetVarianceCustomizeColumns()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
 
       </div>
 
+    </div>
+
+  </div>
+
+  <script>
+    function toggleProjectBudgetVarianceCustomizeColumns() {
+      document
+        .getElementById('projectBudgetVarianceCustomizeColumnsDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function applyProjectBudgetVarianceCustomizeColumns() {
+      alert('Columns Applied');
+    }
+
+    function resetProjectBudgetVarianceCustomizeColumns() {
+      document
+        .querySelectorAll('#projectBudgetVarianceCustomizeColumnsDropdown input[type="checkbox"]')
+        .forEach(cb => cb.checked = false);
+    }
+  </script>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg bg-green-50">
+      <h4 class="text-sm font-semibold">Total Budget</h4>
+      <p id="projectBudgetTotal" class="text-lg font-bold text-green-700">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-blue-50">
+      <h4 class="text-sm font-semibold">Actual Spending</h4>
+      <p id="projectActualSpending" class="text-lg font-bold text-blue-700">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-purple-50">
+      <h4 class="text-sm font-semibold">Variance Amount</h4>
+      <p id="projectVarianceAmount" class="text-lg font-bold text-purple-700">KES 0.00</p>
+    </div>
+
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Highest Variance</h4>
+      <p id="projectHighestVariance" class="text-lg font-bold">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Lowest Variance</h4>
+      <p id="projectLowestVariance" class="text-lg font-bold">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Average Variance</h4>
+      <p id="projectAverageVariance" class="text-lg font-bold">KES 0.00</p>
     </div>
 
   </div>
@@ -80497,12 +81074,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           <th class="p-2 text-left">Budget</th>
           <th class="p-2 text-left">Actual</th>
           <th class="p-2 text-left">Variance</th>
+          <th class="p-2 text-left">Variance %</th>
+          <th class="p-2 text-left">Status</th>
         </tr>
       </thead>
 
       <tbody id="projectBudgetVarianceBody">
         <tr>
-          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+          <td colspan="7" class="p-2 text-center text-gray-500">No data yet</td>
         </tr>
       </tbody>
 
@@ -80517,41 +81096,121 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       <h3 class="text-lg font-bold text-gray-800">Project Timeline</h3>
     </div>
 
-    <div class="flex flex-wrap items-end gap-3">
+    <div class="flex flex-wrap items-right gap-3">
 
       <div>
         <label class="text-xs font-semibold">Project</label>
-        <input type="text" id="projectTimelineProject" class="border px-2 py-1 rounded text-sm" placeholder="Project name">
+        <input type="text" id="projectTimelineProject"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+          placeholder="Project name">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="projectTimelineStart" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="projectTimelineStart"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       </div>
 
       <div>
         <label class="text-xs font-semibold">End</label>
-        <input type="date" id="projectTimelineEnd" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="projectTimelineEnd"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleProjectTimelineMoreFilters()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          + More Filters
+        </button>
+
+        <div id="projectTimelineMoreFiltersDropdown"
+          class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Phase</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>Select phase</option>
+              <option>Planning</option>
+              <option>Execution</option>
+              <option>Testing</option>
+              <option>Completed</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Status</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>All</option>
+              <option>On Track</option>
+              <option>Delayed</option>
+              <option>Completed</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <input type="checkbox" id="includeProjectTimelineSubProjects">
+            <label for="includeProjectTimelineSubProjects" class="text-sm">
+              Include sub-project phases
+            </label>
+          </div>
+
+          <div class="flex gap-2">
+
+            <button
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Apply
+            </button>
+
+            <button onclick="resetProjectTimelineMoreFilters()"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Reset
+            </button>
+
+          </div>
+
+        </div>
+
       </div>
 
     </div>
 
   </div>
 
+  <script>
+    function toggleProjectTimelineMoreFilters() {
+      document
+        .getElementById('projectTimelineMoreFiltersDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function resetProjectTimelineMoreFilters() {
+      document
+        .querySelectorAll('#projectTimelineMoreFiltersDropdown input, #projectTimelineMoreFiltersDropdown select')
+        .forEach(el => {
+          if (el.type === 'checkbox') {
+            el.checked = false;
+          } else {
+            el.selectedIndex = 0;
+          }
+        });
+    }
+  </script>
+
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyProjectTimelineFilters()"
-      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearProjectTimelineFilters()"
-      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('projectTimelineTable','Project Timeline Report','projectTimelineProject')"
-      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -80560,14 +81219,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleProjectTimelineGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
     <div class="relative">
 
       <button onclick="toggleProjectTimelineCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Compare ▼
       </button>
 
@@ -80588,12 +81247,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyProjectTimelineComparison()"
-            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearProjectTimelineComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
@@ -80606,36 +81265,30 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="relative">
 
       <button onclick="toggleProjectTimelineSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
       <div id="projectTimelineSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
 
-        <div class="mb-3">
+        <select id="projectTimelineView"
+          class="border rounded px-2 py-1 w-full">
 
-          <label class="text-sm font-semibold">View</label>
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
 
-          <select id="projectTimelineView"
-            class="border rounded px-2 py-1 w-full">
+        </select>
 
-            <option value="summary">Summary</option>
-            <option value="detailed">Detailed</option>
-
-          </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
+        <div class="flex items-center gap-2 mt-3">
           <input type="checkbox" onchange="toggleProjectTimelineDarkMode(this)">
           <label class="text-sm">Dark Mode</label>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 mt-3">
 
           <button onclick="applyProjectTimelineSettings()"
-            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
             Apply
           </button>
 
@@ -80645,9 +81298,126 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           </button>
 
         </div>
+      </div>
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleProjectTimelineCustomizeColumns()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="projectTimelineCustomizeColumnsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Customize Report Columns</h3>
+
+        <div>
+          <label class="text-xs text-gray-500">Available Columns</label>
+
+          <div class="border rounded mt-1 p-2 h-40 overflow-y-auto">
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="phase">
+              <span class="text-sm">Project Phase</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="startDate">
+              <span class="text-sm">Start Date</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="endDate">
+              <span class="text-sm">End Date</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="duration">
+              <span class="text-sm">Duration</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="checkbox" value="status">
+              <span class="text-sm">Timeline Status</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyProjectTimelineCustomizeColumns()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="resetProjectTimelineCustomizeColumns()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
 
       </div>
 
+    </div>
+
+  </div>
+
+  <script>
+    function toggleProjectTimelineCustomizeColumns() {
+      document
+        .getElementById('projectTimelineCustomizeColumnsDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function applyProjectTimelineCustomizeColumns() {
+      alert('Columns Applied');
+    }
+
+    function resetProjectTimelineCustomizeColumns() {
+      document
+        .querySelectorAll('#projectTimelineCustomizeColumnsDropdown input[type="checkbox"]')
+        .forEach(cb => cb.checked = false);
+    }
+  </script>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg bg-green-50">
+      <h4 class="text-sm font-semibold">Completed Phases</h4>
+      <p id="projectCompletedPhases" class="text-lg font-bold text-green-700">0</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-blue-50">
+      <h4 class="text-sm font-semibold">Ongoing Phases</h4>
+      <p id="projectOngoingPhases" class="text-lg font-bold text-blue-700">0</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-purple-50">
+      <h4 class="text-sm font-semibold">Delayed Phases</h4>
+      <p id="projectDelayedPhases" class="text-lg font-bold text-purple-700">0</p>
+    </div>
+
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Longest Phase</h4>
+      <p id="projectLongestPhase" class="text-lg font-bold">0 Days</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Shortest Phase</h4>
+      <p id="projectShortestPhase" class="text-lg font-bold">0 Days</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Average Duration</h4>
+      <p id="projectAverageDuration" class="text-lg font-bold">0 Days</p>
     </div>
 
   </div>
@@ -80666,13 +81436,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           <th class="p-2 text-left">Project</th>
           <th class="p-2 text-left">Start Date</th>
           <th class="p-2 text-left">End Date</th>
+          <th class="p-2 text-left">Duration</th>
           <th class="p-2 text-left">Status</th>
         </tr>
       </thead>
 
       <tbody id="projectTimelineBody">
         <tr>
-          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+          <td colspan="6" class="p-2 text-center text-gray-500">No data yet</td>
         </tr>
       </tbody>
 
@@ -80687,46 +81458,127 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       <h3 class="text-lg font-bold text-gray-800">Batch Tracking</h3>
     </div>
 
-    <div class="flex flex-wrap items-end gap-3">
+    <div class="flex flex-wrap items-right gap-3">
 
       <div>
         <label class="text-xs font-semibold">Batch No</label>
-        <input type="text" id="batchTrackingNumber" class="border px-2 py-1 rounded text-sm" placeholder="Batch number">
+        <input type="text" id="batchTrackingNumber"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+          placeholder="Batch number">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Item</label>
-        <input type="text" id="batchTrackingItem" class="border px-2 py-1 rounded text-sm" placeholder="Item name">
+        <input type="text" id="batchTrackingItem"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+          placeholder="Item name">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="batchTrackingStart" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="batchTrackingStart"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       </div>
 
       <div>
         <label class="text-xs font-semibold">End</label>
-        <input type="date" id="batchTrackingEnd" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="batchTrackingEnd"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleBatchTrackingMoreFilters()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          + More Filters
+        </button>
+
+        <div id="batchTrackingMoreFiltersDropdown"
+          class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Warehouse</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>Select warehouse</option>
+              <option>Main Warehouse</option>
+              <option>Secondary Warehouse</option>
+              <option>Transit Store</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Batch Status</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>All</option>
+              <option>Active</option>
+              <option>Expired</option>
+              <option>Sold Out</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <input type="checkbox" id="includeBatchTrackingSubWarehouses">
+            <label for="includeBatchTrackingSubWarehouses" class="text-sm">
+              Include sub-warehouses
+            </label>
+          </div>
+
+          <div class="flex gap-2">
+
+            <button
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Apply
+            </button>
+
+            <button onclick="resetBatchTrackingMoreFilters()"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Reset
+            </button>
+
+          </div>
+
+        </div>
+
       </div>
 
     </div>
 
   </div>
 
+  <script>
+    function toggleBatchTrackingMoreFilters() {
+      document
+        .getElementById('batchTrackingMoreFiltersDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function resetBatchTrackingMoreFilters() {
+      document
+        .querySelectorAll('#batchTrackingMoreFiltersDropdown input, #batchTrackingMoreFiltersDropdown select')
+        .forEach(el => {
+          if (el.type === 'checkbox') {
+            el.checked = false;
+          } else {
+            el.selectedIndex = 0;
+          }
+        });
+    }
+  </script>
+
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyBatchTrackingFilters()"
-      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearBatchTrackingFilters()"
-      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('batchTrackingTable','Batch Tracking Report','batchTrackingNumber')"
-      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -80735,14 +81587,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleBatchTrackingGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
     <div class="relative">
 
       <button onclick="toggleBatchTrackingCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Compare ▼
       </button>
 
@@ -80763,12 +81615,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyBatchTrackingComparison()"
-            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearBatchTrackingComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
@@ -80781,36 +81633,30 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="relative">
 
       <button onclick="toggleBatchTrackingSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
       <div id="batchTrackingSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
 
-        <div class="mb-3">
+        <select id="batchTrackingView"
+          class="border rounded px-2 py-1 w-full">
 
-          <label class="text-sm font-semibold">View</label>
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
 
-          <select id="batchTrackingView"
-            class="border rounded px-2 py-1 w-full">
+        </select>
 
-            <option value="summary">Summary</option>
-            <option value="detailed">Detailed</option>
-
-          </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
+        <div class="flex items-center gap-2 mt-3">
           <input type="checkbox" onchange="toggleBatchTrackingDarkMode(this)">
           <label class="text-sm">Dark Mode</label>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 mt-3">
 
           <button onclick="applyBatchTrackingSettings()"
-            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
             Apply
           </button>
 
@@ -80820,9 +81666,126 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           </button>
 
         </div>
+      </div>
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleBatchTrackingCustomizeColumns()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="batchTrackingCustomizeColumnsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Customize Report Columns</h3>
+
+        <div>
+          <label class="text-xs text-gray-500">Available Columns</label>
+
+          <div class="border rounded mt-1 p-2 h-40 overflow-y-auto">
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="batch">
+              <span class="text-sm">Batch Number</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="item">
+              <span class="text-sm">Item Name</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="quantity">
+              <span class="text-sm">Quantity</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="warehouse">
+              <span class="text-sm">Warehouse</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="checkbox" value="status">
+              <span class="text-sm">Batch Status</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyBatchTrackingCustomizeColumns()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="resetBatchTrackingCustomizeColumns()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
 
       </div>
 
+    </div>
+
+  </div>
+
+  <script>
+    function toggleBatchTrackingCustomizeColumns() {
+      document
+        .getElementById('batchTrackingCustomizeColumnsDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function applyBatchTrackingCustomizeColumns() {
+      alert('Columns Applied');
+    }
+
+    function resetBatchTrackingCustomizeColumns() {
+      document
+        .querySelectorAll('#batchTrackingCustomizeColumnsDropdown input[type="checkbox"]')
+        .forEach(cb => cb.checked = false);
+    }
+  </script>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg bg-green-50">
+      <h4 class="text-sm font-semibold">Active Batches</h4>
+      <p id="batchTrackingActive" class="text-lg font-bold text-green-700">0</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-blue-50">
+      <h4 class="text-sm font-semibold">Expired Batches</h4>
+      <p id="batchTrackingExpired" class="text-lg font-bold text-blue-700">0</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-purple-50">
+      <h4 class="text-sm font-semibold">Sold Out Batches</h4>
+      <p id="batchTrackingSoldOut" class="text-lg font-bold text-purple-700">0</p>
+    </div>
+
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Total Quantity</h4>
+      <p id="batchTrackingTotalQty" class="text-lg font-bold">0</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Warehouses</h4>
+      <p id="batchTrackingWarehouses" class="text-lg font-bold">0</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Tracked Items</h4>
+      <p id="batchTrackingTrackedItems" class="text-lg font-bold">0</p>
     </div>
 
   </div>
@@ -80841,13 +81804,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           <th class="p-2 text-left">Item</th>
           <th class="p-2 text-left">Quantity</th>
           <th class="p-2 text-left">Warehouse</th>
+          <th class="p-2 text-left">Expiry Date</th>
           <th class="p-2 text-left">Status</th>
         </tr>
       </thead>
 
       <tbody id="batchTrackingBody">
         <tr>
-          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+          <td colspan="6" class="p-2 text-center text-gray-500">No data yet</td>
         </tr>
       </tbody>
 
@@ -80862,46 +81826,126 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       <h3 class="text-lg font-bold text-gray-800">Damaged Stock</h3>
     </div>
 
-    <div class="flex flex-wrap items-end gap-3">
+    <div class="flex flex-wrap items-right gap-3">
 
       <div>
         <label class="text-xs font-semibold">Item</label>
-        <input type="text" id="damagedStockItem" class="border px-2 py-1 rounded text-sm" placeholder="Item name">
+        <input type="text" id="damagedStockItem"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+          placeholder="Item name">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Warehouse</label>
-        <input type="text" id="damagedStockWarehouse" class="border px-2 py-1 rounded text-sm" placeholder="Warehouse">
+        <input type="text" id="damagedStockWarehouse"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+          placeholder="Warehouse">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="damagedStockStart" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="damagedStockStart"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       </div>
 
       <div>
         <label class="text-xs font-semibold">End</label>
-        <input type="date" id="damagedStockEnd" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="damagedStockEnd"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleDamagedStockMoreFilters()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          + More Filters
+        </button>
+
+        <div id="damagedStockMoreFiltersDropdown"
+          class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Damage Type</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>All</option>
+              <option>Broken</option>
+              <option>Expired</option>
+              <option>Spoiled</option>
+              <option>Lost</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Report Basis</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>Warehouse</option>
+              <option>Item</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <input type="checkbox" id="includeDamagedStockSubWarehouses">
+            <label for="includeDamagedStockSubWarehouses" class="text-sm">
+              Include sub-warehouses
+            </label>
+          </div>
+
+          <div class="flex gap-2">
+
+            <button
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Apply
+            </button>
+
+            <button onclick="resetDamagedStockMoreFilters()"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Reset
+            </button>
+
+          </div>
+
+        </div>
+
       </div>
 
     </div>
 
   </div>
 
+  <script>
+    function toggleDamagedStockMoreFilters() {
+      document
+        .getElementById('damagedStockMoreFiltersDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function resetDamagedStockMoreFilters() {
+      document
+        .querySelectorAll('#damagedStockMoreFiltersDropdown input, #damagedStockMoreFiltersDropdown select')
+        .forEach(el => {
+          if (el.type === 'checkbox') {
+            el.checked = false;
+          } else {
+            el.selectedIndex = 0;
+          }
+        });
+    }
+  </script>
+
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyDamagedStockFilters()"
-      class="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearDamagedStockFilters()"
-      class="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('damagedStockTable','Damaged Stock Report','damagedStockItem')"
-      class="px-3 py-1 bg-red-700 text-white rounded hover:bg-red-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -80910,14 +81954,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleDamagedStockGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
     <div class="relative">
 
       <button onclick="toggleDamagedStockCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Compare ▼
       </button>
 
@@ -80938,12 +81982,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyDamagedStockComparison()"
-            class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearDamagedStockComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
@@ -80956,36 +82000,30 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="relative">
 
       <button onclick="toggleDamagedStockSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
       <div id="damagedStockSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
 
-        <div class="mb-3">
+        <select id="damagedStockView"
+          class="border rounded px-2 py-1 w-full">
 
-          <label class="text-sm font-semibold">View</label>
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
 
-          <select id="damagedStockView"
-            class="border rounded px-2 py-1 w-full">
+        </select>
 
-            <option value="summary">Summary</option>
-            <option value="detailed">Detailed</option>
-
-          </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
+        <div class="flex items-center gap-2 mt-3">
           <input type="checkbox" onchange="toggleDamagedStockDarkMode(this)">
           <label class="text-sm">Dark Mode</label>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 mt-3">
 
           <button onclick="applyDamagedStockSettings()"
-            class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-500">
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
             Apply
           </button>
 
@@ -80995,9 +82033,126 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           </button>
 
         </div>
+      </div>
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleDamagedStockCustomizeColumns()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="damagedStockCustomizeColumnsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Customize Report Columns</h3>
+
+        <div>
+          <label class="text-xs text-gray-500">Available Columns</label>
+
+          <div class="border rounded mt-1 p-2 h-40 overflow-y-auto">
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="item">
+              <span class="text-sm">Item Name</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="warehouse">
+              <span class="text-sm">Warehouse</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="quantity">
+              <span class="text-sm">Quantity</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="reason">
+              <span class="text-sm">Damage Reason</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="checkbox" value="date">
+              <span class="text-sm">Damage Date</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyDamagedStockCustomizeColumns()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="resetDamagedStockCustomizeColumns()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
 
       </div>
 
+    </div>
+
+  </div>
+
+  <script>
+    function toggleDamagedStockCustomizeColumns() {
+      document
+        .getElementById('damagedStockCustomizeColumnsDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function applyDamagedStockCustomizeColumns() {
+      alert('Columns Applied');
+    }
+
+    function resetDamagedStockCustomizeColumns() {
+      document
+        .querySelectorAll('#damagedStockCustomizeColumnsDropdown input[type="checkbox"]')
+        .forEach(cb => cb.checked = false);
+    }
+  </script>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg bg-red-50">
+      <h4 class="text-sm font-semibold">Total Damaged Items</h4>
+      <p id="damagedStockTotalItems" class="text-lg font-bold text-red-700">0</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-yellow-50">
+      <h4 class="text-sm font-semibold">Total Loss Value</h4>
+      <p id="damagedStockLossValue" class="text-lg font-bold text-yellow-700">KES 0.00</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-blue-50">
+      <h4 class="text-sm font-semibold">Affected Warehouses</h4>
+      <p id="damagedStockWarehouses" class="text-lg font-bold text-blue-700">0</p>
+    </div>
+
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Most Damaged Item</h4>
+      <p id="damagedStockTopItem" class="text-lg font-bold">N/A</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Damage Cases</h4>
+      <p id="damagedStockCases" class="text-lg font-bold">0</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Recovered Stock</h4>
+      <p id="damagedStockRecovered" class="text-lg font-bold">0</p>
     </div>
 
   </div>
@@ -81017,12 +82172,13 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           <th class="p-2 text-left">Quantity</th>
           <th class="p-2 text-left">Reason</th>
           <th class="p-2 text-left">Date</th>
+          <th class="p-2 text-left">Loss Value</th>
         </tr>
       </thead>
 
       <tbody id="damagedStockBody">
         <tr>
-          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+          <td colspan="6" class="p-2 text-center text-gray-500">No data yet</td>
         </tr>
       </tbody>
 
@@ -81037,46 +82193,128 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       <h3 class="text-lg font-bold text-gray-800">Expired Items</h3>
     </div>
 
-    <div class="flex flex-wrap items-end gap-3">
+    <div class="flex flex-wrap items-right gap-3">
 
       <div>
         <label class="text-xs font-semibold">Item</label>
-        <input type="text" id="expiredItemsSearch" class="border px-2 py-1 rounded text-sm" placeholder="Item name">
+        <input type="text" id="expiredItemsSearch"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+          placeholder="Item name">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Warehouse</label>
-        <input type="text" id="expiredItemsWarehouse" class="border px-2 py-1 rounded text-sm" placeholder="Warehouse">
+        <input type="text" id="expiredItemsWarehouse"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+          placeholder="Warehouse">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="expiredItemsStart" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="expiredItemsStart"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       </div>
 
       <div>
         <label class="text-xs font-semibold">End</label>
-        <input type="date" id="expiredItemsEnd" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="expiredItemsEnd"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleExpiredItemsMoreFilters()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          + More Filters
+        </button>
+
+        <div id="expiredItemsMoreFiltersDropdown"
+          class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Expiry Status</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>All</option>
+              <option>Expired</option>
+              <option>Near Expiry</option>
+              <option>Disposed</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Category</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>All Categories</option>
+              <option>Food</option>
+              <option>Medicine</option>
+              <option>Beverages</option>
+              <option>Supplies</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <input type="checkbox" id="includeExpiredItemsSubWarehouses">
+            <label for="includeExpiredItemsSubWarehouses" class="text-sm">
+              Include sub-warehouses
+            </label>
+          </div>
+
+          <div class="flex gap-2">
+
+            <button
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Apply
+            </button>
+
+            <button onclick="resetExpiredItemsMoreFilters()"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Reset
+            </button>
+
+          </div>
+
+        </div>
+
       </div>
 
     </div>
 
   </div>
 
+  <script>
+    function toggleExpiredItemsMoreFilters() {
+      document
+        .getElementById('expiredItemsMoreFiltersDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function resetExpiredItemsMoreFilters() {
+      document
+        .querySelectorAll('#expiredItemsMoreFiltersDropdown input, #expiredItemsMoreFiltersDropdown select')
+        .forEach(el => {
+          if (el.type === 'checkbox') {
+            el.checked = false;
+          } else {
+            el.selectedIndex = 0;
+          }
+        });
+    }
+  </script>
+
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyExpiredItemsFilters()"
-      class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearExpiredItemsFilters()"
-      class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('expiredItemsTable','Expired Items Report','expiredItemsSearch')"
-      class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -81085,14 +82323,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleExpiredItemsGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
     <div class="relative">
 
       <button onclick="toggleExpiredItemsCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Compare ▼
       </button>
 
@@ -81113,12 +82351,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyExpiredItemsComparison()"
-            class="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-500">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearExpiredItemsComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
@@ -81131,36 +82369,30 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="relative">
 
       <button onclick="toggleExpiredItemsSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
       <div id="expiredItemsSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
 
-        <div class="mb-3">
+        <select id="expiredItemsView"
+          class="border rounded px-2 py-1 w-full">
 
-          <label class="text-sm font-semibold">View</label>
+          <option value="summary">Summary</option>
+          <option value="detailed">Detailed</option>
 
-          <select id="expiredItemsView"
-            class="border rounded px-2 py-1 w-full">
+        </select>
 
-            <option value="summary">Summary</option>
-            <option value="detailed">Detailed</option>
-
-          </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
+        <div class="flex items-center gap-2 mt-3">
           <input type="checkbox" onchange="toggleExpiredItemsDarkMode(this)">
           <label class="text-sm">Dark Mode</label>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex gap-2 mt-3">
 
           <button onclick="applyExpiredItemsSettings()"
-            class="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-500">
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
             Apply
           </button>
 
@@ -81170,9 +82402,126 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           </button>
 
         </div>
+      </div>
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleExpiredItemsCustomizeColumns()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="expiredItemsCustomizeColumnsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Customize Report Columns</h3>
+
+        <div>
+          <label class="text-xs text-gray-500">Available Columns</label>
+
+          <div class="border rounded mt-1 p-2 h-40 overflow-y-auto">
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="item">
+              <span class="text-sm">Item Name</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="warehouse">
+              <span class="text-sm">Warehouse</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="quantity">
+              <span class="text-sm">Quantity</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="expiry">
+              <span class="text-sm">Expiry Date</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="checkbox" value="status">
+              <span class="text-sm">Status</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyExpiredItemsCustomizeColumns()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="resetExpiredItemsCustomizeColumns()"
+            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            Reset
+          </button>
+
+        </div>
 
       </div>
 
+    </div>
+
+  </div>
+
+  <script>
+    function toggleExpiredItemsCustomizeColumns() {
+      document
+        .getElementById('expiredItemsCustomizeColumnsDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function applyExpiredItemsCustomizeColumns() {
+      alert('Columns Applied');
+    }
+
+    function resetExpiredItemsCustomizeColumns() {
+      document
+        .querySelectorAll('#expiredItemsCustomizeColumnsDropdown input[type="checkbox"]')
+        .forEach(cb => cb.checked = false);
+    }
+  </script>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg bg-red-50">
+      <h4 class="text-sm font-semibold">Expired Items</h4>
+      <p id="expiredItemsTotal" class="text-lg font-bold text-red-700">0</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-yellow-50">
+      <h4 class="text-sm font-semibold">Near Expiry</h4>
+      <p id="expiredItemsNearExpiry" class="text-lg font-bold text-yellow-700">0</p>
+    </div>
+
+    <div class="p-4 border rounded-lg bg-blue-50">
+      <h4 class="text-sm font-semibold">Affected Warehouses</h4>
+      <p id="expiredItemsWarehouses" class="text-lg font-bold text-blue-700">0</p>
+    </div>
+
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Disposed Items</h4>
+      <p id="expiredItemsDisposed" class="text-lg font-bold">0</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Recovered Items</h4>
+      <p id="expiredItemsRecovered" class="text-lg font-bold">0</p>
+    </div>
+
+    <div class="p-4 border rounded-lg">
+      <h4 class="text-sm font-semibold">Loss Value</h4>
+      <p id="expiredItemsLossValue" class="text-lg font-bold">KES 0.00</p>
     </div>
 
   </div>
@@ -81192,12 +82541,13 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           <th class="p-2 text-left">Quantity</th>
           <th class="p-2 text-left">Expiry Date</th>
           <th class="p-2 text-left">Status</th>
+          <th class="p-2 text-left">Loss Value</th>
         </tr>
       </thead>
 
       <tbody id="expiredItemsBody">
         <tr>
-          <td colspan="5" class="p-2 text-center text-gray-500">No data yet</td>
+          <td colspan="6" class="p-2 text-center text-gray-500">No data yet</td>
         </tr>
       </tbody>
 
@@ -81220,14 +82570,14 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       <div>
         <label class="text-xs font-semibold">Employee</label>
         <input type="text" id="leaveSummaryEmployee"
-          class="border px-2 py-1 rounded text-sm"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
           placeholder="Employee ID or name">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Leave Type</label>
         <select id="leaveSummaryType"
-          class="border px-2 py-1 rounded text-sm">
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
           <option value="">All</option>
           <option value="Present">Present</option>
           <option value="Sick Leave">Sick Leave</option>
@@ -81240,33 +82590,109 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       <div>
         <label class="text-xs font-semibold">Start</label>
         <input type="date" id="leaveSummaryStart"
-          class="border px-2 py-1 rounded text-sm">
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       </div>
 
       <div>
         <label class="text-xs font-semibold">End</label>
         <input type="date" id="leaveSummaryEnd"
-          class="border px-2 py-1 rounded text-sm">
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleLeaveSummaryMoreFilters()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          + More Filters
+        </button>
+
+        <div id="leaveSummaryMoreFiltersDropdown"
+          class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Department</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>All Departments</option>
+              <option>HR</option>
+              <option>Finance</option>
+              <option>Sales</option>
+              <option>Operations</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Status</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>All Status</option>
+              <option>Approved</option>
+              <option>Pending</option>
+              <option>Rejected</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <input type="checkbox" id="includeInactiveEmployees">
+            <label for="includeInactiveEmployees" class="text-sm">
+              Include inactive employees
+            </label>
+          </div>
+
+          <div class="flex gap-2">
+
+            <button
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Apply
+            </button>
+
+            <button onclick="resetLeaveSummaryMoreFilters()"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Reset
+            </button>
+
+          </div>
+
+        </div>
+
       </div>
 
     </div>
 
   </div>
 
+  <script>
+    function toggleLeaveSummaryMoreFilters() {
+      document
+        .getElementById('leaveSummaryMoreFiltersDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function resetLeaveSummaryMoreFilters() {
+      document
+        .querySelectorAll('#leaveSummaryMoreFiltersDropdown input, #leaveSummaryMoreFiltersDropdown select')
+        .forEach(el => {
+          if (el.type === 'checkbox') {
+            el.checked = false;
+          } else {
+            el.selectedIndex = 0;
+          }
+        });
+    }
+  </script>
+
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyLeaveSummaryFilters()"
-      class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearLeaveSummaryFilters()"
-      class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-400">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('leaveSummaryTable','Leave Summary Report','leaveSummaryEmployee')"
-      class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -81275,7 +82701,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleLeaveSummaryGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
@@ -81283,17 +82709,17 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       class="hidden flex flex-wrap gap-2">
 
       <button onclick="groupLeaveSummary('employee')"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Employee
       </button>
 
       <button onclick="groupLeaveSummary('type')"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Leave Type
       </button>
 
       <button onclick="groupLeaveSummary('month')"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Month
       </button>
 
@@ -81302,7 +82728,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="relative">
 
       <button onclick="toggleLeaveSummaryCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Compare ▼
       </button>
 
@@ -81323,12 +82749,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyLeaveSummaryComparison()"
-            class="bg-blue-900 text-white px-3 py-1 rounded hover:bg-blue-800">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearLeaveSummaryComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
@@ -81341,7 +82767,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="relative">
 
       <button onclick="toggleLeaveSummarySettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
@@ -81371,11 +82797,84 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2">
 
           <button onclick="applyLeaveSummarySettings()"
-            class="bg-blue-900 text-white px-3 py-1 rounded hover:bg-blue-800">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearLeaveSummarySettings()"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleLeaveSummaryCustomizeColumns()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="leaveSummaryCustomizeColumnsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Customize Report Columns</h3>
+
+        <div>
+          <label class="text-xs text-gray-500">Available Columns</label>
+
+          <div class="border rounded mt-1 p-2 h-40 overflow-y-auto">
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="employeeId">
+              <span class="text-sm">Employee ID</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="date">
+              <span class="text-sm">Date</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="leaveType">
+              <span class="text-sm">Leave Type</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="days">
+              <span class="text-sm">Days</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="note">
+              <span class="text-sm">Note</span>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2">
+              <input type="checkbox" value="remainingLeave">
+              <span class="text-sm">Remaining Leave</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="checkbox" value="status">
+              <span class="text-sm">Status</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyLeaveSummaryCustomizeColumns()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="resetLeaveSummaryCustomizeColumns()"
             class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
             Reset
           </button>
@@ -81388,7 +82887,24 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
   </div>
 
-  <!-- SUMMARY CARDS -->
+  <script>
+    function toggleLeaveSummaryCustomizeColumns() {
+      document
+        .getElementById('leaveSummaryCustomizeColumnsDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function applyLeaveSummaryCustomizeColumns() {
+      alert('Columns Applied');
+    }
+
+    function resetLeaveSummaryCustomizeColumns() {
+      document
+        .querySelectorAll('#leaveSummaryCustomizeColumnsDropdown input[type="checkbox"]')
+        .forEach(cb => cb.checked = false);
+    }
+  </script>
+
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
 
     <div class="bg-blue-50 border rounded-lg p-4">
@@ -81417,6 +82933,10 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
   </div>
 
+  <div class="bg-white p-4 rounded-xl shadow mb-6">
+    <canvas id="leaveSummaryChart"></canvas>
+  </div>
+
   <div class="overflow-x-auto">
 
     <table class="w-full border text-sm" id="leaveSummaryTable">
@@ -81443,6 +82963,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
           </td>
         </tr>
       </tbody>
+
     </table>
   </div>
 </div>
@@ -81458,37 +82979,118 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
       <div>
         <label class="text-xs font-semibold">Employee</label>
-        <input type="text" id="attendanceSummaryEmployee" class="border px-2 py-1 rounded text-sm" placeholder="Employee name">
+        <input type="text" id="attendanceSummaryEmployee"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
+          placeholder="Employee name">
       </div>
 
       <div>
         <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="attendanceSummaryStart" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="attendanceSummaryStart"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       </div>
 
       <div>
         <label class="text-xs font-semibold">End</label>
-        <input type="date" id="attendanceSummaryEnd" class="border px-2 py-1 rounded text-sm">
+        <input type="date" id="attendanceSummaryEnd"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      </div>
+
+      <div class="relative">
+
+        <button onclick="toggleAttendanceSummaryMoreFilters()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          + More Filters
+        </button>
+
+        <div id="attendanceSummaryMoreFiltersDropdown"
+          class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Department</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>All Departments</option>
+              <option>HR</option>
+              <option>Finance</option>
+              <option>Sales</option>
+              <option>Operations</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Status</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option>All Status</option>
+              <option>Present</option>
+              <option>Absent</option>
+              <option>Late</option>
+              <option>On Leave</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <input type="checkbox" id="includeInactiveAttendance">
+            <label for="includeInactiveAttendance" class="text-sm">
+              Include inactive employees
+            </label>
+          </div>
+
+          <div class="flex gap-2">
+
+            <button
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Apply
+            </button>
+
+            <button onclick="resetAttendanceSummaryMoreFilters()"
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+              Reset
+            </button>
+
+          </div>
+
+        </div>
+
       </div>
 
     </div>
 
   </div>
 
+  <script>
+    function toggleAttendanceSummaryMoreFilters() {
+      document
+        .getElementById('attendanceSummaryMoreFiltersDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function resetAttendanceSummaryMoreFilters() {
+      document
+        .querySelectorAll('#attendanceSummaryMoreFiltersDropdown input, #attendanceSummaryMoreFiltersDropdown select')
+        .forEach(el => {
+          if (el.type === 'checkbox') {
+            el.checked = false;
+          } else {
+            el.selectedIndex = 0;
+          }
+        });
+    }
+  </script>
+
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyAttendanceSummaryFilters()"
-      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearAttendanceSummaryFilters()"
-      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('attendanceSummaryTable','Attendance Summary Report','attendanceSummaryEmployee')"
-      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -81497,14 +83099,34 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleAttendanceSummaryGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
+
+    <div id="attendanceSummaryGroupOptions"
+      class="hidden flex flex-wrap gap-2">
+
+      <button onclick="groupAttendanceSummary('employee')"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Employee
+      </button>
+
+      <button onclick="groupAttendanceSummary('status')"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Status
+      </button>
+
+      <button onclick="groupAttendanceSummary('month')"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Month
+      </button>
+
+    </div>
 
     <div class="relative">
 
       <button onclick="toggleAttendanceSummaryCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Compare ▼
       </button>
 
@@ -81525,12 +83147,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyAttendanceSummaryComparison()"
-            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearAttendanceSummaryComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
@@ -81543,7 +83165,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="relative">
 
       <button onclick="toggleAttendanceSummarySettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
@@ -81572,11 +83194,70 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2">
 
           <button onclick="applyAttendanceSummarySettings()"
-            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearAttendanceSummarySettings()"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleAttendanceSummaryCustomizeColumns()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="attendanceSummaryCustomizeColumnsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Customize Report Columns</h3>
+
+        <div class="border rounded mt-1 p-2 h-40 overflow-y-auto">
+
+          <div class="flex items-center gap-2 mb-2">
+            <input type="checkbox" value="employee">
+            <span class="text-sm">Employee</span>
+          </div>
+
+          <div class="flex items-center gap-2 mb-2">
+            <input type="checkbox" value="date">
+            <span class="text-sm">Date</span>
+          </div>
+
+          <div class="flex items-center gap-2 mb-2">
+            <input type="checkbox" value="checkin">
+            <span class="text-sm">Check In</span>
+          </div>
+
+          <div class="flex items-center gap-2 mb-2">
+            <input type="checkbox" value="checkout">
+            <span class="text-sm">Check Out</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input type="checkbox" value="status">
+            <span class="text-sm">Status</span>
+          </div>
+
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyAttendanceSummaryCustomizeColumns()"
+            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            Apply
+          </button>
+
+          <button onclick="resetAttendanceSummaryCustomizeColumns()"
             class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
             Reset
           </button>
@@ -81588,6 +83269,24 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     </div>
 
   </div>
+
+  <script>
+    function toggleAttendanceSummaryCustomizeColumns() {
+      document
+        .getElementById('attendanceSummaryCustomizeColumnsDropdown')
+        .classList.toggle('hidden');
+    }
+
+    function applyAttendanceSummaryCustomizeColumns() {
+      alert('Columns Applied');
+    }
+
+    function resetAttendanceSummaryCustomizeColumns() {
+      document
+        .querySelectorAll('#attendanceSummaryCustomizeColumnsDropdown input[type="checkbox"]')
+        .forEach(cb => cb.checked = false);
+    }
+  </script>
 
   <div class="bg-white p-4 rounded-xl shadow mb-6">
     <canvas id="attendanceSummaryChart"></canvas>
@@ -81615,6 +83314,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
     </table>
   </div>
+
 </div>
 <div id="overtimeSummaryPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
 
@@ -81641,8 +83341,58 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <input type="date" id="overtimeSummaryEnd" class="border px-2 py-1 rounded text-sm">
       </div>
 
-    </div>
+      <div class="relative">
 
+        <button onclick="toggleOvertimeMoreFilters()"
+          class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+          + More Filters
+        </button>
+
+        <div id="overtimeMoreFiltersDropdown"
+          class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Department</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option value="">All</option>
+              <option>Finance</option>
+              <option>Operations</option>
+              <option>Sales</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-xs font-semibold">Rate Type</label>
+            <select class="border px-2 py-1 rounded text-sm w-full">
+              <option value="">All</option>
+              <option>Normal</option>
+              <option>Weekend</option>
+              <option>Holiday</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2 mb-3">
+            <input type="checkbox" id="includeOvertimeApprovedOnly">
+            <label class="text-sm">Approved only</label>
+          </div>
+
+          <div class="flex gap-2">
+
+            <button class="bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-500">
+              Apply
+            </button>
+
+            <button onclick="resetOvertimeMoreFilters()"
+              class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+              Reset
+            </button>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <div class="flex gap-2 mb-4 flex-wrap">
@@ -81662,7 +83412,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
-  </div>
+  </div> 
 
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
@@ -81671,44 +83421,10 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
-    <div class="relative">
-
-      <button onclick="toggleOvertimeSummaryCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-        Compare ▼
-      </button>
-
-      <div id="overtimeSummaryCompareDropdown"
-        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
-
-        <h3 class="font-semibold mb-3">Compare With</h3>
-
-        <select id="overtimeSummaryCompareType"
-          class="border rounded px-2 py-2 w-full">
-
-          <option value="">None</option>
-          <option value="previousYear">Previous Year</option>
-          <option value="previousPeriod">Previous Period</option>
-
-        </select>
-
-        <div class="flex gap-2 mt-4">
-
-          <button onclick="applyOvertimeSummaryComparison()"
-            class="bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-500">
-            Apply
-          </button>
-
-          <button onclick="clearOvertimeSummaryComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
-            Cancel
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
+    <button onclick="toggleOvertimeSummaryCompareDropdown()"
+      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      Compare ▼
+    </button>
 
     <div class="relative">
 
@@ -81717,44 +83433,29 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
-      <div id="overtimeSummarySettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+      <button onclick="toggleOvertimeCustomizeColumns()"
+        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        Customize Columns ⚙️
+      </button>
 
-        <div class="mb-3">
+    </div>
+  </div>
 
-          <label class="text-sm font-semibold">View</label>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
-          <select id="overtimeSummaryView"
-            class="border rounded px-2 py-1 w-full">
+    <div class="bg-orange-50 border rounded-lg p-4">
+      <p class="text-sm text-gray-500">Total Hours</p>
+      <h2 id="overtimeTotalHours" class="text-2xl font-bold text-orange-700">0</h2>
+    </div>
 
-            <option value="summary">Summary</option>
-            <option value="detailed">Detailed</option>
+    <div class="bg-blue-50 border rounded-lg p-4">
+      <p class="text-sm text-gray-500">Total Pay</p>
+      <h2 id="overtimeTotalPay" class="text-2xl font-bold text-blue-700">0</h2>
+    </div>
 
-          </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
-          <input type="checkbox" onchange="toggleOvertimeSummaryDarkMode(this)">
-          <label class="text-sm">Dark Mode</label>
-        </div>
-
-        <div class="flex gap-2">
-
-          <button onclick="applyOvertimeSummarySettings()"
-            class="bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-500">
-            Apply
-          </button>
-
-          <button onclick="clearOvertimeSummarySettings()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
-            Reset
-          </button>
-
-        </div>
-
-      </div>
-
+    <div class="bg-gray-50 border rounded-lg p-4">
+      <p class="text-sm text-gray-500">Average Rate</p>
+      <h2 id="overtimeAvgRate" class="text-2xl font-bold text-gray-700">0</h2>
     </div>
 
   </div>
@@ -81786,6 +83487,24 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     </table>
   </div>
 </div>
+
+<script>
+function toggleOvertimeMoreFilters() {
+  document.getElementById('overtimeMoreFiltersDropdown').classList.toggle('hidden');
+}
+
+function resetOvertimeMoreFilters() {
+  document.querySelectorAll('#overtimeMoreFiltersDropdown input, #overtimeMoreFiltersDropdown select')
+    .forEach(el => {
+      if (el.type === 'checkbox') el.checked = false;
+      else el.selectedIndex = 0;
+    });
+}
+
+function toggleOvertimeCustomizeColumns() {
+  alert("Customize columns panel (to be implemented)");
+}
+</script>
 <div id="budgetVariancePanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
 
   <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
