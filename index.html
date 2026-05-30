@@ -79269,17 +79269,17 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyProfitTrendFilters()"
-      class="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-600">
+      class="border border-purple-700 bg-purple-700 text-white font-bold px-2 py-1 rounded hover:bg-purple-600">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearProfitTrendFilters()"
-      class="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-600">
+      class="border border-purple-700 bg-purple-700 text-white font-bold px-2 py-1 rounded hover:bg-purple-600">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('profitTrendTable','Profit Trends Report','profitTrendMonth')"
-      class="px-3 py-1 bg-purple-700 text-white rounded hover:bg-purple-600">
+      class="border border-purple-700 bg-purple-700 text-white font-bold px-2 py-1 rounded hover:bg-purple-600">
       ⬇ Export CSV
     </button>
 
@@ -79288,14 +79288,19 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleProfitTrendGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-purple-700 bg-purple-700 text-white font-bold px-2 py-1 rounded hover:bg-purple-600">
       Group By ▼
+    </button>
+
+    <button onclick="toggleProfitTrendSubItems()"
+      class="border border-purple-700 bg-purple-700 text-white font-bold px-2 py-1 rounded hover:bg-purple-600">
+      Sub-Items
     </button>
 
     <div class="relative">
 
       <button onclick="toggleProfitTrendCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-purple-700 bg-purple-700 text-white font-bold px-2 py-1 rounded hover:bg-purple-600">
         Compare ▼
       </button>
 
@@ -79316,12 +79321,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyProfitTrendComparison()"
-            class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-500">
+            class="border border-purple-700 bg-purple-700 text-white font-bold px-2 py-1 rounded hover:bg-purple-600">
             Apply
           </button>
 
           <button onclick="clearProfitTrendComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-purple-700 bg-purple-700 text-white font-bold px-2 py-1 rounded hover:bg-purple-600">
             Cancel
           </button>
 
@@ -79334,35 +79339,38 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     <div class="relative">
 
       <button onclick="toggleProfitTrendSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-purple-700 bg-purple-700 text-white font-bold px-2 py-1 rounded hover:bg-purple-600">
         Settings ⚙️
       </button>
 
       <div id="profitTrendSettingsDropdown"
         class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
 
-        <select id="profitTrendView"
-          class="border rounded px-2 py-2 w-full">
+        <div class="mb-3">
+          <label class="text-sm font-semibold">View</label>
+          <select id="profitTrendView"
+            class="border rounded px-2 py-1 w-full">
 
-          <option value="summary">Summary</option>
-          <option value="detailed">Detailed</option>
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
 
-        </select>
+          </select>
+        </div>
 
-        <div class="flex items-center gap-2 mt-3">
+        <div class="flex items-center gap-2 mb-3">
           <input type="checkbox" onchange="toggleProfitTrendDarkMode(this)">
           <label class="text-sm">Dark Mode</label>
         </div>
 
-        <div class="flex gap-2 mt-3">
+        <div class="flex gap-2">
 
           <button onclick="applyProfitTrendSettings()"
-            class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-500">
+            class="border border-purple-700 bg-purple-700 text-white font-bold px-2 py-1 rounded hover:bg-purple-600">
             Apply
           </button>
 
           <button onclick="clearProfitTrendSettings()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-purple-700 bg-purple-700 text-white font-bold px-2 py-1 rounded hover:bg-purple-600">
             Reset
           </button>
 
@@ -83253,12 +83261,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyAttendanceSummaryCustomizeColumns()"
-            class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="resetAttendanceSummaryCustomizeColumns()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Reset
           </button>
 
@@ -83344,7 +83352,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       <div class="relative">
 
         <button onclick="toggleOvertimeMoreFilters()"
-          class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
           + More Filters
         </button>
 
@@ -83378,13 +83386,12 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
 
           <div class="flex gap-2">
 
-            <button class="bg-orange-600 text-white px-3 py-1 rounded hover:bg-orange-500">
+            <button class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
               Apply
             </button>
 
             <button onclick="resetOvertimeMoreFilters()"
-              class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
-              Reset
+              class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             </button>
 
           </div>
@@ -83398,17 +83405,17 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyOvertimeSummaryFilters()"
-      class="px-3 py-1 bg-orange-700 text-white rounded hover:bg-orange-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearOvertimeSummaryFilters()"
-      class="px-3 py-1 bg-orange-700 text-white rounded hover:bg-orange-600">
+     class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('overtimeSummaryTable','Overtime Summary Report','overtimeSummaryEmployee')"
-      class="px-3 py-1 bg-orange-700 text-white rounded hover:bg-orange-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -83417,24 +83424,24 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleOvertimeSummaryGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
     <button onclick="toggleOvertimeSummaryCompareDropdown()"
-      class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Compare ▼
     </button>
 
     <div class="relative">
 
       <button onclick="toggleOvertimeSummarySettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+       class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
       <button onclick="toggleOvertimeCustomizeColumns()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Customize Columns ⚙️
       </button>
 
@@ -83516,38 +83523,129 @@ function toggleOvertimeCustomizeColumns() {
     <div class="flex flex-wrap items-end gap-3">
 
       <div>
-        <label class="text-xs font-semibold">Department</label>
-        <input type="text" id="budgetVarianceDept" class="border px-2 py-1 rounded text-sm" placeholder="Department">
-      </div>
+  <label class="text-xs font-semibold">Department</label>
+  <input type="text" id="budgetVarianceDept" class="border px-2 py-1 rounded text-sm" placeholder="Department">
+</div>
 
-      <div>
-        <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="budgetVarianceStart" class="border px-2 py-1 rounded text-sm">
-      </div>
+<div>
+  <label class="text-xs font-semibold">Start</label>
+  <input type="date" id="budgetVarianceStart" class="border px-2 py-1 rounded text-sm">
+</div>
 
-      <div>
-        <label class="text-xs font-semibold">End</label>
-        <input type="date" id="budgetVarianceEnd" class="border px-2 py-1 rounded text-sm">
-      </div>
+<div>
+  <label class="text-xs font-semibold">End</label>
+  <input type="date" id="budgetVarianceEnd" class="border px-2 py-1 rounded text-sm">
+</div>
 
+<div>
+  <label class="text-xs font-semibold">Budget Type</label>
+  <select id="budgetVarianceType" class="border px-2 py-1 rounded text-sm">
+    <option value="">All</option>
+    <option>Operational</option>
+    <option>Capital</option>
+    <option>Project</option>
+  </select>
+</div>
+
+<div>
+  <label class="text-xs font-semibold">Status</label>
+  <select id="budgetVarianceStatusMain" class="border px-2 py-1 rounded text-sm">
+    <option value="">All</option>
+    <option>Over Budget</option>
+    <option>Under Budget</option>
+    <option>On Target</option>
+  </select>
+</div>
+
+<div>
+  <label class="text-xs font-semibold">Variance Range</label>
+  <select id="budgetVarianceRange" class="border px-2 py-1 rounded text-sm">
+    <option value="">All</option>
+    <option>0 - 10%</option>
+    <option>10% - 25%</option>
+    <option>25% - 50%</option>
+    <option>50%+</option>
+  </select>
+</div>
     </div>
 
-  </div>
+ 
+  <div class="relative">
 
+  <button onclick="toggleBudgetVarianceMoreFilters()"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    + More Filters
+  </button>
+
+  <div id="budgetVarianceMoreFiltersDropdown"
+    class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+    <div class="mb-3">
+      <label class="text-xs font-semibold">Department</label>
+      <select class="border px-2 py-1 rounded text-sm w-full" id="budgetVarianceFilterDept">
+        <option value="">All</option>
+        <option>Finance</option>
+        <option>Operations</option>
+        <option>Sales</option>
+        <option>HR</option>
+        <option>IT</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="text-xs font-semibold">Budget Status</label>
+      <select class="border px-2 py-1 rounded text-sm w-full" id="budgetVarianceStatus">
+        <option value="">All</option>
+        <option>Over Budget</option>
+        <option>Under Budget</option>
+        <option>On Target</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="text-xs font-semibold">Variance Type</label>
+      <select class="border px-2 py-1 rounded text-sm w-full" id="budgetVarianceType">
+        <option value="">All</option>
+        <option>Positive</option>
+        <option>Negative</option>
+      </select>
+    </div>
+
+    <div class="flex items-center gap-2 mb-3">
+      <input type="checkbox" id="budgetVarianceApprovedOnly">
+      <label class="text-sm">Approved only</label>
+    </div>
+
+    <div class="flex gap-2">
+
+      <button onclick="applyBudgetVarianceMoreFilters()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Apply
+      </button>
+
+      <button onclick="resetBudgetVarianceMoreFilters()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Reset
+      </button>
+
+    </div>
+ </div>
+  </div>
+</div>
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyBudgetVarianceFilters()"
-      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearBudgetVarianceFilters()"
-      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('budgetVarianceTable','Budget Variance Report','budgetVarianceDept')"
-      class="px-3 py-1 bg-blue-700 text-white rounded hover:bg-blue-600">
+     class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -83556,14 +83654,14 @@ function toggleOvertimeCustomizeColumns() {
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleBudgetVarianceGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
     <div class="relative">
 
       <button onclick="toggleBudgetVarianceCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Compare ▼
       </button>
 
@@ -83584,12 +83682,12 @@ function toggleOvertimeCustomizeColumns() {
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyBudgetVarianceComparison()"
-            class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearBudgetVarianceComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
@@ -83602,7 +83700,7 @@ function toggleOvertimeCustomizeColumns() {
     <div class="relative">
 
       <button onclick="toggleBudgetVarianceSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+       class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
@@ -83646,8 +83744,65 @@ function toggleOvertimeCustomizeColumns() {
 
     </div>
 
+<div class="relative">
+
+  <button onclick="toggleBudgetVarianceCustomizeColumns()"
+    class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    Customize Columns ⚙️
+  </button>
+
+  <div id="budgetVarianceCustomizeColumnsDropdown"
+    class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+    <h3 class="text-sm font-semibold mb-3">Show / Hide Columns</h3>
+
+    <div class="flex flex-col gap-2 text-sm">
+
+      <label class="flex items-center gap-2">
+        <input type="checkbox" checked>
+        Department
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="checkbox" checked>
+        Budget
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="checkbox" checked>
+        Actual
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="checkbox" checked>
+        Variance
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="checkbox" checked>
+        Status
+      </label>
+
+    </div>
+
+    <div class="flex gap-2 mt-4">
+
+      <button onclick="applyBudgetVarianceColumnSettings()"
+        class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500">
+        Apply
+      </button>
+
+      <button onclick="resetBudgetVarianceColumnSettings()"
+        class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+        Reset
+      </button>
+
+    </div>
+
   </div>
 
+  </div>
+</div>
   <div class="bg-white p-4 rounded-xl shadow mb-6">
     <canvas id="budgetVarianceChart"></canvas>
   </div>
@@ -83675,6 +83830,37 @@ function toggleOvertimeCustomizeColumns() {
     </table>
   </div>
 </div>
+<script>
+  function toggleBudgetVarianceCustomizeColumns() {
+  document.getElementById('budgetVarianceCustomizeColumnsDropdown')
+    .classList.toggle('hidden');
+}
+
+function applyBudgetVarianceColumnSettings() {
+  document.getElementById('budgetVarianceCustomizeColumnsDropdown')
+    .classList.add('hidden');
+}
+
+function resetBudgetVarianceColumnSettings() {
+  document.querySelectorAll('#budgetVarianceCustomizeColumnsDropdown input')
+    .forEach(cb => cb.checked = true);
+}
+  function toggleBudgetVarianceMoreFilters() {
+  document.getElementById('budgetVarianceMoreFiltersDropdown').classList.toggle('hidden');
+}
+
+function resetBudgetVarianceMoreFilters() {
+  document.querySelectorAll('#budgetVarianceMoreFiltersDropdown select, #budgetVarianceMoreFiltersDropdown input')
+    .forEach(el => {
+      if (el.type === 'checkbox') el.checked = false;
+      else el.selectedIndex = 0;
+    });
+}
+
+function applyBudgetVarianceMoreFilters() {
+  document.getElementById('budgetVarianceMoreFiltersDropdown').classList.add('hidden');
+}
+</script>
 <div id="currencyGainLossPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
 
   <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
@@ -83683,41 +83869,116 @@ function toggleOvertimeCustomizeColumns() {
       <h3 class="text-lg font-bold text-gray-800">Currency Gain / Loss</h3>
     </div>
 
+
+  <div class="relative">
     <div class="flex flex-wrap items-end gap-3">
+        <div>
+    <label class="text-xs font-semibold">Currency</label>
+    <input type="text" id="currencyGainLossCurrency"
+      class="border px-2 py-1 rounded text-sm"
+      placeholder="e.g. USD, EUR">
+  </div>
 
-      <div>
-        <label class="text-xs font-semibold">Currency</label>
-        <input type="text" id="currencyGainLossCurrency" class="border px-2 py-1 rounded text-sm" placeholder="e.g. USD, EUR">
-      </div>
+  <div>
+    <label class="text-xs font-semibold">Base Currency</label>
+    <input type="text" id="currencyGainLossBase"
+      class="border px-2 py-1 rounded text-sm"
+      placeholder="e.g. USD">
+  </div>
 
-      <div>
-        <label class="text-xs font-semibold">Start</label>
-        <input type="date" id="currencyGainLossStart" class="border px-2 py-1 rounded text-sm">
-      </div>
+  <div>
+    <label class="text-xs font-semibold">Start</label>
+    <input type="date" id="currencyGainLossStart"
+      class="border px-2 py-1 rounded text-sm">
+  </div>
 
-      <div>
-        <label class="text-xs font-semibold">End</label>
-        <input type="date" id="currencyGainLossEnd" class="border px-2 py-1 rounded text-sm">
-      </div>
+  <div>
+    <label class="text-xs font-semibold">End</label>
+    <input type="date" id="currencyGainLossEnd"
+      class="border px-2 py-1 rounded text-sm">
+  </div>
 
+  <div>
+    <label class="text-xs font-semibold">Amount Range</label>
+    <input type="number" id="currencyGainLossMin"
+      class="border px-2 py-1 rounded text-sm w-24"
+      placeholder="Min">
+
+    <input type="number" id="currencyGainLossMax"
+      class="border px-2 py-1 rounded text-sm w-24 ml-1"
+      placeholder="Max">
+  </div>
+      
     </div>
 
   </div>
+    <button onclick="toggleCurrencyGainLossMoreFilters()"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+      + More Filters
+    </button>
 
+    <div id="currencyGainLossMoreFiltersDropdown"
+      class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50">
+
+      <div class="mb-3">
+        <label class="text-xs font-semibold">Rate Category</label>
+        <select class="border px-2 py-1 rounded text-sm w-full">
+          <option value="">All</option>
+          <option>Spot</option>
+          <option>Forward</option>
+          <option>Mid Rate</option>
+          <option>Closing Rate</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="text-xs font-semibold">Transaction Type</label>
+        <select class="border px-2 py-1 rounded text-sm w-full">
+          <option value="">All</option>
+          <option>Realized</option>
+          <option>Unrealized</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="text-xs font-semibold">Market</label>
+        <select class="border px-2 py-1 rounded text-sm w-full">
+          <option value="">All</option>
+          <option>Forex</option>
+          <option>Bank Rate</option>
+          <option>Internal Rate</option>
+        </select>
+      </div>
+
+      <div class="flex gap-2">
+
+        <button onclick="applyCurrencyGainLossMoreFilters()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Apply
+        </button>
+
+        <button onclick="resetCurrencyGainLossMoreFilters()"
+          class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+          Reset
+        </button>
+
+      </div>
+    </div>
+  </div>
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyCurrencyGainLossFilters()"
-      class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-500">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       🔍 Apply Filter
     </button>
 
     <button onclick="clearCurrencyGainLossFilters()"
-      class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-500">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('currencyGainLossTable','Currency Gain Loss Report','currencyGainLossCurrency')"
-      class="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-500">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       ⬇ Export CSV
     </button>
 
@@ -83726,19 +83987,19 @@ function toggleOvertimeCustomizeColumns() {
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
     <button onclick="toggleCurrencyGainLossGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Group By ▼
     </button>
 
-    <button onclick="toggleSalesItemSubAccounts()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+    <button onclick="toggleCurrencyGainLossSubAccounts()"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Sub-Items
     </button>
 
     <div class="relative">
 
       <button onclick="toggleCurrencyGainLossCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Compare ▼
       </button>
 
@@ -83759,12 +84020,12 @@ function toggleOvertimeCustomizeColumns() {
         <div class="flex gap-2 mt-4">
 
           <button onclick="applyCurrencyGainLossComparison()"
-            class="bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-500">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearCurrencyGainLossComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
@@ -83776,108 +84037,89 @@ function toggleOvertimeCustomizeColumns() {
 
     <div class="relative">
 
-      <button onclick="toggleSalesItemCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-        Compare With : Applied ▼
-      </button>
-
-      <div id="salesItemCompareDropdown"
-        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
-
-        <h3 class="font-semibold mb-3">Compare With</h3>
-
-        <div class="mb-3">
-
-          <label class="block text-sm mb-1">Compare Based on Period/Year</label>
-
-          <select id="salesItemCompareType"
-            class="border rounded px-2 py-2 w-full"
-            onchange="toggleSalesItemCompareOptions()">
-
-            <option value="">None</option>
-            <option value="previousYear">Previous Year(s)</option>
-            <option value="previousPeriod">Previous Period(s)</option>
-
-          </select>
-
-        </div>
-
-        <div class="mb-3" id="salesItemYearsContainer" style="display:none;">
-
-          <label class="block text-sm mb-1">Number of Year(s)</label>
-
-          <select id="salesItemCompareYears"
-            class="border rounded px-2 py-2 w-full">
-
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-
-          </select>
-
-        </div>
-
-        <div class="flex items-start gap-2 mb-4">
-
-          <input type="checkbox" id="salesItemArrangeLatest" checked>
-
-          <label class="text-sm">Arrange period/year from latest to oldest</label>
-
-        </div>
-
-        <div class="flex gap-2">
-
-          <button onclick="applySalesItemComparison()"
-            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
-            Apply
-          </button>
-
-          <button onclick="clearSalesItemComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative">
-
-      <button onclick="toggleSalesItemSettingsDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      <button onclick="toggleCurrencyGainLossSettingsDropdown()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
-      <div id="salesItemSettingsDropdown"
-        class="hidden absolute z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
-
-        <h3 class="font-semibold mb-3">Settings</h3>
+      <div id="currencyGainLossSettingsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
 
         <div class="mb-3">
-
-          <label class="block text-sm mb-1">Item View</label>
-
-          <select id="salesItemFilter"
-            class="border rounded px-2 py-2 w-full">
-
-            <option value="all">All Items</option>
-            <option value="withSales">Items With Sales</option>
-            <option value="zeroSales">Items With Zero Sales</option>
-
+          <label class="text-sm font-semibold">View</label>
+          <select id="currencyGainLossView"
+            class="border rounded px-2 py-1 w-full">
+            <option value="summary">Summary</option>
+            <option value="detailed">Detailed</option>
           </select>
-
         </div>
 
         <div class="flex gap-2">
-
-          <button onclick="applySalesItemSettings()"
-            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
+          <button onclick="applyCurrencyGainLossSettings()"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
-          <button onclick="clearSalesItemSettings()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+          <button onclick="clearCurrencyGainLossSettings()"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Reset
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleCurrencyGainLossCustomizeColumns()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="currencyGainLossCustomizeColumnsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Show / Hide Columns</h3>
+
+        <div class="flex flex-col gap-2 text-sm">
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Currency
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Rate
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Gain
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Loss
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Net
+          </label>
+
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyCurrencyGainLossColumnSettings()"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+            Apply
+          </button>
+
+          <button onclick="resetCurrencyGainLossColumnSettings()"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
             Reset
           </button>
 
@@ -83914,12 +84156,15 @@ function toggleOvertimeCustomizeColumns() {
       </tbody>
 
     </table>
+
   </div>
+
 </div>
 <div id="topCustomersPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t">
 
   <h2 class="text-xl font-semibold mb-4">👥 Top Customers</h2>
 
+  <!-- FILTER INPUTS -->
   <div class="flex items-center gap-2 mb-2">
     <label for="topCustomersMonth" class="font-medium">Select Month:</label>
 
@@ -83945,160 +84190,191 @@ function toggleOvertimeCustomizeColumns() {
 
   </div>
 
+  <!-- MAIN ACTION BUTTONS (same pattern as currency) -->
   <div class="flex gap-2 mb-4 flex-wrap">
 
     <button onclick="applyTopCustomersFilters()"
-      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
-      ✅ Apply Filter
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      🔍 Apply Filter
     </button>
 
     <button onclick="clearTopCustomersFilters()"
-      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
     <button onclick="exportFilteredTableToCSV('topCustomersTable','Top Customers Report','topCustomersSearch')"
-      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
-      ⬇️ Export CSV
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      ⬇ Export CSV
     </button>
 
   </div>
 
+  <!-- TOOLBAR (FULL MATCH WITH CURRENCY PANEL STYLE) -->
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
+    <!-- Group By -->
     <button onclick="toggleTopCustomersGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
-
-      Group By
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      Group By ▼
     </button>
 
+    <!-- Sub Items -->
+    <button onclick="toggleTopCustomersSubItems()"
+      class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      Sub-Items
+    </button>
+
+    <!-- Compare Dropdown -->
     <div class="relative">
 
       <button onclick="toggleTopCustomersCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-
-        Compare With : Applied ▼
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+        Compare ▼
       </button>
 
       <div id="topCustomersCompareDropdown"
         class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
 
-        <h3 class="font-semibold mb-3">
-          Compare With
-        </h3>
+        <h3 class="font-semibold mb-3">Compare With</h3>
 
-        <div class="mb-3">
+        <select id="topCustomersCompareType"
+          class="border rounded px-2 py-2 w-full">
 
-          <label class="block text-sm mb-1">
-            Compare Based on Period/Year
-          </label>
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
 
-          <select id="topCustomersCompareType"
-            class="border rounded px-2 py-2 w-full">
+        </select>
 
-            <option value="">None</option>
-            <option value="previousYear">Previous Year</option>
-            <option value="previousPeriod">Previous Period</option>
-
-          </select>
-
-        </div>
-
-        <div class="flex gap-2">
+        <div class="flex gap-2 mt-4">
 
           <button onclick="applyTopCustomersComparison()"
-            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
-
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearTopCustomersComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
-
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
         </div>
 
       </div>
-
     </div>
 
+    <!-- SETTINGS -->
     <div class="relative">
 
       <button onclick="toggleTopCustomersSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
       <div id="topCustomersSettingsDropdown"
         class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
 
-        <h3 class="font-semibold mb-3">
-          Settings
-        </h3>
-
         <div class="mb-3">
-
-          <label class="block text-sm mb-1">
-            View
-          </label>
+          <label class="text-sm font-semibold">View</label>
 
           <select id="topCustomersView"
-            class="border rounded px-2 py-2 w-full">
-
+            class="border rounded px-2 py-1 w-full">
             <option value="summary">Summary</option>
             <option value="detailed">Detailed</option>
-
           </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
-
-          <input type="checkbox"
-            onchange="toggleTopCustomersDarkMode(this)">
-
-          <label class="text-sm">
-            Dark Mode
-          </label>
-
         </div>
 
         <div class="flex gap-2">
 
           <button onclick="applyTopCustomersSettings()"
-            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
-
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
           <button onclick="clearTopCustomersSettings()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
-
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
             Reset
           </button>
 
         </div>
 
       </div>
+    </div>
 
+    <!-- CUSTOMIZE COLUMNS (FULL LIKE CURRENCY PANEL) -->
+    <div class="relative">
+
+      <button onclick="toggleTopCustomersCustomizeColumns()"
+        class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="topCustomersCustomizeColumnsDropdown"
+        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Show / Hide Columns</h3>
+
+        <div class="flex flex-col gap-2 text-sm">
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Customer
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Sales
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Orders
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Last Purchase
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Status
+          </label>
+
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyTopCustomersColumnSettings()"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+            Apply
+          </button>
+
+          <button onclick="resetTopCustomersColumnSettings()"
+            class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
     </div>
 
   </div>
 
+  <!-- CHART -->
   <div class="bg-white p-4 rounded shadow mb-4 border">
     <canvas id="topCustomersChart"></canvas>
   </div>
 
+  <!-- TABLE -->
   <div class="overflow-x-auto">
 
     <table class="w-full border border-gray-300 text-sm border-collapse"
       id="topCustomersTable">
 
       <thead class="bg-gray-100">
-
         <tr>
           <th class="border px-2 py-1 text-left">Customer</th>
           <th class="border px-2 py-1 text-left">Sales</th>
@@ -84106,19 +84382,14 @@ function toggleOvertimeCustomizeColumns() {
           <th class="border px-2 py-1 text-left">Last Purchase</th>
           <th class="border px-2 py-1 text-left">Status</th>
         </tr>
-
       </thead>
 
       <tbody id="topCustomersBody">
-
         <tr>
-          <td colspan="5"
-            class="border px-2 py-3 text-center text-gray-500">
-
+          <td colspan="5" class="border px-2 py-3 text-center text-gray-500">
             No data yet
           </td>
         </tr>
-
       </tbody>
 
     </table>
@@ -84132,168 +84403,159 @@ function toggleOvertimeCustomizeColumns() {
 
   <div class="flex items-center gap-2 mb-2">
     <label for="topSellingItemsMonth" class="font-medium">Select Month:</label>
-
-    <input type="month" id="topSellingItemsMonth"
-      class="border px-2 py-1 rounded w-full">
+    <input type="month" id="topSellingItemsMonth" class="border px-2 py-1 rounded w-full">
   </div>
 
   <div class="flex items-center gap-2 mb-4">
     <label class="font-medium">Or Date Range:</label>
-
-    <input type="date" id="topSellingItemsStart"
-      class="border px-2 py-1 rounded">
-
-    <input type="date" id="topSellingItemsEnd"
-      class="border px-2 py-1 rounded">
+    <input type="date" id="topSellingItemsStart" class="border px-2 py-1 rounded">
+    <input type="date" id="topSellingItemsEnd" class="border px-2 py-1 rounded">
   </div>
 
   <div class="flex items-center gap-2 mb-4 flex-wrap">
-
-    <input type="text" id="topSellingItemsSearch"
-      placeholder="Item Name"
-      class="border px-2 py-1 rounded">
-
+    <input type="text" id="topSellingItemsSearch" placeholder="Item Name" class="border px-2 py-1 rounded">
   </div>
 
   <div class="flex gap-2 mb-4 flex-wrap">
 
-    <button onclick="applyTopSellingItemsFilters()"
-      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
-      ✅ Apply Filter
+    <button onclick="applyTopSellingItemsFilters()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      🔍 Apply Filter
     </button>
 
-    <button onclick="clearTopSellingItemsFilters()"
-      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+    <button onclick="clearTopSellingItemsFilters()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
-    <button onclick="exportFilteredTableToCSV('topSellingItemsTable','Top Selling Items Report','topSellingItemsSearch')"
-      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
-      ⬇️ Export CSV
+    <button onclick="exportFilteredTableToCSV('topSellingItemsTable','Top Selling Items Report','topSellingItemsSearch')" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      ⬇ Export CSV
     </button>
 
   </div>
 
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
-    <button onclick="toggleTopSellingItemsGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+    <button onclick="toggleTopSellingItemsGroupBy()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      Group By ▼
+    </button>
 
-      Group By
+    <button onclick="toggleTopSellingItemsSubItems()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      Sub-Items
     </button>
 
     <div class="relative">
 
-      <button onclick="toggleTopSellingItemsCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-
-        Compare With : Applied ▼
+      <button onclick="toggleTopSellingItemsCompareDropdown()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+        Compare ▼
       </button>
 
-      <div id="topSellingItemsCompareDropdown"
-        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+      <div id="topSellingItemsCompareDropdown" class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
 
-        <h3 class="font-semibold mb-3">
-          Compare With
-        </h3>
+        <h3 class="font-semibold mb-3">Compare With</h3>
 
-        <div class="mb-3">
+        <select id="topSellingItemsCompareType" class="border rounded px-2 py-2 w-full">
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+        </select>
 
-          <label class="block text-sm mb-1">
-            Compare Based on Period/Year
-          </label>
+        <div class="flex gap-2 mt-4">
 
-          <select id="topSellingItemsCompareType"
-            class="border rounded px-2 py-2 w-full">
-
-            <option value="">None</option>
-            <option value="previousYear">Previous Year</option>
-            <option value="previousPeriod">Previous Period</option>
-
-          </select>
-
-        </div>
-
-        <div class="flex gap-2">
-
-          <button onclick="applyTopSellingItemsComparison()"
-            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
-
+          <button onclick="applyTopSellingItemsComparison()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
-          <button onclick="clearTopSellingItemsComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
-
+          <button onclick="clearTopSellingItemsComparison()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
         </div>
 
       </div>
-
     </div>
 
     <div class="relative">
 
-      <button onclick="toggleTopSellingItemsSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-
+      <button onclick="toggleTopSellingItemsSettings()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
-      <div id="topSellingItemsSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
-
-        <h3 class="font-semibold mb-3">
-          Settings
-        </h3>
+      <div id="topSellingItemsSettingsDropdown" class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
 
         <div class="mb-3">
-
-          <label class="block text-sm mb-1">
-            View
-          </label>
-
-          <select id="topSellingItemsView"
-            class="border rounded px-2 py-2 w-full">
-
+          <label class="text-sm font-semibold">View</label>
+          <select id="topSellingItemsView" class="border rounded px-2 py-1 w-full">
             <option value="summary">Summary</option>
             <option value="detailed">Detailed</option>
-
           </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
-
-          <input type="checkbox"
-            onchange="toggleTopSellingItemsDarkMode(this)">
-
-          <label class="text-sm">
-            Dark Mode
-          </label>
-
         </div>
 
         <div class="flex gap-2">
 
-          <button onclick="applyTopSellingItemsSettings()"
-            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
-
+          <button onclick="applyTopSellingItemsSettings()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
-          <button onclick="clearTopSellingItemsSettings()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
-
+          <button onclick="clearTopSellingItemsSettings()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
             Reset
           </button>
 
         </div>
 
       </div>
+    </div>
 
+    <div class="relative">
+
+      <button onclick="toggleTopSellingItemsCustomizeColumns()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="topSellingItemsCustomizeColumnsDropdown" class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Show / Hide Columns</h3>
+
+        <div class="flex flex-col gap-2 text-sm">
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Item
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Quantity Sold
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Revenue
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Profit
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Trend
+          </label>
+
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applyTopSellingItemsColumnSettings()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+            Apply
+          </button>
+
+          <button onclick="resetTopSellingItemsColumnSettings()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
     </div>
 
   </div>
@@ -84304,11 +84566,9 @@ function toggleOvertimeCustomizeColumns() {
 
   <div class="overflow-x-auto">
 
-    <table class="w-full border border-gray-300 text-sm border-collapse"
-      id="topSellingItemsTable">
+    <table class="w-full border border-gray-300 text-sm border-collapse" id="topSellingItemsTable">
 
       <thead class="bg-gray-100">
-
         <tr>
           <th class="border px-2 py-1 text-left">Item</th>
           <th class="border px-2 py-1 text-left">Quantity Sold</th>
@@ -84316,22 +84576,20 @@ function toggleOvertimeCustomizeColumns() {
           <th class="border px-2 py-1 text-left">Profit</th>
           <th class="border px-2 py-1 text-left">Trend</th>
         </tr>
-
       </thead>
 
       <tbody id="topSellingItemsBody">
-
         <tr>
-          <td colspan="5"
-            class="border px-2 py-3 text-center text-gray-500">
-
+          <td colspan="5" class="border px-2 py-3 text-center text-gray-500">
             No data yet
           </td>
         </tr>
-
       </tbody>
+
     </table>
+
   </div>
+
 </div>
 <div id="salesComparisonPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t">
 
@@ -84339,168 +84597,159 @@ function toggleOvertimeCustomizeColumns() {
 
   <div class="flex items-center gap-2 mb-2">
     <label for="salesComparisonMonth" class="font-medium">Select Month:</label>
-
-    <input type="month" id="salesComparisonMonth"
-      class="border px-2 py-1 rounded w-full">
+    <input type="month" id="salesComparisonMonth" class="border px-2 py-1 rounded w-full">
   </div>
 
   <div class="flex items-center gap-2 mb-4">
     <label class="font-medium">Or Date Range:</label>
-
-    <input type="date" id="salesComparisonStart"
-      class="border px-2 py-1 rounded">
-
-    <input type="date" id="salesComparisonEnd"
-      class="border px-2 py-1 rounded">
+    <input type="date" id="salesComparisonStart" class="border px-2 py-1 rounded">
+    <input type="date" id="salesComparisonEnd" class="border px-2 py-1 rounded">
   </div>
 
   <div class="flex items-center gap-2 mb-4 flex-wrap">
-
-    <input type="text" id="salesComparisonSearch"
-      placeholder="Item or Category"
-      class="border px-2 py-1 rounded">
-
+    <input type="text" id="salesComparisonSearch" placeholder="Item or Category" class="border px-2 py-1 rounded">
   </div>
 
   <div class="flex gap-2 mb-4 flex-wrap">
 
-    <button onclick="applySalesComparisonFilters()"
-      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
-      ✅ Apply Filter
+    <button onclick="applySalesComparisonFilters()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      🔍 Apply Filter
     </button>
 
-    <button onclick="clearSalesComparisonFilters()"
-      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+    <button onclick="clearSalesComparisonFilters()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
       ❌ Clear
     </button>
 
-    <button onclick="exportFilteredTableToCSV('salesComparisonTable','Sales Comparison Report','salesComparisonSearch')"
-      class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
-      ⬇️ Export CSV
+    <button onclick="exportFilteredTableToCSV('salesComparisonTable','Sales Comparison Report','salesComparisonSearch')" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      ⬇ Export CSV
     </button>
 
   </div>
 
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
-    <button onclick="toggleSalesComparisonGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+    <button onclick="toggleSalesComparisonGroupBy()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      Group By ▼
+    </button>
 
-      Group By
+    <button onclick="toggleSalesComparisonSubItems()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+      Sub-Items
     </button>
 
     <div class="relative">
 
-      <button onclick="toggleSalesComparisonCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-
-        Compare With : Applied ▼
+      <button onclick="toggleSalesComparisonCompareDropdown()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+        Compare ▼
       </button>
 
-      <div id="salesComparisonCompareDropdown"
-        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+      <div id="salesComparisonCompareDropdown" class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
 
-        <h3 class="font-semibold mb-3">
-          Compare With
-        </h3>
+        <h3 class="font-semibold mb-3">Compare With</h3>
 
-        <div class="mb-3">
+        <select id="salesComparisonCompareType" class="border rounded px-2 py-2 w-full">
+          <option value="">None</option>
+          <option value="previousYear">Previous Year</option>
+          <option value="previousPeriod">Previous Period</option>
+        </select>
 
-          <label class="block text-sm mb-1">
-            Compare Based on Period/Year
-          </label>
+        <div class="flex gap-2 mt-4">
 
-          <select id="salesComparisonCompareType"
-            class="border rounded px-2 py-2 w-full">
-
-            <option value="">None</option>
-            <option value="previousYear">Previous Year</option>
-            <option value="previousPeriod">Previous Period</option>
-
-          </select>
-
-        </div>
-
-        <div class="flex gap-2">
-
-          <button onclick="applySalesComparisonComparison()"
-            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
-
+          <button onclick="applySalesComparisonComparison()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
-          <button onclick="clearSalesComparisonComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
-
+          <button onclick="clearSalesComparisonComparison()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
             Cancel
           </button>
 
         </div>
 
       </div>
-
     </div>
 
     <div class="relative">
 
-      <button onclick="toggleSalesComparisonSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-
+      <button onclick="toggleSalesComparisonSettings()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
         Settings ⚙️
       </button>
 
-      <div id="salesComparisonSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
-
-        <h3 class="font-semibold mb-3">
-          Settings
-        </h3>
+      <div id="salesComparisonSettingsDropdown" class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
 
         <div class="mb-3">
-
-          <label class="block text-sm mb-1">
-            View
-          </label>
-
-          <select id="salesComparisonView"
-            class="border rounded px-2 py-2 w-full">
-
+          <label class="text-sm font-semibold">View</label>
+          <select id="salesComparisonView" class="border rounded px-2 py-1 w-full">
             <option value="summary">Summary</option>
             <option value="detailed">Detailed</option>
-
           </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
-
-          <input type="checkbox"
-            onchange="toggleSalesComparisonDarkMode(this)">
-
-          <label class="text-sm">
-            Dark Mode
-          </label>
-
         </div>
 
         <div class="flex gap-2">
 
-          <button onclick="applySalesComparisonSettings()"
-            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-400">
-
+          <button onclick="applySalesComparisonSettings()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
             Apply
           </button>
 
-          <button onclick="clearSalesComparisonSettings()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
-
+          <button onclick="clearSalesComparisonSettings()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
             Reset
           </button>
 
         </div>
 
       </div>
+    </div>
 
+    <div class="relative">
+
+      <button onclick="toggleSalesComparisonCustomizeColumns()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="salesComparisonCustomizeColumnsDropdown" class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Show / Hide Columns</h3>
+
+        <div class="flex flex-col gap-2 text-sm">
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Item / Category
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Current Period
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Previous Period
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Difference
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Growth %
+          </label>
+
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applySalesComparisonColumnSettings()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+            Apply
+          </button>
+
+          <button onclick="resetSalesComparisonColumnSettings()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
     </div>
 
   </div>
@@ -84511,8 +84760,7 @@ function toggleOvertimeCustomizeColumns() {
 
   <div class="overflow-x-auto">
 
-    <table class="w-full border border-gray-300 text-sm border-collapse"
-      id="salesComparisonTable">
+    <table class="w-full border border-gray-300 text-sm border-collapse" id="salesComparisonTable">
 
       <thead class="bg-gray-100">
 
@@ -84529,9 +84777,7 @@ function toggleOvertimeCustomizeColumns() {
       <tbody id="salesComparisonBody">
 
         <tr>
-          <td colspan="5"
-            class="border px-2 py-3 text-center text-gray-500">
-
+          <td colspan="5" class="border px-2 py-3 text-center text-gray-500">
             No data yet
           </td>
         </tr>
@@ -84554,130 +84800,154 @@ function toggleOvertimeCustomizeColumns() {
 
   <div class="flex items-center gap-2 mb-4">
     <label class="font-medium">Or Date Range:</label>
-
     <input type="date" id="salesTaxSummaryStart" class="border px-2 py-1 rounded">
     <input type="date" id="salesTaxSummaryEnd" class="border px-2 py-1 rounded">
   </div>
 
   <div class="flex items-center gap-2 mb-4">
-    <input type="text"
-      id="salesTaxSummarySearch"
-      placeholder="Tax type (VAT, GST...)"
-      class="border px-2 py-1 rounded w-full">
+    <input type="text" id="salesTaxSummarySearch" placeholder="Tax type (VAT, GST...)" class="border px-2 py-1 rounded w-full">
   </div>
 
   <div class="flex gap-2 mb-4 flex-wrap">
 
-    <button onclick="applySalesTaxSummaryFilters()"
-      class="px-1 py-1 bg-rose-900 text-white rounded hover:bg-rose-800">
-      ✅ Apply Filter
+    <button onclick="applySalesTaxSummaryFilters()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
+      🔍 Apply Filter
     </button>
 
-    <button onclick="clearSalesTaxSummaryFilters()"
-      class="px-1 py-1 bg-rose-900 text-white rounded hover:bg-rose-800">
+    <button onclick="clearSalesTaxSummaryFilters()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
       ❌ Clear
     </button>
 
-    <button onclick="exportFilteredTableToCSV('salesTaxSummaryTable','Sales Tax Summary Report','salesTaxSummarySearch')"
-      class="px-1 py-1 bg-rose-900 text-white rounded hover:bg-rose-800">
-      ⬇️ Export CSV
+    <button onclick="exportFilteredTableToCSV('salesTaxSummaryTable','Sales Tax Summary Report','salesTaxSummarySearch')" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
+      ⬇ Export CSV
     </button>
 
   </div>
 
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
-    <button onclick="toggleSalesTaxSummaryGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
-      Group By
+    <button onclick="toggleSalesTaxSummaryGroupBy()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
+      Group By ▼
+    </button>
+
+    <button onclick="toggleSalesTaxSummarySubItems()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
+      Sub-Items
     </button>
 
     <div class="relative">
 
-      <button onclick="toggleSalesTaxSummaryCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-        Compare With ▼
+      <button onclick="toggleSalesTaxSummaryCompareDropdown()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
+        Compare ▼
       </button>
 
-      <div id="salesTaxSummaryCompareDropdown"
-        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+      <div id="salesTaxSummaryCompareDropdown" class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
 
         <h3 class="font-semibold mb-3">Compare With</h3>
 
-        <select id="salesTaxSummaryCompareType"
-          class="border rounded px-2 py-2 w-full">
-
+        <select id="salesTaxSummaryCompareType" class="border rounded px-2 py-2 w-full">
           <option value="">None</option>
           <option value="previousYear">Previous Year</option>
           <option value="previousPeriod">Previous Period</option>
-
         </select>
 
         <div class="flex gap-2 mt-4">
 
-          <button onclick="applySalesTaxSummaryComparison()"
-            class="bg-rose-600 text-white px-3 py-1 rounded hover:bg-rose-500">
+          <button onclick="applySalesTaxSummaryComparison()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
             Apply
           </button>
 
-          <button onclick="clearSalesTaxSummaryComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+          <button onclick="clearSalesTaxSummaryComparison()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
             Cancel
           </button>
 
         </div>
 
       </div>
-
     </div>
 
     <div class="relative">
 
-      <button onclick="toggleSalesTaxSummarySettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      <button onclick="toggleSalesTaxSummarySettings()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
         Settings ⚙️
       </button>
 
-      <div id="salesTaxSummarySettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
-
-        <h3 class="font-semibold mb-3">Settings</h3>
+      <div id="salesTaxSummarySettingsDropdown" class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
 
         <div class="mb-3">
-
-          <label class="block text-sm mb-1">View</label>
-
-          <select id="salesTaxSummaryView"
-            class="border rounded px-2 py-2 w-full">
-
+          <label class="text-sm font-semibold">View</label>
+          <select id="salesTaxSummaryView" class="border rounded px-2 py-1 w-full">
             <option value="summary">Summary</option>
             <option value="detailed">Detailed</option>
-
           </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
-          <input type="checkbox" onchange="toggleSalesTaxSummaryDarkMode(this)">
-          <label class="text-sm">Dark Mode</label>
         </div>
 
         <div class="flex gap-2">
 
-          <button onclick="applySalesTaxSummarySettings()"
-            class="bg-rose-600 text-white px-3 py-1 rounded hover:bg-rose-500">
+          <button onclick="applySalesTaxSummarySettings()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
             Apply
           </button>
 
-          <button onclick="clearSalesTaxSummarySettings()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+          <button onclick="clearSalesTaxSummarySettings()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
             Reset
           </button>
 
         </div>
 
       </div>
+    </div>
 
+    <div class="relative">
+
+      <button onclick="toggleSalesTaxSummaryCustomizeColumns()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="salesTaxSummaryCustomizeColumnsDropdown" class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Show / Hide Columns</h3>
+
+        <div class="flex flex-col gap-2 text-sm">
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Tax Type
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Taxable Amount
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Tax Amount
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Rate %
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Status
+          </label>
+
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applySalesTaxSummaryColumnSettings()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
+            Apply
+          </button>
+
+          <button onclick="resetSalesTaxSummaryColumnSettings()" class="border border-rose-900 text-white bg-rose-900 font-bold px-2 py-1 rounded hover:bg-rose-800">
+            Reset
+          </button>
+
+        </div>
+
+      </div>
     </div>
 
   </div>
@@ -84688,8 +84958,7 @@ function toggleOvertimeCustomizeColumns() {
 
   <div class="overflow-x-auto">
 
-    <table class="w-full border border-gray-300 text-sm border-collapse"
-      id="salesTaxSummaryTable">
+    <table class="w-full border border-gray-300 text-sm border-collapse" id="salesTaxSummaryTable">
 
       <thead class="bg-gray-100">
         <tr>
@@ -84710,7 +84979,9 @@ function toggleOvertimeCustomizeColumns() {
       </tbody>
 
     </table>
+
   </div>
+
 </div>
 <div id="salesForecastPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border">
 
@@ -84743,18 +85014,15 @@ function toggleOvertimeCustomizeColumns() {
 
   <div class="flex gap-2 mb-4 flex-wrap">
 
-    <button onclick="applySalesForecastFilters()"
-      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+    <button onclick="applySalesForecastFilters()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
       🔍 Apply Filter
     </button>
 
-    <button onclick="clearSalesForecastFilters()"
-      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+    <button onclick="clearSalesForecastFilters()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
       ❌ Clear
     </button>
 
-    <button onclick="exportFilteredTableToCSV('salesForecastTable','Sales Forecast Report','salesForecastSearch')"
-      class="px-3 py-1 bg-indigo-700 text-white rounded hover:bg-indigo-600">
+    <button onclick="exportFilteredTableToCSV('salesForecastTable','Sales Forecast Report','salesForecastSearch')" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
       ⬇ Export CSV
     </button>
 
@@ -84762,105 +85030,134 @@ function toggleOvertimeCustomizeColumns() {
 
   <div class="flex flex-wrap items-center gap-2 mb-4 border-b pb-3">
 
-    <button onclick="toggleSalesForecastGroupBy()"
-      class="border px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm">
+    <button onclick="toggleSalesForecastGroupBy()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
       Group By ▼
+    </button>
+
+    <button onclick="toggleSalesForecastSubItems()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
+      Sub-Items
     </button>
 
     <div class="relative">
 
-      <button onclick="toggleSalesForecastCompareDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      <button onclick="toggleSalesForecastCompareDropdown()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
         Compare ▼
       </button>
 
-      <div id="salesForecastCompareDropdown"
-        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
+      <div id="salesForecastCompareDropdown" class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4">
 
         <h3 class="font-semibold mb-3">Compare With</h3>
 
-        <select id="salesForecastCompareType"
-          class="border rounded px-2 py-2 w-full">
-
+        <select id="salesForecastCompareType" class="border rounded px-2 py-2 w-full">
           <option value="">None</option>
           <option value="previousYear">Previous Year</option>
           <option value="previousPeriod">Previous Period</option>
-
         </select>
 
         <div class="flex gap-2 mt-4">
 
-          <button onclick="applySalesForecastComparison()"
-            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+          <button onclick="applySalesForecastComparison()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
             Apply
           </button>
 
-          <button onclick="clearSalesForecastComparison()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+          <button onclick="clearSalesForecastComparison()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
             Cancel
           </button>
 
         </div>
 
       </div>
-
     </div>
 
     <div class="relative">
 
-      <button onclick="toggleSalesForecastSettings()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
+      <button onclick="toggleSalesForecastSettings()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
         Settings ⚙️
       </button>
 
-      <div id="salesForecastSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+      <div id="salesForecastSettingsDropdown" class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
 
         <div class="mb-3">
-
           <label class="text-sm font-semibold">View</label>
-
-          <select id="salesForecastView"
-            class="border rounded px-2 py-1 w-full">
-
+          <select id="salesForecastView" class="border rounded px-2 py-1 w-full">
             <option value="summary">Summary</option>
             <option value="detailed">Detailed</option>
-
           </select>
-
-        </div>
-
-        <div class="flex items-center gap-2 mb-3">
-          <input type="checkbox" onchange="toggleSalesForecastDarkMode(this)">
-          <label class="text-sm">Dark Mode</label>
         </div>
 
         <div class="flex gap-2">
-
-          <button onclick="applySalesForecastSettings()"
-            class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-500">
+          <button onclick="applySalesForecastSettings()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
             Apply
           </button>
 
-          <button onclick="clearSalesForecastSettings()"
-            class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
+          <button onclick="clearSalesForecastSettings()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
+            Reset
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="relative">
+
+      <button onclick="toggleSalesForecastCustomizeColumns()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
+        Customize Columns ⚙️
+      </button>
+
+      <div id="salesForecastCustomizeColumnsDropdown" class="hidden absolute right-0 z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
+
+        <h3 class="text-sm font-semibold mb-3">Show / Hide Columns</h3>
+
+        <div class="flex flex-col gap-2 text-sm">
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Item / Category
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Current Sales
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Forecasted Sales
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Growth %
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked>
+            Trend
+          </label>
+
+        </div>
+
+        <div class="flex gap-2 mt-4">
+
+          <button onclick="applySalesForecastColumnSettings()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
+            Apply
+          </button>
+
+          <button onclick="resetSalesForecastColumnSettings()" class="border border-indigo-700 text-white bg-indigo-700 font-bold px-2 py-1 rounded hover:bg-indigo-600">
             Reset
           </button>
 
         </div>
 
       </div>
-
     </div>
 
   </div>
 
-  <!-- CHART -->
   <div class="bg-white p-4 rounded-xl shadow mb-6">
     <canvas id="salesForecastChart"></canvas>
   </div>
 
-  <!-- TABLE -->
   <div class="overflow-x-auto">
 
     <table class="w-full border text-sm" id="salesForecastTable">
@@ -84882,7 +85179,9 @@ function toggleOvertimeCustomizeColumns() {
       </tbody>
 
     </table>
+
   </div>
+
 </div>
 <div id="kpiDashboardPanel" class="report-view hidden bg-blue-50 rounded-xl shadow-md mb-6 p-6 border-2 border-blue-500">
 
