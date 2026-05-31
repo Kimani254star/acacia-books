@@ -217,6 +217,21 @@ table {
 .section-box {
   contain: layout style paint;
 }
+input,
+select,
+textarea {
+  transition: border-color .1s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+
+table {
+  contain: content;
+}
 </style>
 </head>
 <body id="appBody">
@@ -110238,93 +110253,86 @@ document.addEventListener(
 <script>
 (function () {
 
-  function debounce(func, wait = 500) {
-    let timeout;
-    return function (...args) {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func.apply(this, args), wait);
-    };
+  function getFields() {
+    return Array.from(
+      document.querySelectorAll(
+        'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])'
+      )
+    ).filter(el =>
+      el.offsetParent !== null &&
+      !el.readOnly
+    );
   }
 
-  const inputCache = new WeakMap();
+  document.addEventListener("keydown", function (e) {
 
-  document.querySelectorAll("input, textarea, select").forEach(el => {
+    const active = document.activeElement;
 
-    el.setAttribute("autocomplete", "off");
-    el.setAttribute("spellcheck", "false");
+    if (
+      !active ||
+      !["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName)
+    ) return;
 
-    inputCache.set(el, el.value);
+    const fields = getFields();
+    const index = fields.indexOf(active);
 
-    el.addEventListener("focus", () => {
-      el.style.willChange = "contents";
-    });
+    if (index === -1) return;
 
-    el.addEventListener("blur", () => {
-      el.style.willChange = "auto";
-    });
+    if (e.key === "Enter" && active.tagName !== "TEXTAREA") {
+      e.preventDefault();
 
-    el.addEventListener("input", debounce(function () {
-      inputCache.set(this, this.value);
-    }, 300));
+      const next = fields[index + 1];
 
-  });
+      if (next) {
+        next.focus({ preventScroll: true });
 
-  const originalSetItem = localStorage.setItem;
-
-  const localStorageQueue = {};
-
-  localStorage.setItem = function (key, value) {
-    localStorageQueue[key] = value;
-
-    clearTimeout(localStorageQueue._timer);
-
-    localStorageQueue._timer = setTimeout(() => {
-      Object.keys(localStorageQueue).forEach(k => {
-        if (k !== "_timer") {
-          originalSetItem.call(localStorage, k, localStorageQueue[k]);
+        if (
+          next.tagName === "INPUT" &&
+          next.type !== "checkbox" &&
+          next.type !== "radio"
+        ) {
+          next.select();
         }
-      });
-    }, 1000);
-  };
-
-  const observer = new MutationObserver(() => {
-    document.querySelectorAll("input, textarea, select").forEach(el => {
-
-      if (!el.dataset.optimized) {
-
-        el.dataset.optimized = "true";
-
-        el.setAttribute("autocomplete", "off");
-        el.setAttribute("spellcheck", "false");
-
-        el.addEventListener("input", debounce(function () {
-          inputCache.set(this, this.value);
-        }, 300));
-
       }
+    }
 
-    });
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+
+      const next = fields[index + 1];
+
+      if (next) {
+        next.focus({ preventScroll: true });
+      }
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+
+      const prev = fields[index - 1];
+
+      if (prev) {
+        prev.focus({ preventScroll: true });
+      }
+    }
+
   });
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
+  document.addEventListener("focusin", function (e) {
+
+    const el = e.target;
+
+    if (
+      el.matches("input[type=text], input[type=number], input[type=email], input[type=password], input[type=search]")
+    ) {
+      setTimeout(() => {
+        try {
+          el.select();
+        } catch {}
+      }, 0);
+    }
+
   });
-
-  let renderPending = false;
-
-  window.safeRender = function (callback) {
-
-    if (renderPending) return;
-
-    renderPending = true;
-
-    requestAnimationFrame(() => {
-      callback();
-      renderPending = false;
-    });
-
-  };
 
 })();
 </script>
