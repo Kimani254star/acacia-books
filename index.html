@@ -197,6 +197,26 @@ iframe {
     scroll-behavior: auto !important;
   }
 }
+input,
+textarea,
+select {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+table {
+  contain: content;
+}
+
+.heavy-table {
+  content-visibility: auto;
+}
+
+.modal,
+.card,
+.section-box {
+  contain: layout style paint;
+}
 </style>
 </head>
 <body id="appBody">
@@ -110212,6 +110232,99 @@ document.addEventListener(
 
   }
 );
+
+})();
+</script>
+<script>
+(function () {
+
+  function debounce(func, wait = 500) {
+    let timeout;
+    return function (...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  }
+
+  const inputCache = new WeakMap();
+
+  document.querySelectorAll("input, textarea, select").forEach(el => {
+
+    el.setAttribute("autocomplete", "off");
+    el.setAttribute("spellcheck", "false");
+
+    inputCache.set(el, el.value);
+
+    el.addEventListener("focus", () => {
+      el.style.willChange = "contents";
+    });
+
+    el.addEventListener("blur", () => {
+      el.style.willChange = "auto";
+    });
+
+    el.addEventListener("input", debounce(function () {
+      inputCache.set(this, this.value);
+    }, 300));
+
+  });
+
+  const originalSetItem = localStorage.setItem;
+
+  const localStorageQueue = {};
+
+  localStorage.setItem = function (key, value) {
+    localStorageQueue[key] = value;
+
+    clearTimeout(localStorageQueue._timer);
+
+    localStorageQueue._timer = setTimeout(() => {
+      Object.keys(localStorageQueue).forEach(k => {
+        if (k !== "_timer") {
+          originalSetItem.call(localStorage, k, localStorageQueue[k]);
+        }
+      });
+    }, 1000);
+  };
+
+  const observer = new MutationObserver(() => {
+    document.querySelectorAll("input, textarea, select").forEach(el => {
+
+      if (!el.dataset.optimized) {
+
+        el.dataset.optimized = "true";
+
+        el.setAttribute("autocomplete", "off");
+        el.setAttribute("spellcheck", "false");
+
+        el.addEventListener("input", debounce(function () {
+          inputCache.set(this, this.value);
+        }, 300));
+
+      }
+
+    });
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  let renderPending = false;
+
+  window.safeRender = function (callback) {
+
+    if (renderPending) return;
+
+    renderPending = true;
+
+    requestAnimationFrame(() => {
+      callback();
+      renderPending = false;
+    });
+
+  };
 
 })();
 </script>
