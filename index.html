@@ -110,128 +110,6 @@ tbody tr:nth-child(even) {
   font-size: 13px;
 }
 
-img,
-iframe,
-video {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  content-visibility: auto;
-}
-
-iframe {
-  border: none;
-}
-
-.smooth {
-  transition: transform 0.15s ease, opacity 0.15s ease;
-  will-change: transform;
-}
-
-.drag-item {
-  will-change: transform;
-  transform: translate3d(0,0,0);
-  backface-visibility: hidden;
-  user-select: none;
-  touch-action: none;
-}
-
-.fast-render {
-  contain: content;
-}
-
-.shadow,
-.shadow-md,
-.shadow-lg,
-.shadow-xl,
-.shadow-2xl,
-.heavy-shadow {
-  will-change: auto;
-}
-
-.transition,
-.hover\:shadow-xl,
-.hover\:-translate-y-2,
-.hover\:scale-105 {
-  transition-duration: 0.15s !important;
-}
-
-.card,
-.modal,
-.section-box {
-  transform: translateZ(0);
-}
-
-.hidden {
-  display: none !important;
-}
-
-.lazy-section {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 500px;
-}
-
-@media (max-width: 768px) {
-  .heavy-shadow,
-  .shadow,
-  .shadow-md,
-  .shadow-lg,
-  .shadow-xl,
-  .shadow-2xl {
-    box-shadow: none !important;
-  }
-
-  .mobile-stack {
-    flex-direction: column !important;
-  }
-
-  .mobile-full {
-    width: 100% !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none !important;
-    transition: none !important;
-    scroll-behavior: auto !important;
-  }
-}
-input,
-textarea,
-select {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-table {
-  contain: content;
-}
-
-.heavy-table {
-  content-visibility: auto;
-}
-
-.modal,
-.card,
-.section-box {
-  contain: layout style paint;
-}
-input,
-select,
-textarea {
-  transition: border-color .1s;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-}
-
-table {
-  contain: content;
-}
 </style>
 </head>
 <body id="appBody">
@@ -6650,7 +6528,23 @@ function saveItem() {
     buyAcc.amount = (buyAcc.amount || 0) - oldCost + totalCost;
   }
 
-  saveInventory(warehouse, items);
+ saveInventory(warehouse, items);
+
+syncInventoryToFirebase(
+  companyId,
+  warehouse,
+  items
+);
+
+localStorage.setItem(
+  "chartOfAccounts",
+  JSON.stringify(accounts)
+);
+
+syncAccountsToFirebase(
+  companyId,
+  accounts
+);
 
 localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
@@ -109506,833 +109400,230 @@ function emptyRecycleBin() {
 document.addEventListener("DOMContentLoaded", renderRecycleBin);
 </script>
 <script>
-function createPaginatedTable(config) {
-  const state = config.state || (config.state = {
-    currentPage: 1,
-    itemsPerPage: 25
-  });
+(() => {
 
-  const table = document.getElementById(config.tableId);
-  const totalCountSpan = document.getElementById(config.totalCountId);
-  const pageInfo = document.getElementById(config.pageInfoId);
-  const prevBtn = document.getElementById(config.prevBtnId);
-  const nextBtn = document.getElementById(config.nextBtnId);
-  const itemsPerPageSelect = document.getElementById(config.itemsPerPageSelectId);
+const cache = new Map();
 
-  const data = config.data || [];
+window.smartQuery = selector => {
 
-  if (itemsPerPageSelect) {
-    itemsPerPageSelect.value = state.itemsPerPage;
+if(cache.has(selector))
+return cache.get(selector);
 
-    itemsPerPageSelect.onchange = () => {
-      state.itemsPerPage = parseInt(itemsPerPageSelect.value);
-      state.currentPage = 1;
-      render();
-    };
-  }
+const el =
+document.querySelector(selector);
 
-  function render() {
-    const total = data.length;
-    const start = (state.currentPage - 1) * state.itemsPerPage;
-    const end = start + state.itemsPerPage;
+cache.set(selector, el);
 
-    const paginated = data.slice(start, end);
+return el;
 
-    table.innerHTML = "";
-
-    if (config.renderRow) {
-      paginated.forEach((item, i) => {
-        table.innerHTML += config.renderRow(item, start + i);
-      });
-    } else {
-      table.innerHTML = paginated.length
-        ? paginated.map(item =>
-            `<tr>${Object.values(item).map(v => `<td class="p-2 border">${v}</td>`).join("")}</tr>`
-          ).join("")
-        : `<tr><td colspan="100%" class="p-2 text-center">No data</td></tr>`;
-    }
-
-    if (totalCountSpan) {
-      totalCountSpan.textContent = total;
-    }
-
-    const from = total === 0 ? 0 : start + 1;
-    const to = Math.min(end, total);
-
-    if (pageInfo) {
-      pageInfo.textContent = `${from} - ${to} of ${total}`;
-    }
-
-    if (prevBtn) {
-      prevBtn.disabled = state.currentPage === 1;
-      prevBtn.onclick = () => {
-        if (state.currentPage > 1) {
-          state.currentPage--;
-          render();
-        }
-      };
-    }
-
-    if (nextBtn) {
-      nextBtn.disabled = end >= total;
-      nextBtn.onclick = () => {
-        if (end < total) {
-          state.currentPage++;
-          render();
-        }
-      };
-    }
-  }
-
-  render();
-}
-</script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc,
-  onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_ID",
-  appId: "YOUR_APP_ID"
 };
 
-const app = initializeApp(firebaseConfig);
+document.addEventListener(
+'DOMContentLoaded',
+() => {
 
-const db = getFirestore(app);
+document
+.querySelectorAll('img')
+.forEach(img => {
 
-let syncing = false;
-let lastUpload = 0;
-let unsubscribeSync = null;
+img.loading = 'lazy';
 
-function getSyncUser() {
+img.decoding = 'async';
 
-  const user =
-    JSON.parse(localStorage.getItem("loggedInUser") || "{}");
-
-  let company =
-    (
-      user.companyId ||
-      user.companyName ||
-      "default_company"
-    )
-      .toLowerCase()
-      .trim();
-
-  const isDemo =
-    company.includes("demo") ||
-    company.includes("test") ||
-    user.demo === true;
-
-  return (
-    (isDemo ? "demo_" : "company_") + company
-  ).replace(/[^a-zA-Z0-9]/g, "_");
-}
-
-function getFilteredLocalStorage() {
-
-  const data = {};
-
-  for (let i = 0; i < localStorage.length; i++) {
-
-    const key = localStorage.key(i);
-
-    if (!key) continue;
-
-    if (
-      key.toLowerCase().includes("password") ||
-      key.toLowerCase().includes("token")
-    ) continue;
-
-    try {
-
-      data[key] = localStorage.getItem(key);
-
-    } catch (e) {}
-  }
-
-  return data;
-}
-
-async function uploadLocalStorage() {
-
-  if (syncing) return;
-
-  const now = Date.now();
-
-  if (now - lastUpload < 1000) return;
-
-  syncing = true;
-
-  try {
-
-    const syncUser = getSyncUser();
-
-    if (!syncUser) return;
-
-    const data = getFilteredLocalStorage();
-
-    await setDoc(
-      doc(db, "syncData", syncUser),
-      {
-        updatedAt: now,
-        data
-      },
-      { merge: true }
-    );
-
-    lastUpload = now;
-
-    console.log("☁️ Synced");
-
-  } catch (err) {
-
-    console.error(err);
-
-  } finally {
-
-    syncing = false;
-  }
-}
-
-async function downloadLocalStorage() {
-
-  try {
-
-    const syncUser = getSyncUser();
-
-    if (!syncUser) return;
-
-    const ref = doc(db, "syncData", syncUser);
-
-    const snap = await getDoc(ref);
-
-    if (!snap.exists()) return;
-
-    const cloudData = snap.data().data || {};
-
-    Object.keys(cloudData).forEach(key => {
-
-      try {
-
-        localStorage.setItem(
-          key,
-          cloudData[key]
-        );
-
-      } catch (e) {}
-
-    });
-
-    console.log("⬇️ Downloaded");
-
-  } catch (err) {
-
-    console.error(err);
-
-  }
-}
-
-function realtimeSync() {
-
-  if (unsubscribeSync) {
-    unsubscribeSync();
-  }
-
-  const syncUser = getSyncUser();
-
-  const ref = doc(db, "syncData", syncUser);
-
-  unsubscribeSync = onSnapshot(ref, (snap) => {
-
-    if (!snap.exists()) return;
-
-    const cloudData = snap.data().data || {};
-
-    Object.keys(cloudData).forEach(key => {
-
-      if (
-        localStorage.getItem(key) !== cloudData[key]
-      ) {
-
-        localStorage.setItem(
-          key,
-          cloudData[key]
-        );
-      }
-    });
-
-    console.log("🔄 Live Updated");
-  });
-}
-
-window.startCloudSync = async function() {
-
-  await downloadLocalStorage();
-
-  realtimeSync();
-
-  uploadLocalStorage();
-};
-
-window.addEventListener("load", async () => {
-
-  const loggedInUser =
-    JSON.parse(localStorage.getItem("loggedInUser") || "{}");
-
-  if (loggedInUser.username) {
-
-    await window.startCloudSync();
-
-  }
 });
+
+});
+
+const observer =
+new IntersectionObserver(
+entries => {
+
+entries.forEach(entry => {
+
+if(entry.isIntersecting){
+
+entry.target.classList.remove(
+'hidden'
+);
+
+observer.unobserve(
+entry.target
+);
+
+}
+
+});
+
+},
+{
+rootMargin:'100px'
+}
+);
+
+document
+.querySelectorAll(
+'.report-view,.card,.panel'
+)
+.forEach(el =>
+observer.observe(el)
+);
 
 let saveTimer;
 
-const originalSetItem = localStorage.setItem;
+window.smartSave =
+(key,data) => {
 
-localStorage.setItem = function(key, value) {
+clearTimeout(saveTimer);
 
-  originalSetItem.apply(this, [key, value]);
+saveTimer = setTimeout(() => {
 
-  clearTimeout(saveTimer);
+localStorage.setItem(
+key,
+JSON.stringify(data)
+);
 
-  saveTimer = setTimeout(() => {
+},300);
 
-    uploadLocalStorage();
-
-  }, 1000);
 };
 
-window.addEventListener("storage", () => {
-
-  clearTimeout(saveTimer);
-
-  saveTimer = setTimeout(() => {
-
-    uploadLocalStorage();
-
-  }, 1000);
-});
-
-document.addEventListener("visibilitychange", () => {
-
-  if (document.visibilityState === "hidden") {
-
-    uploadLocalStorage();
-
-  }
-});
-
-window.addEventListener("beforeunload", () => {
-
-  uploadLocalStorage();
-
-});
+})();
 </script>
-
-<script>
-function debounce(fn, delay = 50) {
-
-  let timer;
-
-  return function (...args) {
-
-    clearTimeout(timer);
-
-    timer = setTimeout(() => {
-
-      fn.apply(this, args);
-
-    }, delay);
-  };
-}
-
-function throttleRAF(callback) {
-
-  let ticking = false;
-
-  return function (...args) {
-
-    if (ticking) return;
-
-    ticking = true;
-
-    requestAnimationFrame(() => {
-
-      callback.apply(this, args);
-
-      ticking = false;
-
-    });
-  };
-}
-
-window.addEventListener(
-  "scroll",
-  throttleRAF(() => {}),
-  { passive: true }
-);
-
-window.addEventListener(
-  "resize",
-  debounce(() => {}),
-  { passive: true }
-);
-
-["touchstart", "touchmove", "wheel"].forEach((event) => {
-
-  window.addEventListener(
-    event,
-    () => {},
-    { passive: true }
-  );
-});
-
-let isDragging = false;
-let dragElement = null;
-let startX = 0;
-let startY = 0;
-
-document.addEventListener("mousedown", (e) => {
-
-  const target = e.target.closest(".drag-item");
-
-  if (!target) return;
-
-  isDragging = true;
-
-  dragElement = target;
-
-  startX = e.clientX;
-  startY = e.clientY;
-
-  dragElement.style.willChange = "transform";
-  dragElement.style.transition = "none";
-});
-
-document.addEventListener(
-  "mousemove",
-  throttleRAF((e) => {
-
-    if (!isDragging || !dragElement) return;
-
-    const moveX = e.clientX - startX;
-    const moveY = e.clientY - startY;
-
-    dragElement.style.transform =
-      `translate3d(${moveX}px, ${moveY}px, 0)`;
-  })
-);
-
-document.addEventListener("mouseup", () => {
-
-  if (!dragElement) return;
-
-  dragElement.style.willChange = "auto";
-  dragElement.style.transition = "";
-
-  isDragging = false;
-  dragElement = null;
-});
-
-function updateUI(callback) {
-
-  requestAnimationFrame(() => {
-
-    callback();
-
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  document.querySelectorAll("img").forEach((img) => {
-
-    img.loading = "lazy";
-    img.decoding = "async";
-
-  });
-
-  document.querySelectorAll("iframe").forEach((iframe) => {
-
-    iframe.loading = "lazy";
-
-  });
-
-  if ("requestIdleCallback" in window) {
-
-    requestIdleCallback(() => {
-
-      console.log("Idle tasks loaded");
-
-    });
-  }
-});
-
-const observer = new IntersectionObserver(
-  (entries) => {
-
-    entries.forEach((entry) => {
-
-      if (entry.isIntersecting) {
-
-        entry.target.classList.add("visible");
-
-      }
-    });
-  },
-  {
-    threshold: 0.1
-  }
-);
-
-document.querySelectorAll(".lazy-section").forEach((section) => {
-
-  observer.observe(section);
-
-});
-</script>
-
 <script>
 (() => {
 
 "use strict";
 
-const AppOptimizer = {
-
-  observers: [],
-
-  sliderInterval: null,
-
-  init() {
-
-    this.optimizeImages();
-
-    this.lazySections();
-
-    this.optimizeTables();
-
-    this.optimizeDOM();
-
-    this.optimizeSlider();
-
-  },
-
-  optimizeImages() {
-
-    const imgs =
-      document.querySelectorAll("img");
-
-    imgs.forEach(img => {
-
-      img.loading = "lazy";
-
-      img.decoding = "async";
-
-    });
-
-    document.querySelectorAll(
-      "iframe"
-    ).forEach(frame => {
-
-      frame.loading = "lazy";
-
-    });
-
-  },
-
-  lazySections() {
-
-    const sections =
-      document.querySelectorAll(
-        ".lazy-section, section"
-      );
-
-    const observer =
-      new IntersectionObserver(
-        entries => {
-
-          entries.forEach(entry => {
-
-            if (
-              entry.isIntersecting
-            ) {
-
-              entry.target.classList.add(
-                "loaded"
-              );
-
-              observer.unobserve(
-                entry.target
-              );
-
-            }
-
-          });
-
-        },
-        {
-          rootMargin: "200px"
-        }
-      );
-
-    sections.forEach(section => {
-
-      observer.observe(section);
-
-    });
-
-    this.observers.push(observer);
-
-  },
-
-  optimizeTables() {
-
-    window.renderVirtualTable =
-      function(
-        id,
-        data,
-        page = 1,
-        size = 50
-      ) {
-
-        const table =
-          document.getElementById(id);
-
-        if (!table) return;
-
-        const start =
-          (page - 1) * size;
-
-        const rows =
-          data.slice(
-            start,
-            start + size
-          );
-
-        const fragment =
-          document.createDocumentFragment();
-
-        rows.forEach(row => {
-
-          const tr =
-            document.createElement("tr");
-
-          tr.innerHTML =
-            Object.values(row)
-            .map(v =>
-              `<td class="border p-2">${v}</td>`
-            )
-            .join("");
-
-          fragment.appendChild(tr);
-
-        });
-
-        table.innerHTML = "";
-
-        table.appendChild(fragment);
-
-      };
-
-  },
-
-  optimizeDOM() {
-
-    document.querySelectorAll(
-      ".shadow-xl,.shadow-2xl,.shadow-lg"
-    ).forEach(el => {
-
-      el.classList.remove(
-        "shadow-xl",
-        "shadow-2xl",
-        "shadow-lg"
-      );
-
-      el.classList.add(
-        "shadow-sm"
-      );
-
-    });
-
-    document.querySelectorAll(
-      "video"
-    ).forEach(video => {
-
-      video.preload = "none";
-
-    });
-
-  },
-
-  optimizeSlider() {
-
-    const slider =
-      document.getElementById(
-        "slider"
-      );
-
-    if (!slider) return;
-
-    const slides =
-      [...slider.children];
-
-    if (slides.length <= 1) return;
-
-    let current = 0;
-
-    slides.forEach((slide, i) => {
-
-      slide.style.opacity =
-        i === 0 ? "1" : "0";
-
-      slide.style.transition =
-        "opacity .4s ease";
-
-    });
-
-    this.sliderInterval =
-      setInterval(() => {
-
-        slides[current]
-          .style.opacity = "0";
-
-        current++;
-
-        if (
-          current >= slides.length
-        ) {
-
-          current = 0;
-
-        }
-
-        slides[current]
-          .style.opacity = "1";
-
-      }, 8000);
-
-  },
-
-  destroy() {
-
-    this.observers.forEach(
-      o => o.disconnect()
-    );
-
-    clearInterval(
-      this.sliderInterval
-    );
-
-  }
-
+const cache = new Map();
+
+window.$ = selector => {
+  if (cache.has(selector)) return cache.get(selector);
+  const el = document.querySelector(selector);
+  cache.set(selector, el);
+  return el;
 };
 
+window.$$ = selector => document.querySelectorAll(selector);
+
+const debounce = (fn, delay = 200) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+};
+
+const throttle = (fn) => {
+  let ticking = false;
+  return (...args) => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      fn(...args);
+      ticking = false;
+    });
+  };
+};
+
+window.fastStorage = (key, value) => {
+  requestIdleCallback(() => {
+    localStorage.setItem(key, JSON.stringify(value));
+  });
+};
+
+window.fastRender = (element, html) => {
+  requestAnimationFrame(() => {
+    element.innerHTML = html;
+  });
+};
+
+window.fastAppend = (container, elements) => {
+  const fragment = document.createDocumentFragment();
+
+  elements.forEach(el => {
+    fragment.appendChild(el);
+  });
+
+  container.appendChild(fragment);
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  document.querySelectorAll("img").forEach(img => {
+    img.loading = "lazy";
+    img.decoding = "async";
+  });
+
+  document.querySelectorAll("input,textarea,select").forEach(el => {
+
+    el.setAttribute("autocomplete", "off");
+    el.spellcheck = false;
+
+  });
+
+});
+
+const observer = new IntersectionObserver(entries => {
+
+  entries.forEach(entry => {
+
+    if (entry.isIntersecting) {
+
+      entry.target.classList.remove("hidden");
+
+      observer.unobserve(entry.target);
+
+    }
+
+  });
+
+}, {
+  rootMargin: "150px"
+});
+
+document.querySelectorAll(
+".report-view,.panel,.card,.section"
+).forEach(el => observer.observe(el));
+
 document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    AppOptimizer.init();
-
-  }
+"scroll",
+throttle(() => {}),
+{ passive: true }
 );
 
-})();
-</script>
-<script>
-(function () {
+document.addEventListener(
+"mousemove",
+throttle(() => {}),
+{ passive: true }
+);
 
-  function getFields() {
-    return Array.from(
-      document.querySelectorAll(
-        'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])'
-      )
-    ).filter(el =>
-      el.offsetParent !== null &&
-      !el.readOnly
-    );
+const originalAddEvent =
+EventTarget.prototype.addEventListener;
+
+EventTarget.prototype.addEventListener =
+function(type, listener, options) {
+
+  const passiveEvents = [
+    "touchstart",
+    "touchmove",
+    "wheel",
+    "scroll",
+    "mousewheel"
+  ];
+
+  if (
+    passiveEvents.includes(type) &&
+    options !== false
+  ) {
+    options = { passive: true };
   }
 
-  document.addEventListener("keydown", function (e) {
-
-    const active = document.activeElement;
-
-    if (
-      !active ||
-      !["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName)
-    ) return;
-
-    const fields = getFields();
-    const index = fields.indexOf(active);
-
-    if (index === -1) return;
-
-    if (e.key === "Enter" && active.tagName !== "TEXTAREA") {
-      e.preventDefault();
-
-      const next = fields[index + 1];
-
-      if (next) {
-        next.focus({ preventScroll: true });
-
-        if (
-          next.tagName === "INPUT" &&
-          next.type !== "checkbox" &&
-          next.type !== "radio"
-        ) {
-          next.select();
-        }
-      }
-    }
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-
-      const next = fields[index + 1];
-
-      if (next) {
-        next.focus({ preventScroll: true });
-      }
-    }
-
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-
-      const prev = fields[index - 1];
-
-      if (prev) {
-        prev.focus({ preventScroll: true });
-      }
-    }
-
-  });
-
-  document.addEventListener("focusin", function (e) {
-
-    const el = e.target;
-
-    if (
-      el.matches("input[type=text], input[type=number], input[type=email], input[type=password], input[type=search]")
-    ) {
-      setTimeout(() => {
-        try {
-          el.select();
-        } catch {}
-      }, 0);
-    }
-
-  });
+  originalAddEvent.call(
+    this,
+    type,
+    listener,
+    options
+  );
+};
 
 })();
 </script>
