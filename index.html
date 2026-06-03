@@ -110607,5 +110607,21 @@ window.addEventListener(
 
 })();
 </script>
+<script>
+function toggleSubmenu(id) {
+  
+  const allSubmenus = document.querySelectorAll('ul[id*="Submenu"]');
+  allSubmenus.forEach(menu => {
+    if (menu.id !== id) {
+      menu.classList.add('hidden');
+    }
+  });
+
+  const submenu = document.getElementById(id);
+  if (submenu) {
+    submenu.classList.toggle('hidden');
+  }
+}
+</script>
 </body>
 </html>
