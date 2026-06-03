@@ -110,7 +110,144 @@ tbody tr:nth-child(even) {
   font-size: 13px;
 }
 
+img,
+iframe,
+video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  content-visibility: auto;
+}
+
+iframe {
+  border: none;
+}
+
+.smooth {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  will-change: transform;
+}
+
+.drag-item {
+  will-change: transform;
+  transform: translate3d(0,0,0);
+  backface-visibility: hidden;
+  user-select: none;
+  touch-action: none;
+}
+
+.fast-render {
+  contain: content;
+}
+
+.shadow,
+.shadow-md,
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl,
+.heavy-shadow {
+  will-change: auto;
+}
+
+.transition,
+.hover\:shadow-xl,
+.hover\:-translate-y-2,
+.hover\:scale-105 {
+  transition-duration: 0.15s !important;
+}
+
+.card,
+.modal,
+.section-box {
+  transform: translateZ(0);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.lazy-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 500px;
+}
+
+@media (max-width: 768px) {
+  .heavy-shadow,
+  .shadow,
+  .shadow-md,
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: none !important;
+  }
+
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+
+  .mobile-full {
+    width: 100% !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+input,
+textarea,
+select {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+table {
+  contain: content;
+}
+
+.heavy-table {
+  content-visibility: auto;
+}
+
+.modal,
+.card,
+.section-box {
+  contain: layout style paint;
+}
+input,
+select,
+textarea {
+  transition: border-color .1s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+
+table {
+  contain: content;
+}
 </style>
+<script>
+function toggleSubmenu(id) {
+  const allSubmenus = document.querySelectorAll('ul[id*="Submenu"]');
+  allSubmenus.forEach(menu => {
+    if (menu.id !== id) {
+      menu.classList.add('hidden');
+    }
+  });
+
+  const submenu = document.getElementById(id);
+  if (submenu) {
+    submenu.classList.toggle('hidden');
+  }
+}
+</script>
 </head>
 <body id="appBody">
 <!-- 🌱 HOME  -->
@@ -6528,23 +6665,7 @@ function saveItem() {
     buyAcc.amount = (buyAcc.amount || 0) - oldCost + totalCost;
   }
 
- saveInventory(warehouse, items);
-
-syncInventoryToFirebase(
-  companyId,
-  warehouse,
-  items
-);
-
-localStorage.setItem(
-  "chartOfAccounts",
-  JSON.stringify(accounts)
-);
-
-syncAccountsToFirebase(
-  companyId,
-  accounts
-);
+  saveInventory(warehouse, items);
 
 localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
@@ -27117,7 +27238,8 @@ function recordInvoicePayment(id) {
     localStorage.setItem("manualTransactions", JSON.stringify(manualTransactions));
     localStorage.setItem("transactions", JSON.stringify(allTx));
     localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
-
+    
+    postInvoiceJournal(invoice); 
     renderReceipts();
     renderInvoices();
     renderAccountsReceivable?.();
@@ -27397,17 +27519,16 @@ function updateVATReport(invoice) {
 
     localStorage.setItem("vatReport", JSON.stringify(vatReport));
 }
-
 function postInvoiceJournal(invoice) {
     let journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
 
     const totalKES = parseFloat(invoice.totalKES || 0);
     const vatKES = parseFloat(invoice.vatKES || 0);
 
-    const subtotalBeforeVAT = totalKES - vatKES;  
-    const cogs = subtotalBeforeVAT * 0.4;        
-    const sales = subtotalBeforeVAT - cogs;      
-    const debtor = totalKES - cogs;              
+    const subtotalBeforeVAT = totalKES - vatKES;
+    const cogs = subtotalBeforeVAT * 0.4;
+    const sales = subtotalBeforeVAT - cogs;
+    const debtor = totalKES - cogs;
 
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
     const postedBy = loggedInUser ? loggedInUser.username : "System";
@@ -27423,11 +27544,36 @@ function postInvoiceJournal(invoice) {
         source: "Auto",
         invoiceNumber: invoice.invoiceNumber,
         entries: [
-            { debit: "Cost of Goods Sold", credit: "", amount: cogs },
-            { debit: "", credit: "Stock", amount: cogs },
-            { debit: "Debtors Control", credit: "", amount: debtor },
-            { debit: "", credit: "VAT", amount: vatKES },
-            { debit: "", credit: "Sales", amount: sales }
+            {
+                account: "Cost of Goods Sold",
+                description: `Invoice ${invoice.invoiceNumber}`,
+                debit: cogs,
+                credit: 0
+            },
+            {
+                account: "Stock",
+                description: `Invoice ${invoice.invoiceNumber}`,
+                debit: 0,
+                credit: cogs
+            },
+            {
+                account: "Debtors Control",
+                description: `Invoice ${invoice.invoiceNumber}`,
+                debit: debtor,
+                credit: 0
+            },
+            {
+                account: "VAT",
+                description: `Invoice ${invoice.invoiceNumber}`,
+                debit: 0,
+                credit: vatKES
+            },
+            {
+                account: "Sales",
+                description: `Invoice ${invoice.invoiceNumber}`,
+                debit: 0,
+                credit: sales
+            }
         ]
     };
 
@@ -27752,6 +27898,73 @@ function updatePackageStatusFromInvoice(invoice) {
       renderOrders();
     }
   }
+}
+function postManualTransactionJournal(tx) {
+
+  let journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
+
+  const debitTypes = [
+    "Expense",
+    "Vendor Payment",
+    "Vendor Advance",
+    "Owner Drawings",
+    "Transfer To Another Account",
+    "Salary Advance",
+    "Employee Reimbursement",
+    "Employee Loans"
+  ];
+
+  const bankAccount = tx.bank || "Bank";
+
+  let entries = [];
+
+  if (debitTypes.includes(tx.type)) {
+
+    entries = [
+      {
+        account: tx.account,
+        description: tx.type,
+        debit: Number(tx.amount),
+        credit: 0
+      },
+      {
+        account: bankAccount,
+        description: tx.type,
+        debit: 0,
+        credit: Number(tx.amount)
+      }
+    ];
+
+  } else {
+
+    entries = [
+      {
+        account: bankAccount,
+        description: tx.type,
+        debit: Number(tx.amount),
+        credit: 0
+      },
+      {
+        account: tx.account,
+        description: tx.type,
+        debit: 0,
+        credit: Number(tx.amount)
+      }
+    ];
+
+  }
+
+  journals.push({
+    id: Date.now(),
+    date: tx.date,
+    reference: tx.ref,
+    description: `Manual Transaction - ${tx.type}`,
+    postedBy: "System",
+    source: "Bank Transaction",
+    entries
+  });
+
+  localStorage.setItem("manualJournals", JSON.stringify(journals));
 }
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -39922,7 +40135,6 @@ function postBillJournal(bill) {
   const today = bill.date || new Date().toISOString().split("T")[0];
   const desc = `Auto Journal for Bill ${bill.billNumber}`;
 
-  // ✅ Journal with Debit = Credit
   const journal = {
     id: Date.now(),
     date: today,
@@ -39931,9 +40143,24 @@ function postBillJournal(bill) {
     source: "Auto",
     billNumber: bill.billNumber,
     entries: [
-      { debit: "", credit: "Creditors Control", amount: billTotal },
-      { debit: "VAT", credit: "", amount: vatAmount },
-      { debit: "Purchases", credit: "", amount: purchases }
+      {
+        account: "Creditors Control",
+        description: `Bill ${bill.billNumber}`,
+        debit: 0,
+        credit: billTotal
+      },
+      {
+        account: "VAT",
+        description: `VAT Bill ${bill.billNumber}`,
+        debit: vatAmount,
+        credit: 0
+      },
+      {
+        account: "Purchases",
+        description: `Purchases Bill ${bill.billNumber}`,
+        debit: purchases,
+        credit: 0
+      }
     ]
   };
 
@@ -39943,13 +40170,6 @@ function postBillJournal(bill) {
   if (typeof renderManualJournals === "function") {
     renderManualJournals();
   }
-}
-function applyCurrency() {
-  document.querySelectorAll("[data-amount]").forEach(el => {
-    el.innerText = formatCurrency(el.getAttribute("data-amount"));
-  });
-
-  if (typeof renderSupplierBills === "function") renderSupplierBills();
 }
 document.addEventListener('DOMContentLoaded', () => {
   populateSupplierDropdownById("billSupplier");
@@ -43993,6 +44213,20 @@ function populateTaxTypeFromChartOfAccounts() {
     dropdown.appendChild(opt);
   });
 }
+function postJournal({ date, description, source, entries }) {
+  let journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
+
+  journals.push({
+    id: `${source}-${Date.now()}`,
+    date,
+    description,
+    postedBy: "System",
+    source,
+    entries
+  });
+
+  localStorage.setItem("manualJournals", JSON.stringify(journals));
+}
 function addTaxPayment() {
 
   const date = document.getElementById('taxDate').value;
@@ -44047,9 +44281,17 @@ function addTaxPayment() {
     if (oldBank) {
       oldBank.balance += oldPayment.amount;
     }
-
+    
     bank.balance -= amount;
-
+    postJournal({
+  date,
+  description: `Tax Payment - ${taxAccount.name}`,
+  source: "Tax Payment",
+  entries: [
+    { account: taxAccount.name, debit: amount, credit: 0 },
+    { account: bank.name, debit: 0, credit: amount }
+  ]
+    }); 
     const refText =
       reference || `Tax Payment (${taxAccount.name}) via ${method}`;
 
@@ -44652,7 +44894,23 @@ function saveBulkTaxPayments() {
       reference || `Tax Payment (${taxAccount.name}) via ${method}`;
 
     bank.balance -= amount;
-
+    postJournal({
+  date,
+  description: `Tax Payment (Bulk) - ${taxAccount.name}`,
+  source: "Tax Payment",
+  entries: [
+    {
+      account: taxAccount.name,
+      debit: amount,
+      credit: 0
+    },
+    {
+      account: bank.name,
+      debit: 0,
+      credit: amount
+    }
+   ]
+   });
     taxPayments.push({
       id: paymentId,
       date,
@@ -44900,7 +45158,23 @@ function addOperationalCost() {
     });
 
     banks[bankIndex].balance -= amount;
-
+        postJournal({
+  date,
+  description: `Operational Cost - ${description}`,
+  source: "Operational Cost",
+  entries: [
+    {
+      account: category,
+      debit: amount,
+      credit: 0
+    },
+    {
+      account: bank,
+      debit: 0,
+      credit: amount
+    }
+   ]
+    });
     manualTransactions.push({
       id: costId,
       date,
@@ -45486,7 +45760,23 @@ function saveBulkExpenses() {
     }
 
     banks[bankIndex].balance -= amount;
-
+    postJournal({
+  date,
+  description: `Operational Cost - ${description}`,
+  source: "Operational Cost",
+  entries: [
+    {
+      account: category,
+      debit: amount,
+      credit: 0
+    },
+    {
+      account: bank,
+      debit: 0,
+      credit: amount
+    }
+  ]
+  });
     const costId = Date.now() + Math.floor(Math.random() * 1000);
 
     costs.push({
@@ -51279,6 +51569,7 @@ function populateCurrencyAdjustmentBanks() {
 document.addEventListener("DOMContentLoaded", () => {
   populateCurrencyAdjustmentBanks();
 });
+
 function addCurrencyAdjustment() {
   const date = document.getElementById("adjustmentDate").value;
   const account = document.getElementById("adjustmentAccount").value.trim();
@@ -51309,7 +51600,22 @@ function addCurrencyAdjustment() {
     journal.push({ account: "FX Gain/Loss", debit: Math.abs(baseAmount), credit: 0 });
     journal.push({ account: `${currency} Bank`, debit: 0, credit: Math.abs(baseAmount) });
   }
+  let journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
 
+journals.push({
+  id: Date.now(),
+  date,
+  description: `Currency Adjustment - ${account}`,
+  postedBy: "System",
+  source: "Currency Adjustment",
+  entries: journal.map(j => ({
+    account: j.account,
+    debit: j.debit,
+    credit: j.credit
+  }))
+});
+
+localStorage.setItem("manualJournals", JSON.stringify(journals));
   adjustments.push({ 
     date, 
     bank,          
@@ -109400,230 +109706,904 @@ function emptyRecycleBin() {
 document.addEventListener("DOMContentLoaded", renderRecycleBin);
 </script>
 <script>
-(() => {
+function createPaginatedTable(config) {
+  const state = config.state || (config.state = {
+    currentPage: 1,
+    itemsPerPage: 25
+  });
 
-const cache = new Map();
+  const table = document.getElementById(config.tableId);
+  const totalCountSpan = document.getElementById(config.totalCountId);
+  const pageInfo = document.getElementById(config.pageInfoId);
+  const prevBtn = document.getElementById(config.prevBtnId);
+  const nextBtn = document.getElementById(config.nextBtnId);
+  const itemsPerPageSelect = document.getElementById(config.itemsPerPageSelectId);
 
-window.smartQuery = selector => {
+  const data = config.data || [];
 
-if(cache.has(selector))
-return cache.get(selector);
+  if (itemsPerPageSelect) {
+    itemsPerPageSelect.value = state.itemsPerPage;
 
-const el =
-document.querySelector(selector);
+    itemsPerPageSelect.onchange = () => {
+      state.itemsPerPage = parseInt(itemsPerPageSelect.value);
+      state.currentPage = 1;
+      render();
+    };
+  }
 
-cache.set(selector, el);
+  function render() {
+    const total = data.length;
+    const start = (state.currentPage - 1) * state.itemsPerPage;
+    const end = start + state.itemsPerPage;
 
-return el;
+    const paginated = data.slice(start, end);
 
+    table.innerHTML = "";
+
+    if (config.renderRow) {
+      paginated.forEach((item, i) => {
+        table.innerHTML += config.renderRow(item, start + i);
+      });
+    } else {
+      table.innerHTML = paginated.length
+        ? paginated.map(item =>
+            `<tr>${Object.values(item).map(v => `<td class="p-2 border">${v}</td>`).join("")}</tr>`
+          ).join("")
+        : `<tr><td colspan="100%" class="p-2 text-center">No data</td></tr>`;
+    }
+
+    if (totalCountSpan) {
+      totalCountSpan.textContent = total;
+    }
+
+    const from = total === 0 ? 0 : start + 1;
+    const to = Math.min(end, total);
+
+    if (pageInfo) {
+      pageInfo.textContent = `${from} - ${to} of ${total}`;
+    }
+
+    if (prevBtn) {
+      prevBtn.disabled = state.currentPage === 1;
+      prevBtn.onclick = () => {
+        if (state.currentPage > 1) {
+          state.currentPage--;
+          render();
+        }
+      };
+    }
+
+    if (nextBtn) {
+      nextBtn.disabled = end >= total;
+      nextBtn.onclick = () => {
+        if (end < total) {
+          state.currentPage++;
+          render();
+        }
+      };
+    }
+  }
+
+  render();
+}
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_ID",
+  appId: "YOUR_APP_ID"
 };
 
-document.addEventListener(
-'DOMContentLoaded',
-() => {
+const app = initializeApp(firebaseConfig);
 
-document
-.querySelectorAll('img')
-.forEach(img => {
+const db = getFirestore(app);
 
-img.loading = 'lazy';
+let syncing = false;
+let lastUpload = 0;
+let unsubscribeSync = null;
 
-img.decoding = 'async';
+function getSyncUser() {
 
-});
+  const user =
+    JSON.parse(localStorage.getItem("loggedInUser") || "{}");
 
-});
+  let company =
+    (
+      user.companyId ||
+      user.companyName ||
+      "default_company"
+    )
+      .toLowerCase()
+      .trim();
 
-const observer =
-new IntersectionObserver(
-entries => {
+  const isDemo =
+    company.includes("demo") ||
+    company.includes("test") ||
+    user.demo === true;
 
-entries.forEach(entry => {
-
-if(entry.isIntersecting){
-
-entry.target.classList.remove(
-'hidden'
-);
-
-observer.unobserve(
-entry.target
-);
-
+  return (
+    (isDemo ? "demo_" : "company_") + company
+  ).replace(/[^a-zA-Z0-9]/g, "_");
 }
 
-});
+function getFilteredLocalStorage() {
 
-},
-{
-rootMargin:'100px'
+  const data = {};
+
+  for (let i = 0; i < localStorage.length; i++) {
+
+    const key = localStorage.key(i);
+
+    if (!key) continue;
+
+    if (
+      key.toLowerCase().includes("password") ||
+      key.toLowerCase().includes("token")
+    ) continue;
+
+    try {
+
+      data[key] = localStorage.getItem(key);
+
+    } catch (e) {}
+  }
+
+  return data;
 }
-);
 
-document
-.querySelectorAll(
-'.report-view,.card,.panel'
-)
-.forEach(el =>
-observer.observe(el)
-);
+async function uploadLocalStorage() {
+
+  if (syncing) return;
+
+  const now = Date.now();
+
+  if (now - lastUpload < 1000) return;
+
+  syncing = true;
+
+  try {
+
+    const syncUser = getSyncUser();
+
+    if (!syncUser) return;
+
+    const data = getFilteredLocalStorage();
+
+    await setDoc(
+      doc(db, "syncData", syncUser),
+      {
+        updatedAt: now,
+        data
+      },
+      { merge: true }
+    );
+
+    lastUpload = now;
+
+    console.log("☁️ Synced");
+
+  } catch (err) {
+
+    console.error(err);
+
+  } finally {
+
+    syncing = false;
+  }
+}
+
+async function downloadLocalStorage() {
+
+  try {
+
+    const syncUser = getSyncUser();
+
+    if (!syncUser) return;
+
+    const ref = doc(db, "syncData", syncUser);
+
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) return;
+
+    const cloudData = snap.data().data || {};
+
+    Object.keys(cloudData).forEach(key => {
+
+      try {
+
+        localStorage.setItem(
+          key,
+          cloudData[key]
+        );
+
+      } catch (e) {}
+
+    });
+
+    console.log("⬇️ Downloaded");
+
+  } catch (err) {
+
+    console.error(err);
+
+  }
+}
+
+function realtimeSync() {
+
+  if (unsubscribeSync) {
+    unsubscribeSync();
+  }
+
+  const syncUser = getSyncUser();
+
+  const ref = doc(db, "syncData", syncUser);
+
+  unsubscribeSync = onSnapshot(ref, (snap) => {
+
+    if (!snap.exists()) return;
+
+    const cloudData = snap.data().data || {};
+
+    Object.keys(cloudData).forEach(key => {
+
+      if (
+        localStorage.getItem(key) !== cloudData[key]
+      ) {
+
+        localStorage.setItem(
+          key,
+          cloudData[key]
+        );
+      }
+    });
+
+    console.log("🔄 Live Updated");
+  });
+}
+
+window.startCloudSync = async function() {
+
+  await downloadLocalStorage();
+
+  realtimeSync();
+
+  uploadLocalStorage();
+};
+
+window.addEventListener("load", async () => {
+
+  const loggedInUser =
+    JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+
+  if (loggedInUser.username) {
+
+    await window.startCloudSync();
+
+  }
+});
 
 let saveTimer;
 
-window.smartSave =
-(key,data) => {
+const originalSetItem = localStorage.setItem;
 
-clearTimeout(saveTimer);
+localStorage.setItem = function(key, value) {
 
-saveTimer = setTimeout(() => {
+  originalSetItem.apply(this, [key, value]);
 
-localStorage.setItem(
-key,
-JSON.stringify(data)
-);
+  clearTimeout(saveTimer);
 
-},300);
+  saveTimer = setTimeout(() => {
 
+    uploadLocalStorage();
+
+  }, 1000);
 };
 
-})();
+window.addEventListener("storage", () => {
+
+  clearTimeout(saveTimer);
+
+  saveTimer = setTimeout(() => {
+
+    uploadLocalStorage();
+
+  }, 1000);
+});
+
+document.addEventListener("visibilitychange", () => {
+
+  if (document.visibilityState === "hidden") {
+
+    uploadLocalStorage();
+
+  }
+});
+
+window.addEventListener("beforeunload", () => {
+
+  uploadLocalStorage();
+
+});
 </script>
 <script>
 (() => {
 
 "use strict";
 
-const cache = new Map();
-
-window.$ = selector => {
-  if (cache.has(selector)) return cache.get(selector);
-  const el = document.querySelector(selector);
-  cache.set(selector, el);
-  return el;
-};
-
-window.$$ = selector => document.querySelectorAll(selector);
-
-const debounce = (fn, delay = 200) => {
+function debounce(fn, delay = 100) {
   let timer;
   return (...args) => {
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), delay);
   };
-};
+}
 
-const throttle = (fn) => {
-  let ticking = false;
+function rafThrottle(fn) {
+  let running = false;
   return (...args) => {
-    if (ticking) return;
-    ticking = true;
+    if (running) return;
+    running = true;
+
     requestAnimationFrame(() => {
       fn(...args);
-      ticking = false;
+      running = false;
     });
   };
-};
+}
 
-window.fastStorage = (key, value) => {
-  requestIdleCallback(() => {
-    localStorage.setItem(key, JSON.stringify(value));
-  });
-};
+let formFields = [];
 
-window.fastRender = (element, html) => {
+function refreshFields() {
+  formFields = [...document.querySelectorAll(
+    'input:not([type="hidden"]):not([disabled]),select:not([disabled]),textarea:not([disabled])'
+  )].filter(el =>
+    el.offsetParent !== null &&
+    !el.readOnly
+  );
+}
+
+function focusNext(current) {
+
+  const index = formFields.indexOf(current);
+
+  if (index === -1) return;
+
+  const next = formFields[index + 1];
+
+  if (!next) return;
+
   requestAnimationFrame(() => {
-    element.innerHTML = html;
+
+    next.focus({
+      preventScroll: true
+    });
+
+    if (
+      next.tagName === "INPUT" &&
+      next.type !== "checkbox" &&
+      next.type !== "radio"
+    ) {
+      next.select();
+    }
+
   });
-};
 
-window.fastAppend = (container, elements) => {
-  const fragment = document.createDocumentFragment();
+}
 
-  elements.forEach(el => {
-    fragment.appendChild(el);
+function focusPrev(current) {
+
+  const index = formFields.indexOf(current);
+
+  if (index <= 0) return;
+
+  const prev = formFields[index - 1];
+
+  requestAnimationFrame(() => {
+
+    prev.focus({
+      preventScroll: true
+    });
+
+    if (
+      prev.tagName === "INPUT" &&
+      prev.type !== "checkbox" &&
+      prev.type !== "radio"
+    ) {
+      prev.select();
+    }
+
   });
 
-  container.appendChild(fragment);
-};
+}
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  refreshFields();
 
   document.querySelectorAll("img").forEach(img => {
     img.loading = "lazy";
     img.decoding = "async";
   });
 
-  document.querySelectorAll("input,textarea,select").forEach(el => {
-
-    el.setAttribute("autocomplete", "off");
-    el.spellcheck = false;
-
+  document.querySelectorAll("iframe").forEach(frame => {
+    frame.loading = "lazy";
   });
+
+  document.querySelectorAll("video").forEach(video => {
+    video.preload = "none";
+  });
+
+  const observer = new IntersectionObserver(
+    entries => {
+
+      entries.forEach(entry => {
+
+        if (entry.isIntersecting) {
+
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+
+        }
+
+      });
+
+    },
+    {
+      rootMargin: "200px"
+    }
+  );
+
+  document
+    .querySelectorAll(".lazy-section, section")
+    .forEach(el => observer.observe(el));
 
 });
 
-const observer = new IntersectionObserver(entries => {
+document.addEventListener("keydown", e => {
 
-  entries.forEach(entry => {
+  const active = document.activeElement;
 
-    if (entry.isIntersecting) {
+  if (
+    !active ||
+    !["INPUT","TEXTAREA","SELECT"].includes(active.tagName)
+  ) return;
 
-      entry.target.classList.remove("hidden");
+  if (
+    e.key === "Enter" &&
+    active.tagName !== "TEXTAREA"
+  ) {
 
-      observer.unobserve(entry.target);
+    e.preventDefault();
+    focusNext(active);
+
+  }
+
+  if (e.key === "ArrowDown") {
+
+    e.preventDefault();
+    focusNext(active);
+
+  }
+
+  if (e.key === "ArrowUp") {
+
+    e.preventDefault();
+    focusPrev(active);
+
+  }
+
+});
+
+document.addEventListener("focusin", e => {
+
+  const el = e.target;
+
+  if (
+    el.matches(
+      'input[type="text"],input[type="number"],input[type="email"],input[type="search"],input[type="password"]'
+    )
+  ) {
+
+    requestAnimationFrame(() => {
+
+      try {
+        el.select();
+      } catch {}
+
+    });
+
+  }
+
+});
+
+window.addEventListener(
+  "resize",
+  debounce(() => {
+
+    refreshFields();
+
+  }),
+  { passive: true }
+);
+
+window.addEventListener(
+  "scroll",
+  rafThrottle(() => {}),
+  { passive: true }
+);
+
+let dragItem = null;
+let startX = 0;
+let startY = 0;
+
+document.addEventListener("mousedown", e => {
+
+  const target = e.target.closest(".drag-item");
+
+  if (!target) return;
+
+  dragItem = target;
+
+  startX = e.clientX;
+  startY = e.clientY;
+
+  dragItem.style.willChange = "transform";
+  dragItem.style.transition = "none";
+
+});
+
+document.addEventListener(
+  "mousemove",
+  rafThrottle(e => {
+
+    if (!dragItem) return;
+
+    const x = e.clientX - startX;
+    const y = e.clientY - startY;
+
+    dragItem.style.transform =
+      `translate3d(${x}px,${y}px,0)`;
+
+  })
+);
+
+document.addEventListener("mouseup", () => {
+
+  if (!dragItem) return;
+
+  dragItem.style.willChange = "auto";
+  dragItem.style.transition = "";
+
+  dragItem = null;
+
+});
+
+if ("requestIdleCallback" in window) {
+
+  requestIdleCallback(() => {
+
+    refreshFields();
+
+  });
+
+}
+
+})();
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const sections = document.querySelectorAll(
+    "[data-lazy-section]"
+  );
+
+  const observer = new IntersectionObserver(
+    entries => {
+
+      entries.forEach(entry => {
+
+        if (!entry.isIntersecting) return;
+
+        const section = entry.target;
+
+        const template =
+          section.querySelector("template");
+
+        if (template) {
+
+          section.appendChild(
+            template.content.cloneNode(true)
+          );
+
+          template.remove();
+
+        }
+
+        observer.unobserve(section);
+
+      });
+
+    },
+    {
+      rootMargin: "300px"
+    }
+  );
+
+  sections.forEach(section => {
+    observer.observe(section);
+  });
+
+});
+</script>
+<script>
+(() => {
+
+"use strict";
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const lazySections = [
+    "pricing",
+    "customers",
+    "resources",
+    "apps",
+    "blog",
+    "contact",
+    "support"
+  ];
+
+  lazySections.forEach(id => {
+
+    const section = document.getElementById(id);
+
+    if (!section) return;
+
+    if (!section.dataset.loaded) {
+
+      section.dataset.loaded = "0";
+
+      Array.from(section.children).forEach(el => {
+        el.style.display = "none";
+      });
 
     }
 
   });
 
-}, {
-  rootMargin: "150px"
+  const observer = new IntersectionObserver(
+
+    entries => {
+
+      entries.forEach(entry => {
+
+        if (!entry.isIntersecting) return;
+
+        const section = entry.target;
+
+        if (section.dataset.loaded === "1") return;
+
+        Array.from(section.children).forEach(el => {
+          el.style.display = "";
+        });
+
+        section.dataset.loaded = "1";
+
+        observer.unobserve(section);
+
+      });
+
+    },
+
+    {
+      rootMargin: "400px"
+    }
+
+  );
+
+  lazySections.forEach(id => {
+
+    const section =
+      document.getElementById(id);
+
+    if (section) {
+      observer.observe(section);
+    }
+
+  });
+
 });
 
-document.querySelectorAll(
-".report-view,.panel,.card,.section"
-).forEach(el => observer.observe(el));
+window.renderTablePage = function (
+  tableId,
+  data,
+  page = 1,
+  pageSize = 100
+) {
 
-document.addEventListener(
-"scroll",
-throttle(() => {}),
-{ passive: true }
-);
+  const table =
+    document.getElementById(tableId);
 
-document.addEventListener(
-"mousemove",
-throttle(() => {}),
-{ passive: true }
-);
+  if (!table) return;
 
-const originalAddEvent =
-EventTarget.prototype.addEventListener;
+  const start =
+    (page - 1) * pageSize;
 
-EventTarget.prototype.addEventListener =
-function(type, listener, options) {
+  const end =
+    start + pageSize;
 
-  const passiveEvents = [
-    "touchstart",
-    "touchmove",
-    "wheel",
-    "scroll",
-    "mousewheel"
-  ];
+  const rows =
+    data.slice(start, end);
 
-  if (
-    passiveEvents.includes(type) &&
-    options !== false
-  ) {
-    options = { passive: true };
+  const fragment =
+    document.createDocumentFragment();
+
+  rows.forEach(row => {
+
+    const tr =
+      document.createElement("tr");
+
+    tr.innerHTML =
+      Object.values(row)
+      .map(v => `<td>${v}</td>`)
+      .join("");
+
+    fragment.appendChild(tr);
+
+  });
+
+  table.innerHTML = "";
+
+  table.appendChild(fragment);
+
+};
+
+window.createPagination = function (
+  containerId,
+  tableId,
+  data,
+  pageSize = 100
+) {
+
+  const container =
+    document.getElementById(containerId);
+
+  if (!container) return;
+
+  const pages =
+    Math.ceil(data.length / pageSize);
+
+  container.innerHTML = "";
+
+  for (let i = 1; i <= pages; i++) {
+
+    const btn =
+      document.createElement("button");
+
+    btn.textContent = i;
+
+    btn.className =
+      "px-2 py-1 border m-1";
+
+    btn.onclick = () => {
+
+      renderTablePage(
+        tableId,
+        data,
+        i,
+        pageSize
+      );
+
+    };
+
+    container.appendChild(btn);
+
   }
 
-  originalAddEvent.call(
-    this,
-    type,
-    listener,
-    options
-  );
 };
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    document
+      .querySelectorAll("img")
+      .forEach(img => {
+
+        img.loading = "lazy";
+        img.decoding = "async";
+
+      });
+
+    document
+      .querySelectorAll("iframe")
+      .forEach(frame => {
+
+        frame.loading = "lazy";
+
+      });
+
+    document
+      .querySelectorAll("video")
+      .forEach(video => {
+
+        video.preload = "none";
+
+      });
+
+  }
+);
+
+window.addEventListener(
+  "load",
+  () => {
+
+    let sliderStarted = false;
+
+    const slider =
+      document.getElementById(
+        "slider"
+      );
+
+    if (!slider) return;
+
+    if (sliderStarted) return;
+
+    sliderStarted = true;
+
+    const slides =
+      slider.children;
+
+    let current = 0;
+
+    clearInterval(
+      window.sliderInterval
+    );
+
+    window.sliderInterval =
+      setInterval(() => {
+
+        for (
+          let i = 0;
+          i < slides.length;
+          i++
+        ) {
+
+          slides[i].style.opacity =
+            i === current
+            ? "1"
+            : "0";
+
+        }
+
+        current++;
+
+        if (
+          current >= slides.length
+        ) {
+
+          current = 0;
+
+        }
+
+      }, 9000);
+
+  }
+);
 
 })();
 </script>
