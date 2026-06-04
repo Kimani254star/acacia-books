@@ -426,203 +426,222 @@ document.getElementById('demoForm').addEventListener('submit', async function(e)
 });
 </script>
 <!-- 🎯 HERO SLIDESHOW -->
-<section id="hero" class="relative w-full h-[1000px] overflow-hidden">
+<section id="hero" class="relative w-full h-[3000px] overflow-hidden">
 
+<section class="relative h-[1000px] overflow-hidden">
 
-<div id="slider" class="w-full h-full relative">
+  <div id="slider"
+       class="absolute inset-0 bg-cover bg-center transition-all duration-1000">
 
- 
-  <div class="absolute inset-0 transition-opacity duration-1000 opacity-100 bg-cover bg-center"
-        style="background-image: url('https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1600&auto=format&fit=crop');">
     <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-white">
-      <h2 class="text-3xl font-bold mb-4"> Dashboard</h2>
-      <p class="text-lg max-w-2xl text-center">Real-time overview of your entire business in one place.</p>
+      <h2 id="slideTitle" class="text-3xl font-bold mb-4"></h2>
+      <p id="slideDesc" class="text-lg max-w-2xl text-center"></p>
     </div>
+
   </div>
 
-  <div class="absolute inset-0 transition-opacity duration-1000 opacity-0 bg-cover bg-center"
-       style="background-image: url('https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1600&auto=format&fit=crop');">
-    <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-white">
-      <h2 class="text-3xl font-bold mb-4">Inventory</h2>
-      <p class="text-lg max-w-2xl text-center">Smart stock management with warehouses, pricing & adjustments.</p>
-    </div>
-  </div>
+  <button onclick="prevSlide()"
+          class="absolute left-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full">
+    ❮
+  </button>
 
-  <div class="absolute inset-0 transition-opacity duration-1000 opacity-0 bg-cover bg-center"
-       style="background-image: url('https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1600&auto=format&fit=crop');">
-    <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-white">
-      <h2 class="text-3xl font-bold mb-4">Funds</h2>
-      <p class="text-lg max-w-2xl text-center">Track and control business funds seamlessly.</p>
-    </div>
-  </div>
+  <button onclick="nextSlide()"
+          class="absolute right-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full">
+    ❯
+  </button>
 
-  <div class="absolute inset-0 transition-opacity duration-1000 opacity-0 bg-cover bg-center"
-       style="background-image: url('https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1600&auto=format&fit=crop');">
-    <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-white">
-      <h2 class="text-3xl font-bold mb-4">Customers</h2>
-      <p class="text-lg max-w-2xl text-center">Manage clients, invoices, quotes & receipts in one hub.</p>
-    </div>
-  </div>
-
-  
-  <div class="absolute inset-0 transition-opacity duration-1000 opacity-0 bg-cover bg-center"
-       style="background-image: url('https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1600&auto=format&fit=crop');">
-    <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-white">
-      <h2 class="text-3xl font-bold mb-4">Suppliers</h2>
-      <p class="text-lg max-w-2xl text-center">Handle supplier bills, orders, payments & returns efficiently.</p>
-    </div>
-  </div>
-
-  
-  <div class="absolute inset-0 transition-opacity duration-1000 opacity-0 bg-cover bg-center"
-       style="background-image: url('https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1600&auto=format&fit=crop');">
-    <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-white">
-      <h2 class="text-3xl font-bold mb-4"> Accountant</h2>
-      <p class="text-lg max-w-2xl text-center">Powerful accounting tools, journals & chart of accounts.</p>
-    </div>
-  </div>
-
-  
-  <div class="absolute inset-0 transition-opacity duration-1000 opacity-0 bg-cover bg-center"
-        style="background-image: url('https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1600&auto=format&fit=crop');">
-    <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-white">
-      <h2 class="text-3xl font-bold mb-4"> Payroll</h2>
-      <p class="text-lg max-w-2xl text-center">Automate payslips, deductions, benefits & reports.</p>
-    </div>
-  </div>
-  
-<div class="absolute inset-0 transition-opacity duration-1000 opacity-0 bg-cover bg-center"
-     style="background-image: url('https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1600&auto=format&fit=crop');">
-  <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-white">
-    <h2 class="text-3xl font-bold mb-4">Plans</h2>
-    <p class="text-lg max-w-2xl text-center">Manage subscription plans and track usage efficiently.</p>
-  </div>
-</div>
-
-
-<div class="absolute inset-0 transition-opacity duration-1000 opacity-0 bg-cover bg-center"
-     style="background-image: url('https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1600&auto=format&fit=crop');">
-  <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-white">
-    <h2 class="text-3xl font-bold mb-4">Files</h2>
-    <p class="text-lg max-w-2xl text-center">Organize documents, backups, and manage file recovery seamlessly.</p>
-  </div>
-</div>
-
-  
-  <div class="absolute inset-0 transition-opacity duration-1000 opacity-0 bg-cover bg-center"
-        style="background-image: url('https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1600&auto=format&fit=crop');">
-    <div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-white">
-      <h2 class="text-3xl font-bold mb-4">Reports</h2>
-      <p class="text-lg max-w-2xl text-center">Gain insights with real-time financial and operational reports.</p>
-    </div>
-  </div>
-
-</div>
-
-
-<button onclick="prevSlide()" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full">❮</button>
-<button onclick="nextSlide()" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full">❯</button>
 </section>
-
 <script>
-  let currentSlide = 0;
-  const slides = document.querySelectorAll("#slider > div");
 
-  function showSlide(index) {
-    slides.forEach((slide, i) => {
-      slide.style.opacity = i === index ? "1" : "0";
-    });
-    currentSlide = index;
-  }
+const slideData = [
 
-  function nextSlide() {
-    showSlide((currentSlide + 1) % slides.length);
-  }
+{
+title: "Dashboard",
+desc: "Real-time overview of your entire business in one place.",
+image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+},
 
-  function prevSlide() {
-    showSlide((currentSlide - 1 + slides.length) % slides.length);
-  }
+{
+title: "Inventory",
+desc: "Smart stock management with warehouses, pricing & adjustments.",
+image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+},
 
-  setInterval(nextSlide, 9000);
+{
+title: "Funds",
+desc: "Track and control business funds seamlessly.",
+image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+},
+
+{
+title: "Customers",
+desc: "Manage clients, invoices, quotes & receipts in one hub.",
+image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+},
+
+{
+title: "Suppliers",
+desc: "Handle supplier bills, orders, payments & returns efficiently.",
+image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+},
+
+{
+title: "Accountant",
+desc: "Powerful accounting tools, journals & chart of accounts.",
+image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+},
+
+{
+title: "Payroll",
+desc: "Automate payslips, deductions, benefits & reports.",
+image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+},
+
+{
+title: "Plans",
+desc: "Manage subscription plans and track usage efficiently.",
+image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+},
+
+{
+title: "Files",
+desc: "Organize documents, backups and file recovery.",
+image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+},
+
+{
+title: "Reports",
+desc: "Gain insights with real-time financial and operational reports.",
+image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+}
+
+];
+
+let currentSlide = 0;
+
+const slider = document.getElementById("slider");
+const title = document.getElementById("slideTitle");
+const desc = document.getElementById("slideDesc");
+
+function showSlide(index){
+
+title.textContent = slideData[index].title;
+desc.textContent = slideData[index].desc;
+
+slider.style.backgroundImage =
+`url('${slideData[index].image}')`;
+
+currentSlide = index;
+
+}
+
+function nextSlide(){
+showSlide((currentSlide + 1) % slideData.length);
+}
+
+function prevSlide(){
+showSlide((currentSlide - 1 + slideData.length) % slideData.length);
+}
+
+showSlide(0);
+
+setInterval(nextSlide, 9000);
+
 </script>
 
   <!-- 🚀 FEATURES SECTION -->
-<section id="features" class="py-20 max-w-8xl mx-auto grid md:grid-cols-4  gap-10 text-center px-4">
+<section id="features" class="py-20 max-w-8xl mx-auto grid md:grid-cols-3 lg:grid-cols-4 gap-8 px-4">
 
- 
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <h3 class="font-bold text-1xl, text-blue-700 mb-2">📊 Dashboard</h3>
-    <p class="text-gray-600">Get a real-time overview of Stock, Sale, Bills, Expeses, Taxes ,Payroll, Cashflow  and key business metrics.</p>
-  </div>
-
-  
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <h3 class="font-bold text-1xl, text-blue-700 mb-2">📦 Inventory</h3>
-    <p class="text-gray-600">Manage stock, movements, price lists, and amendments seamlessly.</p>
-  </div>
-
-  
- <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <h3 class="font-bold text-1xl, text-blue-700 mb-2">💰 Funds</h3>
-    <p class="text-gray-600">Track cash, bank, and funding sources with clarity.</p>
-  </div>
-
-  
- <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <h3 class="font-bold text-1xl, text-blue-700 mb-2">👥 Customers</h3>
-    <p class="text-gray-600">Handle invoices, Orders,quotes, receipts, credit notes, and customer statements.</p>
-  </div>
-
-  
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <h3 class="font-bold text-1xl, text-blue-700 mb-2">🚚 Suppliers</h3>
-    <p class="text-gray-600">Manage suppliers, bills, payments, debit notes, and GRNs.</p>
-  </div>
-
-  
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <h3 class="font-bold text-1xl, text-blue-700 mb-2">🧮 Accountant</h3>
-    <p class="text-gray-600">Record manual & recurring journals, adjust currencies, and lock transactions.</p>
-  </div>
-
-  
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <h3 class="font-bold text-1xl, text-blue-700 mb-2">💵 Payroll</h3>
-    <p class="text-gray-600">Automate employee records, salaries, deductions, and payslips.</p>
-  </div>
-
- 
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <h3 class="font-bold text-1xl, text-blue-700 mb-2">📈 Reports</h3>
-    <p class="text-gray-600">Access detailed financial, inventory, and payroll reports for decisions.</p>
-  </div>
-  
 <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-  <h3 class="font-bold text-1xl text-blue-700 mb-2">🗂️ Plans</h3>
-  <p class="text-gray-600">Manage subscription plans and track their usage efficiently.</p>
+  <h3 class="font-bold text-1xl text-blue-700 mb-2">📊 Dashboard</h3>
+  <p class="text-gray-600">
+    Get a complete real-time overview of your business performance from a single dashboard. Monitor stock levels, sales activity, supplier bills, customer balances, expenses, taxes, payroll, cash flow, profits, and other important indicators. Interactive summaries and quick insights help management make faster and more informed business decisions every day.
+  </p>
 </div>
 
+<div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+  <h3 class="font-bold text-1xl text-blue-700 mb-2">📦 Inventory</h3>
+  <p class="text-gray-600">
+    Manage inventory efficiently with advanced stock tracking, warehouse management, stock transfers, product categories, serial numbers, and pricing controls. Monitor stock movements in real time, prevent shortages, track adjustments, and maintain accurate inventory records that improve purchasing decisions and overall operational efficiency.
+  </p>
+</div>
+
+<div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+  <h3 class="font-bold text-1xl text-blue-700 mb-2">💰 Funds</h3>
+  <p class="text-gray-600">
+    Track all financial resources including cash accounts, bank accounts, mobile money transactions, loans, investments, and funding sources. Monitor balances in real time, record transfers between accounts, reconcile transactions, and gain a clear understanding of your organization's financial position at any moment.
+  </p>
+</div>
+
+<div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+  <h3 class="font-bold text-1xl text-blue-700 mb-2">👥 Customers</h3>
+  <p class="text-gray-600">
+    Manage customer relationships through invoices, quotations, orders, receipts, credit notes, statements, and payment tracking. Maintain detailed customer records, monitor outstanding balances, review transaction histories, and improve customer service by providing accurate information whenever needed across all business operations.
+  </p>
+</div>
+
+<div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+  <h3 class="font-bold text-1xl text-blue-700 mb-2">🚚 Suppliers</h3>
+  <p class="text-gray-600">
+    Organize supplier information, purchase orders, bills, goods received notes, payments, and debit notes from one centralized system. Improve procurement processes, monitor supplier performance, manage outstanding obligations, and ensure accurate records that support efficient purchasing and inventory management activities.
+  </p>
+</div>
+
+<div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+  <h3 class="font-bold text-1xl text-blue-700 mb-2">🧮 Accountant</h3>
+  <p class="text-gray-600">
+    Access professional accounting tools including manual journals, recurring journals, multi-currency management, account reconciliation, transaction locking, and audit trails. Maintain accurate financial records, improve compliance, simplify bookkeeping procedures, and support informed financial reporting for businesses of all sizes.
+  </p>
+</div>
+
+<div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+  <h3 class="font-bold text-1xl text-blue-700 mb-2">💵 Payroll</h3>
+  <p class="text-gray-600">
+    Automate employee payroll processing with support for salaries, allowances, deductions, taxes, benefits, overtime calculations, and payslip generation. Maintain accurate employee records, reduce administrative workload, ensure compliance with payroll regulations, and simplify workforce management throughout the organization.
+  </p>
+</div>
+
+<div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+  <h3 class="font-bold text-1xl text-blue-700 mb-2">📈 Reports</h3>
+  <p class="text-gray-600">
+    Generate comprehensive financial, inventory, payroll, sales, customer, supplier, and operational reports. Analyze trends, monitor performance indicators, identify opportunities for growth, and make informed decisions using accurate data presented in clear and easy-to-understand reporting formats.
+  </p>
+</div>
+
+<div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+  <h3 class="font-bold text-1xl text-blue-700 mb-2">🗂️ Plans</h3>
+  <p class="text-gray-600">
+    Manage subscription plans, monitor usage limits, control feature access, and track customer subscriptions effectively. View active plans, renewal dates, billing details, and usage statistics to ensure customers receive the correct services while maintaining efficient subscription management processes.
+  </p>
+</div>
 
 <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
   <h3 class="font-bold text-1xl text-blue-700 mb-2">📁 Files</h3>
-  <p class="text-gray-600">Organize documents, backups, and manage file recovery seamlessly.</p>
+  <p class="text-gray-600">
+    Store, organize, and manage important business documents, backups, attachments, contracts, invoices, and records securely. Access files quickly, maintain proper document organization, support recovery processes, and improve collaboration by keeping essential information centralized and easily accessible.
+  </p>
 </div>
 
 <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
   <h3 class="font-bold text-1xl text-green-700 mb-2">🤝 CRM</h3>
-  <p class="text-gray-600">Manage customer relationships, track leads, and boost sales efficiently.</p>
+  <p class="text-gray-600">
+    Strengthen customer relationships through lead tracking, opportunity management, follow-ups, communication records, and sales monitoring. Improve customer engagement, increase conversion rates, organize sales activities, and provide teams with tools that support business growth and long-term customer retention.
+  </p>
 </div>
 
 <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
   <h3 class="font-bold text-1xl text-red-700 mb-2">📧 Email</h3>
-  <p class="text-gray-600">Send, receive, and organize emails directly from your dashboard.</p>
+  <p class="text-gray-600">
+    Send, receive, organize, and manage business communications directly from the platform. Improve communication efficiency, maintain conversation histories, coordinate with customers and suppliers, and streamline workflows by keeping email activities integrated with your daily business operations.
+  </p>
 </div>
 
-
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <h3 class="font-bold text-1xl, text-blue-700 mb-2">⚙️ Settings</h3>
-    <p class="text-gray-600">Customize organization profile, warehouses, taxes, costing and preferences.</p>
-  </div>
+<div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+  <h3 class="font-bold text-1xl text-blue-700 mb-2">⚙️ Settings</h3>
+  <p class="text-gray-600">
+    Customize company profiles, warehouses, taxes, currencies, user permissions, costing methods, notification preferences, and system configurations. Adapt the platform to your specific business requirements, improve operational control, and create a working environment that matches your organizational processes.
+  </p>
+</div>
 
 </section>
  
@@ -829,517 +848,392 @@ document.getElementById('demoForm').addEventListener('submit', async function(e)
       </form>
     </div>
   </section>
+    </section>
 <!-- ⭐ TESTIMONIALS -->
-<section id="customers" class="py-60 bg-gray-300 text-center">
-  <h2 class="text-2xl font-bold text-blue-800 mb-8">What Our Customers Say</h2>
 
- 
-<div id="testimonial-list" class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-2">
+<section id="customers" class="py-20 bg-gray-300 text-center">
 
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <img src="https://randomuser.me/api/portraits/women/68.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
-    <p class="italic text-gray-600 mb-2">
-      "The Free plan is perfect for getting started — all the basics you need without spending a dime!"
-    </p>
-    <div class="flex justify-center mb-2 text-blue-900">★★★★☆</div>
-    <h4 class="font-semibold text-blue-900">Grace Mwangi</h4>
-    <span class="text-sm text-blue-900">Small Business Owner</span>
+  <h2 class="text-2xl font-bold text-blue-800 mb-8">
+    What Our Customers Say
+  </h2>
+
+  <div id="testimonial-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-8xl mx-auto px-4">
+
+    <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+      <img
+        src="https://randomuser.me/api/portraits/women/68.jpg"
+        loading="lazy"
+        class="w-16 h-16 mx-auto rounded-full mb-4 object-cover"
+        alt="Grace Mwangi">
+      <p class="italic text-gray-600 mb-2">
+      "The Free plan gave me an excellent introduction to the system and allowed me to organize my business operations without any upfront investment. From tracking inventory to monitoring sales and expenses, everything became easier to manage. It helped me build confidence, improve efficiency, and prepare my business for future growth."
+      </p>
+      <div class="flex justify-center mb-2 text-blue-900">★★★★☆</div>
+      <h4 class="font-semibold text-blue-900">Grace Mwangi</h4>
+      <span class="text-sm text-blue-900">Small Business Owner</span>
+    </div>
+
+    <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+      <img
+        src="https://randomuser.me/api/portraits/men/34.jpg"
+        loading="lazy"
+        class="w-16 h-16 mx-auto rounded-full mb-4 object-cover"
+        alt="Kevin Otieno">
+      <p class="italic text-gray-600 mb-2">
+      "The Starter plan transformed the way we manage inventory, sales, and customer records. Before using the system, many tasks were completed manually and consumed valuable time. With automation and better visibility into daily operations, our team became more productive, reduced errors, and improved overall customer satisfaction."
+      </p>
+      <div class="flex justify-center mb-2 text-blue-900">★★★★★</div>
+      <h4 class="font-semibold text-blue-900">Kevin Otieno</h4>
+      <span class="text-sm text-blue-900">Retail Manager</span>
+    </div>
+
+    <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+      <img
+        src="https://randomuser.me/api/portraits/men/85.jpg"
+        loading="lazy"
+        class="w-16 h-16 mx-auto rounded-full mb-4 object-cover"
+        alt="Daniel Kimani">
+       <p class="italic text-gray-600 mb-2">
+      "The Pro plan provided advanced reporting and analytics that helped us understand our business performance in greater detail. We were able to identify profitable products, monitor trends, and make informed decisions based on accurate data. As a result, we improved planning, increased profitability, and scaled operations successfully."
+      </p>
+      <div class="flex justify-center mb-2 text-blue-900">★★★★★</div>
+      <h4 class="font-semibold text-blue-900">Daniel Kimani</h4>
+      <span class="text-sm text-blue-900">Warehouse Supervisor</span>
+    </div>
+
+    <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+      <img
+        src="https://randomuser.me/api/portraits/women/12.jpg"
+        loading="lazy"
+        class="w-16 h-16 mx-auto rounded-full mb-4 object-cover"
+        alt="Sarah Njeri">
+      <p class="italic text-gray-600 mb-2">
+      "The Business plan has been a valuable asset for managing multiple stores and departments efficiently. Inventory control, payroll processing, customer management, and financial tracking are now centralized in one platform. This has reduced administrative workload, improved communication between teams, and helped our organization operate more effectively."
+     </p>
+      <div class="flex justify-center mb-2 text-blue-900">★★★★★</div>
+      <h4 class="font-semibold text-blue-900">Sarah Njeri</h4>
+      <span class="text-sm text-blue-900">Entrepreneur</span>
+    </div>
+
+    <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+      <img
+        src="https://randomuser.me/api/portraits/men/42.jpg"
+        loading="lazy"
+        class="w-16 h-16 mx-auto rounded-full mb-4 object-cover"
+        alt="John Mwangi">
+      <p class="italic text-gray-600 mb-2">
+      "The Enterprise package delivered everything our organization needed, including integrations, advanced security, API access, and professional support. The platform adapted well to our complex requirements and provided reliable performance across departments. It has significantly improved operational efficiency and allowed us to focus on strategic growth initiatives."
+     </p>
+      <div class="flex justify-center mb-2 text-blue-900">★★★★★</div>
+      <h4 class="font-semibold text-blue-900">John Mwangi</h4>
+      <span class="text-sm text-blue-900">Operations Director</span>
+    </div>
+
+    <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+      <img
+        src="https://randomuser.me/api/portraits/women/21.jpg"
+        loading="lazy"
+        class="w-16 h-16 mx-auto rounded-full mb-4 object-cover"
+        alt="Emily Wanjiku">
+      <p class="italic text-gray-600 mb-2">
+      "All Access exceeded our expectations by providing a complete suite of business management tools in a single platform. From accounting and payroll to inventory and reporting, every department benefits from the integrated system. The flexibility, reliability, and extensive features have made it an essential part of our daily operations."
+       </p>
+      <div class="flex justify-center mb-2 text-blue-900">★★★★★</div>
+      <h4 class="font-semibold text-blue-900">Emily Wanjiku</h4>
+      <span class="text-sm text-blue-900">CEO</span>
+    </div>
+
   </div>
 
- 
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <img src="https://randomuser.me/api/portraits/men/34.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
-    <p class="italic text-gray-600 mb-2">
-      "The Starter plan helped us manage our growing inventory and track sales seamlessly."
-    </p>
-    <div class="flex justify-center mb-2 text-blue-900">★★★★★</div>
-    <h4 class="font-semibold text-blue-900">Kevin Otieno</h4>
-    <span class="text-sm text-blue-900">Retail Manager</span>
+  <div id="extra-testimonials"
+       class="max-w-6xl mx-auto mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-4">
   </div>
 
-  
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <img src="https://randomuser.me/api/portraits/men/85.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
-    <p class="italic text-gray-600 mb-2">
-      "The Pro plan gave us advanced reporting tools that made scaling our business easy."
-    </p>
-    <div class="flex justify-center mb-2 text-blue-900">★★★★★</div>
-    <h4 class="font-semibold text-blue-900">Daniel Kimani</h4>
-    <span class="text-sm text-blue-900">Warehouse Supervisor</span>
-  </div>
-
-  
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <img src="https://randomuser.me/api/portraits/women/12.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
-    <p class="italic text-gray-600 mb-2">
-      "The Business plan helped our multi-store operations run smoothly with enhanced inventory and payroll management."
-    </p>
-    <div class="flex justify-center mb-2 text-blue-900">★★★★★</div>
-    <h4 class="font-semibold text-blue-900">Sarah Njeri</h4>
-    <span class="text-sm text-blue-900">Entrepreneur</span>
-  </div>
-
-  
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <img src="https://randomuser.me/api/portraits/men/42.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
-    <p class="italic text-gray-600 mb-2">
-      "Enterprise gave us integrations, APIs, and support that fit our large-scale business perfectly."
-    </p>
-    <div class="flex justify-center mb-2 text-blue-900">★★★★★</div>
-    <h4 class="font-semibold text-blue-900">John Mwangi</h4>
-    <span class="text-sm text-blue-900">Operations Director</span>
-  </div>
-
-
-  <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
-    <img src="https://randomuser.me/api/portraits/women/21.jpg" class="w-16 h-16 mx-auto rounded-full mb-4">
-    <p class="italic text-gray-600 mb-2">
-      "All Access unlocked every feature we could imagine — a complete solution for our entire organization."
-    </p>
-    <div class="flex justify-center mb-2 text-blue-900">★★★★★</div>
-    <h4 class="font-semibold text-blue-900">Emily Wanjiku</h4>
-    <span class="text-sm text-blue-900">CEO</span>
-  </div>
-</div>
-
-  
-  <div id="extra-testimonials" class="max-w-6xl mx-auto mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-4"></div>
-
- 
   <div class="text-center mt-10">
-    <button id="toggle-form" 
-      class="bg-blue-900 text-white px-6 py-3 rounded hover:bg-blue-800">
+    <button
+      id="toggle-form"
+      class="bg-blue-900 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition">
       Share Your Experience
     </button>
   </div>
 
- 
   <div id="testimonial-form-wrapper" class="hidden">
     <div class="bg-white p-6 rounded-lg shadow mt-10 max-w-lg mx-auto">
-      <h3 class="text-xl font-bold text-blue-900 mb-4 text-center">Share Your Experience</h3>
+
+      <h3 class="text-xl font-bold text-blue-900 mb-4 text-center">
+        Share Your Experience
+      </h3>
+
       <form id="testimonial-form" class="space-y-4">
-        <input type="text" id="fullName" placeholder="Your Name" required class="w-full border p-2 rounded">
-        <input type="text" id="role" placeholder="Your Role (e.g. Shop Owner)" required class="w-full border p-2 rounded">
-        <textarea id="testimonial" rows="2" placeholder="Write your testimonial..." required class="w-full border p-2 rounded"></textarea>
+
+        <input
+          type="text"
+          id="fullName"
+          placeholder="Your Name"
+          required
+          class="w-full border p-2 rounded">
+
+        <input
+          type="text"
+          id="role"
+          placeholder="Your Role (e.g. Shop Owner)"
+          required
+          class="w-full border p-2 rounded">
+
+        <textarea
+          id="testimonial"
+          rows="3"
+          placeholder="Write your testimonial..."
+          required
+          class="w-full border p-2 rounded"></textarea>
+
         <div>
-          <label class="block font-medium text-blue-900 mb-1">Your Rating:</label>
-          <div class="flex gap-3 text-xl text-blue-900 justify-center">
-            <label><input type="radio" name="rating" value="1" required> ★</label>
-            <label><input type="radio" name="rating" value="2"> ★★</label>
-            <label><input type="radio" name="rating" value="3"> ★★★</label>
-            <label><input type="radio" name="rating" value="4"> ★★★★</label>
-            <label><input type="radio" name="rating" value="5"> ★★★★★</label>
+          <label class="block font-medium text-blue-900 mb-1">
+            Your Rating:
+          </label>
+
+          <div class="flex flex-wrap justify-center gap-3 text-xl text-blue-900">
+
+            <label>
+              <input type="radio" name="rating" value="1" required> ★
+            </label>
+
+            <label>
+              <input type="radio" name="rating" value="2"> ★★
+            </label>
+
+            <label>
+              <input type="radio" name="rating" value="3"> ★★★
+            </label>
+
+            <label>
+              <input type="radio" name="rating" value="4"> ★★★★
+            </label>
+
+            <label>
+              <input type="radio" name="rating" value="5"> ★★★★★
+            </label>
+
           </div>
         </div>
+
         <div>
-          <label class="block font-medium text-blue-900 mb-1">Profile Image (optional):</label>
-          <input type="file" id="image" accept="image/*" class="w-full border p-1 rounded">
+          <label class="block font-medium text-blue-900 mb-1">
+            Profile Image (optional):
+          </label>
+
+          <input
+            type="file"
+            id="image"
+            accept="image/*"
+            class="w-full border p-1 rounded">
         </div>
-        <button type="submit" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-800">
+
+        <button
+          type="submit"
+          class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-800 transition">
           Submit Testimonial
         </button>
+
       </form>
+
     </div>
   </div>
+
 </section>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+
   const form = document.getElementById("testimonial-form");
   const extraTestimonials = document.getElementById("extra-testimonials");
   const toggleFormBtn = document.getElementById("toggle-form");
   const formWrapper = document.getElementById("testimonial-form-wrapper");
 
-  toggleFormBtn.addEventListener("click", function () {
-    if (formWrapper.classList.contains("hidden")) {
-      formWrapper.classList.remove("hidden");
-      toggleFormBtn.textContent = "Hide Form";
-    } else {
-      formWrapper.classList.add("hidden");
-      toggleFormBtn.textContent = "Share Your Experience";
-    }
-  });
+  toggleFormBtn.onclick = function () {
+    formWrapper.classList.toggle("hidden");
 
-  form.addEventListener("submit", function (e) {
+    toggleFormBtn.textContent =
+      formWrapper.classList.contains("hidden")
+        ? "Share Your Experience"
+        : "Hide Form";
+  };
+
+  form.onsubmit = function (e) {
     e.preventDefault();
 
-    const name = document.getElementById("fullName").value;
-    const role = document.getElementById("role").value;
-    const text = document.getElementById("testimonial").value;
-    const rating = document.querySelector("input[name='rating']:checked").value;
+    const name = document.getElementById("fullName").value.trim();
+    const role = document.getElementById("role").value.trim();
+    const text = document.getElementById("testimonial").value.trim();
+
+    const ratingInput = document.querySelector(
+      "input[name='rating']:checked"
+    );
+
+    if (!ratingInput) {
+      alert("Please select a rating.");
+      return;
+    }
+
+    const rating = parseInt(ratingInput.value);
+
     const imageInput = document.getElementById("image");
 
-    let imgSrc = "https://via.placeholder.com/80"; 
+    let imgSrc = "https://via.placeholder.com/80";
+
     if (imageInput.files && imageInput.files[0]) {
-      imgSrc = URL.createObjectURL(imageInput.files[0]);
+
+      const file = imageInput.files[0];
+
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Please upload an image smaller than 2MB.");
+        return;
+      }
+
+      imgSrc = URL.createObjectURL(file);
     }
 
-    const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+    const stars =
+      "★".repeat(rating) +
+      "☆".repeat(5 - rating);
 
-    const newCard = document.createElement("div");
-    newCard.className = "bg-white p-6 rounded-lg shadow text-center";
-    newCard.innerHTML = `
-      <img src="${imgSrc}" class="w-16 h-16 mx-auto rounded-full mb-4">
-      <p class="italic text-gray-600 mb-2">"${text}"</p>
-      <div class="flex justify-center mb-2 text-blue-900">${stars}</div>
-      <h4 class="font-semibold text-blue-900">${name}</h4>
-      <span class="text-sm text-blue-900">${role}</span>
-    `;
+    extraTestimonials.insertAdjacentHTML(
+      "beforeend",
+      `
+      <div class="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+        <img
+          src="${imgSrc}"
+          class="w-16 h-16 mx-auto rounded-full mb-4 object-cover"
+          loading="lazy"
+        >
+        <p class="italic text-gray-600 mb-2">
+          "${text}"
+        </p>
+        <div class="flex justify-center mb-2 text-blue-900">
+          ${stars}
+        </div>
+        <h4 class="font-semibold text-blue-900">
+          ${name}
+        </h4>
+        <span class="text-sm text-blue-900">
+          ${role}
+        </span>
+      </div>
+      `
+    );
 
-    extraTestimonials.appendChild(newCard);
+    if (imgSrc.startsWith("blob:")) {
+      setTimeout(() => {
+        URL.revokeObjectURL(imgSrc);
+      }, 5000);
+    }
 
     form.reset();
+
     formWrapper.classList.add("hidden");
-    toggleFormBtn.textContent = "Share Your Experience";
-  });
-</script>
-  <!-- 📚 RESOURCES SECTION -->
-<section id="resources" class="py-16 bg-gray-50 text-center">
-  <h2 class="text-1xl font-bold text-blue-800 mb-8">Helpful Resources</h2>
-  <div class="max-w-8xl mx-auto grid sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-2 px-4">
 
- 
-<div id="userGuideCard" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition cursor-pointer w-96" onclick="toggleUserGuide()">
-  <h3 class="font-bold text-lg mb-2 text-blue-900">📖 User Guide</h3>
-  <p class="text-gray-600 mb-4 text-sm">Step-by-step instructions to get started with Acacia Books ERP.</p>
-  <span class="inline-block bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">View Guide →</span>
-</div>
+    toggleFormBtn.textContent =
+      "Share Your Experience";
+  };
 
-
-<div id="userGuideSection" class="hidden bg-white p-2 rounded-lg shadow-lg mt-2 w-96">
-
- 
-  <div class="border-b py-2">
-    <button class="w-full flex justify-between items-center text-left font-semibold text-base text-blue-900" onclick="toggleModule('dashboardModule')">
-      📊 Dashboard <span id="dashboardIcon">+</span>
-    </button>
-    <div id="dashboardModule" class="hidden mt-1 text-gray-600 text-sm">
-      Overview of metrics, KPIs, and trends in your business.
-    </div>
-  </div>
-
-  <div class="border-b py-2">
-    <button class="w-full flex justify-between items-center text-left font-semibold text-base text-blue-900" onclick="toggleModule('inventoryModule')">
-      📦 Inventory <span id="inventoryIcon">+</span>
-    </button>
-    <div id="inventoryModule" class="hidden mt-1 text-gray-600 text-sm">
-      <ul class="list-disc ml-5">
-        <li>Stock: Add/edit items, track stock levels.</li>
-        <li>Movement: Track stock transfers and shipments.</li>
-        <li>Price List: Manage prices and discounts.</li>
-        <li>Amendments & Bulk Adjustments: Correct and update stock efficiently.</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="border-b py-2">
-    <button class="w-full flex justify-between items-center text-left font-semibold text-base text-blue-900" onclick="toggleModule('customersModule')">
-      👥 Customers <span id="customersIcon">+</span>
-    </button>
-    <div id="customersModule" class="hidden mt-1 text-gray-600 text-sm">
-      <ul class="list-disc ml-5">
-        <li>Customer profiles, invoices, quotes.</li>
-        <li>Credit notes, sales returns, receipts, and delivery tracking.</li>
-        <li>Account statements for better monitoring.</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="border-b py-2">
-    <button class="w-full flex justify-between items-center text-left font-semibold text-base text-blue-900" onclick="toggleModule('suppliersModule')">
-      🚚 Suppliers <span id="suppliersIcon">+</span>
-    </button>
-    <div id="suppliersModule" class="hidden mt-1 text-gray-600 text-sm">
-      <ul class="list-disc ml-5">
-        <li>Supplier management, bills, purchase orders.</li>
-        <li>Payments, tax, operational costs, and GRN tracking.</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="border-b py-2">
-    <button class="w-full flex justify-between items-center text-left font-semibold text-base text-blue-900" onclick="toggleModule('accountantModule')">
-      🧮 Accountant <span id="accountantIcon">+</span>
-    </button>
-    <div id="accountantModule" class="hidden mt-1 text-gray-600 text-sm">
-      <ul class="list-disc ml-5">
-        <li>Manual & recurring journals.</li>
-        <li>Assets & liabilities, budgets, charts of accounts.</li>
-        <li>Transaction locking for security.</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="border-b py-2">
-    <button class="w-full flex justify-between items-center text-left font-semibold text-base text-blue-900" onclick="toggleModule('payrollModule')">
-      💵 Payroll <span id="payrollIcon">+</span>
-    </button>
-    <div id="payrollModule" class="hidden mt-1 text-gray-600 text-sm">
-      <ul class="list-disc ml-5">
-        <li>Employees, earnings, deductions, attendance.</li>
-        <li>Payslip generation, statutory compliance, payroll reports.</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="border-b py-2">
-    <button class="w-full flex justify-between items-center text-left font-semibold text-base text-blue-900" onclick="toggleModule('reportsModule')">
-      📈 Reports <span id="reportsIcon">+</span>
-    </button>
-    <div id="reportsModule" class="hidden mt-1 text-gray-600 text-sm">
-      Generate financial, inventory, customer, supplier, and payroll reports.
-    </div>
-  </div>
-
-  <div class="border-b py-2">
-    <button class="w-full flex justify-between items-center text-left font-semibold text-base text-blue-900" onclick="toggleModule('settingsModule')">
-      ⚙️ Settings <span id="settingsIcon">+</span>
-    </button>
-    <div id="settingsModule" class="hidden mt-1 text-gray-600 text-sm">
-      Organization profile, warehouses, tax compliance, user management, VAT, preferences, and templates.
-    </div>
-  </div>
-
-</div>
-
-<script>
-  function toggleUserGuide() {
-    const guide = document.getElementById('userGuideSection');
-    guide.classList.toggle('hidden');
-    if (!guide.classList.contains('hidden')) {
-      guide.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }
-
-  function toggleModule(moduleId) {
-    const module = document.getElementById(moduleId);
-    const icon = document.getElementById(moduleId.replace('Module','') + 'Icon');
-    module.classList.toggle('hidden');
-    icon.textContent = module.classList.contains('hidden') ? '+' : '−';
-  }
+});
 </script>
 
-<div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition max-w-md mx-auto">
-  <h3 class="font-bold text-lg mb-4 text-blue-900">🎓 Video Tutorials</h3>
-  <p class="text-gray-600 mb-4">
-    Watch short videos to learn features like POS, Inventory, Payroll, and more.
-  </p>
 
-  
-  <div class="space-y-3">
-    <button onclick="toggleVideo('video1')" class="w-full bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
-      Watch POS Tutorial
-    </button>
-    <div id="video1" class="hidden mt-2">
-      <iframe class="w-full h-40 rounded" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="POS Tutorial" frameborder="0" allowfullscreen></iframe>
-      <p class="text-sm text-gray-700 mt-1">📊 POS: Learn how to manage your point-of-sale efficiently.</p>
-    </div>
+<section id="resources" class="py-20 bg-gray-50 text-center">
 
-    <button onclick="toggleVideo('video2')" class="w-full bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
-      Watch Inventory Tutorial
-    </button>
-    <div id="video2" class="hidden mt-2">
-      <iframe class="w-full h-40 rounded" src="https://www.youtube.com/embed/oHg5SJYRHA0" title="Inventory Tutorial" frameborder="0" allowfullscreen></iframe>
-      <p class="text-sm text-gray-700 mt-1">📦 Inventory: Track stock, movements, and updates easily.</p>
-    </div>
+  <div class="max-w-7xl mx-auto mb-16">
 
-    <button onclick="toggleVideo('video3')" class="w-full bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
-      Watch Payroll Tutorial
-    </button>
-    <div id="video3" class="hidden mt-2">
-      <iframe class="w-full h-40 rounded" src="https://www.youtube.com/embed/oHg5SJYRHA0" title="Inventory Tutorial" frameborder="0" allowfullscreen></iframe>
-      <p class="text-sm text-gray-700 mt-1">💵 Payroll: Generate payslips, track attendance, and manage deductions.</p>
-    </div>
-  </div>
-
- 
-  <div class="mt-4 text-center">
-   <a href="privacy-policy.html" target="_blank" class="inline-block bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
-      Watch All Videos →
-    </a>
-  </div>
-</div>
-
-<script>
-  function toggleVideo(id) {
-    const videoDiv = document.getElementById(id);
-    videoDiv.classList.toggle('hidden');
-    if (!videoDiv.classList.contains('hidden')) {
-      videoDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }
-</script>
-    
-<div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-  <h3 class="font-bold text-lg mb-2 text-blue-900">🛠 FAQ & Support</h3>
-  <p class="text-gray-600 mb-4">Find answers to common questions, troubleshoot quickly, or contact support directly.</p>
-
-  <div class="space-y-2 mb-4">
-    <button onclick="toggleFAQ('faq1')" class="w-full text-left p-2 border rounded hover:bg-blue-50 transition flex justify-between items-center">
-      What is Acacia Books ERP?
-      <span id="faq1Icon">+</span>
-    </button>
-    <div id="faq1" class="hidden text-gray-700 p-2 border-l-4 border-blue-900 rounded bg-blue-50">
-      Acacia Books ERP is a cloud-based platform to manage inventory, customers, suppliers, payroll, and finances in one place.
-    </div>
-
-   <button onclick="toggleFAQ('faq2')" class="w-full text-left p-2 border rounded hover:bg-blue-50 transition flex justify-between items-center">
-  How do I upgrade my plan?
-  <span id="faq2Icon">+</span>
-</button>
-<div id="faq2" class="hidden text-gray-700 p-2 border-l-4 border-blue-900 rounded bg-blue-50">
-  To upgrade your plan, please contact our support team at 
-  <a href="mailto:support@acaciabooks.com" class="text-blue-900 underline">support@acaciabooks.com</a>. 
-  They will guide you through the available plans and assist with the upgrade process.
-</div>
-
-    <button onclick="toggleFAQ('faq3')" class="w-full text-left p-2 border rounded hover:bg-blue-50 transition flex justify-between items-center">
-      How can I contact support?
-      <span id="faq3Icon">+</span>
-    </button>
-    <div id="faq3" class="hidden text-gray-700 p-2 border-l-4 border-blue-900 rounded bg-blue-50">
-      Support is available via email at <a href="mailto:support@acaciabooks.com" class="text-blue-900 underline">support@acaciabooks.com</a> or through the support widget in your dashboard.
-    </div>
-  </div>
-
- 
-  <a href="privacy-policy.html" target="_blank" class="inline-block bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">Visit Full FAQ </a>
-</div>
-
-<script>
-function toggleFAQ(faqId) {
-  const faq = document.getElementById(faqId);
-  const icon = document.getElementById(faqId + 'Icon');
-  if (faq.classList.contains('hidden')) {
-    faq.classList.remove('hidden');
-    icon.textContent = '−';
-  } else {
-    faq.classList.add('hidden');
-    icon.textContent = '+';
-  }
-}
-</script>
-
-<div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition max-w-2xl mx-auto mb-10">
-  <h3 class="font-bold text-xl mb-4 text-blue-900">🔗 Integrations</h3>
-
-  <p class="text-gray-600 text-lg mb-4">
-    Connect Acacia Books with your favorite apps and services to streamline your workflow.
-  </p>
-
-  <div class="space-y-3">
-    <div class="integration-item border-b pb-2">
-      <button class="integration-name w-full text-left font-semibold text-blue-900">
-        📧 Email Marketing (Mailchimp, SendGrid)
-      </button>
-      <div class="integration-details hidden text-gray-600 mt-1">
-        Automate your newsletters and promotional emails directly from Acacia Books.
-      </div>
-    </div>
-
-    <div class="integration-item border-b pb-2">
-      <button class="integration-name w-full text-left font-semibold text-blue-900">
-        💳 Payment Gateways (M-Pesa, Stripe, PayPal)
-      </button>
-      <div class="integration-details hidden text-gray-600 mt-1">
-        Accept payments online and reconcile them automatically with your accounts.
-      </div>
-    </div>
-
-    <div class="integration-item border-b pb-2">
-      <button class="integration-name w-full text-left font-semibold text-blue-900">
-        📦 E-commerce Platforms (Shopify, WooCommerce)
-      </button>
-      <div class="integration-details hidden text-gray-600 mt-1">
-        Sync your inventory and sales data seamlessly between Acacia Books and your online store.
-      </div>
-    </div>
-  </div>
-
-  <div class="mt-4 text-center">
-    <a href="#" class="inline-block bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
-      Connect Now
-    </a>
-  </div>
-</div>
-</div>
-<section id="resources" class="py-60 bg-gray-50 text-center">
-
-  <div class="max-w-50xl mx-auto mb-100">
-
-    <h2 class="text-2xl md:text-2xl font-bold text-blue-900 mb-4">
+    <h2 class="text-2xl md:text-3xl font-bold text-blue-900 mb-4">
       Powering Smarter Business Operations
     </h2>
 
-    <p class="text-lg md:text-1xl text-gray-600 leading-relaxed">
-      Acacia Books is an all-in-one cloud ERP platform built to simplify management, automate workflows,
-      and help businesses grow faster with confidence.
+    <p class="text-lg md:text-xl text-gray-600 leading-relaxed">
+      Acacia Books is a comprehensive cloud-based ERP platform designed to help businesses simplify operations, improve efficiency, and strengthen financial control. By combining accounting, inventory management, payroll processing, customer relationship management, supplier management, reporting, and workflow automation into one powerful system, organizations gain greater visibility, productivity, and confidence while supporting sustainable growth and long-term business success.
     </p>
 
   </div>
 
   <div class="max-w-7xl mx-auto grid md:grid-cols-4 gap-6 px-6">
 
-    <div class="bg-white p-6 rounded-xl shadow hover:shadow-xl transition">
+    <div class="bg-white p-6 rounded-xl shadow">
       <h3 class="text-xl font-bold text-blue-900 mb-4">
         Everything Your Business Needs — In One Platform
       </h3>
 
       <p class="text-gray-600 leading-relaxed">
-        From inventory control to payroll automation, Acacia Books centralizes your core business processes into a secure cloud system.
+        Acacia Books centralizes essential business functions into one secure and easy-to-use platform. Organizations can manage inventory, accounting, payroll, customer records, supplier transactions, reporting, and operational workflows without relying on multiple disconnected systems. This unified approach saves valuable time, reduces complexity, improves accuracy, and helps teams work more efficiently every day.
       </p>
     </div>
-    <div class="bg-white p-6 rounded-xl shadow hover:shadow-xl transition">
-    <h3 class="text-xl font-bold text-blue-900 mb-4">
-    Simplify Daily Operations With Smart Tools
-    </h3>
 
-    <p class="text-gray-600 leading-relaxed">
-    Manage sales, track expenses, monitor stock levels, and organize customer records from one easy-to-use digital workspace.
-    </p>
+    <div class="bg-white p-6 rounded-xl shadow">
+      <h3 class="text-xl font-bold text-blue-900 mb-4">
+        Simplify Daily Operations With Smart Tools
+      </h3>
+
+      <p class="text-gray-600 leading-relaxed">
+        Modern businesses require practical solutions that support productivity and reduce administrative workload. Acacia Books provides tools for managing sales, tracking expenses, monitoring inventory, organizing customer information, and controlling daily business activities. Teams gain faster access to important information, improve collaboration, reduce errors, and maintain operational efficiency across departments.
+      </p>
     </div>
-    <div class="bg-blue-900 text-white p-6 rounded-xl shadow hover:scale-105 transition">
-      <h3 class="text-xl font-bold mb-4">Why Businesses Choose Acacia Books</h3>
+
+    <div class="bg-blue-900 text-white p-6 rounded-xl shadow">
+      <h3 class="text-xl font-bold mb-4">
+        Why Businesses Choose Acacia Books
+      </h3>
+
+      <p class="text-gray-200 leading-relaxed mb-4">
+        Businesses choose Acacia Books because it delivers reliability, flexibility, and powerful management tools within a single integrated platform. The system helps organizations improve productivity, strengthen financial control, automate repetitive processes, and gain valuable business insights while maintaining security, scalability, and ease of use for teams of all sizes.
+      </p>
 
       <ul class="space-y-2 text-gray-200">
         <li>✔ Cloud-Based & Secure</li>
         <li>✔ Easy Setup</li>
         <li>✔ Scalable</li>
-        <li>✔ Support Team</li>
-        <li>✔ Modern System</li>
+        <li>✔ Dedicated Support Team</li>
+        <li>✔ Modern Business Platform</li>
       </ul>
     </div>
 
-    <div class="bg-white p-6 rounded-xl shadow hover:shadow-xl transition">
+    <div class="bg-white p-6 rounded-xl shadow">
       <h3 class="text-xl font-bold text-blue-900 mb-4">
         Business Insights
       </h3>
 
       <p class="text-gray-600 leading-relaxed">
-        Track sales, inventory, and performance with real-time analytics and smart dashboards.
+        Real-time dashboards and advanced reporting tools provide valuable visibility into business performance. Managers can monitor sales trends, inventory movements, customer activity, financial performance, and operational metrics from one location. These insights support better decision-making, improve forecasting accuracy, optimize resources, and help organizations achieve strategic objectives more effectively.
       </p>
     </div>
-    </div>
+
+  </div>
   <div class="max-w-6xl mx-auto mt-12 px-6">
     <div class="grid md:grid-cols-4 gap-4 text-center">
 
-      <div class="p-4 bg-blue-50 rounded-lg shadow">
+     <div class="p-4 bg-blue-50 rounded-lg shadow">
         <h4 class="text-3xl font-bold text-blue-900">16K+</h4>
-        <p class="text-gray-700 text-sm">Invoices</p>
+        <p class="text-gray-700 text-sm">
+          Invoices Processed Successfully Across Multiple Industries And Business Sectors.
+        </p>
       </div>
 
       <div class="p-4 bg-green-50 rounded-lg shadow">
         <h4 class="text-3xl font-bold text-green-900">12K+</h4>
-        <p class="text-gray-700 text-sm">Customers</p>
+        <p class="text-gray-700 text-sm">
+          Customers Managed Through The Platform With Accurate Records And Activity Tracking.
+        </p>
       </div>
 
       <div class="p-4 bg-purple-50 rounded-lg shadow">
         <h4 class="text-3xl font-bold text-purple-900">15K+</h4>
-        <p class="text-gray-700 text-sm">Products</p>
+        <p class="text-gray-700 text-sm">
+          Products Managed Efficiently Using Inventory Control, Tracking, And Reporting Tools.
+        </p>
       </div>
 
       <div class="p-4 bg-yellow-50 rounded-lg shadow">
         <h4 class="text-3xl font-bold text-yellow-900">20K+</h4>
-        <p class="text-gray-700 text-sm">Hours Saved</p>
+        <p class="text-gray-700 text-sm">
+          Hours Saved Through Automation, Streamlined Workflows, And Improved Operational Efficiency.
+        </p>
       </div>
 
 
@@ -1350,13 +1244,12 @@ function toggleFAQ(faqId) {
 
   <h2 class="text-2xl font-bold text-blue-900 mb-4">Our Apps</h2>
 
-  <p class="text-xl md:text-1xl text-gray-600 leading-relaxed max-w-1xl mx-auto mb-10">
-    Access your business tools anywhere, automate workflows, and manage everything in real-time with ease.
+  <p class="text-xl text-gray-600 leading-relaxed max-w-4xl mx-auto mb-10">
+    Access all your business applications in one unified platform designed for speed, automation, and real-time control. Manage operations from anywhere, reduce manual work, improve productivity, and stay connected to your business activities through smart digital tools built to support growth, accuracy, and efficient decision-making across all departments.
   </p>
 
-  <div class="max-w-9xl mx-auto grid md:grid-cols-5 gap-6">
+  <div class="max-w-7xl mx-auto grid md:grid-cols-5 gap-6">
 
-   
     <a href="inventory.html"
        class="group relative bg-white p-5 rounded-xl shadow-md hover:shadow-2xl transition transform hover:-translate-y-2 block overflow-hidden">
 
@@ -1368,8 +1261,9 @@ function toggleFAQ(faqId) {
       <div class="relative z-10">
         <i class="fa-solid fa-boxes-stacked text-3xl text-blue-700 mb-3"></i>
         <h3 class="text-xl font-bold text-blue-900">Inventory</h3>
-        <p class="text-gray-500 text-base md:text-lg mt-2 leading-relaxed">
-          Track stock levels and manage inventory easily in real-time with smart automation and alerts.
+
+        <p class="text-gray-500 text-base mt-2 leading-relaxed">
+          Inventory management helps businesses track stock levels, monitor product movement, and avoid shortages or overstocking. It provides real-time visibility into warehouse operations, improves purchasing decisions, reduces losses, and ensures accurate stock control across all locations for better efficiency and business performance.
         </p>
       </div>
     </a>
@@ -1385,8 +1279,9 @@ function toggleFAQ(faqId) {
       <div class="relative z-10">
         <i class="fa-solid fa-receipt text-3xl text-green-600 mb-3"></i>
         <h3 class="text-xl font-bold text-blue-900">Expenses</h3>
-        <p class="text-gray-500 text-base md:text-lg mt-2 leading-relaxed">
-          Monitor spending, categorize expenses, and get clear financial reports instantly.
+
+        <p class="text-gray-500 text-base mt-2 leading-relaxed">
+          Expense tracking allows businesses to record, categorize, and analyze all financial spending in one place. It improves financial visibility, helps control budgets, reduces unnecessary costs, and provides clear reports that support better financial planning and smarter business decision-making.
         </p>
       </div>
     </a>
@@ -1402,8 +1297,9 @@ function toggleFAQ(faqId) {
       <div class="relative z-10">
         <i class="fa-solid fa-money-check-dollar text-3xl text-purple-600 mb-3"></i>
         <h3 class="text-xl font-bold text-blue-900">Payroll</h3>
-        <p class="text-gray-500 text-base md:text-lg mt-2 leading-relaxed">
-          Automate salaries, deductions, and employee payments with full accuracy and speed.
+
+        <p class="text-gray-500 text-base mt-2 leading-relaxed">
+          Payroll automation simplifies salary processing, tax calculations, deductions, and employee payments. It ensures accuracy, reduces administrative workload, improves compliance, and provides timely and transparent payroll management for businesses of all sizes while increasing efficiency and employee satisfaction.
         </p>
       </div>
     </a>
@@ -1419,23 +1315,27 @@ function toggleFAQ(faqId) {
       <div class="relative z-10">
         <i class="fa-solid fa-file-invoice-dollar text-3xl text-orange-600 mb-3"></i>
         <h3 class="text-xl font-bold text-blue-900">Sales</h3>
-        <p class="text-gray-500 text-base md:text-lg mt-2 leading-relaxed">
-          Create invoices, manage customers, and track payments with real-time insights.
+
+        <p class="text-gray-500 text-base mt-2 leading-relaxed">
+          Sales management tools help businesses create invoices, track customer transactions, and monitor payments in real time. They improve sales visibility, enhance customer relationships, reduce errors, and provide accurate insights into business performance and revenue growth across all sales channels.
         </p>
       </div>
     </a>
+
     <a href="Bills.html"
        class="group relative bg-white p-5 rounded-xl shadow-md hover:shadow-2xl transition transform hover:-translate-y-2 block overflow-hidden">
 
       <div class="absolute inset-0 opacity-20 blur-sm group-hover:opacity-30 transition">
         <div class="w-full h-full bg-cover"
-             style="background-image:url('https://source.unsplash.com/400x300/?sales');"></div>
+             style="background-image:url('https://source.unsplash.com/400x300/?billing');"></div>
       </div>
-     <div class="relative z-10">
+
+      <div class="relative z-10">
         <i class="fa-solid fa-file-invoice-dollar text-3xl text-orange-600 mb-3"></i>
-        <h3 class="text-xl font-bold text-blue-900"> Billing</h3>
-        <p class="text-gray-500 text-base md:text-lg mt-2 leading-relaxed">
-          Create bills, manage Suppliers, and track payments with real-time insights.
+        <h3 class="text-xl font-bold text-blue-900">Billing</h3>
+
+        <p class="text-gray-500 text-base mt-2 leading-relaxed">
+          Billing tools allow businesses to generate supplier bills, manage payments, and track financial obligations efficiently. They improve financial accuracy, reduce manual errors, enhance payment tracking, and provide clear visibility into outstanding liabilities and overall financial health.
         </p>
       </div>
     </a>
@@ -1443,187 +1343,110 @@ function toggleFAQ(faqId) {
   </div>
 </section>
 
-<section id="blog" class="py-8 bg-gray-100 px-20">
+<section id="resources" class="py-16 bg-gray-50 text-center px-4">
 
-  <div class="max-w-4xl mx-auto text-center mb-16">
-    <h2 class="text-1xl md:text-1xl font-bold text-blue-900 mb-6">
-      Insights to Help You Grow
-    </h2>
-    <p class="text-lg text-gray-600">
-      Practical guides and system walkthroughs to help you master Acacia Books ERP.
-    </p>
-  </div>
+  <h2 class="text-xl font-bold text-blue-800 mb-6">Helpful Resources & Support</h2>
 
-  <div class="max-w-10xl mx-auto relative">
+  <div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-6">
 
-    <div id="blog-carousel" class="flex gap-8 overflow-x-auto snap-x snap-mandatory pb-4">
+    <!-- USER GUIDE -->
+    <div class="bg-white p-5 rounded-lg shadow">
+      <h3 class="font-bold text-blue-900 mb-2">📖 User Guide</h3>
+      <p class="text-gray-600 text-sm mb-3">
+      Learn how to use the dashboard, inventory system, customer management, supplier tracking, payroll processing, reporting tools, and system settings in one simple and powerful ERP platform. This guide helps you understand how each module works together to improve efficiency, reduce manual work, and keep your business organized. Whether you are a beginner or an advanced user, these tools are designed to simplify daily operations and help you manage everything from one central system with ease.
+      </p>
+      <button onclick="toggleBox('guide')" class="bg-blue-900 text-white px-3 py-2 rounded text-sm">
+        Open Guide
+      </button>
 
-      <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal1">
-        <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/inventory.jpg');"></div>
-        <div class="p-8 text-left">
-          <span class="text-sm text-blue-700 font-semibold">Inventory Management</span>
-          <h3 class="font-bold text-xl mt-3 mb-3 text-blue-900">How to Manage Inventory Efficiently</h3>
-          <p class="text-gray-600 mb-4">
-            Learn how Acacia Books tracks stock levels in real time, updates quantities after every sale and purchase, and generates accurate inventory reports automatically.
-          </p>
-          <button class="font-semibold text-blue-700 hover:underline">Read More →</button>
-        </div>
-        <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
+      <div id="guide" class="hidden mt-3 text-left text-sm text-gray-600 space-y-2">
+        <p>📊 Dashboard overview and KPIs tracking.</p>
+        <p>📦 Inventory management and stock control.</p>
+        <p>👥 Customer invoices, quotes and receipts.</p>
+        <p>🚚 Supplier billing and purchase tracking.</p>
+        <p>💵 Payroll, salaries and deductions.</p>
+        <p>📈 Reports and analytics tools.</p>
+        <p>⚙️ Settings and system configuration.</p>
       </div>
-
-      <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal2">
-        <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/sales.jpg');"></div>
-        <div class="p-8 text-left">
-          <span class="text-sm text-blue-700 font-semibold">Sales Hub</span>
-          <h3 class="font-bold text-xl mt-3 mb-3 text-blue-900">How the Sales Hub Works</h3>
-          <p class="text-gray-600 mb-4">
-            Create quotations, convert them into invoices, record customer payments, and automatically update inventory and financial records from one centralized dashboard.
-          </p>
-          <button class="font-semibold text-blue-700 hover:underline">Read More →</button>
-        </div>
-        <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
-      </div>
-
-      <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal3">
-        <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/purchase.jpg');"></div>
-        <div class="p-8 text-left">
-          <span class="text-sm text-blue-700 font-semibold">Purchase Hub</span>
-          <h3 class="font-bold text-xl mt-3 mb-3 text-blue-900">How the Purchase Hub Works</h3>
-          <p class="text-gray-600 mb-4">
-            Generate purchase orders, receive goods into inventory, manage supplier balances, and track payments while keeping your accounting records updated automatically.
-          </p>
-          <button class="font-semibold text-blue-700 hover:underline">Read More →</button>
-        </div>
-        <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
-      </div>
-
-      <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal4">
-        <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/payroll.jpg');"></div>
-        <div class="p-8 text-left">
-          <span class="text-sm text-blue-700 font-semibold">Payroll & Compliance</span>
-          <h3 class="font-bold text-xl mt-3 mb-3 text-blue-900">Payroll Compliance Guide</h3>
-          <p class="text-gray-600 mb-4">
-            Process salaries, calculate deductions, generate payslips, and maintain compliance records with automated payroll management tools.
-          </p>
-          <button class="font-semibold text-blue-700 hover:underline">Read More →</button>
-        </div>
-        <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
-      </div>
-
-      <div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal5">
-        <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/business.jpg');"></div>
-        <div class="p-8 text-left">
-          <span class="text-sm text-blue-700 font-semibold">Business Growth</span>
-          <h3 class="font-bold text-xl mt-3 mb-3 text-blue-900">Scaling Your Business with ERP</h3>
-          <p class="text-gray-600 mb-4">
-            Use dashboards, financial reports, and analytics to eliminate bottlenecks and confidently scale your operations.
-          </p>
-          <button class="font-semibold text-blue-700 hover:underline">Read More →</button>
-        </div>
-        <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
-      </div>
-
-<div class="blog-item bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden flex-shrink-0 w-80 snap-start cursor-pointer group" data-modal="modal6">
-  <div class="h-48 bg-cover bg-center transform transition duration-500 group-hover:scale-110" style="background-image: url('images/reports.jpg');"></div>
-  <div class="p-8 text-left">
-    <span class="text-sm text-blue-700 font-semibold">Reports & Analytics</span>
-    <h3 class="font-bold text-xl mt-3 mb-3 text-blue-900">Financial Reports & Insights</h3>
-    <p class="text-gray-600 mb-4">
-      Generate detailed financial reports, track KPIs, visualize growth trends, and make data-driven decisions to optimize business performance.
-    </p>
-    <button class="font-semibold text-blue-700 hover:underline">Read More →</button>
-  </div>
-  <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition duration-300"></div>
-</div>
     </div>
-    
 
-    <button id="prev" class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-blue-700 text-white px-3 py-2 rounded-full shadow-lg hover:bg-blue-800 z-10">‹</button>
-    <button id="next" class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-blue-700 text-white px-3 py-2 rounded-full shadow-lg hover:bg-blue-800 z-10">›</button>
+    <div class="bg-white p-5 rounded-lg shadow">
+      <h3 class="font-bold text-blue-900 mb-2">🎓 Tutorials</h3>
+      <p class="text-gray-600 text-sm mb-3">
+        Watch short videos to understand POS, inventory, payroll and sales.
+      </p>
+
+      <button onclick="toggleBox('videos')" class="bg-blue-900 text-white px-3 py-2 rounded text-sm">
+        Watch Videos
+      </button>
+
+      <div id="videos" class="hidden mt-3 space-y-2">
+        <p class="text-sm">📊 POS system walkthrough</p>
+        <p class="text-sm">📦 Inventory tracking guide</p>
+        <p class="text-sm">💵 Payroll automation setup</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-lg shadow">
+      <h3 class="font-bold text-blue-900 mb-2">🛠 FAQ & Support</h3>
+      <p class="text-gray-600 text-sm mb-3">
+        Get quick answers and contact support anytime.
+      </p>
+
+      <button onclick="toggleBox('faq')" class="bg-blue-900 text-white px-3 py-2 rounded text-sm">
+        View FAQ
+      </button>
+
+      <div id="faq" class="hidden mt-3 text-left text-sm text-gray-600 space-y-2">
+        <p><b>What is ERP?</b> Cloud system for business management.</p>
+        <p><b>Upgrade plan?</b> Contact support for assistance.</p>
+        <p><b>Support?</b> Email: support@acaciabooks.com</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-lg shadow md:col-span-3">
+      <h3 class="font-bold text-blue-900 mb-2">🔗 Integrations</h3>
+
+      <p class="text-gray-600 text-sm mb-4">
+        Connect Acacia Books with tools you already use to automate your workflow and save time.
+      </p>
+
+      <div class="grid md:grid-cols-3 gap-4 text-left text-sm">
+
+        <div class="border p-3 rounded">
+          📧 Email tools<br>
+          <span class="text-gray-600">Mailchimp, SendGrid automation.</span>
+        </div>
+
+        <div class="border p-3 rounded">
+          💳 Payments<br>
+          <span class="text-gray-600">M-Pesa, Stripe, PayPal integration.</span>
+        </div>
+
+        <div class="border p-3 rounded">
+          📦 E-commerce<br>
+          <span class="text-gray-600">Shopify & WooCommerce sync.</span>
+        </div>
+
+      </div>
+
+      <div class="mt-4">
+        <a href="#" class="bg-blue-900 text-white px-4 py-2 rounded inline-block text-sm">
+          Connect Now
+        </a>
+      </div>
+    </div>
 
   </div>
-
 </section>
 
-<div id="modal1" class="blog-modal fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-xl max-w-2xl w-full p-6 relative">
-    <button class="absolute top-3 right-3 text-gray-600 text-xl font-bold modal-close">&times;</button>
-    <h2 class="text-2xl font-bold mb-4 text-blue-900">How to Manage Inventory Efficiently</h2>
-    <img src="images/inventory.jpg" alt="" class="w-full rounded mb-4">
-    <p class="text-gray-700 mb-4">Full article content for Inventory Management...</p>
-  </div>
-</div>
-
-<div id="modal2" class="blog-modal fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-xl max-w-2xl w-full p-6 relative">
-    <button class="absolute top-3 right-3 text-gray-600 text-xl font-bold modal-close">&times;</button>
-    <h2 class="text-2xl font-bold mb-4 text-blue-900">How the Sales Hub Works</h2>
-    <img src="images/sales.jpg" alt="" class="w-full rounded mb-4">
-    <p class="text-gray-700 mb-4">Full article content for Sales Hub...</p>
-  </div>
-</div>
-
-<div id="modal3" class="blog-modal fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-xl max-w-2xl w-full p-6 relative">
-    <button class="absolute top-3 right-3 text-gray-600 text-xl font-bold modal-close">&times;</button>
-    <h2 class="text-2xl font-bold mb-4 text-blue-900">How the Purchase Hub Works</h2>
-    <img src="images/purchase.jpg" alt="" class="w-full rounded mb-4">
-    <p class="text-gray-700 mb-4">Full article content for Purchase Hub...</p>
-  </div>
-</div>
-
-<div id="modal4" class="blog-modal fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-xl max-w-2xl w-full p-6 relative">
-    <button class="absolute top-3 right-3 text-gray-600 text-xl font-bold modal-close">&times;</button>
-    <h2 class="text-2xl font-bold mb-4 text-blue-900">Payroll Compliance Guide</h2>
-    <img src="images/payroll.jpg" alt="" class="w-full rounded mb-4">
-    <p class="text-gray-700 mb-4">Full article content for Payroll & Compliance...</p>
-  </div>
-</div>
-
-<div id="modal5" class="blog-modal fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
-  <div class="bg-white rounded-xl max-w-2xl w-full p-6 relative">
-    <button class="absolute top-3 right-3 text-gray-600 text-xl font-bold modal-close">&times;</button>
-    <h2 class="text-2xl font-bold mb-4 text-blue-900">Scaling Your Business with ERP</h2>
-    <img src="images/business.jpg" alt="" class="w-full rounded mb-4">
-    <p class="text-gray-700 mb-4">Full article content for Business Growth...</p>
-  </div>
-</div>
-
 <script>
-const carousel = document.getElementById('blog-carousel');
-const next = document.getElementById('next');
-const prev = document.getElementById('prev');
-const blogItems = document.querySelectorAll('.blog-item');
-const modals = document.querySelectorAll('.blog-modal');
-const modalCloses = document.querySelectorAll('.modal-close');
-
-next.addEventListener('click', () => { carousel.scrollBy({ left: 300, behavior: 'smooth' }); });
-prev.addEventListener('click', () => { carousel.scrollBy({ left: -300, behavior: 'smooth' }); });
-
-blogItems.forEach(item => {
-  item.addEventListener('click', () => {
-    const modal = document.getElementById(item.dataset.modal);
-    modal.classList.remove('hidden'); modal.classList.add('flex');
-  });
-});
-
-modalCloses.forEach(btn => {
-  btn.addEventListener('click', () => {
-    btn.closest('.blog-modal').classList.add('hidden'); btn.closest('.blog-modal').classList.remove('flex');
-  });
-});
-
-modals.forEach(modal => {
-  modal.addEventListener('click', e => {
-    if(e.target === modal){
-      modal.classList.add('hidden'); modal.classList.remove('flex');
-    }
-  });
-});
+function toggleBox(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle("hidden");
+}
 </script>
 
- 
 <footer class="footer">
 
   <div class="footer-container">
