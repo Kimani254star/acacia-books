@@ -2635,9 +2635,111 @@ setTimeout(() => {
 
 <button id="notificationBtn" onclick="toggleNotifications()" class="p-1 rounded-full hover:bg-yellow-600 transition text-white text-lg leading-none relative">🔔
  <span id="notifCount" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-1 rounded-full hidden">0</span></button>
-</div>
-</div>
+<button id="appsLauncherBtn"
+    onclick="toggleAppsLauncher(event)"
+    class="p-1 rounded-full hover:bg-gray-700 transition text-white text-lg leading-none"
+    title="Applications">
 
+    <svg xmlns="http://www.w3.org/2000/svg"
+         class="w-5 h-5"
+         viewBox="0 0 24 24"
+         fill="currentColor">
+        <circle cx="5" cy="5" r="1.5"/>
+        <circle cx="12" cy="5" r="1.5"/>
+        <circle cx="19" cy="5" r="1.5"/>
+        <circle cx="5" cy="12" r="1.5"/>
+        <circle cx="12" cy="12" r="1.5"/>
+        <circle cx="19" cy="12" r="1.5"/>
+        <circle cx="5" cy="19" r="1.5"/>
+        <circle cx="12" cy="19" r="1.5"/>
+        <circle cx="19" cy="19" r="1.5"/>
+    </svg>
+
+</button>
+
+<div id="appsLauncher"
+     class="hidden fixed top-8 right-4 w-72 bg-white rounded-lg shadow-2xl border border-gray-300 z-[99999] text-black">
+
+    <button onclick="openApp('operationalCostTab')" class="w-full text-left px-4 py-2 hover:bg-gray-100">
+        💰 Operation Cost
+    </button>
+
+    <button onclick="openApp('shipmentsTab')" class="w-full text-left px-4 py-2 hover:bg-gray-100">
+        🚚 Inventory Shipment
+    </button>
+
+    <button onclick="openApp('deliveryTab')" class="w-full text-left px-4 py-2 hover:bg-gray-100">
+        📦 Delivery
+    </button>
+
+    <button onclick="openApp('goodsReceivedTab')" class="w-full text-left px-4 py-2 hover:bg-gray-100">
+        📥 Goods Received
+    </button>
+
+    <button onclick="openApp('budgetVariancePanel')" class="w-full text-left px-4 py-2 hover:bg-gray-100">
+        📊 Budget
+    </button>
+
+    <button onclick="openApp('attendanceSummaryTab')" class="w-full text-left px-4 py-2 hover:bg-gray-100">
+        👨‍💼 Attendance Summary
+    </button>
+
+    <button onclick="openApp('quotesTab')" class="w-full text-left px-4 py-2 hover:bg-gray-100">
+        📝 Quotes
+    </button>
+
+    <button onclick="openApp('salesOrderTab')" class="w-full text-left px-4 py-2 hover:bg-gray-100">
+        🛒 Sales Order
+    </button>
+
+</div>
+</div>
+</div>
+<script>
+function toggleAppsLauncher(event) {
+    if (event) event.stopPropagation();
+
+    const menu = document.getElementById("appsLauncher");
+
+    if (menu) {
+        menu.classList.toggle("hidden");
+    }
+}
+
+function openApp(page) {
+
+    const companyId =
+        localStorage.getItem("currentCompanyId") || "";
+
+    const username =
+        localStorage.getItem("loggedInUser") || "";
+
+    const separator = page.includes("?") ? "&" : "?";
+
+    const url =
+        page +
+        separator +
+        "companyId=" + encodeURIComponent(companyId) +
+        "&user=" + encodeURIComponent(username);
+
+    window.open(url, "_blank");
+}
+
+document.addEventListener("click", function(e) {
+
+    const menu = document.getElementById("appsLauncher");
+    const btn = document.getElementById("appsLauncherBtn");
+
+    if (!menu || !btn) return;
+
+    if (
+        !menu.contains(e.target) &&
+        !btn.contains(e.target)
+    ) {
+        menu.classList.add("hidden");
+    }
+});
+</script>
 <div id="notifPopup" class="hidden fixed top-14 right-4 w-72 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50">
 <h3 class="font-semibold">📢 Updates</h3>
 <ul id="notifList" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul>
@@ -2781,7 +2883,7 @@ setTimeout(() => {
 </li>
 <li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li>
 
-<div id="rightSidebar" class="fixed top-4 right-0 h-half w-8 bg-black  text-white flex flex-col items-center py-1 space-y-1 shadow-lg z-10">
+<div id="rightSidebar" class="fixed top-4 right-0 h-half w-10 bg-black  text-white flex flex-col items-center py-1 space-y-6 shadow-lg z-10">
   
   <!-- 📔 Acacia Notebook -->
  <button id="acaciaToggle" onclick="toggleAcaciaNotebook()" 
@@ -2962,6 +3064,9 @@ setTimeout(() => {
   </div>
 </div>
 <script>
+ function toggleAppsLauncher() {
+    document.getElementById('appsLauncher').classList.toggle('hidden');
+}
 function openGDocs() {
   const win = window.open('https://docs.google.com/document/u/0/', '_blank');
   if (!win) alert('Popup blocked! Please allow pop-ups for this site.');
@@ -13645,13 +13750,21 @@ function deleteBank(index) {
 }
 function updateBankSummary() {
 
- 
-  transactions = JSON.parse(
+  const banks = JSON.parse(
+    localStorage.getItem("banks")
+  ) || [];
+
+  const transactions = JSON.parse(
     localStorage.getItem("transactions")
+  ) || [];
+
+  const transfers = JSON.parse(
+    localStorage.getItem("transfers")
   ) || [];
 
   let totalInflow = 0;
   let totalOutflow = 0;
+  let totalBalance = 0;
 
   transactions.forEach(t => {
 
@@ -13674,9 +13787,7 @@ function updateBankSummary() {
 
       totalInflow += amount;
 
-    }
-
-    else if (
+    } else if (
       type.includes("expense") ||
       type.includes("vendor payment") ||
       type.includes("salary") ||
@@ -13694,45 +13805,98 @@ function updateBankSummary() {
 
   });
 
-  let totalBalance = 0;
+  transfers.forEach(t => {
 
-  banks.forEach(bank => {
-    totalBalance += parseFloat(bank.balance || 0);
+    const amount = parseFloat(t.amount || 0);
+
+    totalInflow += amount;
+    totalOutflow += amount;
+
   });
+
+  const exchangeRates = JSON.parse(
+  localStorage.getItem("exchangeRates")
+) || {};
+
+banks.forEach(bank => {
+
+  const balance =
+    parseFloat(bank.balance || 0);
+
+  const currency =
+    bank.currency || "KES";
+
+  if (currency === "KES") {
+
+    totalBalance += balance;
+
+  } else {
+
+    const rate =
+      parseFloat(exchangeRates[currency]) || 1;
+
+    totalBalance += balance * rate;
+
+  }
+
+});
 
   const net = totalInflow - totalOutflow;
 
-  const totalBalanceEl = document.getElementById("totalBalance");
-  const totalInflowEl = document.getElementById("totalInflow");
-  const totalOutflowEl = document.getElementById("totalOutflow");
-  const netPositionEl = document.getElementById("netPosition");
+  const totalBalanceEl =
+    document.getElementById("totalBankBalance") ||
+    document.getElementById("totalBalance");
+
+  const totalInflowEl =
+    document.getElementById("totalBankInflow") ||
+    document.getElementById("totalInflow");
+
+  const totalOutflowEl =
+    document.getElementById("totalBankOutflow") ||
+    document.getElementById("totalOutflow");
+
+  const netPositionEl =
+    document.getElementById("netBankPosition") ||
+    document.getElementById("netPosition");
 
   if (totalBalanceEl) {
+
     totalBalanceEl.textContent =
-      `KES ${totalBalance.toLocaleString(undefined, {
-        minimumFractionDigits: 2
+      `KES ${totalBalance.toLocaleString(undefined,{
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
       })}`;
+
   }
 
   if (totalInflowEl) {
+
     totalInflowEl.textContent =
-      `KES ${totalInflow.toLocaleString(undefined, {
-        minimumFractionDigits: 2
+      `KES ${totalInflow.toLocaleString(undefined,{
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
       })}`;
+
   }
 
   if (totalOutflowEl) {
+
     totalOutflowEl.textContent =
-      `KES ${totalOutflow.toLocaleString(undefined, {
-        minimumFractionDigits: 2
+      `KES ${totalOutflow.toLocaleString(undefined,{
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
       })}`;
+
   }
 
   if (netPositionEl) {
+
     netPositionEl.textContent =
-      `KES ${net.toLocaleString(undefined, {
-        minimumFractionDigits: 2
+      `KES ${net.toLocaleString(undefined,{
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
       })}`;
+
   }
 
   console.log("Bank Summary Updated", {
@@ -14665,6 +14829,11 @@ document.getElementById("manualImportFile").addEventListener("change", function 
   };
   reader.readAsText(file);
 });
+updateBankSummary();
+
+if (typeof renderBankChart === "function") {
+  renderBankChart();
+}
 </script>
 <script>
 let transfers = JSON.parse(localStorage.getItem("transfers") || "[]");
@@ -15206,6 +15375,11 @@ document.addEventListener("DOMContentLoaded", () => {
   renderTransferLog();
 
 });
+updateBankSummary();
+
+if (typeof renderBankChart === "function") {
+  renderBankChart();
+}
 </script>
 <script>
 let reconciliationTx = JSON.parse(localStorage.getItem("transactions") || "[]");
@@ -37120,7 +37294,18 @@ Save Quote
         <input id="costAmount" type="number" placeholder="Amount"
                class="border p-2 rounded" style="width: 700px;" />
       </div>
-
+      <div class="mb-4">
+  <label for="costAttachment" class="block font-medium mb-1">
+    Attachment (Receipt, Invoice, PDF, Excel, Image)
+  </label>
+  <input
+    id="costAttachment"
+    type="file"
+    accept=".pdf,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.gif,.doc,.docx"
+    class="border p-2 rounded"
+    style="width: 700px;"
+  />
+</div>
       <button onclick="addOperationalCost()"
               class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Record Cost
@@ -37170,6 +37355,7 @@ Save Quote
     <th class="p-2">Mode</th>
     <th class="p-2">Bank</th>
     <th class="p-2">Amount</th>
+     <th class="p-2">Attachment</th>
     <th class="p-2">Action</th>
   </tr>
 </thead>
@@ -45195,7 +45381,19 @@ function renderOperationalCosts() {
       <td class="p-2">${entry.method}</td>
       <td class="p-2">${entry.bank}</td>
       <td class="p-2">KES ${parseFloat(entry.amount || 0).toFixed(2)}</td>
-
+        <td class="p-2">
+    ${
+      entry.attachmentUrl
+        ? `
+          <a href="${entry.attachmentUrl}"
+             target="_blank"
+             class="text-blue-600 hover:underline">
+            📎 View
+          </a>
+        `
+        : `<span class="text-gray-400">-</span>`
+    }
+  </td>
       <td class="p-2 space-x-1 relative">
 
         <button onclick="previewOperationalCost(${index})"
