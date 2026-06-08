@@ -65283,6 +65283,17 @@ document.addEventListener("DOMContentLoaded", () => {
 <div id="reportsPanel" class="ml-84 mr-8 p-2">
 
   <h2 class="text-2xl font-bold mb-3">Reports</h2>
+ <div class="flex justify-center mb-3">
+  <div class="bg-white border border-gray-300 rounded-lg shadow-sm px-1 py-1 min-w-[220px] text-center">
+    <div class="text-1x1 uppercase tracking-wide text-gray-500">
+      Reports
+    </div>
+    <div id="reportCount" class="text-1xl font-bold text-blue-600">
+      0
+    </div>
+  </div>
+</div>
+
   <!-- 🔎 Reports Search -->
 <div class="relative mb-3">
   <input
@@ -86016,6 +86027,18 @@ function applyBudgetVarianceMoreFilters() {
 </style>
 
 <script>
+function updateReportCount() {
+  const reports = [...document.querySelectorAll('.reports-sidebar ul li')];
+  const uniqueReports = new Set(
+    reports.map(li => li.textContent.trim())
+  );
+
+  document.getElementById('reportCount').textContent =
+    `Total Reports: ${uniqueReports.size}`;
+}
+
+document.addEventListener('DOMContentLoaded', updateReportCount);
+
   function searchReports() {
     const query = document.getElementById('reportsSearch').value.toLowerCase();
     const items = document.querySelectorAll('#reportsSection .reports-sidebar ul li');
