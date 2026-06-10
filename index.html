@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  
   <meta charset="UTF-8">
   <title>Acacia Books</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -9,6 +10,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
 <style>
 
   * {
@@ -97,6 +99,49 @@ function toggleSubmenu(id) {
   if (submenu) {
     submenu.classList.toggle('hidden');
   }
+}
+</script>
+<script>
+function autoSync() {
+
+  const backup = {};
+
+  for (let i = 0; i < localStorage.length; i++) {
+
+    const key = localStorage.key(i);
+
+    try {
+      backup[key] = JSON.parse(localStorage.getItem(key));
+    } catch {
+      backup[key] = localStorage.getItem(key);
+    }
+
+  }
+
+  console.log("Syncing...", backup);
+
+
+}
+</script>
+<script>
+function autoSync() {
+
+  const backup = {};
+
+  for (let i = 0; i < localStorage.length; i++) {
+
+    const key = localStorage.key(i);
+
+    try {
+      backup[key] = JSON.parse(localStorage.getItem(key));
+    } catch {
+      backup[key] = localStorage.getItem(key);
+    }
+
+  }
+
+  console.log("Syncing...", backup);
+
 }
 </script>
 </head>
@@ -5045,6 +5090,25 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+<script>
+const originalSetItem = localStorage.setItem.bind(localStorage);
+
+localStorage.setItem = function(key, value) {
+
+    originalSetItem(key, value);
+
+    clearTimeout(window.syncTimer);
+
+    window.syncTimer = setTimeout(() => {
+
+        if (typeof autoSync === "function") {
+            autoSync();
+        }
+
+    }, 2000);
+
+};
+</script>
 
 <!-- 📦 INVENTORY MODULE -->
 <div id="inventoryTab" class="hidden ml-84 mr-7 p-2">
@@ -5080,15 +5144,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
   <div class="grid grid-cols-3 gap-4 mb-6">
     <input id="itemName" type="text" placeholder="Item Name" class="border p-2 rounded" />
+    </div>
+    <div class="grid grid-cols-3 gap-4 mb-6">
     <input id="itemSKU" type="text" placeholder="SKU / Code" class="border p-2 rounded" />
+    </div>
+    <div class="grid grid-cols-3 gap-4 mb-6">
     <input id="itemQty" type="number" placeholder="Quantity" class="border p-2 rounded" />
   </div>
-
-  <div class="grid grid-cols-2 gap-8">
+   <div class="grid grid-cols-3 gap-4 mb-6">
+    <input id="buyCountryOrigin" type="text" placeholder="Country of Origin (Buy)" class="border p-2 rounded" style="width: 700px;" />
+  </div>
+  <div class="grid grid-cols-1 gap-8">
     
     <div class="space-y-4">
       <input id="itemBuyPrice" type="number" placeholder="Buy Price" class="border p-2 rounded" style="width: 700px;"/>
-      <input id="buyCountryOrigin" type="text" placeholder="Country of Origin (Buy)" class="border p-2 rounded" style="width: 700px;" />
       <select id="buyVatRule" class="border p-2 rounded" style="width: 700px;">
         <option value="">VAT Rule (Buy)</option>
         <option value="Zero">Zero</option>
@@ -5273,11 +5342,20 @@ window.addEventListener('DOMContentLoaded', () => {
         <option value="">Select To Warehouse</option>
       </select>
     </div>
+     <div>
+     <input id="effectiveDate" type="date" class="border p-2 rounded" style="width: 700px;"/>
+    </div>
+    <div class="grid grid-cols-3 gap-4 mb-6">
+    <input id="itemSKU" type="text" placeholder="SKU / Code" class="border p-2 rounded" />
+    </div>
     <div>
       <input id="transferQuantity" type="number" placeholder="Quantity to Transfer" class="border p-2 rounded" style="width: 700px;" />
     </div>
     <div>
       <input id="transferDate" type="date" class="border p-2 rounded" style="width: 700px;" />
+    </div>
+    <div>
+     <textarea id="sellDescription" placeholder="Description (Sell)" class="border p-2 rounded w-full resize-y" rows="2"></textarea>
     </div>
     <div>
       <button onclick="saveTransferDraft()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800"> Save as Draft</button>
@@ -5345,9 +5423,9 @@ window.addEventListener('DOMContentLoaded', () => {
     </div>
   </div>
 
-  <div class="mt-6 bg-blue-100 p-4 rounded shadow">
+  <div class="bg-white p-2 rounded shadow mb-6">
   <h3 class="text-xl font-semibold mb-4">Movement Tab</h3>
-  <button id="bulkDeleteMovementBtn" onclick="bulkDeleteMovement()" class="bg-blue-900 text-white px-2 py-1 rounded"> Bulk Delete </button>
+  <button id="bulkDeleteMovementBtn" onclick="bulkDeleteMovement()" class="bg-blue-900 text-white px-1 py-1 rounded"> Bulk Delete </button>
   <table class="w-full border-collapse border border-gray-300">
     <thead class="bg-gray-100">
       <tr>
@@ -5420,7 +5498,6 @@ window.addEventListener('DOMContentLoaded', () => {
       <select id="adjustItem" class="border p-2 rounded" style="width: 700px;">
         <option value="">Select Item</option>
       </select>
-
       <input id="adjustType" type="text" placeholder="Adjustment Type (e.g. Correction, Loss, Damage)" class="border p-2 rounded" style="width: 700px;"/>
       <input id="adjustQty" type="number" placeholder="Quantity Adjustment (+/-)" class="border p-2 rounded" style="width: 700px;"/>
       <input id="adjustReason" type="text"laceholder="Reason for Adjustment"class="border p-2 rounded"="width: 700px; max-width: none;" />
@@ -5563,14 +5640,25 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
 
   <div class="bg-white p-6 rounded shadow space-y-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
       <select id="priceItem" class="border p-2 rounded" style="width: 700px;">
         <option value="">Select Item</option>
       </select>
-
-      <input id="newSellingPrice" type="number" placeholder="New Selling Price (KES)" class="border p-2 rounded" style="width: 700px;" />
-      <input id="newCostPrice" type="number" placeholder="New Cost Price (KES)" class="border p-2 rounded" style="width: 700px;" />
-      <input id="effectiveDate" type="date" class="border p-2 rounded" style="width: 700px;"/>
+   
+      <div class="grid grid-cols-3 gap-4 mb-6">
+     <input id="effectiveDate" type="date" class="border p-2 rounded" style="width: 700px;"/>
+    </div>
+    <div class="grid grid-cols-3 gap-4 mb-6">
+    <input id="itemSKU" type="text" placeholder="SKU / Code" class="border p-2 rounded" />
+    </div>
+      <div class="grid grid-cols-3 gap-4 mb-6">
+    <input id="newSellingPrice" type="number" placeholder="New Selling Price (KES)" class="border p-2 rounded" style="width: 700px;" />
+    </div>
+      <div class="grid grid-cols-3 gap-4 mb-6">
+    <input id="newCostPrice" type="number" placeholder="New Cost Price (KES)" class="border p-2 rounded" style="width: 700px;" />
+    </div>
+   </select>
+     <textarea id="sellDescription" placeholder="Description (Sell)" class="border p-2 rounded w-full resize-y" rows="2"></textarea>
     </div>
 
     <div class="text-right">
@@ -6352,7 +6440,21 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 <script>const WAREHOUSES = [""];
+let syncTimer;
 
+function queueSync() {
+
+  clearTimeout(syncTimer);
+
+  syncTimer = setTimeout(() => {
+
+    if (typeof autoSync === "function") {
+      autoSync();
+    }
+
+  }, 2000);
+
+}
 function searchInventory() {
   const input = document.getElementById("inventorySearch").value.toLowerCase();
   const warehouseFilter = document.getElementById('warehouseSelect')?.value;
@@ -6561,21 +6663,27 @@ function saveItem() {
     buyAcc.amount = (buyAcc.amount || 0) - oldCost + totalCost;
   }
 
-  saveInventory(warehouse, items);
+saveInventory(warehouse, items);
 
 localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
-const updatedItems = getInventory(warehouse);
+queueSync();
+
+const updatedItems = items;
 
 renderFilteredInventoryTable(updatedItems, warehouse);
 
-renderStockReports();
-renderProfitMargin();
+setTimeout(() => {
 
-if (typeof renderBalanceSheet === "function") renderBalanceSheet();
-if (typeof renderInventorySummary === "function") renderInventorySummary();
-if (typeof renderStockValuation === "function") renderStockValuation();
-if (typeof renderSimpleWarehouseMovement === "function") renderSimpleWarehouseMovement();
+  renderStockReports();
+  renderProfitMargin();
+
+  if (typeof renderBalanceSheet === "function") renderBalanceSheet();
+  if (typeof renderInventorySummary === "function") renderInventorySummary();
+  if (typeof renderStockValuation === "function") renderStockValuation();
+  if (typeof renderSimpleWarehouseMovement === "function") renderSimpleWarehouseMovement();
+
+}, 100);
 
 resetForm();
 
@@ -6799,8 +6907,21 @@ function setInventoryInactive(index, warehouse) {
   renderInventoryTable(); 
 }
 
+const inventoryCache = {};
+
 function getInventory(warehouse) {
-  return JSON.parse(localStorage.getItem(`inventory_${warehouse}`) || "[]");
+
+  if (inventoryCache[warehouse]) {
+    return inventoryCache[warehouse];
+  }
+
+  const data = JSON.parse(
+    localStorage.getItem(`inventory_${warehouse}`) || "[]"
+  );
+
+  inventoryCache[warehouse] = data;
+
+  return data;
 }
 
 function populateAccountDropdowns() {
@@ -7483,6 +7604,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 <script>
+  
  function searchMovement() {
   const input = document.getElementById("movementSearch").value.toLowerCase();
   const warehouseFilter = document.getElementById("fromLocation").value;
@@ -7634,6 +7756,7 @@ function saveTransfer() {
     date: transferDate,
   });
   localStorage.setItem('movements', JSON.stringify(movements));
+  queueSync();
 
   alert('Stock transferred successfully.');
 
@@ -7765,7 +7888,7 @@ function cloneMovement(index) {
   movements.push(cloned);
 
   localStorage.setItem('movements', JSON.stringify(movements));
-
+ queueSync();
   renderMovementTable();
 
   alert("Movement cloned successfully");
@@ -7843,7 +7966,7 @@ function editMovement(index) {
 
   movements.splice(index, 1);
   localStorage.setItem('movements', JSON.stringify(movements));
-
+  queueSync();
   renderMovementTable();
   renderStockTransfer();
 }
@@ -7970,7 +8093,7 @@ function deleteMovement(index) {
   moveToRecycle(item, "File", "Movements");
   movements.splice(index, 1);
   localStorage.setItem('movements', JSON.stringify(movements));
-
+  queueSync();
   renderMovementTable();
   renderStockTransfer();
   alert("♻️ Record moved to Recycle Bin.");
@@ -8004,7 +8127,7 @@ function bulkDeleteAdjustments() {
   });
 
   localStorage.setItem("baLog", JSON.stringify(remaining));
-
+  queueSync();
   renderBALog();
 
   if (typeof renderInventoryTable === "function") renderInventoryTable();
@@ -8118,23 +8241,19 @@ function renderStockTransfer() {
   const tbody = document.getElementById("stockTransferTable");
   if (!tbody) return;
 
-  tbody.innerHTML = "";
-
   let movements = JSON.parse(localStorage.getItem("movements") || "[]");
 
-  movements.forEach(move => {
-    tbody.innerHTML += `
-      <tr>
-        <td class="border px-3 py-2">${move.item}</td>
-        <td class="border px-3 py-2">${move.from}</td>
-        <td class="border px-3 py-2">${move.to}</td>
-        <td class="border px-3 py-2 text-right">${move.quantity}</td>
-        <td class="border px-3 py-2 text-right">${move.quantity}</td>
-        <td class="border px-3 py-2 text-right">0</td>
-        <td class="border px-3 py-2 text-right">-</td>
-      </tr>
-    `;
-  });
+  tbody.innerHTML = movements.map(move => `
+    <tr>
+      <td class="border px-3 py-2">${move.item}</td>
+      <td class="border px-3 py-2">${move.from}</td>
+      <td class="border px-3 py-2">${move.to}</td>
+      <td class="border px-3 py-2 text-right">${move.quantity}</td>
+      <td class="border px-3 py-2 text-right">${move.quantity}</td>
+      <td class="border px-3 py-2 text-right">0</td>
+      <td class="border px-3 py-2 text-right">-</td>
+    </tr>
+  `).join('');
 }
 window.addEventListener('click',function(e){
   const dropdown=document.getElementById('amendDropdown');
@@ -8146,7 +8265,19 @@ window.addEventListener('click',function(e){
 </script>
 <script>
 const PRICE_LIST_KEY = "priceList";
+let cachedPriceList = JSON.parse(
+  localStorage.getItem(PRICE_LIST_KEY) || "[]"
+);
 
+function getPriceList() {
+  return cachedPriceList;
+}
+
+function savePriceList(data) {
+  cachedPriceList = data;
+  localStorage.setItem(PRICE_LIST_KEY, JSON.stringify(data));
+  queueSync();
+}
 function getInventory(warehouse) {
   return JSON.parse(localStorage.getItem("inventory_" + warehouse) || "[]");
 }
@@ -8252,7 +8383,7 @@ function updatePrice() {
   priceList = priceList.filter(e => !(e.warehouse === warehouse && e.item === itemKey));
   priceList.push({ warehouse, item: itemKey, sellingPrice, costPrice, effectiveDate });
   localStorage.setItem(PRICE_LIST_KEY, JSON.stringify(priceList));
-
+  queueSync();
   let inventory = getInventory(warehouse);
   const itemIndex = inventory.findIndex(i => i.sku === itemKey || i.name === itemKey);
 
@@ -8468,7 +8599,7 @@ function clonePriceItem(item, warehouse) {
   priceList.push(cloned);
 
   localStorage.setItem(PRICE_LIST_KEY, JSON.stringify(priceList));
-
+queueSync();
   renderPriceListTable();
 }
 
@@ -8602,7 +8733,7 @@ function deletePriceMerged(itemKey, warehouse) {
 
   priceList = priceList.filter(e => !(e.item === itemKey && e.warehouse === warehouse));
   localStorage.setItem(PRICE_LIST_KEY, JSON.stringify(priceList));
-
+queueSync();
  
   let inventory = getInventory(warehouse);
   const index = inventory.findIndex(i => i.sku === itemKey || i.name === itemKey);
@@ -8611,6 +8742,7 @@ function deletePriceMerged(itemKey, warehouse) {
     inventory[index].sellPrice = 0;
     inventory[index].buyPrice = 0;
     localStorage.setItem(`inventory_${warehouse}`, JSON.stringify(inventory));
+    queueSync();
   }
 
   renderPriceListTable();
@@ -8698,7 +8830,7 @@ function bulkDeletePriceList() {
   priceList = priceList.filter((_, i) => !indexes.includes(i));
 
   localStorage.setItem("priceList", JSON.stringify(priceList));
-
+  queueSync();
   renderPriceListTable();
 
   alert("✔ Price list updated successfully");
@@ -12032,7 +12164,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <!-- BANK MANUAL TRANSCTIONS -->
 <div class="bg-white p-2 rounded shadow mb-6">
   <h3 class="text-lg font-semibold mb-4">Add Transaction</h3>
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+  <div class="grid grid-cols-1 sm:grid-cols-1 gap-4 mb-4">
 
     <select id="manualBank" class="border p-2 rounded">
       <option value="">Select Bank</option>
@@ -12102,7 +12234,12 @@ document.addEventListener("DOMContentLoaded", () => {
     <option value="">Select Vendor</option>
   </select>
 </div>
-
+ <div class="grid grid-cols-1 gap-4 mb-6">
+     <input id="effectiveDate" type="date" class="border p-2 rounded" style="width: 700px;"/>
+    </div>
+    <div class="grid grid-cols-3 gap-4 mb-6">
+    <input id="itemSKU" type="text" placeholder="SKU / Code" class="border p-2 rounded" />
+    </div>
     <input id="manualAmount" type="number" placeholder="Amount" class="border p-2 rounded" />
 
     <input id="manualDate" type="date" class="border p-2 rounded" />
@@ -16015,9 +16152,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     <div class="mb-4 grid grid-cols-2 gap-4">
       <input type="email" id="customerEmailPrimary" placeholder="Primary Email"
-        class="border p-2 rounded">
+        class="border p-2 rounded w-[700px]">
+         </div>
+          <div class="mb-4 grid grid-cols-2 gap-4">
       <input type="email" id="customerEmailSecondary" placeholder="Secondary Email"
-        class="border p-2 rounded">
+        class="border p-2 rounded w-[700px]">
     </div>
 
     <div class="mb-4">
@@ -16031,9 +16170,11 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
 
     <div class="mb-4 grid grid-cols-2 gap-4">
-      <input type="number" id="creditLimit" placeholder="Credit Limit"
-        class="border p-2 rounded">
-      <input type="date" id="statementDate" class="border p-2 rounded">
+      <input type="number" id="creditLimit"  placeholder="KRA PIN"
+        class="border p-2 rounded w-[700px]">
+         </div>
+         <div class="mb-4 grid grid-cols-2 gap-4">
+      <input type="date" id="statementDate" class="border p-2 rounded w-[700px]">
     </div>
 
     <div class="mb-4">
@@ -109656,6 +109797,93 @@ function emptyRecycleBin() {
 }
 
 document.addEventListener("DOMContentLoaded", renderRecycleBin);
+</script>
+<script>
+(() => {
+
+  const originalAddEventListener = document.addEventListener;
+
+  const allowedFunctions = new Set();
+
+  window.allowRender = function(name){
+    allowedFunctions.add(name);
+  };
+
+  window.blockRender = true;
+
+  const originalSetTimeout = window.setTimeout;
+  const originalSetInterval = window.setInterval;
+
+  window.setInterval = function(fn,time){
+
+    if(window.blockRender){
+      return 0;
+    }
+
+    return originalSetInterval(fn,time);
+  };
+
+  window.setTimeout = function(fn,time){
+
+    if(window.blockRender){
+      return 0;
+    }
+
+    return originalSetTimeout(fn,time);
+  };
+
+})();
+</script>
+<script>
+(() => {
+
+  document.addEventListener("DOMContentLoaded", () => {
+
+    document.querySelectorAll("input, select, textarea").forEach(el => {
+      el.setAttribute("autocomplete", "off");
+      el.setAttribute("spellcheck", "false");
+    });
+
+    let raf;
+
+    document.addEventListener("input", e => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {});
+    }, { passive:true });
+
+    document.addEventListener("scroll", () => {}, {
+      passive:true
+    });
+
+    document.querySelectorAll("*").forEach(el => {
+      el.style.willChange = "auto";
+    });
+
+    document.body.style.contain = "layout style paint";
+
+  });
+
+  const originalAddEvent = EventTarget.prototype.addEventListener;
+
+  EventTarget.prototype.addEventListener = function(type, listener, options) {
+
+    if (
+      type === "mousemove" ||
+      type === "mouseover" ||
+      type === "mouseenter"
+    ) {
+      options = { passive:true };
+    }
+
+    return originalAddEvent.call(
+      this,
+      type,
+      listener,
+      options
+    );
+  };
+
+})();
 </script>
 <script>
 function toggleSubmenu(id) {
