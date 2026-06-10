@@ -10,72 +10,46 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-body {
-  font-family: 'Comic Sans MS', serif;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  text-rendering: optimizeSpeed;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
 
-* {
-  box-sizing: border-box;
-}
+  * {
+    font-family: 'Cambria', serif !important;
+    font-style: normal !important;
+    font-weight: normal !important;
+  }
 
-html {
-  scroll-behavior: smooth;
-}
+  b, strong, th, h1, h2, h3, h4, h5, h6 {
+    font-weight: 700 !important;
+  }
 
-b,
-strong,
-th,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 700;
-}
+  input, select, textarea, button, ::placeholder {
+    font-family: 'Cambria', serif !important;
+  }
+  
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+ 
+  table, th, td {
+    border: 1px solid #ccc;
+    border-collapse: collapse;
+  }
 
-input,
-select,
-textarea,
-button,
-::placeholder {
-  font-family: 'Comic Sans MS', serif;
-}
+  th, td {
+    padding: 8px 8px;
+  }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+  thead {
+    background-color: #f8f8f8;
+  }
 
-table,
-th,
-td {
-  border: 1px solid #ddd;
-}
-
-th,
-td {
-  padding: 8px;
-}
-
-thead {
-  background-color: #f8f8f8;
-}
-
-tbody tr:nth-child(even) {
-  background-color: #fafafa;
-}
-
+  tbody tr:nth-child(even) {
+    background-color: #fafafa;
+  }
 .footer {
   background: #111;
   color: white;
-  padding: 40px;
+  padding: 40px 40px;   
   margin-top: 40px;
 }
 
@@ -84,7 +58,7 @@ tbody tr:nth-child(even) {
   justify-content: space-between;
   align-items: flex-start;
   gap: 20px;
-  flex-wrap: wrap;
+  flex-wrap: wrap;  
 }
 
 .footer-section {
@@ -94,7 +68,7 @@ tbody tr:nth-child(even) {
 
 .footer-section h3,
 .footer-section h4 {
-  margin-bottom: 10px;
+  margin-bottom: 10px;  
 }
 
 .footer-section p {
@@ -104,133 +78,10 @@ tbody tr:nth-child(even) {
 
 .footer-bottom {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 20px;  
   border-top: 1px solid #444;
   padding-top: 10px;
   font-size: 13px;
-}
-
-img,
-iframe,
-video {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  content-visibility: auto;
-}
-
-iframe {
-  border: none;
-}
-
-.smooth {
-  transition: transform 0.15s ease, opacity 0.15s ease;
-  will-change: transform;
-}
-
-.drag-item {
-  will-change: transform;
-  transform: translate3d(0,0,0);
-  backface-visibility: hidden;
-  user-select: none;
-  touch-action: none;
-}
-
-.fast-render {
-  contain: content;
-}
-
-.shadow,
-.shadow-md,
-.shadow-lg,
-.shadow-xl,
-.shadow-2xl,
-.heavy-shadow {
-  will-change: auto;
-}
-
-.transition,
-.hover\:shadow-xl,
-.hover\:-translate-y-2,
-.hover\:scale-105 {
-  transition-duration: 0.15s !important;
-}
-
-.card,
-.modal,
-.section-box {
-  transform: translateZ(0);
-}
-
-.hidden {
-  display: none !important;
-}
-
-.lazy-section {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 500px;
-}
-
-@media (max-width: 768px) {
-  .heavy-shadow,
-  .shadow,
-  .shadow-md,
-  .shadow-lg,
-  .shadow-xl,
-  .shadow-2xl {
-    box-shadow: none !important;
-  }
-
-  .mobile-stack {
-    flex-direction: column !important;
-  }
-
-  .mobile-full {
-    width: 100% !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none !important;
-    transition: none !important;
-    scroll-behavior: auto !important;
-  }
-}
-input,
-textarea,
-select {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-table {
-  contain: content;
-}
-
-.heavy-table {
-  content-visibility: auto;
-}
-
-.modal,
-.card,
-.section-box {
-  contain: layout style paint;
-}
-input,
-select,
-textarea {
-  transition: border-color .1s;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-}
-
-table {
-  contain: content;
 }
 </style>
 <script>
@@ -1367,7 +1218,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <p>📊 Dashboard Hub – Business overview, KPIs, performance metrics and activity monitoring.</p>
        <p>📦 Inventory Hub – Stock control, movements, pricing, bundles, packages, adjustments and shipments.</p>
         <p>👥 Sales Hub – Customers, invoices, quotes, orders, receipts, returns, deliveries and statements.</p>
-        <p>🛒 Purchase Hub – Suppliers, bills, payments, purchase orders, quotations, GRNs and returns.</p>
+        <p>🛒 Purchase Hub – Suppliers, bills, payments, purchase orders, GRNs and returns.</p>
         <p>🧮 Accountant Hub – Journals, budgets, chart of accounts, assets, liabilities and tax adjustments.</p>
         <p>💵 Payroll Hub – Employees, attendance, earnings, deductions, payslips, statutory compliance and reports.</p>
         <p>📈 Reports & Planning – Analytics, business reports, project management and plan tracking.</p>
@@ -2518,7 +2369,6 @@ setTimeout(() => {
         "bulkBillingTab",
         "taxPaymentsTab",
         "OperationalCostsTab",
-        "supplierQuotationsTab",
         "supplierPurchaseOrdersTab",
         "supplierDebitNotesTab",
         "purchaseReturnsTab",
@@ -2803,7 +2653,6 @@ document.addEventListener("click", function(e) {
 <li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li>
 <li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li>
 <li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li>
-<li><button onclick="showTab('supplierQuotationsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotations</button></li>
 <li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li>
 <li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li>
 <li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li>
@@ -2883,7 +2732,7 @@ document.addEventListener("click", function(e) {
 </li>
 <li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li>
 
-<div id="rightSidebar" class="fixed top-4 right-0 h-half w-10 bg-black  text-white flex flex-col items-center py-1 space-y-6 shadow-lg z-10">
+<div id="rightSidebar" class="fixed top-4 right-0 h-half w-8 bg-black  text-white flex flex-col items-center py-1 space-y-6 shadow-lg z-10">
   
   <!-- 📔 Acacia Notebook -->
  <button id="acaciaToggle" onclick="toggleAcaciaNotebook()" 
@@ -6501,11 +6350,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     </table>
   </div>
-
-
 </div>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>const WAREHOUSES = [""];
 
 function searchInventory() {
@@ -8299,7 +8144,6 @@ window.addEventListener('click',function(e){
   }
 });
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const PRICE_LIST_KEY = "priceList";
 
@@ -13922,7 +13766,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const moneyInTypes = [
   "Customer Advance", "Customer Payment", "Transfer From Another Account",
@@ -30550,9 +30393,6 @@ window.addEventListener("orgSettingsChanged", () => {
   renderBulkInvoices();
 });
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
 let creditNoteItems = [];
 let editingCreditNoteId = null;
@@ -34697,7 +34537,6 @@ window.editRecurring = editRecurring;
 window.previewRecurring = previewRecurring;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
 <script>
@@ -35939,225 +35778,7 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </div>
 </div>
-<!-- ✅ SUPPLIER QUOTATIONS MODULE -->
-<div id="supplierQuotationsTab" class="p-4">
 
-  <h2 class="text-1xl font-bold mb-4 text-left">Quotations</h2>
-
-  <div class="relative mb-4">
-    <input 
-      type="text" 
-      id="quoteSearch"
-      placeholder="Search Quotations (/)"
-      class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-      oninput="searchQuotes()"
-    />
-  </div>
-
-  <div class="mb-2 relative inline-block text-right">
-
-    <button id="quoteMasterBtn"
-      class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-9 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-      Quote Actions
-      <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-      </svg>
-    </button>
-
-    <div id="quoteMasterDropdown"
-      class="absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white hidden z-10">
-
-      <div class="py-1">
-
-        <button onclick="sortQuotesBy('quoteNumber')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-          Quote #
-        </button>
-
-        <button onclick="sortQuotesBy('date')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-          Date
-        </button>
-
-        <button onclick="sortQuotesBy('supplier')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-          Supplier
-        </button>
-
-        <hr class="my-1 border-gray-200">
-
-        <button onclick="importQuotes()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-          Import Quotes
-        </button>
-
-        <button onclick="exportQuotes()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-          Export Quotes
-        </button>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="bg-white p-6 rounded shadow mb-6">
-
-    <h3 class="text-xl font-semibold mb-4">Add New Quotation</h3>
-
-    <div class="mb-4">
-      <label class="block font-semibold mb-1">Date</label>
-      <input id="quoteDate" type="date" class="border p-2 rounded" style="width: 700px;" />
-    </div>
-
-    <div class="mb-4">
-      <label class="block font-semibold mb-1">Quote Number</label>
-      <input id="quoteNumber" type="text" class="border p-2 rounded bg-gray-100" readonly style="width: 700px;" />
-    </div>
-
-    <div class="mb-4">
-      <label class="block font-semibold mb-1">Select Supplier</label>
-      <select id="quoteSupplier" class="border p-2 rounded" style="width: 700px;">
-        <option value="">Select Supplier</option>
-      </select>
-    </div>
-   <div class="grid grid-cols-2 gap-4 mb-4">
-  <div>
-    <label for="quoteCurrency" class="block font-semibold mb-1">Currency:</label>
-    <select id="quoteCurrency" class="border p-2 rounded">
-      <option value="KES">KES (Base Currency)</option>
-      <option value="USD">USD (US Dollar)</option>
-      <option value="EUR">EUR (Euro)</option>
-      <option value="GBP">GBP (British Pound)</option>
-      <option value="TZS">TZS (Tanzanian Shilling)</option>
-      <option value="UGX">UGX (Ugandan Shilling)</option>
-      <option value="RWF">RWF (Rwandan Franc)</option>
-      <option value="ETB">ETB (Ethiopian Birr)</option>
-      <option value="NGN">NGN (Nigerian Naira)</option>
-      <option value="ZAR">ZAR (South African Rand)</option>
-      <option value="CNY">CNY (Chinese Yuan)</option>
-      <option value="INR">INR (Indian Rupee)</option>
-      <option value="JPY">JPY (Japanese Yen)</option>
-      <option value="CAD">CAD (Canadian Dollar)</option>
-      <option value="AUD">AUD (Australian Dollar)</option>
-      <option value="CHF">CHF (Swiss Franc)</option>
-      <option value="AED">AED (UAE Dirham)</option>
-    </select>
-  </div>
-  <div>
-    <label for="quoteCurrencyRate" class="block font-semibold mb-1">Exchange Rate:</label>
-    <input id="quoteCurrencyRate" type="number" class="border p-2 rounded" value="1" step="0.01" />
-  </div>
-</div>
- 
-   <div class="mb-4">
-   <label class="block font-semibold mb-1">Terms (Days)</label>
-   <select id="quoteTermsDays" class="border p-2 rounded" style="width: 700px;">
-    <option value="0">Due on Receipt</option>
-    <option value="7">7 Days</option>
-    <option value="14">14 Days</option>
-    <option value="30">30 Days</option>
-    <option value="45">45 Days</option>
-    <option value="60">60 Days</option>
-    <option value="90">90 Days</option>
-   </select>
-    </div>
-    <div class="mb-4">
-  <label for="supplierQuoteItemType" class="block font-semibold mb-1">Item Type</label>
-
-  <select id="supplierQuoteItemType" class="border p-2 rounded" style="width: 700px;" required>
-    <option value="">Select Item Type</option>
-    <option value="product">Product</option>
-    <option value="service">Service</option>
-    <option value="asset">Asset</option>
-    <option value="inventory">Inventory Item</option>
-    <option value="noninventory">Non-Inventory Item</option>
-    <option value="expense">Expense</option>
-    <option value="labour">Labour</option>
-    <option value="consulting">Consulting</option>
-    <option value="import">Imported Item</option>
-  </select>
-</div>
-    <div class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4">
-
-      <select id="quoteProductSelect" class="border p-2 rounded">
-        <option value="">Select Product</option>
-      </select>
-
-      <input id="quoteItemQty" type="number" placeholder="Qty" class="border p-2 rounded" />
-
-      <input id="quoteItemPrice" type="number" placeholder="Unit Price" class="border p-2 rounded" />
-
-      <input id="quoteItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded" />
-
-      <select id="quoteItemTax" class="border p-2 rounded">
-        <option value="16">VAT 16%</option>
-        <option value="8">VAT 8%</option>
-        <option value="0">Zero Rated</option>
-        <option value="exempt">Exempt</option>
-        <option value="import">Imports</option>
-      </select>
-
-      <button onclick="addQuoteItem()"
-        class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-        Add Item
-      </button>
-
-    </div>
-    <button type="button" id="saveDraftQuoteBtn"
-class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-Save Draft
-</button>
-    <button type="button" id="saveQuoteBtn"
-class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-Save Quote
-</button>
-
-
-    <table class="w-full text-sm border mb-4" id="quoteItemsTable">
-    <h2 class="text-lg font-semibold mb-4">Qoute List</h2>
-    <button onclick="deleteSelectedQuoteItems()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button>
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="p-2"><input type="checkbox" onclick="toggleSelectAllQuoteItems(this)"></th>
-          <th class="p-2">Item</th>
-          <th class="p-2">Qty</th>
-          <th class="p-2">Unit Price</th>
-          <th class="p-2">VAT</th>
-          <th class="p-2">Terms (Days)</th>
-          <th class="p-2">Subtotal</th>
-          <th class="p-2">Action</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr>
-          <td colspan="6" class="p-2 text-center text-gray-500">No items</td>
-        </tr>
-      </tbody>
-
-    </table>
-
-  </div>
-
-  <div id="quotePaginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600">
-
-    <div>
-      Total Count: <span id="quoteTotalCount">0</span>
-    </div>
-
-    <div>
-      Show 
-      <select id="quoteItemsPerPageSelect" class="border rounded px-1">
-        <option value="25">25</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
-      </select>
-      per page
-    </div>
-
-    <div>
-      <button id="quotePrevPageBtn" class="px-2 py-1 border rounded disabled:opacity-50" disabled>Prev</button>
-      <span id="quotePageInfo">1 - 0</span>
-      <button id="quoteNextPageBtn" class="px-2 py-1 border rounded disabled:opacity-50" disabled>Next</button>
-    </div>
-
-  </div>
-</div>
 <!-- ✅ SUPPLIER PURCHASE ORDERS MODULE --> 
 <div id="supplierPurchaseOrdersTab" class="p-4">
   <h2 class="text-1xl font-bold mb-4 text-left">Purchase Orders</h2>
@@ -41170,362 +40791,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
 
-let supplierQuoteItems = [];
-let editingSupplierQuoteIndex = null;
-
-function getQuotes() {
-  return JSON.parse(localStorage.getItem("supplierQuotes") || "[]");
-}
-
-function saveQuotes(data) {
-  localStorage.setItem("supplierQuotes", JSON.stringify(data));
-}
-
-function populateSupplierDropdown() {
-  const select = document.getElementById("quoteSupplier");
-  if (!select) return;
-
-  const suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
-  select.innerHTML = '<option value="">Select Supplier</option>';
-
-  suppliers.forEach(s => {
-    const opt = document.createElement("option");
-    opt.value = s.name;
-    opt.textContent = s.name;
-    select.appendChild(opt);
-  });
-}
-
-function populateSupplierQuoteProductDropdown() {
-
-  const select = document.getElementById("quoteItemName");
-
-  if (!select) return;
-
-  select.innerHTML = '<option value="">Select Item</option>';
-
-  const items = getAllInventories();
-
-  const unique = new Map();
-
-  items.forEach(item => {
-
-    if (item && item.name) {
-
-      unique.set(item.sku || item.name, item);
-
-    }
-
-  });
-
-  unique.forEach(item => {
-
-    const opt = document.createElement("option");
-
-    opt.value = item.name;
-
-    opt.textContent = `${item.name} (${item.sku || "No SKU"})`;
-
-    opt.dataset.sku = item.sku || "";
-    opt.dataset.buyPrice = item.buyPrice || 0;
-    opt.dataset.sellPrice = item.sellPrice || 0;
-
-    select.appendChild(opt);
-
-  });
-
-}
-
-function addSupplierQuoteItem() {
-  const name = document.getElementById("quoteItemName").value;
-  const qty = parseFloat(document.getElementById("quoteItemQty").value);
-  const price = parseFloat(document.getElementById("quoteItemPrice").value);
-
-  if (!name || isNaN(qty) || isNaN(price)) return;
-
-  supplierQuoteItems.push({
-    name,
-    qty,
-    price,
-    total: qty * price
-  });
-
-  renderSupplierQuoteItems();
-  clearSupplierQuoteItemForm();
-}
-
-function renderSupplierQuoteItems() {
-  const tbody = document.getElementById("supplierQuotesTable");
-  if (!tbody) return;
-
-  tbody.innerHTML = supplierQuoteItems.length
-    ? supplierQuoteItems.map((i, index) => `
-      <tr>
-        <td>${i.name}</td>
-        <td>${i.qty}</td>
-        <td>${i.price}</td>
-        <td>${i.total}</td>
-        <td>
-          <button onclick="removeSupplierQuoteItem(${index})">Remove</button>
-        </td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="5" class="text-center">No items</td></tr>`;
-}
-
-function removeSupplierQuoteItem(index) {
-  supplierQuoteItems.splice(index, 1);
-  renderSupplierQuoteItems();
-}
-
-function clearSupplierQuoteItemForm() {
-  document.getElementById("quoteItemName").value = "";
-  document.getElementById("quoteItemQty").value = "";
-  document.getElementById("quoteItemPrice").value = "";
-}
-
-function saveSupplierQuote() {
-  const supplier = document.getElementById("quoteSupplier").value;
-  const date = document.getElementById("quoteDate").value;
-
-  if (!supplier || !date || supplierQuoteItems.length === 0) return;
-
-  let quotes = getQuotes();
-
-  const total = supplierQuoteItems.reduce((s, i) => s + i.total, 0);
-
-  const data = {
-    supplier,
-    date,
-    items: supplierQuoteItems,
-    total,
-    status: "Pending"
-  };
-
-  if (editingSupplierQuoteIndex !== null) {
-    quotes[editingSupplierQuoteIndex] = data;
-    editingSupplierQuoteIndex = null;
-  } else {
-    quotes.push(data);
-  }
-
-  saveQuotes(quotes);
-
-  supplierQuoteItems = [];
-  renderSupplierQuotes();
-  clearSupplierQuoteForm();
-}
-
-function renderSupplierQuotes() {
-
-  const table = document.getElementById("supplierQuotesList");
-  if (!table) return;
-
-  const quotes = getQuotes();
-
-  table.innerHTML = "";
-
-  quotes.forEach((q, index) => {
-
-    table.innerHTML += `
-      <tr>
-
-        <td class="p-2">
-          <input type="checkbox"
-            class="supplier-quote-checkbox"
-            value="${index}">
-        </td>
-
-        <td class="p-2">${q.supplier}</td>
-        <td class="p-2">${q.date}</td>
-        <td class="p-2">${q.total}</td>
-        <td class="p-2">${q.status}</td>
-
-        <td class="p-2 space-x-1">
-          <button onclick="viewSupplierQuote(${index})"
-            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
-            View
-          </button>
-
-          <button onclick="editSupplierQuote(${index})"
-            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
-            Edit
-          </button>
-
-          <button onclick="deleteSupplierQuote(${index})"
-            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
-            Delete
-          </button>
-
-          <button onclick="convertSupplierQuote(${index})"
-            class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">
-            Convert
-          </button>
-        </td>
-
-      </tr>
-    `;
-  });
-}
-function deleteSupplierQuote(index) {
-  if (!confirm("Delete this quote?")) return;
-
-  let quotes = getQuotes();
-  quotes.splice(index, 1);
-  saveQuotes(quotes);
-
-  renderSupplierQuotes();
-}
-function deleteSelectedSupplierQuotes() {
-
-  let quotes = getQuotes();
-
-  const selected = Array.from(
-    document.querySelectorAll(".supplier-quote-checkbox:checked")
-  ).map(cb => parseInt(cb.value));
-
-  if (selected.length === 0) {
-    alert("No quotes selected");
-    return;
-  }
-
-  if (!confirm(`You selected ${selected.length} quote(s). Proceed?`)) return;
-
-  if (!confirm("This action cannot be undone. Confirm delete?")) return;
-
-  selected.sort((a, b) => b - a).forEach(index => {
-
-    const quote = quotes[index];
-
-    if (!quote) return;
-
-    if (!quote.id) quote.id = crypto.randomUUID();
-
-    moveToRecycle(quote, "File", "SupplierQuotes");
-
-    quotes.splice(index, 1);
-
-  });
-
-  localStorage.setItem("supplierQuotes", JSON.stringify(quotes));
-
-  renderSupplierQuotes();
-
-  alert("♻️ Selected supplier quotes moved to Recycle Bin.");
-}
-
-function toggleSelectAllSupplierQuotes(source) {
-
-  const checkboxes = document.querySelectorAll(".supplier-quote-checkbox");
-
-  checkboxes.forEach(cb => {
-    cb.checked = source.checked;
-  });
-
-}
-function editSupplierQuote(index) {
-  const quotes = getQuotes();
-  const q = quotes[index];
-
-  editingSupplierQuoteIndex = index;
-
-  document.getElementById("quoteSupplier").value = q.supplier;
-  document.getElementById("quoteDate").value = q.date;
-
-  supplierQuoteItems = [...q.items];
-  renderSupplierQuoteItems();
-}
-
-function viewSupplierQuote(index) {
-  const q = getQuotes()[index];
-  if (!q) return;
-
-  const old = document.getElementById("quotePopup");
-  if (old) old.remove();
-
-  const popup = document.createElement("div");
-
-  popup.style = `
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.6);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    z-index:99999;
-  `;
-
-  popup.innerHTML = `
-    <div style="background:#fff;padding:20px;width:70%;height:80%;overflow:auto;">
-      <h3>Supplier Quote</h3>
-      <p><b>Supplier:</b> ${q.supplier}</p>
-      <p><b>Date:</b> ${q.date}</p>
-      <p><b>Total:</b> ${q.total}</p>
-
-      <table border="1" width="100%">
-        <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
-        ${q.items.map(i => `
-          <tr>
-            <td>${i.name}</td>
-            <td>${i.qty}</td>
-            <td>${i.price}</td>
-            <td>${i.total}</td>
-          </tr>
-        `).join("")}
-      </table>
-
-      <button onclick="document.getElementById('quotePopup').remove()">Close</button>
-    </div>
-  `;
-
-  popup.id = "quotePopup";
-  document.body.appendChild(popup);
-}
-
-function convertSupplierQuote(index) {
-  const quotes = getQuotes();
-  const q = quotes[index];
-
-  if (!q) return;
-
-  let poList = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
-
-  poList.push({
-    poNumber: Date.now(),
-    date: q.date,
-    supplier: q.supplier,
-    items: q.items,
-    status: "From Quote"
-  });
-
-  localStorage.setItem("purchaseOrders", JSON.stringify(poList));
-
-  alert("Converted to Purchase Order");
-}
-
-function clearSupplierQuoteForm() {
-  document.getElementById("quoteSupplier").value = "";
-  document.getElementById("quoteDate").value = "";
-  supplierQuoteItems = [];
-  renderSupplierQuoteItems();
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  populateSupplierDropdown();
-  populateSupplierQuoteProductDropdown();
-  renderSupplierQuotes();
-});
-
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 let poItems = [];
 let editingPOIndex = null;
@@ -47222,7 +46489,6 @@ style.innerHTML = `
 `;
 document.head.appendChild(style);
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
@@ -50001,7 +49267,6 @@ Equity Actions
     </div>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 
 function searchManualJournals() {
@@ -52340,7 +51605,6 @@ function manageCurrencyAdjustmentFiles() {
     alert(message + "\nYou can extend this modal to allow deletion or export of individual records.");
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
 let editingTaxIndex=null
 
@@ -53700,7 +52964,6 @@ function parseCSV(csvText) {
   return accounts;
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
   let editingEquityIndex = null;
 
@@ -54446,7 +53709,6 @@ function manageEquityFiles() {
   }
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="scripts/nonCurrentAssets.js"></script>
 <script>
 function searchNonCurrentAssets() {
@@ -55752,7 +55014,6 @@ function manageAssetFiles() {
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script>
 let currentAccounts = JSON.parse(localStorage.getItem("currentAccounts") || "[]");
@@ -56427,7 +55688,6 @@ function resetCurrentAccounts(){
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 let currentAccTransactions = [];
 
@@ -56895,9 +56155,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 let balanceSheet = JSON.parse(localStorage.getItem("balanceSheet")) || {};
@@ -60550,8 +59808,6 @@ function showToast(msg) {
   }, 2000);
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script>
 function getCurrentUserRole() {
@@ -61162,66 +60418,7 @@ function downloadPreviewPDF() {
     <button onclick="resetEarnings()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Reset</button>
   </div>
 </div>
-<script>
-  const earningsBtn = document.getElementById("earningsActionsBtn");
-const earningsDropdown = document.getElementById("earningsDropdown");
 
-earningsBtn.addEventListener("click", () => {
-  earningsDropdown.classList.toggle("hidden");
-  earningsBtn.querySelector("svg").classList.toggle("rotate-180");
-});
-
-function sortEarnings(column) {
-  const table = document.getElementById("earningsTable");
-  const rows = Array.from(table.rows);
-  const headerMap = {
-    empID: 0,
-    basic: 1,
-    house: 2,
-    transport: 3,
-    overtime: 4,
-    bonus: 5,
-    other: 6,
-    gross: 7
-  };
-  const index = headerMap[column];
-  if (index === undefined) return;
-  let asc = table.dataset.sortOrder !== "asc";
-  table.dataset.sortOrder = asc ? "asc" : "desc";
-  rows.sort((a, b) => {
-    let aText = a.cells[index].innerText || a.cells[index].textContent;
-    let bText = b.cells[index].innerText || b.cells[index].textContent;
-    let aNum = parseFloat(aText.replace(/[^0-9.-]+/g,""));
-    let bNum = parseFloat(bText.replace(/[^0-9.-]+/g,""));
-    if (!isNaN(aNum) && !isNaN(bNum)) {
-      return asc ? aNum - bNum : bNum - aNum;
-    } else {
-      return asc ? aText.localeCompare(bText) : bText.localeCompare(aText);
-    }
-  });
-  rows.forEach(row => table.appendChild(row));
-}
-
-function exportEarningsCSV() {
-  const table = document.getElementById("earningsTable");
-  let csv = [];
-  Array.from(table.rows).forEach(row => {
-    let cols = Array.from(row.cells).map(cell => `"${cell.innerText}"`);
-    csv.push(cols.join(","));
-  });
-  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "earnings.csv";
-  link.click();
-}
-
-function resetEarnings() {
-  const table = document.getElementById("earningsTable");
-  table.innerHTML = "";
-}
-</script>
- 
   <div class="bg-white p-6 rounded shadow mb-6">
     <h3 class="text-lg font-semibold mb-4">Add Allowances</h3>
 
@@ -61642,33 +60839,7 @@ function resetEarnings() {
       <button onclick="resetAttendance()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Reset</button>
     </div>
   </div>
-  <script>
-document.getElementById('attendanceActionsBtn').addEventListener('click', () => {
-  const dropdown = document.getElementById('attendanceDropdown');
-  dropdown.classList.toggle('hidden');
-});
 
-document.addEventListener('click', (e) => {
-  const btn = document.getElementById('attendanceActionsBtn');
-  const dropdown = document.getElementById('attendanceDropdown');
-  if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
-    dropdown.classList.add('hidden');
-  }
-});
-
-function sortAttendance(key) {
-  console.log('Sort attendance by', key);
-}
-
-function exportAttendanceCSV() {
-  console.log('Export attendance CSV');
-}
-
-function resetAttendance() {
-  console.log('Reset attendance records');
-}
-</script>
- 
   <div class="bg-white p-6 rounded shadow mb-6 space-y-4">
     
     
@@ -61920,79 +61091,7 @@ function resetAttendance() {
 
 <div id="integrationsTab" class="p-1">
   <h2 class="text-2xl font-bold mb-6 text-center">Bank Integration</h2>
- 
-<script>
-  const bankActionsBtn = document.createElement("button");
-const bankDropdown = document.createElement("div");
 
-document.getElementById("integrationsTab").insertAdjacentHTML("afterbegin", `
-<div class="relative inline-block mb-4">
-  <button id="bankActionsBtn"  class="inline-flex items-center rounded-md border border-gray-300 shadow-sm px-6 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-    Bank Actions
-    <svg class="ml-2 h-4 w-4 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-    </svg>
-  </button>
-  <div id="bankDropdown" class="hidden absolute bg-white border rounded shadow mt-1 w-48 z-10">
-    <button onclick="sortBankAccounts('employee')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Employee</button>
-    <button onclick="sortBankAccounts('bank')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Bank</button>
-    <button onclick="sortBankAccounts('branchName')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Branch Name</button>
-    <button onclick="sortBankAccounts('branchCode')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Branch Code</button>
-    <hr class="my-1 border-gray-200">
-    <button onclick="exportBankAccountsCSV()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Export CSV</button>
-    <button onclick="resetBankAccounts()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Reset</button>
-  </div>
-</div>
-`);
-
-document.getElementById("bankActionsBtn").addEventListener("click", () => {
-  const dropdown = document.getElementById("bankDropdown");
-  dropdown.classList.toggle("hidden");
-  document.getElementById("bankActionsBtn").querySelector("svg").classList.toggle("rotate-180");
-});
-
-function sortBankAccounts(column) {
-  const table = document.getElementById("bankAccountsTable");
-  const rows = Array.from(table.rows);
-  const headerMap = {
-    employee: 0,
-    bank: 1,
-    branchName: 2,
-    branchCode: 3,
-    employeeAccount: 4,
-    employerAccount: 5
-  };
-  const index = headerMap[column];
-  if (index === undefined) return;
-  let asc = table.dataset.sortOrder !== "asc";
-  table.dataset.sortOrder = asc ? "asc" : "desc";
-  rows.sort((a, b) => {
-    let aText = a.cells[index].innerText || a.cells[index].textContent;
-    let bText = b.cells[index].innerText || b.cells[index].textContent;
-    return asc ? aText.localeCompare(bText) : bText.localeCompare(aText);
-  });
-  rows.forEach(row => table.appendChild(row));
-}
-
-function exportBankAccountsCSV() {
-  const table = document.getElementById("bankAccountsTable");
-  let csv = [];
-  Array.from(table.rows).forEach(row => {
-    let cols = Array.from(row.cells).map(cell => `"${cell.innerText}"`);
-    csv.push(cols.join(","));
-  });
-  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "bank_accounts.csv";
-  link.click();
-}
-
-function resetBankAccounts() {
-  const table = document.getElementById("bankAccountsTable");
-  table.innerHTML = "";
-}
-</script>
   <div class="bg-white p-6 rounded shadow space-y-6">
 
     <div>
@@ -62198,6 +61297,65 @@ function resetBankAccounts() {
     });
 }
 
+  const earningsBtn = document.getElementById("earningsActionsBtn");
+const earningsDropdown = document.getElementById("earningsDropdown");
+
+earningsBtn.addEventListener("click", () => {
+  earningsDropdown.classList.toggle("hidden");
+  earningsBtn.querySelector("svg").classList.toggle("rotate-180");
+});
+
+function sortEarnings(column) {
+  const table = document.getElementById("earningsTable");
+  const rows = Array.from(table.rows);
+  const headerMap = {
+    empID: 0,
+    basic: 1,
+    house: 2,
+    transport: 3,
+    overtime: 4,
+    bonus: 5,
+    other: 6,
+    gross: 7
+  };
+  const index = headerMap[column];
+  if (index === undefined) return;
+  let asc = table.dataset.sortOrder !== "asc";
+  table.dataset.sortOrder = asc ? "asc" : "desc";
+  rows.sort((a, b) => {
+    let aText = a.cells[index].innerText || a.cells[index].textContent;
+    let bText = b.cells[index].innerText || b.cells[index].textContent;
+    let aNum = parseFloat(aText.replace(/[^0-9.-]+/g,""));
+    let bNum = parseFloat(bText.replace(/[^0-9.-]+/g,""));
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+      return asc ? aNum - bNum : bNum - aNum;
+    } else {
+      return asc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+    }
+  });
+  rows.forEach(row => table.appendChild(row));
+}
+
+function exportEarningsCSV() {
+  const table = document.getElementById("earningsTable");
+  let csv = [];
+  Array.from(table.rows).forEach(row => {
+    let cols = Array.from(row.cells).map(cell => `"${cell.innerText}"`);
+    csv.push(cols.join(","));
+  });
+  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "earnings.csv";
+  link.click();
+}
+
+function resetEarnings() {
+  const table = document.getElementById("earningsTable");
+  table.innerHTML = "";
+}
+
+ 
   function addEmployee() {
     const name = document.getElementById("empName").value.trim();
     const id = document.getElementById("empID").value.trim();
@@ -64394,7 +63552,35 @@ function searchPayments() {
     });
 }
 </script>
+  <script>
+document.getElementById('attendanceActionsBtn').addEventListener('click', () => {
+  const dropdown = document.getElementById('attendanceDropdown');
+  dropdown.classList.toggle('hidden');
+});
+
+document.addEventListener('click', (e) => {
+  const btn = document.getElementById('attendanceActionsBtn');
+  const dropdown = document.getElementById('attendanceDropdown');
+  if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.classList.add('hidden');
+  }
+});
+
+function sortAttendance(key) {
+  console.log('Sort attendance by', key);
+}
+
+function exportAttendanceCSV() {
+  console.log('Export attendance CSV');
+}
+
+function resetAttendance() {
+  console.log('Reset attendance records');
+}
+</script>
+
 <script>
+  
   function searchAttendance() {
     const query = document.getElementById('attendanceSearch').value.toLowerCase();
     const rows = document.querySelectorAll('#attendanceTableBody tr');
@@ -64936,7 +64122,6 @@ function deleteAttendance(index) {
   }
 });
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 
   function searchESR() {
@@ -65279,7 +64464,80 @@ document.addEventListener("DOMContentLoaded", () => {
   populateEmployeeDropdown();
   renderBankAccountsTable();
 });
+
+  const bankActionsBtn = document.createElement("button");
+const bankDropdown = document.createElement("div");
+
+document.getElementById("integrationsTab").insertAdjacentHTML("afterbegin", `
+<div class="relative inline-block mb-4">
+  <button id="bankActionsBtn"  class="inline-flex items-center rounded-md border border-gray-300 shadow-sm px-6 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+    Bank Actions
+    <svg class="ml-2 h-4 w-4 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+    </svg>
+  </button>
+  <div id="bankDropdown" class="hidden absolute bg-white border rounded shadow mt-1 w-48 z-10">
+    <button onclick="sortBankAccounts('employee')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Employee</button>
+    <button onclick="sortBankAccounts('bank')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Bank</button>
+    <button onclick="sortBankAccounts('branchName')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Branch Name</button>
+    <button onclick="sortBankAccounts('branchCode')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Branch Code</button>
+    <hr class="my-1 border-gray-200">
+    <button onclick="exportBankAccountsCSV()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Export CSV</button>
+    <button onclick="resetBankAccounts()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Reset</button>
+  </div>
+</div>
+`);
+
+document.getElementById("bankActionsBtn").addEventListener("click", () => {
+  const dropdown = document.getElementById("bankDropdown");
+  dropdown.classList.toggle("hidden");
+  document.getElementById("bankActionsBtn").querySelector("svg").classList.toggle("rotate-180");
+});
+
+function sortBankAccounts(column) {
+  const table = document.getElementById("bankAccountsTable");
+  const rows = Array.from(table.rows);
+  const headerMap = {
+    employee: 0,
+    bank: 1,
+    branchName: 2,
+    branchCode: 3,
+    employeeAccount: 4,
+    employerAccount: 5
+  };
+  const index = headerMap[column];
+  if (index === undefined) return;
+  let asc = table.dataset.sortOrder !== "asc";
+  table.dataset.sortOrder = asc ? "asc" : "desc";
+  rows.sort((a, b) => {
+    let aText = a.cells[index].innerText || a.cells[index].textContent;
+    let bText = b.cells[index].innerText || b.cells[index].textContent;
+    return asc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+  });
+  rows.forEach(row => table.appendChild(row));
+}
+
+function exportBankAccountsCSV() {
+  const table = document.getElementById("bankAccountsTable");
+  let csv = [];
+  Array.from(table.rows).forEach(row => {
+    let cols = Array.from(row.cells).map(cell => `"${cell.innerText}"`);
+    csv.push(cols.join(","));
+  });
+  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "bank_accounts.csv";
+  link.click();
+}
+
+function resetBankAccounts() {
+  const table = document.getElementById("bankAccountsTable");
+  table.innerHTML = "";
+}
 </script>
+
+  <!--  Reports -->
 <div id="reportsPanel" class="ml-84 mr-8 p-2">
 
   <h2 class="text-2xl font-bold mb-3">Reports</h2>
@@ -65294,7 +64552,6 @@ document.addEventListener("DOMContentLoaded", () => {
   </div>
 </div>
 
-  <!-- 🔎 Reports Search -->
 <div class="relative mb-3">
   <input
     type="text"
@@ -65335,7 +64592,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <li onclick="showReport('billSummaryReport', this)">📁Bill Summary</li>
         <li onclick="showReport('writeOffReportPanel', this)">📁 Write Off Report</li>
         <li onclick="showReport('debitNotesReport', this)">📁Debit Notes</li>
-        <li onclick="showReport('supplierQuotationsPanel', this)">📁 Supplier Quotations</li>
         <li onclick="showReport('operationalCostsPanel', this)">📁Operational Costs</li>
         <li onclick="showReport('payrollPanel', this)">📁Payroll</li>
         <li onclick="showReport('taxesPanel', this)">📁Taxes Report</li>
@@ -74499,256 +73755,6 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       </tr>
     </thead>
     <tbody id="purchaseOrdersBody"></tbody>
-  </table>
-
-</div>
-<div id="supplierQuotationsPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t">
-
-  <p class="font-semibold mb-3 text-lg">Supplier Quotations Report</p>
-
-  <div class="flex flex-wrap gap-3 mb-2 items-end">
-
-    <div>
-      <label class="text-xs font-semibold">Start Date</label>
-      <input type="date" id="sqStartDate" class="border p-1 rounded text-sm">
-    </div>
-
-    <div>
-      <label class="text-xs font-semibold">End Date</label>
-      <input type="date" id="sqEndDate" class="border p-1 rounded text-sm">
-    </div>
-
-  </div>
-
-  <div class="flex gap-2 mb-3">
-
-    <button onclick="applySQFilter()"
-      class="bg-blue-900 text-white font-bold px-4 py-1 rounded hover:bg-blue-800">
-      ✅ Apply Filter
-    </button>
-
-    <button onclick="clearSQFilter()"
-      class="bg-gray-300 text-black font-bold px-4 py-1 rounded hover:bg-gray-400">
-      ❌ Clear Filter
-    </button>
-
-    <button onclick="exportSQCSV()"
-      class="border border-blue-900 text-blue-900 bg-blue-100 font-bold px-3 py-1 rounded hover:bg-blue-200 ml-2">
-      ⬇️ Export CSV
-    </button>
-
-  </div>
-    <div class="flex flex-wrap items-center gap-3 mb-4">
-
-    <div class="relative">
-
-      <button onclick="toggleCustomerQuotesGroupByDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-
-        Group By ▼
-
-      </button>
-
-      <div id="customerQuotesGroupByDropdown"
-        class="hidden absolute z-50 mt-2 w-80 bg-white border rounded shadow-lg p-4 space-y-4">
-
-        <div>
-
-          <h3 class="font-semibold mb-2">Group By</h3>
-
-          <select id="customerQuotesGroupBy"
-            class="border rounded px-2 py-2 w-full"
-            onchange="renderCustomerQuotesReport()">
-
-            <option value="customer">Customer</option>
-            <option value="date">Date</option>
-            <option value="month">Month</option>
-            <option value="status">Status</option>
-
-          </select>
-
-        </div>
-
-        <div>
-
-          <h3 class="font-semibold mb-2">Customer Filter</h3>
-
-          <input type="text"
-            id="customerQuotesCustomerFilter"
-            class="border rounded px-2 py-2 w-full"
-            placeholder="Search customer..."
-            onkeyup="renderCustomerQuotesReport()">
-
-        </div>
-
-        <div>
-
-          <h3 class="font-semibold mb-2">Customer Order</h3>
-
-          <select id="customerQuotesCustomerSort"
-            class="border rounded px-2 py-2 w-full"
-            onchange="renderCustomerQuotesReport()">
-
-            <option value="">Default</option>
-            <option value="az">A → Z</option>
-            <option value="za">Z → A</option>
-
-          </select>
-
-        </div>
-
-      </div>
-
-    </div>
-
-    <div class="relative">
-
-      <button onclick="toggleCustomerQuotesShowByDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-
-        Show By ▼
-
-      </button>
-
-      <div id="customerQuotesShowByDropdown"
-        class="hidden absolute z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
-
-        <h3 class="font-semibold mb-3">Show By</h3>
-
-        <select id="customerQuotesShowBy"
-          class="border rounded px-2 py-2 w-full"
-          onchange="renderCustomerQuotesReport()">
-
-          <option value="summary">Summary</option>
-          <option value="detailed">Detailed</option>
-          <option value="quote">Quote Wise</option>
-
-        </select>
-
-      </div>
-
-    </div>
-
-    <div class="relative">
-
-      <button onclick="toggleCustomerQuotesColumnCustomizer()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-
-        Customize Columns
-
-      </button>
-
-      <div id="customerQuotesColumnCustomizer"
-        class="hidden absolute z-50 mt-2 w-72 bg-white border rounded shadow-lg p-4">
-
-        <h3 class="font-semibold mb-3">Show/Hide Columns</h3>
-
-        <div class="space-y-2">
-
-          <label class="flex items-center gap-2">
-            <input type="checkbox" checked onchange="toggleCustomerQuotesColumn(0,this)">
-            Quote No.
-          </label>
-
-          <label class="flex items-center gap-2">
-            <input type="checkbox" checked onchange="toggleCustomerQuotesColumn(1,this)">
-            Customer
-          </label>
-
-          <label class="flex items-center gap-2">
-            <input type="checkbox" checked onchange="toggleCustomerQuotesColumn(2,this)">
-            Items
-          </label>
-
-          <label class="flex items-center gap-2">
-            <input type="checkbox" checked onchange="toggleCustomerQuotesColumn(3,this)">
-            Qty
-          </label>
-
-          <label class="flex items-center gap-2">
-            <input type="checkbox" checked onchange="toggleCustomerQuotesColumn(4,this)">
-            Unit Price
-          </label>
-
-          <label class="flex items-center gap-2">
-            <input type="checkbox" checked onchange="toggleCustomerQuotesColumn(5,this)">
-            Total
-          </label>
-
-          <label class="flex items-center gap-2">
-            <input type="checkbox" checked onchange="toggleCustomerQuotesColumn(6,this)">
-            Date
-          </label>
-
-          <label class="flex items-center gap-2">
-            <input type="checkbox" checked onchange="toggleCustomerQuotesColumn(7,this)">
-            Validity (Days)
-          </label>
-
-          <label class="flex items-center gap-2">
-            <input type="checkbox" checked onchange="toggleCustomerQuotesColumn(8,this)">
-            Status
-          </label>
-
-        </div>
-
-      </div>
-
-    </div>
-
-    <div class="relative">
-
-      <button onclick="toggleCustomerQuotesSettingsDropdown()"
-        class="border px-3 py-1 rounded bg-white hover:bg-gray-100 text-sm">
-
-        Settings ⚙️
-
-      </button>
-
-      <div id="customerQuotesSettingsDropdown"
-        class="hidden absolute right-0 z-50 mt-2 w-64 bg-white border rounded shadow-lg p-4">
-
-        <h3 class="font-semibold mb-3">Settings</h3>
-
-        <div class="space-y-3">
-
-          <label class="flex items-center gap-2">
-            <input type="checkbox" onchange="toggleCustomerQuotesDarkMode(this)">
-            Dark Mode
-          </label>
-
-          <label class="flex items-center gap-2">
-            <input type="checkbox" onchange="toggleCustomerQuotesCompactView(this)">
-            Compact View
-          </label>
-
-          <label class="flex items-center gap-2">
-            <input type="checkbox" onchange="toggleCustomerQuotesShowTotals(this)">
-            Show Totals Only
-          </label>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-  <table class="w-full border text-sm">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="p-2">Quotation No.</th>
-        <th class="p-2">Supplier</th>
-        <th class="p-2">Item</th>
-        <th class="p-2">Quantity</th>
-        <th class="p-2">Unit Price</th>
-        <th class="p-2">Total Amount</th>
-        <th class="p-2">Date</th>
-        <th class="p-2">Status</th>
-        <th class="p-2">Reference No.</th>
-      </tr>
-    </thead>
-    <tbody id="supplierQuotationsBody"></tbody>
   </table>
 
 </div>
@@ -93186,7 +92192,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderPurchaseReturnReport();
 });
 </script>
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script>
 function renderPurchaseOrdersReport(filteredData = null) {
   const tbody = document.getElementById("purchaseOrdersBody");
@@ -101956,7 +100961,6 @@ document.addEventListener("DOMContentLoaded", function () {
   renderProjectsChart();
 });
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 document.getElementById('planTrackingActionsBtn').addEventListener('click', function () {
   const dropdown = document.getElementById('planTrackingDropdown');
@@ -104057,7 +103061,6 @@ Save
   <label><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label>
   <label><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label>
   <label><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label>
-  <label><input type="checkbox" value="supplierQuotationsTab"> Quotations</label>
   <label><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label>
   <label><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label>
   <label><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label>
@@ -106012,7 +105015,6 @@ const ALL_MODULES = [
   "bulkBillingTab",
   "taxPaymentsTab",
   "OperationalCostsTab",
-  "supplierQuotationsTab",
   "supplierPurchaseOrdersTab",
   "supplierDebitNotesTab",
   "purchaseReturnsTab",
@@ -106233,7 +105235,7 @@ const roleModules = {
 
     'supplierTab','supplierPaymentsTab','supplierBillsTab',
     'bulkBillingTab','taxPaymentsTab','OperationalCostsTab',
-    'supplierQuotationsTab','supplierPurchaseOrdersTab',
+    'supplierPurchaseOrdersTab',
     'supplierDebitNotesTab','purchaseReturnsTab',
     'grnTab','supplierStatementTab',
 
@@ -106314,7 +105316,6 @@ const roleModules = {
     'bulkBillingTab',
     'taxPaymentsTab',
     'OperationalCostsTab',
-    'supplierQuotationsTab',
     'supplierPurchaseOrdersTab',
     'supplierDebitNotesTab',
     'purchaseReturnsTab',
@@ -108980,7 +107981,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script>
 
@@ -109075,7 +108075,6 @@ function exportCostingToPDF() {
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <script>
 
@@ -110657,908 +109656,6 @@ function emptyRecycleBin() {
 }
 
 document.addEventListener("DOMContentLoaded", renderRecycleBin);
-</script>
-<script>
-function createPaginatedTable(config) {
-  const state = config.state || (config.state = {
-    currentPage: 1,
-    itemsPerPage: 25
-  });
-
-  const table = document.getElementById(config.tableId);
-  const totalCountSpan = document.getElementById(config.totalCountId);
-  const pageInfo = document.getElementById(config.pageInfoId);
-  const prevBtn = document.getElementById(config.prevBtnId);
-  const nextBtn = document.getElementById(config.nextBtnId);
-  const itemsPerPageSelect = document.getElementById(config.itemsPerPageSelectId);
-
-  const data = config.data || [];
-
-  if (itemsPerPageSelect) {
-    itemsPerPageSelect.value = state.itemsPerPage;
-
-    itemsPerPageSelect.onchange = () => {
-      state.itemsPerPage = parseInt(itemsPerPageSelect.value);
-      state.currentPage = 1;
-      render();
-    };
-  }
-
-  function render() {
-    const total = data.length;
-    const start = (state.currentPage - 1) * state.itemsPerPage;
-    const end = start + state.itemsPerPage;
-
-    const paginated = data.slice(start, end);
-
-    table.innerHTML = "";
-
-    if (config.renderRow) {
-      paginated.forEach((item, i) => {
-        table.innerHTML += config.renderRow(item, start + i);
-      });
-    } else {
-      table.innerHTML = paginated.length
-        ? paginated.map(item =>
-            `<tr>${Object.values(item).map(v => `<td class="p-2 border">${v}</td>`).join("")}</tr>`
-          ).join("")
-        : `<tr><td colspan="100%" class="p-2 text-center">No data</td></tr>`;
-    }
-
-    if (totalCountSpan) {
-      totalCountSpan.textContent = total;
-    }
-
-    const from = total === 0 ? 0 : start + 1;
-    const to = Math.min(end, total);
-
-    if (pageInfo) {
-      pageInfo.textContent = `${from} - ${to} of ${total}`;
-    }
-
-    if (prevBtn) {
-      prevBtn.disabled = state.currentPage === 1;
-      prevBtn.onclick = () => {
-        if (state.currentPage > 1) {
-          state.currentPage--;
-          render();
-        }
-      };
-    }
-
-    if (nextBtn) {
-      nextBtn.disabled = end >= total;
-      nextBtn.onclick = () => {
-        if (end < total) {
-          state.currentPage++;
-          render();
-        }
-      };
-    }
-  }
-
-  render();
-}
-</script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc,
-  onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_ID",
-  appId: "YOUR_APP_ID"
-};
-
-const app = initializeApp(firebaseConfig);
-
-const db = getFirestore(app);
-
-let syncing = false;
-let lastUpload = 0;
-let unsubscribeSync = null;
-
-function getSyncUser() {
-
-  const user =
-    JSON.parse(localStorage.getItem("loggedInUser") || "{}");
-
-  let company =
-    (
-      user.companyId ||
-      user.companyName ||
-      "default_company"
-    )
-      .toLowerCase()
-      .trim();
-
-  const isDemo =
-    company.includes("demo") ||
-    company.includes("test") ||
-    user.demo === true;
-
-  return (
-    (isDemo ? "demo_" : "company_") + company
-  ).replace(/[^a-zA-Z0-9]/g, "_");
-}
-
-function getFilteredLocalStorage() {
-
-  const data = {};
-
-  for (let i = 0; i < localStorage.length; i++) {
-
-    const key = localStorage.key(i);
-
-    if (!key) continue;
-
-    if (
-      key.toLowerCase().includes("password") ||
-      key.toLowerCase().includes("token")
-    ) continue;
-
-    try {
-
-      data[key] = localStorage.getItem(key);
-
-    } catch (e) {}
-  }
-
-  return data;
-}
-
-async function uploadLocalStorage() {
-
-  if (syncing) return;
-
-  const now = Date.now();
-
-  if (now - lastUpload < 1000) return;
-
-  syncing = true;
-
-  try {
-
-    const syncUser = getSyncUser();
-
-    if (!syncUser) return;
-
-    const data = getFilteredLocalStorage();
-
-    await setDoc(
-      doc(db, "syncData", syncUser),
-      {
-        updatedAt: now,
-        data
-      },
-      { merge: true }
-    );
-
-    lastUpload = now;
-
-    console.log("☁️ Synced");
-
-  } catch (err) {
-
-    console.error(err);
-
-  } finally {
-
-    syncing = false;
-  }
-}
-
-async function downloadLocalStorage() {
-
-  try {
-
-    const syncUser = getSyncUser();
-
-    if (!syncUser) return;
-
-    const ref = doc(db, "syncData", syncUser);
-
-    const snap = await getDoc(ref);
-
-    if (!snap.exists()) return;
-
-    const cloudData = snap.data().data || {};
-
-    Object.keys(cloudData).forEach(key => {
-
-      try {
-
-        localStorage.setItem(
-          key,
-          cloudData[key]
-        );
-
-      } catch (e) {}
-
-    });
-
-    console.log("⬇️ Downloaded");
-
-  } catch (err) {
-
-    console.error(err);
-
-  }
-}
-
-function realtimeSync() {
-
-  if (unsubscribeSync) {
-    unsubscribeSync();
-  }
-
-  const syncUser = getSyncUser();
-
-  const ref = doc(db, "syncData", syncUser);
-
-  unsubscribeSync = onSnapshot(ref, (snap) => {
-
-    if (!snap.exists()) return;
-
-    const cloudData = snap.data().data || {};
-
-    Object.keys(cloudData).forEach(key => {
-
-      if (
-        localStorage.getItem(key) !== cloudData[key]
-      ) {
-
-        localStorage.setItem(
-          key,
-          cloudData[key]
-        );
-      }
-    });
-
-    console.log("🔄 Live Updated");
-  });
-}
-
-window.startCloudSync = async function() {
-
-  await downloadLocalStorage();
-
-  realtimeSync();
-
-  uploadLocalStorage();
-};
-
-window.addEventListener("load", async () => {
-
-  const loggedInUser =
-    JSON.parse(localStorage.getItem("loggedInUser") || "{}");
-
-  if (loggedInUser.username) {
-
-    await window.startCloudSync();
-
-  }
-});
-
-let saveTimer;
-
-const originalSetItem = localStorage.setItem;
-
-localStorage.setItem = function(key, value) {
-
-  originalSetItem.apply(this, [key, value]);
-
-  clearTimeout(saveTimer);
-
-  saveTimer = setTimeout(() => {
-
-    uploadLocalStorage();
-
-  }, 1000);
-};
-
-window.addEventListener("storage", () => {
-
-  clearTimeout(saveTimer);
-
-  saveTimer = setTimeout(() => {
-
-    uploadLocalStorage();
-
-  }, 1000);
-});
-
-document.addEventListener("visibilitychange", () => {
-
-  if (document.visibilityState === "hidden") {
-
-    uploadLocalStorage();
-
-  }
-});
-
-window.addEventListener("beforeunload", () => {
-
-  uploadLocalStorage();
-
-});
-</script>
-<script>
-(() => {
-
-"use strict";
-
-function debounce(fn, delay = 100) {
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
-}
-
-function rafThrottle(fn) {
-  let running = false;
-  return (...args) => {
-    if (running) return;
-    running = true;
-
-    requestAnimationFrame(() => {
-      fn(...args);
-      running = false;
-    });
-  };
-}
-
-let formFields = [];
-
-function refreshFields() {
-  formFields = [...document.querySelectorAll(
-    'input:not([type="hidden"]):not([disabled]),select:not([disabled]),textarea:not([disabled])'
-  )].filter(el =>
-    el.offsetParent !== null &&
-    !el.readOnly
-  );
-}
-
-function focusNext(current) {
-
-  const index = formFields.indexOf(current);
-
-  if (index === -1) return;
-
-  const next = formFields[index + 1];
-
-  if (!next) return;
-
-  requestAnimationFrame(() => {
-
-    next.focus({
-      preventScroll: true
-    });
-
-    if (
-      next.tagName === "INPUT" &&
-      next.type !== "checkbox" &&
-      next.type !== "radio"
-    ) {
-      next.select();
-    }
-
-  });
-
-}
-
-function focusPrev(current) {
-
-  const index = formFields.indexOf(current);
-
-  if (index <= 0) return;
-
-  const prev = formFields[index - 1];
-
-  requestAnimationFrame(() => {
-
-    prev.focus({
-      preventScroll: true
-    });
-
-    if (
-      prev.tagName === "INPUT" &&
-      prev.type !== "checkbox" &&
-      prev.type !== "radio"
-    ) {
-      prev.select();
-    }
-
-  });
-
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  refreshFields();
-
-  document.querySelectorAll("img").forEach(img => {
-    img.loading = "lazy";
-    img.decoding = "async";
-  });
-
-  document.querySelectorAll("iframe").forEach(frame => {
-    frame.loading = "lazy";
-  });
-
-  document.querySelectorAll("video").forEach(video => {
-    video.preload = "none";
-  });
-
-  const observer = new IntersectionObserver(
-    entries => {
-
-      entries.forEach(entry => {
-
-        if (entry.isIntersecting) {
-
-          entry.target.classList.add("visible");
-          observer.unobserve(entry.target);
-
-        }
-
-      });
-
-    },
-    {
-      rootMargin: "200px"
-    }
-  );
-
-  document
-    .querySelectorAll(".lazy-section, section")
-    .forEach(el => observer.observe(el));
-
-});
-
-document.addEventListener("keydown", e => {
-
-  const active = document.activeElement;
-
-  if (
-    !active ||
-    !["INPUT","TEXTAREA","SELECT"].includes(active.tagName)
-  ) return;
-
-  if (
-    e.key === "Enter" &&
-    active.tagName !== "TEXTAREA"
-  ) {
-
-    e.preventDefault();
-    focusNext(active);
-
-  }
-
-  if (e.key === "ArrowDown") {
-
-    e.preventDefault();
-    focusNext(active);
-
-  }
-
-  if (e.key === "ArrowUp") {
-
-    e.preventDefault();
-    focusPrev(active);
-
-  }
-
-});
-
-document.addEventListener("focusin", e => {
-
-  const el = e.target;
-
-  if (
-    el.matches(
-      'input[type="text"],input[type="number"],input[type="email"],input[type="search"],input[type="password"]'
-    )
-  ) {
-
-    requestAnimationFrame(() => {
-
-      try {
-        el.select();
-      } catch {}
-
-    });
-
-  }
-
-});
-
-window.addEventListener(
-  "resize",
-  debounce(() => {
-
-    refreshFields();
-
-  }),
-  { passive: true }
-);
-
-window.addEventListener(
-  "scroll",
-  rafThrottle(() => {}),
-  { passive: true }
-);
-
-let dragItem = null;
-let startX = 0;
-let startY = 0;
-
-document.addEventListener("mousedown", e => {
-
-  const target = e.target.closest(".drag-item");
-
-  if (!target) return;
-
-  dragItem = target;
-
-  startX = e.clientX;
-  startY = e.clientY;
-
-  dragItem.style.willChange = "transform";
-  dragItem.style.transition = "none";
-
-});
-
-document.addEventListener(
-  "mousemove",
-  rafThrottle(e => {
-
-    if (!dragItem) return;
-
-    const x = e.clientX - startX;
-    const y = e.clientY - startY;
-
-    dragItem.style.transform =
-      `translate3d(${x}px,${y}px,0)`;
-
-  })
-);
-
-document.addEventListener("mouseup", () => {
-
-  if (!dragItem) return;
-
-  dragItem.style.willChange = "auto";
-  dragItem.style.transition = "";
-
-  dragItem = null;
-
-});
-
-if ("requestIdleCallback" in window) {
-
-  requestIdleCallback(() => {
-
-    refreshFields();
-
-  });
-
-}
-
-})();
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-
-  const sections = document.querySelectorAll(
-    "[data-lazy-section]"
-  );
-
-  const observer = new IntersectionObserver(
-    entries => {
-
-      entries.forEach(entry => {
-
-        if (!entry.isIntersecting) return;
-
-        const section = entry.target;
-
-        const template =
-          section.querySelector("template");
-
-        if (template) {
-
-          section.appendChild(
-            template.content.cloneNode(true)
-          );
-
-          template.remove();
-
-        }
-
-        observer.unobserve(section);
-
-      });
-
-    },
-    {
-      rootMargin: "300px"
-    }
-  );
-
-  sections.forEach(section => {
-    observer.observe(section);
-  });
-
-});
-</script>
-<script>
-(() => {
-
-"use strict";
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  const lazySections = [
-    "pricing",
-    "customers",
-    "resources",
-    "apps",
-    "blog",
-    "contact",
-    "support"
-  ];
-
-  lazySections.forEach(id => {
-
-    const section = document.getElementById(id);
-
-    if (!section) return;
-
-    if (!section.dataset.loaded) {
-
-      section.dataset.loaded = "0";
-
-      Array.from(section.children).forEach(el => {
-        el.style.display = "none";
-      });
-
-    }
-
-  });
-
-  const observer = new IntersectionObserver(
-
-    entries => {
-
-      entries.forEach(entry => {
-
-        if (!entry.isIntersecting) return;
-
-        const section = entry.target;
-
-        if (section.dataset.loaded === "1") return;
-
-        Array.from(section.children).forEach(el => {
-          el.style.display = "";
-        });
-
-        section.dataset.loaded = "1";
-
-        observer.unobserve(section);
-
-      });
-
-    },
-
-    {
-      rootMargin: "400px"
-    }
-
-  );
-
-  lazySections.forEach(id => {
-
-    const section =
-      document.getElementById(id);
-
-    if (section) {
-      observer.observe(section);
-    }
-
-  });
-
-});
-
-window.renderTablePage = function (
-  tableId,
-  data,
-  page = 1,
-  pageSize = 100
-) {
-
-  const table =
-    document.getElementById(tableId);
-
-  if (!table) return;
-
-  const start =
-    (page - 1) * pageSize;
-
-  const end =
-    start + pageSize;
-
-  const rows =
-    data.slice(start, end);
-
-  const fragment =
-    document.createDocumentFragment();
-
-  rows.forEach(row => {
-
-    const tr =
-      document.createElement("tr");
-
-    tr.innerHTML =
-      Object.values(row)
-      .map(v => `<td>${v}</td>`)
-      .join("");
-
-    fragment.appendChild(tr);
-
-  });
-
-  table.innerHTML = "";
-
-  table.appendChild(fragment);
-
-};
-
-window.createPagination = function (
-  containerId,
-  tableId,
-  data,
-  pageSize = 100
-) {
-
-  const container =
-    document.getElementById(containerId);
-
-  if (!container) return;
-
-  const pages =
-    Math.ceil(data.length / pageSize);
-
-  container.innerHTML = "";
-
-  for (let i = 1; i <= pages; i++) {
-
-    const btn =
-      document.createElement("button");
-
-    btn.textContent = i;
-
-    btn.className =
-      "px-2 py-1 border m-1";
-
-    btn.onclick = () => {
-
-      renderTablePage(
-        tableId,
-        data,
-        i,
-        pageSize
-      );
-
-    };
-
-    container.appendChild(btn);
-
-  }
-
-};
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    document
-      .querySelectorAll("img")
-      .forEach(img => {
-
-        img.loading = "lazy";
-        img.decoding = "async";
-
-      });
-
-    document
-      .querySelectorAll("iframe")
-      .forEach(frame => {
-
-        frame.loading = "lazy";
-
-      });
-
-    document
-      .querySelectorAll("video")
-      .forEach(video => {
-
-        video.preload = "none";
-
-      });
-
-  }
-);
-
-window.addEventListener(
-  "load",
-  () => {
-
-    let sliderStarted = false;
-
-    const slider =
-      document.getElementById(
-        "slider"
-      );
-
-    if (!slider) return;
-
-    if (sliderStarted) return;
-
-    sliderStarted = true;
-
-    const slides =
-      slider.children;
-
-    let current = 0;
-
-    clearInterval(
-      window.sliderInterval
-    );
-
-    window.sliderInterval =
-      setInterval(() => {
-
-        for (
-          let i = 0;
-          i < slides.length;
-          i++
-        ) {
-
-          slides[i].style.opacity =
-            i === current
-            ? "1"
-            : "0";
-
-        }
-
-        current++;
-
-        if (
-          current >= slides.length
-        ) {
-
-          current = 0;
-
-        }
-
-      }, 9000);
-
-  }
-);
-
-})();
 </script>
 <script>
 function toggleSubmenu(id) {
