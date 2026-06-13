@@ -3567,6 +3567,8 @@ function showApp() {
   const layoutEl = document.getElementById('layout');
   const homeTabEl = document.getElementById('homeTab');
   const userEl = document.getElementById('currentUser');
+  const sidebarEl = document.getElementById('sidebar');
+  const rightSidebarEl = document.getElementById('rightSidebar');
 
   const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
   if (!loggedInUser) return;
@@ -3574,6 +3576,8 @@ function showApp() {
   if (authEl) authEl.classList.add('hidden');
   if (homeTabEl) homeTabEl.style.display = 'none';
   if (layoutEl) layoutEl.classList.remove('hidden');
+  if (sidebarEl) sidebarEl.classList.remove('hidden');
+  if (rightSidebarEl) rightSidebarEl.classList.remove('hidden');
 
   if (userEl) userEl.textContent = loggedInUser.username;
 
@@ -3605,8 +3609,12 @@ function logout() {
   const layoutEl = document.getElementById('layout');
   const authEl = document.getElementById('auth');
   const homeTabEl = document.getElementById('homeTab');
+  const sidebarEl = document.getElementById('sidebar');
+  const rightSidebarEl = document.getElementById('rightSidebar');
 
   if (layoutEl) layoutEl.classList.add('hidden');
+  if (sidebarEl) sidebarEl.classList.add('hidden');
+  if (rightSidebarEl) rightSidebarEl.classList.add('hidden');
   if (authEl) authEl.classList.remove('hidden');
   if (homeTabEl) homeTabEl.style.display = 'block';
 }
