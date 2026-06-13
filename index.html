@@ -62420,7 +62420,20 @@ function showReport(panelId) {
   if (panelId === "writeOffReportPanel") {
     renderWriteOffReport();
   }
+
+  // Auto-render report content when a report panel is opened
+  var reportRenderers = {
+    profitMarginPanel: "renderProfitMargin",
+    purchaseByItemReport: "renderPurchaseByItem",
+    purchaseByVendorPanel: "renderPurchaseByVendor",
+    currencyGainLossPanel: "renderCurrencyGainLoss"
+  };
+  var fnName = reportRenderers[panelId];
+  if (fnName && typeof window[fnName] === "function") {
+    try { window[fnName](); } catch (e) { console.error(fnName + " failed:", e); }
+  }
 }
+
 
 function exportFilteredTableToCSV(tableId, filename) {
 
