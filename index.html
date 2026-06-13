@@ -12,22 +12,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-#sidebar{
-    position:fixed !important;
-    top:0;
-    left:0;
-    width:160px;
-    height:100vh;
-    overflow-y:auto;
-    overflow-x:hidden;
-    z-index:99999;
-}
 
-#mainContent{
-    margin-left:160px;
-    height:100vh;
-    overflow-y:auto;
-}
 * {
   box-sizing: border-box;
 }
@@ -192,17 +177,95 @@ function autoSync() {
 
 }
 </script>
-</head><body id="appBody"><!-- 🌱 HOME  --><div id="homeTab" class="bg-white text-gray-900"><nav class="flex justify-between items-center px-2 py-1 shadow-md bg-blue-900 sticky top-0 z-50"><h1 class="text-2xl font-bold text-white">Acacia Books</h1><ul class="flex gap-6 text-white font-medium"><li><a href="#hero" class="px-2 py-1 rounded hover:bg-blue-800">Home</a></li>
-  <li><a href="#features" class="px-2 py-1 rounded hover:bg-blue-800">Features</a></li>
-  <li><a href="#pricing" class="px-2 py-1 rounded hover:bg-blue-800">Pricing</a></li>
-  <li><a href="#customers" class="px-2 py-1 rounded hover:bg-blue-800">Customers</a></li>
-  <li><a href="#resources" class="px-2 py-1 rounded hover:bg-blue-800">Resources</a></li>
-  <li><a href="#about" class="px-2 py-1 rounded hover:bg-blue-800">About</a></li>
-  <li><a href="#blog" class="px-2 py-1 rounded hover:bg-blue-800">Blog</a></li>
-  <li><a href="#contact" class="px-2 py-1 rounded hover:bg-blue-800">Contact</a></li>
-  <li><a href="#apps" class="px-2 py-1 rounded hover:bg-blue-800">Apps</a></li>
-  <li><a href="#support" class="px-2 py-1 rounded hover:bg-blue-800">Support</a></li>
-   </ul><div class="flex gap-6"><button onclick="openLogin()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
+<style id="sidebarFix">#sidebar{position:fixed!important;top:0!important;left:0!important;bottom:0!important;height:100vh!important;width:10rem!important;overflow-y:auto!important;z-index:40!important;transform:none!important}#contentArea{margin-left:10rem!important}html,body{overflow-x:hidden}</style><style id="fixedWorkspaceShellFix">
+/* Zoho-style locked workspace shell: only module content scrolls. */
+#layout {
+  height: 100vh !important;
+  width: 100vw !important;
+  overflow: hidden !important;
+}
+
+body:has(#layout:not(.hidden)) {
+  overflow: hidden !important;
+}
+
+#layout > div:first-child {
+  position: fixed !important;
+  top: 0 !important;
+  left: 10rem !important;
+  right: 2.5rem !important;
+  height: 1.75rem !important;
+  min-height: 1.75rem !important;
+  z-index: 1200 !important;
+  transform: none !important;
+}
+
+#sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: 10rem !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  z-index: 1300 !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+#rightSidebar {
+  position: fixed !important;
+  top: 1.75rem !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 2.5rem !important;
+  height: calc(100vh - 1.75rem) !important;
+  max-height: calc(100vh - 1.75rem) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  z-index: 1300 !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+#contentArea {
+  position: fixed !important;
+  top: 1.75rem !important;
+  left: 10rem !important;
+  right: 2.5rem !important;
+  bottom: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  margin-left: 0 !important;
+  padding-top: 0.25rem !important;
+  overflow: auto !important;
+  overscroll-behavior: contain !important;
+  z-index: 1 !important;
+  transform: none !important;
+}
+
+#appsLauncher,
+#quickCreateMenu,
+#commPanel,
+#webinarPanel,
+#orgDetailsPanel,
+#acaciaNotebook,
+#gdocsPanel,
+#gsheetsPanel,
+#supportPopup {
+  z-index: 1400 !important;
+}
+
+html,
+body {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+</style></head><body id="appBody"><!-- 🌱 HOME  --><div id="homeTab" class="bg-white text-gray-900"><nav class="flex justify-between items-center px-2 py-1 shadow-md bg-blue-900 sticky top-0 z-50"><h1 class="text-2xl font-bold text-white">Acacia Books</h1><ul class="flex gap-6 text-white font-medium"><li><a href="#hero" class="px-2 py-1 rounded hover:bg-blue-800">Home</a></li><li><a href="#features" class="px-2 py-1 rounded hover:bg-blue-800">Features</a></li><li><a href="#pricing" class="px-2 py-1 rounded hover:bg-blue-800">Pricing</a></li><li><a href="#customers" class="px-2 py-1 rounded hover:bg-blue-800">Customers</a></li><li><a href="#resources" class="px-2 py-1 rounded hover:bg-blue-800">Resources</a></li><li><a href="#about" class="px-2 py-1 rounded hover:bg-blue-800">About</a></li><li><a href="#blog" class="px-2 py-1 rounded hover:bg-blue-800">Blog</a></li><li><a href="#contact" class="px-2 py-1 rounded hover:bg-blue-800">Contact</a></li><li><a href="#apps" class="px-2 py-1 rounded hover:bg-blue-800">Apps</a></li><li><a href="#support" class="px-2 py-1 rounded hover:bg-blue-800">Support</a></li></ul><div class="flex gap-6"><button onclick="openLogin()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
       Sign In
     </button><button id="openDemoBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
       Request Demo
@@ -400,76 +463,19 @@ setInterval(nextSlide, 9000);
     Send, receive, organize, and manage business communications directly from the platform. Improve communication efficiency, maintain conversation histories, coordinate with customers and suppliers, and streamline workflows by keeping email activities integrated with your daily business operations.
   </p></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="font-bold text-1xl text-blue-700 mb-2">⚙️ Settings</h3><p class="text-gray-600">
     Customize company profiles, warehouses, taxes, currencies, user permissions, costing methods, notification preferences, and system configurations. Adapt the platform to your specific business requirements, improve operational control, and create a working environment that matches your organizational processes.
-  </p></div></section><!-- 💰 PRICING SECTION --><section id="pricing" class="py-40 bg-gray-300 text-center"><h2 class="text-2xl font-bold text-blue-800 mb-8">Affordable Pricing Plans</h2><div class="flex justify-center items-center mb-6"><label class="flex items-center cursor-pointer"><span class="mr-2 font-medium text-gray-700">Monthly</span><input type="checkbox" id="billingToggle" class="hidden" onchange="toggleBilling()"><span class="w-12 h-6 flex items-center bg-blue-900 rounded-full p-1 duration-300 ease-in-out"><span class="bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out"></span></span><span class="ml-2 font-medium text-gray-700">Yearly <span class="text-blue-900 text-sm">(10% off)</span></span></label></div><div id="pricingCards" class="grid sm:grid-cols-6 lg:grid-cols-6 xl:grid-cols-6 gap-6 text-sm max-w-8xl mx-auto"><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Free</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="0" data-year="0">KES 0/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li>
-    <li>💰 Funds (Basic)</li>
-    <li>📈 Reports (Basic)</li>
-    <li>📦 Inventory: (Basic)</li>
-    <li>👥 Customers:(Basic)</li>
-    <li>🚚 Suppliers: (Basic)</li>
-    <li>🧮 Accountant: (Basic)</li>
-    <li>⚙️ Settings: (Basic)/li><li>💵 Payroll: None</li></ul><button onclick="choosePlan('Free', 0)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-700">
+  </p></div></section><!-- 💰 PRICING SECTION --><section id="pricing" class="py-40 bg-gray-300 text-center"><h2 class="text-2xl font-bold text-blue-800 mb-8">Affordable Pricing Plans</h2><div class="flex justify-center items-center mb-6"><label class="flex items-center cursor-pointer"><span class="mr-2 font-medium text-gray-700">Monthly</span><input type="checkbox" id="billingToggle" class="hidden" onchange="toggleBilling()"><span class="w-12 h-6 flex items-center bg-blue-900 rounded-full p-1 duration-300 ease-in-out"><span class="bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out"></span></span><span class="ml-2 font-medium text-gray-700">Yearly <span class="text-blue-900 text-sm">(10% off)</span></span></label></div><div id="pricingCards" class="grid sm:grid-cols-6 lg:grid-cols-6 xl:grid-cols-6 gap-6 text-sm max-w-8xl mx-auto"><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Free</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="0" data-year="0">KES 0/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li><li>💰 Funds (Basic)</li><li>📈 Reports (Basic)</li><li>📦 Inventory: (Basic)</li><li>👥 Customers:(Basic)</li><li>🚚 Suppliers: (Basic)</li><li>🧮 Accountant: (Basic)</li><li>⚙️ Settings: (Basic)/li><li>💵 Payroll: None</li></ul><button onclick="choosePlan('Free', 0)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-700">
       Get Started
-    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Starter</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="2000" data-year="21600">KES 2,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li>
-      <li>💰 Funds</li>
-      <li>📈 Reports</li>
-      <li>📦 Inventory</li>
-      <li>👥 Customers</li>
-      <li>🚚 suppliers</li>
-      <li>🧮 Accountant</li>
-      <li>💵 Payroll</li>
-      <li>⚙️ Settings</li></ul><button onclick="choosePlan('Starter', 2000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-900">
+    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Starter</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="2000" data-year="21600">KES 2,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li><li>💰 Funds</li><li>📈 Reports</li><li>📦 Inventory</li><li>👥 Customers</li><li>🚚 suppliers</li><li>🧮 Accountant</li><li>💵 Payroll</li><li>⚙️ Settings</li></ul><button onclick="choosePlan('Starter', 2000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-900">
       Choose
-    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Pro</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="5000" data-year="54000">KES 5,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li>
-      <li>💰 Funds</li>
-      <li>📈 Reports</li>
-      <li>📦 Inventory</li>
-      <li>👥 Customers</li>
-      <li>🚚 Suppliers</li>
-      <li>🧮 Accountant</li>
-      <li>💵 Payroll</li>
-      <li>⚙️ Settings</li></ul><button onclick="choosePlan('Pro', 5000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-900">
+    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Pro</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="5000" data-year="54000">KES 5,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li><li>💰 Funds</li><li>📈 Reports</li><li>📦 Inventory</li><li>👥 Customers</li><li>🚚 Suppliers</li><li>🧮 Accountant</li><li>💵 Payroll</li><li>⚙️ Settings</li></ul><button onclick="choosePlan('Pro', 5000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-900">
       Choose
-    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Business</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="8000" data-year="86400">KES 8,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li>
-      <li>💰 Funds</li>
-      <li>📈 Reports</li>
-      <li>📦 Inventory</li>
-      <li>👥 Customers</li>
-      <li>🚚 Suppliers</li>
-      <li>🧮 Accountant</li>
-      <li>💵 Payroll</li>
-      <li>⚙️ Settings</li></ul><button onclick="choosePlan('Business', 8000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-700">
+    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Business</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="8000" data-year="86400">KES 8,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li><li>💰 Funds</li><li>📈 Reports</li><li>📦 Inventory</li><li>👥 Customers</li><li>🚚 Suppliers</li><li>🧮 Accountant</li><li>💵 Payroll</li><li>⚙️ Settings</li></ul><button onclick="choosePlan('Business', 8000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-700">
       Choose
-    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Enterprise</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="12000" data-year="129600">KES 12,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li>
-      <li>💰 Funds</li>
-      <li>📈 Reports</li>
-      <li>📦 Inventory: </li>
-      <li>👥 Customers:</li>
-      <li>🚚 Suppliers: </li>
-      <li>🧮 Accountant: </li>
-      <li>💵 Payroll: </li>
-      <li>⚙️ Settings: </li>
-      <li>🔗 Integrations & APIs</li>
-      <li>💻 On-premise deployment support</li>
-    </ul><button onclick="choosePlan('Enterprise', 12000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-700">
+    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Enterprise</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="12000" data-year="129600">KES 12,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li><li>💰 Funds</li><li>📈 Reports</li><li>📦 Inventory: </li><li>👥 Customers:</li><li>🚚 Suppliers: </li><li>🧮 Accountant: </li><li>💵 Payroll: </li><li>⚙️ Settings: </li><li>🔗 Integrations & APIs</li><li>💻 On-premise deployment support</li></ul><button onclick="choosePlan('Enterprise', 12000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-700">
       Choose
-    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">All Access</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="20000" data-year="240000">KES 20,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard:</li>
-      <li>💰 Funds </li>
-      <li>📈 Reports</li>
-      <li>📦 Inventory </li>
-      <li>👥 Customers </li>
-      <li>🚚 Suppliers </li>
-      <li>🧮 Accountant</li>
-      <li>💵 payroll</li>
-      <li>⚙️ Settings</li>
-      <li>🔗 Integrations & APIs</li>
-      <li>💻 On-premise deployment & priority support</li>
-      <li>📁 Files</li></ul>
-      <button onclick="choosePlan('All Access', 20000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-700">
+    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">All Access</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="20000" data-year="240000">KES 20,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard:</li><li>💰 Funds </li><li>📈 Reports</li><li>📦 Inventory </li><li>👥 Customers </li><li>🚚 Suppliers </li><li>🧮 Accountant</li><li>💵 payroll</li><li>⚙️ Settings</li><li>🔗 Integrations & APIs</li><li>💻 On-premise deployment & priority support</li><li>📁 Files</li></ul><button onclick="choosePlan('All Access', 20000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-700">
     Choose
-  </button></div>
-</div></section><div id="registration-form" class="max-w-xl mx-auto mt-8 bg-white p-6 rounded shadow hidden">
-  <h2 class="text-2xl font-bold mb-4">Register & Subscribe</h2><p id="selected-plan" class="mb-4 text-blue-900 font-semibold"></p>
-  <form action="" method="POST" class="space-y-4"><div id="google-signup" class="mb-4"><button onclick="signUpWithGoogle()" type="button"
+  </button></div></div></section><div id="registration-form" class="max-w-xl mx-auto mt-8 bg-white p-6 rounded shadow hidden"><h2 class="text-2xl font-bold mb-4">Register & Subscribe</h2><p id="selected-plan" class="mb-4 text-blue-900 font-semibold"></p><form action="" method="POST" class="space-y-4"><div id="google-signup" class="mb-4"><button onclick="signUpWithGoogle()" type="button"
             class="bg-white border border-gray-300 text-gray-800 py-2 px-4 rounded w-full flex items-center justify-center hover:bg-gray-100"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 mr-2" alt="Google Logo" />
             Sign up with Google
           </button><div class="text-center my-2 text-gray-500 text-sm">or</div></div><div id="payment-section"><input type="hidden" name="plan" id="plan-input"><input type="hidden" name="price" id="price-input"><input type="text" name="companyName" id="company-name" placeholder="Company Name" required class="w-full border p-2 rounded"><input type="text" name="fullName" id="fullName" placeholder="Full Name" required class="w-full border p-2 rounded"><input type="email" name="email" id="email" placeholder="Email" required class="w-full border p-2 rounded"><input type="password" name="password" id="password" placeholder="Password" required class="w-full border p-2 rounded"><input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm Password" required class="w-full border p-2 rounded"><div><label class="block font-medium mb-1 text-blue-900">Choose Payment Method:</label><select name="paymentMethod" id="payment-method" required onchange="togglePaymentFields()"
@@ -665,13 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
         Why Businesses Choose Acacia Books
       </h3><p class="text-gray-200 leading-relaxed mb-4">
         Businesses choose Acacia Books because it delivers reliability, flexibility, and powerful management tools within a single integrated platform. The system helps organizations improve productivity, strengthen financial control, automate repetitive processes, and gain valuable business insights while maintaining security, scalability, and ease of use for teams of all sizes.
-      </p><ul class="space-y-2 text-gray-200"><li>✔ Cloud-Based & Secure</li>
-        <li>✔ Easy Setup</li>
-        <li>✔ Scalable</li>
-        <li>✔ Dedicated Support Team</li>
-        <li>✔ Modern Business Platform</li></ul>
-      </div><div class="bg-white p-6 rounded-xl shadow">
-        <h3 class="text-xl font-bold text-blue-900 mb-4">
+      </p><ul class="space-y-2 text-gray-200"><li>✔ Cloud-Based & Secure</li><li>✔ Easy Setup</li><li>✔ Scalable</li><li>✔ Dedicated Support Team</li><li>✔ Modern Business Platform</li></ul></div><div class="bg-white p-6 rounded-xl shadow"><h3 class="text-xl font-bold text-blue-900 mb-4">
         Business Insights
       </h3><p class="text-gray-600 leading-relaxed">
         Real-time dashboards and advanced reporting tools provide valuable visibility into business performance. Managers can monitor sales trends, inventory movements, customer activity, financial performance, and operational metrics from one location. These insights support better decision-making, improve forecasting accuracy, optimize resources, and help organizations achieve strategic objectives more effectively.
@@ -1769,96 +1769,14 @@ document.addEventListener("click", function(e) {
     }
 });
 </script>
-<div id="notifPopup" class="hidden fixed top-14 right-4 w-72 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold">📢 Updates</h3><ul id="notifList" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul></div><div id="quickCreatePanel" class="hidden fixed top-14 right-20 w-64 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold text-gray-700">⚙️ Quick Create</h3><button onclick="openCreate('customersTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100"> Customer</button><button onclick="openCreate('invoicesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Invoice</button><button onclick="openCreate('supplierTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Supplier</button><button onclick="openCreate('employeesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Employee</button><button onclick="openCreate('inventoryTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Inventory</button><button onclick="openCreate('manualJournalsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Journal</button><button onclick="openCreate('fundsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Fund</button></div><div class="h-3"></div>
-<div id="sidebar" class="fixed top-0 left-0 h-full w-40 bg-black text-white p-1 overflow-y-auto" style="position:fixed !important;top:0 !important;left:0 !important;height:100vh !important;z-index:40;"><img src="acaciabooks-logo.png" alt="Logo" class="w-24 mb-4 mx-auto" /><h2 class="text-xl font-bold  mb-6">AkBook</h2>
-<ul class="space-y-5 text-sm"
-<li><button onclick="showTab('dashboard')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📊 Dashboard Hub</button></li>
-<li><button onclick="toggleSubmenu('inventorySubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📦 Inventory Hub</button></li>
-  <ul id="inventorySubmenu" class="ml-4 hidden space-y-1">
-  <li><button onclick="showTab('inventoryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Stock</button></li>
-  <li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li>
-  <li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li>
-  <li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li>
-  <li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li>
-  <li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li>
-  <li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li>
-  <li><button onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li></ul>
-  <li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li>
-  <li><button onclick="toggleSubmenu('customerSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Sales Hub</button></li>
-  <ul id="customerSubmenu" class="ml-4 hidden space-y-1">
-  <li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li>
-  <li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li>
-  <li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li>
-  <li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li>
-  <li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li>
-  <li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li>
-  <li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li>
-  <li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li>
-  <li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li>
-  <li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li>
-  <li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul>
-  <li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li>
-  <ul id="supplierSubmenu" class="ml-4 hidden space-y-1">
-    <li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li>
-  <li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li>
-  <li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li>
-  <li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li>
-  <li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li>
-  <li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li>
-  <li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li>
-  <li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li>
-  <li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li>
-  <li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li>
-  <li><button onclick="showTab('supplierStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul>
-  <li><button onclick="toggleSubmenu('accountantSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🧮 Accountant Hub</button></li>
-  <ul id="accountantSubmenu" class="ml-4 hidden space-y-1">
-  <li><button onclick="showTab('manualJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Manual Journals</button></li>
-  <li><button onclick="showTab('recurringJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Recurring Journals</button></li>
-  <li><button onclick="showTab('currencyAdjustmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Currency Adjustments</button></li>
-  <li><button onclick="showTab('nonCurrentAssetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Assets</button></li>
-  <li><button onclick="showTab('nonCurrentLiabilitiesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Liabilities</button></li>
-  <li><button onclick="showTab('equityTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Equity</button></li>
-  <li><button onclick="showTab('taxAdjustmentsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Adjustments</button></li>
-  <li><button onclick="showTab('chartOfAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Chart of Accounts</button></li>
-  <li><button onclick="showTab('currentAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Current Accounts</button></li>
-  <li><button onclick="showTab('budgetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Budgets</button></li>
-  <li><button onclick="showTab('transactionLockingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Transaction Locking</button></li></ul>
-  <li><button onclick="toggleSubmenu('payrollSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💵 Payroll Hub </button></li>
-  <ul id="payrollSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('employeesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Employees</button></li>
-  <li><button onclick="showTab('earningsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Allowances</button></li>
-  <li><button onclick="showTab('grossPayTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Deductions</button></li>
-  <li><button onclick="showTab('attendanceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Attendance & Leave</button></li>
-  <li><button onclick="showTab('payslipTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payslip Generation</button></li>
-  <li><button onclick="showTab('statutoryDeductionsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Statutories</button></li>
-  <li><button onclick="showTab('payrollReportsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payroll Reports</button></li>
-  <li><button onclick="showTab('integrationsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Integrations</button></li></ul>
-  <li><button onclick="showTab('reportsPanel')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📈 Reports Hub </button></li>
-  <li><button onclick="toggleSubmenu('plansSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🗂️Plans Hub </button></li>
-  <ul id="plansSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('plansTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plans Hub </button></li>
-  <li><button onclick="showTab('projectTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Project Hub</button></li>
-  <li><button onclick="showTab('planTrackingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Plan Tracking</button></li></ul>
-  <li><button onclick="toggleSubmenu('settingsSubmenu2')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">⚙️ Settings Hub </button></li>
-  <ul id="settingsSubmenu2" class="ml-4 hidden space-y-1"><li><button onclick="showTab('orgProfileTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Org Profile </button></li>
-  <li><button onclick="showTab('warehousesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Warehouses</button></li>
-  <li><button onclick="showTab('DatacenterTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Data center</button></li>
-  <li><button onclick="showTab('systemConfigurationTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">System configuration</button></li>
-  <li><button onclick="showTab('userActivityTab')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Activity </button></li>
-  <li><button onclick="showTab('taxComplianceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Compliance</button></li>
-  <li><button onclick="showTab('userManagementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Management</button></li>
-  <li><button onclick="showTab('vatTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">VAT</button></li>
-  <li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li>
-  <li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li>
-  <li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li>
-  <li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li></ul><li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li><ul id="filesSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li>
-  <li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li></ul><li id="mailLink" class="hidden"><a href="https://kimani254star.github.io/acacia-mail/" target="_blank"
+<div id="notifPopup" class="hidden fixed top-14 right-4 w-72 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold">📢 Updates</h3><ul id="notifList" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul></div><div id="quickCreatePanel" class="hidden fixed top-14 right-20 w-64 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold text-gray-700">⚙️ Quick Create</h3><button onclick="openCreate('customersTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100"> Customer</button><button onclick="openCreate('invoicesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Invoice</button><button onclick="openCreate('supplierTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Supplier</button><button onclick="openCreate('employeesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Employee</button><button onclick="openCreate('inventoryTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Inventory</button><button onclick="openCreate('manualJournalsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Journal</button><button onclick="openCreate('fundsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Fund</button></div><div class="h-3"></div><div id="sidebar" class="fixed top-0 left-0 h-full w-40 bg-black text-white p-1 overflow-y-auto" style="position:fixed !important;top:0 !important;left:0 !important;height:100vh !important;z-index:40;"><img src="acaciabooks-logo.png" alt="Logo" class="w-24 mb-4 mx-auto" /><h2 class="text-xl font-bold  mb-6">AkBook</h2><ul class="space-y-5 text-sm"
+<li><button onclick="showTab('dashboard')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📊 Dashboard Hub</button></li><li><button onclick="toggleSubmenu('inventorySubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📦 Inventory Hub</button></li><ul id="inventorySubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('inventoryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Stock</button></li><li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li><li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li><li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li><li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li><li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li><li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li><li><button   onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li></ul><li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li><li><button onclick="toggleSubmenu('customerSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Sales Hub</button></li><ul id="customerSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li><li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li><li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li><li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li><li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li><li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li><li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li><li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li><li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li><li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li><li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li><ul id="supplierSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li><li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li><li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li><li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li><li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li><li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li><li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li><li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li><li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li><li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li><li><button onclick="showTab('supplierStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('accountantSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🧮 Accountant Hub</button></li><ul id="accountantSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('manualJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Manual Journals</button></li><li><button onclick="showTab('recurringJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Recurring Journals</button></li><li><button onclick="showTab('currencyAdjustmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Currency Adjustments</button></li><li><button onclick="showTab('nonCurrentAssetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Assets</button></li><li><button onclick="showTab('nonCurrentLiabilitiesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Liabilities</button></li><li><button onclick="showTab('equityTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Equity</button></li><li><button onclick="showTab('taxAdjustmentsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Adjustments</button></li><li><button onclick="showTab('chartOfAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Chart of Accounts</button></li><li><button onclick="showTab('currentAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Current Accounts</button></li><li><button onclick="showTab('budgetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Budgets</button></li><li><button onclick="showTab('transactionLockingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Transaction Locking</button></li></ul><li><button onclick="toggleSubmenu('payrollSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💵 Payroll Hub </button></li><ul id="payrollSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('employeesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Employees</button></li><li><button onclick="showTab('earningsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Allowances</button></li><li><button onclick="showTab('grossPayTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Deductions</button></li><li><button onclick="showTab('attendanceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Attendance & Leave</button></li><li><button onclick="showTab('payslipTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payslip Generation</button></li><li><button onclick="showTab('statutoryDeductionsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Statutories</button></li><li><button onclick="showTab('payrollReportsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payroll Reports</button></li><li><button onclick="showTab('integrationsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Integrations</button></li></ul><li><button onclick="showTab('reportsPanel')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📈 Reports Hub </button></li><li><button onclick="toggleSubmenu('plansSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🗂️Plans Hub </button></li><ul id="plansSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('plansTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plans Hub </button></li><li><button onclick="showTab('projectTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Project Hub</button></li><li><button onclick="showTab('planTrackingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Plan Tracking</button></li></ul><li><button onclick="toggleSubmenu('settingsSubmenu2')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">⚙️ Settings Hub </button></li><ul id="settingsSubmenu2" class="ml-4 hidden space-y-1"><li><button onclick="showTab('orgProfileTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Org Profile </button></li><li><button onclick="showTab('warehousesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Warehouses</button></li><li><button onclick="showTab('DatacenterTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Data center</button></li><li><button onclick="showTab('systemConfigurationTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">System configuration</button></li><li><button onclick="showTab('userActivityTab')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Activity </button></li><li><button onclick="showTab('taxComplianceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Compliance</button></li><li><button onclick="showTab('userManagementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Management</button></li><li><button onclick="showTab('vatTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">VAT</button></li><li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li><li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li><li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li><li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li></ul><li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li><ul id="filesSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li><li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li></ul><li id="mailLink" class="hidden"><a href="https://kimani254star.github.io/acacia-mail/" target="_blank"
     class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">
     💬Acacia Mail Hub
   </a></li><li id="crmLink"><a href="https://kimani254star.github.io/acacia-crm/?from=books" target="_blank"
     class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">
     🏢CRM Portal Hub
-  </a></li>
-  <li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li>
-  <div id="rightSidebar" class="fixed top-4 right-0 h-half w-10 bg-black  text-white flex flex-col items-center py-1 space-y-6 shadow-lg z-10"><!-- 📔 Acacia Notebook --><button id="acaciaToggle" onclick="toggleAcaciaNotebook()"
+  </a></li><li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li><div id="rightSidebar" class="fixed top-4 right-0 h-half w-10 bg-black  text-white flex flex-col items-center py-1 space-y-6 shadow-lg z-10"><!-- 📔 Acacia Notebook --><button id="acaciaToggle" onclick="toggleAcaciaNotebook()"
   class="group flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full relative text-xl">📔
   <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
     Acacia Notebook
@@ -72717,6 +72635,27 @@ function saveBalances() {
   });
 
   localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
+
+  // Sync opening balances back into Chart of Accounts
+  try {
+    const coa = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+    if (Array.isArray(coa) && coa.length) {
+      const norm = s => (s || "").toString().trim().toLowerCase();
+      const setAmt = (accountRef, amount) => {
+        if (!accountRef) return;
+        const key = norm(accountRef);
+        const hit = coa.find(a => norm(a.name) === key || norm(a.code) === key);
+        if (hit) hit.amount = Number(amount) || 0;
+      };
+      (balanceSheet.banks || []).forEach(b => setAmt(b.account || b.name, b.balance));
+      (balanceSheet.nonCurrentAssets || []).forEach(a => setAmt(a.account || a.name, a.value));
+      (balanceSheet.currentLiabilities || []).forEach(l => setAmt(l.account || l.name, l.amount));
+      (balanceSheet.nonCurrentLiabilities || []).forEach(l => setAmt(l.account || l.name, l.amount || l.principal));
+      (balanceSheet.equity || []).forEach(e => setAmt(e.account || e.name, e.value || e.amount || e.bdAmount));
+      localStorage.setItem("chartOfAccounts", JSON.stringify(coa));
+      if (typeof renderChartOfAccounts === "function") renderChartOfAccounts();
+    }
+  } catch (e) { console.warn("COA opening-balance sync failed", e); }
   document.querySelectorAll("#balanceBody td.debit, #balanceBody td.credit").forEach(td => {
     td.contentEditable = false;
     td.classList.remove("editable");
@@ -76501,5 +76440,28 @@ function toggleSubmenu(id) {
     submenu.classList.toggle('hidden');
   }
 }
+
+/* === Sidebar pin fix: re-parent to <body> so no ancestor transform breaks position:fixed === */
+(function pinSidebar(){
+  function pin(){
+    var sb = document.getElementById('sidebar');
+    if (sb && sb.parentNode !== document.body) {
+      document.body.appendChild(sb);
+    }
+    if (sb) {
+      sb.style.position = 'fixed';
+      sb.style.top = '0';
+      sb.style.left = '0';
+      sb.style.height = '100vh';
+      sb.style.zIndex = '40';
+      sb.style.overflowY = 'auto';
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', pin);
+  } else { pin(); }
+  // Re-pin after any tab switch in case scripts re-render
+  window.addEventListener('load', pin);
+})();
 </script>
 </body></html>
