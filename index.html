@@ -8764,7 +8764,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ><option value="">Select Account</option></select></div><div><label class="block text-sm font-semibold text-gray-700 mb-1">
         Transfer Date
       </label><input
-        id="transferDate"
+        id="bankTransferDate"
         type="date"
         class="w-full border rounded-lg p-2.5"
       /></div><div><label class="block text-sm font-semibold text-gray-700 mb-1">
@@ -9421,21 +9421,31 @@ function viewBank(index) {
     section.classList.remove("hidden");
   } else {
     section.classList.add("hidden");
+    // Clear the per-bank filter so the rest of the app is unaffected
+    localStorage.removeItem("selectedBankIndex");
+    if (typeof renderManualTransactions === "function") renderManualTransactions();
+    if (typeof updateBankSummary === "function") updateBankSummary();
     return; 
   }
   updateBankDropdowns();
   const bank = banks[index];
   localStorage.setItem("selectedBankIndex", index);
 
-  ["manualBank", "expenseBank", "reconcileBank","payrollBank" ].forEach(id => {
-    const select = document.getElementById(id);
-    for (let opt of select.options) {
-      if (opt.value === bank.name) {
-        opt.selected = true;
-        break;
-      }
+  // Only pre-select the manual-transaction bank (this section's own form).
+  // Do NOT touch expenseBank / reconcileBank / payrollBank — those belong to
+  // other modules and selecting them here was leaking the bank filter across
+  // the whole site and overwriting balances.
+  const manualSelect = document.getElementById("manualBank");
+  if (manualSelect) {
+    for (let opt of manualSelect.options) {
+      if (opt.value === bank.name) { opt.selected = true; break; }
     }
-  });
+  }
+
+  // Filter the Manual Transactions table to this bank only
+  if (typeof renderManualTransactions === "function") {
+    renderManualTransactions(bank.name);
+  }
 }
 
 
@@ -10724,7 +10734,7 @@ function clearTransferForm() {
 
   document.getElementById("transferAccountDropdown").value = "";
 
-  document.getElementById("transferDate").value = "";
+  document.getElementById("bankTransferDate").value = "";
 
   document.getElementById("transferRef").value = "";
 
@@ -10751,7 +10761,7 @@ function transferBetweenBanks() {
     document.getElementById("transferAccountDropdown").value;
 
   const date =
-    document.getElementById("transferDate").value;
+    document.getElementById("bankTransferDate").value;
 
   const reference =
     document.getElementById("transferRef").value.trim();
@@ -10996,7 +11006,7 @@ function editTransfer(id) {
   document.getElementById("transferAccountDropdown").value =
     tx.account;
 
-  document.getElementById("transferDate").value =
+  document.getElementById("bankTransferDate").value =
     tx.date;
 
   document.getElementById("transferRef").value =
@@ -17222,6 +17232,7 @@ if (customerIndex !== -1) {
     } else {
         invoices.push(invoiceData);
         updateCustomerReceivables(customer, convertedTotalKES);
+        postToCOA(account, convertedTotalKES, { date, ref: invoiceData.invoiceNumber, source: "Invoice" });
         showToast("✅ Invoice saved successfully!");
     }
 
@@ -17239,6 +17250,7 @@ if (customerIndex !== -1) {
     if (typeof renderPaymentsReceived === "function") renderPaymentsReceived();
 
     renderDebitControlPanel();
+    if (typeof renderAccounts === "function") renderAccounts();
   
     invoiceItems = [];
     invoiceNumberField.value = generateInvoiceNumber();
@@ -33269,6 +33281,8 @@ function addOperationalCost() {
       amount
     });
 
+    postToCOA(category, amount, { date, ref: `Operational Cost via ${method}`, source: "Operational Cost" });
+
     banks[bankIndex].balance -= amount;
         postJournal({
   date,
@@ -33324,6 +33338,7 @@ function addOperationalCost() {
   populateCostCategoryFromChartOfAccounts();
   updateExpensesCard();
   renderReports();
+  if (typeof renderAccounts === "function") renderAccounts();
   resetOperationalCostForm();
 }
 
@@ -35530,7 +35545,7 @@ function manageCOAFiles(){
   <div class="bg-white p-6 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-4">Add New Account</h3><div class="mb-4"><label for="accountName" class="block font-medium mb-1">Account Name</label><input id="accountName" type="text" placeholder="Account Name" class="border p-2 rounded" style="width: 700px;"/></div><div class="mb-4"><label for="accountCode" class="block font-medium mb-1">Account Code</label><input id="accountCode" type="text" placeholder="Account Code" class="border p-2 rounded" style="width: 700px;"/></div><div class="mb-4"><label for="accountType" class="block font-medium mb-1">Account Type</label><select id="accountType" class="border p-2 rounded" style="width: 700px;"><option value="">Select Type</option><optgroup label="ASSETS"></optgroup><option value="Asset">Asset</option><option value="Other Asset">Other Asset</option><option value="Other Current Asset">Other Current Asset</option><option value="Fixed Assets">Fixed Assets</option><option value="Stock">Stock</option><option value="Cash">Cash</option><option value="Banks">Banks</option><option value="Accounts Receivable">Accounts Receivable</option><option value="Investment Property">Investment Property</option><option value="Prepaid Expenses">Prepaid Expenses</option><option value="Inventory">Inventory</option><option value="Long Term Investments">Long Term Investments</option><option value="Short Term Investments">Short Term Investments</option><option value="Property Plant & Equipment">Property Plant & Equipment</option><option value="Intangible Assets">Intangible Assets</option><option value="Goodwill">Goodwill</option><option value="Deferred Tax Assets">Deferred Tax Assets</option><option value="Receivables">Receivables</option><option value="Securities">Securities</option><option value="Loans Receivable">Loans Receivable</option><option value="Marketable Securities">Marketable Securities</option><option value="Other Long Term Assets">Other Long Term Assets</option><option value="Work in Progress">Work in Progress</option><option value="Construction in Progress">Construction in Progress</option><option value="Deposits">Deposits</option><option value="Notes Receivable">Notes Receivable</option><option value="Employee Advances">Employee Advances</option><option value="Royalties Receivable">Royalties Receivable</option><option value="Rent Receivable">Rent Receivable</option><option value="Insurance Claims Receivable">Insurance Claims Receivable</option><option value="Patents">Patents</option><option value="Trademarks">Trademarks</option><option value="Copyrights">Copyrights</option><option value="Licenses">Licenses</option><option value="Franchise Rights">Franchise Rights</option><option value="Leasehold Improvements">Leasehold Improvements</option><option value="Accumulated Depreciation">Accumulated Depreciation</option><option value="Natural Resources">Natural Resources</option><option value="Oil & Gas Properties">Oil & Gas Properties</option><option value="Timberlands">Timberlands</option><option value="Water Rights">Water Rights</option><option value="Intellectual Property">Intellectual Property</option><option value="Software">Software</option><option value="Customer Lists">Customer Lists</option><option value="Brand Value">Brand Value</option><option value="Other Intangible Assets">Other Intangible Assets</option><option value="Prepaid Rent">Prepaid Rent</option><option value="Prepaid Insurance">Prepaid Insurance</option><option value="Prepaid Taxes">Prepaid Taxes</option><option value="Deferred Charges">Deferred Charges</option><optgroup label="LIABILITIES"></optgroup><option value="Liability">Liability</option><option value="Other Current Liability">Other Current Liability</option><option value="Accounts Payable">Accounts Payable</option><option value="Non Current Liability">Non Current Liability</option><option value="Other Liability">Other Liability</option><option value="Credit Card">Credit Card</option><option value="Bank Loan">Bank Loan</option><option value="Notes Payable">Notes Payable</option><option value="Accrued Expenses">Accrued Expenses</option><option value="Taxes Payable">Taxes Payable</option><option value="Employee Benefits Payable">Employee Benefits Payable</option><option value="Dividends Payable">Dividends Payable</option><option value="Interest Payable">Interest Payable</option><option value="Mortgage Payable">Mortgage Payable</option><option value="Unearned Revenue">Unearned Revenue</option><option value="Deferred Revenue">Deferred Revenue</option><option value="Short Term Loans">Short Term Loans</option><option value="Long Term Loans">Long Term Loans</option><option value="Lease Liability">Lease Liability</option><option value="Warranty Liability">Warranty Liability</option><option value="Provision for Contingencies">Provision for Contingencies</option><option value="Customer Deposits">Customer Deposits</option><option value="Payroll Liabilities">Payroll Liabilities</option><option value="Pension Liabilities">Pension Liabilities</option><option value="Social Security Payable">Social Security Payable</option><option value="Sales Tax Payable">Sales Tax Payable</option><option value="Value Added Tax Payable">Value Added Tax Payable</option><option value="Service Charges Payable">Service Charges Payable</option><option value="Dividends Payable to Shareholders">Dividends Payable to Shareholders</option><option value="Other Long Term Liabilities">Other Long Term Liabilities</option><optgroup label="EQUITY"></optgroup><option value="Equity">Equity</option><option value="Retained Earnings">Retained Earnings</option><option value="Owner Contribution">Owner Contribution</option><option value="Dividends">Dividends</option><option value="Common Stock">Common Stock</option><option value="Preferred Stock">Preferred Stock</option><option value="Additional Paid-In Capital">Additional Paid-In Capital</option><option value="Treasury Stock">Treasury Stock</option><option value="Capital Surplus">Capital Surplus</option><option value="Share Premium">Share Premium</option><option value="Partner’s Capital">Partner’s Capital</option><option value="Partner’s Drawings">Partner’s Drawings</option><option value="Accumulated Other Comprehensive Income">Accumulated Other Comprehensive Income</option><option value="Revaluation Surplus">Revaluation Surplus</option><option value="Owner’s Equity">Owner’s Equity</option><option value="Paid-In Capital">Paid-In Capital</option><option value="Contributed Capital">Contributed Capital</option><option value="Capital Reserve">Capital Reserve</option><option value="General Reserve">General Reserve</option><option value="Revenue Reserve">Revenue Reserve</option><option value="Statutory Reserve">Statutory Reserve</option><option value="Retained Surplus">Retained Surplus</option><option value="Undistributed Profits">Undistributed Profits</option><option value="Capital Accounts">Capital Accounts</option><option value="Owner’s Investment">Owner’s Investment</option><option value="Partner’s Equity">Partner’s Equity</option><option value="Shareholder’s Equity">Shareholder’s Equity</option><option value="Accumulated Earnings">Accumulated Earnings</option><option value="Other Equity">Other Equity</option><option value="Distributable Reserve">Distributable Reserve</option><optgroup label="INCOME"></optgroup><option value="Income">Income</option><option value="Sales">Sales</option><option value="Other Income">Other Income</option><option value="Interest Income">Interest Income</option><option value="Commission Income">Commission Income</option><option value="Service Revenue">Service Revenue</option><option value="Rental Income">Rental Income</option><option value="Dividend Income">Dividend Income</option><option value="Gain on Sale of Assets">Gain on Sale of Assets</option><option value="Consulting Income">Consulting Income</option><option value="Fee Income">Fee Income</option><option value="Royalty Income">Royalty Income</option><option value="Franchise Income">Franchise Income</option><option value="Subscription Income">Subscription Income</option><option value="Advertising Income">Advertising Income</option><option value="Membership Fees">Membership Fees</option><option value="Trading Income">Trading Income</option><option value="Foreign Exchange Gain">Foreign Exchange Gain</option><option value="Late Fees Income">Late Fees Income</option><option value="Insurance Recoveries">Insurance Recoveries</option><option value="Miscellaneous Income">Miscellaneous Income</option><option value="Grants Received">Grants Received</option><option value="Investment Property Income">Investment Property Income</option><option value="Rebate Income">Rebate Income</option><option value="Discount Received">Discount Received</option><option value="Project Income">Project Income</option><option value="Product Sales Online">Product Sales Online</option><option value="Donations Received">Donations Received</option><option value="Other Operating Income">Other Operating Income</option><option value="Non-Operating Income">Non-Operating Income</option><optgroup label="EXPENSES"></optgroup><option value="Expense">Expense</option><option value="Cost of Goods Sold">Cost of Goods Sold</option><option value="Other Expense">Other Expense</option><option value="Depreciation">Depreciation</option><option value="Personnel Costs">Personnel Costs</option><option value="Marketing Expense">Marketing Expense</option><option value="Finance Costs">Finance Costs</option><option value="Repairs & Maintenance">Repairs & Maintenance</option><option value="Insurance Costs">Insurance Costs</option><option value="Utilities Expense">Utilities Expense</option><option value="Rent Expense">Rent Expense</option><option value="Office Supplies">Office Supplies</option><option value="Travel Expense">Travel Expense</option><option value="Entertainment Expense">Entertainment Expense</option><option value="Training & Development">Training & Development</option><option value="IT & Software Expense">IT & Software Expense</option><option value="Telephone & Internet">Telephone & Internet</option><option value="Postage & Courier">Postage & Courier</option><option value="Professional Fees">Professional Fees</option><option value="Legal Fees">Legal Fees</option><option value="Audit Fees">Audit Fees</option><option value="Consulting Fees">Consulting Fees</option><option value="Bank Charges">Bank Charges</option><option value="Credit Card Charges">Credit Card Charges</option><option value="Bad Debts">Bad Debts</option><option value="Charity & Donations">Charity & Donations</option><option value="Research & Development">Research & Development</option><option value="Transportation Expense">Transportation Expense</option><option value="Fuel Expense">Fuel Expense</option><option value="Printing & Stationery">Printing & Stationery</option><option value="Recruitment Costs">Recruitment Costs</option><option value="Subscriptions & Memberships">Subscriptions & Memberships</option><option value="Licenses & Permits">Licenses & Permits</option><option value="Taxes & Levies">Taxes & Levies</option><option value="Property Taxes">Property Taxes</option><option value="Sales Tax Expense">Sales Tax Expense</option><option value="Customs & Duties">Customs & Duties</option><option value="Shipping & Freight">Shipping & Freight</option><option value="Packaging Costs">Packaging Costs</option><option value="Employee Benefits">Employee Benefits</option><option value="Pension Contributions">Pension Contributions</option><option value="Medical Benefits">Medical Benefits</option><option value="Bonus Expense">Bonus Expense</option><option value="Commission Expense">Commission Expense</option><option value="Overtime Expense">Overtime Expense</option><option value="Severance Expense">Severance Expense</option><option value="Uniforms & PPE">Uniforms & PPE</option><option value="Inventory Write-Off">Inventory Write-Off</option><option value="Obsolete Stock Expense">Obsolete Stock Expense</option><option value="Amortization Expense">Amortization Expense</option><option value="Software Subscriptions">Software Subscriptions</option><option value="Cloud Services">Cloud Services</option><option value="Hosting & Domain Fees">Hosting & Domain Fees</option><option value="Advertising & Promotions">Advertising & Promotions</option><option value="Social Media Marketing">Social Media Marketing</option><option value="Website Maintenance">Website Maintenance</option><option value="SEO & SEM Expenses">SEO & SEM Expenses</option><option value="Affiliate Marketing Expenses">Affiliate Marketing Expenses</option><option value="Customer Support Costs">Customer Support Costs</option><option value="Call Center Costs">Call Center Costs</option><option value="Training Materials">Training Materials</option><option value="Employee Welfare">Employee Welfare</option><option value="Catering & Refreshments">Catering & Refreshments</option><option value="Conference & Events">Conference & Events</option><option value="Travel Insurance">Travel Insurance</option><option value="Vehicle Maintenance">Vehicle Maintenance</option><option value="Fuel & Oil">Fuel & Oil</option><option value="Lease Payments">Lease Payments</option><option value="Equipment Rental">Equipment Rental</option><option value="Maintenance Contracts">Maintenance Contracts</option><option value="Cleaning & Janitorial">Cleaning & Janitorial</option><option value="Security Costs">Security Costs</option><option value="Waste Disposal">Waste Disposal</option><option value="Environmental Compliance">Environmental Compliance</option><option value="Health & Safety Compliance">Health & Safety Compliance</option><option value="Employee Travel Reimbursement">Employee Travel Reimbursement</option><option value="Client Entertainment">Client Entertainment</option><option value="Stakeholder Meetings">Stakeholder Meetings</option><option value="Foreign Exchange Loss">Foreign Exchange Loss</option><option value="Inventory Shrinkage">Inventory Shrinkage</option><option value="Trade Discounts Allowed">Trade Discounts Allowed</option><option value="Cash Shortages">Cash Shortages</option><option value="License Renewal Fees">License Renewal Fees</option><option value="Office Renovation Costs">Office Renovation Costs</option><option value="IT Hardware Purchase">IT Hardware Purchase</option><option value="Depreciation – Buildings">Depreciation – Buildings</option><option value="Depreciation – Equipment">Depreciation – Equipment</option><option value="Depreciation – Vehicles">Depreciation – Vehicles</option><option value="Depreciation – Furniture">Depreciation – Furniture</option><option value="Software Development Costs">Software Development Costs</option><option value="Research Grants Expense">Research Grants Expense</option><option value="Marketing Collateral Costs">Marketing Collateral Costs</option><option value="Printing & Design">Printing & Design</option><option value="Internal Audit Expenses">Internal Audit Expenses</option><option value="External Audit Fees">External Audit Fees</option><option value="Legal Settlements">Legal Settlements</option><option value="Fines & Penalties">Fines & Penalties</option><option value="Donations to NGOs">Donations to NGOs</option><option value="Training Fees">Training Fees</option><option value="Corporate Gifts">Corporate Gifts</option><option value="Employee Recognition Awards">Employee Recognition Awards</option><option value="Subscription Services">Subscription Services</option><option value="Communication Expenses">Communication Expenses</option><option value="Telecommunication Charges">Telecommunication Charges</option><option value="Postage Costs">Postage Costs</option><option value="Courier Charges">Courier Charges</option><option value="Miscellaneous Operating Expenses">Miscellaneous Operating Expenses</option><option value="Other Administrative Expenses">Other Administrative Expenses</option><option value="Non-Operating Expenses">Non-Operating Expenses</option><option value="Bank Service Charges">Bank Service Charges</option><option value="Credit Card Interest">Credit Card Interest</option><option value="Loan Interest Expense">Loan Interest Expense</option><option value="Investment Losses">Investment Losses</option><option value="Bad Debt Provision">Bad Debt Provision</option><option value="Operational Contingencies">Operational Contingencies</option><option value="Emergency Repairs">Emergency Repairs</option><option value="Inventory Handling Costs">Inventory Handling Costs</option><option value="Shipping & Delivery Costs">Shipping & Delivery Costs</option><option value="Freight Charges">Freight Charges</option><option value="Packaging Materials">Packaging Materials</option><option value="Courier & Logistics Fees">Courier & Logistics Fees</option><option value="Training & Certification">Training & Certification</option><option value="Employee Benefits Administration">Employee Benefits Administration</option><option value="Health & Safety Training">Health & Safety Training</option><option value="Environmental Training">Environmental Training</option><option value="Corporate Sponsorships">Corporate Sponsorships</option><option value="Employee Relocation Costs">Employee Relocation Costs</option><option value="Data Protection & Privacy Costs">Data Protection & Privacy Costs</option><option value="IT Security Costs">IT Security Costs</option><option value="Office Equipment Maintenance">Office Equipment Maintenance</option><option value="Software Licenses">Software Licenses</option><option value="Cloud Storage Costs">Cloud Storage Costs</option><option value="Third-Party Services">Third-Party Services</option><option value="Professional Membership Fees">Professional Membership Fees</option><option value="Other Non-Operating Expenses">Other Non-Operating Expenses</option><option value="Miscellaneous Corporate Expenses">Miscellaneous Corporate Expenses</option><optgroup label="TAXES"></optgroup><option value="Output Tax">Output Tax</option><option value="Input Tax">Input Tax</option><option value="Withholding Tax">Withholding Tax</option><option value="Tax Expense">Tax Expense</option><option value="VAT Payable">VAT Payable</option><option value="VAT Receivable">VAT Receivable</option><option value="Excise Duty">Excise Duty</option><option value="Customs Duty">Customs Duty</option><option value="PAYE">PAYE (Pay As You Earn)</option><option value="SHIF">SHIF (Social Health Insurance Fund)</option><option value="NSSF">NSSF (Social Security Fund)</option><option value="NITA">NITA (Industrial Training Levy)</option><option value="Housing Levy">Housing Levy</option><option value="Pension Contributions">Pension Contributions</option><option value="Corporate Tax">Corporate Tax</option><option value="Deferred Tax">Deferred Tax</option><option value="Other Statutory Deductions">Other Statutory Deductions</option><option value="Income Tax Payable">Income Tax Payable</option><option value="Capital Gains Tax">Capital Gains Tax</option><option value="Property Tax">Property Tax</option><option value="Service Tax">Service Tax</option><option value="Stamp Duty">Stamp Duty</option><option value="Fuel Tax">Fuel Tax</option><option value="Environmental Levy">Environmental Levy</option><option value="Luxury Tax">Luxury Tax</option><option value="Tourism Levy">Tourism Levy</option><option value="Payroll Tax">Payroll Tax</option><option value="Fringe Benefits Tax">Fringe Benefits Tax</option><option value="Withholding VAT">Withholding VAT</option><option value="Import Duty">Import Duty</option><option value="Export Duty">Export Duty</option><option value="Excise VAT">Excise VAT</option><option value="Social Security Tax">Social Security Tax</option><option value="Employee Health Contributions">Employee Health Contributions</option><option value="Employer Health Contributions">Employer Health Contributions</option><option value="Tax Penalties">Tax Penalties</option><option value="Tax Interest">Tax Interest</option><option value="Customs VAT">Customs VAT</option><option value="Environmental Tax">Environmental Tax</option><option value="Carbon Tax">Carbon Tax</option><option value="Green Levy">Green Levy</option><option value="Financial Transaction Tax">Financial Transaction Tax</option><option value="Bank Levy">Bank Levy</option><option value="Insurance Levy">Insurance Levy</option><option value="Import VAT">Import VAT</option><option value="Export VAT">Export VAT</option><option value="Excise Duty on Alcohol">Excise Duty on Alcohol</option><option value="Excise Duty on Tobacco">Excise Duty on Tobacco</option><option value="Excise Duty on Fuel">Excise Duty on Fuel</option><option value="Luxury Goods Tax">Luxury Goods Tax</option><option value="Entertainment Tax">Entertainment Tax</option><option value="Tourist Tax">Tourist Tax</option><option value="Education Levy">Education Levy</option><option value="Health Levy">Health Levy</option><option value="Technology Levy">Technology Levy</option><option value="Digital Services Tax">Digital Services Tax</option><option value="E-commerce VAT">E-commerce VAT</option><option value="Payroll Withholding Tax">Payroll Withholding Tax</option><option value="Dividends Withholding Tax">Dividends Withholding Tax</option><option value="Royalties Withholding Tax">Royalties Withholding Tax</option><option value="Interest Withholding Tax">Interest Withholding Tax</option><option value="Rent Withholding Tax">Rent Withholding Tax</option><option value="Professional Fees Tax">Professional Fees Tax</option><option value="Management Fees Tax">Management Fees Tax</option><option value="Service Charges Tax">Service Charges Tax</option><option value="Telecom Tax">Telecom Tax</option><option value="Fuel Excise Tax">Fuel Excise Tax</option><option value="Electricity Levy">Electricity Levy</option><option value="Water Levy">Water Levy</option><option value="Road Levy">Road Levy</option><option value="Transport Levy">Transport Levy</option><option value="Vehicle Tax">Vehicle Tax</option><option value="Registration Tax">Registration Tax</option><option value="Import Excise Duty">Import Excise Duty</option><option value="Export Excise Duty">Export Excise Duty</option><option value="Property Rates">Property Rates</option><option value="Land Tax">Land Tax</option><option value="Building Tax">Building Tax</option><option value="Business Permit Fee">Business Permit Fee</option><option value="Occupational Tax">Occupational Tax</option><option value="Franchise Tax">Franchise Tax</option><option value="Capital Tax">Capital Tax</option><option value="Net Wealth Tax">Net Wealth Tax</option><option value="Financial Services Tax">Financial Services Tax</option><option value="Transaction Tax">Transaction Tax</option><option value="Excise Duty on Vehicles">Excise Duty on Vehicles</option><option value="Excise Duty on Cigarettes">Excise Duty on Cigarettes</option><option value="Excise Duty on Spirits">Excise Duty on Spirits</option><option value="Import License Fee">Import License Fee</option><option value="Export License Fee">Export License Fee</option><option value="Local Service Tax">Local Service Tax</option><option value="Foreign Service Tax">Foreign Service Tax</option><option value="Environmental Protection Tax">Environmental Protection Tax</option><option value="Corporate Income Tax">Corporate Income Tax</option><option value="Personal Income Tax">Personal Income Tax</option><option value="Withholding Personal Tax">Withholding Personal Tax</option><option value="Investment Income Tax">Investment Income Tax</option><option value="Dividend Tax">Dividend Tax</option><option value="Interest Tax">Interest Tax</option><option value="Capital Gains Tax Payable">Capital Gains Tax Payable</option><option value="Other Tax Liabilities">Other Tax Liabilities</option><option value="Deferred Tax Liabilities">Deferred Tax Liabilities</option><option value="Tax Refund Receivable">Tax Refund Receivable</option><option value="Tax Penalty Charges">Tax Penalty Charges</option><option value="Tax Assessment Fees">Tax Assessment Fees</option><option value="VAT on Imports">VAT on Imports</option><option value="VAT on Exports">VAT on Exports</option><option value="Excise on Imports">Excise on Imports</option><option value="Excise on Exports">Excise on Exports</option><option value="Income Tax Receivable">Income Tax Receivable</option><option value="Payroll Taxes Payable">Payroll Taxes Payable</option><option value="Tax Provision">Tax Provision</option><option value="Other Government Levies">Other Government Levies</option><option value="Other Statutory Taxes">Other Statutory Taxes</option><option value="Local Taxes Payable">Local Taxes Payable</option><option value="Foreign Taxes Payable">Foreign Taxes Payable</option><option value="Indirect Taxes">Indirect Taxes</option><option value="Direct Taxes">Direct Taxes</option><option value="Sales Tax Payable">Sales Tax Payable</option><option value="Excise Tax Payable">Excise Tax Payable</option><option value="Income Tax Payable – Current Year">Income Tax Payable – Current Year</option><option value="Income Tax Payable – Prior Year">Income Tax Payable – Prior Year</option><option value="VAT Payable – Current Period">VAT Payable – Current Period</option><option value="VAT Payable – Prior Period">VAT Payable – Prior Period</option><option value="Corporate Withholding Tax">Corporate Withholding Tax</option><option value="Employee Withholding Tax">Employee Withholding Tax</option><option value="Other Withholding Taxes">Other Withholding Taxes</option><option value="Customs Tax Payable">Customs Tax Payable</option><option value="Excise Duty Payable">Excise Duty Payable</option><option value="Import VAT Payable">Import VAT Payable</option><option value="Export VAT Payable">Export VAT Payable</option><option value="Other Indirect Taxes">Other Indirect Taxes</option></select></div><div class="mb-4 flex gap-4"><div class="flex-1"><label for="parentAccountName" class="block font-medium mb-1">Parent Account Name</label><input id="parentAccountName" type="text" placeholder="Parent Account Name" class="border p-2 rounded" style="width: 700px;" /></div><div class="flex-1"><label for="parentAccountCode" class="block font-medium mb-1">Parent Account Code</label><input id="parentAccountCode" type="text" placeholder="Parent Account Code" class="border p-2 rounded" style="width: 700px;" /></div></div><div class="mb-4"><label for="accountAmount" class="block font-medium mb-1">Opening Balance (optional)</label><input id="accountAmount" type="number" placeholder="Opening Balance" class="border p-2 rounded" style="width: 700px;"/></div><button type="button" onclick="saveAccountDraft()"class="bg-gray-700 text-white px-1 py-1 rounded hover:bg-gray-600">Save as Draft</button><button id="addAccountBtn" onclick="addAccount()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Save Account </button></div><div class="flex justify-end gap-4 mb-6"><button onclick="exportAccountsJSON()" class="bg-blue-900 text-white font-semibold px-1 py-1 rounded hover:bg-blue-700 ">Export JSON</button><button onclick="exportAccountsCSV()" class="bg-blue-900 text-white font-semibold px-1 py-1 rounded hover:bg-blue-700 ">Export CSV</button><label for="importFile" class="bg-blue-900 text-white font-semibold px-1 py-1 rounded hover:bg-blue-700 cursor-pointer">Import Accounts</label><input id="importFile" type="file" accept=".json,.csv" class="hidden" onchange="importAccounts(event)" /></div><div class="bg-white p-1 rounded shadow"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold">
       Account List
     </h3><button onclick="bulkDeleteAccounts()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button></div><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2"><input type="checkbox"
-            onclick="toggleAllAccounts(this)"></th><th class="p-2">Name</th><th class="p-2">Code</th><th class="p-2">Type</th><th class="p-2">Parent Name</th><th class="p-2">Parent Code</th><th class="p-2 text-right">Opening Balance</th><th class="p-2">Actions</th></tr></thead><tbody id="accountsTable"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
+            onclick="toggleAllAccounts(this)"></th><th class="p-2">Name</th><th class="p-2">Code</th><th class="p-2">Type</th><th class="p-2">Parent Name</th><th class="p-2">Parent Code</th><th class="p-2 text-right">Opening Balance</th><th class="p-2 text-right">Current Balance</th><th class="p-2">Actions</th></tr></thead><tbody id="accountsTable"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
     Total Count: <span id="totalCount">0</span></div><div>
     Show
     <select id="itemsPerPageSelect" class="border rounded px-1"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select>
@@ -38723,7 +38738,36 @@ function searchCOA() {
     });
 }
 
+// ===== Chart of Accounts running-balance ledger =====
+function getCOAPostings() {
+  return JSON.parse(localStorage.getItem("coaPostings") || "[]");
+}
+function postToCOA(account, amount, meta) {
+  if (!account || !amount) return;
+  const postings = getCOAPostings();
+  postings.push({
+    account: String(account),
+    amount: Number(amount) || 0,
+    date: (meta && meta.date) || new Date().toISOString().slice(0, 10),
+    ref: (meta && meta.ref) || "",
+    source: (meta && meta.source) || ""
+  });
+  localStorage.setItem("coaPostings", JSON.stringify(postings));
+}
+function getCOACurrentBalance(acc) {
+  const opening = parseFloat(acc.amount) || 0;
+  const postings = getCOAPostings();
+  const movement = postings.reduce((sum, p) => {
+    if (p.account === acc.name || p.account === acc.code) {
+      return sum + (parseFloat(p.amount) || 0);
+    }
+    return sum;
+  }, 0);
+  return opening + movement;
+}
+
 function addAccount() {
+
   const name = document.getElementById("accountName").value.trim();
   const code = document.getElementById("accountCode").value.trim();
   const type = document.getElementById("accountType").value;
@@ -38817,6 +38861,11 @@ function renderAccounts() {
       <td class="p-2 text-right">
         ${(acc.amount || 0).toFixed(2)}
       </td>
+
+      <td class="p-2 text-right font-semibold">
+        ${getCOACurrentBalance(acc).toFixed(2)}
+      </td>
+
 
      <td class="p-2 relative">
 
@@ -62408,26 +62457,224 @@ function renderWriteOffReport() {
 
 }
 
-function showReport(panelId) {
+function toggleAuditTrailGroupByDropdown() { toggleReportDropdown("auditTrailGroupByDropdown"); }
+function toggleAuditTrailShowByDropdown() { toggleReportDropdown("auditTrailShowByDropdown"); }
+function toggleAuditTrailColumnCustomizer() { toggleReportDropdown("auditTrailColumnCustomizer"); }
+function toggleAuditTrailSettingsDropdown() { toggleReportDropdown("auditTrailSettingsDropdown"); }
+function toggleUserActivityGroupByDropdown() { toggleReportDropdown("userActivityGroupByDropdown"); }
+function toggleUserActivityShowByDropdown() { toggleReportDropdown("userActivityShowByDropdown"); }
+function toggleUserActivityColumnCustomizer() { toggleReportDropdown("userActivityColumnCustomizer"); }
+function toggleUserActivitySettingsDropdown() { toggleReportDropdown("userActivitySettingsDropdown"); }
+
+function toggleReportDropdown(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle("hidden");
+}
+
+function getStoredArray(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(value) ? value : [];
+  } catch (e) {
+    console.warn("Could not read " + key, e);
+    return [];
+  }
+}
+
+function reportValueMatches(value, search) {
+  return String(value || "").toLowerCase().includes(String(search || "").toLowerCase());
+}
+
+function renderAuditTrailReport() {
+  const tbody = document.getElementById("auditTrailBody");
+  if (!tbody) return;
+
+  const startDate = document.getElementById("auditTrailStart")?.value || "";
+  const endDate = document.getElementById("auditTrailEnd")?.value || "";
+  const search = (
+    document.getElementById("auditTrailUserSearch")?.value ||
+    document.getElementById("auditTrailUserFilter")?.value ||
+    ""
+  ).toLowerCase().trim();
+
+  let logs = getStoredArray("auditLogs").map(log => {
+    const data = log.data || {};
+    const user = log.user || log.employee || log.username || data.user || data.employee || data.username || "System";
+    const action = log.action || data.action || "Updated";
+    const moduleName = log.module || data.module || data.type || "General";
+    const reference = log.reference || log.ref || data.reference || data.ref || data.invoiceNumber || data.billNumber || data.id || log.id || "-";
+    const date = log.date || log.dateTime || log.createdAt || data.date || new Date().toISOString();
+    return { date, user, action, moduleName, reference };
+  });
+
+  if (startDate) logs = logs.filter(log => String(log.date).substring(0, 10) >= startDate);
+  if (endDate) logs = logs.filter(log => String(log.date).substring(0, 10) <= endDate);
+  if (search) {
+    logs = logs.filter(log =>
+      reportValueMatches(log.user, search) ||
+      reportValueMatches(log.action, search) ||
+      reportValueMatches(log.moduleName, search) ||
+      reportValueMatches(log.reference, search)
+    );
+  }
+
+  if (!logs.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-gray-500">No audit trail records found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = logs.map(log => `
+    <tr class="border-b hover:bg-gray-50">
+      <td class="p-2">${new Date(log.date).toLocaleString()}</td>
+      <td class="p-2">${log.user}</td>
+      <td class="p-2">${log.action}</td>
+      <td class="p-2">${log.moduleName}</td>
+      <td class="p-2">${log.reference}</td>
+    </tr>
+  `).join("");
+}
+
+function applyAuditTrailFilter() { renderAuditTrailReport(); }
+function clearAuditTrailFilter() {
+  ["auditTrailStart", "auditTrailEnd", "auditTrailUserSearch", "auditTrailUserFilter"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  renderAuditTrailReport();
+}
+
+function renderUserActivityReport() {
+  const tbody = document.getElementById("userActivityBody");
+  if (!tbody) return;
+
+  const startDate = document.getElementById("userActivityStart")?.value || "";
+  const endDate = document.getElementById("userActivityEnd")?.value || "";
+  const search = (
+    document.getElementById("userSearch")?.value ||
+    document.getElementById("userActivityUserFilter")?.value ||
+    ""
+  ).toLowerCase().trim();
+
+  let rows = getStoredArray("userActivities").map(item => {
+    const user = item.employee || item.fullName || item.username || item.user || "System";
+    const login = item.loginTime || item.dateTime || item.date || "";
+    const logout = item.logoutTime || item.logout || "-";
+    const ip = item.ipAddress || item.ip || item.deviceIp || "-";
+    const action = [item.action, item.module, item.description].filter(Boolean).join(" - ") || "Activity recorded";
+    return { user, login, logout, ip, action };
+  });
+
+  if (startDate) rows = rows.filter(row => String(row.login).substring(0, 10) >= startDate);
+  if (endDate) rows = rows.filter(row => String(row.login).substring(0, 10) <= endDate);
+  if (search) {
+    rows = rows.filter(row =>
+      reportValueMatches(row.user, search) ||
+      reportValueMatches(row.ip, search) ||
+      reportValueMatches(row.action, search)
+    );
+  }
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-gray-500">No activity yet</td></tr>';
+  } else {
+    tbody.innerHTML = rows.map(row => `
+      <tr class="border-b hover:bg-gray-50">
+        <td class="p-2">${row.user}</td>
+        <td class="p-2">${row.login ? new Date(row.login).toLocaleString() : "-"}</td>
+        <td class="p-2">${row.logout && row.logout !== "-" ? new Date(row.logout).toLocaleString() : "-"}</td>
+        <td class="p-2">${row.ip}</td>
+        <td class="p-2">${row.action}</td>
+      </tr>
+    `).join("");
+  }
+
+  const canvas = document.getElementById("userActivityChart");
+  if (canvas && typeof Chart !== "undefined") {
+    const counts = rows.reduce((acc, row) => {
+      acc[row.user] = (acc[row.user] || 0) + 1;
+      return acc;
+    }, {});
+    if (window.userActivityReportChartInstance) window.userActivityReportChartInstance.destroy();
+    window.userActivityReportChartInstance = new Chart(canvas.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: Object.keys(counts).length ? Object.keys(counts) : ["No activity"],
+        datasets: [{ label: "Activities", data: Object.values(counts).length ? Object.values(counts) : [0] }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+  }
+}
+
+function filterUserActivity() { renderUserActivityReport(); }
+function applyUserActivityFilter() { renderUserActivityReport(); }
+function clearUserActivityFilter() {
+  ["userActivityStart", "userActivityEnd", "userSearch", "userActivityUserFilter"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  renderUserActivityReport();
+}
+
+function showReport(panelId, element) {
 
   document.querySelectorAll(".report-view")
     .forEach(r => r.classList.add("hidden"));
 
+  document.querySelectorAll(".reports-sidebar li")
+    .forEach(li => li.classList.remove("active"));
+
+  if (element) element.classList.add("active");
+
   const panel = document.getElementById(panelId);
 
-  if (panel) panel.classList.remove("hidden");
+  if (!panel) {
+    console.warn("Report panel not found:", panelId);
+    return;
+  }
 
-  if (panelId === "writeOffReportPanel") {
+  panel.classList.remove("hidden");
+
+  const row = document.getElementById(panelId + "Row");
+  if (row) {
+    const cell = row.querySelector(".last-visited");
+    if (cell) {
+      cell.textContent = new Date().toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+  }
+
+  if (panelId === "writeOffReportPanel" && typeof renderWriteOffReport === "function") {
     renderWriteOffReport();
   }
 
-  // Auto-render report content when a report panel is opened
+  // Auto-render report content when a report panel is opened from the sidebar.
   var reportRenderers = {
     profitMarginPanel: "renderProfitMargin",
     purchaseByItemReport: "renderPurchaseByItem",
     purchaseByVendorPanel: "renderPurchaseByVendor",
-    currencyGainLossPanel: "renderCurrencyGainLoss"
+    currencyGainLossPanel: "renderCurrencyGainLoss",
+    auditTrailPanel: "renderAuditTrailReport",
+    userActivityPanel: "renderUserActivityReport",
+    kpiDashboardPanel: "renderKpiDashboard",
+    businessHealthPanel: "loadBusinessHealthDashboard",
+    profitTrendPanel: "renderProfitTrend",
+    revenueVsExpensesPanel: "renderRevenueVsExpenses",
+    cashflowForecastPanel: "renderCashflow",
+    projectExpensesPanel: "renderProjectExpenses",
+    projectRevenuePanel: "renderProjectRevenue",
+    projectBudgetVariancePanel: "renderProjectBudgetVariance",
+    projectTimelinePanel: "renderProjectTimeline",
+    batchTrackingPanel: "renderBatchTracking",
+    damagedStockPanel: "renderDamagedStock",
+    expiredItemsPanel: "renderExpiredItems"
   };
+
   var fnName = reportRenderers[panelId];
   if (fnName && typeof window[fnName] === "function") {
     try { window[fnName](); } catch (e) { console.error(fnName + " failed:", e); }
@@ -76475,6 +76722,341 @@ function toggleSubmenu(id) {
   } else { pin(); }
   // Re-pin after any tab switch in case scripts re-render
   window.addEventListener('load', pin);
+})();
+</script>
+<script>
+/* ============================================================
+   Acacia Books — Report Fix Pack (v5)
+   Overrides broken/missing report renderers with real-data versions.
+   Drop-in: this is the LAST script in the document, so its function
+   declarations win over any earlier definitions.
+   ============================================================ */
+(function(){
+  "use strict";
+
+  const KES = v => "KES " + Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+  const get = (k, fb) => { try { return JSON.parse(localStorage.getItem(k) || fb); } catch(e){ return JSON.parse(fb); } };
+  const arr = k => { const v = get(k,"[]"); return Array.isArray(v) ? v : []; };
+  const obj = k => { const v = get(k,"{}"); return (v && typeof v==="object" && !Array.isArray(v)) ? v : {}; };
+  const monthKey = d => { const x = new Date(d); return isNaN(x) ? null : x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0"); };
+  const last12 = () => {
+    const labels = [], now = new Date();
+    for (let i=11;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth()-i,1); labels.push(d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")); }
+    return labels;
+  };
+  const labelPretty = k => { const [y,m]=k.split("-"); return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m,10)-1]+" "+y.slice(2); };
+
+  // ---- Source aggregators -------------------------------------------------
+  function invoiceTotal(inv){
+    if (inv.total != null) return num(inv.total);
+    if (inv.grandTotal != null) return num(inv.grandTotal);
+    if (inv.amount != null) return num(inv.amount);
+    if (Array.isArray(inv.items)) return inv.items.reduce((s,it)=>s+num(it.total||it.amount||(num(it.qty)*num(it.price))),0);
+    return 0;
+  }
+  function invoicePaid(inv){
+    if (inv.paid != null) return num(inv.paid);
+    if (inv.amountPaid != null) return num(inv.amountPaid);
+    if (Array.isArray(inv.payments)) return inv.payments.reduce((s,p)=>s+num(p.amount),0);
+    if (inv.status && /paid/i.test(inv.status) && !/unpaid|partial/i.test(inv.status)) return invoiceTotal(inv);
+    return 0;
+  }
+  function invoiceDate(inv){ return inv.date || inv.invoiceDate || inv.issueDate || inv.createdAt || ""; }
+
+  function monthlyRevenue(){
+    const map = {};
+    arr("invoices").forEach(inv => {
+      const k = monthKey(invoiceDate(inv)); if(!k) return;
+      map[k] = (map[k]||0) + invoiceTotal(inv);
+    });
+    return map;
+  }
+  function monthlyExpenses(){
+    const map = {};
+    const add = (d,v) => { const k=monthKey(d); if(!k) return; map[k]=(map[k]||0)+num(v); };
+    arr("bills").forEach(b => add(b.date||b.billDate, b.total||b.amount||b.grandTotal));
+    arr("supplierBills").forEach(b => add(b.date||b.billDate, b.total||b.amount||b.grandTotal));
+    arr("operationalCosts").forEach(o => add(o.date, o.amount||o.total||o.value));
+    arr("payrollRecords").forEach(p => add(p.date||p.payDate||p.month, p.netPay||p.net||p.amount||p.total));
+    arr("taxPayments").forEach(t => add(t.date, t.amount));
+    return map;
+  }
+
+  // ---- 1. FIXED ASSET REGISTER (was MISSING) ------------------------------
+  window.renderFixedAssetsReport = function(){
+    const tbody = document.getElementById("fixedAssetsRegisterBody");
+    if (!tbody) return;
+    const bs = obj("balanceSheet");
+    let assets = Array.isArray(bs.nonCurrentAssets) ? bs.nonCurrentAssets : [];
+    const backup = arr("nonCurrentAssetsBackup");
+    if (assets.length === 0 && backup.length) assets = backup;
+
+    const groupBy = document.getElementById("fixedAssetsGroupBy")?.value || "";
+    const deptFilter = (document.getElementById("fixedAssetsDepartmentFilter")?.value||"").toLowerCase().trim();
+    const showBy = document.getElementById("fixedAssetsShowBy")?.value || "detailed";
+
+    let rows = assets.map(a => {
+      const cost = num(a.cost||a.purchaseCost||a.amount||a.value);
+      const acc  = num(a.accumulatedDepreciation||a.depreciation||a.accDep);
+      const nbv  = a.netBookValue!=null ? num(a.netBookValue) : (cost - acc);
+      return {
+        name: a.name||a.assetName||a.description||"-",
+        code: a.code||a.assetCode||a.id||"-",
+        department: a.department||a.dept||"-",
+        purchaseDate: a.purchaseDate||a.date||a.acquiredDate||"-",
+        cost, acc, nbv
+      };
+    });
+
+    if (deptFilter) rows = rows.filter(r => String(r.department).toLowerCase().includes(deptFilter));
+    if (groupBy === "department") rows.sort((a,b)=>String(a.department).localeCompare(String(b.department)));
+    else if (groupBy === "purchase_date") rows.sort((a,b)=>String(a.purchaseDate).localeCompare(String(b.purchaseDate)));
+    else if (groupBy === "asset_name") rows.sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+
+    if (rows.length === 0){
+      tbody.innerHTML = `<tr><td colspan="7" class="p-3 text-center text-gray-500">No fixed assets recorded yet. Add them under Balance Sheet → Non-Current Assets.</td></tr>`;
+      return;
+    }
+
+    if (showBy === "summary"){
+      const groups = {};
+      rows.forEach(r => {
+        const g = r.department || "Unassigned";
+        if (!groups[g]) groups[g] = { count:0, cost:0, acc:0, nbv:0 };
+        groups[g].count++; groups[g].cost+=r.cost; groups[g].acc+=r.acc; groups[g].nbv+=r.nbv;
+      });
+      tbody.innerHTML = Object.entries(groups).map(([g,s])=>`
+        <tr><td class="p-2">${g} (${s.count})</td><td class="p-2">—</td><td class="p-2">${g}</td><td class="p-2">—</td>
+        <td class="p-2 text-right">${KES(s.cost)}</td><td class="p-2 text-right">${KES(s.acc)}</td><td class="p-2 text-right font-semibold">${KES(s.nbv)}</td></tr>
+      `).join("");
+    } else {
+      tbody.innerHTML = rows.map(r=>`
+        <tr><td class="p-2">${r.name}</td><td class="p-2">${r.code}</td><td class="p-2">${r.department}</td>
+        <td class="p-2">${r.purchaseDate}</td>
+        <td class="p-2 text-right">${KES(r.cost)}</td><td class="p-2 text-right">${KES(r.acc)}</td>
+        <td class="p-2 text-right font-semibold">${KES(r.nbv)}</td></tr>
+      `).join("");
+    }
+
+    const totals = rows.reduce((s,r)=>({cost:s.cost+r.cost,acc:s.acc+r.acc,nbv:s.nbv+r.nbv}),{cost:0,acc:0,nbv:0});
+    tbody.innerHTML += `<tr class="bg-gray-100 font-bold"><td class="p-2" colspan="4">TOTAL</td>
+      <td class="p-2 text-right">${KES(totals.cost)}</td><td class="p-2 text-right">${KES(totals.acc)}</td>
+      <td class="p-2 text-right">${KES(totals.nbv)}</td></tr>`;
+  };
+
+  // ---- 2. WRITE-OFF REPORT (was invoices-only) ----------------------------
+  window.renderWriteOffReport = function(){
+    const custBody = document.getElementById("customerWriteOffTable");
+    const suppBody = document.getElementById("supplierWriteOffTable");
+    if (!custBody && !suppBody) return;
+
+    const month = document.getElementById("writeOffMonth")?.value || "";
+    const start = document.getElementById("writeOffStart")?.value || "";
+    const end   = document.getElementById("writeOffEnd")?.value || "";
+    const basis = document.getElementById("writeOffBasis")?.value || "accrual";
+    const custFilter = (document.getElementById("writeOffCustomerFilter")?.value||"").toLowerCase().trim();
+    const suppFilter = (document.getElementById("writeOffSupplierFilter")?.value||"").toLowerCase().trim();
+
+    const inRange = d => {
+      d = d || "";
+      if (month && !d.startsWith(month)) return false;
+      if (start && d < start) return false;
+      if (end && d > end) return false;
+      return true;
+    };
+
+    // Customer side: invoices with writeOffAmount OR unpaid balances flagged written-off
+    const invoices = arr("invoices");
+    let custRows = [];
+    invoices.forEach(inv => {
+      const date = invoiceDate(inv);
+      if (!inRange(date)) return;
+      const wo = num(inv.writeOffAmount);
+      const unpaid = invoiceTotal(inv) - invoicePaid(inv);
+      let amount = wo;
+      let reason = inv.writeOffReason || "";
+      if (!amount && /written.?off|bad.?debt/i.test(String(inv.status||""))) { amount = unpaid; reason = reason || "Written off"; }
+      if (amount <= 0) return;
+      const customer = inv.customer || inv.customerName || inv.client || "-";
+      if (custFilter && !String(customer).toLowerCase().includes(custFilter)) return;
+      custRows.push({ date, ref: inv.invoiceNumber||inv.number||inv.id||"-", party: customer, amount, reason: reason||"-" });
+    });
+
+    // Also pick up explicit writeOffs log entries (customer-side)
+    arr("writeOffs").forEach(w => {
+      if (!inRange(w.date)) return;
+      if (w.supplier) return;
+      const amount = num(w.amount);
+      if (amount <= 0) return;
+      const customer = w.customer || "-";
+      if (custFilter && !String(customer).toLowerCase().includes(custFilter)) return;
+      custRows.push({ date: w.date||"", ref: w.invoiceNumber||w.id||"-", party: customer, amount, reason: w.reason||"Logged write-off" });
+    });
+
+    // Supplier side: bills with writeOffAmount OR written-off status
+    const billSources = arr("bills").concat(arr("supplierBills"));
+    let suppRows = [];
+    billSources.forEach(b => {
+      const date = b.date || b.billDate || "";
+      if (!inRange(date)) return;
+      const wo = num(b.writeOffAmount);
+      const billTotal = num(b.total||b.amount||b.grandTotal);
+      const billPaid = num(b.paid||b.amountPaid||0);
+      const unpaid = billTotal - billPaid;
+      let amount = wo;
+      let reason = b.writeOffReason || "";
+      if (!amount && /written.?off|bad.?debt/i.test(String(b.status||""))) { amount = unpaid; reason = reason || "Written off"; }
+      if (amount <= 0) return;
+      const supplier = b.supplier || b.supplierName || b.vendor || "-";
+      if (suppFilter && !String(supplier).toLowerCase().includes(suppFilter)) return;
+      suppRows.push({ date, ref: b.billNumber||b.number||b.id||"-", party: supplier, amount, reason: reason||"-" });
+    });
+
+    const render = (tbody, rows, partyLabel) => {
+      if (!tbody) return;
+      if (rows.length === 0){
+        tbody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-gray-500">No ${partyLabel} write-offs in range.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = rows.map(r=>`
+        <tr><td class="border px-2 py-1">${r.date||"-"}</td>
+        <td class="border px-2 py-1">${r.ref}</td>
+        <td class="border px-2 py-1">${r.party}</td>
+        <td class="border px-2 py-1 text-right">${KES(r.amount)}</td>
+        <td class="border px-2 py-1">${r.reason}</td></tr>
+      `).join("") + `<tr class="bg-gray-100 font-bold">
+        <td class="border px-2 py-1" colspan="3">TOTAL</td>
+        <td class="border px-2 py-1 text-right">${KES(rows.reduce((s,r)=>s+r.amount,0))}</td>
+        <td class="border px-2 py-1"></td></tr>`;
+    };
+    render(custBody, custRows, "customer");
+    render(suppBody, suppRows, "supplier");
+    void basis; // basis hook retained for future cash/accrual filtering
+  };
+
+  // ---- 3. PROFIT TREND (was hardcoded fake data) --------------------------
+  window.renderProfitTrend = function(){
+    const canvas = document.getElementById("profitTrendChart");
+    if (!canvas || typeof Chart === "undefined") return;
+    const rev = monthlyRevenue(), exp = monthlyExpenses();
+    const months = last12();
+    const revenue = months.map(m => rev[m]||0);
+    const expenses = months.map(m => exp[m]||0);
+    const net = revenue.map((r,i)=>r-expenses[i]);
+    if (window.profitTrendChartInstance) window.profitTrendChartInstance.destroy();
+    window.profitTrendChartInstance = new Chart(canvas.getContext("2d"), {
+      type:"line",
+      data:{ labels: months.map(labelPretty), datasets:[
+        { label:"Revenue",    data:revenue,  borderColor:"#22c55e", backgroundColor:"rgba(34,197,94,.15)", tension:.3, fill:true },
+        { label:"Expenses",   data:expenses, borderColor:"#ef4444", backgroundColor:"rgba(239,68,68,.15)", tension:.3, fill:true },
+        { label:"Net Profit", data:net,      borderColor:"#3b82f6", backgroundColor:"rgba(59,130,246,.15)", tension:.3, fill:false, borderWidth:3 }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ tooltip:{ callbacks:{ label:c=>c.dataset.label+": "+KES(c.raw) }}},
+        scales:{ y:{ ticks:{ callback:v=>KES(v).replace("KES ","") }}}
+      }
+    });
+  };
+
+  // ---- 4. REVENUE VS EXPENSES (was hardcoded fake data) -------------------
+  window.renderRevenueVsExpenses = function(){
+    const canvas = document.getElementById("revenueVsExpensesChart");
+    if (!canvas || typeof Chart === "undefined") return;
+    const rev = monthlyRevenue(), exp = monthlyExpenses();
+    const months = last12();
+    const revenue = months.map(m => rev[m]||0);
+    const expenses = months.map(m => exp[m]||0);
+    if (window.revExpChartInstance) window.revExpChartInstance.destroy();
+    window.revExpChartInstance = new Chart(canvas.getContext("2d"), {
+      type:"bar",
+      data:{ labels: months.map(labelPretty), datasets:[
+        { label:"Revenue",  data:revenue,  backgroundColor:"#22c55e" },
+        { label:"Expenses", data:expenses, backgroundColor:"#ef4444" }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ tooltip:{ callbacks:{ label:c=>c.dataset.label+": "+KES(c.raw) }}},
+        scales:{ y:{ ticks:{ callback:v=>KES(v).replace("KES ","") }}}
+      }
+    });
+  };
+
+  // ---- 5. CASHFLOW FORECAST (was scraping unrendered DOM) -----------------
+  window.renderCashflow = function(){
+    const pnl = obj("profitAndLoss");
+    const pnl2 = obj("profitLossData");
+    const P = Object.keys(pnl).length ? pnl : pnl2;
+
+    // Pull profit components, falling back to derivation from invoices/bills
+    let netProfit = num(P.netProfit ?? P.profit ?? P.netIncome);
+    let depreciation = num(P.depreciation);
+    let interestPaid = num(P.interest ?? P.interestPaid);
+    let currencyAdjustment = num(P.currencyAdjustment ?? P.fxAdjustment);
+
+    if (!netProfit){
+      const revT = Object.values(monthlyRevenue()).reduce((s,v)=>s+v,0);
+      const expT = Object.values(monthlyExpenses()).reduce((s,v)=>s+v,0);
+      netProfit = revT - expT;
+    }
+
+    const bs = obj("balanceSheet");
+    const nca = Array.isArray(bs.nonCurrentAssets) ? bs.nonCurrentAssets : [];
+    const banks = arr("banks");
+    const bills = arr("bills");
+    const manualTx = arr("manualTransactions");
+
+    const operationalCosts = arr("operationalCosts").reduce((s,o)=>s+num(o.amount||o.total||o.value),0);
+    const totalPayroll = arr("payrollRecords").reduce((s,p)=>s+num(p.netPay||p.net||p.amount||p.total),0);
+    const totalTaxes = arr("taxPayments").reduce((s,t)=>s+num(t.amount),0);
+
+    const cashFromOperations = netProfit + depreciation + currencyAdjustment
+      - operationalCosts - totalPayroll - interestPaid - totalTaxes;
+
+    const assetPurchase = nca.reduce((s,a)=>s+num(a.newPurchase||a.purchasedThisPeriod),0);
+    const assetSale = nca.reduce((s,a)=>s+num(a.saleValue||a.disposalValue),0);
+    const investingTotal = assetSale - assetPurchase;
+
+    const ownersContribution = manualTx.reduce((s,t)=> (t.type==="Owner Contribution"&&t.source==="bank") ? s+num(t.amount) : s, 0);
+    const loanProceeds = bills.reduce((s,b)=>s+num(b.loanReceived),0);
+    const loanRepayments = bills.reduce((s,b)=>s+num(b.loanRepaid),0);
+    const financingTotal = (ownersContribution+loanProceeds) - loanRepayments;
+
+    const netChange = cashFromOperations + investingTotal + financingTotal;
+    const currentBank = banks.reduce((s,b)=>s+num(b.balance),0);
+    const excludedInflows = manualTx.reduce((s,t)=>(t.type==="Owner Contribution"||t.type==="Other Income")?s+num(t.amount):s,0);
+    const openingCash = currentBank - excludedInflows - netChange; // working backwards
+    const closingCash = openingCash + netChange;
+
+    const setVal = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=KES(v); };
+    setVal("cfOperatingTotal", cashFromOperations);
+    setVal("cfInvestingTotal", investingTotal);
+    setVal("cfFinancingTotal", financingTotal);
+    setVal("cfNetChange", netChange);
+    setVal("cfOpeningCash", openingCash);
+    setVal("cfClosingCash", closingCash);
+
+    if (typeof window.renderCashflowChart === "function"){
+      window.renderCashflowChart(cashFromOperations, investingTotal, financingTotal, netChange);
+    }
+  };
+
+  // ---- Re-render whichever panel is currently visible after fix loads -----
+  function refreshActive(){
+    const tryRun = (id, fn) => { const el=document.getElementById(id); if(el && !el.classList.contains("hidden")) try{fn();}catch(e){console.warn(id,e);} };
+    tryRun("fixedAssetsRegisterPanel", renderFixedAssetsReport);
+    tryRun("writeOffReportPanel",      renderWriteOffReport);
+    tryRun("profitTrendPanel",         renderProfitTrend);
+    tryRun("revenueVsExpensesPanel",   renderRevenueVsExpenses);
+    tryRun("cashflowForecastPanel",    renderCashflow);
+  }
+  if (document.readyState === "complete" || document.readyState === "interactive") {
+    setTimeout(refreshActive, 50);
+  } else {
+    document.addEventListener("DOMContentLoaded", () => setTimeout(refreshActive, 50));
+  }
+  window.addEventListener("load", () => setTimeout(refreshActive, 200));
+
+  console.log("%c[Acacia] Report Fix Pack v5 loaded","color:#16a34a;font-weight:bold");
 })();
 </script>
 </body></html>
