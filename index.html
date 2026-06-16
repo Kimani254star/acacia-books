@@ -4514,84 +4514,7 @@ function previewInventoryItem(index) {
           }
         </style>
       </head><body><div class="top-buttons"><button onclick="window.print()">Download PDF</button><button onclick="window.close()">Close</button></div><h2>Inventory Item Preview</h2><table><tr><th>Warehouse</th><td>${warehouse}</td></tr><tr><th>Item Name</th><td>${item.name || '-'}</td></tr><tr><th>SKU</th><td>${item.sku || '-'}</td></tr><tr><th>Quantity</th><td>${item.qty || 0}</td></tr><tr><th>Buying Price</th><td>${money(item.buyPrice || 0)}</td></tr><tr><th>Selling Price</th><td>${money(item.sellPrice || 0)}</td></tr><tr><th>Buy VAT</th><td>${item.buyVat || '-'}</td></tr><tr><th>Sell VAT</th><td>${item.sellVat || '-'}</td></tr><tr><th>Buying Account</th><td>${item.buyingAccount || '-'}</td></tr><tr><th>Selling Account</th><td>${item.sellingAccount || '-'}</td></tr><tr><th>Description</th><td>${item.sellDescription || '-'}</td></tr><tr><th>Status</th><td>${item.active ? 'Active' : 'Inactive'}</td></tr></table><a id="__acaciaDl" href="/index_source.html" download="index_fixed.html" title="Download the current HTML source">⬇ Download Source</a>
-<style id="rep-cat-styles">
-.reports-sidebar-list{list-style:none;padding:0;margin:0;font-size:13px}
-.reports-sidebar-list .rep-cat-header{cursor:pointer;padding:6px 8px;font-weight:700;color:#0f172a;background:#f1f5f9;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:4px}
-.reports-sidebar-list .rep-cat-header:hover{background:#e2e8f0}
-.reports-sidebar-list .rep-cat-header.rep-fav{background:#fef3c7;color:#92400e}
-.reports-sidebar-list .rep-cat-header.open .rep-cat-caret{transform:rotate(90deg)}
-.reports-sidebar-list .rep-cat-caret{display:inline-block;transition:transform .15s;font-size:10px;color:#64748b}
-.reports-sidebar-list .rep-cat-count{margin-left:auto;font-size:10px;color:#64748b;font-weight:500}
-.reports-sidebar-list .rep-cat-children{list-style:none;padding:0;margin:0;background:#fff}
-.reports-sidebar-list .rep-cat-children li{padding:5px 8px 5px 24px;cursor:pointer;border-bottom:1px solid #f1f5f9;color:#334155}
-.reports-sidebar-list .rep-cat-children li:hover{background:#eff6ff;color:#1e3a8a}
-.reports-sidebar-list .rep-cat-children li.active{background:#dbeafe;color:#1e3a8a;font-weight:600}
-</style>
-<script id="rep-cat-script">
-(function(){
-  function persistKey(){return 'reportCatsOpen_v1'}
-  function getOpenSet(){try{return new Set(JSON.parse(localStorage.getItem(persistKey())||'[]'))}catch(e){return new Set()}}
-  function saveOpenSet(s){try{localStorage.setItem(persistKey(),JSON.stringify(Array.from(s)))}catch(e){}}
-  window.toggleReportCat = function(el){
-    var cat = el.getAttribute('data-cat');
-    var kids = document.querySelector('.rep-cat-children[data-cat="'+cat+'"]');
-    if(!kids) return;
-    var isOpen = kids.style.display !== 'none';
-    kids.style.display = isOpen ? 'none' : 'block';
-    el.classList.toggle('open', !isOpen);
-    var s = getOpenSet();
-    if(isOpen) s.delete(cat); else s.add(cat);
-    saveOpenSet(s);
-  };
-  // restore on load
-  document.addEventListener('DOMContentLoaded', function(){
-    var s = getOpenSet();
-    s.forEach(function(cat){
-      var h = document.querySelector('.rep-cat-header[data-cat="'+cat+'"]');
-      var k = document.querySelector('.rep-cat-children[data-cat="'+cat+'"]');
-      if(h && k){ h.classList.add('open'); k.style.display='block'; }
-    });
-  });
-  // Helpers for new report panels
-  function panelOf(btn){return btn.closest('.report-view');}
-  window.repRefresh = function(btn){
-    var p = panelOf(btn); if(!p) return;
-    // Hook for future data wiring. For now flash the empty state.
-    var e = p.querySelector('.rep-empty td');
-    if(e){ e.style.background='#fef9c3'; setTimeout(function(){e.style.background='';},400); }
-  };
-  window.repPrint = function(btn){
-    var p = panelOf(btn); if(!p) return;
-    var w = window.open('','_blank');
-    w.document.write('<html><head><title>Print</title><style>body{font-family:system-ui;padding:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:6px;font-size:12px;text-align:left}</style></head><body>'+p.innerHTML+'</body></html>');
-    w.document.close(); w.focus(); w.print();
-  };
-  window.repCsv = function(btn){
-    var p = panelOf(btn); if(!p) return;
-    var rows = p.querySelectorAll('table.rep-table tr');
-    var csv = [];
-    rows.forEach(function(r){
-      var cells = r.querySelectorAll('th,td');
-      var line = [];
-      cells.forEach(function(c){
-        var t = (c.innerText||'').replace(/"/g,'""');
-        line.push('"'+t+'"');
-      });
-      csv.push(line.join(','));
-    });
-    var blob = new Blob([csv.join('\n')], {type:'text/csv'});
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    var title = (p.querySelector('h2')||{}).innerText||'report';
-    a.download = title.replace(/[^a-z0-9]+/gi,'_').toLowerCase()+'.csv';
-    document.body.appendChild(a); a.click(); a.remove();
-  };
-  window.repPdf = function(btn){
-    // Reuse browser print-to-pdf as a portable fallback
-    window.repPrint(btn);
-  };
-})();
-</script>
+
 </body></html>
   `);
   previewWindow.document.close();
@@ -77142,6 +77065,85 @@ function toggleSubmenu(id) {
   window.addEventListener("load", () => setTimeout(refreshActive, 200));
 
   console.log("%c[Acacia] Report Fix Pack v5 loaded","color:#16a34a;font-weight:bold");
+})();
+</script>
+
+<style id="rep-cat-styles">
+.reports-sidebar-list{list-style:none;padding:0;margin:0;font-size:13px}
+.reports-sidebar-list .rep-cat-header{cursor:pointer;padding:6px 8px;font-weight:700;color:#0f172a;background:#f1f5f9;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:4px}
+.reports-sidebar-list .rep-cat-header:hover{background:#e2e8f0}
+.reports-sidebar-list .rep-cat-header.rep-fav{background:#fef3c7;color:#92400e}
+.reports-sidebar-list .rep-cat-header.open .rep-cat-caret{transform:rotate(90deg)}
+.reports-sidebar-list .rep-cat-caret{display:inline-block;transition:transform .15s;font-size:10px;color:#64748b}
+.reports-sidebar-list .rep-cat-count{margin-left:auto;font-size:10px;color:#64748b;font-weight:500}
+.reports-sidebar-list .rep-cat-children{list-style:none;padding:0;margin:0;background:#fff}
+.reports-sidebar-list .rep-cat-children li{padding:5px 8px 5px 24px;cursor:pointer;border-bottom:1px solid #f1f5f9;color:#334155}
+.reports-sidebar-list .rep-cat-children li:hover{background:#eff6ff;color:#1e3a8a}
+.reports-sidebar-list .rep-cat-children li.active{background:#dbeafe;color:#1e3a8a;font-weight:600}
+</style>
+<script id="rep-cat-script">
+(function(){
+  function persistKey(){return 'reportCatsOpen_v1'}
+  function getOpenSet(){try{return new Set(JSON.parse(localStorage.getItem(persistKey())||'[]'))}catch(e){return new Set()}}
+  function saveOpenSet(s){try{localStorage.setItem(persistKey(),JSON.stringify(Array.from(s)))}catch(e){}}
+  window.toggleReportCat = function(el){
+    var cat = el.getAttribute('data-cat');
+    var kids = document.querySelector('.rep-cat-children[data-cat="'+cat+'"]');
+    if(!kids) return;
+    var isOpen = kids.style.display !== 'none';
+    kids.style.display = isOpen ? 'none' : 'block';
+    el.classList.toggle('open', !isOpen);
+    var s = getOpenSet();
+    if(isOpen) s.delete(cat); else s.add(cat);
+    saveOpenSet(s);
+  };
+  // restore on load
+  document.addEventListener('DOMContentLoaded', function(){
+    var s = getOpenSet();
+    s.forEach(function(cat){
+      var h = document.querySelector('.rep-cat-header[data-cat="'+cat+'"]');
+      var k = document.querySelector('.rep-cat-children[data-cat="'+cat+'"]');
+      if(h && k){ h.classList.add('open'); k.style.display='block'; }
+    });
+  });
+  // Helpers for new report panels
+  function panelOf(btn){return btn.closest('.report-view');}
+  window.repRefresh = function(btn){
+    var p = panelOf(btn); if(!p) return;
+    // Hook for future data wiring. For now flash the empty state.
+    var e = p.querySelector('.rep-empty td');
+    if(e){ e.style.background='#fef9c3'; setTimeout(function(){e.style.background='';},400); }
+  };
+  window.repPrint = function(btn){
+    var p = panelOf(btn); if(!p) return;
+    var w = window.open('','_blank');
+    w.document.write('<html><head><title>Print</title><style>body{font-family:system-ui;padding:20px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:6px;font-size:12px;text-align:left}</style></head><body>'+p.innerHTML+'</body></html>');
+    w.document.close(); w.focus(); w.print();
+  };
+  window.repCsv = function(btn){
+    var p = panelOf(btn); if(!p) return;
+    var rows = p.querySelectorAll('table.rep-table tr');
+    var csv = [];
+    rows.forEach(function(r){
+      var cells = r.querySelectorAll('th,td');
+      var line = [];
+      cells.forEach(function(c){
+        var t = (c.innerText||'').replace(/"/g,'""');
+        line.push('"'+t+'"');
+      });
+      csv.push(line.join(','));
+    });
+    var blob = new Blob([csv.join('\n')], {type:'text/csv'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    var title = (p.querySelector('h2')||{}).innerText||'report';
+    a.download = title.replace(/[^a-z0-9]+/gi,'_').toLowerCase()+'.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  window.repPdf = function(btn){
+    // Reuse browser print-to-pdf as a portable fallback
+    window.repPrint(btn);
+  };
 })();
 </script>
 </body></html>
