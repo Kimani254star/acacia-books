@@ -15947,20 +15947,20 @@ function resetForm() {
   document.getElementById("statementDate").value = "";
   document.getElementById("customerBtn").textContent = "Save Customer";
 }
-function formatDate(dateStr) {
-  if (!dateStr) return "";
+function formatDate(date) {
+    if (!date) return "";
 
-  const parts = dateStr.split("/");
+    if (date.includes("/")) return date;
 
-  if (parts.length !== 3) return dateStr;
+    const d = new Date(date);
 
-  const [day, month, year] = parts;
+    if (isNaN(d.getTime())) return "";
 
-  const date = new Date(`${year}-${month}-${day}`);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
 
-  if (isNaN(date.getTime())) return dateStr;
-
-  return date.toLocaleDateString();
+    return `${day}/${month}/${year}`;
 }
 
 function renderCustomers() {
@@ -16816,18 +16816,18 @@ function importCustomers(event) {
       if (cols.length < 2) return;
 
       customers.push({
-        salutation: cols[0] || "",
-        name: cols[1] || "",
-        primaryEmail: cols[2] || "",
-        secondaryEmail: cols[3] || "",
-        phone: cols[4] || "",
-        billingAddress: cols[5] || "",
-        shippingAddress: cols[6] || "",
-        krapin: cols[7] || "",
-        receivables: parseFloat(cols[8]) || 0,
-        creditLimit: parseFloat(cols[9]) || 0,
-        statementDate: cols[10] || ""
-      });
+    salutation: cols[0]?.trim() || "",
+    name: cols[1]?.trim() || "",
+    primaryEmail: cols[2]?.trim() || "",
+    secondaryEmail: cols[3]?.trim() || "",
+    phone: cols[4]?.trim() || "",
+    billingAddress: cols[5]?.trim() || "",
+    shippingAddress: cols[6]?.trim() || "",
+    kraPin: cols[7]?.trim() || "",
+    receivables: parseFloat(cols[8]) || 0,
+    creditLimit: parseFloat(cols[9]) || 0,
+    statementDate: cols[10]?.replace(/\r/g, "").trim() || ""
+    });
     });
 
     localStorage.setItem("customers", JSON.stringify(customers));
@@ -16927,6 +16927,14 @@ document.addEventListener("DOMContentLoaded", function () {
     invoiceNumberField.value = generateInvoiceNumber();
   }
 });
+function mapVatRuleToOption(rule) {
+  const r = String(rule == null ? "" : rule).trim().toLowerCase().replace("%", "");
+  if (r === "16") return "16";
+  if (r === "8") return "8";
+  if (r === "0" || r === "zero" || r === "zero rated" || r === "zero-rated") return "0";
+  if (r === "exempt" || r === "exempted") return "exempt";
+  return "exempt";
+}
 function populateInvoiceProductSelect() {
   const select = document.getElementById('invoiceProductSelect');
   if (!select) return;
@@ -16945,7 +16953,7 @@ function populateInvoiceProductSelect() {
 
     option.dataset.price = item.sellPrice;
     option.dataset.qty = item.qty;
-    option.dataset.tax = item.buyVat || "exempt";
+    option.dataset.tax = mapVatRuleToOption(item.sellVat);
 
     if (isOutOfStock) {
       option.disabled = true;
@@ -17100,6 +17108,21 @@ function clearItemInputs() {
   if (qty <= 0 || price <= 0) {
     alert("Quantity and Price must be greater than zero.");
     return;
+  }
+
+  // Block selling product items with zero or insufficient stock
+  const itemTypeSel = document.getElementById("invoiceItemType");
+  const itemType = (itemTypeSel?.value || "product").toLowerCase();
+  const availableQty = parseFloat(selectedOption.dataset.qty) || 0;
+  if (itemType === "product") {
+    if (availableQty <= 0) {
+      alert("⚠️ This product is out of stock and cannot be sold.");
+      return;
+    }
+    if (qty > availableQty) {
+      alert(`⚠️ Only ${availableQty} units available in stock. Reduce the quantity.`);
+      return;
+    }
   }
 
   const priceAfterDiscount = price * (1 - discount / 100);
@@ -17376,15 +17399,17 @@ function renderInvoices() {
             dueDate = invoiceDate.toISOString().split("T")[0];
         }
 
-        const total = Number(inv.total) || 0;
-        const vat = Number(inv.vat) || 0;
+        const total = Number(inv.totalKES) || Number(inv.total) || 0;
+        const vat = Number(inv.vatKES) || Number(inv.vat) || 0;
         const amountPaid = Number(inv.amountPaid) || 0;
-        const balance = total - amountPaid;
+        const balance = Math.max(total - amountPaid, 0);
 
         let status = "Unpaid";
-        if (balance <= 0) status = "Paid";
+        if (total > 0 && amountPaid >= total) status = "Paid";
         else if (amountPaid > 0 && balance > 0) status = "Partial";
-        if (dueDate && new Date(dueDate) < new Date() && balance > 0) status = "Overdue";
+        if (status !== "Paid" && dueDate && new Date(dueDate) < new Date() && balance > 0) status = "Overdue";
+        inv.status = status;
+        inv.balance = balance;
 
         tbody.innerHTML += `
             <tr>
@@ -18269,8 +18294,8 @@ function recordInvoicePayment(id) {
     };
     manualTransactions.push(tx);
     allTx.push(tx);
-    customerAcc.amount = (customerAcc.amount || 0) + amountPaidNow;
-    updateCustomerReceivables(invoice.customer, amountPaidNow);
+    customerAcc.amount = (customerAcc.amount || 0) - amountPaidNow;
+    updateCustomerReceivables(invoice.customer, -amountPaidNow);
     const paid = receipts
       .filter(r => r.invoiceId === invoice.id)
       .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
@@ -18311,74 +18336,117 @@ function recordInvoicePayment(id) {
 }
 function reversePayment(id) {
   const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-  const index = invoices.findIndex(i => i.id === id);
-  if (index === -1) return;
+  const index = invoices.findIndex(i => String(i.id) === String(id));
+  if (index === -1) return alert("Invoice not found.");
   const invoice = invoices[index];
   const total = parseFloat(invoice.totalKES || invoice.total) || 0;
+
   let receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
   const relatedReceipts = receipts.filter(r => String(r.invoiceId) === String(invoice.id));
   const paid = relatedReceipts.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
   if (paid <= 0) return alert("No payment to reverse.");
-  const newPaid = parseFloat(prompt("Edit payment amount:", paid));
-  if (isNaN(newPaid) || newPaid < 0 || newPaid > total) {
-    return alert("Invalid amount");
+
+  const input = prompt(
+    `Current paid: ${paid.toFixed(2)} KES (Total: ${total.toFixed(2)} KES)\n` +
+    `Enter NEW paid amount (0 to fully reverse):`,
+    "0"
+  );
+  if (input === null) return;
+  const newPaid = parseFloat(input);
+  if (isNaN(newPaid) || newPaid < 0 || newPaid > paid) {
+    return alert("Invalid amount. Must be between 0 and current paid.");
   }
-  const difference = paid - newPaid;
-  if (difference > 0) {
-    let remaining = difference;
-    for (let i = receipts.length - 1; i >= 0 && remaining > 0; i--) {
-      if (String(receipts[i].invoiceId) === String(invoice.id)) {
-        const amt = parseFloat(receipts[i].amount) || 0;
-        if (amt <= remaining) {
-          remaining -= amt;
-          receipts.splice(i, 1);
-        } else {
-          receipts[i].amount = amt - remaining;
-          remaining = 0;
-        }
-      }
+
+  const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+  let difference = paid - newPaid;
+  if (difference <= 0) return alert("Nothing to reverse.");
+
+  // Walk receipts newest-first, refund bank balances accordingly
+  let remaining = difference;
+  for (let i = receipts.length - 1; i >= 0 && remaining > 0; i--) {
+    if (String(receipts[i].invoiceId) !== String(invoice.id)) continue;
+    const r = receipts[i];
+    const amt = parseFloat(r.amount) || 0;
+    const take = Math.min(amt, remaining);
+
+    // Roll back bank balance
+    let bank = null;
+    if (typeof r.bankIndex === "number" && banks[r.bankIndex]) bank = banks[r.bankIndex];
+    else if (r.bankName) bank = banks.find(b => b.name === r.bankName);
+    if (bank) bank.balance = (parseFloat(bank.balance) || 0) - take;
+
+    if (amt - take <= 0.0001) {
+      receipts.splice(i, 1);
+    } else {
+      r.amount = amt - take;
     }
-    localStorage.setItem("receipts", JSON.stringify(receipts));
+    remaining -= take;
   }
+  localStorage.setItem("receipts", JSON.stringify(receipts));
+  localStorage.setItem("banks", JSON.stringify(banks));
+
+  // Update invoice
   const finalPaid = receipts
     .filter(r => String(r.invoiceId) === String(invoice.id))
     .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
   invoice.amountPaid = finalPaid;
-  invoice.balance = total - finalPaid;
-  if (invoice.balance <= 0) {
-    invoice.status = "Paid";
-    invoice.paid = true;
-    invoice.balance = 0;
-  } else if (finalPaid > 0) {
-    invoice.status = "Partial";
-    invoice.paid = false;
-  } else {
-    invoice.status = "Unpaid";
-    invoice.paid = false;
-  }
+  invoice.balance = Math.max(total - finalPaid, 0);
+  if (finalPaid >= total) { invoice.status = "Paid"; invoice.paid = true; invoice.balance = 0; }
+  else if (finalPaid > 0) { invoice.status = "Partial"; invoice.paid = false; }
+  else { invoice.status = "Unpaid"; invoice.paid = false; }
   invoices[index] = invoice;
   localStorage.setItem("invoices", JSON.stringify(invoices));
-  const customerPayments = JSON.parse(localStorage.getItem("customerPayments") || "[]");
-  localStorage.setItem("customerPayments", JSON.stringify(
-    customerPayments.filter(p => String(p.invoiceId) !== String(invoice.id))
-  ));
-  const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
-  localStorage.setItem("transactions", JSON.stringify(
-    transactions.filter(t =>
-      !(t.type === "Customer Payment" && String(t.ref) === String(invoice.invoiceNumber))
-    )
-  ));
-  const manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
-  localStorage.setItem("manualTransactions", JSON.stringify(
-    manualTransactions.filter(t =>
-      !(t.type === "Customer Payment" && String(t.ref) === String(invoice.invoiceNumber))
-    )
-  ));
-  renderInvoices();
-  renderAccountsReceivable?.();
-  renderDebitControlPanel?.();
-  updateDashboardTotals?.();
-  showToast(`🔄 Payment updated for Invoice ${invoice.invoiceNumber}`);
+
+  // Roll back Customer Receivables (chart of accounts + per-customer)
+  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+  const custAcc = accounts.find(a => a.name === "Customer Receivables");
+  if (custAcc) {
+    custAcc.amount = (parseFloat(custAcc.amount) || 0) + difference;
+    localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+  }
+  if (typeof updateCustomerReceivables === "function") {
+    updateCustomerReceivables(invoice.customer, difference);
+  }
+
+  // Roll back customerPayments records (newest first)
+  let customerPayments = JSON.parse(localStorage.getItem("customerPayments") || "[]");
+  let remainCP = difference;
+  for (let i = customerPayments.length - 1; i >= 0 && remainCP > 0; i--) {
+    const p = customerPayments[i];
+    if (String(p.invoiceId) !== String(invoice.id)) continue;
+    const pAmt = parseFloat(p.amount) || 0;
+    const take = Math.min(pAmt, remainCP);
+    if (pAmt - take <= 0.0001) customerPayments.splice(i, 1);
+    else p.amount = pAmt - take;
+    remainCP -= take;
+  }
+  localStorage.setItem("customerPayments", JSON.stringify(customerPayments));
+
+  // Update transactions — keep cumulative row, or drop if fully reversed
+  const updateTxStore = key => {
+    let arr = JSON.parse(localStorage.getItem(key) || "[]");
+    if (finalPaid <= 0) {
+      arr = arr.filter(t => !(t.type === "Customer Payment" && String(t.ref) === String(invoice.invoiceNumber)));
+    } else {
+      for (let i = arr.length - 1; i >= 0; i--) {
+        const t = arr[i];
+        if (t.type === "Customer Payment" && String(t.ref) === String(invoice.invoiceNumber)) { t.amount = finalPaid; break; }
+      }
+    }
+    localStorage.setItem(key, JSON.stringify(arr));
+  };
+  updateTxStore("transactions");
+  updateTxStore("manualTransactions");
+
+  if (typeof renderInvoices === "function") renderInvoices();
+  if (typeof renderReceipts === "function") renderReceipts();
+  if (typeof renderAccountsReceivable === "function") renderAccountsReceivable();
+  if (typeof renderDebitControlPanel === "function") renderDebitControlPanel();
+  if (typeof renderBankTable === "function") renderBankTable();
+  if (typeof updateBankDropdowns === "function") updateBankDropdowns();
+  if (typeof updateDashboardTotals === "function") updateDashboardTotals();
+
+  showToast(`🔄 Reversed ${difference.toFixed(2)} KES on Invoice ${invoice.invoiceNumber}. New paid: ${finalPaid.toFixed(2)} KES.`);
 }
 function syncInvoiceReceipt(invoice) {
   const receipts = JSON.parse(localStorage.getItem('receipts') || "[]");
@@ -18702,7 +18770,7 @@ function loadConvertedOrderToInvoice() {
   );
   if (alreadyExists) {
     localStorage.removeItem("currentInvoice");
-    showTab("invoiceTab");
+    showTab("invoicesTab");
     renderInvoices?.();
     return;
   }
@@ -18766,7 +18834,7 @@ function loadConvertedOrderToInvoice() {
     invoiceId
   );
   localStorage.removeItem("currentInvoice");
-  showTab("invoiceTab");
+  showTab("invoicesTab");
   document.getElementById("invoiceNumber").value =
     newInvoice.invoiceNumber;
   document.getElementById("invoiceDate").value =
@@ -19383,6 +19451,8 @@ function convertOrder(index) {
 
     return {
       desc: item.desc || "",
+      sku: item.sku || "",
+      itemType: item.itemType || item.type || "product",
       warehouse: item.warehouse || "Main",
       qty,
       price,
@@ -19395,7 +19465,7 @@ function convertOrder(index) {
     };
   });
 
-  const invoiceId = crypto.randomUUID();
+  const invoiceId = Date.now();
 
   const newInvoice = {
 
@@ -19462,9 +19532,9 @@ function convertOrder(index) {
 
     paid: false,
 
-    currency: "KES",
+    currency: order.currency || "KES",
 
-    exchangeRate: 1,
+    exchangeRate: parseFloat(order.exchangeRate) || 1,
 
     sourceOrderId: order.id,
 
@@ -19479,6 +19549,10 @@ function convertOrder(index) {
     "invoices",
     JSON.stringify(invoices)
   );
+
+  if (typeof deductStockFromInvoice === "function") {
+    deductStockFromInvoice(convertedItems);
+  }
 
   order.status = "converted";
   order.converted = true;
@@ -19500,7 +19574,7 @@ function convertOrder(index) {
     updateDashboardTotals();
   }
 
-  showTab("invoiceTab");
+  showTab("invoicesTab");
 
   setTimeout(() => {
     previewInvoice(invoiceId);
@@ -24693,6 +24767,7 @@ function loadRecurringProducts() {
     opt.textContent = `${item.name} (${item.sku}) | Qty: ${qty} | Price: ${item.sellPrice}`;
     opt.dataset.price = item.sellPrice || 0;
     opt.dataset.qty = qty;
+    opt.dataset.tax = mapVatRuleToOption(item.sellVat);
 
     select.appendChild(opt);
   });
@@ -24702,6 +24777,11 @@ function loadRecurringProducts() {
 
     document.getElementById("recurringInvoiceItemPrice").value =
       selected.dataset.price || 0;
+
+    const recTaxInput = document.getElementById("recurringInvoiceItemTax");
+    if (recTaxInput && selected.dataset.tax) {
+      recTaxInput.value = selected.dataset.tax;
+    }
 
     const qtyInput = document.getElementById("recurringInvoiceItemQty");
     if (qtyInput && !qtyInput.value) {
@@ -24819,6 +24899,11 @@ function deductStockFromInvoice(items) {
   console.log("🔍 BEFORE STOCK:", inventory);
 
   items.forEach(item => {
+    const itype = String(item.itemType || item.type || "product").toLowerCase();
+    if (itype !== "product") {
+      console.log(`↩ Skipping non-product item for stock:`, item.desc, itype);
+      return;
+    }
     const product = inventory.find(p => String(p.sku) === String(item.sku));
 
     if (product) {
@@ -24839,6 +24924,82 @@ function deductStockFromInvoice(items) {
 
   localStorage.setItem("inventories", JSON.stringify(inventory));
 }
+function syncRecurringToInvoices(recurring) {
+  // Create or update a real invoice in the Invoices list from a recurring template.
+  let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+
+  const total = Number(recurring.total) || 0;
+  const vat = Number(recurring.vat) || 0;
+  const totalKES = (recurring.currency && recurring.currency !== "KES")
+    ? total // recurring stores its total already in the entered currency
+    : total;
+
+  // Normalize items to the invoice item shape used elsewhere in the app.
+  const items = (recurring.items || []).map(it => ({
+    desc: it.desc,
+    sku: it.sku,
+    qty: it.qty,
+    price: it.price,
+    discount: it.discount || 0,
+    tax: it.tax,
+    vat: it.vat,
+    total: it.total
+  }));
+
+  const existing = invoices.find(inv => String(inv.recurringId) === String(recurring.id));
+
+  if (existing) {
+    // Update the linked invoice but keep its number, id and any payments made.
+    const prevTotalKES = Number(existing.totalKES) || Number(existing.total) || 0;
+    existing.date = recurring.date;
+    existing.customer = recurring.customerName;
+    existing.customerId = recurring.customerId;
+    existing.account = recurring.accountCode;
+    existing.netDays = recurring.recurrenceDays || existing.netDays || "";
+    existing.items = items;
+    existing.total = total.toFixed(2);
+    existing.vat = vat.toFixed(2);
+    existing.currency = recurring.currency;
+    existing.totalKES = totalKES;
+    if (typeof updateCustomerReceivables === "function") {
+      updateCustomerReceivables(existing.customer, totalKES - prevTotalKES);
+    }
+  } else {
+    const newInvoice = {
+      id: Date.now(),
+      invoiceNumber: (typeof generateInvoiceNumber === "function") ? generateInvoiceNumber() : ("INV-" + Date.now()),
+      recurringId: recurring.id,
+      date: recurring.date,
+      customer: recurring.customerName,
+      customerId: recurring.customerId,
+      netDays: recurring.recurrenceDays || "",
+      account: recurring.accountCode,
+      items: items,
+      total: total.toFixed(2),
+      vat: vat.toFixed(2),
+      currency: recurring.currency,
+      totalKES: totalKES,
+      amountPaid: 0,
+      paid: false,
+      status: "Unpaid"
+    };
+    invoices.push(newInvoice);
+    if (typeof updateCustomerReceivables === "function") {
+      updateCustomerReceivables(newInvoice.customer, totalKES);
+    }
+    if (typeof postToCOA === "function") {
+      try { postToCOA(recurring.accountCode, totalKES, { date: recurring.date, ref: newInvoice.invoiceNumber, source: "Recurring Invoice" }); } catch (e) {}
+    }
+  }
+
+  localStorage.setItem("invoices", JSON.stringify(invoices));
+  if (typeof window !== "undefined") window.invoices = invoices;
+
+  if (typeof renderInvoices === "function") renderInvoices();
+  if (typeof updateDashboardTotals === "function") updateDashboardTotals();
+  if (typeof renderDebitControlPanel === "function") renderDebitControlPanel();
+}
+
 function saveRecurringInvoice(status = "active") {
   const date = document.getElementById("recurringInvoiceDate").value;
   const nextDate = document.getElementById("recurringInvoiceNextDate").value;
@@ -24894,6 +25055,7 @@ function saveRecurringInvoice(status = "active") {
 
   if (status === "active") {
     deductStockFromInvoice(invoice.items);
+    syncRecurringToInvoices(invoice);
   }
 
   recurringInvoiceItems = [];
@@ -27907,7 +28069,7 @@ function loadSupplierBills() {
     Preview
   </button>
 
-  <button onclick="recordPayment(${i})"
+  <button onclick="recordBillPayment(${i})"
     class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
     Record Payment
   </button>
@@ -27937,7 +28099,7 @@ function loadSupplierBills() {
         Email
       </button>
 
-      <button onclick="reversePayment(${i})"
+      <button onclick="reverseBillPayment(${i})"
         class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">
         Reverse Payment
       </button>
@@ -28127,7 +28289,7 @@ function editSupplierBill(index) {
     loadSupplierBills();
   }, "🚫 You don't have permission to edit supplier bills.");
 }
-function recordPayment(index) {
+function recordBillPayment(index) {
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
   const bill = bills[index];
   if (!bill) return;
@@ -28170,10 +28332,18 @@ function recordPayment(index) {
   // Build bank options
   const bankOptions = banks.map(b => `<option value="${b.name}">${b.name} (${b.currency} ${b.balance.toFixed(2)})</option>`).join("");
 
+  const alreadyPaid = parseFloat(bill.paidAmount) || 0;
+  const outstanding = Math.max((parseFloat(bill.total) || 0) - alreadyPaid, 0);
+
   content.innerHTML = `
     <h3>Record Payment for Bill ${bill.billNumber}</h3>
-    <label>Amount (Total: ${bill.total.toFixed(2)} KES):</label>
-    <input type="number" id="paymentAmountInput" class="border p-1 w-full mb-2" value="${bill.paidAmount || 0}" min="0" max="${bill.total}" step="0.01"/>
+    <p style="margin:6px 0;font-size:13px;color:#444">
+      Total: ${(parseFloat(bill.total)||0).toFixed(2)} KES &nbsp;|&nbsp;
+      Paid: ${alreadyPaid.toFixed(2)} KES &nbsp;|&nbsp;
+      Outstanding: <b>${outstanding.toFixed(2)} KES</b>
+    </p>
+    <label>Payment Amount (KES):</label>
+    <input type="number" id="paymentAmountInput" class="border p-1 w-full mb-2" value="${outstanding.toFixed(2)}" min="0.01" max="${outstanding.toFixed(2)}" step="0.01"/>
     
     <label>Select Bank:</label>
     <select id="paymentBankSelect" class="border p-1 w-full mb-2">
@@ -28201,8 +28371,8 @@ function recordPayment(index) {
   // Save button
   document.getElementById("savePaymentBtn").onclick = () => {
     let inputAmount = parseFloat(document.getElementById("paymentAmountInput").value);
-    if (isNaN(inputAmount) || inputAmount < 0 || inputAmount > bill.total) {
-      return alert("Invalid amount");
+    if (isNaN(inputAmount) || inputAmount <= 0 || inputAmount > outstanding + 0.0001) {
+      return alert(`Invalid amount. Must be between 0.01 and ${outstanding.toFixed(2)} KES.`);
     }
 
     const bankName = document.getElementById("paymentBankSelect").value;
@@ -28220,14 +28390,20 @@ function recordPayment(index) {
     // Deduct from bank
     bank.balance -= paymentInBankCurrency;
 
-    // Update bill
-    bill.paidAmount = inputAmount;
+    // Update bill (cumulative)
+    const newPaid = alreadyPaid + inputAmount;
+    bill.paidAmount = newPaid;
+    bill.amountPaid = newPaid;
+    bill.balance = Math.max((parseFloat(bill.total) || 0) - newPaid, 0);
+    if (newPaid >= (parseFloat(bill.total) || 0)) bill.status = "Paid";
+    else if (newPaid > 0) bill.status = "Partial";
+    else bill.status = "Unpaid";
     bills[index] = bill;
 
-    // Supplier Payments record
+    // Append a payment record (do not overwrite previous partials)
     let payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
-    const existingPaymentIndex = payments.findIndex(p => p.billNumber === bill.billNumber);
     const paymentRecord = {
+      id: Date.now(),
       billNumber: bill.billNumber,
       date: new Date().toISOString().split("T")[0],
       supplier: bill.supplier,
@@ -28236,10 +28412,9 @@ function recordPayment(index) {
       bank: bank.name,
       exchangeRate
     };
-    if (existingPaymentIndex !== -1) payments[existingPaymentIndex] = paymentRecord;
-    else payments.push(paymentRecord);
+    payments.push(paymentRecord);
 
-    // Manual transactions
+    // Manual transactions — keep a cumulative row per bill
     let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
     let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
     const tx = {
@@ -28247,19 +28422,24 @@ function recordPayment(index) {
       type: "Vendor Payment",
       account: supplierAcc.name,
       code: supplierAcc.code,
-      amount: inputAmount,
+      amount: newPaid,
       date: paymentRecord.date,
       ref: bill.billNumber,
       source: "supplierPayment",
       direction: "Withdraw"
     };
-    manualTransactions = manualTransactions.filter(t => t.ref !== bill.billNumber);
-    allTx = allTx.filter(t => t.ref !== bill.billNumber);
+    manualTransactions = manualTransactions.filter(t => !(t.ref === bill.billNumber && t.type === "Vendor Payment"));
+    allTx = allTx.filter(t => !(t.ref === bill.billNumber && t.type === "Vendor Payment"));
     manualTransactions.push(tx);
     allTx.push(tx);
 
     // Update Supplier Payments account
-    supplierAcc.amount = (supplierAcc.amount || 0) - inputAmount;
+    supplierAcc.amount = (parseFloat(supplierAcc.amount) || 0) - inputAmount;
+
+    // Reduce supplier outstanding balance
+    if (typeof updateSupplierBalance === "function") {
+      updateSupplierBalance(bill.supplier, -inputAmount);
+    }
 
     // Save all
     localStorage.setItem('bills', JSON.stringify(bills));
@@ -28271,55 +28451,104 @@ function recordPayment(index) {
 
     // Refresh UI
     loadSupplierBills();
-    renderSupplierPayments();
-    renderManualTransactions?.();
-    renderBankTable();
-    renderCreditcontrolAnalysis?.();
-    updateBankDropdowns();
+    if (typeof renderSupplierPayments === "function") renderSupplierPayments();
+    if (typeof renderManualTransactions === "function") renderManualTransactions();
+    if (typeof renderBankTable === "function") renderBankTable();
+    if (typeof renderCreditcontrolAnalysis === "function") renderCreditcontrolAnalysis();
+    if (typeof updateBankDropdowns === "function") updateBankDropdowns();
 
     document.body.removeChild(modal);
-    alert(`Payment of ${inputAmount.toFixed(2)} KES recorded for Bill ${bill.billNumber}.`);
+    alert(
+      bill.status === "Paid"
+        ? `✅ Bill ${bill.billNumber} fully paid.`
+        : `✅ Partial payment of ${inputAmount.toFixed(2)} KES recorded for Bill ${bill.billNumber}. Outstanding: ${bill.balance.toFixed(2)} KES.`
+    );
   };
 }
-function reversePayment(index) {
+function reverseBillPayment(index) {
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
   const bill = bills[index];
-  if (!bill || bill.paidAmount <= 0) return alert("This bill has no payment to reverse.");
+  if (!bill) return alert("Bill not found.");
+  const currentPaid = parseFloat(bill.paidAmount) || 0;
+  if (currentPaid <= 0) return alert("This bill has no payment to reverse.");
 
-  const bankSelect = document.getElementById("fromBank");
-  const bankName = bankSelect.value;
-  if (!bankName) return alert("Please select the bank used for payment.");
+  const total = parseFloat(bill.total) || 0;
+  const input = prompt(
+    `Current paid: ${currentPaid.toFixed(2)} KES (Total: ${total.toFixed(2)} KES)\n` +
+    `Enter NEW paid amount (0 to fully reverse):`,
+    "0"
+  );
+  if (input === null) return;
+  const newPaid = parseFloat(input);
+  if (isNaN(newPaid) || newPaid < 0 || newPaid > currentPaid) {
+    return alert("Invalid amount. Must be between 0 and current paid.");
+  }
+  const reverseAmount = currentPaid - newPaid;
+  if (reverseAmount <= 0) return alert("Nothing to reverse.");
 
   let banks = JSON.parse(localStorage.getItem("banks") || "[]");
-  const bank = banks.find(b => b.name === bankName);
-  if (!bank) return alert("Selected bank not found.");
-
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   const supplierAcc = accounts.find(a => a.name === "Supplier Payments");
 
-  // Restore bank balance
-  const paymentInBankCurrency = bill.paidAmount / (exchangeRates[bank.currency] || 1);
-  bank.balance += paymentInBankCurrency;
+  // Roll back bank balances using recorded payments (newest first)
+  let payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
+  let remaining = reverseAmount;
+  for (let i = payments.length - 1; i >= 0 && remaining > 0; i--) {
+    const p = payments[i];
+    if (p.billNumber !== bill.billNumber) continue;
+    const pAmt = parseFloat(p.amount) || 0;
+    const take = Math.min(pAmt, remaining);
+    const rate = parseFloat(p.exchangeRate) || 1;
+    const bank = banks.find(b => b.name === p.bank);
+    if (bank) bank.balance = (parseFloat(bank.balance) || 0) + (take / rate);
+    if (pAmt - take <= 0.0001) {
+      payments.splice(i, 1);
+    } else {
+      p.amount = pAmt - take;
+    }
+    remaining -= take;
+  }
+  // If no detailed payment rows exist, roll back the full amount on the first bank
+  if (remaining > 0 && banks.length) {
+    banks[0].balance = (parseFloat(banks[0].balance) || 0) + remaining;
+    remaining = 0;
+  }
 
   // Restore Supplier Payments account
-  if (supplierAcc) supplierAcc.amount = (supplierAcc.amount || 0) + bill.paidAmount;
+  if (supplierAcc) supplierAcc.amount = (parseFloat(supplierAcc.amount) || 0) + reverseAmount;
 
-  // Remove associated payment record
-  let payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
-  payments = payments.filter(p => p.billNumber !== bill.billNumber);
+  // Reverse supplier outstanding balance (paying reduced supplier liability; reversing adds back)
+  if (typeof updateSupplierBalance === "function") {
+    updateSupplierBalance(bill.supplier, reverseAmount);
+  }
 
-  // Remove manual transaction(s)
+  // Remove / adjust manual transactions for this bill
   let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
   let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
+  if (newPaid <= 0) {
+    manualTransactions = manualTransactions.filter(t => !(t.ref === bill.billNumber && t.type === "Vendor Payment"));
+    allTx = allTx.filter(t => !(t.ref === bill.billNumber && t.type === "Vendor Payment"));
+  } else {
+    // Update the latest Vendor Payment row to the new cumulative amount
+    for (let i = manualTransactions.length - 1; i >= 0; i--) {
+      const t = manualTransactions[i];
+      if (t.ref === bill.billNumber && t.type === "Vendor Payment") { t.amount = newPaid; break; }
+    }
+    for (let i = allTx.length - 1; i >= 0; i--) {
+      const t = allTx[i];
+      if (t.ref === bill.billNumber && t.type === "Vendor Payment") { t.amount = newPaid; break; }
+    }
+  }
 
-  manualTransactions = manualTransactions.filter(t => t.ref !== bill.billNumber);
-  allTx = allTx.filter(t => t.ref !== bill.billNumber);
-
-  // Reset bill
-  bill.paidAmount = 0;
+  // Update bill
+  bill.paidAmount = newPaid;
+  bill.amountPaid = newPaid;
+  bill.balance = Math.max(total - newPaid, 0);
+  if (newPaid <= 0) bill.status = "Unpaid";
+  else if (newPaid >= total) bill.status = "Paid";
+  else bill.status = "Partial";
   bills[index] = bill;
 
-  // Save updates
   localStorage.setItem('bills', JSON.stringify(bills));
   localStorage.setItem("billPayments", JSON.stringify(payments));
   localStorage.setItem('banks', JSON.stringify(banks));
@@ -28327,15 +28556,14 @@ function reversePayment(index) {
   localStorage.setItem("transactions", JSON.stringify(allTx));
   localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
-  // Refresh UI
-  loadSupplierBills();
-  renderSupplierPayments();
-  renderManualTransactions?.();
-  renderBankTable();
-  renderCreditcontrolAnalysis?.();
-  updateBankDropdowns();
+  if (typeof loadSupplierBills === "function") loadSupplierBills();
+  if (typeof renderSupplierPayments === "function") renderSupplierPayments();
+  if (typeof renderManualTransactions === "function") renderManualTransactions();
+  if (typeof renderBankTable === "function") renderBankTable();
+  if (typeof renderCreditcontrolAnalysis === "function") renderCreditcontrolAnalysis();
+  if (typeof updateBankDropdowns === "function") updateBankDropdowns();
 
-  alert(`Payment for Bill ${bill.billNumber} has been reversed and synced.`);
+  alert(`Reversed ${reverseAmount.toFixed(2)} KES on Bill ${bill.billNumber}. New paid: ${newPaid.toFixed(2)} KES.`);
 }
 // ---------------------- PREVIEW ----------------------
 function previewBill(index) {
@@ -30265,9 +30493,13 @@ function closePOPreview() {
 
 function convertPO(index) {
   const po = getPOList()[index];
+  if (!po) { alert("PO not found"); return; }
+  if (po.converted) { alert("This PO has already been converted to a Bill"); return; }
+  if (!confirm(`Convert PO ${po.poNumber} to a Bill?`)) return;
+  if (!confirm("Approve conversion? This cannot be undone.")) return;
 
+  // 1) Create GRN entry (preserve existing behavior)
   let grnList = JSON.parse(localStorage.getItem("grn") || "[]");
-
   grnList.push({
     fromPO: po.poNumber,
     supplier: po.supplier,
@@ -30276,10 +30508,70 @@ function convertPO(index) {
     date: new Date().toISOString().split("T")[0],
     status: "Pending Receipt"
   });
-
   localStorage.setItem("grn", JSON.stringify(grnList));
 
-  alert("Converted");
+  // 2) Create a draft Bill from the PO
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  const dup = bills.find(b => b.sourcePOId === po.poNumber);
+  if (dup) {
+    alert("A Bill already exists for this PO");
+    showTab("supplierBillsTab");
+    return;
+  }
+
+  const items = (po.items || []).map(it => ({
+    ...it,
+    desc: it.desc || it.name || "",
+    qty: parseFloat(it.qty) || 0,
+    price: parseFloat(it.price) || 0,
+    subtotal: parseFloat(it.subtotal) || (parseFloat(it.qty) || 0) * (parseFloat(it.price) || 0),
+    vat: parseFloat(it.vat) || 0
+  }));
+  const subtotal = items.reduce((s, i) => s + (i.subtotal || 0), 0);
+  const vat = items.reduce((s, i) => s + (i.vat || 0), 0);
+  const total = subtotal + vat;
+
+  const billNumber = (typeof generateBillNumber === "function") ? generateBillNumber() : ("BILL-" + Date.now());
+  const newBill = {
+    id: crypto.randomUUID(),
+    billNumber,
+    supplier: po.supplier,
+    chartOfAccount: po.chartOfAccount,
+    date: new Date().toISOString().split("T")[0],
+    items,
+    subtotal,
+    vat,
+    total,
+    amountPaid: 0,
+    balance: total,
+    status: "Unpaid",
+    currency: po.currency || "KES",
+    exchangeRate: parseFloat(po.exchangeRate) || 1,
+    sourcePOId: po.poNumber,
+    convertedFromPO: po.poNumber,
+    createdAt: new Date().toISOString()
+  };
+  bills.push(newBill);
+  localStorage.setItem("bills", JSON.stringify(bills));
+
+  // Mark PO as converted
+  const poList = getPOList();
+  if (poList[index]) {
+    poList[index].converted = true;
+    poList[index].status = "converted";
+    savePOList(poList);
+  }
+
+  if (typeof loadSupplierBills === "function") loadSupplierBills();
+  if (typeof renderBills === "function") renderBills();
+  if (typeof renderPurchaseOrders === "function") renderPurchaseOrders();
+
+  showTab("supplierBillsTab");
+  if (typeof showToast === "function") {
+    showToast(`✅ PO ${po.poNumber} converted to Bill ${newBill.billNumber}`);
+  } else {
+    alert(`PO ${po.poNumber} converted to Bill ${newBill.billNumber}`);
+  }
 }
 
 function clearPOForm() {
@@ -77402,127 +77694,185 @@ function toggleSubmenu(id) {
 <script>
 /* ============================================================
    VAT auto-populate + Batch picker across transaction forms
+   (Fix #1 + #2 + partial #15 — applies to every doc type)
    ============================================================ */
-(function(){
+(function () {
   const FORMS = [
-    { sel:'invoiceProductSelect',     tax:'invoiceItemTax',    vat:'sell', addSel:"button[onclick='addInvoiceItem()']" },
-    { sel:'quoteProductSelect',       tax:'quoteItemTax',      vat:'sell', addSel:"button[onclick='addQuoteItem()']" },
-    { sel:'orderProductSelect',       tax:'orderItemTax',      vat:'sell', addSel:"button[onclick='addOrderItem()']" },
-    { sel:'creditItemSelect',         tax:'creditItemTax',     vat:'sell', addSel:"button[onclick='addCreditNoteItem()'],button[onclick='addCreditItem()']" },
-    { sel:'billItemDesc',             tax:'billItemTax',       vat:'buy',  addSel:"#addBillItemBtn" },
-    { sel:'poProductSelect',          tax:'poItemTax',         vat:'buy',  addSel:"button[onclick='addPOItem()'],button[onclick='addPoItem()']" },
-    { sel:'recurringInvoiceProductSelect', tax:'recurringInvoiceItemTax', vat:'sell', addSel:"button[onclick='addRecurringInvoiceItem()']" },
-    { sel:'bulkInvoiceProductSelect', tax:'bulkInvoiceItemTax',vat:'sell', addSel:"button[onclick='addBulkInvoiceItem()']" }
+    { sel:'invoiceProductSelect',          tax:'invoiceItemTax',          price:'invoiceItemPrice',          qty:'invoiceItemQty',          desc:null,                        vat:'sell', addSel:"button[onclick='addInvoiceItem()']" },
+    { sel:'quoteProductSelect',            tax:'quoteItemTax',            price:'quoteItemPrice',            qty:'quoteItemQty',            desc:null,                        vat:'sell', addSel:"button[onclick='addQuoteItem()']" },
+    { sel:'orderProductSelect',            tax:'orderItemTax',            price:'orderItemPrice',            qty:'orderItemQty',            desc:null,                        vat:'sell', addSel:"button[onclick='addOrderItem()']" },
+    { sel:'creditItemSelect',              tax:'creditItemTax',           price:'creditItemPrice',           qty:'creditItemQty',           desc:null,                        vat:'sell', addSel:"button[onclick='addCreditNoteItem()'],button[onclick='addCreditItem()']" },
+    { sel:'billItemDesc',                  tax:'billItemTax',             price:'billItemPrice',             qty:'billItemQty',             desc:null,                        vat:'buy',  addSel:"#addBillItemBtn,button[onclick='addBillItem()']" },
+    { sel:'poProductSelect',               tax:'poItemTax',               price:'poItemPrice',               qty:'poItemQty',               desc:null,                        vat:'buy',  addSel:"button[onclick='addPOItem()'],button[onclick='addPoItem()']" },
+    { sel:'recurringInvoiceProductSelect', tax:'recurringInvoiceItemTax', price:'recurringInvoiceItemPrice', qty:'recurringInvoiceItemQty', desc:null,                        vat:'sell', addSel:"button[onclick='addRecurringInvoiceItem()']" },
+    { sel:'bulkInvoiceProductSelect',      tax:'bulkInvoiceItemTax',      price:'bulkInvoiceItemPrice',      qty:'bulkInvoiceItemQty',      desc:null,                        vat:'sell', addSel:"button[onclick='addBulkInvoiceItem()']" }
   ];
 
-  function mapVat(rule){
-    if (rule == null) return 'exempt';
-    const r = String(rule).trim().toLowerCase();
-    if (r === '16%' || r === '16') return '16';
-    if (r === '8%'  || r === '8')  return '8';
-    if (r === 'zero' || r === '0%' || r === '0') return '0';
-    if (r === 'exempt') return 'exempt';
-    return rule;
+  // --- VAT mapping: item's "sellVat"/"buyVat" string -> tax <select> option value
+  function mapVat(rule) {
+    if (rule == null || rule === '') return null;
+    const r = String(rule).trim().toLowerCase().replace('%','');
+    if (r === '16') return '16';
+    if (r === '8')  return '8';
+    if (r === '0' || r === 'zero' || r === 'zero rated' || r === 'zero-rated') return '0';
+    if (r === 'exempt' || r === 'exempted') return 'exempt';
+    return null;
   }
 
-  function getAllInv(){
-    try { if (typeof getAllInventories === 'function') return getAllInventories(); } catch(e){}
+  // --- Read all inventory items (host app helper, else fallback to localStorage)
+  function getAllInv() {
+    try { if (typeof getAllInventories === 'function') return getAllInventories() || []; } catch(e){}
     const out = [];
-    for (let i=0;i<localStorage.length;i++){
+    for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('inventory_')){
-        try { (JSON.parse(localStorage.getItem(k))||[]).forEach(it => out.push(it)); } catch(e){}
+      if (k && k.startsWith('inventory_')) {
+        try { (JSON.parse(localStorage.getItem(k)) || []).forEach(it => out.push(it)); } catch(e){}
       }
     }
     return out;
   }
 
-  function findItem(name){
-    return getAllInv().find(i => (i.name||'').trim() === (name||'').trim());
+  // --- Some dropdowns store option.value as JSON ({name, warehouse}) — extract name
+  function extractName(val) {
+    if (!val) return '';
+    if (typeof val === 'string' && val.charAt(0) === '{') {
+      try { return (JSON.parse(val).name || '').trim(); } catch(e){}
+    }
+    // Some use SKU as value; resolve to name via inventory
+    const v = String(val).trim();
+    const byName = getAllInv().find(i => (i.name || '').trim() === v);
+    if (byName) return byName.name;
+    const bySku  = getAllInv().find(i => (i.sku  || '').trim() === v);
+    return bySku ? bySku.name : v;
   }
 
-  function ensureBatchSelect(productSel, key){
-    let bs = document.getElementById(key+'_batchSel');
+  function findItem(name) {
+    const n = (name || '').trim();
+    return getAllInv().find(i => (i.name || '').trim() === n);
+  }
+
+  // --- Tag every <option> in a product select with data-tax / data-price / data-qty
+  function tagOptions(sel, cfg) {
+    Array.from(sel.options).forEach(opt => {
+      if (!opt.value) return;
+      const name = extractName(opt.value);
+      const item = findItem(name);
+      if (!item) return;
+      const ruleStr  = cfg.vat === 'buy' ? item.buyVat  : item.sellVat;
+      const mapped   = mapVat(ruleStr);
+      if (mapped != null && !opt.dataset.tax) opt.dataset.tax = mapped;
+      const priceNum = cfg.vat === 'buy' ? item.buyPrice : (item.sellPrice || item.sellingPrice || item.price);
+      if (priceNum != null && !opt.dataset.price) opt.dataset.price = priceNum;
+      if (item.qty != null && !opt.dataset.qty) opt.dataset.qty = item.qty;
+    });
+  }
+
+  // --- Batch picker UI (Fix #2) ---
+  function ensureBatchSelect(productSel, key) {
+    let bs = document.getElementById(key + '_batchSel');
     if (bs) return bs;
     bs = document.createElement('select');
-    bs.id = key+'_batchSel';
-    bs.className = 'border p-2 rounded text-sm';
+    bs.id = key + '_batchSel';
+    bs.className = 'border p-2 rounded text-sm ml-1';
     bs.title = 'Select batch (optional)';
     bs.style.minWidth = '180px';
     bs.innerHTML = '<option value="">No batch</option>';
     bs.disabled = true;
-    // Insert right after product select
     productSel.parentNode.insertBefore(bs, productSel.nextSibling);
     return bs;
   }
 
-  function refreshBatches(bs, item){
+  function refreshBatches(bs, item) {
     bs.innerHTML = '<option value="">No batch</option>';
     const batches = (item && item.batches) || [];
-    if (!batches.length){ bs.disabled = true; return; }
-    batches.forEach((b,i) => {
-      const o = document.createElement('option');
+    if (!batches.length) { bs.disabled = true; return; }
+    batches.forEach((b, i) => {
       const exp = b.expiry || b.expiryDate || '';
-      const bn  = b.batchNo || b.batch || ('#'+(i+1));
-      const qty = b.qty != null ? ` (Qty:${b.qty})` : '';
-      o.value = JSON.stringify({batchNo:bn, expiry:exp, mfg:b.mfg||b.mfgDate||'', qty:b.qty||''});
-      o.textContent = `Batch ${bn}${exp?` — Exp ${exp}`:''}${qty}`;
+      const bn  = b.batchNo || b.batch || ('#' + (i + 1));
+      const qty = b.qty != null ? ' (Qty:' + b.qty + ')' : '';
+      const o = document.createElement('option');
+      o.value = JSON.stringify({ batchNo: bn, expiry: exp, mfg: b.mfg || b.mfgDate || '', qty: b.qty || '' });
+      o.textContent = 'Batch ' + bn + (exp ? ' — Exp ' + exp : '') + qty;
       bs.appendChild(o);
     });
     bs.disabled = false;
   }
 
-  function wireForm(cfg){
+  // --- Wire a single form: tagging + change-driven tax/price/qty/batch ---
+  const wired = new WeakSet();
+  function wireForm(cfg) {
     const sel = document.getElementById(cfg.sel);
     if (!sel) return;
-    const taxEl = document.getElementById(cfg.tax);
+    const taxEl   = cfg.tax   ? document.getElementById(cfg.tax)   : null;
+    const priceEl = cfg.price ? document.getElementById(cfg.price) : null;
+    const qtyEl   = cfg.qty   ? document.getElementById(cfg.qty)   : null;
     const bs = ensureBatchSelect(sel, cfg.sel);
 
-    function onChange(){
-      const name = sel.value;
-      const item = findItem(name);
-      if (item && taxEl){
-        const rule = cfg.vat === 'buy' ? item.buyVat : item.sellVat;
-        const mapped = mapVat(rule);
-        // Only set if a matching option exists, else leave existing
-        const has = Array.from(taxEl.options).some(o => o.value === mapped);
-        if (has) taxEl.value = mapped;
-      }
-      refreshBatches(bs, item);
-    }
-    sel.addEventListener('change', onChange);
+    // Always retag options (cheap, options change when inventory changes)
+    tagOptions(sel, cfg);
 
-    // Intercept Add click to bake batch info into description
+    if (!wired.has(sel)) {
+      wired.add(sel);
+
+      const apply = function () {
+        const name = extractName(sel.value);
+        const item = findItem(name);
+        if (item) {
+          if (taxEl) {
+            const mapped = mapVat(cfg.vat === 'buy' ? item.buyVat : item.sellVat);
+            if (mapped != null) {
+              const has = Array.from(taxEl.options).some(o => o.value === mapped);
+              if (has && taxEl.value !== mapped) {
+                taxEl.value = mapped;
+                try { taxEl.dispatchEvent(new Event('change', { bubbles: true })); } catch(e){}
+              }
+            }
+          }
+          if (priceEl && (!priceEl.value || priceEl.value === '0')) {
+            const p = cfg.vat === 'buy' ? item.buyPrice : (item.sellPrice || item.sellingPrice || item.price);
+            if (p != null) priceEl.value = Number(p).toFixed(2);
+          }
+          if (qtyEl && !qtyEl.value) qtyEl.value = 1;
+          refreshBatches(bs, item);
+        } else {
+          refreshBatches(bs, null);
+        }
+      };
+
+      // Run AFTER any host handler so we win the value race
+      sel.addEventListener('change', function () { setTimeout(apply, 0); });
+    }
+
+    // Bake batch into description when Add is clicked
     const addBtns = cfg.addSel ? document.querySelectorAll(cfg.addSel) : [];
     addBtns.forEach(btn => {
-      btn.addEventListener('click', function(){
+      if (btn.__vatBatchHooked) return;
+      btn.__vatBatchHooked = true;
+      btn.addEventListener('click', function () {
         if (!bs.value) return;
         let info; try { info = JSON.parse(bs.value); } catch(e){ return; }
         const opt = sel.options[sel.selectedIndex];
         if (!opt || !opt.value) return;
-        const origVal = opt.value;
+        const origVal  = opt.value;
         const origText = opt.textContent;
-        const suffix = ` | Batch: ${info.batchNo}${info.expiry?` (Exp ${info.expiry})`:''}`;
+        const suffix = ' | Batch: ' + info.batchNo + (info.expiry ? ' (Exp ' + info.expiry + ')' : '');
+        // Temporarily suffix value so the host's addX handler captures it in the line description
         opt.value = origVal + suffix;
-        // Restore after current task so handler captures suffixed value
-        setTimeout(()=>{
-          opt.value = origVal;
-          opt.textContent = origText;
-          bs.value = '';
-        }, 0);
-      }, true); // capture, runs before original handler
+        setTimeout(function () { opt.value = origVal; opt.textContent = origText; bs.value = ''; }, 0);
+      }, true);
     });
   }
 
-  function wireAll(){ FORMS.forEach(wireForm); }
+  function wireAll() { FORMS.forEach(wireForm); }
 
-  if (document.readyState === 'loading'){
+  if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', wireAll);
   } else {
     wireAll();
   }
-  // Re-wire periodically in case forms render later (tab switches)
-  setInterval(wireAll, 1500);
+  // Tab switches / lazy renders / re-renders may rebuild the dropdowns.
+  // Re-tag + re-wire periodically. WeakSet guards prevent duplicate listeners.
+  setInterval(wireAll, 1200);
 })();
 </script>
 </body></html>
