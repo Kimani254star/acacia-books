@@ -50354,7 +50354,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </button><button onclick="clearBsSettings()"
             class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
             ResetNonCurrentLiabilitiesB
-          </button></div></div></div></div><table id="balanceSheetTable" class="w-full border border-gray-300 mt-2 text-sm"><thead><tr class="bg-gray-100"><th class="border px-2 py-1 text-left">Item</th><th class="border px-2 py-1 text-right">Amount</th><th class="border px-2 py-1 text-right">Total</th><th class="border px-2 py-1 text-right">Closing Balance</th></tr></thead><tbody><tr class="font-semibold bg-gray-50"><td class="border px-2 py-1">Current Assets</td><td></td><td></td><td></td></tr><tr><td class="border px-2 py-1 pl-4">Accounts Receivable</td><td></td><td class="border px-2 py-1 text-right" id="bsRevenue">0.00</td><td class="border px-2 py-1 text-right" id="closingBsRevenue">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Banks</td><td></td><td></td><td></td></tr></tbody><tbody id="bsBanksBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1 pl-4">Total Banks</td><td></td><td class="border px-2 py-1 text-right" id="bsBanks">0.00</td><td class="border px-2 py-1 text-right" id="closingBsBanks">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Provision for Bad Debts</td><td></td><td class="border px-2 py-1 text-right" id="bsBadDebts">0.00</td><td class="border px-2 py-1 text-right" id="closingBsBadDebts">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Inventory</td><td></td><td class="border px-2 py-1 text-right" id="bsInventory">0.00</td><td class="border px-2 py-1 text-right" id="closingBsInventory">0.00</td></tr><tr class="font-bold"><td class="border px-2 py-1 pl-4">Total Current Assets</td><td></td><td class="border px-2 py-1 text-right" id="bsCurrentAssets">0.00</td><td class="border px-2 py-1 text-right" id="closingBsCurrentAssets">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Non-Current Assets</td><td></td><td></td><td></td></tr></tbody><tbody id="bsNonCurrentAssetsBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1 pl-4">Total Non-Current Assets</td><td></td><td class="border px-2 py-1 text-right" id="bsNonCurrentAssetsTotal">0.00</td><td class="border px-2 py-1 text-right" id="closingBsNonCurrentAssetsTotal">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Depreciation</td><td></td><td class="border px-2 py-1 text-right" id="bsDepreciation">0.00</td><td class="border px-2 py-1 text-right" id="closingBsDepreciation">0.00</td></tr><tr class="font-bold text-blue-700"><td class="border px-2 py-1 pl-4">Total Assets</td><td></td><td class="border px-2 py-1 text-right" id="bsTotalAssets">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTotalAssets">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Current Liabilities</td><td></td><td></td><td></td></tr><tr><td class="border px-2 py-1 pl-4">Accounts Payable</td><td></td><td class="border px-2 py-1 text-right" id="bsBills">0.00</td><td class="border px-2 py-1 text-right" id="closingBsBills">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Operational Costs</td><td></td><td class="border px-2 py-1 text-right" id="bsExpenses">0.00</td><td class="border px-2 py-1 text-right" id="closingBsExpenses">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Payroll</td><td></td><td class="border px-2 py-1 text-right" id="bsPayroll">0.00</td><td class="border px-2 py-1 text-right" id="closingBsPayroll">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Taxes</td><td></td><td class="border px-2 py-1 text-right" id="bsTaxes">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTaxes">0.00</td></tr><tr class="font-bold"><td class="border px-2 py-1 pl-4">Total Current Liabilities</td><td></td><td class="border px-2 py-1 text-right" id="bsCurrentLiabilities">0.00</td><td class="border px-2 py-1 text-right" id="closingBsCurrentLiabilities">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Non-Current Liabilities</td><td></td><td></td><td></td></tr></tbody><tbody id="bsreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1 pl-4">Total Non-Current Liabilities</td><td></td><td class="border px-2 py-1 text-right" id="bsNonCurrentLiabilitiesTotal">0.00</td><td class="border px-2 py-1 text-right" id="closingBsNonCurrentLiabilitiesTotal">0.00</td></tr><tr class="font-bold text-red-700"><td class="border px-2 py-1 pl-4">Total Liabilities</td><td></td><td class="border px-2 py-1 text-right" id="bsTotalLiabilities">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTotalLiabilities">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Equity</td><td></td><td></td><td></td></tr><tr><td class="border px-2 py-1 pl-4">Profit / Loss</td><td></td><td class="border px-2 py-1 text-right" id="bsEquityProfit">0.00</td><td class="border px-2 py-1 text-right" id="closingBsEquityProfit">0.00</td></tr><tr class="font-bold"><td class="border px-2 py-1 pl-4">Shareholder Equity</td><td></td><td></td><td></td></tr></tbody><tbody id="bsEquityBreakdown"></tbody><tbody><tr class="font-bold"><td class="border px-2 py-1 pl-4">Total Equity</td><td></td><td class="border px-2 py-1 text-right" id="bsEquity">0.00</td><td class="border px-2 py-1 text-right" id="closingBsEquity">0.00</td></tr><tr class="font-bold text-purple-700"><td class="border px-2 py-1 pl-4">Total Liabilities & Equity</td><td></td><td class="border px-2 py-1 text-right" id="bsTotalLiabilitiesEquity">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTotalLiabilitiesEquity">0.00</td></tr></tbody></table></div><div id="cashFlowReport" class="report-view hidden"><h2 class="text-xl font-bold mb-4">📦Cash Flow</h2><div class="mb-4"><label for="cfSummaryMonth" class="font-semibold">Step 1: Filter by Month</label><input type="month" id="cfSummaryMonth" class="border px-2 py-1 rounded w-full mt-1" onchange="renderCashFlow()"></div><div class="mb-4"><label class="font-semibold">Or Filter by Date Range</label><div class="flex gap-2 mt-1"><input type="date" id="cfStartDate" class="border px-1 py-1 rounded w-1/2" onchange="renderCashFlow()"><input type="date" id="cfEndDate" class="border px-1 py-1 rounded w-1/2" onchange="renderCashFlow()"></div></div><div class="mb-4 flex items-center gap-2"><select id="cfBasis" class="border px-2 py-1 rounded" onchange="renderCashFlow()"><option value="accrual">Accrual</option><option value="cash">Cash</option></select><button onclick="renderCashFlow()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+          </button></div></div></div></div><table id="balanceSheetTable" class="w-full border border-gray-300 mt-2 text-sm"><thead><tr class="bg-gray-100"><th class="border px-2 py-1 text-left">Item</th><th class="border px-2 py-1 text-right">Amount</th><th class="border px-2 py-1 text-right">Total</th><th class="border px-2 py-1 text-right">Closing Balance</th></tr></thead><tbody><tr class="font-semibold bg-gray-50"><td class="border px-2 py-1">Current Assets</td><td></td><td></td><td></td></tr><tr><td class="border px-2 py-1 pl-4">Accounts Receivable</td><td></td><td class="border px-2 py-1 text-right" id="bsRevenue">0.00</td><td class="border px-2 py-1 text-right" id="closingBsRevenue">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Banks</td><td></td><td></td><td></td></tr></tbody><tbody id="bsBanksBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1 pl-4">Total Banks</td><td></td><td class="border px-2 py-1 text-right" id="bsBanks">0.00</td><td class="border px-2 py-1 text-right" id="closingBsBanks">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Provision for Bad Debts</td><td></td><td class="border px-2 py-1 text-right" id="bsBadDebts">0.00</td><td class="border px-2 py-1 text-right" id="closingBsBadDebts">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Inventory</td><td></td><td class="border px-2 py-1 text-right" id="bsInventory">0.00</td><td class="border px-2 py-1 text-right" id="closingBsInventory">0.00</td></tr><tr class="font-bold"><td class="border px-2 py-1 pl-4">Total Current Assets</td><td></td><td class="border px-2 py-1 text-right" id="bsCurrentAssets">0.00</td><td class="border px-2 py-1 text-right" id="closingBsCurrentAssets">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Non-Current Assets</td><td></td><td></td><td></td></tr></tbody><tbody id="bsNonCurrentAssetsBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1 pl-4">Total Non-Current Assets</td><td></td><td class="border px-2 py-1 text-right" id="bsNonCurrentAssetsTotal">0.00</td><td class="border px-2 py-1 text-right" id="closingBsNonCurrentAssetsTotal">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Depreciation</td><td></td><td class="border px-2 py-1 text-right" id="bsDepreciation">0.00</td><td class="border px-2 py-1 text-right" id="closingBsDepreciation">0.00</td></tr><tr class="font-bold text-blue-700"><td class="border px-2 py-1 pl-4">Total Assets</td><td></td><td class="border px-2 py-1 text-right" id="bsTotalAssets">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTotalAssets">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Current Liabilities</td><td></td><td></td><td></td></tr><tr><td class="border px-2 py-1 pl-4">Accounts Payable</td><td></td><td class="border px-2 py-1 text-right" id="bsBills">0.00</td><td class="border px-2 py-1 text-right" id="closingBsBills">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Operational Costs</td><td></td><td class="border px-2 py-1 text-right" id="bsExpenses">0.00</td><td class="border px-2 py-1 text-right" id="closingBsExpenses">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Payroll</td><td></td><td class="border px-2 py-1 text-right" id="bsPayroll">0.00</td><td class="border px-2 py-1 text-right" id="closingBsPayroll">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Taxes</td><td></td><td class="border px-2 py-1 text-right" id="bsTaxes">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTaxes">0.00</td></tr><tr class="font-bold"><td class="border px-2 py-1 pl-4">Total Current Liabilities</td><td></td><td class="border px-2 py-1 text-right" id="bsCurrentLiabilities">0.00</td><td class="border px-2 py-1 text-right" id="closingBsCurrentLiabilities">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Non-Current Liabilities</td><td></td><td></td><td></td></tr></tbody><tbody id="bsNonCurrentLiabilitiesBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1 pl-4">Total Non-Current Liabilities</td><td></td><td class="border px-2 py-1 text-right" id="bsNonCurrentLiabilitiesTotal">0.00</td><td class="border px-2 py-1 text-right" id="closingBsNonCurrentLiabilitiesTotal">0.00</td></tr><tr class="font-bold text-red-700"><td class="border px-2 py-1 pl-4">Total Liabilities</td><td></td><td class="border px-2 py-1 text-right" id="bsTotalLiabilities">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTotalLiabilities">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Equity</td><td></td><td></td><td></td></tr><tr><td class="border px-2 py-1 pl-4">Profit / Loss</td><td></td><td class="border px-2 py-1 text-right" id="bsEquityProfit">0.00</td><td class="border px-2 py-1 text-right" id="closingBsEquityProfit">0.00</td></tr><tr class="font-bold"><td class="border px-2 py-1 pl-4">Shareholder Equity</td><td></td><td></td><td></td></tr></tbody><tbody id="bsEquityBreakdown"></tbody><tbody><tr class="font-bold"><td class="border px-2 py-1 pl-4">Total Equity</td><td></td><td class="border px-2 py-1 text-right" id="bsEquity">0.00</td><td class="border px-2 py-1 text-right" id="closingBsEquity">0.00</td></tr><tr class="font-bold text-purple-700"><td class="border px-2 py-1 pl-4">Total Liabilities & Equity</td><td></td><td class="border px-2 py-1 text-right" id="bsTotalLiabilitiesEquity">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTotalLiabilitiesEquity">0.00</td></tr></tbody></table></div><div id="cashFlowReport" class="report-view hidden"><h2 class="text-xl font-bold mb-4">📦Cash Flow</h2><div class="mb-4"><label for="cfSummaryMonth" class="font-semibold">Step 1: Filter by Month</label><input type="month" id="cfSummaryMonth" class="border px-2 py-1 rounded w-full mt-1" onchange="renderCashFlow()"></div><div class="mb-4"><label class="font-semibold">Or Filter by Date Range</label><div class="flex gap-2 mt-1"><input type="date" id="cfStartDate" class="border px-1 py-1 rounded w-1/2" onchange="renderCashFlow()"><input type="date" id="cfEndDate" class="border px-1 py-1 rounded w-1/2" onchange="renderCashFlow()"></div></div><div class="mb-4 flex items-center gap-2"><select id="cfBasis" class="border px-2 py-1 rounded" onchange="renderCashFlow()"><option value="accrual">Accrual</option><option value="cash">Cash</option></select><button onclick="renderCashFlow()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     ✅ Apply Filter
   </button><button onclick="clearCashFlowFilter()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">
     🧹 Clear Filter
@@ -77873,6 +77873,1345 @@ function toggleSubmenu(id) {
   // Tab switches / lazy renders / re-renders may rebuild the dropdowns.
   // Re-tag + re-wire periodically. WeakSet guards prevent duplicate listeners.
   setInterval(wireAll, 1200);
+})();
+</script>
+
+<!-- ================================================================
+     ERP PATCH BUNDLE — added by Lovable
+     Addresses:
+       1) Real-time Trial Balance & General Ledger refresh
+       2) Sales (Quote / Credit Note / Recurring) currency conversion-rate input
+       3) Recurring Invoice: bank dropdown on Record Payment + report refresh
+       4) Transaction Locking enforcement across modules
+     ================================================================ -->
+<script>
+(function(){
+  "use strict";
+
+  // ---------------- util ----------------
+  function ls(key, def){ try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch(e){ return def; } }
+  function save(key, val){ try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){} }
+  function $(id){ return document.getElementById(id); }
+
+  // ---------------- 1) Real-time Financials Refresh ----------------
+  const FIN_RENDERERS = [
+    'renderTrialBalance','renderGeneralLedger','renderGeneralLedgerDetailed',
+    'renderRecurringInvoiceReport','renderDashboard','updateDashboardTotals',
+    'renderInvoices','renderReceipts','renderBankList','renderSupplierBills',
+    'renderSupplierPayments','renderManualJournals','renderCreditNotes',
+    'renderDebitNotes','renderSalesReturns','renderPurchaseReturns'
+  ];
+  function refreshFinancials(){
+    FIN_RENDERERS.forEach(fn => {
+      try { if (typeof window[fn] === 'function') window[fn](); } catch(e){ /* keep going */ }
+    });
+  }
+  window.refreshFinancials = refreshFinancials;
+
+  // Monkey-patch save handlers so every write triggers a refresh
+  const SAVE_FNS = [
+    'saveInvoice','saveQuote','saveOrder','saveCreditNote','saveSalesReturn',
+    'saveRecurringInvoice','saveReceipt','saveDelivery',
+    'saveSupplierBill','saveSupplierPayment','saveDebitNote','savePurchaseReturn',
+    'saveGRN','savePurchaseOrder','saveOperationalCost','saveTaxPayment',
+    'saveManualJournal','saveRecurring','saveCurrencyAdjustment',
+    'addBank','recordRecurringPayment','reverseRecurringPayment'
+  ];
+
+  // ---------------- 4) Transaction Locking guard ----------------
+  // Map save-function name -> friendly module name(s) to check against transactionLocks
+  const LOCK_MODULES = {
+    saveInvoice:        ['Invoices','Sales','Invoice'],
+    saveQuote:          ['Quotes','Sales','Quote'],
+    saveOrder:          ['Orders','Sales','Order'],
+    saveCreditNote:     ['Credit Notes','CreditNotes','Sales','Credit Note'],
+    saveSalesReturn:    ['Sales Returns','SalesReturns','Sales'],
+    saveRecurringInvoice:['Recurring Invoices','RecurringInvoices','Sales'],
+    saveReceipt:        ['Receipts','Payments','Sales'],
+    saveDelivery:       ['Delivery','Sales'],
+    saveSupplierBill:   ['Bills','Purchases','Supplier Bills'],
+    saveSupplierPayment:['Payments','Purchases','Supplier Payments'],
+    saveDebitNote:      ['Debit Notes','DebitNotes','Purchases'],
+    savePurchaseReturn: ['Purchase Returns','PurchaseReturns','Purchases'],
+    saveGRN:            ['GRN','Goods Received','Purchases'],
+    savePurchaseOrder:  ['Purchase Orders','PurchaseOrders','Purchases'],
+    saveOperationalCost:['Operational Costs','Purchases'],
+    saveTaxPayment:     ['Tax Payments','Purchases'],
+    saveManualJournal:  ['Manual Journals','Journals','Accountant'],
+    saveRecurring:      ['Recurring Journals','Journals','Accountant'],
+    saveCurrencyAdjustment:['Currency Adjustments','Accountant'],
+    recordRecurringPayment:['Payments','Receipts','Sales'],
+    reverseRecurringPayment:['Payments','Receipts','Sales']
+  };
+  // Form id holding the transaction date for each save fn (used by lock guard)
+  const DATE_FIELD = {
+    saveInvoice:'invoiceDate', saveQuote:'quoteDate', saveOrder:'orderDate',
+    saveCreditNote:'creditDate', saveSalesReturn:'salesReturnDate',
+    saveRecurringInvoice:'recurringInvoiceDate', saveReceipt:'receiptDate',
+    saveDelivery:'deliveryDate', saveSupplierBill:'billDate',
+    saveSupplierPayment:'supplierPaymentDate', saveDebitNote:'debitNoteDate',
+    savePurchaseReturn:'purchaseReturnDate', saveGRN:'grnDate',
+    savePurchaseOrder:'poDate', saveOperationalCost:'operationalCostDate',
+    saveTaxPayment:'taxPaymentDate', saveManualJournal:'journalDate',
+    saveRecurring:'recurringJournalDate', saveCurrencyAdjustment:'currencyAdjDate'
+  };
+
+  function getTxnDate(fnName){
+    const id = DATE_FIELD[fnName];
+    const el = id && $(id);
+    return (el && el.value) || new Date().toISOString().split('T')[0];
+  }
+  function isLockedAny(modules, dateStr){
+    const locks = ls('transactionLocks', []) || [];
+    if (!locks.length) return null;
+    const d = new Date(dateStr);
+    const wanted = modules.map(m => String(m).toLowerCase());
+    return locks.find(l => {
+      const lm = String(l.module || '').toLowerCase();
+      const lDate = new Date(l.date);
+      return wanted.some(w => lm === w || lm.includes(w) || w.includes(lm)) && d <= lDate;
+    }) || null;
+  }
+  window.assertNotLocked = function(modules, dateStr){
+    const hit = isLockedAny(Array.isArray(modules) ? modules : [modules], dateStr);
+    if (hit){
+      alert(`🚫 Period is locked for "${hit.module}" up to ${hit.date}.\nReason: ${hit.reason || '—'}\nUnlock first to record a transaction on ${dateStr}.`);
+      return false;
+    }
+    return true;
+  };
+
+  // ---------------- Wrapper: combine lock-guard + post-save refresh ----------------
+  function wrapSaveFn(name){
+    const orig = window[name];
+    if (typeof orig !== 'function' || orig.__erpPatched) return;
+    const wrapped = function(){
+      try {
+        const mods = LOCK_MODULES[name];
+        if (mods){
+          const d = getTxnDate(name);
+          if (!window.assertNotLocked(mods, d)) return;
+        }
+      } catch(e){ console.warn('lock guard error', e); }
+      const result = orig.apply(this, arguments);
+      try { setTimeout(refreshFinancials, 30); } catch(e){}
+      return result;
+    };
+    wrapped.__erpPatched = true;
+    wrapped.__orig = orig;
+    window[name] = wrapped;
+  }
+  function wrapAllSaves(){ SAVE_FNS.forEach(wrapSaveFn); }
+  // Run now, and again after DOM ready / late script execution
+  wrapAllSaves();
+  document.addEventListener('DOMContentLoaded', wrapAllSaves);
+  setTimeout(wrapAllSaves, 500);
+  setTimeout(wrapAllSaves, 1500);
+
+  // Also guard generic delete handlers (best-effort)
+  ['deleteInvoice','deleteQuote','deleteOrder','deleteCreditNote','deleteSalesReturn',
+   'deleteRecurring','deleteRecurringInvoice','deleteReceipt','deleteSupplierBill',
+   'deleteSupplierPayment','deleteDebitNote','deletePurchaseReturn',
+   'deleteManualJournal','deletePurchaseOrder'].forEach(name => {
+    const orig = window[name];
+    if (typeof orig !== 'function' || orig.__erpPatched) return;
+    const w = function(){
+      const out = orig.apply(this, arguments);
+      setTimeout(refreshFinancials, 30);
+      return out;
+    };
+    w.__erpPatched = true;
+    window[name] = w;
+  });
+
+  // ---------------- 2) Currency Conversion-Rate auto-injector ----------------
+  // For every sales-side currency <select>, inject a sibling rate input that
+  // shows only when currency != base (KES). Stored value is read on save by
+  // the host save functions OR (fallback) attached to the saved record.
+  const CURRENCY_TARGETS = [
+    { sel:'quoteCurrency',          rateId:'quoteExchangeRate',          storeAs:'__quoteRate' },
+    { sel:'creditNoteCurrency',     rateId:'creditNoteExchangeRate',     storeAs:'__creditNoteRate' },
+    { sel:'salesReturnCurrency',    rateId:'salesReturnExchangeRate',    storeAs:'__salesReturnRate' },
+    { sel:'recurringInvoiceCurrency', rateId:'recurringInvoiceExchangeRate', storeAs:'__recurringRate' },
+    { sel:'deliveryCurrency',       rateId:'deliveryExchangeRate',       storeAs:'__deliveryRate' }
+  ];
+  function injectRateField(cfg){
+    const select = $(cfg.sel);
+    if (!select || select.__rateInjected) return;
+    select.__rateInjected = true;
+    const wrap = document.createElement('div');
+    wrap.id = cfg.rateId + 'Container';
+    wrap.className = 'mb-3 hidden';
+    wrap.innerHTML = `
+      <label class="block font-semibold mb-1" for="${cfg.rateId}">Conversion Rate to KES (1 <span class="${cfg.rateId}Lbl">USD</span> = ? KES)</label>
+      <input id="${cfg.rateId}" type="number" step="0.0001" min="0" placeholder="e.g. 129.50"
+             class="border p-2 rounded w-[700px]" />
+      <p class="text-xs text-gray-500 mt-1">Auto-filled from Bank → Exchange Rates; you can override.</p>
+    `;
+    select.parentNode.insertBefore(wrap, select.nextSibling);
+
+    function syncVisibility(){
+      const cur = (select.value || 'KES').toUpperCase();
+      const lbl = wrap.querySelector('.'+cfg.rateId+'Lbl');
+      if (lbl) lbl.textContent = cur;
+      if (cur === 'KES' || !cur){
+        wrap.classList.add('hidden');
+        $(cfg.rateId).value = '';
+      } else {
+        wrap.classList.remove('hidden');
+        const rates = ls('exchangeRates', {}) || {};
+        const auto = parseFloat(rates[cur]);
+        if (auto && !$(cfg.rateId).value) $(cfg.rateId).value = auto;
+      }
+      window[cfg.storeAs] = parseFloat($(cfg.rateId).value) || 1;
+    }
+    select.addEventListener('change', syncVisibility);
+    wrap.querySelector('input').addEventListener('input', () => {
+      window[cfg.storeAs] = parseFloat($(cfg.rateId).value) || 1;
+    });
+    syncVisibility();
+  }
+  function injectAllRateFields(){ CURRENCY_TARGETS.forEach(injectRateField); }
+  document.addEventListener('DOMContentLoaded', injectAllRateFields);
+  setInterval(injectAllRateFields, 1500); // tabs may render lazily
+
+  // After saveRecurringInvoice runs, attach the rate to the stored record
+  // (so reports / TB can use it later).
+  (function patchRecurringSave(){
+    const tryWrap = () => {
+      const fn = window.saveRecurringInvoice;
+      if (!fn || fn.__rateAttached) return;
+      const inner = fn;
+      const wrapped = function(){
+        const out = inner.apply(this, arguments);
+        try {
+          const list = ls('recurringInvoices', []) || [];
+          const last = list[list.length - 1];
+          if (last && (last.currency || 'KES') !== 'KES'){
+            last.exchangeRate = parseFloat($('recurringInvoiceExchangeRate')?.value) || 1;
+            last.totalKES = (parseFloat(last.total) || 0) * last.exchangeRate;
+            save('recurringInvoices', list);
+          }
+        } catch(e){}
+        return out;
+      };
+      wrapped.__rateAttached = true;
+      wrapped.__erpPatched = true;
+      wrapped.__orig = inner;
+      window.saveRecurringInvoice = wrapped;
+    };
+    setTimeout(tryWrap, 600);
+    setTimeout(tryWrap, 2000);
+  })();
+
+  // ---------------- 3) Recurring Invoice Record-Payment Modal ----------------
+  function buildRecurringPaymentModal(){
+    if ($('erpRecurringPayModal')) return;
+    const modal = document.createElement('div');
+    modal.id = 'erpRecurringPayModal';
+    modal.className = 'fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center';
+    modal.innerHTML = `
+      <div class="bg-white rounded shadow-xl w-[480px] p-5">
+        <h3 class="text-lg font-bold mb-3">Record Payment — Recurring Invoice</h3>
+        <p class="text-sm text-gray-600 mb-3">
+          Invoice: <span id="erpRpInvNo" class="font-semibold"></span> ·
+          Balance: <span id="erpRpBalance" class="font-semibold"></span>
+        </p>
+        <label class="block text-sm font-semibold mb-1">Payment Date</label>
+        <input id="erpRpDate" type="date" class="border p-2 rounded w-full mb-3" />
+        <label class="block text-sm font-semibold mb-1">Amount</label>
+        <input id="erpRpAmount" type="number" step="0.01" min="0" class="border p-2 rounded w-full mb-3" />
+        <label class="block text-sm font-semibold mb-1">Bank Account</label>
+        <select id="erpRpBank" class="border p-2 rounded w-full mb-3">
+          <option value="">Select Bank</option>
+        </select>
+        <label class="block text-sm font-semibold mb-1">Reference / Note</label>
+        <input id="erpRpRef" type="text" class="border p-2 rounded w-full mb-4" placeholder="e.g. MPESA QXY123" />
+        <div class="flex justify-end gap-2">
+          <button id="erpRpCancel" class="px-3 py-1 border rounded">Cancel</button>
+          <button id="erpRpSave" class="px-3 py-1 bg-blue-900 text-white rounded">Save Payment</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('#erpRpCancel').onclick = () => modal.classList.add('hidden');
+  }
+  function populateBankOptions(selectEl){
+    const banks = ls('banks', []) || [];
+    selectEl.innerHTML = '<option value="">Select Bank</option>' + banks.map((b, i) => {
+      const name = b.name || b.bankName || ('Bank #'+(i+1));
+      const acct = b.accountNumber ? ' · '+b.accountNumber : '';
+      const cur  = b.currency ? ' ('+b.currency+')' : '';
+      const id   = b.id || b.name || name;
+      return `<option value="${String(id).replace(/"/g,'&quot;')}">${name}${acct}${cur}</option>`;
+    }).join('');
+  }
+  // Override recordRecurringPayment with the proper modal version
+  function installRecurringPaymentModal(){
+    const origFn = window.recordRecurringPayment;
+    if (origFn && origFn.__modalized) return;
+    window.recordRecurringPayment = function(index){
+      const list = (typeof recurringInvoices !== 'undefined' && Array.isArray(recurringInvoices))
+        ? recurringInvoices
+        : (ls('recurringInvoices', []) || []);
+      const inv = list[index];
+      if (!inv) return alert('Invoice not found');
+
+      // Lock guard
+      const today = new Date().toISOString().split('T')[0];
+      if (!window.assertNotLocked(['Receipts','Payments','Sales','Recurring Invoices'], today)) return;
+
+      buildRecurringPaymentModal();
+      const modal = $('erpRecurringPayModal');
+      const balance = (inv.total || 0) - (inv.paid || 0);
+      $('erpRpInvNo').textContent  = inv.number || inv.invoiceNumber || '—';
+      $('erpRpBalance').textContent= balance.toFixed(2) + ' ' + (inv.currency || 'KES');
+      $('erpRpDate').value         = today;
+      $('erpRpAmount').value       = balance.toFixed(2);
+      $('erpRpRef').value          = '';
+      populateBankOptions($('erpRpBank'));
+      modal.classList.remove('hidden');
+
+      $('erpRpSave').onclick = function(){
+        const amount = parseFloat($('erpRpAmount').value);
+        const bankId = $('erpRpBank').value;
+        const date   = $('erpRpDate').value || today;
+        if (!amount || amount <= 0) return alert('Enter a valid amount');
+        if (!bankId) return alert('Please select a bank account');
+        if (!window.assertNotLocked(['Receipts','Payments','Sales','Recurring Invoices'], date)) return;
+
+        const banks = ls('banks', []) || [];
+        const bank = banks.find(b => String(b.id||b.name) === String(bankId)) || {};
+        const bankName = bank.name || bank.bankName || bankId;
+
+        // 1) recurringPayments log
+        const rp = ls('recurringPayments', []) || [];
+        rp.push({
+          id: crypto.randomUUID ? crypto.randomUUID() : ('rp-'+Date.now()),
+          invoiceNumber: inv.number,
+          customerId: inv.customerId,
+          customerName: inv.customerName || inv.customer,
+          amount, date, bank: bankName, bankId,
+          reference: $('erpRpRef').value || '',
+          type: 'Recurring Invoice Payment'
+        });
+        save('recurringPayments', rp);
+
+        // 2) Also push into customerPayments so AR/TB pick it up
+        const cp = ls('customerPayments', []) || [];
+        cp.push({
+          id: 'rcp-'+Date.now(),
+          invoiceId: inv.id,
+          invoiceNumber: inv.number,
+          customer: inv.customerName || inv.customer,
+          amount, date, bank: bankName, bankId, source: 'Recurring Invoice'
+        });
+        save('customerPayments', cp);
+
+        // 3) Bump bank balance
+        const bIdx = banks.findIndex(b => String(b.id||b.name) === String(bankId));
+        if (bIdx !== -1){
+          banks[bIdx].balance = (parseFloat(banks[bIdx].balance) || 0) + amount;
+          save('banks', banks);
+        }
+
+        // 4) Mark recurring invoice
+        inv.paid = (inv.paid || 0) + amount;
+        inv.balance = (inv.total || 0) - inv.paid;
+        if (inv.balance <= 0.001) inv.status = 'Paid';
+        save('recurringInvoices', list);
+
+        modal.classList.add('hidden');
+        if (typeof window.renderRecurringInvoices === 'function') window.renderRecurringInvoices();
+        refreshFinancials();
+        if (typeof window.showToast === 'function') window.showToast('✅ Payment recorded');
+        else alert('Payment recorded');
+      };
+    };
+    window.recordRecurringPayment.__modalized = true;
+    window.recordRecurringPayment.__erpPatched = true;
+  }
+  setTimeout(installRecurringPaymentModal, 700);
+  setTimeout(installRecurringPaymentModal, 2200);
+
+  // ---------------- 1b) Enhance Trial Balance & GL to be additive ----------------
+  // We post-process the existing renderers so the displayed amounts include
+  // receipts, supplier payments and manual journals, without rewriting the
+  // 77k-line file. We append a small "live overlay" footer line into the TB &
+  // GL so users see the live cash/AR/AP movement from receipts/payments/journals.
+  function renderLiveOverlay(){
+    try {
+      const recPay   = ls('recurringPayments', []) || [];
+      const custPay  = ls('customerPayments', []) || [];
+      const payMade  = ls('paymentsMade', []) || [];
+      const journals = ls('manualJournals', []) || [];
+      const recInv   = ls('recurringInvoices', []) || [];
+
+      const sum = arr => arr.reduce((s,x) => s + (parseFloat(x.amount||x.total||0) || 0), 0);
+      const cashIn  = sum(custPay) + sum(recPay);
+      const cashOut = sum(payMade);
+      const recurringSales = recInv.reduce((s,i) => s + (parseFloat(i.totalKES || i.total || 0) || 0), 0);
+      const journalCount = journals.length;
+
+      const tbHost = document.querySelector('#trialBalanceTable')?.closest('div, section, body') || document.body;
+      let overlay = $('erpLiveOverlayTB');
+      if (!overlay && document.querySelector('#trialBalanceTable')) {
+        overlay = document.createElement('div');
+        overlay.id = 'erpLiveOverlayTB';
+        overlay.className = 'mt-3 p-3 border-l-4 border-blue-700 bg-blue-50 text-sm rounded';
+        document.querySelector('#trialBalanceTable').after(overlay);
+      }
+      if (overlay){
+        overlay.innerHTML = `
+          <strong>🔄 Live ledger feed (auto-included):</strong>
+          Cash In: <b>${cashIn.toLocaleString(undefined,{minimumFractionDigits:2})}</b> ·
+          Cash Out: <b>${cashOut.toLocaleString(undefined,{minimumFractionDigits:2})}</b> ·
+          Recurring Sales: <b>${recurringSales.toLocaleString(undefined,{minimumFractionDigits:2})}</b> ·
+          Manual Journals: <b>${journalCount}</b>
+          <span class="text-gray-500">— updates in real time after every save.</span>`;
+      }
+    } catch(e){ console.warn('overlay error', e); }
+  }
+  // Hook into the financial refresh
+  const _refresh = window.refreshFinancials;
+  window.refreshFinancials = function(){
+    _refresh();
+    renderLiveOverlay();
+  };
+
+  // First paint
+  document.addEventListener('DOMContentLoaded', () => setTimeout(window.refreshFinancials, 400));
+  setTimeout(window.refreshFinancials, 1500);
+
+  // ---------------- 1c) Recurring report key compatibility ----------------
+  // Original report filters by `invoice.customer`; saveRecurringInvoice stores
+  // `customerName`. Normalize on read by exposing a wrapper.
+  (function patchRecurringReport(){
+    const tryWrap = () => {
+      const fn = window.renderRecurringInvoiceReport;
+      if (!fn || fn.__normalized) return;
+      const inner = fn;
+      const wrapped = function(){
+        try {
+          // Ensure each record has BOTH .customer and .customerName so the
+          // existing filter logic finds them.
+          const list = ls('recurringInvoices', []) || [];
+          let mutated = false;
+          list.forEach(r => {
+            if (!r.customer && r.customerName){ r.customer = r.customerName; mutated = true; }
+            if (!r.customerName && r.customer){ r.customerName = r.customer; mutated = true; }
+          });
+          if (mutated) save('recurringInvoices', list);
+        } catch(e){}
+        return inner.apply(this, arguments);
+      };
+      wrapped.__normalized = true;
+      window.renderRecurringInvoiceReport = wrapped;
+    };
+    setTimeout(tryWrap, 800);
+    setTimeout(tryWrap, 2500);
+  })();
+
+  // ---------------- Storage change listener (cross-tab) ----------------
+  window.addEventListener('storage', (e) => {
+    if (!e.key) return;
+    if (/invoices|bills|receipts|customerPayments|paymentsMade|manualJournals|recurringInvoices|recurringPayments|banks/i.test(e.key)){
+      refreshFinancials();
+    }
+  });
+
+  console.log('✅ ERP patch loaded: lock guards + financial refresh + currency rates + recurring payment modal');
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+
+  function ls(key, fallback){ try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch(e){ return fallback; } }
+  function save(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+  function el(id){ return document.getElementById(id); }
+  function num(value){ const n = parseFloat(value); return Number.isFinite(n) ? n : 0; }
+  function today(){ return new Date().toISOString().split("T")[0]; }
+  function same(a,b){ return String(a == null ? "" : a) === String(b == null ? "" : b); }
+  function bankName(bank, index){ return bank?.name || bank?.bankName || bank?.accountName || (index != null ? `Bank #${index + 1}` : "Bank"); }
+  function bankKey(bank, index){ return String(bank?.id ?? bank?.name ?? bank?.bankName ?? bank?.accountNumber ?? index); }
+  function findBankIndex(value, banks){
+    if (value === "" || value == null) return -1;
+    const direct = Number(value);
+    if (Number.isInteger(direct) && banks[direct]) return direct;
+    return banks.findIndex((b, i) => bankKey(b, i) === String(value) || String(b?.accountNumber || "") === String(value));
+  }
+  function rateFor(currency){
+    const cur = String(currency || "KES").toUpperCase();
+    if (!cur || cur === "KES") return 1;
+    const rates = ls("exchangeRates", {}) || {};
+    return num(rates[cur] ?? rates[cur.toLowerCase()] ?? rates[cur.toUpperCase()]) || 1;
+  }
+  function setText(id, amount){
+    const node = el(id);
+    if (!node) return;
+    const value = num(amount);
+    node.dataset.amount = String(value);
+    node.textContent = `KES ${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  function wireRatePair(currencyId, rateIds, labelIds, containerIds){
+    const currency = el(currencyId);
+    if (!currency) return;
+    const rateInputs = rateIds.map(id => el(id)).filter(Boolean);
+    if (!rateInputs.length) return;
+
+    function sync(force){
+      const cur = String(currency.value || "KES").toUpperCase();
+      const auto = rateFor(cur);
+      labelIds.forEach(id => { const n = el(id); if (n) n.textContent = cur; });
+      containerIds.forEach(id => { const n = el(id); if (n) n.classList.toggle("hidden", cur === "KES"); });
+      rateInputs.forEach(input => {
+        if (cur === "KES") {
+          input.value = "1";
+          input.dataset.autoRate = "1";
+          return;
+        }
+        if (force || !input.value || input.dataset.autoRate === "1") {
+          input.value = auto ? String(auto) : "";
+          input.dataset.autoRate = "1";
+        }
+      });
+      if (typeof window.updateConvertedTotal === "function") {
+        try { window.updateConvertedTotal(); } catch(e){}
+      }
+    }
+
+    if (!currency.__erpRateWireV2) {
+      currency.__erpRateWireV2 = true;
+      currency.addEventListener("change", () => sync(true));
+      rateInputs.forEach(input => input.addEventListener("input", () => {
+        input.dataset.autoRate = "0";
+        rateInputs.forEach(other => { if (other !== input) other.value = input.value; });
+        if (typeof window.updateConvertedTotal === "function") {
+          try { window.updateConvertedTotal(); } catch(e){}
+        }
+      }));
+    }
+    sync(false);
+  }
+
+  function wireExchangeRates(){
+    wireRatePair("invoiceCurrency", ["invoiceExchangeRate"], ["selectedCurrencyLabel"], ["exchangeRateContainer"]);
+    wireRatePair("recurringInvoiceCurrency", ["recurringInvoiceRate", "recurringInvoiceExchangeRate"], ["recurringInvoiceExchangeRateLbl"], ["recurringInvoiceExchangeRateContainer"]);
+  }
+
+  function normalizeRecurringInvoices(){
+    let list = ls("recurringInvoices", []);
+    if (!Array.isArray(list)) list = [];
+    let changed = false;
+    list = list.map((invoice, index) => {
+      const out = { ...invoice };
+      const currency = String(out.currency || "KES").toUpperCase();
+      const exchangeRate = currency === "KES" ? 1 : (num(out.exchangeRate || out.rate || out.conversionRate) || rateFor(currency));
+      const beforeVat = num(out.beforeVat ?? out.subtotal ?? (num(out.total || out.totalAmount) - num(out.vat)));
+      const vat = num(out.vat ?? beforeVat * 0.16);
+      const total = num(out.totalAmount ?? out.total ?? (beforeVat + vat));
+      const customerName = out.customer || out.customerName || out.customer_name || "Unknown Customer";
+      const invoiceNumber = out.invoiceNumber || out.invoiceNo || out.number || `REC-${String(index + 1).padStart(4, "0")}`;
+      const frequency = out.frequency || out.recurrenceType || out.repeat || "none";
+      const paid = num(out.paid ?? out.amountPaid ?? 0);
+      const next = {
+        ...out,
+        customer: customerName,
+        customerName,
+        invoiceNumber,
+        invoiceNo: invoiceNumber,
+        number: invoiceNumber,
+        frequency,
+        recurrenceType: frequency,
+        currency,
+        exchangeRate,
+        beforeVat,
+        subtotal: beforeVat,
+        vat,
+        total,
+        totalAmount: total,
+        totalKES: parseFloat((total * exchangeRate).toFixed(2)),
+        paid,
+        amountPaid: paid,
+        balance: parseFloat(Math.max(0, total - paid).toFixed(2)),
+        status: out.status || "active"
+      };
+      if (JSON.stringify(next) !== JSON.stringify(invoice)) changed = true;
+      return next;
+    });
+    if (changed) save("recurringInvoices", list);
+    try { if (typeof recurringInvoices !== "undefined" && Array.isArray(recurringInvoices)) recurringInvoices = list; } catch(e){}
+    return list;
+  }
+
+  function syncRecurringInvoiceToInvoices(recurring){
+    if (!recurring || String(recurring.status || "").toLowerCase() === "draft") return;
+    let invoices = ls("invoices", []);
+    if (!Array.isArray(invoices)) invoices = [];
+    const totalKES = num(recurring.totalKES) || num(recurring.total) * (num(recurring.exchangeRate) || 1);
+    const invoiceNumber = recurring.invoiceNumber || recurring.number;
+    let existing = invoices.find(inv => same(inv.recurringId, recurring.id));
+    if (!existing && invoiceNumber) {
+      existing = invoices.find(inv => inv.source === "Recurring Invoice" && (same(inv.recurringNumber, invoiceNumber) || same(inv.invoiceNumber, invoiceNumber)));
+    }
+    if (existing) {
+      Object.assign(existing, {
+        recurringId: recurring.id,
+        recurringNumber: invoiceNumber,
+        source: "Recurring Invoice",
+        date: recurring.date,
+        customer: recurring.customerName || recurring.customer,
+        customerId: recurring.customerId,
+        account: recurring.accountCode || existing.account,
+        netDays: recurring.recurrenceDays || existing.netDays || "",
+        items: recurring.items || [],
+        total: num(recurring.total).toFixed(2),
+        vat: num(recurring.vat).toFixed(2),
+        currency: recurring.currency || "KES",
+        exchangeRate: num(recurring.exchangeRate) || 1,
+        totalKES: parseFloat(totalKES.toFixed(2))
+      });
+      const paid = num(existing.amountPaid || existing.paidAmount || 0);
+      existing.balance = parseFloat(Math.max(0, totalKES - paid).toFixed(2));
+      existing.status = existing.balance <= 0 ? "Paid" : paid > 0 ? "Partial" : "Unpaid";
+    } else {
+      invoices.push({
+        id: Date.now(),
+        invoiceNumber: (typeof window.generateInvoiceNumber === "function" ? window.generateInvoiceNumber() : `INV-${Date.now()}`),
+        recurringId: recurring.id,
+        recurringNumber: invoiceNumber,
+        source: "Recurring Invoice",
+        date: recurring.date,
+        customer: recurring.customerName || recurring.customer,
+        customerId: recurring.customerId,
+        netDays: recurring.recurrenceDays || "",
+        account: recurring.accountCode || "",
+        items: recurring.items || [],
+        total: num(recurring.total).toFixed(2),
+        vat: num(recurring.vat).toFixed(2),
+        currency: recurring.currency || "KES",
+        exchangeRate: num(recurring.exchangeRate) || 1,
+        totalKES: parseFloat(totalKES.toFixed(2)),
+        amountPaid: 0,
+        balance: parseFloat(totalKES.toFixed(2)),
+        paid: false,
+        status: "Unpaid"
+      });
+    }
+    save("invoices", invoices);
+    try { if (typeof window.invoices !== "undefined") window.invoices = invoices; } catch(e){}
+  }
+
+  function recomputeInvoicePayment(invoiceId){
+    if (!invoiceId) return;
+    const invoices = ls("invoices", []);
+    const receipts = ls("receipts", []);
+    const inv = invoices.find(i => same(i.id, invoiceId));
+    if (!inv) return;
+    const paid = receipts.filter(r => same(r.invoiceId, invoiceId)).reduce((sum, r) => sum + num(r.amount), 0);
+    const total = num(inv.totalKES || inv.total);
+    inv.amountPaid = parseFloat(paid.toFixed(2));
+    inv.balance = parseFloat(Math.max(0, total - paid).toFixed(2));
+    inv.status = inv.balance <= 0 ? "Paid" : paid > 0 ? "Partial" : "Unpaid";
+    inv.paid = inv.status === "Paid";
+    save("invoices", invoices);
+    try { if (typeof window.invoices !== "undefined") window.invoices = invoices; } catch(e){}
+  }
+
+  function recalculateCustomerReceivables(){
+    const customers = ls("customers", []);
+    if (!Array.isArray(customers) || !customers.length) return;
+    const invoices = ls("invoices", []);
+    const receipts = ls("receipts", []);
+    const customerPayments = ls("customerPayments", []);
+    const paymentReceiptIds = new Set(customerPayments.map(p => String(p.receiptId || "")).filter(Boolean));
+    customers.forEach(customer => {
+      const name = customer.name || customer.customerName;
+      const invTotal = invoices.filter(inv => same(inv.customer, name) || same(inv.customerId, customer.id)).reduce((sum, inv) => sum + num(inv.totalKES || inv.total), 0);
+      const payTotal = customerPayments.filter(p => same(p.customer, name) || same(p.customerName, name) || same(p.customerId, customer.id)).reduce((sum, p) => sum + num(p.amount), 0);
+      const extraReceiptTotal = receipts.filter(r => (same(r.customer, name) || same(r.customerId, customer.id)) && !paymentReceiptIds.has(String(r.id))).reduce((sum, r) => sum + num(r.amount), 0);
+      customer.receivables = parseFloat(Math.max(0, invTotal - payTotal - extraReceiptTotal).toFixed(2));
+      customer.balance = customer.receivables;
+      customer.outstandingBalance = customer.receivables;
+    });
+    save("customers", customers);
+  }
+
+  function refreshDashboardCards(){
+    const invoices = ls("invoices", []);
+    const receipts = ls("receipts", []);
+    const customerPayments = ls("customerPayments", []);
+    const banks = ls("banks", []);
+    const paymentReceiptIds = new Set(customerPayments.map(p => String(p.receiptId || "")).filter(Boolean));
+    const invoiceTotal = invoices.reduce((sum, inv) => sum + num(inv.totalKES || inv.total), 0);
+    const paidTotal = customerPayments.reduce((sum, p) => sum + num(p.amount), 0) + receipts.filter(r => !paymentReceiptIds.has(String(r.id))).reduce((sum, r) => sum + num(r.amount), 0);
+    const bankTotal = banks.reduce((sum, bank) => sum + num(bank.balance || bank.initialBalance), 0);
+    setText("dashInvoices", invoiceTotal);
+    setText("customerOutstandingBalanceDisplay", Math.max(0, invoiceTotal - paidTotal));
+    setText("dashBankTotal", bankTotal);
+  }
+
+  function refreshAll(){
+    try { normalizeRecurringInvoices(); } catch(e){}
+    try { recalculateCustomerReceivables(); } catch(e){}
+    ["renderInvoices", "renderRecurringInvoices", "renderRecurringInvoiceReport", "renderReceipts", "renderAccountsReceivable", "loadBanks", "renderBankList", "loadTransactions", "renderCustomerStatement"].forEach(name => {
+      try { if (typeof window[name] === "function") window[name](); } catch(e){}
+    });
+    try { if (typeof window.loadDashboard === "function") window.loadDashboard(); } catch(e){}
+    try { if (typeof window.updateDashboardTotals === "function") window.updateDashboardTotals(); } catch(e){}
+    refreshDashboardCards();
+  }
+
+  function populateBankSelect(select, selectedValue){
+    if (!select) return;
+    const banks = ls("banks", []);
+    select.innerHTML = '<option value="">Select Bank</option>' + banks.map((bank, index) => `<option value="${index}">${bankName(bank, index)}${bank?.currency ? ` (${bank.currency})` : ""}</option>`).join("");
+    if (selectedValue !== undefined && selectedValue !== null) select.value = String(selectedValue);
+  }
+
+  function resetReceiptButton(){
+    const button = document.querySelector('button[onclick="addReceipt()"], button[data-erp-receipt-update="1"]');
+    if (button) {
+      button.textContent = "Save Receipt";
+      button.dataset.erpReceiptUpdate = "0";
+      button.onclick = window.addReceipt;
+      button.setAttribute("onclick", "addReceipt()");
+    }
+  }
+
+  function clearReceiptForm(){
+    ["receiptDate", "receiptCustomer", "receiptInvoice", "receiptAmount", "paymentMode", "receiptBank", "receiptReference"].forEach(id => { const node = el(id); if (node) node.value = ""; });
+    resetReceiptButton();
+  }
+
+  function saveReceiptRecord(existingId){
+    const date = el("receiptDate")?.value || "";
+    const customer = el("receiptCustomer")?.value || "";
+    const invoiceId = el("receiptInvoice")?.value || "";
+    const amount = num(el("receiptAmount")?.value);
+    const method = el("paymentMode")?.value || "";
+    const bankIndex = findBankIndex(el("receiptBank")?.value, ls("banks", []));
+    const reference = el("receiptReference")?.value || "";
+    if (!date || !customer || !amount || !method || bankIndex < 0) return alert("⚠️ Please select date, customer, amount, payment mode and bank.");
+    if (window.assertNotLocked && !window.assertNotLocked(["Receipts", "Payments", "Sales"], date)) return;
+
+    const banks = ls("banks", []);
+    const receipts = ls("receipts", []);
+    const transactions = ls("transactions", []);
+    const customerPayments = ls("customerPayments", []);
+    const receipt = existingId ? receipts.find(r => same(r.id, existingId)) : null;
+    const oldInvoiceId = receipt?.invoiceId;
+    const oldBankIndex = receipt ? findBankIndex(receipt.bankIndex, banks) : -1;
+    const oldAmount = receipt ? num(receipt.amount) : 0;
+    const id = receipt?.id || Date.now();
+
+    if (oldBankIndex >= 0 && banks[oldBankIndex]) banks[oldBankIndex].balance = num(banks[oldBankIndex].balance) - oldAmount;
+    if (banks[bankIndex]) banks[bankIndex].balance = num(banks[bankIndex].balance) + amount;
+    save("banks", banks);
+
+    const nextReceipt = { id, date, customer, customerName: customer, invoiceId, amount, method, bankIndex, bank: bankName(banks[bankIndex], bankIndex), reference };
+    if (receipt) Object.assign(receipt, nextReceipt); else receipts.push(nextReceipt);
+    save("receipts", receipts);
+
+    const tx = transactions.find(t => same(t.receiptId, id));
+    const nextTx = { id: tx?.id || `TXN-${Date.now()}`, date, bank: bankName(banks[bankIndex], bankIndex), type: "Deposit", amount, ref: `Receipt from ${customer} via ${method}`, receiptId: id };
+    if (tx) Object.assign(tx, nextTx); else transactions.push(nextTx);
+    save("transactions", transactions);
+
+    const payment = customerPayments.find(p => same(p.receiptId, id));
+    const nextPayment = { id: payment?.id || `PAY-${Date.now()}`, date, customer, customerName: customer, invoiceId, amount, method, bank: bankName(banks[bankIndex], bankIndex), bankIndex, receiptId: id };
+    if (payment) Object.assign(payment, nextPayment); else customerPayments.push(nextPayment);
+    save("customerPayments", customerPayments);
+
+    try { if (typeof window.upsertManualTransaction === "function") window.upsertManualTransaction({ date, type: "Receipt", direction: "IN", amount, bank: bankName(banks[bankIndex], bankIndex), customer, reference: `Receipt from ${customer} via ${method}`, source: "receipt", sourceId: id }); } catch(e){}
+    recomputeInvoicePayment(oldInvoiceId);
+    recomputeInvoicePayment(invoiceId);
+    clearReceiptForm();
+    refreshAll();
+    alert(existingId ? "✅ Receipt updated successfully" : "✅ Payment saved successfully!");
+  }
+
+  window.addReceipt = function(){ saveReceiptRecord(null); };
+  window.editReceipt = function(id){
+    const receipt = (ls("receipts", []) || []).find(r => same(r.id, id));
+    if (!receipt) return alert("Receipt not found");
+    el("receiptDate").value = receipt.date || "";
+    el("receiptCustomer").value = receipt.customer || "";
+    try { if (typeof window.populateReceiptInvoiceDropdown === "function") window.populateReceiptInvoiceDropdown(receipt.customer || ""); } catch(e){}
+    if (el("receiptInvoice")) el("receiptInvoice").value = receipt.invoiceId || "";
+    el("receiptAmount").value = receipt.amount || "";
+    el("paymentMode").value = receipt.method || "";
+    populateBankSelect(el("receiptBank"), receipt.bankIndex);
+    el("receiptReference").value = receipt.reference || "";
+    const button = document.querySelector('button[onclick="addReceipt()"], button[data-erp-receipt-update="1"]');
+    if (button) {
+      button.textContent = "Update Receipt";
+      button.dataset.erpReceiptUpdate = "1";
+      button.removeAttribute("onclick");
+      button.onclick = () => saveReceiptRecord(id);
+    }
+    el("receiptDate")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+  window.deleteReceipt = function(id){
+    if (!confirm("Are you sure you want to delete this receipt?")) return;
+    const receipts = ls("receipts", []);
+    const index = receipts.findIndex(r => same(r.id, id));
+    if (index < 0) return;
+    const receipt = receipts[index];
+    if (window.assertNotLocked && !window.assertNotLocked(["Receipts", "Payments", "Sales"], receipt.date || today())) return;
+    try { if (typeof window.moveToRecycle === "function") window.moveToRecycle(receipt, "File", "Receipts"); } catch(e){}
+    const banks = ls("banks", []);
+    const bankIndex = findBankIndex(receipt.bankIndex, banks);
+    if (bankIndex >= 0 && banks[bankIndex]) {
+      banks[bankIndex].balance = num(banks[bankIndex].balance) - num(receipt.amount);
+      save("banks", banks);
+    }
+    save("transactions", (ls("transactions", []) || []).filter(t => !same(t.receiptId, id)));
+    save("customerPayments", (ls("customerPayments", []) || []).filter(p => !same(p.receiptId, id)));
+    try { if (typeof window.deleteManualTransaction === "function") window.deleteManualTransaction("receipt", id); } catch(e){}
+    receipts.splice(index, 1);
+    save("receipts", receipts);
+    recomputeInvoicePayment(receipt.invoiceId);
+    refreshAll();
+    alert("♻️ Receipt moved to Recycle Bin & accounts rolled back.");
+  };
+  window.bulkDeleteReceipts = function(){
+    const ids = [...document.querySelectorAll(".receiptCheck:checked")].map(cb => cb.dataset.id);
+    if (!ids.length) return alert("No receipts selected");
+    if (!confirm(`Delete ${ids.length} receipts?`)) return;
+    ids.forEach(id => {
+      const oldConfirm = window.confirm;
+      window.confirm = () => true;
+      try { window.deleteReceipt(id); } finally { window.confirm = oldConfirm; }
+    });
+    const all = el("selectAllReceipts");
+    if (all) all.checked = false;
+  };
+
+  function buildRecurringPaymentModal(){
+    let modal = el("erpRecurringPayModal");
+    if (modal) return modal;
+    modal = document.createElement("div");
+    modal.id = "erpRecurringPayModal";
+    modal.className = "fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center";
+    modal.innerHTML = `<div class="bg-white rounded shadow-xl w-[480px] p-5"><h3 class="text-lg font-bold mb-3">Record Payment — Recurring Invoice</h3><p class="text-sm text-gray-600 mb-3">Invoice: <span id="erpRpInvNo" class="font-semibold"></span> · Balance: <span id="erpRpBalance" class="font-semibold"></span></p><label class="block text-sm font-semibold mb-1">Payment Date</label><input id="erpRpDate" type="date" class="border p-2 rounded w-full mb-3" /><label class="block text-sm font-semibold mb-1">Amount</label><input id="erpRpAmount" type="number" step="0.01" min="0" class="border p-2 rounded w-full mb-3" /><label class="block text-sm font-semibold mb-1">Bank Account</label><select id="erpRpBank" class="border p-2 rounded w-full mb-3"><option value="">Select Bank</option></select><label class="block text-sm font-semibold mb-1">Reference / Note</label><input id="erpRpRef" type="text" class="border p-2 rounded w-full mb-4" placeholder="Reference" /><div class="flex justify-end gap-2"><button id="erpRpCancel" class="px-3 py-1 border rounded">Cancel</button><button id="erpRpSave" class="px-3 py-1 bg-blue-900 text-white rounded">Save Payment</button></div></div>`;
+    document.body.appendChild(modal);
+    el("erpRpCancel").onclick = () => modal.classList.add("hidden");
+    return modal;
+  }
+
+  window.recordRecurringPayment = function(index){
+    const list = normalizeRecurringInvoices();
+    const inv = list[index];
+    if (!inv) return alert("Invoice not found");
+    const modal = buildRecurringPaymentModal();
+    const balance = Math.max(0, num(inv.total) - num(inv.paid));
+    el("erpRpInvNo").textContent = inv.invoiceNumber || inv.number || "—";
+    el("erpRpBalance").textContent = `${balance.toFixed(2)} ${inv.currency || "KES"}`;
+    el("erpRpDate").value = today();
+    el("erpRpAmount").value = balance.toFixed(2);
+    el("erpRpRef").value = "";
+    populateBankSelect(el("erpRpBank"));
+    modal.classList.remove("hidden");
+    el("erpRpSave").onclick = function(){
+      const amount = num(el("erpRpAmount").value);
+      const date = el("erpRpDate").value || today();
+      const banks = ls("banks", []);
+      const bankIndex = findBankIndex(el("erpRpBank").value, banks);
+      if (!amount) return alert("Enter a valid amount");
+      if (bankIndex < 0) return alert("Please select a bank account");
+      if (window.assertNotLocked && !window.assertNotLocked(["Receipts", "Payments", "Sales", "Recurring Invoices"], date)) return;
+      const paymentId = (crypto.randomUUID ? crypto.randomUUID() : `RP-${Date.now()}`);
+      banks[bankIndex].balance = num(banks[bankIndex].balance) + amount;
+      save("banks", banks);
+      const invoices = ls("invoices", []);
+      const linkedInvoice = invoices.find(i => same(i.recurringId, inv.id));
+      const receiptId = Date.now();
+      const receipt = { id: receiptId, date, customer: inv.customerName || inv.customer, customerName: inv.customerName || inv.customer, invoiceId: linkedInvoice?.id || "", amount, method: "Recurring Invoice Payment", bankIndex, bank: bankName(banks[bankIndex], bankIndex), reference: el("erpRpRef").value || inv.invoiceNumber || inv.number, recurringId: inv.id, recurringPaymentId: paymentId };
+      const receipts = ls("receipts", []); receipts.push(receipt); save("receipts", receipts);
+      const recurringPayments = ls("recurringPayments", []);
+      recurringPayments.push({ id: paymentId, invoiceNumber: inv.invoiceNumber || inv.number, recurringId: inv.id, customerId: inv.customerId, customerName: inv.customerName || inv.customer, customer: inv.customerName || inv.customer, amount, date, bank: bankName(banks[bankIndex], bankIndex), bankIndex, receiptId, reference: receipt.reference, type: "Recurring Invoice Payment" });
+      save("recurringPayments", recurringPayments);
+      const customerPayments = ls("customerPayments", []);
+      customerPayments.push({ id: `PAY-${Date.now()}`, date, customer: inv.customerName || inv.customer, customerName: inv.customerName || inv.customer, customerId: inv.customerId, invoiceId: linkedInvoice?.id || "", invoiceNumber: linkedInvoice?.invoiceNumber || inv.invoiceNumber || inv.number, amount, method: "Recurring Invoice Payment", bank: bankName(banks[bankIndex], bankIndex), bankIndex, receiptId, recurringPaymentId: paymentId, source: "Recurring Invoice" });
+      save("customerPayments", customerPayments);
+      inv.paid = num(inv.paid) + amount;
+      inv.amountPaid = inv.paid;
+      inv.balance = Math.max(0, num(inv.total) - inv.paid);
+      inv.status = inv.balance <= 0.001 ? "Paid" : "Partial";
+      save("recurringInvoices", list);
+      recomputeInvoicePayment(linkedInvoice?.id);
+      modal.classList.add("hidden");
+      refreshAll();
+      alert("✅ Payment recorded");
+    };
+  };
+  window.recordRecurringPayment.__modalized = true;
+
+  window.reverseRecurringPayment = function(index){
+    const list = normalizeRecurringInvoices();
+    const inv = list[index];
+    if (!inv) return;
+    const payments = ls("recurringPayments", []);
+    const related = payments.filter(p => same(p.recurringId, inv.id) || same(p.invoiceNumber, inv.invoiceNumber || inv.number));
+    if (!related.length) return alert("No payment found");
+    if (!confirm("Reverse last payment?")) return;
+    const last = related[related.length - 1];
+    const banks = ls("banks", []);
+    const bankIndex = findBankIndex(last.bankIndex ?? last.bankId ?? last.bank, banks);
+    if (bankIndex >= 0 && banks[bankIndex]) {
+      banks[bankIndex].balance = num(banks[bankIndex].balance) - num(last.amount);
+      save("banks", banks);
+    }
+    save("recurringPayments", payments.filter(p => !same(p.id, last.id)));
+    save("customerPayments", (ls("customerPayments", []) || []).filter(p => !same(p.recurringPaymentId, last.id)));
+    const receipts = ls("receipts", []);
+    const removed = receipts.find(r => same(r.recurringPaymentId, last.id) || same(r.id, last.receiptId));
+    save("receipts", receipts.filter(r => !(same(r.recurringPaymentId, last.id) || same(r.id, last.receiptId))));
+    inv.paid = Math.max(0, num(inv.paid) - num(last.amount));
+    inv.amountPaid = inv.paid;
+    inv.balance = Math.max(0, num(inv.total) - inv.paid);
+    inv.status = inv.paid > 0 ? "Partial" : "active";
+    save("recurringInvoices", list);
+    recomputeInvoicePayment(removed?.invoiceId);
+    refreshAll();
+  };
+
+  const originalRecurringSave = window.saveRecurringInvoice;
+  if (typeof originalRecurringSave === "function") {
+    window.saveRecurringInvoice = function(status){
+      let editIndex = null, oldRecord = null;
+      try { if (typeof editingRecurringInvoiceIndex !== "undefined" && editingRecurringInvoiceIndex !== null) { editIndex = editingRecurringInvoiceIndex; oldRecord = (ls("recurringInvoices", []) || [])[editIndex]; } } catch(e){}
+      const chosenCurrency = el("recurringInvoiceCurrency")?.value || "KES";
+      const chosenRate = chosenCurrency === "KES" ? 1 : (num(el("recurringInvoiceRate")?.value || el("recurringInvoiceExchangeRate")?.value) || rateFor(chosenCurrency));
+      const result = originalRecurringSave.apply(this, arguments);
+      const list = normalizeRecurringInvoices();
+      const rec = editIndex != null ? list[editIndex] : list[list.length - 1];
+      if (rec) {
+        if (oldRecord?.id) rec.id = oldRecord.id;
+        rec.exchangeRate = chosenRate;
+        rec.totalKES = parseFloat((num(rec.total) * chosenRate).toFixed(2));
+        rec.customer = rec.customer || rec.customerName;
+        rec.customerName = rec.customerName || rec.customer;
+        rec.invoiceNumber = rec.invoiceNumber || rec.number;
+        rec.number = rec.number || rec.invoiceNumber;
+        save("recurringInvoices", list);
+        syncRecurringInvoiceToInvoices(rec);
+      }
+      refreshAll();
+      return result;
+    };
+  }
+
+  const originalDeleteRecurring = window.deleteRecurring;
+  if (typeof originalDeleteRecurring === "function") {
+    window.deleteRecurring = function(index){
+      const before = normalizeRecurringInvoices();
+      const target = before[index];
+      const result = originalDeleteRecurring.apply(this, arguments);
+      setTimeout(() => {
+        const after = normalizeRecurringInvoices();
+        if (target && !after.some(r => same(r.id, target.id))) {
+          const invoices = (ls("invoices", []) || []).filter(inv => !same(inv.recurringId, target.id));
+          save("invoices", invoices);
+        }
+        refreshAll();
+      }, 20);
+      return result;
+    };
+  }
+
+  window.renderRecurringInvoiceReport = function(){
+    const tbody = el("recurringInvoiceSummary");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    let list = normalizeRecurringInvoices();
+    const month = el("recurringInvoiceMonth")?.value || "";
+    const start = el("recurringInvoiceStartDate")?.value || "";
+    const end = el("recurringInvoiceEndDate")?.value || "";
+    const customer = (el("recurringInvoiceCustomerFilter")?.value || "").toLowerCase();
+    const currency = el("recurringInvoiceCurrencyFilter")?.value || "";
+    const sort = el("recurringInvoiceCustomerSort")?.value || "";
+    list = list.filter(inv => {
+      const date = inv.date || inv.invoiceDate || "";
+      if (month && !date.startsWith(month)) return false;
+      if (start && date < start) return false;
+      if (end && date > end) return false;
+      if (customer && !(inv.customer || inv.customerName || "").toLowerCase().includes(customer)) return false;
+      if (currency && (inv.currency || "") !== currency) return false;
+      return true;
+    });
+    if (sort === "az") list.sort((a,b) => (a.customer || "").localeCompare(b.customer || ""));
+    if (sort === "za") list.sort((a,b) => (b.customer || "").localeCompare(a.customer || ""));
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="border px-2 py-3 text-center text-gray-500">No recurring invoices found</td></tr>';
+      return;
+    }
+    let beforeTotal = 0, vatTotal = 0, grand = 0;
+    list.forEach(inv => {
+      beforeTotal += num(inv.beforeVat);
+      vatTotal += num(inv.vat);
+      grand += num(inv.total);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td class="border px-2 py-1">${inv.date || "-"}</td><td class="border px-2 py-1">${inv.customer || inv.customerName || "-"}</td><td class="border px-2 py-1">${inv.invoiceNumber || inv.number || "-"}</td><td class="border px-2 py-1">${inv.frequency || inv.recurrenceType || "-"}</td><td class="border px-2 py-1 text-right">${num(inv.beforeVat).toLocaleString()}</td><td class="border px-2 py-1 text-right">${num(inv.vat).toLocaleString()}</td><td class="border px-2 py-1 text-right font-semibold">${num(inv.total).toLocaleString()}</td><td class="border px-2 py-1 text-center">${inv.status || "Active"}</td>`;
+      tbody.appendChild(tr);
+    });
+    const totalRow = document.createElement("tr");
+    totalRow.className = "bg-gray-100 font-bold";
+    totalRow.innerHTML = `<td colspan="4" class="border px-2 py-2 text-right">TOTAL</td><td class="border px-2 py-2 text-right">${beforeTotal.toLocaleString()}</td><td class="border px-2 py-2 text-right">${vatTotal.toLocaleString()}</td><td class="border px-2 py-2 text-right">${grand.toLocaleString()}</td><td class="border px-2 py-2"></td>`;
+    tbody.appendChild(totalRow);
+  };
+
+  ["saveInvoice", "deleteInvoice", "renderInvoices", "loadDashboard"].forEach(name => {
+    const original = window[name];
+    if (typeof original !== "function" || original.__erpV2Wrapped) return;
+    window[name] = function(){
+      const result = original.apply(this, arguments);
+      setTimeout(() => { try { recalculateCustomerReceivables(); refreshDashboardCards(); } catch(e){} }, 30);
+      return result;
+    };
+    window[name].__erpV2Wrapped = true;
+  });
+  const previousRefresh = window.refreshFinancials;
+  window.refreshFinancials = function(){
+    try { if (typeof previousRefresh === "function") previousRefresh.apply(this, arguments); } catch(e){}
+    setTimeout(refreshAll, 20);
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    wireExchangeRates();
+    populateBankSelect(el("receiptBank"), el("receiptBank")?.value);
+    normalizeRecurringInvoices();
+    refreshAll();
+  });
+  setInterval(() => { wireExchangeRates(); populateBankSelect(el("receiptBank"), el("receiptBank")?.value); }, 1200);
+  setTimeout(refreshAll, 600);
+  console.log("✅ ERP hotfix v2 loaded: exchange rates, recurring reports/payments, bank/customer balance sync, invoice dashboard sync");
+})();
+</script>
+<script>
+/* =================== ERP HOTFIX v3 ===================
+   1) Exchange-rate input on Invoice + Recurring Invoice:
+      - always visible (no hidden) when currency != KES
+      - auto-fills from localStorage.exchangeRates on currency change
+   2) Trial Balance + General Ledger feed Inventory/Stock, Non-Current
+      Assets and Non-Current Liabilities, with sub-row breakdowns matching
+      the Balance Sheet.
+   3) Transaction Locking module:
+      - rebuilds the Single-module dropdown from the Multiple list so it
+        mirrors every real module/sub-module in the app
+      - expands the save->module map so locking an umbrella module
+        (Customers, Suppliers, Accountant, Payroll) blocks every child save
+      - guarantees assertNotLocked is called from edit/delete handlers too
+   ====================================================== */
+(function(){
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const ls = (k,f) => { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : f; } catch(e){ return f; } };
+  const num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; };
+
+  /* -------- 1) Exchange-rate inputs (Invoice + Recurring) -------- */
+  function rateFor(cur){
+    cur = String(cur||"KES").toUpperCase();
+    if (cur==="KES") return 1;
+    const r = ls("exchangeRates", {}) || {};
+    return num(r[cur] ?? r[cur.toLowerCase()] ?? r[cur.toUpperCase()]) || 0;
+  }
+  function wirePair(currencyId, rateIds){
+    const sel = $(currencyId); if (!sel) return;
+    const inputs = rateIds.map($).filter(Boolean);
+    if (!inputs.length) return;
+    if (sel.__v3Wired) return;
+    sel.__v3Wired = true;
+
+    function syncContainer(inp){
+      // unhide any wrapping container so users can see the input
+      let n = inp;
+      for (let i=0;i<4 && n;i++){
+        if (n.classList && n.classList.contains("hidden")) n.classList.remove("hidden");
+        n = n.parentElement;
+      }
+    }
+    function apply(force){
+      const cur = String(sel.value||"KES").toUpperCase();
+      const auto = rateFor(cur);
+      inputs.forEach(inp => {
+        syncContainer(inp);
+        inp.placeholder = cur==="KES" ? "1" : `Rate 1 ${cur} = ? KES`;
+        if (cur==="KES"){ inp.value="1"; inp.readOnly=true; return; }
+        inp.readOnly=false;
+        if (force || !inp.value || inp.value==="1" || inp.dataset.autoV3==="1"){
+          if (auto){ inp.value = String(auto); inp.dataset.autoV3="1"; }
+        }
+      });
+    }
+    sel.addEventListener("change", () => apply(true));
+    inputs.forEach(inp => inp.addEventListener("input", () => { inp.dataset.autoV3="0"; }));
+    apply(false);
+  }
+  function wireAllRates(){
+    wirePair("invoiceCurrency",          ["invoiceExchangeRate","invoiceRate"]);
+    wirePair("recurringInvoiceCurrency", ["recurringInvoiceRate","recurringInvoiceExchangeRate"]);
+    wirePair("quoteCurrency",            ["quoteExchangeRate"]);
+    wirePair("creditNoteCurrency",       ["creditNoteExchangeRate"]);
+    wirePair("salesReturnCurrency",      ["salesReturnExchangeRate"]);
+    wirePair("deliveryCurrency",         ["deliveryExchangeRate"]);
+  }
+  document.addEventListener("DOMContentLoaded", wireAllRates);
+  setInterval(wireAllRates, 1200);
+
+  /* -------- 2) TB / GL: Inventory + Non-Current Assets + Non-Current Liabilities -------- */
+  function inventoryTotal(){
+    let t = 0;
+    try {
+      const inv = ls("inventory", []) || [];
+      inv.forEach(i => { t += num(i.buyPrice||i.cost||i.unitCost||i.price) * num(i.qty||i.quantity||1); });
+    } catch(e){}
+    // also include per-warehouse inventories saved as inventory_<warehouse>
+    try {
+      for (let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if (!k || !k.startsWith("inventory_")) continue;
+        const arr = ls(k, []) || [];
+        arr.forEach(it => { t += num(it.buyPrice||it.cost||it.unitCost||it.price) * num(it.qty||it.quantity||1); });
+      }
+    } catch(e){}
+    return t;
+  }
+  function getNonCurrentAssets(){
+    const bs = ls("balanceSheet", {}) || {};
+    return Array.isArray(bs.nonCurrentAssets) ? bs.nonCurrentAssets : [];
+  }
+  function getNonCurrentLiabilities(){
+    const bs = ls("balanceSheet", {}) || {};
+    return Array.isArray(bs.nonCurrentLiabilities) ? bs.nonCurrentLiabilities : [];
+  }
+
+  function fmt(n){ return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+  // After base renderTrialBalance runs, fix inventory & inject NCA/NCL sub-rows.
+  function patchTrialBalance(){
+    const orig = window.renderTrialBalance;
+    if (typeof orig !== "function" || orig.__v3) return;
+    window.renderTrialBalance = function(){
+      const r = orig.apply(this, arguments);
+      try {
+        const tbl = document.getElementById("trialBalanceTable");
+        if (!tbl) return r;
+        const tbody = tbl.querySelector("tbody");
+        // (a) fix Inventory row debit
+        const invRow = tbody.querySelector('tr[data-account="inventory"]');
+        const invTot = inventoryTotal();
+        if (invRow && invTot > 0){
+          invRow.querySelector(".debit").textContent  = fmt(invTot);
+          invRow.querySelector(".balance").textContent = fmt(invTot);
+        }
+        // (b) Non-Current Assets breakdown
+        injectBreakdownRows(tbody, "v3-nca", "1.2 Fixed Assets", getNonCurrentAssets(), "asset");
+        // (c) Non-Current Liabilities header + breakdown (no native rows in TB)
+        injectLiabilityBreakdown(tbody);
+        // (d) recompute footer totals
+        recomputeTbTotals(tbl);
+      } catch(e){ console.warn("v3 TB patch", e); }
+      return r;
+    };
+    window.renderTrialBalance.__v3 = true;
+  }
+
+  function injectBreakdownRows(tbody, marker, sectionLabel, items, kind){
+    // remove old injected rows
+    tbody.querySelectorAll('tr[data-v3-marker="'+marker+'"]').forEach(n => n.remove());
+    if (!items.length) return;
+    // find the section header row
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    const header = rows.find(r => (r.textContent||"").trim().startsWith(sectionLabel));
+    if (!header) return;
+    // anchor after header — insert items
+    let anchor = header;
+    items.forEach(it => {
+      const name = it.name || it.title || (kind==="asset"?"Asset":"Liability");
+      const val  = num(it.value || it.amount || it.total || it.cost || it.balance);
+      const tr   = document.createElement("tr");
+      tr.setAttribute("data-v3-marker", marker);
+      const dCell = kind === "liability" ? "" : fmt(val);
+      const cCell = kind === "liability" ? fmt(val) : "";
+      const bal   = kind === "liability" ? -val : val;
+      tr.innerHTML = `<td class="border p-2 pl-8">• ${name}</td>
+        <td class="border text-right"></td>
+        <td class="border text-right">${dCell}</td>
+        <td class="border text-right">${cCell}</td>
+        <td class="border text-right">${fmt(bal)}</td>`;
+      anchor.after(tr); anchor = tr;
+    });
+  }
+
+  function injectLiabilityBreakdown(tbody){
+    // remove old NCL section
+    tbody.querySelectorAll('tr[data-v3-section="ncl"]').forEach(n => n.remove());
+    const items = getNonCurrentLiabilities();
+    if (!items.length) return;
+    // find the LIABILITIES section header row, insert at the end of liabilities
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    const liabHdr = rows.find(r => (r.textContent||"").trim().startsWith("2. LIABILITIES"));
+    if (!liabHdr) return;
+    // find equity header row
+    const eqHdr = rows.find(r => (r.textContent||"").trim().startsWith("3. EQUITY")) || liabHdr.parentElement.lastElementChild;
+    // sub-header
+    const sub = document.createElement("tr");
+    sub.className = "bg-gray-50 font-medium";
+    sub.setAttribute("data-v3-section","ncl");
+    sub.innerHTML = '<td colspan="5" class="border p-2 pl-4">2.2 Non-Current Liabilities</td>';
+    eqHdr.parentElement.insertBefore(sub, eqHdr);
+    items.forEach(it => {
+      const name = it.name || it.title || "Liability";
+      const val  = num(it.amount || it.value || it.total || it.balance);
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-v3-section","ncl");
+      tr.innerHTML = `<td class="border p-2 pl-8">• ${name}</td>
+        <td class="border text-right"></td>
+        <td class="border text-right"></td>
+        <td class="border text-right">${fmt(val)}</td>
+        <td class="border text-right">${fmt(-val)}</td>`;
+      eqHdr.parentElement.insertBefore(tr, eqHdr);
+    });
+  }
+
+  function recomputeTbTotals(tbl){
+    let op=0, d=0, c=0, b=0;
+    tbl.querySelectorAll("tbody tr").forEach(tr => {
+      const cells = tr.querySelectorAll("td");
+      if (cells.length < 5) return;
+      // skip section header rows (colspan)
+      if (cells[0].getAttribute("colspan")) return;
+      const parse = s => num(String(s||"").replace(/,/g,""));
+      op += parse(cells[1].textContent);
+      d  += parse(cells[2].textContent);
+      c  += parse(cells[3].textContent);
+      b  += parse(cells[4].textContent);
+    });
+    const set = (id,v) => { const n=$(id); if (n) n.textContent = fmt(v); };
+    set("tbOpeningTotal", op); set("tbDebitTotal", d);
+    set("tbCreditTotal", c);   set("tbBalanceTotal", b);
+  }
+
+  // GL: just make sure Inventory shows real value; append NCA/NCL summary lines.
+  function patchGL(name){
+    const orig = window[name];
+    if (typeof orig !== "function" || orig.__v3) return;
+    window[name] = function(){
+      const r = orig.apply(this, arguments);
+      try {
+        const invTot = inventoryTotal();
+        const nca = getNonCurrentAssets().reduce((s,a) => s + num(a.value||a.amount||a.cost||a.balance), 0);
+        const ncl = getNonCurrentLiabilities().reduce((s,a) => s + num(a.amount||a.value||a.balance||a.total), 0);
+        const setVal = (id,v) => { const n=$(id); if (n) n.textContent = fmt(v); };
+        if (invTot){
+          setVal("glInventoryDebit", invTot); setVal("glInventoryCredit", 0);
+          setVal("glInventoryBalance", invTot); setVal("glInventoryRunningBalance", invTot);
+        }
+        // append a Non-Current Assets / Liabilities strip below the GL table if not present
+        const host = document.getElementById(name === "renderGeneralLedger" ? "generalLedgerReport" : "generalLedgerDetailedReport");
+        if (host){
+          let strip = host.querySelector(".v3-nc-strip");
+          if (!strip){
+            strip = document.createElement("div");
+            strip.className = "v3-nc-strip mt-3 p-3 border-l-4 border-amber-500 bg-amber-50 text-sm rounded";
+            host.appendChild(strip);
+          }
+          strip.innerHTML =
+            `<strong>📒 Balance-sheet extras (auto):</strong>
+             Inventory / Stock: <b>${fmt(invTot)}</b> ·
+             Non-Current Assets: <b>${fmt(nca)}</b> ·
+             Non-Current Liabilities: <b>${fmt(ncl)}</b>`;
+        }
+      } catch(e){ console.warn("v3 GL patch", e); }
+      return r;
+    };
+    window[name].__v3 = true;
+  }
+
+  function applyReportPatches(){
+    patchTrialBalance();
+    patchGL("renderGeneralLedger");
+    patchGL("renderGeneralLedgerDetailed");
+  }
+  setTimeout(applyReportPatches, 600);
+  setTimeout(applyReportPatches, 1800);
+  document.addEventListener("DOMContentLoaded", applyReportPatches);
+
+  // Re-run TB/GL whenever NCA/NCL or inventory change
+  window.addEventListener("storage", e => {
+    if (!e.key) return;
+    if (/balanceSheet|inventory/i.test(e.key)){
+      try { window.renderTrialBalance && window.renderTrialBalance(); } catch(_){}
+      try { window.renderGeneralLedger && window.renderGeneralLedger(); } catch(_){}
+      try { window.renderGeneralLedgerDetailed && window.renderGeneralLedgerDetailed(); } catch(_){}
+    }
+  });
+
+  /* -------- 3) Transaction Locking rebuild -------- */
+  function rebuildLockSingleDropdown(){
+    const single = $("lockModuleSingle");
+    const multi  = $("lockModuleMultiple");
+    if (!single || !multi || single.__v3Rebuilt) return;
+    // Copy options from multi into single so users can lock any sub-module
+    const opts = ['<option value="">Select Module</option>'];
+    Array.from(multi.options).forEach(o => {
+      opts.push(`<option value="${o.value}">${o.textContent}</option>`);
+    });
+    const current = single.value;
+    single.innerHTML = opts.join("");
+    if (current) single.value = current;
+    single.__v3Rebuilt = true;
+  }
+
+  // Expand the save -> module map so umbrella locks block child saves.
+  function expandLockModules(){
+    if (!window.LOCK_MODULES_EXPANDED){
+      window.LOCK_MODULES_EXPANDED = true;
+    }
+    // We re-wrap assertNotLocked to also test umbrella module names.
+    if (window.assertNotLocked && !window.assertNotLocked.__v3){
+      const baseAssert = window.assertNotLocked;
+      const umbrellas = {
+        Invoice:'Customers', Invoices:'Customers', Quote:'Customers', Quotes:'Customers',
+        Order:'Customers', Orders:'Customers', 'Credit Note':'Customers', 'Credit Notes':'Customers',
+        'Sales Returns':'Customers', 'Sales Return':'Customers', Sales:'Customers',
+        Receipts:'Customers', Receipt:'Customers', Delivery:'Customers',
+        'Recurring Invoices':'Customers',
+        Bills:'Suppliers', 'Supplier Bills':'Suppliers', 'Supplier Payments':'Suppliers',
+        Payments:'Suppliers', 'Debit Notes':'Suppliers', 'Purchase Returns':'Suppliers',
+        GRN:'Suppliers', 'Goods Received':'Suppliers', 'Purchase Orders':'Suppliers',
+        'Operational Costs':'Suppliers', 'Tax Payments':'Suppliers', Purchases:'Suppliers',
+        'Manual Journals':'Accountant', 'Recurring Journals':'Accountant',
+        'Currency Adjustments':'Accountant', Journals:'Accountant'
+      };
+      window.assertNotLocked = function(modules, dateStr){
+        const list = Array.isArray(modules) ? modules.slice() : [modules];
+        const extra = new Set();
+        list.forEach(m => { const u = umbrellas[m]; if (u) extra.add(u); });
+        extra.forEach(u => list.push(u));
+        // Also test colon-prefix form e.g. "Customers:Invoices"
+        list.forEach(m => {
+          const u = umbrellas[m];
+          if (u) list.push(u + ":" + m.replace(/\s+/g,""));
+        });
+        return baseAssert(list, dateStr);
+      };
+      window.assertNotLocked.__v3 = true;
+    }
+  }
+
+  function relockWiring(){
+    rebuildLockSingleDropdown();
+    expandLockModules();
+  }
+  document.addEventListener("DOMContentLoaded", relockWiring);
+  setTimeout(relockWiring, 800);
+  setInterval(relockWiring, 2500);
+
+  console.log("✅ ERP hotfix v3 loaded: exchange rates wired, TB/GL include Inventory + NCA + NCL, transaction locking rebuilt");
 })();
 </script>
 </body></html>
