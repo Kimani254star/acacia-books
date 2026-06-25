@@ -15782,12 +15782,12 @@ button:hover {
         Clone Recurring Invoices
       </button><button onclick="resetRecurringInvoiceColumnWidths()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
         Reset Column Width
-      </button></div></div></div><div class="bg-white p-6 rounded shadow mb-6"><h2 class="text-xl font-bold mb-4">Add Recurring Invoice</h2><div class="mb-3"><input id="recurringInvoiceDate" type="date" class="border p-2 rounded w-[700px]" /></div><div class="mb-3"><select id="recurringInvoiceRecurrenceType" class="border p-2 rounded w-[700px]" onchange="toggleRecurrenceFields()"><option value="none">No Recurrence</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="custom">Custom Days</option></select></div><div id="recurringInvoiceRecurrenceDaysContainer" class="mb-3 hidden"><input id="recurringInvoiceRecurrenceDays" type="number" placeholder="Repeat every X days" class="border p-2 rounded w-[700px]" /></div><div class="mb-3"><input id="recurringInvoiceNextDate" type="date" class="border p-2 rounded w-[700px]" /></div><div class="mb-3"><select id="recurringInvoiceCustomer" class="border p-2 rounded w-[700px]"><option value="">Select Customer</option></select></div><div class="mb-3"><select id="recurringInvoiceNetDays" class="border p-2 rounded w-[700px]"><option value="">Select Term</option><option value="0">Due on Receipt</option><option value="7">7 Days</option><option value="15">15 Days</option><option value="30">30 Days</option><option value="45">45 Days</option><option value="60">60 Days</option><option value="90">90 Days</option><option value="120">120 Days</option></select></div><div class="mb-3"><select id="recurringChartAccountSelect" class="border p-2 rounded w-[700px]"><option value="">Select Account</option></select></div><div class="mb-3"><input id="recurringInvoiceNumber" type="text" class="border bg-gray-100 p-2 rounded w-[700px]" readonly /></div><div class="mb-3 flex gap-4 items-center"><select id="recurringInvoiceCurrency" class="border p-2 rounded w-[350px]"><option value="KES">KES</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="ZAR">ZAR</option><option value="NGN">NGN</option><option value="UGX">UGX</option><option value="TZS">TZS</option></select><input
+      </button></div></div></div><div class="bg-white p-6 rounded shadow mb-6"><h2 class="text-xl font-bold mb-4">Add Recurring Invoice</h2><div class="mb-3"><input id="recurringInvoiceDate" type="date" class="border p-2 rounded w-[700px]" /></div><div class="mb-3"><select id="recurringInvoiceRecurrenceType" class="border p-2 rounded w-[700px]" onchange="toggleRecurrenceFields()"><option value="none">No Recurrence</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option><option value="custom">Custom Days</option></select></div><div id="recurringInvoiceRecurrenceDaysContainer" class="mb-3 hidden"><input id="recurringInvoiceRecurrenceDays" type="number" placeholder="Repeat every X days" class="border p-2 rounded w-[700px]" /></div><div class="mb-3"><input id="recurringInvoiceNextDate" type="date" class="border p-2 rounded w-[700px]" /></div><div class="mb-3"><select id="recurringInvoiceCustomer" class="border p-2 rounded w-[700px]"><option value="">Select Customer</option></select></div><div class="mb-3"><select id="recurringInvoiceNetDays" class="border p-2 rounded w-[700px]"><option value="">Select Term</option><option value="0">Due on Receipt</option><option value="7">7 Days</option><option value="15">15 Days</option><option value="30">30 Days</option><option value="45">45 Days</option><option value="60">60 Days</option><option value="90">90 Days</option><option value="120">120 Days</option></select></div><div class="mb-3"><textarea id="recurringInvoiceTerms" class="border p-2 rounded w-[700px]" rows="3" placeholder="Terms &amp; Conditions"></textarea></div><div class="mb-3"><select id="recurringChartAccountSelect" class="border p-2 rounded w-[700px]"><option value="">Select Account</option></select></div><div class="mb-3"><input id="recurringInvoiceNumber" type="text" class="border bg-gray-100 p-2 rounded w-[700px]" readonly /></div><div class="mb-3 flex gap-4 items-center"><select id="recurringInvoiceCurrency" class="border p-2 rounded w-[350px]"><option value="KES">KES</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="ZAR">ZAR</option><option value="NGN">NGN</option><option value="UGX">UGX</option><option value="TZS">TZS</option></select><input
     type="number"
     id="recurringInvoiceRate"
     class="border p-2 rounded w-[300px]"  placeholder="Exchange Rate" step="0.01" value="1"></div><div class="mb-3"><select id="recurringInvoiceItemType" class="border p-2 rounded w-[700px]"><option value="">Select Item Type</option><option value="product">Product</option><option value="service">Service</option><option value="subscription">Subscription</option><option value="license">License</option><option value="consulting">Consulting</option><option value="maintenance">Maintenance</option><option value="rent">Rent</option><option value="utility">Utility</option><option value="support">Support</option><option value="other">Other</option></select></div><div class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-3"><select id="recurringInvoiceProductSelect" class="border p-2 rounded w-full"><option value="">Select Product</option></select><input id="recurringInvoiceItemQty" type="number" placeholder="Qty" class="border p-2 rounded w-full"><input id="recurringInvoiceItemPrice" type="number" placeholder="Price" class="border p-2 rounded w-full"><input id="recurringInvoiceItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded w-full"><select id="recurringInvoiceItemTax" class="border p-2 rounded w-full"><option value="16">VAT 16%</option><option value="8">VAT 8%</option><option value="0">Zero Rated</option><option value="exempt">Exempt</option><option value="export">Export</option></select></div><div class="mb-3"><button onclick="addRecurringInvoiceItem()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
       Add
-    </button></div><table class="w-full text-sm border mb-3"><thead class="bg-gray-100"><tr><th>Description</th><th>Qty</th><th>Price</th><th>VAT</th><th>Total</th><th></th></tr></thead><tbody id="recurringInvoiceItemTableBody"></tbody></table><button onclick="saveRecurringInvoice('draft')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Draft</button><button onclick="saveRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Recurring Invoice</button></div><button onclick="bulkDeleteRecurringInvoices()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Bulk Delete</button><div class="bg-white p-6 rounded shadow"><h2 class="text-lg font-semibold mb-4">Recurring Invoice List</h2><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><th><input type="checkbox" onclick="toggleAllRecurringInvoices(this)"></th><th>Recurring Invoice #</th><th>Date</th><th>Customer</th><th>Frequency</th><th>Next Run</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody id="recurringInvoiceTable"></tbody></table></div></div><div id="recurringInvoicePreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded shadow w-full max-w-3xl relative overflow-y-auto max-h-[90vh]"><h3 class="text-xl font-semibold mb-4 text-center">📄 Recurring Invoice Preview</h3><div class="mb-3 flex justify-between items-center"><div><label for="recurringTemplateSelect" class="font-semibold">Choose Template:</label><select id="recurringTemplateSelect" onchange="changeRecurringTemplate(this.value)" class="border p-1 rounded"><option value="template-default">Default</option><option value="template-minimal">Minimal</option><option value="template-modern">Modern</option><option value="template-elegant">Elegant</option><option value="template-bold">Bold</option><option value="template-corporate">Corporate</option><option value="template-creative">Creative</option></select></div><div class="space-x-3"><button onclick="printRecurringPreview()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Print</button><button onclick="downloadRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Download</button><button onclick="emailRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button><button onclick="closeRecurringPreview()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Close</button></div></div><div id="recurringInvoiceTemplateWrapper" class="template-default"><div class="flex justify-between mb-4"><div><strong>Recurring Invoice Number:</strong><span id="previewRecurringInvoiceNumber"></span></div><div><strong>Date:</strong><span id="previewRecurringInvoiceDate"></span></div></div><div class="mb-4"><div class="text-right"><h4 class="font-semibold">Company</h4><p id="previewRecurringInvoiceCompanyName">My Company Ltd</p><p>PIN: <span id="previewRecurringInvoiceCompanyPIN">P00000000</span></p><p>Address: <span id="previewRecurringInvoiceCompanyAddress">123 Business Rd, Nairobi</span></p></div><div class="text-left mb-4"><h4 class="font-semibold">Customer</h4><p id="previewRecurringInvoiceCustomerName"></p><p>Billing Address: <span id="previewRecurringInvoiceCustomerAddress"></span></p><p>Phone Number: <span id="previewRecurringInvoiceCustomerPhone"></span></p><p>PIN: <span id="previewRecurringInvoiceCustomerPIN"></span></p></div></div><table class="w-full text-sm border mt-4 border-collapse"><thead class="bg-gray-100"><tr><th class="p-2 border">#</th><th class="p-2 border">Item Name</th><th class="p-2 border">Qty</th><th class="p-2 border">Price (Before VAT)</th><th class="p-2 border">VAT</th><th class="p-2 border">Total</th></tr></thead><tbody id="previewRecurringInvoiceItems"></tbody></table><div class="mt-2 text-right text-sm font-semibold"><p>Amount (Before VAT): <span id="previewRecurringInvoiceSubtotal">KES 0.00</span></p><p>VAT: <span id="previewRecurringInvoiceVAT">KES 0.00</span></p><p>Total Amount: <span id="previewRecurringInvoiceTotal">KES 0.00</span></p><p>Payment Made: <span id="previewRecurringInvoicePaymentMade">KES 0.00</span></p><p>Balance Due: <span id="previewRecurringInvoiceBalance">KES 0.00</span></p><p>Status: <span id="previewRecurringInvoicePaymentStatus" class="text-blue-600">Pending</span></p></div><table class="bank-details"><thead><tr><th>BANK NAME</th><th>BRANCH</th><th>SWIFT CODE</th><th>KSH ACC</th><th>USD ACC</th><th>EURO ACC</th></tr></thead><tbody><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody></table><div id="recurringInvoiceQRCode" class="mt-4 text-center"><canvas></canvas><p id="qrRecurringPlaceholder" class="text-xs text-gray-500 text-center hidden">
+    </button></div><table class="w-full text-sm border mb-3"><thead class="bg-gray-100"><tr><th>Description</th><th>Qty</th><th>Price</th><th>VAT</th><th>Total</th><th></th></tr></thead><tbody id="recurringInvoiceItemTableBody"></tbody></table><button onclick="saveRecurringInvoice('draft')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Draft</button><button onclick="saveRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Recurring Invoice</button></div><button onclick="bulkDeleteRecurringInvoices()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Bulk Delete</button><div class="bg-white p-6 rounded shadow"><h2 class="text-lg font-semibold mb-4">Recurring Invoice List</h2><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><th><input type="checkbox" onclick="toggleAllRecurringInvoices(this)"></th><th>Recurring Invoice #</th><th>Date</th><th>Customer</th><th>Frequency</th><th>Next Run</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody id="recurringInvoiceTable"></tbody></table></div></div><div id="recurringInvoicePreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded shadow w-full max-w-3xl relative overflow-y-auto max-h-[90vh]"><h3 class="text-xl font-semibold mb-4 text-center">📄 Recurring Invoice Preview</h3><div class="mb-3 flex justify-between items-center"><div><label for="recurringTemplateSelect" class="font-semibold">Choose Template:</label><select id="recurringTemplateSelect" onchange="changeRecurringTemplate(this.value)" class="border p-1 rounded"><option value="template-default">Default</option><option value="template-minimal">Minimal</option><option value="template-modern">Modern</option><option value="template-elegant">Elegant</option><option value="template-bold">Bold</option><option value="template-corporate">Corporate</option><option value="template-creative">Creative</option></select></div><div class="space-x-3"><button onclick="printRecurringPreview()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Print</button><button onclick="downloadRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Download</button><button onclick="emailRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button><button onclick="closeRecurringPreview()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Close</button></div></div><div id="recurringInvoiceTemplateWrapper" class="template-default"><div class="flex justify-between mb-4"><div><strong>Recurring Invoice Number:</strong><span id="previewRecurringInvoiceNumber"></span></div><div><strong>Date:</strong><span id="previewRecurringInvoiceDate"></span></div></div><div class="mb-4"><div class="text-right"><h4 class="font-semibold">Company</h4><p id="previewRecurringInvoiceCompanyName">My Company Ltd</p><p>PIN: <span id="previewRecurringInvoiceCompanyPIN">P00000000</span></p><p>Address: <span id="previewRecurringInvoiceCompanyAddress">123 Business Rd, Nairobi</span></p></div><div class="text-left mb-4"><h4 class="font-semibold">Customer</h4><p id="previewRecurringInvoiceCustomerName"></p><p>Billing Address: <span id="previewRecurringInvoiceCustomerAddress"></span></p><p>Phone Number: <span id="previewRecurringInvoiceCustomerPhone"></span></p><p>PIN: <span id="previewRecurringInvoiceCustomerPIN"></span></p></div></div><table class="w-full text-sm border mt-4 border-collapse"><thead class="bg-gray-100"><tr><th class="p-2 border">#</th><th class="p-2 border">Item Name</th><th class="p-2 border">Qty</th><th class="p-2 border">Price (Before VAT)</th><th class="p-2 border">VAT</th><th class="p-2 border">Total</th></tr></thead><tbody id="previewRecurringInvoiceItems"></tbody></table><div class="mt-2 text-right text-sm font-semibold"><p>Amount (Before VAT): <span id="previewRecurringInvoiceSubtotal">KES 0.00</span></p><p>VAT: <span id="previewRecurringInvoiceVAT">KES 0.00</span></p><p>Total Amount: <span id="previewRecurringInvoiceTotal">KES 0.00</span></p><p>Payment Made: <span id="previewRecurringInvoicePaymentMade">KES 0.00</span></p><p>Balance Due: <span id="previewRecurringInvoiceBalance">KES 0.00</span></p><p>Net Days: <span id="previewRecurringInvoiceNetDays">-</span></p><p>Due Date: <span id="previewRecurringInvoiceDueDate">-</span></p><p>Status: <span id="previewRecurringInvoicePaymentStatus" class="text-blue-600">Pending</span></p><div class="mt-3 text-left text-sm"><strong>Terms &amp; Conditions:</strong><p id="previewRecurringInvoiceTerms" class="whitespace-pre-line text-gray-700">-</p></div></div><table class="bank-details"><thead><tr><th>BANK NAME</th><th>BRANCH</th><th>SWIFT CODE</th><th>KSH ACC</th><th>USD ACC</th><th>EURO ACC</th></tr></thead><tbody><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody></table><div id="recurringInvoiceQRCode" class="mt-4 text-center"><canvas></canvas><p id="qrRecurringPlaceholder" class="text-xs text-gray-500 text-center hidden">
           QR will be generated after ETIMS submission
         </p></div></div></div></div><!-- ✅ CUSTOMER STATEMENT MODULE --><div id="customerStatementTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-2xl font-bold mb-4 text-center">📑 Customer Statement</h2><label for="statementCustomer" class="block mb-2 font-medium">Select Customer:</label><select id="statementCustomer" onchange="renderCustomerStatement()" class="p-2 border rounded w-full mb-4"><option value="">-- Choose Customer --</option></select><div class="flex gap-2 mb-4"><div class="flex flex-col"><label for="statementFromDate" class="text-sm font-medium">From:</label><input type="date" id="statementFromDate" onchange="renderCustomerStatement()" class="p-2 border rounded"></div><div class="flex flex-col"><label for="statementToDate" class="text-sm font-medium">To:</label><input type="date" id="statementToDate" onchange="renderCustomerStatement()" class="p-2 border rounded"></div></div><div class="flex flex-wrap gap-2 mb-4"><button onclick="printStatement()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-900">🖨️ Print</button><button onclick="downloadStatementPDF()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-900">⬇️ Download PDF</button><button onclick="downloadStatementExcel()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-900">⬇️ Download Excel</button><button onclick="sendStatementByEmail()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-900">📧 Send Email</button></div><div id="statementProfiles" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 border p-3 rounded bg-gray-50"></div><div id="statementContent" class="overflow-auto"><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="border p-1">Date</th><th class="border p-1">Type</th><th class="border p-1">Ref</th><th class="border p-1">Debit</th><th class="border p-1">Credit</th><th class="border p-1">Balance</th><th class="border p-1">Preview</th></tr></thead><tbody id="statementTableBody"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
     Total Count: <span id="totalCount">0</span></div><div>
@@ -17385,12 +17385,28 @@ function renderInvoices() {
     if (!tbody) return;
     tbody.innerHTML = "";
     invoices = JSON.parse(localStorage.getItem("invoices")) || [];
-    if (invoices.length === 0) {
+    // Build a display-only list that excludes recurring-sourced invoices. Do NOT mutate storage,
+    // so recurring occurrences still count toward dashboard totals and customer balance.
+    let _displayInvoices = invoices;
+    try {
+        const _rec = JSON.parse(localStorage.getItem("recurringInvoices")) || [];
+        const _recIds = new Set(_rec.map(r => String(r.id)));
+        const _recNums = new Set(_rec.map(r => String(r.number)));
+        _displayInvoices = invoices.filter(inv => {
+            if (inv.fromRecurring || inv.isRecurring || inv.recurrenceType || inv.recurrenceDays) return false;
+            if (inv.recurringId) return false;
+            if (_recIds.has(String(inv.id))) return false;
+            if (inv.invoiceNumber && _recNums.has(String(inv.invoiceNumber))) return false;
+            if (inv.number && _recNums.has(String(inv.number))) return false;
+            return true;
+        });
+    } catch(e) { console.warn("recurring filter failed", e); }
+    if (_displayInvoices.length === 0) {
         tbody.innerHTML = `<tr><td colspan="10" class="p-2 text-center text-gray-500">No invoices found.</td></tr>`;
         return;
     }
 
-    invoices.forEach(inv => {
+    _displayInvoices.forEach(inv => {
         const displayInvoiceNumber = inv.invoiceNumber || generateInvoiceNumberFromId(inv.id || Date.now());
         let dueDate = "";
         if (inv.netDays && inv.date) {
@@ -24738,10 +24754,13 @@ function loadRecurringCustomers() {
   const select = document.getElementById("recurringInvoiceCustomer");
   if (!select) return;
   select.innerHTML = `<option value="">Select Customer</option>`;
-  customers.forEach(c => {
+  customers.forEach((c, i) => {
     const opt = document.createElement("option");
-    opt.value = c.id;
-    opt.textContent = c.name;
+    const cid = c.id ?? c.customerId ?? c.code ?? c.name ?? ("idx-" + i);
+    opt.value = String(cid);
+    opt.textContent = c.name || c.customerName || ("Customer " + (i + 1));
+    opt.dataset.cname = opt.textContent;
+    opt.dataset.cidx = String(i);
     select.appendChild(opt);
   });
 }
@@ -24955,12 +24974,15 @@ function syncRecurringToInvoices(recurring) {
     existing.customer = recurring.customerName;
     existing.customerId = recurring.customerId;
     existing.account = recurring.accountCode;
-    existing.netDays = recurring.recurrenceDays || existing.netDays || "";
+    existing.netDays = recurring.netDays || recurring.recurrenceDays || existing.netDays || "";
+    existing.terms = recurring.terms || existing.terms || "";
     existing.items = items;
     existing.total = total.toFixed(2);
     existing.vat = vat.toFixed(2);
+    existing.vatKES = vat;
     existing.currency = recurring.currency;
     existing.totalKES = totalKES;
+    existing.fromRecurring = true;
     if (typeof updateCustomerReceivables === "function") {
       updateCustomerReceivables(existing.customer, totalKES - prevTotalKES);
     }
@@ -24969,14 +24991,17 @@ function syncRecurringToInvoices(recurring) {
       id: Date.now(),
       invoiceNumber: (typeof generateInvoiceNumber === "function") ? generateInvoiceNumber() : ("INV-" + Date.now()),
       recurringId: recurring.id,
+      fromRecurring: true,
       date: recurring.date,
       customer: recurring.customerName,
       customerId: recurring.customerId,
-      netDays: recurring.recurrenceDays || "",
+      netDays: recurring.netDays || recurring.recurrenceDays || "",
+      terms: recurring.terms || "",
       account: recurring.accountCode,
       items: items,
       total: total.toFixed(2),
       vat: vat.toFixed(2),
+      vatKES: vat,
       currency: recurring.currency,
       totalKES: totalKES,
       amountPaid: 0,
@@ -25005,43 +25030,78 @@ function saveRecurringInvoice(status = "active") {
   const nextDate = document.getElementById("recurringInvoiceNextDate").value;
   const recurrenceType = document.getElementById("recurringInvoiceRecurrenceType").value;
   const recurrenceDays = document.getElementById("recurringInvoiceRecurrenceDays").value;
-  const customerId = document.getElementById("recurringInvoiceCustomer").value;
+  const customerSel = document.getElementById("recurringInvoiceCustomer");
+  const customerId = customerSel ? customerSel.value : "";
+  const customerLabel = customerSel && customerSel.selectedOptions[0] ? customerSel.selectedOptions[0].textContent.trim() : "";
   const accountCode = document.getElementById("recurringChartAccountSelect").value;
   const currency = document.getElementById("recurringInvoiceCurrency").value;
   const number = document.getElementById("recurringInvoiceNumber").value || generateRecurringInvoiceNumber();
+  const netDaysEl = document.getElementById("recurringInvoiceNetDays");
+  const netDays = netDaysEl ? netDaysEl.value : "";
+  const termsEl = document.getElementById("recurringInvoiceTerms");
+  const terms = termsEl ? termsEl.value : "";
 
   if (!date || !customerId || recurringInvoiceItems.length === 0) {
-    return alert("Missing required fields");
+    return alert("Missing required fields - please select a customer, date and at least one item");
   }
 
   const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-
-  const customer = customers.find(c =>
-    String(c.id) === String(customerId) ||
-    String(c.code) === String(customerId) ||
-    String(c.customerId) === String(customerId)
+  // Trust the user's actual selection. Match strictly on id-like fields first;
+  // only fall back to name match when the label is non-empty (prevents
+  // accidentally returning customers[0] when ids are missing).
+  let customer = customers.find(c =>
+    String(c.id ?? "") === String(customerId) ||
+    String(c.customerId ?? "") === String(customerId) ||
+    String(c.code ?? "") === String(customerId)
   );
+  if (!customer && customerLabel) {
+    customer = customers.find(c =>
+      String(c.name ?? "") === String(customerLabel) ||
+      String(c.customerName ?? "") === String(customerLabel)
+    );
+  }
+  // Selected dropdown text is the source of truth for display name.
+  const resolvedCustomerName = customerLabel || customer?.name || customer?.customerName || "Unknown Customer";
+  const resolvedCustomerId = customer?.id || customer?.customerId || customerId || resolvedCustomerName;
 
-  let subtotal = recurringInvoiceItems.reduce((s, i) => s + (i.qty * i.price), 0);
-  let vat = recurringInvoiceItems.reduce((s, i) => s + i.vat, 0);
-  let total = subtotal + vat;
+  const subtotal = recurringInvoiceItems.reduce((s, i) => s + (Number(i.qty) * Number(i.price)), 0);
+  const vat = recurringInvoiceItems.reduce((s, i) => s + Number(i.vat || 0), 0);
+  const total = subtotal + vat;
+
+  // capture previous values when editing so we can adjust deltas correctly
+  let prev = null;
+  if (editingRecurringInvoiceIndex !== null && recurringInvoices[editingRecurringInvoiceIndex]) {
+    prev = recurringInvoices[editingRecurringInvoiceIndex];
+  }
+
+  const paidPrev = prev ? Number(prev.paid || 0) : 0;
+  const balance = Math.max(0, total - paidPrev);
 
   const invoice = {
-    id: crypto.randomUUID(),
+    id: prev?.id || crypto.randomUUID(),
     number,
     date,
     nextDate,
     recurrenceType,
     recurrenceDays,
-    customerId,
-    customerName: customer?.name || customer?.customerName || "Unknown Customer",
+    customerId: resolvedCustomerId,
+    customer: resolvedCustomerName,
+    customerName: resolvedCustomerName,
     accountCode,
     currency,
-    items: recurringInvoiceItems,
+    netDays,
+    terms,
+    items: JSON.parse(JSON.stringify(recurringInvoiceItems)),
     subtotal,
+    beforeVat: subtotal,
     vat,
     total,
-    status
+    totalAmount: total,
+    totalKES: total,
+    paid: paidPrev,
+    amountPaid: paidPrev,
+    balance,
+    status: balance <= 0 && paidPrev > 0 ? "Paid" : status
   };
 
   if (editingRecurringInvoiceIndex !== null) {
@@ -25053,18 +25113,55 @@ function saveRecurringInvoice(status = "active") {
 
   localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
 
-  if (status === "active") {
-    deductStockFromInvoice(invoice.items);
-    syncRecurringToInvoices(invoice);
-  }
+  // --- Customer balance sync (delta) ---
+  try {
+    const prevTotal = prev ? Number(prev.total || 0) : 0;
+    const delta = total - prevTotal;
+    // if customer changed on edit, reverse prev from old customer and add new total to new customer
+    const oldCustomerKey = prev ? (prev.customerId || prev.customerName) : null;
+    const newCustomerKey = resolvedCustomerId || resolvedCustomerName;
+    const sameCustomer = String(oldCustomerKey || "") === String(newCustomerKey || "");
+    customers.forEach(c => {
+      const key = c.id || c.customerId || c.name;
+      if (prev && !sameCustomer && String(key) === String(oldCustomerKey)) {
+        c.balance = Math.max(0, Number(c.balance || 0) - (prevTotal - paidPrev));
+        c.receivables = c.balance;
+        c.outstandingBalance = c.balance;
+      }
+      if (String(key) === String(newCustomerKey) || String(c.name) === String(resolvedCustomerName)) {
+        const add = (prev && sameCustomer) ? delta : balance;
+        c.balance = Math.max(0, Number(c.balance || 0) + add);
+        c.receivables = c.balance;
+        c.outstandingBalance = c.balance;
+      }
+    });
+    localStorage.setItem("customers", JSON.stringify(customers));
+  } catch(e) { console.warn("customer balance sync failed", e); }
+
+  // Sync this recurring entry into the main invoices list (tagged so it stays out of the normal invoice table but counts in dashboard totals)
+  try { if (typeof syncRecurringToInvoices === "function") syncRecurringToInvoices(invoice); } catch(e) { console.warn("syncRecurringToInvoices failed", e); }
 
   recurringInvoiceItems = [];
   renderRecurringInvoiceItems();
   renderRecurringInvoices();
 
   document.getElementById("recurringInvoiceNumber").value = generateRecurringInvoiceNumber();
+  if (netDaysEl) netDaysEl.value = "";
+  if (termsEl) termsEl.value = "";
 
-  console.log("📄 Invoice saved:", invoice);
+  // refresh totals across the app
+  try { if (typeof renderCustomers === "function") renderCustomers(); } catch(e){}
+  try { if (typeof renderAccountsReceivable === "function") renderAccountsReceivable(); } catch(e){}
+  try { if (typeof renderCustomerStatement === "function") renderCustomerStatement(); } catch(e){}
+  try { if (typeof renderRecurringInvoiceReport === "function") renderRecurringInvoiceReport(); } catch(e){}
+  try { if (typeof loadDashboard === "function") loadDashboard(); } catch(e){}
+  try { if (typeof updateDashboardTotals === "function") updateDashboardTotals(); } catch(e){}
+  try { if (typeof updateDashboardTotals === "function") updateDashboardTotals(); } catch(e){}
+  try { if (typeof window.refreshDashboardCards === "function") window.refreshDashboardCards(); } catch(e){}
+  try { if (typeof loadDashboard === "function") loadDashboard(); } catch(e){}
+  try { if (typeof renderInvoices === "function") renderInvoices(); } catch(e){}
+
+  console.log("📄 Recurring invoice saved:", invoice);
 }
 function renderRecurringInvoices() {
   const tbody = document.getElementById("recurringInvoiceTable");
@@ -25123,6 +25220,10 @@ function editRecurring(index) {
   document.getElementById("recurringInvoiceCustomer").value = inv.customerId;
   document.getElementById("recurringChartAccountSelect").value = inv.accountCode;
   document.getElementById("recurringInvoiceCurrency").value = inv.currency;
+  const _nd = document.getElementById("recurringInvoiceNetDays");
+  if (_nd) _nd.value = inv.netDays || "";
+  const _tm = document.getElementById("recurringInvoiceTerms");
+  if (_tm) _tm.value = inv.terms || "";
 
   recurringInvoiceItems = inv.items ? JSON.parse(JSON.stringify(inv.items)) : [];
 
@@ -25145,14 +25246,31 @@ function deleteRecurring(index) {
 
   restoreStockFromInvoice(recurringInvoices[realIndex].items);
 
+  const removedId = inv.id;
   recurringInvoices.splice(realIndex, 1);
   localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
+
+  // Remove the linked invoice (the recurring-sourced occurrence) from the main invoices list
+  try {
+    let _invs = JSON.parse(localStorage.getItem("invoices") || "[]");
+    const _before = _invs.length;
+    _invs = _invs.filter(i => String(i.recurringId) !== String(removedId));
+    if (_invs.length !== _before) {
+      localStorage.setItem("invoices", JSON.stringify(_invs));
+      if (typeof window !== "undefined") window.invoices = _invs;
+    }
+  } catch(e) { console.warn("linked invoice cleanup failed", e); }
 
   editingRecurringInvoiceIndex = null;
 
   renderRecurringInvoices();
 
   alert("Recurring invoice deleted successfully.");
+
+  if (typeof renderInvoices === "function") renderInvoices();
+  if (typeof renderRecurringInvoiceReport === "function") renderRecurringInvoiceReport();
+  if (typeof updateDashboardTotals === "function") updateDashboardTotals();
+  if (typeof loadDashboard === "function") loadDashboard();
 }
 function previewRecurring(id) {
   const inv = recurringInvoices.find(i => i.id === id);
@@ -25186,6 +25304,22 @@ function previewRecurring(id) {
   document.getElementById("previewRecurringInvoiceTotal").textContent = inv.total.toFixed(2);
   document.getElementById("previewRecurringInvoiceBalance").textContent = inv.total.toFixed(2);
 
+  // Terms, net days, due date
+  const termsEl = document.getElementById("previewRecurringInvoiceTerms");
+  if (termsEl) termsEl.textContent = (inv.terms && String(inv.terms).trim()) ? inv.terms : "-";
+  const netEl = document.getElementById("previewRecurringInvoiceNetDays");
+  if (netEl) netEl.textContent = (inv.netDays !== undefined && inv.netDays !== "") ? inv.netDays : "-";
+  const dueEl = document.getElementById("previewRecurringInvoiceDueDate");
+  if (dueEl) {
+    let due = "-";
+    if (inv.date && inv.netDays !== "" && inv.netDays !== undefined && !isNaN(parseInt(inv.netDays))) {
+      const d = new Date(inv.date);
+      d.setDate(d.getDate() + parseInt(inv.netDays));
+      due = d.toISOString().split("T")[0];
+    }
+    dueEl.textContent = due;
+  }
+
   document.getElementById("recurringInvoicePreviewModal").classList.remove("hidden");
 }
 
@@ -25201,53 +25335,168 @@ function recordRecurringPayment(index) {
   const inv = recurringInvoices[index];
   if (!inv) return;
 
-  const amount = prompt("Enter payment amount:", inv.total);
-  if (!amount) return;
+  const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+  if (banks.length === 0) return alert("Add a bank first.");
+  const bankList = banks.map((b,i)=>`${i+1}. ${b.name} (${b.currency||"KES"} ${Number(b.balance||0).toFixed(2)})`).join("\n");
+  const bankPick = prompt("Select bank by number:\n"+bankList,"1");
+  if (!bankPick) return;
+  const bankIdx = parseInt(bankPick,10)-1;
+  if (isNaN(bankIdx)||!banks[bankIdx]) return alert("Invalid bank.");
+  const bank = banks[bankIdx];
 
+  const outstanding = (Number(inv.total)||0) - (Number(inv.paid)||0);
+  const amountStr = prompt("Enter payment amount (outstanding "+outstanding.toFixed(2)+"):", outstanding.toFixed(2));
+  if (!amountStr) return;
+  const amount = parseFloat(amountStr);
+  if (isNaN(amount)||amount<=0) return alert("Invalid amount.");
+
+  const today = new Date().toISOString().split("T")[0];
+  const paymentId = crypto.randomUUID();
+
+  // 1) recurringPayments log
   const payment = {
-    id: crypto.randomUUID(),
+    id: paymentId,
     invoiceNumber: inv.number,
+    recurringId: inv.id,
     customerId: inv.customerId,
-    amount: parseFloat(amount),
-    date: new Date().toISOString().split("T")[0],
+    customerName: inv.customerName,
+    amount: amount,
+    bank: bank.name,
+    date: today,
     type: "Recurring Invoice Payment"
   };
-
   let payments = JSON.parse(localStorage.getItem("recurringPayments") || "[]");
   payments.push(payment);
   localStorage.setItem("recurringPayments", JSON.stringify(payments));
 
-  inv.paid = (inv.paid || 0) + parseFloat(amount);
-  inv.balance = inv.total - inv.paid;
+  // 2) Receipts entry (so it renders on Receipts page)
+  const receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
+  receipts.push({
+    id: paymentId,
+    receiptNumber: "RCPT-"+Date.now(),
+    date: today,
+    customer: inv.customerName,
+    customerId: inv.customerId,
+    invoiceNumber: inv.number,
+    recurringId: inv.id,
+    amount: amount,
+    bank: bank.name,
+    bankIndex: bankIdx,
+    currency: inv.currency || "KES",
+    reference: "Recurring "+inv.number,
+    source: "Recurring Invoice Payment"
+  });
+  localStorage.setItem("receipts", JSON.stringify(receipts));
 
+  // 3) Bank balance up
+  bank.balance = (Number(bank.balance)||0) + amount;
+  localStorage.setItem("banks", JSON.stringify(banks));
+
+  // 4) Manual transaction entry (Money In)
+  const manualTx = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+  const allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
+  const txEntry = {
+    id: paymentId,
+    date: today,
+    bank: bank.name,
+    type: "Customer Receipt",
+    amount: amount,
+    description: "Recurring Invoice "+inv.number+" - "+inv.customerName,
+    reference: inv.number,
+    source: "Recurring Invoice Payment",
+    recurringId: inv.id
+  };
+  manualTx.push(txEntry);
+  allTx.push(txEntry);
+  localStorage.setItem("manualTransactions", JSON.stringify(manualTx));
+  localStorage.setItem("transactions", JSON.stringify(allTx));
+
+  // 5) Customer receivables down (balance card)
+  if (typeof updateCustomerReceivables === "function" && inv.customerName) {
+    updateCustomerReceivables(inv.customerName, -amount);
+  }
+
+  // 6) Update recurring invoice paid/balance/status
+  inv.paid = (Number(inv.paid)||0) + amount;
+  inv.balance = (Number(inv.total)||0) - inv.paid;
   if (inv.balance <= 0) inv.status = "Paid";
-
   localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
+
+  // 7) Refresh UI
   renderRecurringInvoices();
+  if (typeof renderReceipts === "function") renderReceipts();
+  if (typeof renderManualTransactions === "function") renderManualTransactions();
+  if (typeof renderBankList === "function") renderBankList();
+  if (typeof loadBanks === "function") loadBanks();
+  if (typeof loadTransactions === "function") loadTransactions();
+  if (typeof renderAccountsReceivable === "function") renderAccountsReceivable();
+  if (typeof renderCustomers === "function") renderCustomers();
+  if (typeof updateDashboardTotals === "function") updateDashboardTotals();
+  if (typeof renderRecurringInvoiceReport === "function") renderRecurringInvoiceReport();
+
+  alert("\u2705 Payment of "+amount.toFixed(2)+" recorded.");
 }
 function reverseRecurringPayment(index) {
   const inv = recurringInvoices[index];
   if (!inv) return;
 
   let payments = JSON.parse(localStorage.getItem("recurringPayments") || "[]");
-
   const related = payments.filter(p => p.invoiceNumber === inv.number);
   if (related.length === 0) return alert("No payment found");
-
   if (!confirm("Reverse last payment?")) return;
 
   const last = related[related.length - 1];
+  const amt = Number(last.amount)||0;
 
+  // 1) remove from recurringPayments
   payments = payments.filter(p => p.id !== last.id);
   localStorage.setItem("recurringPayments", JSON.stringify(payments));
 
-  inv.paid = Math.max(0, (inv.paid || 0) - last.amount);
-  inv.balance = inv.total - inv.paid;
+  // 2) remove receipt
+  let receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
+  receipts = receipts.filter(r => r.id !== last.id);
+  localStorage.setItem("receipts", JSON.stringify(receipts));
 
+  // 3) reverse bank balance
+  const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+  const bank = banks.find(b => b.name === last.bank);
+  if (bank) {
+    bank.balance = (Number(bank.balance)||0) - amt;
+    localStorage.setItem("banks", JSON.stringify(banks));
+  }
+
+  // 4) remove manual transaction + transactions entry
+  let manualTx = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+  manualTx = manualTx.filter(t => t.id !== last.id);
+  localStorage.setItem("manualTransactions", JSON.stringify(manualTx));
+  let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
+  allTx = allTx.filter(t => t.id !== last.id);
+  localStorage.setItem("transactions", JSON.stringify(allTx));
+
+  // 5) restore customer receivables
+  if (typeof updateCustomerReceivables === "function" && (last.customerName || inv.customerName)) {
+    updateCustomerReceivables(last.customerName || inv.customerName, amt);
+  }
+
+  // 6) update recurring invoice state
+  inv.paid = Math.max(0, (Number(inv.paid)||0) - amt);
+  inv.balance = (Number(inv.total)||0) - inv.paid;
   if (inv.balance > 0) inv.status = "Active";
-
   localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
+
+  // 7) refresh
   renderRecurringInvoices();
+  if (typeof renderReceipts === "function") renderReceipts();
+  if (typeof renderManualTransactions === "function") renderManualTransactions();
+  if (typeof renderBankList === "function") renderBankList();
+  if (typeof loadBanks === "function") loadBanks();
+  if (typeof loadTransactions === "function") loadTransactions();
+  if (typeof renderAccountsReceivable === "function") renderAccountsReceivable();
+  if (typeof renderCustomers === "function") renderCustomers();
+  if (typeof updateDashboardTotals === "function") updateDashboardTotals();
+  if (typeof renderRecurringInvoiceReport === "function") renderRecurringInvoiceReport();
+
+  alert("\u21A9\uFE0F Payment of "+amt.toFixed(2)+" reversed.");
 }
 function pushRecurringToETIMS(index) {
   const inv = recurringInvoices[index];
@@ -35915,12 +36164,12 @@ function manageCOAFiles(){
     oninput="searchNonCurrentAssets()"
   /><svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div><div class="mb-4 relative inline-block text-right"><button id="assetActionsBtn" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-6 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
     Asset Actions
-    <svg class="-mr-1 ml-2 h-5 w-5 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button><div id="assetActionsDropdown" class="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10"><button onclick="sortDepreciationBy('asset')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Asset</button><button onclick="sortDepreciationBy('initial')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Initial Value</button><button onclick="sortDepreciationBy('rate')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Depreciation Rate</button><button onclick="sortDepreciationBy('depreciated')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Depreciated Value</button><button onclick="sortDepreciationBy('years')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Years</button><hr class="my-1"><button onclick="importAssets()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Import Assets</button><button onclick="exportAssets()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Export Assets</button><button onclick="resetAssetsTable()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Reset Table</button><button onclick="manageAssetFiles()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Manage Files</button></div></div><div class="mb-4 space-y-2"><div><input id="nonCurrentAssetName" placeholder="Asset Name" class="border p-2 rounded" style="width: 700px;"  /></div><div><input  id="nonCurrentAssetCode"  placeholder="Asset Code (Auto)"   class="border p-2 rounded bg-gray-100"  style="width: 700px;"  /></div><div><input id="nonCurrentAssetValue" type="number" placeholder="Value (KES)" class="border p-2 rounded" style="width: 700px;"  /></div><div><select id="nonCurrentAssetAccountSelect" class="border p-2 rounded" style="width: 700px;" ></select></div><div class="mb-4"><select id="nonCurrentAssetBankSelect" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Bank --</option></select></div><div class="mb-3"><input type="file" id="attachmentFile" class="border p-2 rounded"style="width: 700px;"accept=".pdf,.xls,.xlsx,.jpg,.jpeg,.png,.gif"></div><div>
+    <svg class="-mr-1 ml-2 h-5 w-5 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button><div id="assetActionsDropdown" class="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-10"><button onclick="sortDepreciationBy('asset')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Asset</button><button onclick="sortDepreciationBy('initial')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Initial Value</button><button onclick="sortDepreciationBy('rate')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Depreciation Rate</button><button onclick="sortDepreciationBy('depreciated')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Depreciated Value</button><button onclick="sortDepreciationBy('years')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Years</button><hr class="my-1"><button onclick="importAssets()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Import Assets</button><button onclick="exportAssets()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Export Assets</button><button onclick="resetAssetsTable()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Reset Table</button><button onclick="manageAssetFiles()" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100">Manage Files</button></div></div><div class="mb-4 space-y-2"><div><input id="nonCurrentAssetName" placeholder="Asset Name" class="border p-2 rounded" style="width: 700px;"  /></div><div><input  id="nonCurrentAssetCode"  placeholder="Asset Code (Auto)"   class="border p-2 rounded bg-gray-100"  style="width: 700px;"  /></div><div><input id="nonCurrentAssetValue" type="number" placeholder="Value (KES)" class="border p-2 rounded" style="width: 700px;"  /></div><div><select id="nonCurrentAssetBankSelect" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Bank (optional) --</option></select></div><div><select id="nonCurrentAssetAccountSelect" class="border p-2 rounded" style="width: 700px;" ></select></div><div class="mb-3"><input type="file" id="attachmentFile" class="border p-2 rounded"style="width: 700px;"accept=".pdf,.xls,.xlsx,.jpg,.jpeg,.png,.gif"></div><div>
   <textarea  id="nonCurrentAssetDescription" placeholder="Asset Description (optional)"  class="border p-2 rounded" style="width: 700px; height: 120px;" ></textarea>
 </div><div class="flex space-x-2"><button onclick="addNonCurrentAsset()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Add</button><button id="cancelEditAssetBtn" onclick="cancelEditAsset()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Cancel</button></div></div><div class="bg-white p-4 rounded shadow mb-6"><div class="flex justify-between items-center mb-3"><h3 class="text-lg font-semibold">
       Non-Current Assets
     </h3><button onclick="bulkDeleteNonCurrentAssets()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button></div><table class="w-full border text-sm mb-6"><thead class="bg-gray-100"><tr><th class="p-2 border"><input type="checkbox"
-            onclick="toggleAllNonCurrentAssets(this)"></th><th class="p-2 border">Asset</th><th class="p-2 border">Asset Code</th><th class="p-1 border">Description</th><th class="p-2 border text-right">Value (KES)</th><th class="p-2 border">Account</th><th class="p-2 border">Actions</th></tr></thead><tbody id="nonCurrentAssetsTableBody"></tbody></table></div><h3 class="text-xl font-semibold mt-8 mb-2">Depreciation Overview</h3><table class="w-full border text-sm mb-6"><thead class="bg-gray-100"><tr><th class="p-2 border">Asset</th><th class="p-2 border">Initial Value (KES)</th><th class="p-2 border">Depreciation Rate (%)</th><th class="p-2 border">Depreciated Value (KES)</th><th class="p-2 border">Years</th></tr></thead><tbody id="depreciationTableBody"></tbody></table><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
+            onclick="toggleAllNonCurrentAssets(this)"></th><th class="p-2 border">Asset</th><th class="p-2 border">Asset Code</th><th class="p-1 border">Description</th><th class="p-2 border text-right">Value (KES)</th><th class="p-2 border">Account</th><th class="p-2 border">Bank</th><th class="p-2 border">Actions</th></tr></thead><tbody id="nonCurrentAssetsTableBody"></tbody></table></div><h3 class="text-xl font-semibold mt-8 mb-2">Depreciation Overview</h3><table class="w-full border text-sm mb-6"><thead class="bg-gray-100"><tr><th class="p-2 border">Asset</th><th class="p-2 border">Initial Value (KES)</th><th class="p-2 border">Depreciation Rate (%)</th><th class="p-2 border">Depreciated Value (KES)</th><th class="p-2 border">Years</th></tr></thead><tbody id="depreciationTableBody"></tbody></table><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
     Total Count: <span id="totalCount">0</span></div><div>
     Show
     <select id="itemsPerPageSelect" class="border rounded px-1"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select>
@@ -40720,7 +40969,6 @@ function populateAssetAccounts() {
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   const select = document.getElementById("nonCurrentAssetAccountSelect");
   if (!select) return;
-
   select.innerHTML = `<option value="">-- Select Account --</option>`;
   accounts
     .filter(acc => acc.type === "Asset" || acc.category === "Non-Current Asset")
@@ -40730,18 +40978,26 @@ function populateAssetAccounts() {
       opt.textContent = acc.name;
       select.appendChild(opt);
     });
+  // Populate bank dropdown too
+  const bankSel = document.getElementById("nonCurrentAssetBankSelect");
+  if (bankSel) {
+    const prev = bankSel.value;
+    const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+    bankSel.innerHTML = `<option value="">-- Select Bank (optional) --</option>`;
+    banks.forEach(b => {
+      const opt = document.createElement("option");
+      opt.value = b.name;
+      opt.textContent = `${b.name} (${(b.currency||'KES')} ${Number(b.balance||0).toLocaleString()})`;
+      bankSel.appendChild(opt);
+    });
+    if (prev) bankSel.value = prev;
+  }
 }
 function generateAssetCode() {
   const year = new Date().getFullYear();
-
   const assets = balanceSheet.nonCurrentAssets || [];
-
-  const yearAssets = assets.filter(a =>
-    a.code && a.code.startsWith(year + "-A")
-  );
-
+  const yearAssets = assets.filter(a => a.code && a.code.startsWith(year + "-A"));
   let lastNumber = 0;
-
   yearAssets.forEach(a => {
     const match = a.code.match(/A(\d+)/);
     if (match) {
@@ -40749,16 +41005,15 @@ function generateAssetCode() {
       if (num > lastNumber) lastNumber = num;
     }
   });
-
   const nextNumber = (lastNumber + 1).toString().padStart(3, "0");
-
   return `${year}-A${nextNumber}`;
 }
 function addNonCurrentAsset() {
   const name = document.getElementById('nonCurrentAssetName').value.trim();
   const value = parseFloat(document.getElementById('nonCurrentAssetValue').value);
   const account = document.getElementById("nonCurrentAssetAccountSelect").value;
-  const description = document.getElementById("nonCurrentAssetDescription").value.trim();
+  const bankName = document.getElementById("nonCurrentAssetBankSelect")?.value || "";
+  const description = document.getElementById("nonCurrentAssetDescription")?.value?.trim() || "";
 
   if (!name || isNaN(value) || !account) {
     alert('Enter valid asset name, value, and select an account.');
@@ -40776,20 +41031,64 @@ function addNonCurrentAsset() {
   const years = 1;
 
   const asset = {
+    id: crypto.randomUUID(),
     name,
     code,
     description,
     value,
     depreciationRate: depreciation.rate,
     years,
-    account
+    account,
+    bankName: bankName || null,
+    purchaseDate: new Date().toISOString().split("T")[0]
+  };
+
+  // Helpers for bank + manual transaction sync
+  const syncBankForAsset = (oldA, newA) => {
+    const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+    let mt = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+    // refund old bank
+    if (oldA && oldA.bankName) {
+      const ob = banks.find(b => b.name === oldA.bankName);
+      if (ob) ob.balance = parseFloat(ob.balance || 0) + parseFloat(oldA.value || 0);
+      mt = mt.filter(t => !(t.source === "asset_purchase" && t.assetId === oldA.id));
+    }
+    // deduct new bank + log
+    if (newA && newA.bankName) {
+      const nb = banks.find(b => b.name === newA.bankName);
+      if (nb) nb.balance = parseFloat(nb.balance || 0) - parseFloat(newA.value || 0);
+      const today = new Date().toISOString().split("T")[0];
+      const tx = {
+        date: today,
+        bank: newA.bankName,
+        type: "Asset Purchase",
+        account: newA.account || "Asset Purchase",
+        amount: parseFloat(newA.value || 0),
+        reference: `Purchase of ${newA.name} (${newA.code})`,
+        ref: `Purchase of ${newA.name} (${newA.code})`,
+        source: "asset_purchase",
+        assetId: newA.id
+      };
+      mt.push(tx);
+      if (typeof manualTransactions !== "undefined" && Array.isArray(manualTransactions)) {
+        // refresh in-memory list
+        manualTransactions.length = 0;
+        mt.forEach(t => manualTransactions.push(t));
+      }
+    }
+    localStorage.setItem("banks", JSON.stringify(banks));
+    localStorage.setItem("manualTransactions", JSON.stringify(mt));
   };
 
   if (editAssetIndex > -1) {
+    const prev = balanceSheet.nonCurrentAssets[editAssetIndex] || {};
+    asset.id = prev.id || asset.id;
+    syncBankForAsset(prev, asset);
     balanceSheet.nonCurrentAssets[editAssetIndex] = asset;
     editAssetIndex = -1;
     document.getElementById('cancelEditAssetBtn').classList.add('hidden');
   } else {
+    syncBankForAsset(null, asset);
     balanceSheet.nonCurrentAssets.push(asset);
   }
 
@@ -40798,20 +41097,26 @@ function addNonCurrentAsset() {
   renderNonCurrentAssets();
   renderNonCurrentAssetsSummary();
   renderBalanceSheetAssets?.();
+  try { renderBankTable?.(); } catch(_){}
+  try { renderManualTransactions?.(); } catch(_){}
+  try { renderBalanceSheet?.(); } catch(_){}
   renderReports?.();
   syncNonCurrentAssetsToOpeningBalances();
+  populateAssetAccounts();
 
-  
   document.getElementById('nonCurrentAssetName').value = '';
   document.getElementById('nonCurrentAssetValue').value = '';
   document.getElementById('nonCurrentAssetAccountSelect').value = '';
-  document.getElementById('nonCurrentAssetDescription').value = '';
+  if (document.getElementById('nonCurrentAssetBankSelect'))
+    document.getElementById('nonCurrentAssetBankSelect').value = '';
+  if (document.getElementById('nonCurrentAssetDescription'))
+    document.getElementById('nonCurrentAssetDescription').value = '';
 }
 
 function cancelEditAsset() {
   document.getElementById('nonCurrentAssetName').value = '';
   document.getElementById('nonCurrentAssetValue').value = '';
-  document.getElementById('nonCurrentAssetAccountSelect').value = ''; 
+  document.getElementById('nonCurrentAssetAccountSelect').value = '';
   editAssetIndex = -1;
   document.getElementById('cancelEditAssetBtn').classList.add('hidden');
 }
@@ -40823,10 +41128,10 @@ function editNonCurrentAsset(index) {
   document.getElementById('nonCurrentAssetName').value = asset.name;
   document.getElementById('nonCurrentAssetValue').value = asset.value;
   document.getElementById("nonCurrentAssetAccountSelect").value = asset.account || '';
-
+  populateAssetAccounts();
+  if (document.getElementById('nonCurrentAssetBankSelect'))
+    document.getElementById('nonCurrentAssetBankSelect').value = asset.bankName || '';
   document.getElementById('nonCurrentAssetDescription').value = asset.description || '';
-
-  console.log("Editing Asset Code:", asset.code);
 
   editAssetIndex = index;
   document.getElementById('cancelEditAssetBtn').classList.remove('hidden');
@@ -40839,7 +41144,22 @@ function deleteNonCurrentAsset(index) {
   if (!confirm(`♻️ Are you sure you want to delete this non-current asset: "${asset.name || asset.id}"?`)) return;
 
   if (!asset.id) asset.id = crypto.randomUUID();
-  moveToRecycle(asset, "File", "NonCurrentAssets"); 
+  moveToRecycle(asset, "File", "NonCurrentAssets");
+
+  // Refund bank + remove its purchase transaction
+  if (asset.bankName) {
+    const banks = JSON.parse(localStorage.getItem("banks") || "[]");
+    const b = banks.find(x => x.name === asset.bankName);
+    if (b) b.balance = parseFloat(b.balance || 0) + parseFloat(asset.value || 0);
+    localStorage.setItem("banks", JSON.stringify(banks));
+  }
+  let mt = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+  mt = mt.filter(t => !(t.source === "asset_purchase" && t.assetId === asset.id));
+  localStorage.setItem("manualTransactions", JSON.stringify(mt));
+  if (typeof manualTransactions !== "undefined" && Array.isArray(manualTransactions)) {
+    manualTransactions.length = 0;
+    mt.forEach(t => manualTransactions.push(t));
+  }
 
   assets.splice(index, 1);
   balanceSheet.nonCurrentAssets = assets;
@@ -40848,6 +41168,9 @@ function deleteNonCurrentAsset(index) {
   renderNonCurrentAssets();
   renderNonCurrentAssetsSummary();
   renderBalanceSheetAssets?.();
+  try { renderBankTable?.(); } catch(_){}
+  try { renderManualTransactions?.(); } catch(_){}
+  try { renderBalanceSheet?.(); } catch(_){}
   renderReports?.();
   syncNonCurrentAssetsToOpeningBalances();
 
@@ -40929,7 +41252,7 @@ function renderNonCurrentAssets() {
   if (filteredAssets.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="p-3 text-center text-gray-500">
+        <td colspan="8" class="p-3 text-center text-gray-500">
           No Assets Found
         </td>
       </tr>
@@ -40960,6 +41283,7 @@ function renderNonCurrentAssets() {
       </td>
 
       <td class="p-2 border">${asset.account || ''}</td>
+      <td class="p-2 border">${asset.bankName || '<span class="text-gray-400">—</span>'}</td>
 
       <td class="p-2 border space-x-2">
 
@@ -41184,17 +41508,18 @@ function processAssetSale(bankName, salePrice, ref) {
 
   const today = new Date().toISOString().split("T")[0];
 
-  if (profitLoss > 0) {
-    otherIncomes.push({
-      date: today,
-      description: `Gain on sale of ${asset.name}`,
-      amount: profitLoss,
-      type: "Asset Disposal Gain"
-    });
-  } else if (profitLoss < 0) {
+  // Always post the full sale proceeds to Other Income
+  otherIncomes.push({
+    date: today,
+    description: `Sale of ${asset.name}`,
+    amount: salePrice,
+    type: "Asset Disposal"
+  });
+  // If sold at a loss, post only the shortfall to Operational Costs / Expenses
+  if (profitLoss < 0) {
     operationalCosts.push({
       date: today,
-      description: `Loss on sale of ${asset.name}`,
+      description: `Loss on sale of ${asset.name} (book ${bookValue.toFixed(2)} - sale ${salePrice.toFixed(2)})`,
       amount: Math.abs(profitLoss),
       category: "Asset Disposal Loss"
     });
@@ -41242,6 +41567,7 @@ function processAssetSale(bankName, salePrice, ref) {
   renderBankTable();
   renderManualTransactions();
   renderDepreciationSchedule?.();
+  try { renderBalanceSheet?.(); } catch {}
   renderReports?.();
 
   closeSellAssetModal();
@@ -43375,7 +43701,8 @@ window.deleteNonCurrentLiability = function(index) {
 window.payNonCurrentLiability = function(index) {
   const banks = JSON.parse(localStorage.getItem("banks") || "[]");
 
-  let balanceSheet = JSON.parse(localStorage.getItem("balanceSheet") || "{}");
+  // Use the global balanceSheet so renders + sync reflect the change
+  window.balanceSheet = window.balanceSheet || JSON.parse(localStorage.getItem("balanceSheet") || "{}");
   balanceSheet.nonCurrentLiabilities = balanceSheet.nonCurrentLiabilities || [];
 
   const liability = balanceSheet.nonCurrentLiabilities[index];
@@ -43445,13 +43772,6 @@ window.payNonCurrentLiability = function(index) {
 
     let debitAmount = amount;
 
-    if (bank) {
-      const fromCurrency = liability.currency || "KES";
-      const toCurrency = bank.currency || "KES";
-
-      debitAmount = await convertAmount(amount, fromCurrency, toCurrency);
-    }
-
     if (bank && debitAmount > bank.balance) {
       return alert("Insufficient bank balance");
     }
@@ -43479,6 +43799,11 @@ window.payNonCurrentLiability = function(index) {
       mode: paymentMode,
       reference
     });
+
+    // Reduce the displayed liability balance (BS reads liab.amount/total)
+    const _curAmt = Number(liability.amount || liability.total || liability.principal || 0);
+    liability.amount = Math.max(0, _curAmt - principalPortion);
+    liability.total = liability.amount;
 
     const journal = JSON.parse(localStorage.getItem("journalEntries") || "[]");
 
@@ -43525,6 +43850,11 @@ window.payNonCurrentLiability = function(index) {
     renderNonCurrentLiabilities();
     renderNonCurrentLiabilitiesSummary();
     syncNonCurrentLiabilitiesToOpeningBalances();
+    try { renderBankTable?.(); } catch {}
+    try { renderManualTransactions?.(); } catch {}
+    try { renderBalanceSheet?.(); } catch {}
+    try { renderReports?.(); } catch {}
+    try { buildLoanAndInterestData?.(); renderLoanSchedule?.(loanSchedules); renderInterestExpense?.(interestExpenses); } catch {}
 
     alert("Payment recorded successfully");
   };
@@ -43543,6 +43873,9 @@ window.undoLiabilityPayment = function(liabilityIndex, paymentId) {
   if (bank) bank.balance += payment.amount;
 
   liability.payments.splice(index, 1);
+  // Restore the displayed BS amount by the principal portion we deducted earlier
+  liability.amount = Number(liability.amount || liability.total || 0) + Number(payment.principalPortion || payment.amount || 0);
+  liability.total = liability.amount;
 
   let manual = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
   manual = manual.filter(m => m.id !== paymentId);
@@ -43683,7 +44016,7 @@ window.toggleActionsMenu = function (index) {
 window.increaseNonCurrentLiability = function(index) {
 
   const banks = JSON.parse(localStorage.getItem("banks") || "[]");
-  let balanceSheet = JSON.parse(localStorage.getItem("balanceSheet") || "{}");
+  window.balanceSheet = window.balanceSheet || JSON.parse(localStorage.getItem("balanceSheet") || "{}");
   balanceSheet.nonCurrentLiabilities = balanceSheet.nonCurrentLiabilities || [];
 
   const liability = balanceSheet.nonCurrentLiabilities[index];
@@ -43744,6 +44077,8 @@ window.increaseNonCurrentLiability = function(index) {
     const date = new Date().toISOString().split("T")[0];
 
     liability.principal += amount;
+    liability.amount = Number(liability.amount || liability.total || 0) + amount;
+    liability.total = liability.amount;
 
     bank.balance += amount;
 
@@ -43799,9 +44134,11 @@ window.increaseNonCurrentLiability = function(index) {
     renderNonCurrentLiabilities();
     renderNonCurrentLiabilitiesSummary();
     syncNonCurrentLiabilitiesToOpeningBalances();
-    buildLoanAndInterestData();
-    renderLoanSchedule(loanSchedules);
-    renderInterestExpense(interestExpenses);
+    try { buildLoanAndInterestData?.(); renderLoanSchedule?.(loanSchedules); renderInterestExpense?.(interestExpenses); } catch {}
+    try { renderBankTable?.(); } catch {}
+    try { renderManualTransactions?.(); } catch {}
+    try { renderBalanceSheet?.(); } catch {}
+    try { renderReports?.(); } catch {}
 
     alert("✅ Loan increased successfully.");
   };
@@ -43844,6 +44181,9 @@ window.editIncrease = function (liabilityIndex, increaseIndex) {
 
   newBank.balance += newAmount;
   liability.principal += newAmount;
+  // Keep BS-displayed amount in sync: removed old increase, added new
+  liability.amount = Number(liability.amount || liability.total || 0) - Number(increase.amount || 0) + newAmount;
+  liability.total = liability.amount;
 
   increase.amount = newAmount;
   increase.bank = newBankName;
@@ -43874,6 +44214,10 @@ window.editIncrease = function (liabilityIndex, increaseIndex) {
   renderNonCurrentLiabilities();
   renderNonCurrentLiabilitiesSummary();
   togglePaymentHistory(liabilityIndex);
+  try { renderBankTable?.(); } catch {}
+  try { renderManualTransactions?.(); } catch {}
+  try { renderBalanceSheet?.(); } catch {}
+  try { renderReports?.(); } catch {}
 
   alert("✅ Increase updated successfully");
 };
@@ -43897,6 +44241,8 @@ window.deleteIncrease = function (liabilityIndex, increaseIndex) {
 
   if (bank) bank.balance -= increase.amount;
   liability.principal -= increase.amount;
+  liability.amount = Math.max(0, Number(liability.amount || liability.total || 0) - Number(increase.amount || 0));
+  liability.total = liability.amount;
 
   journal = journal.filter(j => j.id !== increase.id);
   manual = manual.filter(m => m.id !== increase.id);
@@ -43911,6 +44257,10 @@ window.deleteIncrease = function (liabilityIndex, increaseIndex) {
   renderNonCurrentLiabilities();
   renderNonCurrentLiabilitiesSummary();
   togglePaymentHistory(liabilityIndex);
+  try { renderBankTable?.(); } catch {}
+  try { renderManualTransactions?.(); } catch {}
+  try { renderBalanceSheet?.(); } catch {}
+  try { renderReports?.(); } catch {}
 
   alert("🗑️ Increase deleted successfully");
 };
@@ -44070,6 +44420,8 @@ window.deletePayment = function(liabilityIndex, paymentIndex) {
   if (bank) bank.balance += payment.amount;
 
   liability.payments.splice(paymentIndex, 1);
+  liability.amount = Number(liability.amount || liability.total || 0) + Number(payment.principalPortion || payment.amount || 0);
+  liability.total = liability.amount;
 
   let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
   manualTransactions = manualTransactions.filter(mt => mt.id !== payment.id);
@@ -44086,6 +44438,10 @@ window.deletePayment = function(liabilityIndex, paymentIndex) {
   renderLoanSchedule(loanSchedules);
   renderInterestExpense(interestExpenses);
   refreshPaymentHistory(liabilityIndex);
+  try { renderBankTable?.(); } catch {}
+  try { renderManualTransactions?.(); } catch {}
+  try { renderBalanceSheet?.(); } catch {}
+  try { renderReports?.(); } catch {}
 
   alert("🗑️ Payment deleted and refunded to bank.");
 };
@@ -63347,7 +63703,7 @@ function renderRecurringInvoiceReport() {
 
     if (
       customerFilter &&
-      !(invoice.customer || "")
+      !((invoice.customerName || invoice.customer || ""))
         .toLowerCase()
         .includes(customerFilter)
     )
@@ -63409,7 +63765,7 @@ function renderRecurringInvoiceReport() {
       Number(invoice.vat || beforeVat * 0.16);
 
     const total =
-      Number(invoice.totalAmount || beforeVat + vat);
+      Number(invoice.totalAmount || invoice.total || beforeVat + vat);
 
     grandBeforeVat += beforeVat;
     grandVat += vat;
@@ -63424,15 +63780,15 @@ function renderRecurringInvoiceReport() {
       </td>
 
       <td class="border px-2 py-1">
-        ${invoice.customer || "-"}
+        ${invoice.customerName || invoice.customer || "-"}
       </td>
 
       <td class="border px-2 py-1">
-        ${invoice.invoiceNumber || invoice.invoiceNo || "-"}
+        ${invoice.number || invoice.invoiceNumber || invoice.invoiceNo || "-"}
       </td>
 
       <td class="border px-2 py-1">
-        ${invoice.frequency || "-"}
+        ${invoice.recurrenceType || invoice.frequency || "-"}
       </td>
 
       <td class="border px-2 py-1 text-right">
@@ -79119,11 +79475,23 @@ function toggleSubmenu(id) {
             strip.className = "v3-nc-strip mt-3 p-3 border-l-4 border-amber-500 bg-amber-50 text-sm rounded";
             host.appendChild(strip);
           }
+          const equityRecords = ls("equityRecords", []) || [];
+          const shareholderEquity = num(localStorage.getItem("shareholderEquity") || 0);
+          const equityTotal = shareholderEquity + equityRecords.reduce((s,e)=>s+num(e.value||e.amount),0);
+          const operationalCosts = ls("operationalCosts", []) || [];
+          const payrollRecords = ls("payrollRecords", []) || [];
+          const expensesTotal = operationalCosts.reduce((s,e)=>s+num(e.amount),0) +
+                                payrollRecords.reduce((s,p)=>s+num(p.net||p.amount),0);
+          const taxPayments = ls("taxPayments", []) || [];
+          const taxesTotal = taxPayments.reduce((s,t)=>s+num(t.amount),0);
           strip.innerHTML =
-            `<strong>📒 Balance-sheet extras (auto):</strong>
+            `<strong>📒 Balance-sheet & P&L extras (auto):</strong>
              Inventory / Stock: <b>${fmt(invTot)}</b> ·
              Non-Current Assets: <b>${fmt(nca)}</b> ·
-             Non-Current Liabilities: <b>${fmt(ncl)}</b>`;
+             Non-Current Liabilities: <b>${fmt(ncl)}</b> ·
+             Equity: <b>${fmt(equityTotal)}</b> ·
+             Expenses: <b>${fmt(expensesTotal)}</b> ·
+             Taxes: <b>${fmt(taxesTotal)}</b>`;
         }
       } catch(e){ console.warn("v3 GL patch", e); }
       return r;
