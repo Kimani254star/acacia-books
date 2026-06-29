@@ -1770,7 +1770,7 @@ document.addEventListener("click", function(e) {
 });
 </script>
 <div id="notifPopup" class="hidden fixed top-14 right-4 w-72 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold">📢 Updates</h3><ul id="notifList" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul></div><div id="quickCreatePanel" class="hidden fixed top-14 right-20 w-64 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold text-gray-700">⚙️ Quick Create</h3><button onclick="openCreate('customersTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100"> Customer</button><button onclick="openCreate('invoicesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Invoice</button><button onclick="openCreate('supplierTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Supplier</button><button onclick="openCreate('employeesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Employee</button><button onclick="openCreate('inventoryTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Inventory</button><button onclick="openCreate('manualJournalsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Journal</button><button onclick="openCreate('fundsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Fund</button></div><div class="h-3"></div><div id="sidebar" class="fixed top-0 left-0 h-full w-40 bg-black text-white p-1 overflow-y-auto" style="position:fixed !important;top:0 !important;left:0 !important;height:100vh !important;z-index:40;"><img src="acaciabooks-logo.png" alt="Logo" class="w-24 mb-4 mx-auto" /><h2 class="text-xl font-bold  mb-6">AkBook</h2><ul class="space-y-5 text-sm"
-<li><button onclick="showTab('dashboard')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📊 Dashboard Hub</button></li><li><button onclick="toggleSubmenu('inventorySubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📦 Inventory Hub</button></li><ul id="inventorySubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('inventoryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Stock</button></li><li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li><li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li><li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li><li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li><li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li><li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li><li><button   onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li></ul><li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li><li><button onclick="toggleSubmenu('customerSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Sales Hub</button></li><ul id="customerSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li><li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li><li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li><li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li><li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li><li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li><li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li><li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li><li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li><li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li><li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li><ul id="supplierSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li><li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li><li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li><li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li><li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li><li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li><li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li><li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li><li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li><li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li><li><button onclick="showTab('supplierStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('accountantSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🧮 Accountant Hub</button></li><ul id="accountantSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('manualJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Manual Journals</button></li><li><button onclick="showTab('recurringJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Recurring Journals</button></li><li><button onclick="showTab('currencyAdjustmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Currency Adjustments</button></li><li><button onclick="showTab('nonCurrentAssetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Assets</button></li><li><button onclick="showTab('nonCurrentLiabilitiesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Liabilities</button></li><li><button onclick="showTab('equityTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Equity</button></li><li><button onclick="showTab('taxAdjustmentsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Adjustments</button></li><li><button onclick="showTab('chartOfAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Chart of Accounts</button></li><li><button onclick="showTab('currentAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Current Accounts</button></li><li><button onclick="showTab('budgetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Budgets</button></li><li><button onclick="showTab('transactionLockingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Transaction Locking</button></li></ul><li><button onclick="toggleSubmenu('payrollSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💵 Payroll Hub </button></li><ul id="payrollSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('employeesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Employees</button></li><li><button onclick="showTab('earningsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Allowances</button></li><li><button onclick="showTab('grossPayTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Deductions</button></li><li><button onclick="showTab('attendanceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Attendance & Leave</button></li><li><button onclick="showTab('payslipTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payslip Generation</button></li><li><button onclick="showTab('statutoryDeductionsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Statutories</button></li><li><button onclick="showTab('payrollReportsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payroll Reports</button></li><li><button onclick="showTab('integrationsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Integrations</button></li></ul><li><button onclick="showTab('reportsPanel')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📈 Reports Hub </button></li><li><button onclick="toggleSubmenu('plansSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🗂️Plans Hub </button></li><ul id="plansSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('plansTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plans Hub </button></li><li><button onclick="showTab('projectTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Project Hub</button></li><li><button onclick="showTab('planTrackingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Plan Tracking</button></li></ul><li><button onclick="toggleSubmenu('settingsSubmenu2')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">⚙️ Settings Hub </button></li><ul id="settingsSubmenu2" class="ml-4 hidden space-y-1"><li><button onclick="showTab('orgProfileTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Org Profile </button></li><li><button onclick="showTab('warehousesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Warehouses</button></li><li><button onclick="showTab('DatacenterTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Data center</button></li><li><button onclick="showTab('systemConfigurationTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">System configuration</button></li><li><button onclick="showTab('userActivityTab')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Activity </button></li><li><button onclick="showTab('taxComplianceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Compliance</button></li><li><button onclick="showTab('userManagementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Management</button></li><li><button onclick="showTab('vatTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">VAT</button></li><li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li><li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li><li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li><li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li></ul><li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li><ul id="filesSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li><li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li></ul><li id="mailLink" class="hidden"><a href="https://kimani254star.github.io/acacia-mail/" target="_blank"
+<li><button onclick="showTab('dashboard')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📊 Dashboard Hub</button></li><li><button onclick="toggleSubmenu('inventorySubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📦 Inventory Hub</button></li><ul id="inventorySubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('inventoryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Stock</button></li><li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li><li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li><li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li><li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li><li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li><li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li><li><button   onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li></ul><li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li><li><button onclick="toggleSubmenu('customerSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Sales Hub</button></li><ul id="customerSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li><li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li><li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li><li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li><li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li><li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li><li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li><li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li><li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li><li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li><li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li><ul id="supplierSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li><li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li><li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li><li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li><li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li><li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li><li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li><li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li><li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li><li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li><li><button onclick="showTab('supplierStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('accountantSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🧮 Accountant Hub</button></li><ul id="accountantSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('manualJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Manual Journals</button></li><li><button onclick="showTab('recurringJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Recurring Journals</button></li><li><button onclick="showTab('currencyAdjustmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Currency Adjustments</button></li><li><button onclick="showTab('nonCurrentAssetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Assets</button></li><li><button onclick="showTab('nonCurrentLiabilitiesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Liabilities</button></li><li><button onclick="showTab('equityTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Equity</button></li><li><button onclick="showTab('taxAdjustmentsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Adjustments</button></li><li><button onclick="showTab('chartOfAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Chart of Accounts</button></li><li><button onclick="showTab('currentAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Current Accounts</button></li><li><button onclick="showTab('budgetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Budgets</button></li><li><button onclick="showTab('transactionLockingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Transaction Locking</button></li></ul><li><button onclick="toggleSubmenu('payrollSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💵 Payroll Hub </button></li><ul id="payrollSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('employeesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Employees</button></li><li><button onclick="showTab('earningsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Allowances</button></li><li><button onclick="showTab('grossPayTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Deductions</button></li><li><button onclick="showTab('attendanceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Attendance & Leave</button></li><li><button onclick="showTab('payslipTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payslip Generation</button></li><li><button onclick="showTab('statutoryDeductionsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Statutories</button></li><li><button onclick="showTab('payrollReportsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payroll Reports</button></li><li><button onclick="showTab('integrationsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Integrations</button></li></ul><li><button onclick="showTab('reportsPanel')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📈 Reports Hub </button></li><li><button onclick="toggleSubmenu('plansSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🗂️Plans Hub </button></li><ul id="plansSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('plansTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plans Hub </button></li><li><button onclick="showTab('projectTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Project Hub</button></li><li><button onclick="showTab('planTrackingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Plan Tracking</button></li><li><button onclick="showTab('projectRevenueTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">  Project Revenue</button </li> </ul><li><button onclick="toggleSubmenu('settingsSubmenu2')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">⚙️ Settings Hub </button></li><ul id="settingsSubmenu2" class="ml-4 hidden space-y-1"><li><button onclick="showTab('orgProfileTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Org Profile </button></li><li><button onclick="showTab('warehousesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Warehouses</button></li><li><button onclick="showTab('DatacenterTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Data center</button></li><li><button onclick="showTab('systemConfigurationTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">System configuration</button></li><li><button onclick="showTab('userActivityTab')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Activity </button></li><li><button onclick="showTab('taxComplianceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Compliance</button></li><li><button onclick="showTab('userManagementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Management</button></li><li><button onclick="showTab('vatTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">VAT</button></li><li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li><li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li><li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li><li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li></ul><li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li><ul id="filesSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li><li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li></ul><li id="mailLink" class="hidden"><a href="https://kimani254star.github.io/acacia-mail/" target="_blank"
     class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">
     💬Acacia Mail Hub
   </a></li><li id="crmLink"><a href="https://kimani254star.github.io/acacia-crm/?from=books" target="_blank"
@@ -15787,7 +15787,7 @@ button:hover {
     id="recurringInvoiceRate"
     class="border p-2 rounded w-[300px]"  placeholder="Exchange Rate" step="0.01" value="1"></div><div class="mb-3"><select id="recurringInvoiceItemType" class="border p-2 rounded w-[700px]"><option value="">Select Item Type</option><option value="product">Product</option><option value="service">Service</option><option value="subscription">Subscription</option><option value="license">License</option><option value="consulting">Consulting</option><option value="maintenance">Maintenance</option><option value="rent">Rent</option><option value="utility">Utility</option><option value="support">Support</option><option value="other">Other</option></select></div><div class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-3"><select id="recurringInvoiceProductSelect" class="border p-2 rounded w-full"><option value="">Select Product</option></select><input id="recurringInvoiceItemQty" type="number" placeholder="Qty" class="border p-2 rounded w-full"><input id="recurringInvoiceItemPrice" type="number" placeholder="Price" class="border p-2 rounded w-full"><input id="recurringInvoiceItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded w-full"><select id="recurringInvoiceItemTax" class="border p-2 rounded w-full"><option value="16">VAT 16%</option><option value="8">VAT 8%</option><option value="0">Zero Rated</option><option value="exempt">Exempt</option><option value="export">Export</option></select></div><div class="mb-3"><button onclick="addRecurringInvoiceItem()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">
       Add
-    </button></div><table class="w-full text-sm border mb-3"><thead class="bg-gray-100"><tr><th>Description</th><th>Qty</th><th>Price</th><th>VAT</th><th>Total</th><th></th></tr></thead><tbody id="recurringInvoiceItemTableBody"></tbody></table><button onclick="saveRecurringInvoice('draft')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Draft</button><button onclick="saveRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Recurring Invoice</button></div><button onclick="bulkDeleteRecurringInvoices()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Bulk Delete</button><div class="bg-white p-6 rounded shadow"><h2 class="text-lg font-semibold mb-4">Recurring Invoice List</h2><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><th><input type="checkbox" onclick="toggleAllRecurringInvoices(this)"></th><th>Recurring Invoice #</th><th>Date</th><th>Customer</th><th>Frequency</th><th>Next Run</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody id="recurringInvoiceTable"></tbody></table></div></div><div id="recurringInvoicePreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded shadow w-full max-w-3xl relative overflow-y-auto max-h-[90vh]"><h3 class="text-xl font-semibold mb-4 text-center">📄 Recurring Invoice Preview</h3><div class="mb-3 flex justify-between items-center"><div><label for="recurringTemplateSelect" class="font-semibold">Choose Template:</label><select id="recurringTemplateSelect" onchange="changeRecurringTemplate(this.value)" class="border p-1 rounded"><option value="template-default">Default</option><option value="template-minimal">Minimal</option><option value="template-modern">Modern</option><option value="template-elegant">Elegant</option><option value="template-bold">Bold</option><option value="template-corporate">Corporate</option><option value="template-creative">Creative</option></select></div><div class="space-x-3"><button onclick="printRecurringPreview()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Print</button><button onclick="downloadRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Download</button><button onclick="emailRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button><button onclick="closeRecurringPreview()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Close</button></div></div><div id="recurringInvoiceTemplateWrapper" class="template-default"><div class="flex justify-between mb-4"><div><strong>Recurring Invoice Number:</strong><span id="previewRecurringInvoiceNumber"></span></div><div><strong>Date:</strong><span id="previewRecurringInvoiceDate"></span></div></div><div class="mb-4"><div class="text-right"><h4 class="font-semibold">Company</h4><p id="previewRecurringInvoiceCompanyName">My Company Ltd</p><p>PIN: <span id="previewRecurringInvoiceCompanyPIN">P00000000</span></p><p>Address: <span id="previewRecurringInvoiceCompanyAddress">123 Business Rd, Nairobi</span></p></div><div class="text-left mb-4"><h4 class="font-semibold">Customer</h4><p id="previewRecurringInvoiceCustomerName"></p><p>Billing Address: <span id="previewRecurringInvoiceCustomerAddress"></span></p><p>Phone Number: <span id="previewRecurringInvoiceCustomerPhone"></span></p><p>PIN: <span id="previewRecurringInvoiceCustomerPIN"></span></p></div></div><table class="w-full text-sm border mt-4 border-collapse"><thead class="bg-gray-100"><tr><th class="p-2 border">#</th><th class="p-2 border">Item Name</th><th class="p-2 border">Qty</th><th class="p-2 border">Price (Before VAT)</th><th class="p-2 border">VAT</th><th class="p-2 border">Total</th></tr></thead><tbody id="previewRecurringInvoiceItems"></tbody></table><div class="mt-2 text-right text-sm font-semibold"><p>Amount (Before VAT): <span id="previewRecurringInvoiceSubtotal">KES 0.00</span></p><p>VAT: <span id="previewRecurringInvoiceVAT">KES 0.00</span></p><p>Total Amount: <span id="previewRecurringInvoiceTotal">KES 0.00</span></p><p>Payment Made: <span id="previewRecurringInvoicePaymentMade">KES 0.00</span></p><p>Balance Due: <span id="previewRecurringInvoiceBalance">KES 0.00</span></p><p>Net Days: <span id="previewRecurringInvoiceNetDays">-</span></p><p>Due Date: <span id="previewRecurringInvoiceDueDate">-</span></p><p>Status: <span id="previewRecurringInvoicePaymentStatus" class="text-blue-600">Pending</span></p><div class="mt-3 text-left text-sm"><strong>Terms &amp; Conditions:</strong><p id="previewRecurringInvoiceTerms" class="whitespace-pre-line text-gray-700">-</p></div></div><table class="bank-details"><thead><tr><th>BANK NAME</th><th>BRANCH</th><th>SWIFT CODE</th><th>KSH ACC</th><th>USD ACC</th><th>EURO ACC</th></tr></thead><tbody><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody></table><div id="recurringInvoiceQRCode" class="mt-4 text-center"><canvas></canvas><p id="qrRecurringPlaceholder" class="text-xs text-gray-500 text-center hidden">
+    </button></div><table class="w-full text-sm border mb-3"><thead class="bg-gray-100"><tr><th>Description</th><th>Qty</th><th>Price</th><th>VAT</th><th>Total</th><th></th></tr></thead><tbody id="recurringInvoiceItemTableBody"></tbody><tfoot class="bg-gray-50 font-semibold"><tr><td colspan="4" class="text-right p-1">Subtotal</td><td id="recurringInvoiceSubtotal" class="p-1">0.00</td><td></td></tr><tr><td colspan="4" class="text-right p-1">VAT</td><td id="recurringInvoiceVatTotal" class="p-1">0.00</td><td></td></tr><tr><td colspan="4" class="text-right p-1">Total</td><td id="recurringInvoiceGrandTotal" class="p-1">0.00</td><td></td></tr></tfoot></table><button onclick="saveRecurringInvoice('draft')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Draft</button><button onclick="saveRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Save Recurring Invoice</button></div><button onclick="bulkDeleteRecurringInvoices()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Bulk Delete</button><div class="bg-white p-6 rounded shadow"><h2 class="text-lg font-semibold mb-4">Recurring Invoice List</h2><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><th><input type="checkbox" onclick="toggleAllRecurringInvoices(this)"></th><th>Recurring Invoice #</th><th>Date</th><th>Customer</th><th>Frequency</th><th>Next Run</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody id="recurringInvoiceTable"></tbody></table></div></div><div id="recurringInvoicePreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded shadow w-full max-w-3xl relative overflow-y-auto max-h-[90vh]"><h3 class="text-xl font-semibold mb-4 text-center">📄 Recurring Invoice Preview</h3><div class="mb-3 flex justify-between items-center"><div><label for="recurringTemplateSelect" class="font-semibold">Choose Template:</label><select id="recurringTemplateSelect" onchange="changeRecurringTemplate(this.value)" class="border p-1 rounded"><option value="template-default">Default</option><option value="template-minimal">Minimal</option><option value="template-modern">Modern</option><option value="template-elegant">Elegant</option><option value="template-bold">Bold</option><option value="template-corporate">Corporate</option><option value="template-creative">Creative</option></select></div><div class="space-x-3"><button onclick="printRecurringPreview()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Print</button><button onclick="downloadRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Download</button><button onclick="emailRecurringInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Email</button><button onclick="closeRecurringPreview()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-900">Close</button></div></div><div id="recurringInvoiceTemplateWrapper" class="template-default"><div class="flex justify-between mb-4"><div><strong>Recurring Invoice Number:</strong><span id="previewRecurringInvoiceNumber"></span></div><div><strong>Date:</strong><span id="previewRecurringInvoiceDate"></span></div></div><div class="mb-4"><div class="text-right"><h4 class="font-semibold">Company</h4><p id="previewRecurringInvoiceCompanyName">My Company Ltd</p><p>PIN: <span id="previewRecurringInvoiceCompanyPIN">P00000000</span></p><p>Address: <span id="previewRecurringInvoiceCompanyAddress">123 Business Rd, Nairobi</span></p></div><div class="text-left mb-4"><h4 class="font-semibold">Customer</h4><p id="previewRecurringInvoiceCustomerName"></p><p>Billing Address: <span id="previewRecurringInvoiceCustomerAddress"></span></p><p>Phone Number: <span id="previewRecurringInvoiceCustomerPhone"></span></p><p>PIN: <span id="previewRecurringInvoiceCustomerPIN"></span></p></div></div><table class="w-full text-sm border mt-4 border-collapse"><thead class="bg-gray-100"><tr><th class="p-2 border">#</th><th class="p-2 border">Item Name</th><th class="p-2 border">Qty</th><th class="p-2 border">Price (Before VAT)</th><th class="p-2 border">VAT</th><th class="p-2 border">Total</th></tr></thead><tbody id="previewRecurringInvoiceItems"></tbody></table><div class="mt-2 text-right text-sm font-semibold"><p>Amount (Before VAT): <span id="previewRecurringInvoiceSubtotal">KES 0.00</span></p><p>VAT: <span id="previewRecurringInvoiceVAT">KES 0.00</span></p><p>Total Amount: <span id="previewRecurringInvoiceTotal">KES 0.00</span></p><p>Payment Made: <span id="previewRecurringInvoicePaymentMade">KES 0.00</span></p><p>Balance Due: <span id="previewRecurringInvoiceBalance">KES 0.00</span></p><p>Net Days: <span id="previewRecurringInvoiceNetDays">-</span></p><p>Due Date: <span id="previewRecurringInvoiceDueDate">-</span></p><p>Status: <span id="previewRecurringInvoicePaymentStatus" class="text-blue-600">Pending</span></p><div class="mt-3 text-left text-sm"><strong>Terms &amp; Conditions:</strong><p id="previewRecurringInvoiceTerms" class="whitespace-pre-line text-gray-700">-</p></div></div><table class="bank-details"><thead><tr><th>BANK NAME</th><th>BRANCH</th><th>SWIFT CODE</th><th>KSH ACC</th><th>USD ACC</th><th>EURO ACC</th></tr></thead><tbody><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody></table><div id="recurringInvoiceQRCode" class="mt-4 text-center"><canvas></canvas><p id="qrRecurringPlaceholder" class="text-xs text-gray-500 text-center hidden">
           QR will be generated after ETIMS submission
         </p></div></div></div></div><!-- ✅ CUSTOMER STATEMENT MODULE --><div id="customerStatementTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-2xl font-bold mb-4 text-center">📑 Customer Statement</h2><label for="statementCustomer" class="block mb-2 font-medium">Select Customer:</label><select id="statementCustomer" onchange="renderCustomerStatement()" class="p-2 border rounded w-full mb-4"><option value="">-- Choose Customer --</option></select><div class="flex gap-2 mb-4"><div class="flex flex-col"><label for="statementFromDate" class="text-sm font-medium">From:</label><input type="date" id="statementFromDate" onchange="renderCustomerStatement()" class="p-2 border rounded"></div><div class="flex flex-col"><label for="statementToDate" class="text-sm font-medium">To:</label><input type="date" id="statementToDate" onchange="renderCustomerStatement()" class="p-2 border rounded"></div></div><div class="flex flex-wrap gap-2 mb-4"><button onclick="printStatement()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-900">🖨️ Print</button><button onclick="downloadStatementPDF()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-900">⬇️ Download PDF</button><button onclick="downloadStatementExcel()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-900">⬇️ Download Excel</button><button onclick="sendStatementByEmail()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-900">📧 Send Email</button></div><div id="statementProfiles" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 border p-3 rounded bg-gray-50"></div><div id="statementContent" class="overflow-auto"><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="border p-1">Date</th><th class="border p-1">Type</th><th class="border p-1">Ref</th><th class="border p-1">Debit</th><th class="border p-1">Credit</th><th class="border p-1">Balance</th><th class="border p-1">Preview</th></tr></thead><tbody id="statementTableBody"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
     Total Count: <span id="totalCount">0</span></div><div>
@@ -24864,6 +24864,18 @@ function addRecurringInvoiceItem() {
 function renderRecurringInvoiceItems() {
   const tbody = document.getElementById("recurringInvoiceItemTableBody");
   tbody.innerHTML = "";
+
+  // --- Live VAT / subtotal / total summary ---
+  try {
+    const sub = recurringInvoiceItems.reduce((s,i)=>s + (Number(i.qty)||0)*(Number(i.price)||0), 0);
+    const vat = recurringInvoiceItems.reduce((s,i)=>s + (Number(i.vat)||0), 0);
+    const grand = sub + vat;
+    const fmt = n => Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+    const set = (id,v) => { const el = document.getElementById(id); if (el) el.textContent = fmt(v); };
+    set("recurringInvoiceSubtotal", sub);
+    set("recurringInvoiceVatTotal", vat);
+    set("recurringInvoiceGrandTotal", grand);
+  } catch(e) { console.warn("recurring summary refresh failed", e); }
 
   recurringInvoiceItems.forEach((item, index) => {
     const tr = document.createElement("tr");
@@ -50647,7 +50659,7 @@ document.addEventListener("DOMContentLoaded", () => {
               checked
               onchange="toggleColumn(3,this)">
             Closing Balance
-          </label></div></div></div></div><table id="pnlTable" class="w-full border border-gray-300 mt-2 text-sm"><thead><tr class="bg-gray-100"><th class="border px-2 py-1 text-left">Item</th><th class="border px-2 py-1 text-right">Amount</th><th class="border px-2 py-1 text-right">Total</th><th class="border px-2 py-1 text-right">Closing Balance</th></tr></thead><tbody><tr><td class="border px-2 py-1">Sales Revenue</td><td></td><td class="border px-2 py-1 text-right" id="pnlRevenue">0.00</td><td class="border px-2 py-1 text-right" id="closingRevenue">0.00</td></tr><tr><td class="border px-2 py-1">Other Incomes</td><td></td><td class="border px-2 py-1 text-right" id="pnlOtherIncomes">0.00</td><td class="border px-2 py-1 text-right" id="closingOtherIncomes">0.00</td></tr><tr><td class="border px-2 py-1">Discounts</td><td></td><td class="border px-2 py-1 text-right" id="pnlDiscount">0.00</td><td class="border px-2 py-1 text-right" id="closingDiscount">0.00</td></tr><tr><td class="border px-2 py-1">Cost of Goods Sold (COGS)</td><td></td><td class="border px-2 py-1 text-right" id="pnlCogs">0.00</td><td class="border px-2 py-1 text-right" id="closingCogs">0.00</td></tr><tr><td class="border px-2 py-1">Provision for Bad Debts</td><td></td><td class="border px-2 py-1 text-right" id="pnlBadDebts">0.00</td><td class="border px-2 py-1 text-right" id="closingBadDebts">0.00</td></tr><tr class="font-semibold"><td class="border px-2 py-1">Gross Profit</td><td></td><td class="border px-2 py-1 text-right" id="pnlGrossProfit">0.00</td><td class="border px-2 py-1 text-right" id="closingGrossProfit">0.00</td></tr><tr><td class="border px-2 py-1">Bills</td><td></td><td class="border px-2 py-1 text-right" id="pnlBills">0.00</td><td class="border px-2 py-1 text-right" id="closingBills">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Operational Costs</td><td></td><td></td><td></td></tr><tbody id="pnlOperationalCostsBreakdown"></tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Operational Costs</td><td></td><td class="border px-2 py-1 text-right" id="pnlExpenses">0.00</td><td class="border px-2 py-1 text-right" id="closingExpenses">0.00</td></tr><tr><td class="border px-2 py-1">Depreciation</td><td></td><td class="border px-2 py-1 text-right" id="pnlDepreciation">0.00</td><td class="border px-2 py-1 text-right" id="closingDepreciation">0.00</td></tr><tr><td class="border px-2 py-1">Interest Paid on Loan</td><td></td><td class="border px-2 py-1 text-right" id="pnlInterest">0.00</td><td class="border px-2 py-1 text-right" id="closingInterest">0.00</td></tr><tr><td class="border px-2 py-1">Payroll</td><td></td><td class="border px-2 py-1 text-right" id="pnlPayroll">0.00</td><td class="border px-2 py-1 text-right" id="closingPayroll">0.00</td></tr><tr><td class="border px-2 py-1">Currency Adjustment</td><td></td><td class="border px-2 py-1 text-right" id="pnlCurrencyAdjustment">0.00</td><td class="border px-2 py-1 text-right" id="closingCurrencyAdjustment">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Taxes</td><td></td><td></td><td></td></tr><tbody id="pnlTaxesBreakdown"></tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Taxes</td><td></td><td class="border px-2 py-1 text-right" id="pnlTaxes">0.00</td><td class="border px-2 py-1 text-right" id="closingTaxes">0.00</td></tr><tr class="font-semibold text-blue-700"><td class="border px-2 py-1">Profit Before Tax</td><td></td><td class="border px-2 py-1 text-right" id="pnlProfitBeforeTax">0.00</td><td class="border px-2 py-1 text-right" id="closingProfitBeforeTax">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Income Tax (30%)</td><td></td><td class="border px-2 py-1 text-right" id="pnlIncomeTax">0.00</td><td class="border px-2 py-1 text-right" id="closingIncomeTax">0.00</td></tr><tr class="font-bold text-green-800"><td class="border px-2 py-1">Net Profit After Tax</td><td></td><td class="border px-2 py-1 text-right" id="pnlProfit">0.00</td><td class="border px-2 py-1 text-right" id="closingProfit">0.00</td></tr></tbody></table></div><div id="bsReport" class="report-view hidden"><h2 class="text-xl font-bold mb-4">📦Balance Sheet</h2><div class="mb-4"><label for="bsSummaryMonth" class="font-semibold">Step 1: Filter by Month</label><input type="month" id="bsSummaryMonth" class="border px-2 py-1 rounded w-full mt-1"
+          </label></div></div></div></div><table id="pnlTable" class="w-full border border-gray-300 mt-2 text-sm"><thead><tr class="bg-gray-100"><th class="border px-2 py-1 text-left">Item</th><th class="border px-2 py-1 text-right">Amount</th><th class="border px-2 py-1 text-right">Total</th><th class="border px-2 py-1 text-right">Closing Balance</th></tr></thead><tbody><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Sales Revenue</td><td></td><td></td><td></td></tr></tbody><tbody id="pnlRevenueBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Sales Revenue</td><td></td><td class="border px-2 py-1 text-right" id="pnlRevenue">0.00</td><td class="border px-2 py-1 text-right" id="closingRevenue">0.00</td></tr><tr><td class="border px-2 py-1">Other Incomes</td><td></td><td class="border px-2 py-1 text-right" id="pnlOtherIncomes">0.00</td><td class="border px-2 py-1 text-right" id="closingOtherIncomes">0.00</td></tr><tr><td class="border px-2 py-1">Discounts</td><td></td><td class="border px-2 py-1 text-right" id="pnlDiscount">0.00</td><td class="border px-2 py-1 text-right" id="closingDiscount">0.00</td></tr><tr><td class="border px-2 py-1">Cost of Goods Sold (COGS)</td><td></td><td class="border px-2 py-1 text-right" id="pnlCogs">0.00</td><td class="border px-2 py-1 text-right" id="closingCogs">0.00</td></tr><tr><td class="border px-2 py-1">Provision for Bad Debts</td><td></td><td class="border px-2 py-1 text-right" id="pnlBadDebts">0.00</td><td class="border px-2 py-1 text-right" id="closingBadDebts">0.00</td></tr><tr class="font-semibold"><td class="border px-2 py-1">Gross Profit</td><td></td><td class="border px-2 py-1 text-right" id="pnlGrossProfit">0.00</td><td class="border px-2 py-1 text-right" id="closingGrossProfit">0.00</td></tr><tr><td class="border px-2 py-1">Bills</td><td></td><td class="border px-2 py-1 text-right" id="pnlBills">0.00</td><td class="border px-2 py-1 text-right" id="closingBills">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Operational Costs</td><td></td><td></td><td></td></tr><tbody id="pnlOperationalCostsBreakdown"></tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Operational Costs</td><td></td><td class="border px-2 py-1 text-right" id="pnlExpenses">0.00</td><td class="border px-2 py-1 text-right" id="closingExpenses">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Current Accounts</td><td></td><td></td><td></td></tr><tbody id="pnlCurrentAccountsBreakdown"></tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Current Accounts</td><td></td><td class="border px-2 py-1 text-right" id="pnlCurrentAccounts">0.00</td><td class="border px-2 py-1 text-right" id="closingCurrentAccounts">0.00</td></tr><tr><td class="border px-2 py-1">Depreciation</td><td></td><td class="border px-2 py-1 text-right" id="pnlDepreciation">0.00</td><td class="border px-2 py-1 text-right" id="closingDepreciation">0.00</td></tr><tr><td class="border px-2 py-1">Interest Paid on Loan</td><td></td><td class="border px-2 py-1 text-right" id="pnlInterest">0.00</td><td class="border px-2 py-1 text-right" id="closingInterest">0.00</td></tr><tr><td class="border px-2 py-1">Payroll</td><td></td><td class="border px-2 py-1 text-right" id="pnlPayroll">0.00</td><td class="border px-2 py-1 text-right" id="closingPayroll">0.00</td></tr><tr><td class="border px-2 py-1">Currency Adjustment</td><td></td><td class="border px-2 py-1 text-right" id="pnlCurrencyAdjustment">0.00</td><td class="border px-2 py-1 text-right" id="closingCurrencyAdjustment">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Taxes</td><td></td><td></td><td></td></tr><tbody id="pnlTaxesBreakdown"></tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Taxes</td><td></td><td class="border px-2 py-1 text-right" id="pnlTaxes">0.00</td><td class="border px-2 py-1 text-right" id="closingTaxes">0.00</td></tr><tr class="font-semibold text-blue-700"><td class="border px-2 py-1">Profit Before Tax</td><td></td><td class="border px-2 py-1 text-right" id="pnlProfitBeforeTax">0.00</td><td class="border px-2 py-1 text-right" id="closingProfitBeforeTax">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Income Tax (30%)</td><td></td><td class="border px-2 py-1 text-right" id="pnlIncomeTax">0.00</td><td class="border px-2 py-1 text-right" id="closingIncomeTax">0.00</td></tr><tr class="font-bold text-green-800"><td class="border px-2 py-1">Net Profit After Tax</td><td></td><td class="border px-2 py-1 text-right" id="pnlProfit">0.00</td><td class="border px-2 py-1 text-right" id="closingProfit">0.00</td></tr></tbody></table></div><div id="bsReport" class="report-view hidden"><h2 class="text-xl font-bold mb-4">📦Balance Sheet</h2><div class="mb-4"><label for="bsSummaryMonth" class="font-semibold">Step 1: Filter by Month</label><input type="month" id="bsSummaryMonth" class="border px-2 py-1 rounded w-full mt-1"
             onchange="renderBalanceSheet()"></div><div class="mb-4"><label class="font-semibold">Or Filter by Date Range</label><div class="flex gap-2 mt-1"><input type="date" id="bsStartDate" class="border px-2 py-1 rounded w-1/2" onchange="renderBalanceSheet()"><input type="date" id="bsEndDate" class="border px-2 py-1 rounded w-1/2" onchange="renderBalanceSheet()"></div></div><div class="mb-4 flex items-center gap-2"><select id="bsBasis" class="border px-2 py-1 rounded" onchange="renderBalanceSheet()"><option value="accrual">Accrual</option><option value="cash">Cash</option></select><button onclick="renderBalanceSheet()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     ✅ Apply Filter
   </button><button onclick="clearBalanceSheetFilter()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">
@@ -56207,6 +56219,7 @@ function renderReports() {
   const basis = document.getElementById('pnlBasis')?.value;
 
   let invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+  let recurringInvoicesPL = JSON.parse(localStorage.getItem('recurringInvoices') || '[]');
   let bills = JSON.parse(localStorage.getItem('bills') || '[]');
   let operationalCosts = JSON.parse(localStorage.getItem('operationalCosts') || '[]');
   let payrollRecords = JSON.parse(localStorage.getItem('payrollRecords') || '[]');
@@ -56244,6 +56257,7 @@ function renderReports() {
   };
 
   invoices = invoices.filter(i => inMonth(i.date));
+  recurringInvoicesPL = recurringInvoicesPL.filter(i => inMonth(i.date));
   bills = bills.filter(b => inMonth(b.date));
   operationalCosts = operationalCosts.filter(c => inMonth(c.date));
   payrollRecords = payrollRecords.filter(p => inMonth(p.date));
@@ -56258,6 +56272,7 @@ function renderReports() {
       return dt >= start && dt <= end;
     };
     invoices = invoices.filter(i => inRange(i.date));
+    recurringInvoicesPL = recurringInvoicesPL.filter(i => inRange(i.date));
     bills = bills.filter(b => inRange(b.date));
     operationalCosts = operationalCosts.filter(c => inRange(c.date));
     payrollRecords = payrollRecords.filter(p => inRange(p.date));
@@ -56278,13 +56293,23 @@ function renderReports() {
 
   const equityFromRecords = equityRecords.reduce((sum, rec) => sum + parseFloatSafe(rec.value), 0);
 
-  const revenue = invoices.reduce((sum, inv) => {
-    const gross = parseFloatSafe(inv.total || inv.amount || inv.invoiceTotal || 0);
+  // Combine regular + recurring invoices for revenue, broken down by Chart of Account
+  const _allRevSources = [
+    ...invoices.map(i => ({ ...i, _acct: i.account || i.accountCode || i.chartAccount || "Sales Revenue" })),
+    ...recurringInvoicesPL.map(i => ({ ...i, _acct: i.accountCode || i.account || i.chartAccount || "Sales Revenue" }))
+  ];
+  const revenueBreakdown = {};
+  let revenue = 0;
+  _allRevSources.forEach(inv => {
+    const gross = parseFloatSafe(inv.total || inv.amount || inv.invoiceTotal || inv.totalAmount || 0);
     const vat = parseFloatSafe(inv.vat || inv.vatAmount || inv.tax || 0);
-    return sum + (gross - vat);
-  }, 0);
+    const net = gross - vat;
+    revenue += net;
+    const key = inv._acct || "Sales Revenue";
+    revenueBreakdown[key] = (revenueBreakdown[key] || 0) + net;
+  });
 
-  const discountTotal = invoices.reduce((sum, inv) => sum + parseFloatSafe(inv.discount || inv.discountAmount || inv.discountValue || 0), 0);
+  const discountTotal = _allRevSources.reduce((sum, inv) => sum + parseFloatSafe(inv.discount || inv.discountAmount || inv.discountValue || 0), 0);
 
   const cogs = bills.reduce((sum, b) => sum + parseFloatSafe(b.amount || b.subtotal || 0) * 0.35, 0);
 
@@ -56448,6 +56473,54 @@ if (pnlOperationalCostsBreakdown) {
     pnlOperationalCostsBreakdown.appendChild(row);
   });
 }
+
+// === Current Accounts breakdown (per employee) ===
+try {
+  const _ca = JSON.parse(localStorage.getItem("currentAccounts") || "[]");
+  const _caGrouped = {};
+  let _caTotal = 0;
+  _ca.forEach(a => {
+    const amt = parseFloat(a.amount) || 0;
+    const key = (a.name || a.empId || "Unknown") + (a.empId ? " (" + a.empId + ")" : "");
+    _caGrouped[key] = (_caGrouped[key] || 0) + amt;
+    _caTotal += amt;
+  });
+  const _caEl = document.getElementById("pnlCurrentAccountsBreakdown");
+  if (_caEl) {
+    _caEl.innerHTML = "";
+    Object.entries(_caGrouped)
+      .sort((a,b) => b[1] - a[1])
+      .forEach(([emp, total]) => {
+        const r = document.createElement("tr");
+        r.innerHTML = `
+          <td class="border px-2 py-1 pl-6">• ${emp}</td>
+          <td class="border px-2 py-1 text-right">KES ${Number(total).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+          <td class="border px-2 py-1"></td>
+          <td class="border px-2 py-1"></td>`;
+        _caEl.appendChild(r);
+      });
+  }
+  updateText('pnlCurrentAccounts', _caTotal);
+  updateText('closingCurrentAccounts', _caTotal);
+} catch(e) { console.warn('current accounts P&L breakdown failed', e); }
+
+const pnlRevenueBreakdownEl = document.getElementById("pnlRevenueBreakdown");
+if (pnlRevenueBreakdownEl) {
+  pnlRevenueBreakdownEl.innerHTML = "";
+  Object.entries(revenueBreakdown)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([account, total]) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td class="border px-2 py-1 pl-6">• ${account}</td>
+        <td class="border px-2 py-1 text-right">KES ${Number(total).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+        <td class="border px-2 py-1"></td>
+        <td class="border px-2 py-1"></td>
+      `;
+      pnlRevenueBreakdownEl.appendChild(row);
+    });
+}
+
 
 updateText('bsRevenue', revenue);
 updateText('closingBsRevenue', revenue);
@@ -67581,7 +67654,7 @@ window.addEventListener(
         <textarea id="projectDescription" rows="3" class="border p-2 rounded w-full"></textarea>
       </div></div><button onclick="addProject()" class="bg-blue-900 text-white px-3 py-2 rounded hover:bg-blue-600 mt-4">
       Add Project
-    </button></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">All Projects</h3><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Title</th><th class="border p-2">Department</th><th class="border p-2">Type</th><th class="border p-2">Priority</th><th class="border p-2">Budget</th><th class="border p-2">Start</th><th class="border p-2">End</th><th class="border p-2">Status</th><th class="border p-2">Actions</th></tr></thead><tbody id="projectsTableBody"></tbody></table></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Project Progress</h3><div class="flex flex-col gap-4 mb-4"><select id="progressProjectTitle" class="border p-2 rounded w-full"><option value="">-- Select Project --</option></select><input id="projectProgressValue" type="number" placeholder="Progress %" class="border p-2 rounded w-full"><select id="projectStatus" class="border p-2 rounded w-full"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>On Hold</option><option>Delayed</option></select><input id="projectProgressComment" placeholder="Comment / Update" class="border p-2 rounded w-full"><div id="projectExpensesContainer" class="flex flex-col gap-2"><div class="flex gap-2"><input type="text" placeholder="Expense Description" class="border p-2 rounded w-2/3 expense-desc"><input type="number" placeholder="Amount" class="border p-2 rounded w-1/3 expense-amt"></div></div><button type="button" id="addExpenseBtn" class="bg-gray-300 text-black px-3 py-1 rounded hover:bg-gray-400 w-1/2">
+    </button></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">All Projects</h3><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Title</th><th class="border p-2">Department</th><th class="border p-2">Type</th><th class="border p-2">Priority</th><th class="border p-2">Budget</th><th class="border p-2">Start</th><th class="border p-2">End</th><th class="border p-2">Status</th><th class="border p-2">Actions</th></tr></thead><tbody id="projectsTableBody"></tbody></table></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Project Progress</h3><div class="flex flex-col gap-4 mb-4"><select id="progressProjectTitle" class="border p-2 rounded w-full"><option value="">-- Select Project --</option></select><input id="projectProgressValue" type="number" placeholder="Progress %" class="border p-2 rounded w-full"><select id="projectStatus" class="border p-2 rounded w-full"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>On Hold</option><option>Delayed</option></select><input id="projectProgressComment" placeholder="Comment / Update" class="border p-2 rounded w-full"><div id="projectExpensesContainer" class="flex flex-col gap-2"><div class="flex gap-2 flex-wrap"><input type="text" placeholder="Expense Description" class="border p-2 rounded w-full sm:w-1/3 expense-desc"><input type="number" placeholder="Amount" class="border p-2 rounded w-full sm:w-1/6 expense-amt"><select class="border p-2 rounded w-full sm:w-1/4 expense-bank"><option value="">-- Select Bank --</option></select><select class="border p-2 rounded w-full sm:w-1/4 expense-coa"><option value="">-- Select Account --</option></select></div></div><button type="button" id="addExpenseBtn" class="bg-gray-300 text-black px-3 py-1 rounded hover:bg-gray-400 w-1/2">
       + Add Another Expense
     </button></div><button onclick="updateProjectProgress()" class="bg-blue-900 text-white px-3 py-2 rounded hover:bg-blue-600">
     Update Progress
@@ -67602,6 +67675,447 @@ window.addEventListener(
       </div><div><label class="block text-sm font-medium mb-1">Responsible Person</label><input id="trackPerson" placeholder="e.g., Jane Doe" class="border p-2 rounded" style="width: 700px;"></div></div><button onclick="addPlanTracking()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-600 width: 700px;">Add Progress</button></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Plan Tracking Table</h3><div class="overflow-x-auto"><table class="w-full text-sm border"><thead class="bg-gray-100 text-gray-800"><tr><th class="p-2 border">Plan Title</th><th class="p-2 border">Progress (%)</th><th class="p-2 border">Status</th><th class="p-2 border">Responsible</th><th class="p-2 border">Comment</th><th class="p-2 border">Date Updated</th></tr></thead><tbody id="planTrackingTable" class="text-gray-700"></tbody></table></div></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">📈 Progress Analytics</h3><canvas id="planTrackingChart" height="120" class="mb-4"></canvas><div id="planTrackingSummary" class="text-sm text-gray-700 space-y-2"></div></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">🔄 Review & Adjust Plans</h3><div class="space-y-4 mb-4"><div><input id="adjustPlanTitle" placeholder="Plan Title"  class="border p-2 rounded" style="width: 700px;"></div><div><select id="adjustAction"  class="border p-2 rounded" style="width: 700px;"><option value="Extend">Extend</option><option value="Revise">Revise</option><option value="Close">Close</option></select></div><div><input id="adjustComment"  placeholder="Reason or Note"  class="border p-2 rounded" style="width: 700px;"></div></div><button onclick="revisePlanTracking()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-600"  style="width: 700px;">
     Apply Adjustment
   </button><div id="planTrackingHistory" class="text-xs text-gray-600 mt-3"></div></div><div class="bg-white p-4 rounded shadow"><h3 class="text-lg font-semibold mb-3">🤖 AI Insights</h3><button onclick="generatePlanTrackingInsights()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-600 width: 700px;">Generate Insights</button><div id="planTrackingInsights" class="text-xs text-gray-600 mt-3"></div></div></div>
+  <div id="projectRevenueTab" class="hidden ml-84 mr-7 p-2">
+
+<h2 class="text-1xl font-bold mb-4 text-left">
+💰 Project Revenue Management
+</h2>
+
+<div class="relative mb-2 mt-2">
+
+<input
+type="text"
+id="projectRevenueSearch"
+placeholder="Search Revenue (/)"
+class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+oninput="searchProjectRevenue()">
+
+<svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400"
+fill="none"
+stroke="currentColor"
+stroke-width="2"
+viewBox="0 0 24 24">
+
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+
+</svg>
+
+</div>
+
+
+<div class="relative inline-block">
+
+<button id="projectRevenueActionsBtn"
+class="inline-flex items-center rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+
+Revenue Actions
+
+<svg class="ml-2 h-4 w-4"
+fill="none"
+stroke="currentColor"
+viewBox="0 0 24 24">
+
+<path stroke-linecap="round"
+stroke-linejoin="round"
+stroke-width="2"
+d="M19 9l-7 7-7-7"/>
+
+</svg>
+
+</button>
+
+
+<div id="projectRevenueDropdown"
+class="hidden absolute bg-white border rounded shadow mt-1 w-48 z-10">
+
+
+<button onclick="sortRevenue('project')"
+class="block w-full text-left px-3 py-1 hover:bg-gray-100">
+
+Sort by Project
+
+</button>
+
+
+<button onclick="sortRevenue('client')"
+class="block w-full text-left px-3 py-1 hover:bg-gray-100">
+
+Sort by Client
+
+</button>
+
+
+<button onclick="sortRevenue('amount')"
+class="block w-full text-left px-3 py-1 hover:bg-gray-100">
+
+Sort by Revenue
+
+</button>
+
+
+<hr>
+
+
+<input type="file"
+id="projectRevenueCSV"
+class="hidden"
+accept=".csv"
+onchange="importRevenueCSV(event)">
+
+
+<button onclick="document.getElementById('projectRevenueCSV').click()"
+class="block w-full text-left px-3 py-1 hover:bg-gray-100">
+
+Import CSV
+
+</button>
+
+
+<button onclick="exportRevenueCSV()"
+class="block w-full text-left px-3 py-1 hover:bg-gray-100">
+
+Export CSV
+
+</button>
+
+
+<button onclick="resetRevenue()"
+class="block w-full text-left px-3 py-1 hover:bg-gray-100">
+
+Reset
+
+</button>
+
+
+</div>
+
+</div>
+
+
+
+<div class="bg-white rounded shadow p-4 mb-6">
+
+
+<h3 class="text-lg font-semibold mb-4">
+Record Project Revenue
+</h3>
+
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+
+<div>
+
+<label class="block text-sm font-medium">
+Project
+</label>
+
+<select id="revenueProject"
+class="border p-2 rounded"
+style="width:700px;">
+
+<option value="">
+Select Project
+</option>
+
+</select>
+
+</div>
+
+
+
+<div>
+
+<label class="block text-sm font-medium">
+Customer
+</label>
+
+<select id="revenueCustomer"
+class="border p-2 rounded"
+style="width:700px;">
+
+<option value="">
+Select Customer
+</option>
+
+</select>
+
+</div>
+
+
+
+<div>
+
+<label class="block text-sm font-medium">
+Invoice
+</label>
+
+<select id="invoiceNumber"
+class="border p-2 rounded"
+style="width:700px;">
+
+<option value="">
+Select Invoice
+</option>
+
+</select>
+
+</div>
+
+
+
+<div>
+
+<label class="block text-sm font-medium">
+Revenue Amount
+</label>
+
+<input
+id="revenueAmount"
+type="number"
+class="border p-2 rounded"
+style="width:700px;">
+
+</div>
+
+
+
+<div>
+
+<label class="block text-sm font-medium">
+Bank Account
+</label>
+
+<select id="revenueBank"
+class="border p-2 rounded"
+style="width:700px;">
+
+<option value="">
+Select Bank
+</option>
+
+</select>
+
+</div>
+
+
+
+<div>
+
+<label class="block text-sm font-medium">
+Payment Date
+</label>
+
+<input
+id="paymentDate"
+type="date"
+class="border p-2 rounded"
+style="width:700px;">
+
+</div>
+
+
+
+<div>
+
+<label class="block text-sm font-medium">
+Payment Status
+</label>
+
+
+<select id="paymentStatus"
+class="border p-2 rounded"
+style="width:700px;">
+
+
+<option>
+Pending
+</option>
+
+<option>
+Partial
+</option>
+
+<option>
+Paid
+</option>
+
+<option>
+Overdue
+</option>
+
+
+</select>
+
+</div>
+
+
+
+<div class="col-span-2">
+
+
+<label class="block text-sm font-medium">
+Notes
+</label>
+
+
+<textarea
+id="revenueNotes"
+rows="3"
+class="border p-2 rounded"
+style="width:700px;"></textarea>
+
+
+</div>
+
+
+</div>
+
+
+<button onclick="addProjectRevenue()"
+class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4">
+
+Save Revenue
+
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="bg-white rounded shadow p-4 mb-6">
+
+
+<h3 class="text-lg font-semibold mb-3">
+Revenue Register
+</h3>
+
+
+<table class="w-full border text-sm">
+
+
+<thead class="bg-gray-200">
+
+
+<tr>
+
+<th class="border p-2">
+Project
+</th>
+
+<th class="border p-2">
+Customer
+</th>
+
+<th class="border p-2">
+Invoice
+</th>
+
+<th class="border p-2">
+Amount
+</th>
+
+<th class="border p-2">
+Bank
+</th>
+
+<th class="border p-2">
+Date
+</th>
+
+<th class="border p-2">
+Status
+</th>
+
+<th class="border p-2">
+Actions
+</th>
+
+</tr>
+
+
+</thead>
+
+
+<tbody id="projectRevenueTable"></tbody>
+
+
+</table>
+
+
+</div>
+
+
+
+
+
+<div class="bg-white rounded shadow p-4 mb-6">
+
+
+<h3 class="text-lg font-semibold mb-3">
+Revenue Analytics
+</h3>
+
+
+<canvas id="projectRevenueChart" height="120"></canvas>
+
+
+<div id="projectRevenueSummary"
+class="mt-4 text-sm space-y-2"></div>
+
+
+</div>
+
+
+
+
+
+<div class="bg-white rounded shadow p-4 mb-6">
+
+
+<h3 class="text-lg font-semibold mb-3">
+Revenue Forecast
+</h3>
+
+
+<canvas id="revenueForecastChart"
+height="120"></canvas>
+
+
+</div>
+
+
+
+
+
+<div class="bg-white rounded shadow p-4">
+
+
+<h3 class="text-lg font-semibold mb-3">
+🤖 AI Revenue Insights
+</h3>
+
+
+<button onclick="generateRevenueInsights()"
+class="bg-blue-900 text-white px-3 py-2 rounded hover:bg-blue-600">
+
+Generate Insights
+
+</button>
+
+
+<div id="revenueInsights"
+class="mt-4 text-sm text-gray-700"></div>
+
+
+</div>
+
+
+</div>
 <script>
 
 function saveToLocalStorage(key, data) {
@@ -69955,10 +70469,14 @@ document.getElementById("addExpenseBtn").addEventListener("click", function() {
   const container = document.getElementById("projectExpensesContainer");
   const div = document.createElement("div");
   div.className = "flex gap-2";
+  div.className = "flex gap-2 flex-wrap";
   div.innerHTML = `
-    <input type="text" placeholder="Expense Description" class="border p-2 rounded w-2/3 expense-desc">
-    <input type="number" placeholder="Amount" class="border p-2 rounded w-1/3 expense-amt">
+    <input type="text" placeholder="Expense Description" class="border p-2 rounded w-full sm:w-1/3 expense-desc">
+    <input type="number" placeholder="Amount" class="border p-2 rounded w-full sm:w-1/6 expense-amt">
+    <select class="border p-2 rounded w-full sm:w-1/4 expense-bank"><option value="">-- Select Bank --</option></select>
+    <select class="border p-2 rounded w-full sm:w-1/4 expense-coa"><option value="">-- Select Account --</option></select>
   `;
+  if (typeof populateProjectExpenseDropdowns === "function") populateProjectExpenseDropdowns(div);
   container.appendChild(div);
 });
 
@@ -79580,6 +80098,533 @@ function toggleSubmenu(id) {
   setInterval(relockWiring, 2500);
 
   console.log("✅ ERP hotfix v3 loaded: exchange rates wired, TB/GL include Inventory + NCA + NCL, transaction locking rebuilt");
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+/* === Payroll persistence patch (added by Lovable) ===
+   Persists localStorage["payrollRecords"] to Supabase table public.app_state.
+   Requires this SQL run once in your Supabase SQL editor:
+
+     create table if not exists public.app_state (
+       key text primary key,
+       value jsonb not null,
+       updated_at timestamptz not null default now()
+     );
+     alter table public.app_state enable row level security;
+     create policy "app_state read"  on public.app_state for select using (true);
+     create policy "app_state write" on public.app_state for insert with check (true);
+     create policy "app_state upd"   on public.app_state for update using (true) with check (true);
+     grant select, insert, update on public.app_state to anon, authenticated;
+*/
+(function(){
+  if(!window.supabase || !window.__SUPA_URL__) { console.warn('[payroll-sync] Supabase not available'); return; }
+  const sb = window.supabase.createClient(window.__SUPA_URL__, window.__SUPA_KEY__);
+  const KEY = 'payrollRecords';
+
+  // 1) Pull on load, then re-run any UI renders that depend on payrollRecords.
+  async function pull(){
+    try{
+      const { data, error } = await sb.from('app_state').select('value').eq('key', KEY).maybeSingle();
+      if(error){ console.warn('[payroll-sync] pull error', error); return; }
+      if(data && Array.isArray(data.value)){
+        localStorage.setItem(KEY, JSON.stringify(data.value));
+        try { window.calculateTotalPayroll && window.calculateTotalPayroll(); } catch(e){}
+        try { window.renderGrossPayroll   && window.renderGrossPayroll();   } catch(e){}
+        try { window.renderPayrollReports && window.renderPayrollReports(); } catch(e){}
+        try { window.renderPayrollSummary && window.renderPayrollSummary(); } catch(e){}
+        try { window.updateProfitAndLoss  && window.updateProfitAndLoss();  } catch(e){}
+        try { window.renderReports        && window.renderReports();        } catch(e){}
+      }
+    }catch(e){ console.warn('[payroll-sync] pull failed', e); }
+  }
+
+  // 2) Push whenever payrollRecords changes locally (debounced).
+  let t = null;
+  function pushSoon(){
+    clearTimeout(t);
+    t = setTimeout(async ()=>{
+      try{
+        const raw = localStorage.getItem(KEY) || '[]';
+        const value = JSON.parse(raw);
+        const { error } = await sb.from('app_state').upsert(
+          { key: KEY, value, updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        );
+        if(error) console.warn('[payroll-sync] push error', error);
+      }catch(e){ console.warn('[payroll-sync] push failed', e); }
+    }, 400);
+  }
+
+  const origSet = Storage.prototype.setItem;
+  Storage.prototype.setItem = function(k, v){
+    origSet.apply(this, arguments);
+    if(this === window.localStorage && k === KEY) pushSoon();
+  };
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', pull);
+  } else {
+    pull();
+  }
+})();
+</script>
+<script>
+(function(){
+  function lsGet(k, def){ try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(def)); } catch(e){ return def; } }
+  function lsSet(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+  window.populateProjectExpenseDropdowns = function(scope){
+    const banks = lsGet('banks', []);
+    const coa = lsGet('chartOfAccounts', []);
+    const root = scope || document;
+    root.querySelectorAll('.expense-bank').forEach(sel => {
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">-- Select Bank --</option>' +
+        banks.map(b => `<option value="${b.name}">${b.name} (KES ${Number(b.balance||0).toLocaleString()})</option>`).join('');
+      if (cur) sel.value = cur;
+    });
+    root.querySelectorAll('.expense-coa').forEach(sel => {
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">-- Select Account --</option>' +
+        coa.map(a => `<option value="${a.code}">${a.code} - ${a.name}</option>`).join('');
+      if (cur) sel.value = cur;
+    });
+  };
+
+  const _orig = window.updateProjectProgress;
+  window.updateProjectProgress = function(){
+    const descs = document.querySelectorAll('.expense-desc');
+    const amts  = document.querySelectorAll('.expense-amt');
+    const bks   = document.querySelectorAll('.expense-bank');
+    const cas   = document.querySelectorAll('.expense-coa');
+    const title = document.getElementById('progressProjectTitle')?.value || '';
+    const today = new Date().toISOString().slice(0,10);
+
+    let banks = lsGet('banks', []);
+    let coa   = lsGet('chartOfAccounts', []);
+    let mtx   = lsGet('manualTransactions', []);
+    let allTx = lsGet('transactions', []);
+    let projExp = lsGet('projectExpensesLedger', []);
+
+    for (let i=0; i<descs.length; i++){
+      const desc = (descs[i].value||'').trim();
+      const amt  = parseFloat(amts[i].value);
+      const bn   = bks[i] ? bks[i].value : '';
+      const cc   = cas[i] ? cas[i].value : '';
+      if (!desc || isNaN(amt) || amt<=0) continue;
+      if (bn && cc){
+        const bank = banks.find(b => b.name === bn);
+        const acc  = coa.find(a => a.code === cc);
+        if (bank) bank.balance = (parseFloat(bank.balance)||0) - amt;
+        if (acc)  acc.amount   = (parseFloat(acc.amount)||0) + amt;
+        const tx = {
+          bank: bn, type: 'Project Expense', account: acc ? acc.name : '', code: cc,
+          amount: amt, date: today, ref: 'PROJ-'+title+'-'+Date.now()+'-'+i,
+          source: 'project', direction: 'Withdraw',
+          project: title, description: desc
+        };
+        mtx.push(tx); allTx.push(tx);
+        projExp.push({ project: title, description: desc, amount: amt, bank: bn, code: cc, account: acc?acc.name:'', date: today });
+      }
+    }
+    lsSet('banks', banks); lsSet('chartOfAccounts', coa);
+    lsSet('manualTransactions', mtx); lsSet('transactions', allTx);
+    lsSet('projectExpensesLedger', projExp);
+
+    if (typeof _orig === 'function') _orig.apply(this, arguments);
+    if (typeof renderProfitAndLoss === 'function') try { renderProfitAndLoss(); } catch(e){}
+    if (typeof renderManualTransactions === 'function') try { renderManualTransactions(); } catch(e){}
+    populateProjectExpenseDropdowns();
+  };
+
+  const _showTab = window.showTab;
+  if (typeof _showTab === 'function'){
+    window.showTab = function(id){
+      const r = _showTab.apply(this, arguments);
+      if (id === 'projectTab') setTimeout(populateProjectExpenseDropdowns, 50);
+      return r;
+    };
+  }
+  document.addEventListener('DOMContentLoaded', populateProjectExpenseDropdowns);
+
+  function injectStrategyExpenseRows(){
+    const anchor = document.getElementById('pnlCurrentAccounts');
+    if (!anchor) return;
+    const totalRow = anchor.closest('tr');
+    if (!totalRow || !totalRow.parentNode) return;
+    document.querySelectorAll('tr[data-strategy-expense]').forEach(r => r.remove());
+
+    const projExp = lsGet('projectExpensesLedger', []);
+    if (!projExp.length) return;
+    const grouped = {};
+    let total = 0;
+    projExp.forEach(e => {
+      const key = (e.project || 'Unassigned') + (e.description ? ' — ' + e.description : '');
+      const amt = parseFloat(e.amount)||0;
+      grouped[key] = (grouped[key]||0) + amt;
+      total += amt;
+    });
+
+    const frag = document.createDocumentFragment();
+    const header = document.createElement('tr');
+    header.setAttribute('data-strategy-expense','');
+    header.className = 'bg-gray-50 font-semibold';
+    header.innerHTML = '<td class="border px-2 py-1">Strategy Expense</td><td></td><td></td><td></td>';
+    frag.appendChild(header);
+    Object.entries(grouped).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-strategy-expense','');
+      tr.innerHTML = `<td class="border px-2 py-1 pl-6">• ${k}</td>
+        <td class="border px-2 py-1 text-right">KES ${Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+        <td class="border px-2 py-1"></td><td class="border px-2 py-1"></td>`;
+      frag.appendChild(tr);
+    });
+    const totRow = document.createElement('tr');
+    totRow.setAttribute('data-strategy-expense','');
+    totRow.className = 'font-semibold';
+    totRow.innerHTML = `<td class="border px-2 py-1">Total Strategy Expense</td><td></td>
+      <td class="border px-2 py-1 text-right">KES ${Number(total).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="border px-2 py-1 text-right">KES ${Number(total).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>`;
+    frag.appendChild(totRow);
+    totalRow.parentNode.insertBefore(frag, totalRow.nextSibling);
+  }
+  const _pnl = window.renderProfitAndLoss;
+  if (typeof _pnl === 'function'){
+    window.renderProfitAndLoss = function(){
+      const r = _pnl.apply(this, arguments);
+      try { injectStrategyExpenseRows(); } catch(e){ console.warn('strategy expense inject failed', e); }
+      return r;
+    };
+  }
+
+  function refreshProjectReportDropdowns(){
+    const projects = lsGet('projects', []);
+    const opts = '<option value="">All Projects</option>' + projects.map(p => `<option value="${p.title}">${p.title}</option>`).join('');
+    ['projectRevenueProject','projectTimelineProject','projectExpensesProject','projectBudgetVarianceProject','planTrackingReportProject'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (el.tagName === 'INPUT'){
+        const sel = document.createElement('select');
+        sel.id = el.id;
+        sel.className = el.className;
+        sel.innerHTML = opts;
+        el.parentNode.replaceChild(sel, el);
+      } else {
+        const cur = el.value;
+        el.innerHTML = opts;
+        el.value = cur;
+      }
+    });
+  }
+
+  window.renderProjectRevenue = function(){
+    refreshProjectReportDropdowns();
+    const project = document.getElementById('projectRevenueProject')?.value || '';
+    const start = document.getElementById('projectRevenueStart')?.value || '';
+    const end = document.getElementById('projectRevenueEnd')?.value || '';
+    const projects = lsGet('projects', []);
+    const stored = lsGet('projectRevenue', []);
+    const rows = [];
+    projects.forEach(p => {
+      rows.push({ date: p.startDate || '', project: p.title, type: p.type || 'Budget', status: p.status || 'Planned', amount: parseFloat(p.budget)||0 });
+    });
+    stored.forEach(r => rows.push(r));
+    const filtered = rows.filter(r => {
+      const d = r.date ? new Date(r.date) : null;
+      return (!project || r.project === project) &&
+             (!start || (d && d >= new Date(start))) &&
+             (!end   || (d && d <= new Date(end)));
+    });
+    const tbody = document.getElementById('projectRevenueBody');
+    if (!tbody) return;
+    if (!filtered.length){ tbody.innerHTML = '<tr><td colspan="5" class="p-2 text-center text-gray-500">No data yet</td></tr>'; return; }
+    let total = 0;
+    tbody.innerHTML = filtered.map(r => {
+      const a = parseFloat(r.amount)||0; total += a;
+      const m = r.date ? new Date(r.date).toLocaleString('default',{month:'short', year:'numeric'}) : '';
+      return `<tr><td class="p-2">${m}</td><td class="p-2">${r.project||''}</td><td class="p-2">${r.type||r.revenueType||''}</td><td class="p-2">${r.status||''}</td><td class="p-2 text-right">KES ${a.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>`;
+    }).join('') + `<tr class="font-semibold bg-gray-50"><td class="p-2" colspan="4">Total</td><td class="p-2 text-right">KES ${total.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>`;
+  };
+
+  window.renderProjectTimeline = function(){
+    refreshProjectReportDropdowns();
+    const project = document.getElementById('projectTimelineProject')?.value || '';
+    const projects = lsGet('projects', []);
+    const tbody = document.getElementById('projectTimelineBody');
+    if (!tbody) return;
+    const rows = projects.filter(p => !project || p.title === project);
+    if (!rows.length){ tbody.innerHTML = '<tr><td colspan="6" class="p-2 text-center text-gray-500">No data yet</td></tr>'; return; }
+    tbody.innerHTML = rows.map(p => `
+      <tr>
+        <td class="p-2">${p.title||''}</td>
+        <td class="p-2">${p.department||''}</td>
+        <td class="p-2">${p.startDate||''}</td>
+        <td class="p-2">${p.endDate||''}</td>
+        <td class="p-2">${p.status||'Not Started'}</td>
+        <td class="p-2">${p.progress||0}%</td>
+      </tr>`).join('');
+  };
+
+  window.renderPlanTrackingReport = function(){
+    refreshProjectReportDropdowns();
+    const tracking = lsGet('planTracking', []);
+    const tbody = document.getElementById('planTrackingReportBody') || document.getElementById('planTrackingTable');
+    if (!tbody) return;
+    if (!tracking.length){ tbody.innerHTML = '<tr><td colspan="6" class="p-2 text-center text-gray-500">No plan tracking data</td></tr>'; return; }
+    tbody.innerHTML = tracking.map(t => `
+      <tr>
+        <td class="border p-2">${t.title||''}</td>
+        <td class="border p-2">${t.progress||0}%</td>
+        <td class="border p-2">${t.status||''}</td>
+        <td class="border p-2">${t.person||''}</td>
+        <td class="border p-2">${t.comment||''}</td>
+        <td class="border p-2">${t.date||''}</td>
+      </tr>`).join('');
+  };
+
+  const _showReport = window.showReport;
+  if (typeof _showReport === 'function'){
+    window.showReport = function(id, el){
+      const r = _showReport.apply(this, arguments);
+      try {
+        if (id === 'projectRevenuePanel') renderProjectRevenue();
+        else if (id === 'projectTimelinePanel') renderProjectTimeline();
+        else if (id === 'planTrackingPanel' || id === 'planTrackingReport') renderPlanTrackingReport();
+        else if (id === 'pnlReport') injectStrategyExpenseRows();
+      } catch(e){ console.warn('report render hook failed', e); }
+      return r;
+    };
+  }
+
+  // ===== Extended renderers for plan-module-driven reports =====
+  const fmt = n => 'KES ' + (Number(n)||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  function inRange(dateStr, start, end){
+    if (!dateStr) return !start && !end;
+    const d = new Date(dateStr);
+    if (start && d < new Date(start)) return false;
+    if (end && d > new Date(end)) return false;
+    return true;
+  }
+  function getRevenueRows(){
+    const projects = lsGet('projects', []);
+    const invoices = lsGet('invoices', []);
+    const stored = lsGet('projectRevenue', []);
+    const rows = [];
+    projects.forEach(p => {
+      const projInvoices = invoices.filter(i => (i.project||i.projectName) === p.title);
+      const earned = projInvoices.reduce((s,i)=> s + (parseFloat(i.total||i.amount)||0), 0);
+      rows.push({ date: p.startDate||'', project: p.title, type: p.type||'Project', status: p.status||'Planned', amount: earned || parseFloat(p.budget)||0, received: earned, pending: Math.max(0,(parseFloat(p.budget)||0)-earned) });
+    });
+    stored.forEach(r => rows.push({ date:r.date||'', project:r.project||'', type:r.type||r.revenueType||'', status:r.status||'', amount: parseFloat(r.amount)||0, received: parseFloat(r.received)||0, pending: parseFloat(r.pending)||0 }));
+    return rows;
+  }
+  function getExpenseRows(){
+    const ledger = lsGet('projectExpensesLedger', []);
+    return ledger.map(e => ({ date:e.date||'', project:e.project||'', type:e.description||e.type||'Expense', status:e.status||'Approved', amount: parseFloat(e.amount)||0 }));
+  }
+
+  window.renderProjectRevenue = function(){
+    refreshProjectReportDropdowns();
+    const proj = document.getElementById('projectRevenueProject')?.value || '';
+    const start = document.getElementById('projectRevenueStart')?.value || '';
+    const end = document.getElementById('projectRevenueEnd')?.value || '';
+    const rows = getRevenueRows().filter(r => (!proj || r.project===proj) && inRange(r.date,start,end));
+    const tbody = document.getElementById('projectRevenueBody');
+    if (tbody){
+      if (!rows.length) tbody.innerHTML = '<tr><td colspan="5" class="p-2 text-center text-gray-500">No data yet</td></tr>';
+      else {
+        let total = 0;
+        tbody.innerHTML = rows.map(r => { const a=r.amount; total+=a; const m=r.date?new Date(r.date).toLocaleString('default',{month:'short',year:'numeric'}):''; return `<tr><td class="p-2">${m}</td><td class="p-2">${r.project}</td><td class="p-2">${r.type}</td><td class="p-2">${r.status}</td><td class="p-2 text-right">${fmt(a)}</td></tr>`; }).join('') + `<tr class="font-semibold bg-gray-50"><td class="p-2" colspan="4">Total</td><td class="p-2 text-right">${fmt(total)}</td></tr>`;
+      }
+    }
+    const total = rows.reduce((s,r)=>s+r.amount,0);
+    const received = rows.reduce((s,r)=>s+(r.received||0),0);
+    const pending = rows.reduce((s,r)=>s+(r.pending||0),0);
+    const amts = rows.map(r=>r.amount);
+    const setEl = (id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
+    setEl('projectRevenueTotal', fmt(total));
+    setEl('projectReceivedRevenue', fmt(received));
+    setEl('projectPendingRevenue', fmt(pending));
+    setEl('projectHighestRevenue', fmt(amts.length?Math.max(...amts):0));
+    setEl('projectLowestRevenue', fmt(amts.length?Math.min(...amts):0));
+    setEl('projectAverageRevenue', fmt(amts.length?(total/amts.length):0));
+  };
+  window.applyProjectRevenueFilters = window.renderProjectRevenue;
+  window.clearProjectRevenueFilters = function(){ ['projectRevenueProject','projectRevenueStart','projectRevenueEnd'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';}); renderProjectRevenue(); };
+
+  window.renderProjectExpenses = function(){
+    refreshProjectReportDropdowns();
+    const proj = document.getElementById('projectExpensesProject')?.value || '';
+    const start = document.getElementById('projectExpensesStart')?.value || '';
+    const end = document.getElementById('projectExpensesEnd')?.value || '';
+    const rows = getExpenseRows().filter(r => (!proj || r.project===proj) && inRange(r.date,start,end));
+    const tbody = document.getElementById('projectExpensesBody');
+    if (tbody){
+      if (!rows.length) tbody.innerHTML = '<tr><td colspan="5" class="p-2 text-center text-gray-500">No data yet</td></tr>';
+      else {
+        let total=0;
+        tbody.innerHTML = rows.map(r => { const a=r.amount; total+=a; const m=r.date?new Date(r.date).toLocaleString('default',{month:'short',year:'numeric'}):''; return `<tr><td class="p-2">${m}</td><td class="p-2">${r.project}</td><td class="p-2">${r.type}</td><td class="p-2">${r.status}</td><td class="p-2 text-right">${fmt(a)}</td></tr>`; }).join('') + `<tr class="font-semibold bg-gray-50"><td class="p-2" colspan="4">Total</td><td class="p-2 text-right">${fmt(total)}</td></tr>`;
+      }
+    }
+    const total = rows.reduce((s,r)=>s+r.amount,0);
+    const approved = rows.filter(r=>/approv/i.test(r.status)).reduce((s,r)=>s+r.amount,0);
+    const pending = rows.filter(r=>/pend/i.test(r.status)).reduce((s,r)=>s+r.amount,0);
+    const amts = rows.map(r=>r.amount);
+    const setEl = (id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
+    setEl('projectExpensesTotal', fmt(total));
+    setEl('projectApprovedExpenses', fmt(approved||total));
+    setEl('projectPendingExpenses', fmt(pending));
+    setEl('projectHighestExpense', fmt(amts.length?Math.max(...amts):0));
+    setEl('projectLowestExpense', fmt(amts.length?Math.min(...amts):0));
+    setEl('projectAverageExpense', fmt(amts.length?(total/amts.length):0));
+  };
+  window.applyProjectExpenseFilters = window.renderProjectExpenses;
+  window.clearProjectExpenseFilters = function(){ ['projectExpensesProject','projectExpensesStart','projectExpensesEnd'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';}); renderProjectExpenses(); };
+
+  window.renderProjectBudgetVariance = function(){
+    refreshProjectReportDropdowns();
+    const proj = document.getElementById('projectBudgetVarianceProject')?.value || '';
+    const projects = lsGet('projects', []);
+    const expenses = getExpenseRows();
+    const rows = projects.filter(p => !proj || p.title===proj).map(p => {
+      const actual = expenses.filter(e=>e.project===p.title).reduce((s,e)=>s+e.amount,0);
+      const budget = parseFloat(p.budget)||0;
+      const variance = budget - actual;
+      const pct = budget ? (variance/budget*100) : 0;
+      return { date:p.startDate||'', project:p.title, budget, actual, variance, pct, status: variance>=0?'On Budget':'Over Budget' };
+    });
+    const tbody = document.getElementById('projectBudgetVarianceBody');
+    if (tbody){
+      if (!rows.length) tbody.innerHTML = '<tr><td colspan="7" class="p-2 text-center text-gray-500">No data yet</td></tr>';
+      else tbody.innerHTML = rows.map(r => { const m=r.date?new Date(r.date).toLocaleString('default',{month:'short',year:'numeric'}):''; return `<tr><td class="p-2">${m}</td><td class="p-2">${r.project}</td><td class="p-2 text-right">${fmt(r.budget)}</td><td class="p-2 text-right">${fmt(r.actual)}</td><td class="p-2 text-right">${fmt(r.variance)}</td><td class="p-2 text-right">${r.pct.toFixed(1)}%</td><td class="p-2">${r.status}</td></tr>`; }).join('');
+    }
+    const totalB = rows.reduce((s,r)=>s+r.budget,0);
+    const totalA = rows.reduce((s,r)=>s+r.actual,0);
+    const totalV = totalB - totalA;
+    const vars = rows.map(r=>r.variance);
+    const setEl = (id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
+    setEl('projectBudgetTotal', fmt(totalB));
+    setEl('projectActualSpending', fmt(totalA));
+    setEl('projectVarianceAmount', fmt(totalV));
+    setEl('projectHighestVariance', fmt(vars.length?Math.max(...vars):0));
+    setEl('projectLowestVariance', fmt(vars.length?Math.min(...vars):0));
+    setEl('projectAverageVariance', fmt(vars.length?(totalV/vars.length):0));
+  };
+  window.applyProjectBudgetVarianceFilters = window.renderProjectBudgetVariance;
+  window.clearProjectBudgetVarianceFilters = function(){ ['projectBudgetVarianceProject','projectBudgetVarianceStart','projectBudgetVarianceEnd'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';}); renderProjectBudgetVariance(); };
+
+  window.renderProjectTimeline = function(){
+    refreshProjectReportDropdowns();
+    const proj = document.getElementById('projectTimelineProject')?.value || '';
+    const projects = lsGet('projects', []).filter(p => !proj || p.title===proj);
+    const tbody = document.getElementById('projectTimelineBody');
+    const dur = p => {
+      if (!p.startDate || !p.endDate) return 0;
+      return Math.max(0, Math.round((new Date(p.endDate)-new Date(p.startDate))/86400000));
+    };
+    if (tbody){
+      if (!projects.length) tbody.innerHTML = '<tr><td colspan="6" class="p-2 text-center text-gray-500">No data yet</td></tr>';
+      else tbody.innerHTML = projects.map(p => `<tr><td class="p-2">${p.type||p.title}</td><td class="p-2">${p.title}</td><td class="p-2">${p.startDate||''}</td><td class="p-2">${p.endDate||''}</td><td class="p-2">${dur(p)} Days</td><td class="p-2">${p.status||'Not Started'}</td></tr>`).join('');
+    }
+    const setEl=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+    const completed = projects.filter(p=>/complet/i.test(p.status||'')).length;
+    const ongoing = projects.filter(p=>/progress|ongoing|active/i.test(p.status||'')).length;
+    const delayed = projects.filter(p=>/delay/i.test(p.status||'')).length;
+    setEl('projectCompletedPhases', completed);
+    setEl('projectOngoingPhases', ongoing);
+    setEl('projectDelayedPhases', delayed);
+    const durs = projects.map(dur).filter(d=>d>0);
+    setEl('projectLongestPhase', (durs.length?Math.max(...durs):0)+' Days');
+    setEl('projectShortestPhase', (durs.length?Math.min(...durs):0)+' Days');
+    setEl('projectAverageDuration', (durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0)+' Days');
+  };
+  window.applyProjectTimelineFilters = window.renderProjectTimeline;
+  window.clearProjectTimelineFilters = function(){ ['projectTimelineProject','projectTimelineStart','projectTimelineEnd'].forEach(id=>{const e=document.getElementById(id); if(e) e.value='';}); renderProjectTimeline(); };
+
+  window.renderDepartmentalPnLTable = function(){
+    const projects = lsGet('projects', []);
+    const revenue = getRevenueRows();
+    const expenses = getExpenseRows();
+    const byDept = {};
+    projects.forEach(p => {
+      const d = p.department || 'Unassigned';
+      byDept[d] = byDept[d] || { department:d, revenue:0, expenses:0 };
+    });
+    revenue.forEach(r => {
+      const p = projects.find(x=>x.title===r.project);
+      const d = (p && p.department) || 'Unassigned';
+      byDept[d] = byDept[d] || { department:d, revenue:0, expenses:0 };
+      byDept[d].revenue += r.amount;
+    });
+    expenses.forEach(e => {
+      const p = projects.find(x=>x.title===e.project);
+      const d = (p && p.department) || 'Unassigned';
+      byDept[d] = byDept[d] || { department:d, revenue:0, expenses:0 };
+      byDept[d].expenses += e.amount;
+    });
+    const data = Object.values(byDept).map(d => ({ ...d, profit: d.revenue - d.expenses }));
+    const tbody = document.getElementById('departmentalPnlBody');
+    if (!tbody) return;
+    if (!data.length){ tbody.innerHTML = '<tr><td colspan="4" class="p-2 text-center text-gray-500">No data yet</td></tr>'; return; }
+    tbody.innerHTML = data.map(d => `<tr><td class="border p-2">${d.department}</td><td class="border p-2 text-right">${fmt(d.revenue)}</td><td class="border p-2 text-right">${fmt(d.expenses)}</td><td class="border p-2 text-right">${fmt(d.profit)}</td></tr>`).join('');
+  };
+
+  window.renderProjectProfitabilityTable = function(){
+    const projects = lsGet('projects', []);
+    const revenue = getRevenueRows();
+    const expenses = getExpenseRows();
+    const data = projects.map(p => {
+      const r = revenue.filter(x=>x.project===p.title).reduce((s,x)=>s+x.amount,0);
+      const e = expenses.filter(x=>x.project===p.title).reduce((s,x)=>s+x.amount,0);
+      return { project:p.title, revenue:r, expenses:e, profit:r-e };
+    });
+    const tbody = document.getElementById('projectProfitabilityBody');
+    if (!tbody) return;
+    if (!data.length){ tbody.innerHTML = '<tr><td colspan="4" class="p-2 text-center text-gray-500">No data yet</td></tr>'; return; }
+    tbody.innerHTML = data.map(p => `<tr><td class="border p-2">${p.project}</td><td class="border p-2 text-right">${fmt(p.revenue)}</td><td class="border p-2 text-right">${fmt(p.expenses)}</td><td class="border p-2 text-right">${fmt(p.profit)}</td></tr>`).join('');
+  };
+
+  window.renderCostCenterReport = function(){
+    const projects = lsGet('projects', []);
+    const expenses = getExpenseRows();
+    const byCenter = {};
+    projects.forEach(p => {
+      const c = p.department || p.title || 'Unassigned';
+      byCenter[c] = byCenter[c] || { center:c, budget:0, actual:0 };
+      byCenter[c].budget += parseFloat(p.budget)||0;
+    });
+    expenses.forEach(e => {
+      const p = projects.find(x=>x.title===e.project);
+      const c = (p && (p.department||p.title)) || e.project || 'Unassigned';
+      byCenter[c] = byCenter[c] || { center:c, budget:0, actual:0 };
+      byCenter[c].actual += e.amount;
+    });
+    const data = Object.values(byCenter).map(d => ({ ...d, variance: d.budget - d.actual }));
+    const tbody = document.getElementById('costCenterReportBody');
+    if (!tbody) return;
+    if (!data.length){ tbody.innerHTML = '<tr><td colspan="4" class="p-2 text-center text-gray-500">No data yet</td></tr>'; return; }
+    tbody.innerHTML = data.map(d => `<tr><td class="border p-2">${d.center}</td><td class="border p-2 text-right">${fmt(d.budget)}</td><td class="border p-2 text-right">${fmt(d.actual)}</td><td class="border p-2 text-right">${fmt(d.variance)}</td></tr>`).join('');
+  };
+
+  const _showReport2 = window.showReport;
+  if (typeof _showReport2 === 'function'){
+    window.showReport = function(id, el){
+      const r = _showReport2.apply(this, arguments);
+      try {
+        if (id === 'projectRevenuePanel') renderProjectRevenue();
+        else if (id === 'projectExpensesPanel') renderProjectExpenses();
+        else if (id === 'projectBudgetVariancePanel') renderProjectBudgetVariance();
+        else if (id === 'projectTimelinePanel') renderProjectTimeline();
+        else if (id === 'departmentalPnlPanel') renderDepartmentalPnLTable();
+        else if (id === 'projectProfitabilityPanel') renderProjectProfitabilityTable();
+        else if (id === 'costCenterReportPanel') renderCostCenterReport();
+        else if (id === 'planTrackingPanel' || id === 'planTrackingReport') renderPlanTrackingReport();
+        else if (id === 'pnlReport') injectStrategyExpenseRows();
+      } catch(e){ console.warn('extended report render hook failed', e); }
+      return r;
+    };
+  }
 })();
 </script>
 </body></html>
