@@ -1776,7 +1776,14 @@ document.addEventListener("click", function(e) {
   </a></li><li id="crmLink"><a href="https://kimani254star.github.io/acacia-crm/?from=books" target="_blank"
     class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">
     🏢CRM Portal Hub
-  </a></li><li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li><div id="rightSidebar" class="fixed top-4 right-0 h-half w-10 bg-black  text-white flex flex-col items-center py-1 space-y-6 shadow-lg z-10"><!-- 📔 Acacia Notebook --><button id="acaciaToggle" onclick="toggleAcaciaNotebook()"
+  </a></li>
+  <li id="projectHubLink">
+  <a href="https://kimani254star.github.io/project-hub/" target="_blank"
+     class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">
+    📁 Advanced Project Hub
+  </a>
+</li>
+</li><li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li><div id="rightSidebar" class="fixed top-4 right-0 h-half w-10 bg-black  text-white flex flex-col items-center py-1 space-y-6 shadow-lg z-10"><!-- 📔 Acacia Notebook --><button id="acaciaToggle" onclick="toggleAcaciaNotebook()"
   class="group flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full relative text-xl">📔
   <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
     Acacia Notebook
@@ -67677,333 +67684,824 @@ window.addEventListener(
   </button><div id="planTrackingHistory" class="text-xs text-gray-600 mt-3"></div></div><div class="bg-white p-4 rounded shadow"><h3 class="text-lg font-semibold mb-3">🤖 AI Insights</h3><button onclick="generatePlanTrackingInsights()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-600 width: 700px;">Generate Insights</button><div id="planTrackingInsights" class="text-xs text-gray-600 mt-3"></div></div></div>
   <div id="projectRevenueTab" class="hidden ml-84 mr-7 p-2">
 
-<h2 class="text-1xl font-bold mb-4 text-left">
+<div class="bg-white rounded-lg shadow-md p-5 mb-6">
+
+<div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+
+<div>
+
+<h2 class="text-2xl font-bold text-gray-800">
 💰 Project Revenue Management
 </h2>
 
-<div class="relative mb-2 mt-2">
+<p class="text-sm text-gray-500">
+Manage Project Revenue, Collections and Revenue Analytics
+</p>
+
+</div>
+
+<div class="flex flex-wrap gap-2">
+
+<div class="relative">
 
 <input
 type="text"
 id="projectRevenueSearch"
 placeholder="Search Revenue (/)"
-class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+class="border rounded-md pl-8 pr-3 py-2 w-72 focus:ring-2 focus:ring-blue-500"
 oninput="searchProjectRevenue()">
 
-<svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400"
+<svg class="absolute left-2 top-2.5 w-4 h-4 text-gray-400"
 fill="none"
 stroke="currentColor"
-stroke-width="2"
 viewBox="0 0 24 24">
 
 <circle cx="11" cy="11" r="8"></circle>
-<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+
+<line
+x1="21"
+y1="21"
+x2="16.65"
+y2="16.65">
+</line>
 
 </svg>
 
 </div>
 
-
 <div class="relative inline-block">
 
-<button id="projectRevenueActionsBtn"
-class="inline-flex items-center rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+<button
+id="projectRevenueActionsBtn"
+class="flex items-center bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
 
 Revenue Actions
 
-<svg class="ml-2 h-4 w-4"
+<svg
+class="ml-2 w-4 h-4"
 fill="none"
 stroke="currentColor"
 viewBox="0 0 24 24">
 
-<path stroke-linecap="round"
+<path
+stroke-linecap="round"
 stroke-linejoin="round"
 stroke-width="2"
-d="M19 9l-7 7-7-7"/>
+d="M19 9l-7 7-7-7">
+</path>
 
 </svg>
 
 </button>
 
+<div
+id="projectRevenueDropdown"
+class="hidden absolute right-0 mt-1 bg-white border rounded-lg shadow-lg w-64 z-50">
 
-<div id="projectRevenueDropdown"
-class="hidden absolute bg-white border rounded shadow mt-1 w-48 z-10">
+<button
+onclick="addProjectRevenue()"
+class="block w-full text-left px-4 py-2 hover:bg-gray-100">
 
-
-<button onclick="sortRevenue('project')"
-class="block w-full text-left px-3 py-1 hover:bg-gray-100">
-
-Sort by Project
-
-</button>
-
-
-<button onclick="sortRevenue('client')"
-class="block w-full text-left px-3 py-1 hover:bg-gray-100">
-
-Sort by Client
+➕ New Revenue
 
 </button>
 
+<button
+onclick="duplicateSelectedRevenue()"
+class="block w-full text-left px-4 py-2 hover:bg-gray-100">
 
-<button onclick="sortRevenue('amount')"
-class="block w-full text-left px-3 py-1 hover:bg-gray-100">
-
-Sort by Revenue
+📄 Duplicate Revenue
 
 </button>
 
+<button
+onclick="printRevenueReceipt()"
+class="block w-full text-left px-4 py-2 hover:bg-gray-100">
 
-<hr>
+🖨 Print Receipt
 
+</button>
 
-<input type="file"
+<button
+onclick="downloadRevenuePDF()"
+class="block w-full text-left px-4 py-2 hover:bg-gray-100">
+
+📕 Download PDF
+
+</button>
+
+<button
+onclick="emailRevenueReceipt()"
+class="block w-full text-left px-4 py-2 hover:bg-gray-100">
+
+📧 Email Receipt
+
+</button>
+
+<button
+onclick="exportRevenueExcel()"
+class="block w-full text-left px-4 py-2 hover:bg-gray-100">
+
+📊 Export Excel
+
+</button>
+
+<button
+onclick="exportRevenueCSV()"
+class="block w-full text-left px-4 py-2 hover:bg-gray-100">
+
+📄 Export CSV
+
+</button>
+
+<input
+type="file"
 id="projectRevenueCSV"
-class="hidden"
 accept=".csv"
+class="hidden"
 onchange="importRevenueCSV(event)">
 
+<button
+onclick="document.getElementById('projectRevenueCSV').click()"
+class="block w-full text-left px-4 py-2 hover:bg-gray-100">
 
-<button onclick="document.getElementById('projectRevenueCSV').click()"
-class="block w-full text-left px-3 py-1 hover:bg-gray-100">
-
-Import CSV
+📥 Import CSV
 
 </button>
 
+<button
+onclick="refreshProjectRevenueModule()"
+class="block w-full text-left px-4 py-2 hover:bg-gray-100">
 
-<button onclick="exportRevenueCSV()"
-class="block w-full text-left px-3 py-1 hover:bg-gray-100">
+🔄 Refresh
+
+</button>
+
+<button
+onclick="resetProjectRevenueForm()"
+class="block w-full text-left px-4 py-2 hover:bg-gray-100">
+
+♻ Reset Form
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mt-6">
+
+<div class="bg-blue-50 rounded-lg border p-4">
+
+<div class="text-sm text-gray-600">
+Total Revenue
+</div>
+
+<div
+id="revTotalRevenue"
+class="text-2xl font-bold text-blue-700">
+
+0
+
+</div>
+
+</div>
+
+<div class="bg-green-50 rounded-lg border p-4">
+
+<div class="text-sm text-gray-600">
+Collected
+</div>
+
+<div
+id="revCollectedRevenue"
+class="text-2xl font-bold text-green-700">
+
+0
+
+</div>
+
+</div>
+
+<div class="bg-red-50 rounded-lg border p-4">
+
+<div class="text-sm text-gray-600">
+Outstanding
+</div>
+
+<div
+id="revOutstandingRevenue"
+class="text-2xl font-bold text-red-700">
+
+0
+
+</div>
+
+</div>
+
+<div class="bg-yellow-50 rounded-lg border p-4">
+
+<div class="text-sm text-gray-600">
+Collection Rate
+</div>
+
+<div
+id="revCollectionRate"
+class="text-2xl font-bold text-yellow-700">
+
+0%
+
+</div>
+
+</div>
+
+<div class="bg-purple-50 rounded-lg border p-4">
+
+<div class="text-sm text-gray-600">
+Average Revenue
+</div>
+
+<div
+id="averageProjectRevenue"
+class="text-2xl font-bold text-purple-700">
+
+0
+
+</div>
+
+</div>
+
+<div class="bg-indigo-50 rounded-lg border p-4">
+
+<div class="text-sm text-gray-600">
+Paid Invoices
+</div>
+
+<div
+id="revPaidInvoices"
+class="text-2xl font-bold text-indigo-700">
+
+0
+
+</div>
+
+</div>
+
+<div class="bg-orange-50 rounded-lg border p-4">
+
+<div class="text-sm text-gray-600">
+Partial
+</div>
+
+<div
+id="revPartialInvoices"
+class="text-2xl font-bold text-orange-700">
+
+0
+
+</div>
+
+</div>
+
+<div class="bg-gray-50 rounded-lg border p-4">
+
+<div class="text-sm text-gray-600">
+Unpaid
+</div>
+
+<div
+id="revUnpaidInvoices"
+class="text-2xl font-bold text-gray-700">
+
+0
+
+</div>
+
+</div>
+
+<div class="bg-cyan-50 rounded-lg border p-4">
+
+<div class="text-sm text-gray-600">
+Highest Customer
+</div>
+
+<div
+id="highestRevenueCustomer"
+class="font-bold text-cyan-700">
+
+-
+
+</div>
+
+</div>
+
+<div class="bg-pink-50 rounded-lg border p-4">
+
+<div class="text-sm text-gray-600">
+Highest Project
+</div>
+
+<div
+id="highestRevenueProject"
+class="font-bold text-pink-700">
+
+-
+
+</div>
+
+</div>
+
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 mt-6">
+
+<select
+id="filterRevenueCustomer"
+class="border rounded p-2"
+onchange="filterProjectRevenue()">
+
+<option value="">
+All Customers
+</option>
+
+</select>
+
+<select
+id="filterRevenueProject"
+class="border rounded p-2"
+onchange="filterProjectRevenue()">
+
+<option value="">
+All Projects
+</option>
+
+</select>
+
+<select
+id="filterRevenueStatus"
+class="border rounded p-2"
+onchange="filterProjectRevenue()">
+
+<option value="">
+All Status
+</option>
+
+<option>Pending</option>
+
+<option>Partial</option>
+
+<option>Paid</option>
+
+<option>Overdue</option>
+
+</select>
+
+<select
+id="filterRevenueBank"
+class="border rounded p-2">
+
+<option value="">
+All Banks
+</option>
+
+</select>
+
+<select
+id="filterRevenueMethod"
+class="border rounded p-2">
+
+<option value="">
+Payment Method
+</option>
+
+<option>Cash</option>
+
+<option>Bank Transfer</option>
+
+<option>Cheque</option>
+
+<option>MPESA</option>
+
+<option>EFT</option>
+
+<option>RTGS</option>
+
+<option>Credit Card</option>
+
+</select>
+
+<input
+type="date"
+id="revenueFromDate"
+class="border rounded p-2">
+
+<input
+type="date"
+id="revenueToDate"
+class="border rounded p-2">
+
+<input
+type="number"
+id="revenueMinAmount"
+placeholder="Min Amount"
+class="border rounded p-2">
+
+<input
+type="number"
+id="revenueMaxAmount"
+placeholder="Max Amount"
+class="border rounded p-2">
+
+<button
+onclick="filterProjectRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Apply Filters
+
+</button>
+
+</div>
+
+</div>
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+
+<h3 class="text-xl font-semibold mb-6">
+Record Project Revenue
+</h3>
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+<div>
+<label class="block text-sm font-medium mb-1">Revenue No</label>
+<input
+id="revenueNo"
+readonly
+class="border rounded p-2 bg-gray-100 w-full">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Project</label>
+<select
+id="revenueProject"
+class="border rounded p-2 w-full">
+<option value="">Select Project</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Customer</label>
+<select
+id="revenueCustomer"
+class="border rounded p-2 w-full">
+<option value="">Select Customer</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Invoice</label>
+<select
+id="invoiceNumber"
+class="border rounded p-2 w-full">
+<option value="">Select Invoice</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Revenue Type</label>
+<select
+id="revenueType"
+class="border rounded p-2 w-full">
+<option>Contract Payment</option>
+<option>Deposit</option>
+<option>Progress Payment</option>
+<option>Advance Payment</option>
+<option>Interim Payment</option>
+<option>Final Payment</option>
+<option>Retention Release</option>
+<option>Variation Order</option>
+<option>Maintenance</option>
+<option>Other</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Payment Method</label>
+<select
+id="paymentMethod"
+class="border rounded p-2 w-full">
+<option>Cash</option>
+<option>Bank Transfer</option>
+<option>Cheque</option>
+<option>MPESA</option>
+<option>EFT</option>
+<option>RTGS</option>
+<option>Credit Card</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Bank Account</label>
+<select
+id="revenueBank"
+class="border rounded p-2 w-full">
+<option value="">Select Bank</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Currency</label>
+<select
+id="revenueCurrency"
+class="border rounded p-2 w-full">
+<option>KES</option>
+<option>USD</option>
+<option>EUR</option>
+<option>GBP</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Exchange Rate</label>
+<input
+id="exchangeRate"
+type="number"
+value="1"
+step="0.0001"
+class="border rounded p-2 w-full">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Invoice Total</label>
+<input
+id="invoiceTotal"
+readonly
+class="border rounded p-2 bg-gray-100 w-full">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Balance Before Payment</label>
+<input
+id="balanceBefore"
+readonly
+class="border rounded p-2 bg-gray-100 w-full">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Revenue Amount</label>
+<input
+id="revenueAmount"
+type="number"
+step="0.01"
+class="border rounded p-2 w-full">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">VAT Amount</label>
+<input
+id="revenueVAT"
+readonly
+class="border rounded p-2 bg-gray-100 w-full">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Net Revenue</label>
+<input
+id="netRevenue"
+readonly
+class="border rounded p-2 bg-gray-100 w-full">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Balance After Payment</label>
+<input
+id="balanceAfter"
+readonly
+class="border rounded p-2 bg-gray-100 w-full">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Reference Number</label>
+<input
+id="referenceNumber"
+class="border rounded p-2 w-full"
+placeholder="Bank/MPESA/Cheque Reference">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Receipt Number</label>
+<input
+id="receiptNumber"
+readonly
+class="border rounded p-2 bg-gray-100 w-full">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Payment Date</label>
+<input
+id="paymentDate"
+type="date"
+class="border rounded p-2 w-full">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Payment Status</label>
+<select
+id="paymentStatus"
+class="border rounded p-2 w-full">
+<option>Pending</option>
+<option>Partial</option>
+<option>Paid</option>
+<option>Overdue</option>
+</select>
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Received By</label>
+<input
+id="receivedBy"
+readonly
+class="border rounded p-2 bg-gray-100 w-full">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Department</label>
+<input
+id="revenueDepartment"
+readonly
+class="border rounded p-2 bg-gray-100 w-full">
+</div>
+
+<div>
+<label class="block text-sm font-medium mb-1">Branch</label>
+<input
+id="revenueBranch"
+readonly
+class="border rounded p-2 bg-gray-100 w-full">
+</div>
+
+<div class="md:col-span-2 xl:col-span-3">
+
+<label class="block text-sm font-medium mb-1">
+Notes
+</label>
+
+<textarea
+id="revenueNotes"
+rows="4"
+class="border rounded p-2 w-full"></textarea>
+
+</div>
+
+<div class="md:col-span-2 xl:col-span-3">
+
+<div class="flex flex-wrap gap-3">
+
+<button
+onclick="saveProjectRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+💾 Save Revenue
+
+</button>
+
+<button
+onclick="resetProjectRevenueForm()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+♻ Reset
+
+</button>
+
+<button
+onclick="printRevenueReceipt()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+🖨 Print Receipt
+
+</button>
+
+<button
+onclick="downloadRevenuePDF()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+📕 PDF
+
+</button>
+
+<button
+onclick="emailRevenueReceipt()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+📧 Email
+
+</button>
+
+<button
+onclick="duplicateRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+📄 Duplicate
+
+</button>
+
+<button
+onclick="deleteRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+🗑 Delete
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+
+<div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-4 gap-4">
+
+<h3 class="text-xl font-semibold">
+Revenue Register
+</h3>
+
+<div class="flex flex-wrap gap-2">
+
+<button
+onclick="bulkDeleteProjectRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Delete Selected
+
+</button>
+
+<button
+onclick="printProjectRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Print
+
+</button>
+
+<button
+onclick="exportProjectRevenueCSV()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
 
 Export CSV
 
 </button>
 
+<button
+onclick="exportRevenueExcel()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
 
-<button onclick="resetRevenue()"
-class="block w-full text-left px-3 py-1 hover:bg-gray-100">
-
-Reset
+Export Excel
 
 </button>
 
-
-</div>
-
-</div>
-
-
-
-<div class="bg-white rounded shadow p-4 mb-6">
-
-
-<h3 class="text-lg font-semibold mb-4">
-Record Project Revenue
-</h3>
-
-
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-
-<div>
-
-<label class="block text-sm font-medium">
-Project
-</label>
-
-<select id="revenueProject"
-class="border p-2 rounded"
-style="width:700px;">
-
-<option value="">
-Select Project
-</option>
-
-</select>
-
-</div>
-
-
-
-<div>
-
-<label class="block text-sm font-medium">
-Customer
-</label>
-
-<select id="revenueCustomer"
-class="border p-2 rounded"
-style="width:700px;">
-
-<option value="">
-Select Customer
-</option>
-
-</select>
-
-</div>
-
-
-
-<div>
-
-<label class="block text-sm font-medium">
-Invoice
-</label>
-
-<select id="invoiceNumber"
-class="border p-2 rounded"
-style="width:700px;">
-
-<option value="">
-Select Invoice
-</option>
-
-</select>
-
-</div>
-
-
-
-<div>
-
-<label class="block text-sm font-medium">
-Revenue Amount
-</label>
-
-<input
-id="revenueAmount"
-type="number"
-class="border p-2 rounded"
-style="width:700px;">
-
-</div>
-
-
-
-<div>
-
-<label class="block text-sm font-medium">
-Bank Account
-</label>
-
-<select id="revenueBank"
-class="border p-2 rounded"
-style="width:700px;">
-
-<option value="">
-Select Bank
-</option>
-
-</select>
-
-</div>
-
-
-
-<div>
-
-<label class="block text-sm font-medium">
-Payment Date
-</label>
-
-<input
-id="paymentDate"
-type="date"
-class="border p-2 rounded"
-style="width:700px;">
-
-</div>
-
-
-
-<div>
-
-<label class="block text-sm font-medium">
-Payment Status
-</label>
-
-
-<select id="paymentStatus"
-class="border p-2 rounded"
-style="width:700px;">
-
-
-<option>
-Pending
-</option>
-
-<option>
-Partial
-</option>
-
-<option>
-Paid
-</option>
-
-<option>
-Overdue
-</option>
-
-
-</select>
-
-</div>
-
-
-
-<div class="col-span-2">
-
-
-<label class="block text-sm font-medium">
-Notes
-</label>
-
-
-<textarea
-id="revenueNotes"
-rows="3"
-class="border p-2 rounded"
-style="width:700px;"></textarea>
-
-
-</div>
-
-
-</div>
-
-
-<button onclick="addProjectRevenue()"
-class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4">
-
-Save Revenue
+<button
+onclick="refreshProjectRevenueModule()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Refresh
 
 </button>
 
+</div>
 
 </div>
 
+<div class="overflow-x-auto">
 
+<table class="min-w-full border border-gray-300 text-sm">
 
-
-
-<div class="bg-white rounded shadow p-4 mb-6">
-
-
-<h3 class="text-lg font-semibold mb-3">
-Revenue Register
-</h3>
-
-
-<table class="w-full border text-sm">
-
-
-<thead class="bg-gray-200">
-
+<thead class="bg-gray-100">
 
 <tr>
 
 <th class="border p-2">
+
+<input
+type="checkbox"
+onclick="toggleAllRevenue(this)">
+
+</th>
+
+<th class="border p-2">
+#
+</th>
+
+<th class="border p-2">
+Revenue No
+</th>
+
+<th class="border p-2">
 Project
 </th>
 
@@ -68016,7 +68514,15 @@ Invoice
 </th>
 
 <th class="border p-2">
-Amount
+Revenue Type
+</th>
+
+<th class="border p-2">
+Payment Method
+</th>
+
+<th class="border p-2">
+Reference
 </th>
 
 <th class="border p-2">
@@ -68024,11 +68530,43 @@ Bank
 </th>
 
 <th class="border p-2">
-Date
+Currency
+</th>
+
+<th class="border p-2 text-right">
+Gross
+</th>
+
+<th class="border p-2 text-right">
+VAT
+</th>
+
+<th class="border p-2 text-right">
+Net
+</th>
+
+<th class="border p-2 text-right">
+Before
+</th>
+
+<th class="border p-2 text-right">
+After
+</th>
+
+<th class="border p-2">
+Payment Date
 </th>
 
 <th class="border p-2">
 Status
+</th>
+
+<th class="border p-2">
+Recorded By
+</th>
+
+<th class="border p-2">
+Created
 </th>
 
 <th class="border p-2">
@@ -68037,84 +68575,1084 @@ Actions
 
 </tr>
 
-
 </thead>
 
+<tbody id="projectRevenueListBody">
 
-<tbody id="projectRevenueTable"></tbody>
+</tbody>
 
+<tfoot class="bg-gray-50 font-semibold">
+
+<tr>
+
+<td colspan="11" class="border p-2 text-right">
+
+Totals
+
+</td>
+
+<td
+id="footerGrossRevenue"
+class="border p-2 text-right">
+
+0.00
+
+</td>
+
+<td
+id="footerVATRevenue"
+class="border p-2 text-right">
+
+0.00
+
+</td>
+
+<td
+id="footerNetRevenue"
+class="border p-2 text-right">
+
+0.00
+
+</td>
+
+<td
+id="footerBalanceBefore"
+class="border p-2 text-right">
+
+0.00
+
+</td>
+
+<td
+id="footerBalanceAfter"
+class="border p-2 text-right">
+
+0.00
+
+</td>
+
+<td colspan="5" class="border">
+
+</td>
+
+</tr>
+
+</tfoot>
 
 </table>
 
+</div>
+
+<div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mt-5 gap-4">
+
+<div class="text-sm text-gray-600">
+
+Showing
+
+<span id="revenueStartRecord">
+
+0
+
+</span>
+
+-
+
+<span id="revenueEndRecord">
+
+0
+
+</span>
+
+of
+
+<span id="revenueTotalRecords">
+
+0
+
+</span>
+
+Records
 
 </div>
 
+<div class="flex items-center gap-2">
 
+<label>
 
+Rows
 
+</label>
 
-<div class="bg-white rounded shadow p-4 mb-6">
+<select
+id="revenueRowsPerPage"
+onchange="changeRevenueRowsPerPage()"
+class="border rounded p-2">
 
+<option>10</option>
 
-<h3 class="text-lg font-semibold mb-3">
-Revenue Analytics
+<option>25</option>
+
+<option>50</option>
+
+<option>100</option>
+
+<option>250</option>
+
+</select>
+
+</div>
+
+<div class="flex gap-2">
+
+<button
+onclick="firstRevenuePage()"
+class="border rounded px-3 py-2">
+
+First
+
+</button>
+
+<button
+onclick="previousRevenuePage()"
+class="border rounded px-3 py-2">
+
+Previous
+
+</button>
+
+<span
+id="revenueCurrentPage"
+class="px-4 py-2 bg-blue-900 text-white rounded">
+
+1
+
+</span>
+
+<button
+onclick="nextRevenuePage()"
+class="border rounded px-3 py-2">
+
+Next
+
+</button>
+
+<button
+onclick="lastRevenuePage()"
+class="border rounded px-3 py-2">
+
+Last
+
+</button>
+
+</div>
+
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mt-6">
+
+<div class="border rounded-lg p-4 bg-blue-50">
+
+<div class="text-xs text-gray-600">
+
+Transactions
+
+</div>
+
+<div
+id="totalRevenueTransactions"
+class="text-xl font-bold">
+
+0
+
+</div>
+
+</div>
+
+<div class="border rounded-lg p-4 bg-green-50">
+
+<div class="text-xs text-gray-600">
+
+Gross Revenue
+
+</div>
+
+<div
+id="grossRevenueTotal"
+class="text-xl font-bold">
+
+0
+
+</div>
+
+</div>
+
+<div class="border rounded-lg p-4 bg-yellow-50">
+
+<div class="text-xs text-gray-600">
+
+VAT
+
+</div>
+
+<div
+id="vatRevenueTotal"
+class="text-xl font-bold">
+
+0
+
+</div>
+
+</div>
+
+<div class="border rounded-lg p-4 bg-indigo-50">
+
+<div class="text-xs text-gray-600">
+
+Net Revenue
+
+</div>
+
+<div
+id="netRevenueTotal"
+class="text-xl font-bold">
+
+0
+
+</div>
+
+</div>
+
+<div class="border rounded-lg p-4 bg-red-50">
+
+<div class="text-xs text-gray-600">
+
+Outstanding
+
+</div>
+
+<div
+id="registerOutstandingRevenue"
+class="text-xl font-bold">
+
+0
+
+</div>
+
+</div>
+
+<div class="border rounded-lg p-4 bg-purple-50">
+
+<div class="text-xs text-gray-600">
+
+Average Revenue
+
+</div>
+
+<div
+id="registerAverageRevenue"
+class="text-xl font-bold">
+
+0
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+
+<h3 class="text-xl font-semibold mb-6">
+
+Revenue Analytics Dashboard
+
 </h3>
 
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-<canvas id="projectRevenueChart" height="120"></canvas>
+<div class="border rounded-lg p-4">
 
+<h4 class="font-semibold mb-3">
 
-<div id="projectRevenueSummary"
-class="mt-4 text-sm space-y-2"></div>
+Monthly Revenue Trend
 
+</h4>
+
+<canvas
+id="monthlyRevenueChart"
+height="120">
+
+</canvas>
 
 </div>
 
+<div class="border rounded-lg p-4">
 
+<h4 class="font-semibold mb-3">
 
+Quarterly Revenue
 
+</h4>
 
-<div class="bg-white rounded shadow p-4 mb-6">
+<canvas
+id="quarterlyRevenueChart"
+height="120">
 
+</canvas>
 
-<h3 class="text-lg font-semibold mb-3">
+</div>
+
+<div class="border rounded-lg p-4">
+
+<h4 class="font-semibold mb-3">
+
+Annual Revenue
+
+</h4>
+
+<canvas
+id="annualRevenueChart"
+height="120">
+
+</canvas>
+
+</div>
+
+<div class="border rounded-lg p-4">
+
+<h4 class="font-semibold mb-3">
+
+Revenue Status
+
+</h4>
+
+<canvas
+id="revenueStatusChart"
+height="120">
+
+</canvas>
+
+</div>
+
+<div class="border rounded-lg p-4">
+
+<h4 class="font-semibold mb-3">
+
+Revenue by Customer
+
+</h4>
+
+<canvas
+id="customerRevenueChart"
+height="120">
+
+</canvas>
+
+</div>
+
+<div class="border rounded-lg p-4">
+
+<h4 class="font-semibold mb-3">
+
+Revenue by Project
+
+</h4>
+
+<canvas
+id="projectRevenueChart"
+height="120">
+
+</canvas>
+
+</div>
+
+<div class="border rounded-lg p-4">
+
+<h4 class="font-semibold mb-3">
+
+Revenue by Bank
+
+</h4>
+
+<canvas
+id="bankRevenueChart"
+height="120">
+
+</canvas>
+
+</div>
+
+<div class="border rounded-lg p-4">
+
+<h4 class="font-semibold mb-3">
+
+Revenue by Payment Method
+
+</h4>
+
+<canvas
+id="paymentMethodRevenueChart"
+height="120">
+
+</canvas>
+
+</div>
+
+<div class="border rounded-lg p-4 xl:col-span-2">
+
+<h4 class="font-semibold mb-3">
+
 Revenue Forecast
-</h3>
 
+</h4>
 
-<canvas id="revenueForecastChart"
-height="120"></canvas>
+<canvas
+id="revenueForecastChart"
+height="90">
 
+</canvas>
 
 </div>
 
+</div>
 
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
 
+<div class="border rounded-lg">
 
+<div class="bg-gray-100 px-4 py-3 font-semibold">
 
-<div class="bg-white rounded shadow p-4">
+Top Customers
 
+</div>
 
-<h3 class="text-lg font-semibold mb-3">
-🤖 AI Revenue Insights
+<div
+id="topRevenueCustomers"
+class="divide-y">
+
+</div>
+
+</div>
+
+<div class="border rounded-lg">
+
+<div class="bg-gray-100 px-4 py-3 font-semibold">
+
+Top Projects
+
+</div>
+
+<div
+id="topRevenueProjects"
+class="divide-y">
+
+</div>
+
+</div>
+
+<div class="border rounded-lg">
+
+<div class="bg-gray-100 px-4
+<div class="bg-gray-100 px-4 py-3 font-semibold">
+
+Monthly Revenue Summary
+
+</div>
+
+<div
+id="monthlyRevenueSummary"
+class="overflow-x-auto">
+
+<table class="min-w-full text-sm">
+
+<thead>
+
+<tr class="bg-gray-50">
+
+<th class="border p-2">Month</th>
+
+<th class="border p-2">Invoices</th>
+
+<th class="border p-2">Revenue</th>
+
+<th class="border p-2">Collected</th>
+
+<th class="border p-2">Outstanding</th>
+
+<th class="border p-2">Growth %</th>
+
+</tr>
+
+</thead>
+
+<tbody id="monthlyRevenueSummaryTable">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<div class="border rounded-lg">
+
+<div class="bg-gray-100 px-4 py-3 font-semibold">
+
+Revenue by Bank
+
+</div>
+
+<div
+id="bankRevenueSummary"
+class="overflow-x-auto">
+
+<table class="min-w-full text-sm">
+
+<thead>
+
+<tr class="bg-gray-50">
+
+<th class="border p-2">Bank</th>
+
+<th class="border p-2">Transactions</th>
+
+<th class="border p-2">Revenue</th>
+
+<th class="border p-2">%</th>
+
+</tr>
+
+</thead>
+
+<tbody id="bankRevenueTable">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<div class="border rounded-lg">
+
+<div class="bg-gray-100 px-4 py-3 font-semibold">
+
+Revenue by Payment Method
+
+</div>
+
+<div
+id="paymentMethodSummary"
+class="overflow-x-auto">
+
+<table class="min-w-full text-sm">
+
+<thead>
+
+<tr class="bg-gray-50">
+
+<th class="border p-2">Method</th>
+
+<th class="border p-2">Transactions</th>
+
+<th class="border p-2">Revenue</th>
+
+<th class="border p-2">%</th>
+
+</tr>
+
+</thead>
+
+<tbody id="paymentMethodTable">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mt-8">
+
+<div class="border rounded-lg p-4">
+
+<div class="text-sm text-gray-500">
+
+Largest Payment
+
+</div>
+
+<div
+id="largestRevenuePayment"
+class="text-2xl font-bold text-green-700">
+
+0
+
+</div>
+
+</div>
+
+<div class="border rounded-lg p-4">
+
+<div class="text-sm text-gray-500">
+
+Average Payment
+
+</div>
+
+<div
+id="averageRevenuePayment"
+class="text-2xl font-bold text-blue-700">
+
+0
+
+</div>
+
+</div>
+
+<div class="border rounded-lg p-4">
+
+<div class="text-sm text-gray-500">
+
+Collection Efficiency
+
+</div>
+
+<div
+id="collectionEfficiency"
+class="text-2xl font-bold text-purple-700">
+
+0%
+
+</div>
+
+</div>
+
+<div class="border rounded-lg p-4">
+
+<div class="text-sm text-gray-500">
+
+Revenue Growth
+
+</div>
+
+<div
+id="revenueGrowth"
+class="text-2xl font-bold text-orange-700">
+
+0%
+
+</div>
+
+</div>
+
+</div>
+
+<div class="bg-blue-50 rounded-lg border mt-8 p-5">
+
+<h3 class="text-lg font-semibold mb-4">
+
+Revenue Reports
+
 </h3>
 
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
 
-<button onclick="generateRevenueInsights()"
-class="bg-blue-900 text-white px-3 py-2 rounded hover:bg-blue-600">
+<button onclick="printProjectRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Revenue Register
+
+</button>
+
+<button onclick="printDailyRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Daily Revenue
+
+</button>
+
+<button onclick="printMonthlyRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Monthly Revenue
+
+</button>
+
+<button onclick="printAnnualRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Annual Revenue
+
+</button>
+
+<button onclick="printRevenueForecast()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Forecast
+
+</button>
+
+<button onclick="printCustomerRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Customer Revenue
+
+</button>
+
+<button onclick="printProjectRevenueAnalysis()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Project Revenue
+
+</button>
+
+<button onclick="printBankRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Bank Revenue
+
+</button>
+
+<button onclick="printPaymentMethodRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Payment Methods
+
+</button>
+
+<button onclick="exportRevenueExcel()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Export Excel
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+
+<h3 class="text-xl font-semibold mb-6">
+
+🤖 AI Revenue Insights
+
+</h3>
+
+<div class="flex flex-wrap gap-3 mb-6">
+
+<button
+onclick="generateRevenueInsights()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
 
 Generate Insights
 
 </button>
 
+<button
+onclick="predictRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
 
-<div id="revenueInsights"
-class="mt-4 text-sm text-gray-700"></div>
+Revenue Forecast
 
+</button>
+
+<button
+onclick="identifyRevenueRisks()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Revenue Risks
+
+</button>
+
+<button
+onclick="recommendCollections()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Collection Recommendations
+
+</button>
+
+<button
+onclick="refreshRevenueDashboard()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Refresh Dashboard
+
+</button>
 
 </div>
 
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
 
+<div class="border rounded-lg p-4">
+
+<div class="text-sm text-gray-500">
+
+Projected Month End Revenue
+
+</div>
+
+<div
+id="projectedRevenue"
+class="text-2xl font-bold text-green-700">
+
+0
+
+</div>
+
+</div>
+
+<div class="border rounded-lg p-4">
+
+<div class="text-sm text-gray-500">
+
+Collection Probability
+
+</div>
+
+<div
+id="collectionProbability"
+class="text-2xl font-bold text-blue-700">
+
+0%
+
+</div>
+
+</div>
+
+<div class="border rounded-lg p-4">
+
+<div class="text-sm text-gray-500">
+
+Revenue Risk Score
+
+</div>
+
+<div
+id="revenueRiskScore"
+class="text-2xl font-bold text-red-700">
+
+0%
+
+</div>
+
+</div>
+
+<div class="border rounded-lg p-4">
+
+<div class="text-sm text-gray-500">
+
+Forecast Accuracy
+
+</div>
+
+<div
+id="forecastAccuracy"
+class="text-2xl font-bold text-purple-700">
+
+0%
+
+</div>
+
+</div>
+
+</div>
+
+<div
+id="revenueInsights"
+class="border rounded-lg mt-6 p-5 min-h-[150px]">
+
+</div>
+
+</div>
+
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+
+<h3 class="text-xl font-semibold mb-5">
+
+Revenue Timeline
+
+</h3>
+
+<div
+id="revenueTimeline"
+class="space-y-3">
+
+</div>
+
+</div>
+
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+
+<h3 class="text-xl font-semibold mb-5">
+
+Recent Revenue Transactions
+
+</h3>
+
+<div class="overflow-x-auto">
+
+<table class="min-w-full text-sm border">
+
+<thead class="bg-gray-100">
+
+<tr>
+
+<th class="border p-2">Date</th>
+
+<th class="border p-2">Revenue No</th>
+
+<th class="border p-2">Project</th>
+
+<th class="border p-2">Customer</th>
+
+<th class="border p-2">Invoice</th>
+
+<th class="border p-2">Amount</th>
+
+<th class="border p-2">Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="recentRevenueTransactions">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+
+<h3 class="text-xl font-semibold mb-5">
+
+Revenue Activity Log
+
+</h3>
+
+<div
+id="revenueActivityLog"
+class="space-y-2 text-sm">
+
+</div>
+
+</div>
+
+<div
+id="viewRevenueModal"
+class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+
+<div class="bg-white rounded-lg shadow-lg w-11/12 max-w-5xl p-6">
+
+<div class="flex justify-between items-center mb-4">
+
+<h3 class="text-xl font-semibold">
+
+Revenue Details
+
+</h3>
+
+<button
+onclick="closeRevenueModal()"
+class="text-red-600 text-xl">
+
+×
+
+</button>
+
+</div>
+
+<div
+id="viewRevenueContent">
+
+</div>
+
+</div>
+
+</div>
+
+<div
+id="deleteRevenueModal"
+class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+
+<div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+
+<h3 class="text-lg font-semibold mb-4">
+
+Delete Revenue
+
+</h3>
+
+<p>
+
+Are you sure you want to delete this revenue record?
+
+</p>
+
+<div class="flex justify-end gap-3 mt-6">
+
+<button
+onclick="closeDeleteRevenueModal()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Cancel
+
+</button>
+
+<button
+onclick="confirmDeleteRevenue()"
+class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
+
+Delete
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<div
+id="loadingRevenue"
+class="hidden fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+
+<div class="bg-white rounded-lg p-6 flex items-center gap-4">
+
+<div class="animate-spin rounded-full h-8 w-8 border-4 border-blue-900 border-t-transparent">
+
+</div>
+
+<div class="font-semibold">
+
+Loading Revenue...
+
+</div>
+
+</div>
+
+</div>
+
+<div
+id="revenueToast"
+class="hidden fixed bottom-5 right-5 bg-green-700 text-white px-5 py-3 rounded shadow-lg z-50">
+
+Saved Successfully
+
+</div>
 </div>
 <script>
 
@@ -68442,7 +69980,7 @@ function renderPlansTable() {
           <div class="relative inline-block">
 
             <button onclick="togglePlanMenu(${index})"
-              class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+              class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
               More ▾
             </button>
 
@@ -68840,7 +70378,7 @@ function renderRevisionHistoryTable() {
           <div class="relative inline-block">
 
             <button onclick="toggleRevisionMenu(${index})"
-              class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+              class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
               More ▾
             </button>
 
@@ -69188,7 +70726,7 @@ function renderProgressTable() {
           <div class="relative inline-block">
 
             <button onclick="toggleProgressMenu(${index})"
-              class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+              class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
               More ▾
             </button>
 
@@ -69621,7 +71159,7 @@ function renderOwnerships() {
         <div class="relative inline-block">
 
           <button onclick="toggleOwnershipMenu(${index})"
-            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
             More ▾
           </button>
 
@@ -70177,7 +71715,7 @@ function renderProjectsTable() {
         <div class="relative inline-block">
 
           <button onclick="toggleProjectMenu(${index})"
-            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
             More ▾
           </button>
 
@@ -70579,7 +72117,7 @@ function renderProjectProgressTable() {
           <div class="relative inline-block">
 
             <button onclick="toggleProjectProgressMenu(${index})"
-              class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+              class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
               More ▾
             </button>
 
@@ -71187,7 +72725,7 @@ function renderPlanTracking() {
         <div class="relative inline-block">
 
           <button onclick="togglePlanTrackingMenu(${index})"
-            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
             More ▾
           </button>
 
@@ -71524,19 +73062,19 @@ function renderPlanTrackingRevisions() {
       <div class="flex gap-1 flex-wrap">
 
         <button onclick="previewPlanTrackingRevision(${index})"
-          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
           Preview
         </button>
 
         <button onclick="deletePlanTrackingRevision(${index})"
-          class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-700">
+          class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
           Delete
         </button>
 
         <div class="relative inline-block">
 
           <button onclick="togglePlanTrackingRevisionMenu(${index})"
-            class="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600">
+            class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-700">
             More ▾
           </button>
 
@@ -71725,6 +73263,1559 @@ document.addEventListener("DOMContentLoaded", function () {
   renderPlanTrackingRevisions();
 });
 </script>
+<script>
+const RevenueModule={
+data:{
+revenue:[],
+customers:[],
+projects:[],
+banks:[],
+invoices:[]
+},
+editingId:null,
+
+load(){
+this.data.revenue=JSON.parse(localStorage.getItem("projectRevenue")||"[]");
+this.data.customers=JSON.parse(localStorage.getItem("customers")||"[]");
+this.data.projects=JSON.parse(localStorage.getItem("projects")||"[]");
+this.data.banks=JSON.parse(localStorage.getItem("banks")||"[]");
+this.data.invoices=JSON.parse(localStorage.getItem("invoices")||"[]");
+},
+
+saveRevenue(){
+localStorage.setItem("projectRevenue",JSON.stringify(this.data.revenue));
+},
+
+saveInvoices(){
+localStorage.setItem("invoices",JSON.stringify(this.data.invoices));
+},
+
+id(){
+return Date.now()+Math.floor(Math.random()*100000);
+},
+
+number(){
+let max=0;
+
+this.data.revenue.forEach(r=>{
+const n=parseInt(String(r.revenueNo||"REV00000").replace("REV",""));
+if(n>max)max=n;
+});
+
+return "REV"+String(max+1).padStart(5,"0");
+},
+
+el(id){
+return document.getElementById(id);
+},
+
+value(id){
+const e=this.el(id);
+return e?e.value.trim():"";
+},
+
+text(id,value){
+const e=this.el(id);
+if(e)e.textContent=value;
+},
+
+html(id,value){
+const e=this.el(id);
+if(e)e.innerHTML=value;
+},
+
+set(id,value){
+const e=this.el(id);
+if(e)e.value=value;
+},
+
+money(value){
+return Number(value||0).toLocaleString();
+},
+
+date(){
+return new Date().toISOString().split("T")[0];
+},
+
+project(id){
+return this.data.projects.find(p=>String(p.id)===String(id));
+},
+
+customer(id){
+return this.data.customers.find(c=>
+String(c.id)===String(id)||
+String(c.customerId)===String(id)||
+String(c.customerCode)===String(id)
+);
+},
+
+invoice(no){
+return this.data.invoices.find(i=>i.invoiceNumber===no);
+},
+
+bank(id){
+return this.data.banks.find(b=>String(b.id)===String(id));
+},
+
+populateCustomers(){
+
+const select=this.el("revenueCustomer");
+
+if(!select)return;
+
+select.innerHTML='<option value="">Select Customer</option>';
+
+this.data.customers
+.sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")))
+.forEach(c=>{
+
+select.insertAdjacentHTML("beforeend",`
+<option value="${c.id}">
+${c.name||c.customerName}
+</option>
+`);
+
+});
+
+},
+populateProjects(){
+
+const select=this.el("revenueProject");
+
+if(!select)return;
+
+select.innerHTML='<option value="">Select Project</option>';
+
+console.log(this.data.projects);
+
+this.data.projects.forEach(p=>{
+
+const projectName=
+p.projectName||
+p.projectTitle||
+p.project||
+p.name||
+p.title||
+p.project_code||
+p.code||
+"Unnamed Project";
+
+select.insertAdjacentHTML("beforeend",`
+<option value="${p.id}">
+${projectName}
+</option>
+`);
+
+});
+
+},
+populateBanks(){
+
+const select=this.el("revenueBank");
+
+if(!select)return;
+
+select.innerHTML='<option value="">Select Bank</option>';
+
+this.data.banks
+.sort((a,b)=>
+String(a.bankName||a.name||a.bank||"")
+.localeCompare(
+String(b.bankName||b.name||b.bank||"")
+)
+)
+.forEach(bank=>{
+
+const bankName=
+bank.bankName||
+bank.name||
+bank.bank||
+"Unnamed Bank";
+
+const balance=Number(
+bank.balance||
+bank.currentBalance||
+bank.availableBalance||
+bank.amount||
+0
+).toLocaleString();
+
+select.insertAdjacentHTML("beforeend",`
+<option value="${bank.id}">
+${bankName} - ${balance}
+</option>
+`);
+
+});
+
+},
+
+populateInvoices(){
+
+const customer=this.value("revenueCustomer");
+const project=this.value("revenueProject");
+
+const select=this.el("invoiceNumber");
+
+if(!select)return;
+
+select.innerHTML='<option value="">Select Invoice</option>';
+
+this.data.invoices
+.filter(inv=>{
+
+if(customer){
+
+if(
+String(inv.customerId)!==customer &&
+String(inv.customer)!==customer &&
+String(inv.customerCode)!==customer
+)return false;
+
+}
+
+if(project){
+
+if(
+String(inv.projectId)!==project &&
+String(inv.project)!==project
+)return false;
+
+}
+
+return Number(inv.balance||inv.total||0)>0;
+
+})
+.sort((a,b)=>String(a.invoiceNumber).localeCompare(String(b.invoiceNumber)))
+.forEach(inv=>{
+
+const balance=Number(inv.balance||inv.total||0);
+
+select.insertAdjacentHTML("beforeend",`
+<option value="${inv.invoiceNumber}">
+${inv.invoiceNumber} - ${balance.toLocaleString()}
+</option>
+`);
+
+});
+
+},
+
+reset(){
+
+this.editingId=null;
+
+this.set("revenueNo",this.number());
+this.set("revenueProject","");
+this.set("revenueCustomer","");
+this.set("invoiceNumber","");
+this.set("revenueAmount","");
+this.set("revenueBank","");
+this.set("paymentDate",this.date());
+
+if(this.el("paymentStatus"))
+this.el("paymentStatus").value="Paid";
+
+if(this.el("revenueType"))
+this.el("revenueType").value="";
+
+if(this.el("revenueNotes"))
+this.el("revenueNotes").value="";
+
+this.populateInvoices();
+
+},
+
+init(){
+
+this.load();
+
+this.populateCustomers();
+
+this.populateProjects();
+
+this.populateBanks();
+
+this.reset();
+
+this.events();
+
+}
+
+};
+RevenueModule.events=function(){
+
+const project=this.el("revenueProject");
+const customer=this.el("revenueCustomer");
+const invoice=this.el("invoiceNumber");
+const save=this.el("saveProjectRevenue");
+
+if(project){
+
+project.addEventListener("change",()=>{
+
+const p=this.project(project.value);
+
+if(p){
+
+this.set(
+"revenueCustomer",
+p.customerId||p.customer||""
+);
+
+}
+
+this.populateInvoices();
+
+});
+
+}
+
+if(customer){
+
+customer.addEventListener("change",()=>{
+
+this.populateInvoices();
+
+});
+
+}
+
+if(invoice){
+
+invoice.addEventListener("change",()=>{
+
+const inv=this.invoice(invoice.value);
+
+if(inv){
+
+this.set(
+"revenueAmount",
+Number(inv.balance||inv.total||0)
+);
+
+}
+
+});
+
+}
+
+if(save){
+
+save.addEventListener("click",()=>{
+
+this.save();
+
+});
+
+}
+
+};
+
+RevenueModule.validate=function(){
+
+if(!this.value("revenueProject")){
+
+alert("Select Project");
+
+return false;
+
+}
+
+if(!this.value("revenueCustomer")){
+
+alert("Select Customer");
+
+return false;
+
+}
+
+if(!this.value("invoiceNumber")){
+
+alert("Select Invoice");
+
+return false;
+
+}
+
+if(!this.value("revenueAmount")){
+
+alert("Enter Amount");
+
+return false;
+
+}
+
+if(Number(this.value("revenueAmount"))<=0){
+
+alert("Invalid Amount");
+
+return false;
+
+}
+
+return true;
+
+};
+
+RevenueModule.exists=function(invoice){
+
+return this.data.revenue.some(r=>
+
+r.invoiceNumber===invoice &&
+
+r.id!==this.editingId
+
+);
+
+};
+
+RevenueModule.updateInvoice=function(invoiceNumber){
+
+this.data.invoices=this.data.invoices.map(inv=>{
+
+if(inv.invoiceNumber!==invoiceNumber){
+
+return inv;
+
+}
+
+const paid=this.data.revenue
+
+.filter(r=>r.invoiceNumber===invoiceNumber)
+
+.reduce((t,r)=>t+Number(r.amount||0),0);
+
+inv.paid=paid;
+
+inv.balance=Math.max(
+
+Number(inv.total||0)-paid,
+
+0
+
+);
+
+inv.status=
+
+inv.balance===0
+
+?"Paid"
+
+:paid>0
+
+?"Partially Paid"
+
+:"Unpaid";
+
+return inv;
+
+});
+
+this.saveInvoices();
+
+};
+
+RevenueModule.save=function(){
+
+if(!this.validate())return;
+
+const invoice=this.invoice(
+
+this.value("invoiceNumber")
+
+);
+
+if(!invoice){
+
+alert("Invoice not found");
+
+return;
+
+}
+
+if(
+
+this.editingId===null &&
+
+this.exists(invoice.invoiceNumber)
+
+){
+
+alert("Revenue already exists.");
+
+return;
+
+}
+
+const customer=this.customer(
+
+this.value("revenueCustomer")
+
+);
+
+const project=this.project(
+
+this.value("revenueProject")
+
+);
+
+const item={
+
+id:
+
+this.editingId===null
+
+?this.id()
+
+:this.editingId,
+
+revenueNo:
+
+this.editingId===null
+
+?this.number()
+
+:this.value("revenueNo"),
+
+projectId:
+
+this.value("revenueProject"),
+
+projectName:
+
+project?.projectName||"",
+
+customerId:
+
+this.value("revenueCustomer"),
+
+customerName:
+
+customer?.name||
+
+customer?.customerName||
+
+"",
+
+revenueType:
+
+this.value("revenueType"),
+
+invoiceNumber:
+
+invoice.invoiceNumber,
+
+invoiceDate:
+
+invoice.invoiceDate||"",
+
+amount:
+
+Number(
+
+this.value("revenueAmount")
+
+),
+
+bank:
+
+this.value("revenueBank"),
+
+paymentDate:
+
+this.value("paymentDate"),
+
+paymentStatus:
+
+this.value("paymentStatus"),
+
+notes:
+
+this.value("revenueNotes"),
+
+createdAt:
+
+this.editingId===null
+
+?new Date().toISOString()
+
+:(this.data.revenue.find(r=>r.id===this.editingId)?.createdAt||
+
+new Date().toISOString())
+
+};
+
+if(this.editingId===null){
+
+this.data.revenue.push(item);
+
+}else{
+
+const index=this.data.revenue.findIndex(
+
+r=>r.id===this.editingId
+
+);
+
+if(index>-1){
+
+this.data.revenue[index]=item;
+
+}
+
+}
+
+this.saveRevenue();
+
+this.updateInvoice(item.invoiceNumber);
+
+this.load();
+
+this.render();
+
+this.reset();
+
+};
+
+RevenueModule.edit=function(id){
+
+const item=this.data.revenue.find(
+
+r=>String(r.id)===String(id)
+
+);
+
+if(!item)return;
+
+this.editingId=item.id;
+
+this.set("revenueNo",item.revenueNo);
+
+this.set("revenueProject",item.projectId);
+
+this.set("revenueCustomer",item.customerId);
+
+this.populateInvoices();
+
+this.set("invoiceNumber",item.invoiceNumber);
+
+this.set("revenueAmount",item.amount);
+
+this.set("revenueBank",item.bank);
+
+this.set("paymentDate",item.paymentDate);
+
+this.set("paymentStatus",item.paymentStatus);
+
+this.set("revenueType",item.revenueType);
+
+this.set("revenueNotes",item.notes);
+
+};
+
+RevenueModule.remove=function(id){
+
+if(!confirm("Delete revenue record?")){
+
+return;
+
+}
+
+const item=this.data.revenue.find(
+
+r=>String(r.id)===String(id)
+
+);
+
+if(!item)return;
+
+this.data.revenue=this.data.revenue.filter(
+
+r=>String(r.id)!==String(id)
+
+);
+
+this.saveRevenue();
+
+this.updateInvoice(item.invoiceNumber);
+
+this.load();
+
+this.render();
+
+this.reset();
+
+};
+
+RevenueModule.duplicate=function(id){
+
+const item=this.data.revenue.find(
+
+r=>String(r.id)===String(id)
+
+);
+
+if(!item)return;
+
+this.editingId=null;
+
+this.set("revenueNo",this.number());
+
+this.set("revenueProject",item.projectId);
+
+this.set("revenueCustomer",item.customerId);
+
+this.populateInvoices();
+
+this.set("invoiceNumber",item.invoiceNumber);
+
+this.set("revenueAmount",item.amount);
+
+this.set("revenueBank",item.bank);
+
+this.set("paymentDate",item.paymentDate);
+
+this.set("paymentStatus",item.paymentStatus);
+
+this.set("revenueType",item.revenueType);
+
+this.set("revenueNotes",item.notes);
+
+};
+RevenueModule.render=function(){
+
+this.load();
+
+const tbody=this.el("projectRevenueListBody");
+
+if(!tbody)return;
+
+tbody.innerHTML="";
+
+let total=0;
+
+this.data.revenue.forEach((r,index)=>{
+
+total+=Number(r.amount||0);
+
+tbody.insertAdjacentHTML("beforeend",`
+
+<tr>
+
+<td class="border px-2 py-1 text-center">${index+1}</td>
+
+<td class="border px-2 py-1">${r.revenueNo}</td>
+
+<td class="border px-2 py-1">${r.projectName}</td>
+
+<td class="border px-2 py-1">${r.customerName}</td>
+
+<td class="border px-2 py-1">${r.invoiceNumber}</td>
+
+<td class="border px-2 py-1 text-right">${Number(r.amount).toLocaleString()}</td>
+
+<td class="border px-2 py-1">${r.bank}</td>
+
+<td class="border px-2 py-1">${r.paymentDate}</td>
+
+<td class="border px-2 py-1">${r.paymentStatus}</td>
+
+<td class="border px-2 py-1">${r.notes||""}</td>
+
+<td class="border px-2 py-1 text-center">
+
+<div class="flex gap-1 justify-center">
+
+<button class="bg-blue-900 text-white px-2 py-1 rounded" onclick="RevenueModule.edit('${r.id}')">
+
+Edit
+
+</button>
+
+<button class="bg-red-700 text-white px-2 py-1 rounded" onclick="RevenueModule.remove('${r.id}')">
+
+Delete
+
+</button>
+
+<button class="bg-green-700 text-white px-2 py-1 rounded" onclick="RevenueModule.duplicate('${r.id}')">
+
+Duplicate
+
+</button>
+
+</div>
+
+</td>
+
+</tr>
+
+`);
+
+});
+
+this.text(
+
+"totalProjectRevenue",
+
+total.toLocaleString()
+
+);
+
+this.dashboard();
+
+};
+
+RevenueModule.search=function(){
+
+const value=this.value("projectRevenueSearch").toLowerCase();
+
+document.querySelectorAll("#projectRevenueListBody tr").forEach(row=>{
+
+row.style.display=
+
+row.innerText.toLowerCase().includes(value)
+
+?""
+
+:"none";
+
+});
+
+};
+
+RevenueModule.filter=function(){
+
+const customer=this.value("filterRevenueCustomer");
+
+const project=this.value("filterRevenueProject");
+
+const status=this.value("filterRevenueStatus");
+
+const tbody=this.el("projectRevenueListBody");
+
+tbody.innerHTML="";
+
+let total=0;
+
+this.data.revenue
+
+.filter(r=>{
+
+if(customer&&String(r.customerId)!==customer)return false;
+
+if(project&&String(r.projectId)!==project)return false;
+
+if(status&&r.paymentStatus!==status)return false;
+
+return true;
+
+})
+
+.forEach((r,index)=>{
+
+total+=Number(r.amount||0);
+
+tbody.insertAdjacentHTML("beforeend",`
+
+<tr>
+
+<td>${index+1}</td>
+
+<td>${r.revenueNo}</td>
+
+<td>${r.projectName}</td>
+
+<td>${r.customerName}</td>
+
+<td>${r.invoiceNumber}</td>
+
+<td class="text-right">${Number(r.amount).toLocaleString()}</td>
+
+<td>${r.bank}</td>
+
+<td>${r.paymentDate}</td>
+
+<td>${r.paymentStatus}</td>
+
+<td>${r.notes||""}</td>
+
+<td>
+
+<div class="flex gap-1">
+
+<button class="bg-blue-900 text-white px-2 py-1 rounded" onclick="RevenueModule.edit('${r.id}')">
+
+Edit
+
+</button>
+
+<button class="bg-red-700 text-white px-2 py-1 rounded" onclick="RevenueModule.remove('${r.id}')">
+
+Delete
+
+</button>
+
+<button class="bg-green-700 text-white px-2 py-1 rounded" onclick="RevenueModule.duplicate('${r.id}')">
+
+Duplicate
+
+</button>
+
+</div>
+
+</td>
+
+</tr>
+
+`);
+
+});
+
+this.text(
+
+"totalProjectRevenue",
+
+total.toLocaleString()
+
+);
+
+};
+
+RevenueModule.sort=function(field){
+
+this.data.revenue.sort((a,b)=>{
+
+const x=a[field];
+
+const y=b[field];
+
+if(typeof x==="number"){
+
+return x-y;
+
+}
+
+return String(x).localeCompare(String(y));
+
+});
+
+this.saveRevenue();
+
+this.render();
+
+};
+
+RevenueModule.dashboard=function(){
+
+let totalRevenue=0;
+
+let collected=0;
+
+let outstanding=0;
+
+let paid=0;
+
+let partial=0;
+
+let unpaid=0;
+
+this.data.invoices.forEach(inv=>{
+
+totalRevenue+=Number(inv.total||0);
+
+outstanding+=Number(inv.balance||0);
+
+const s=String(inv.status||"").toLowerCase();
+
+if(s==="paid")paid++;
+
+else if(s.includes("partial"))partial++;
+
+else unpaid++;
+
+});
+
+this.data.revenue.forEach(r=>{
+
+collected+=Number(r.amount||0);
+
+});
+
+const rate=
+
+totalRevenue
+
+?((collected/totalRevenue)*100).toFixed(2)
+
+:"0.00";
+
+this.text(
+
+"projectRevenueTotal",
+
+totalRevenue.toLocaleString()
+
+);
+
+this.text(
+
+"projectRevenueCollected",
+
+collected.toLocaleString()
+
+);
+
+this.text(
+
+"projectRevenueOutstanding",
+
+outstanding.toLocaleString()
+
+);
+
+this.text(
+
+"projectRevenueRate",
+
+rate+"%"
+
+);
+
+this.text(
+
+"revTotalRevenue",
+
+totalRevenue.toLocaleString()
+
+);
+
+this.text(
+
+"revCollectedRevenue",
+
+collected.toLocaleString()
+
+);
+
+this.text(
+
+"revOutstandingRevenue",
+
+outstanding.toLocaleString()
+
+);
+
+this.text(
+
+"revCollectionRate",
+
+rate+"%"
+
+);
+
+this.text(
+
+"revPaidInvoices",
+
+paid
+
+);
+
+this.text(
+
+"revPartialInvoices",
+
+partial
+
+);
+
+this.text(
+
+"revUnpaidInvoices",
+
+unpaid
+
+);
+
+};
+
+RevenueModule.bindFilters=function(){
+
+this.el("projectRevenueSearch")?.addEventListener(
+
+"keyup",
+
+()=>this.search()
+
+);
+
+this.el("filterRevenueCustomer")?.addEventListener(
+
+"change",
+
+()=>this.filter()
+
+);
+
+this.el("filterRevenueProject")?.addEventListener(
+
+"change",
+
+()=>this.filter()
+
+);
+
+this.el("filterRevenueStatus")?.addEventListener(
+
+"change",
+
+()=>this.filter()
+
+);
+
+};
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+RevenueModule.init();
+
+RevenueModule.bindFilters();
+
+RevenueModule.render();
+
+});
+RevenueModule.report=function(){
+
+const body=this.el("projectRevenueBody");
+
+if(!body)return;
+
+const project=this.value("projectRevenueProject");
+
+const start=this.value("projectRevenueStart");
+
+const end=this.value("projectRevenueEnd");
+
+body.innerHTML="";
+
+let total=0;
+
+this.data.revenue
+
+.filter(r=>{
+
+const d=new Date(r.paymentDate);
+
+if(project){
+
+if(
+
+String(r.projectId)!==project &&
+
+r.projectName!==project
+
+)return false;
+
+}
+
+if(start&&d<new Date(start))return false;
+
+if(end&&d>new Date(end))return false;
+
+return true;
+
+})
+
+.forEach(r=>{
+
+total+=Number(r.amount||0);
+
+const month=new Date(r.paymentDate).toLocaleDateString(undefined,{
+year:"numeric",
+month:"short"
+});
+
+body.insertAdjacentHTML("beforeend",`
+
+<tr>
+
+<td>${month}</td>
+
+<td>${r.projectName}</td>
+
+<td>${r.customerName}</td>
+
+<td>${r.revenueType}</td>
+
+<td>${r.paymentStatus}</td>
+
+<td class="text-right">${Number(r.amount).toLocaleString()}</td>
+
+</tr>
+
+`);
+
+});
+
+this.text(
+
+"projectRevenueTotal",
+
+total.toLocaleString()
+
+);
+
+};
+
+RevenueModule.customerTotals=function(){
+
+const data={};
+
+this.data.revenue.forEach(r=>{
+
+const key=r.customerName||"Unknown";
+
+data[key]=(data[key]||0)+Number(r.amount||0);
+
+});
+
+return Object.entries(data)
+
+.sort((a,b)=>b[1]-a[1]);
+
+};
+
+RevenueModule.projectTotals=function(){
+
+const data={};
+
+this.data.revenue.forEach(r=>{
+
+const key=r.projectName||"Unknown";
+
+data[key]=(data[key]||0)+Number(r.amount||0);
+
+});
+
+return Object.entries(data)
+
+.sort((a,b)=>b[1]-a[1]);
+
+};
+
+RevenueModule.monthlyTotals=function(){
+
+const data={};
+
+this.data.revenue.forEach(r=>{
+
+if(!r.paymentDate)return;
+
+const month=r.paymentDate.substring(0,7);
+
+data[month]=(data[month]||0)+Number(r.amount||0);
+
+});
+
+return Object.entries(data)
+
+.sort((a,b)=>a[0].localeCompare(b[0]));
+
+};
+
+RevenueModule.quarterlyTotals=function(){
+
+const data={};
+
+this.data.revenue.forEach(r=>{
+
+if(!r.paymentDate)return;
+
+const d=new Date(r.paymentDate);
+
+const key=d.getFullYear()+" Q"+(Math.floor(d.getMonth()/3)+1);
+
+data[key]=(data[key]||0)+Number(r.amount||0);
+
+});
+
+return Object.entries(data);
+
+};
+
+RevenueModule.annualTotals=function(){
+
+const data={};
+
+this.data.revenue.forEach(r=>{
+
+if(!r.paymentDate)return;
+
+const year=new Date(r.paymentDate).getFullYear();
+
+data[year]=(data[year]||0)+Number(r.amount||0);
+
+});
+
+return Object.entries(data)
+
+.sort((a,b)=>a[0]-b[0]);
+
+};
+
+RevenueModule.topCustomer=function(){
+
+const top=this.customerTotals()[0];
+
+if(!top)return;
+
+this.text(
+
+"highestRevenueCustomer",
+
+top[0]+" ("+Number(top[1]).toLocaleString()+")"
+
+);
+
+};
+
+RevenueModule.topProject=function(){
+
+const top=this.projectTotals()[0];
+
+if(!top)return;
+
+this.text(
+
+"highestRevenueProject",
+
+top[0]+" ("+Number(top[1]).toLocaleString()+")"
+
+);
+
+};
+
+RevenueModule.exportCSV=function(){
+
+let csv="Revenue No,Project,Customer,Invoice,Revenue Type,Amount,Bank,Payment Date,Status,Notes\n";
+
+this.data.revenue.forEach(r=>{
+
+const row=[
+
+r.revenueNo,
+
+r.projectName,
+
+r.customerName,
+
+r.invoiceNumber,
+
+r.revenueType,
+
+r.amount,
+
+r.bank,
+
+r.paymentDate,
+
+r.paymentStatus,
+
+String(r.notes||"").replace(/"/g,'""')
+
+];
+
+csv+=row.map(v=>`"${v}"`).join(",")+"\n";
+
+});
+
+const blob=new Blob([csv],{
+
+type:"text/csv"
+
+});
+
+const link=document.createElement("a");
+
+link.href=URL.createObjectURL(blob);
+
+link.download="ProjectRevenue.csv";
+
+link.click();
+
+URL.revokeObjectURL(link.href);
+
+};
+
+RevenueModule.print=function(){
+
+const table=this.el("projectRevenueTable");
+
+if(!table)return;
+
+const win=window.open("","_blank","width=1200,height=700");
+
+win.document.write(`
+
+<html>
+
+<head>
+
+<title>Project Revenue Report</title>
+
+<style>
+
+body{
+
+font-family:Arial;
+
+padding:20px;
+
+}
+
+table{
+
+width:100%;
+
+border-collapse:collapse;
+
+}
+
+th,td{
+
+border:1px solid #ccc;
+
+padding:6px;
+
+font-size:13px;
+
+}
+
+th{
+
+background:#0f172a;
+
+color:#fff;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>Project Revenue Report</h2>
+
+${table.outerHTML}
+
+</body>
+
+</html>
+
+`);
+
+win.document.close();
+
+win.focus();
+
+win.print();
+
+};
+
+RevenueModule.bulkDelete=function(){
+
+const ids=[
+
+...document.querySelectorAll(".revenueCheck:checked")
+
+].map(x=>String(x.value));
+
+if(!ids.length){
+
+alert("Select records.");
+
+return;
+
+}
+
+if(!confirm("Delete selected records?")){
+
+return;
+
+}
+
+this.data.revenue=this.data.revenue.filter(r=>
+
+!ids.includes(String(r.id))
+
+);
+
+this.saveRevenue();
+
+this.load();
+
+this.render();
+
+};
+
+RevenueModule.toggleAll=function(source){
+
+document.querySelectorAll(".revenueCheck")
+
+.forEach(c=>{
+
+c.checked=source.checked;
+
+});
+
+};
+
+RevenueModule.refresh=function(){
+
+this.load();
+
+this.render();
+
+this.report();
+
+this.dashboard();
+
+this.topCustomer();
+
+this.topProject();
+
+};
+
+window.addEventListener("storage",e=>{
+
+if(
+
+e.key==="projectRevenue"||
+
+e.key==="invoices"
+
+){
+
+RevenueModule.refresh();
+
+}
+
+});
+
+document.addEventListener("visibilitychange",()=>{
+
+if(!document.hidden){
+
+RevenueModule.refresh();
+
+}
+
+});
+</script>
+
 <!-- ORGPROFILE --><div id="orgProfileTab" class="hidden ml-84 mr-7 p-2"><div id="orgNameHeader" class="text-2xl font-bold mb-6 text-center">Organization Profile</div><form id="orgProfileForm" class="bg-white p-6 rounded shadow space-y-10"><div class="space-y-2"><h3 class="text-lg font-semibold">Basic Information</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="col-span-3"><label for="orgLogo" class="block text-sm font-medium">Organization Logo</label><input type="file" id="orgLogo" accept=".jpg,.jpeg,.png,.gif,.bmp" class="border p-2 rounded w-full" /><p class="text-xs text-gray-500 mt-1">
             Preferred: 240x240px @ 72 DPI • Max 1MB • JPG, PNG, GIF, BMP
           </p></div><input id="orgName" type="text" placeholder="e.g., Acacia Books" class="border p-2 rounded" /><input id="orgPIN" type="text" placeholder="e.g., P000000000K" class="border p-2 rounded" /><input id="orgCurrency" type="text" placeholder="e.g., KES" class="border p-2 rounded" /><input id="orgPhone" type="text" placeholder="Phone" class="border p-2 rounded" /><input id="orgEmail" type="email" placeholder="Email" class="border p-2 rounded" /><input id="orgAddress" type="text" placeholder="Address" class="border p-2 rounded col-span-3" /></div></div><div class="space-y-2"><h3 class="text-lg font-semibold">Contacts & Industry</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><input id="orgIndustry" type="text" placeholder="e.g., Agriculture" class="border p-2 rounded" /><input id="orgLocation" type="text" placeholder="Organization Location" class="border p-2 rounded" /><div class="flex items-center gap-2 col-span-3"><input type="checkbox" id="diffPaymentAddress" class="h-4 w-4" /><label for="diffPaymentAddress" class="text-sm">Add a different address for payment stubs?</label></div><input id="primaryContact" type="text" placeholder="Primary Contact Name" class="border p-2 rounded" /><input id="primaryContactEmail" type="email" placeholder="e.g., account.com" class="border p-2 rounded" /></div></div><div class="space-y-2"><h3 class="text-lg font-semibold">Settings</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="sm:col-span-1"><label for="baseCurrency" class="block text-sm font-medium text-blue-900 mb-1">Base Currency</label><select id="baseCurrency" class="border p-2 rounded w-full"><option value="USD">🇺🇸 USD – US Dollar</option><option value="EUR">🇪🇺 EUR – Euro</option><option value="GBP">🇬🇧 GBP – British Pound</option><option value="JPY">🇯🇵 JPY – Japanese Yen</option><option value="AUD">🇦🇺 AUD – Australian Dollar</option><option value="CAD">🇨🇦 CAD – Canadian Dollar</option><option value="CHF">🇨🇭 CHF – Swiss Franc</option><option value="CNY">🇨🇳 CNY – Chinese Yuan</option><option value="INR">🇮🇳 INR – Indian Rupee</option><option value="KES">🇰🇪 KES – Kenyan Shilling</option><option value="NZD">🇳🇿 NZD – New Zealand Dollar</option><option value="SGD">🇸🇬 SGD – Singapore Dollar</option><option value="ZAR">🇿🇦 ZAR – South African Rand</option><option value="KRW">🇰🇷 KRW – South Korean Won</option><option value="MXN">🇲🇽 MXN – Mexican Peso</option><option value="BRL">🇧🇷 BRL – Brazilian Real</option><option value="RUB">🇷🇺 RUB – Russian Ruble</option><option value="TRY">🇹🇷 TRY – Turkish Lira</option><option value="NOK">🇳🇴 NOK – Norwegian Krone</option><option value="SEK">🇸🇪 SEK – Swedish Krona</option><option value="DKK">🇩🇰 DKK – Danish Krone</option><option value="SAR">🇸🇦 SAR – Saudi Riyal</option><option value="AED">🇦🇪 AED – UAE Dirham</option><option value="HKD">🇭🇰 HKD – Hong Kong Dollar</option></select></div><div class="sm:col-span-1"><label for="fiscalYear" class="block text-sm font-medium text-blue-900 mb-1">Fiscal Year</label><select id="fiscalYear" class="border p-2 rounded w-full"><option value="">Select Fiscal Year</option><option value="January - December">January – December</option><option value="April - March">April – March</option><option value="July - June">July – June</option><option value="October - September">October – September</option></select></div><div class="sm:col-span-1"><label for="reportBasis" class="block text-sm font-medium text-blue-900 mb-1">Report Basis</label><select id="reportBasis" class="border p-2 rounded w-full"><option value="">Select Report Basis</option><option value="Accrual">Accrual</option><option value="Cash">Cash</option></select></div><div class="sm:col-span-1"><label for="language" class="block text-sm font-medium text-blue-900 mb-1">Language</label><select id="language" class="border p-2 rounded w-full"><option value="">Select Language</option><option value="en">English 🇬🇧</option><option value="fr">French 🇫🇷</option><option value="sw">Swahili 🇰🇪</option><option value="es">Spanish 🇪🇸</option><option value="de">German 🇩🇪</option><option value="pt">Portuguese 🇵🇹</option><option value="ar">Arabic 🇸🇦</option><option value="hi">Hindi 🇮🇳</option><option value="zh">Chinese 🇨🇳</option><option value="ru">Russian 🇷🇺</option><option value="ja">Japanese 🇯🇵</option><option value="ko">Korean 🇰🇷</option><option value="it">Italian 🇮🇹</option><option value="nl">Dutch 🇳🇱</option><option value="tr">Turkish 🇹🇷</option><option value="vi">Vietnamese 🇻🇳</option><option value="th">Thai 🇹🇭</option><option value="fa">Persian 🇮🇷</option><option value="id">Indonesian 🇮🇩</option><option value="he">Hebrew 🇮🇱</option></select></div><div class="sm:col-span-1"><label for="timeZone" class="block text-sm font-medium text-blue-900 mb-1">Time Zone</label><select id="timeZone" class="border p-2 rounded w-full"><option value="">Select Time Zone</option><option value="Africa/Nairobi">(GMT+03:00) Africa/Nairobi</option><option value="Europe/London">(GMT+00:00) Europe/London</option><option value="America/New_York">(GMT-05:00) America/New_York</option><option value="America/Chicago">(GMT-06:00) America/Chicago</option><option value="America/Denver">(GMT-07:00) America/Denver</option><option value="America/Los_Angeles">(GMT-08:00) America/Los_Angeles</option><option value="Asia/Dubai">(GMT+04:00) Asia/Dubai</option><option value="Asia/Kolkata">(GMT+05:30) Asia/Kolkata</option><option value="Asia/Tokyo">(GMT+09:00) Asia/Tokyo</option><option value="Asia/Shanghai">(GMT+08:00) Asia/Shanghai</option><option value="Europe/Paris">(GMT+01:00) Europe/Paris</option><option value="Europe/Berlin">(GMT+01:00) Europe/Berlin</option><option value="Europe/Moscow">(GMT+03:00) Europe/Moscow</option><option value="Australia/Sydney">(GMT+10:00) Australia/Sydney</option><option value="Australia/Perth">(GMT+08:00) Australia/Perth</option><option value="America/Sao_Paulo">(GMT-03:00) America/Sao_Paulo</option><option value="America/Toronto">(GMT-05:00) America/Toronto</option><option value="America/Mexico_City">(GMT-06:00) America/Mexico_City</option><option value="Asia/Jakarta">(GMT+07:00) Asia/Jakarta</option><option value="Africa/Johannesburg">(GMT+02:00) Africa/Johannesburg</option></select></div><div class="sm:col-span-1"><label for="dateFormat" class="block text-sm font-medium text-blue-900 mb-1">Date Format</label><select id="dateFormat" class="border p-2 rounded w-full"><option value="">Select Date Format</option><option value="DD/MM/YYYY">DD/MM/YYYY</option><option value="MM/DD/YYYY">MM/DD/YYYY</option><option value="YYYY-MM-DD">YYYY-MM-DD</option><option value="DD.MM.YYYY">DD.MM.YYYY</option><option value="YYYY/MM/DD">YYYY/MM/DD</option><option value="DD-MM-YYYY">DD-MM-YYYY</option><option value="MM-DD-YYYY">MM-DD-YYYY</option><option value="YYYY.MM.DD">YYYY.MM.DD</option><option value="D MMM, YYYY">D MMM, YYYY</option><option value="MMM D, YYYY">MMM D, YYYY</option></select></div><div class="sm:col-span-1"><label for="companyId" class="block text-sm font-medium text-blue-900 mb-1">Company ID</label><input id="companyId" type="text" readonly class="border p-2 rounded bg-gray-100 text-gray-700 w-full" /><button type="button"
@@ -77932,7 +81023,6 @@ function toggleSubmenu(id) {
   }
 }
 
-/* === Sidebar pin fix: re-parent to <body> so no ancestor transform breaks position:fixed === */
 (function pinSidebar(){
   function pin(){
     var sb = document.getElementById('sidebar');
@@ -77951,17 +81041,12 @@ function toggleSubmenu(id) {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', pin);
   } else { pin(); }
-  // Re-pin after any tab switch in case scripts re-render
+ 
   window.addEventListener('load', pin);
 })();
 </script>
 <script>
-/* ============================================================
-   Acacia Books — Report Fix Pack (v5)
-   Overrides broken/missing report renderers with real-data versions.
-   Drop-in: this is the LAST script in the document, so its function
-   declarations win over any earlier definitions.
-   ============================================================ */
+
 (function(){
   "use strict";
 
@@ -77978,7 +81063,6 @@ function toggleSubmenu(id) {
   };
   const labelPretty = k => { const [y,m]=k.split("-"); return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(m,10)-1]+" "+y.slice(2); };
 
-  // ---- Source aggregators -------------------------------------------------
   function invoiceTotal(inv){
     if (inv.total != null) return num(inv.total);
     if (inv.grandTotal != null) return num(inv.grandTotal);
@@ -78014,7 +81098,7 @@ function toggleSubmenu(id) {
     return map;
   }
 
-  // ---- 1. FIXED ASSET REGISTER (was MISSING) ------------------------------
+  
   window.renderFixedAssetsReport = function(){
     const tbody = document.getElementById("fixedAssetsRegisterBody");
     if (!tbody) return;
@@ -78076,7 +81160,6 @@ function toggleSubmenu(id) {
       <td class="p-2 text-right">${KES(totals.nbv)}</td></tr>`;
   };
 
-  // ---- 2. WRITE-OFF REPORT (was invoices-only) ----------------------------
   window.renderWriteOffReport = function(){
     const custBody = document.getElementById("customerWriteOffTable");
     const suppBody = document.getElementById("supplierWriteOffTable");
@@ -78097,7 +81180,7 @@ function toggleSubmenu(id) {
       return true;
     };
 
-    // Customer side: invoices with writeOffAmount OR unpaid balances flagged written-off
+
     const invoices = arr("invoices");
     let custRows = [];
     invoices.forEach(inv => {
@@ -78114,7 +81197,7 @@ function toggleSubmenu(id) {
       custRows.push({ date, ref: inv.invoiceNumber||inv.number||inv.id||"-", party: customer, amount, reason: reason||"-" });
     });
 
-    // Also pick up explicit writeOffs log entries (customer-side)
+   
     arr("writeOffs").forEach(w => {
       if (!inRange(w.date)) return;
       if (w.supplier) return;
@@ -78125,7 +81208,7 @@ function toggleSubmenu(id) {
       custRows.push({ date: w.date||"", ref: w.invoiceNumber||w.id||"-", party: customer, amount, reason: w.reason||"Logged write-off" });
     });
 
-    // Supplier side: bills with writeOffAmount OR written-off status
+   
     const billSources = arr("bills").concat(arr("supplierBills"));
     let suppRows = [];
     billSources.forEach(b => {
@@ -78163,10 +81246,10 @@ function toggleSubmenu(id) {
     };
     render(custBody, custRows, "customer");
     render(suppBody, suppRows, "supplier");
-    void basis; // basis hook retained for future cash/accrual filtering
+    void basis; 
   };
 
-  // ---- 3. PROFIT TREND (was hardcoded fake data) --------------------------
+
   window.renderProfitTrend = function(){
     const canvas = document.getElementById("profitTrendChart");
     if (!canvas || typeof Chart === "undefined") return;
@@ -78190,7 +81273,6 @@ function toggleSubmenu(id) {
     });
   };
 
-  // ---- 4. REVENUE VS EXPENSES (was hardcoded fake data) -------------------
   window.renderRevenueVsExpenses = function(){
     const canvas = document.getElementById("revenueVsExpensesChart");
     if (!canvas || typeof Chart === "undefined") return;
@@ -78212,13 +81294,11 @@ function toggleSubmenu(id) {
     });
   };
 
-  // ---- 5. CASHFLOW FORECAST (was scraping unrendered DOM) -----------------
   window.renderCashflow = function(){
     const pnl = obj("profitAndLoss");
     const pnl2 = obj("profitLossData");
     const P = Object.keys(pnl).length ? pnl : pnl2;
 
-    // Pull profit components, falling back to derivation from invoices/bills
     let netProfit = num(P.netProfit ?? P.profit ?? P.netIncome);
     let depreciation = num(P.depreciation);
     let interestPaid = num(P.interest ?? P.interestPaid);
@@ -78271,7 +81351,7 @@ function toggleSubmenu(id) {
     }
   };
 
-  // ---- Re-render whichever panel is currently visible after fix loads -----
+  
   function refreshActive(){
     const tryRun = (id, fn) => { const el=document.getElementById(id); if(el && !el.classList.contains("hidden")) try{fn();}catch(e){console.warn(id,e);} };
     tryRun("fixedAssetsRegisterPanel", renderFixedAssetsReport);
@@ -78354,7 +81434,7 @@ function toggleSubmenu(id) {
       var v = JSON.parse(raw);
       if(Array.isArray(v)) return v;
       if(v && typeof v==='object'){
-        // unwrap common containers
+       
         for(var k in v){ if(Array.isArray(v[k])) return v[k]; }
         return [v];
       }
@@ -78364,7 +81444,6 @@ function toggleSubmenu(id) {
 
   function panelOf(btn){return btn.closest('.report-view');}
 
-  // Per-report transforms: shape raw rows into report-specific aggregations.
   function _num(v){var n=parseFloat(v);return isNaN(n)?0:n;}
   function _amt(r){return _num(r.amount||r.total||r.grandTotal||r.netTotal||r.value||r.price||r.subtotal||0);}
   function _date(r){var v=r.date||r.createdAt||r.created_at||r.invoiceDate||r.billDate||r.timestamp||r.issuedOn||r.postedOn||r.dueDate;return v?new Date(v):null;}
@@ -78456,7 +81535,6 @@ function toggleSubmenu(id) {
       return;
     }
 
-    // Discover columns from first non-trivial row
     var sample = data.find(function(r){return r && typeof r==='object';}) || {};
     var keys = Object.keys(sample).filter(function(k){
       var v = sample[k];
@@ -78464,7 +81542,7 @@ function toggleSubmenu(id) {
       if(typeof v==='object') return false; // skip nested
       return true;
     });
-    // Prefer ordering: date-ish, label-ish, others, amount-ish last
+ 
     var dateField = findField(sample, DATE_FIELDS);
     var amountField = findField(sample, AMOUNT_FIELDS);
     var labelField = findField(sample, LABEL_FIELDS);
@@ -78475,10 +81553,9 @@ function toggleSubmenu(id) {
       if(ordered.indexOf(k)<0 && k!==amountField && k!=='id' && k!=='_id') ordered.push(k);
     });
     if(amountField && ordered.indexOf(amountField)<0) ordered.push(amountField);
-    // Cap to 7 columns for readability
+   
     if(ordered.length>7) ordered = ordered.slice(0,7);
 
-    // Filter by date if available
     var rows = data.filter(function(r){
       if(!r||typeof r!=='object') return false;
       if(!dateField || (!fromD && !toD)) return true;
@@ -78488,14 +81565,13 @@ function toggleSubmenu(id) {
       return true;
     });
 
-    // Header
+    
     thead.innerHTML = '<tr>'+ordered.map(function(k){
       var align = (k===amountField) ? 'right':'left';
       var label = k.replace(/([A-Z])/g,' $1').replace(/^./,function(c){return c.toUpperCase();});
       return '<th class="border px-2 py-1 text-'+align+'">'+label+'</th>';
     }).join('')+'</tr>';
 
-    // Body
     var total = 0;
     tbody.innerHTML = rows.map(function(r){
       return '<tr>'+ordered.map(function(k){
@@ -78507,7 +81583,7 @@ function toggleSubmenu(id) {
       }).join('')+'</tr>';
     }).join('') || '<tr><td colspan="'+ordered.length+'" style="padding:16px;text-align:center;color:#6b7280">No rows match the selected date range.</td></tr>';
 
-    // Footer
+    
     if(tfoot){
       if(amountField){
         tfoot.innerHTML = '<tr><th class="border px-2 py-1 text-right" colspan="'+(ordered.length-1)+'">Total ('+rows.length+' rows)</th><th class="border px-2 py-1 text-right">'+total.toLocaleString(undefined,{maximumFractionDigits:2})+'</th></tr>';
@@ -78549,7 +81625,7 @@ function toggleSubmenu(id) {
   };
   window.repPdf = function(btn){ window.repPrint(btn); };
 
-  // Auto-render new panels on open by wrapping showReport
+  
   function wrap(){
     if(typeof window.showReport!=='function'){ setTimeout(wrap,200); return; }
     var orig = window.showReport;
@@ -78566,10 +81642,7 @@ function toggleSubmenu(id) {
 })();
 </script>
 <script>
-/* ============================================================
-   VAT auto-populate + Batch picker across transaction forms
-   (Fix #1 + #2 + partial #15 — applies to every doc type)
-   ============================================================ */
+
 (function () {
   const FORMS = [
     { sel:'invoiceProductSelect',          tax:'invoiceItemTax',          price:'invoiceItemPrice',          qty:'invoiceItemQty',          desc:null,                        vat:'sell', addSel:"button[onclick='addInvoiceItem()']" },
@@ -78593,7 +81666,7 @@ function toggleSubmenu(id) {
     return null;
   }
 
-  // --- Read all inventory items (host app helper, else fallback to localStorage)
+ 
   function getAllInv() {
     try { if (typeof getAllInventories === 'function') return getAllInventories() || []; } catch(e){}
     const out = [];
@@ -78606,13 +81679,13 @@ function toggleSubmenu(id) {
     return out;
   }
 
-  // --- Some dropdowns store option.value as JSON ({name, warehouse}) — extract name
+ 
   function extractName(val) {
     if (!val) return '';
     if (typeof val === 'string' && val.charAt(0) === '{') {
       try { return (JSON.parse(val).name || '').trim(); } catch(e){}
     }
-    // Some use SKU as value; resolve to name via inventory
+    
     const v = String(val).trim();
     const byName = getAllInv().find(i => (i.name || '').trim() === v);
     if (byName) return byName.name;
@@ -78625,7 +81698,7 @@ function toggleSubmenu(id) {
     return getAllInv().find(i => (i.name || '').trim() === n);
   }
 
-  // --- Tag every <option> in a product select with data-tax / data-price / data-qty
+  
   function tagOptions(sel, cfg) {
     Array.from(sel.options).forEach(opt => {
       if (!opt.value) return;
@@ -78640,8 +81713,6 @@ function toggleSubmenu(id) {
       if (item.qty != null && !opt.dataset.qty) opt.dataset.qty = item.qty;
     });
   }
-
-  // --- Batch picker UI (Fix #2) ---
   function ensureBatchSelect(productSel, key) {
     let bs = document.getElementById(key + '_batchSel');
     if (bs) return bs;
@@ -78672,7 +81743,6 @@ function toggleSubmenu(id) {
     bs.disabled = false;
   }
 
-  // --- Wire a single form: tagging + change-driven tax/price/qty/batch ---
   const wired = new WeakSet();
   function wireForm(cfg) {
     const sel = document.getElementById(cfg.sel);
@@ -78682,7 +81752,7 @@ function toggleSubmenu(id) {
     const qtyEl   = cfg.qty   ? document.getElementById(cfg.qty)   : null;
     const bs = ensureBatchSelect(sel, cfg.sel);
 
-    // Always retag options (cheap, options change when inventory changes)
+    
     tagOptions(sel, cfg);
 
     if (!wired.has(sel)) {
@@ -78713,11 +81783,9 @@ function toggleSubmenu(id) {
         }
       };
 
-      // Run AFTER any host handler so we win the value race
       sel.addEventListener('change', function () { setTimeout(apply, 0); });
     }
 
-    // Bake batch into description when Add is clicked
     const addBtns = cfg.addSel ? document.querySelectorAll(cfg.addSel) : [];
     addBtns.forEach(btn => {
       if (btn.__vatBatchHooked) return;
@@ -78744,30 +81812,19 @@ function toggleSubmenu(id) {
   } else {
     wireAll();
   }
-  // Tab switches / lazy renders / re-renders may rebuild the dropdowns.
-  // Re-tag + re-wire periodically. WeakSet guards prevent duplicate listeners.
+  
   setInterval(wireAll, 1200);
 })();
 </script>
 
-<!-- ================================================================
-     ERP PATCH BUNDLE — added by Lovable
-     Addresses:
-       1) Real-time Trial Balance & General Ledger refresh
-       2) Sales (Quote / Credit Note / Recurring) currency conversion-rate input
-       3) Recurring Invoice: bank dropdown on Record Payment + report refresh
-       4) Transaction Locking enforcement across modules
-     ================================================================ -->
 <script>
 (function(){
   "use strict";
 
-  // ---------------- util ----------------
   function ls(key, def){ try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch(e){ return def; } }
   function save(key, val){ try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){} }
   function $(id){ return document.getElementById(id); }
 
-  // ---------------- 1) Real-time Financials Refresh ----------------
   const FIN_RENDERERS = [
     'renderTrialBalance','renderGeneralLedger','renderGeneralLedgerDetailed',
     'renderRecurringInvoiceReport','renderDashboard','updateDashboardTotals',
@@ -78782,7 +81839,6 @@ function toggleSubmenu(id) {
   }
   window.refreshFinancials = refreshFinancials;
 
-  // Monkey-patch save handlers so every write triggers a refresh
   const SAVE_FNS = [
     'saveInvoice','saveQuote','saveOrder','saveCreditNote','saveSalesReturn',
     'saveRecurringInvoice','saveReceipt','saveDelivery',
@@ -78792,8 +81848,6 @@ function toggleSubmenu(id) {
     'addBank','recordRecurringPayment','reverseRecurringPayment'
   ];
 
-  // ---------------- 4) Transaction Locking guard ----------------
-  // Map save-function name -> friendly module name(s) to check against transactionLocks
   const LOCK_MODULES = {
     saveInvoice:        ['Invoices','Sales','Invoice'],
     saveQuote:          ['Quotes','Sales','Quote'],
@@ -78817,7 +81871,7 @@ function toggleSubmenu(id) {
     recordRecurringPayment:['Payments','Receipts','Sales'],
     reverseRecurringPayment:['Payments','Receipts','Sales']
   };
-  // Form id holding the transaction date for each save fn (used by lock guard)
+
   const DATE_FIELD = {
     saveInvoice:'invoiceDate', saveQuote:'quoteDate', saveOrder:'orderDate',
     saveCreditNote:'creditDate', saveSalesReturn:'salesReturnDate',
@@ -78855,7 +81909,6 @@ function toggleSubmenu(id) {
     return true;
   };
 
-  // ---------------- Wrapper: combine lock-guard + post-save refresh ----------------
   function wrapSaveFn(name){
     const orig = window[name];
     if (typeof orig !== 'function' || orig.__erpPatched) return;
@@ -78876,13 +81929,13 @@ function toggleSubmenu(id) {
     window[name] = wrapped;
   }
   function wrapAllSaves(){ SAVE_FNS.forEach(wrapSaveFn); }
-  // Run now, and again after DOM ready / late script execution
+ 
   wrapAllSaves();
   document.addEventListener('DOMContentLoaded', wrapAllSaves);
   setTimeout(wrapAllSaves, 500);
   setTimeout(wrapAllSaves, 1500);
 
-  // Also guard generic delete handlers (best-effort)
+  
   ['deleteInvoice','deleteQuote','deleteOrder','deleteCreditNote','deleteSalesReturn',
    'deleteRecurring','deleteRecurringInvoice','deleteReceipt','deleteSupplierBill',
    'deleteSupplierPayment','deleteDebitNote','deletePurchaseReturn',
@@ -78898,10 +81951,6 @@ function toggleSubmenu(id) {
     window[name] = w;
   });
 
-  // ---------------- 2) Currency Conversion-Rate auto-injector ----------------
-  // For every sales-side currency <select>, inject a sibling rate input that
-  // shows only when currency != base (KES). Stored value is read on save by
-  // the host save functions OR (fallback) attached to the saved record.
   const CURRENCY_TARGETS = [
     { sel:'quoteCurrency',          rateId:'quoteExchangeRate',          storeAs:'__quoteRate' },
     { sel:'creditNoteCurrency',     rateId:'creditNoteExchangeRate',     storeAs:'__creditNoteRate' },
@@ -78947,10 +81996,8 @@ function toggleSubmenu(id) {
   }
   function injectAllRateFields(){ CURRENCY_TARGETS.forEach(injectRateField); }
   document.addEventListener('DOMContentLoaded', injectAllRateFields);
-  setInterval(injectAllRateFields, 1500); // tabs may render lazily
+  setInterval(injectAllRateFields, 1500);
 
-  // After saveRecurringInvoice runs, attach the rate to the stored record
-  // (so reports / TB can use it later).
   (function patchRecurringSave(){
     const tryWrap = () => {
       const fn = window.saveRecurringInvoice;
@@ -78978,7 +82025,7 @@ function toggleSubmenu(id) {
     setTimeout(tryWrap, 2000);
   })();
 
-  // ---------------- 3) Recurring Invoice Record-Payment Modal ----------------
+ 
   function buildRecurringPaymentModal(){
     if ($('erpRecurringPayModal')) return;
     const modal = document.createElement('div');
@@ -79019,7 +82066,6 @@ function toggleSubmenu(id) {
       return `<option value="${String(id).replace(/"/g,'&quot;')}">${name}${acct}${cur}</option>`;
     }).join('');
   }
-  // Override recordRecurringPayment with the proper modal version
   function installRecurringPaymentModal(){
     const origFn = window.recordRecurringPayment;
     if (origFn && origFn.__modalized) return;
@@ -79030,7 +82076,7 @@ function toggleSubmenu(id) {
       const inv = list[index];
       if (!inv) return alert('Invoice not found');
 
-      // Lock guard
+     
       const today = new Date().toISOString().split('T')[0];
       if (!window.assertNotLocked(['Receipts','Payments','Sales','Recurring Invoices'], today)) return;
 
@@ -79057,7 +82103,6 @@ function toggleSubmenu(id) {
         const bank = banks.find(b => String(b.id||b.name) === String(bankId)) || {};
         const bankName = bank.name || bank.bankName || bankId;
 
-        // 1) recurringPayments log
         const rp = ls('recurringPayments', []) || [];
         rp.push({
           id: crypto.randomUUID ? crypto.randomUUID() : ('rp-'+Date.now()),
@@ -79070,7 +82115,6 @@ function toggleSubmenu(id) {
         });
         save('recurringPayments', rp);
 
-        // 2) Also push into customerPayments so AR/TB pick it up
         const cp = ls('customerPayments', []) || [];
         cp.push({
           id: 'rcp-'+Date.now(),
@@ -79081,14 +82125,12 @@ function toggleSubmenu(id) {
         });
         save('customerPayments', cp);
 
-        // 3) Bump bank balance
         const bIdx = banks.findIndex(b => String(b.id||b.name) === String(bankId));
         if (bIdx !== -1){
           banks[bIdx].balance = (parseFloat(banks[bIdx].balance) || 0) + amount;
           save('banks', banks);
         }
 
-        // 4) Mark recurring invoice
         inv.paid = (inv.paid || 0) + amount;
         inv.balance = (inv.total || 0) - inv.paid;
         if (inv.balance <= 0.001) inv.status = 'Paid';
@@ -79107,11 +82149,6 @@ function toggleSubmenu(id) {
   setTimeout(installRecurringPaymentModal, 700);
   setTimeout(installRecurringPaymentModal, 2200);
 
-  // ---------------- 1b) Enhance Trial Balance & GL to be additive ----------------
-  // We post-process the existing renderers so the displayed amounts include
-  // receipts, supplier payments and manual journals, without rewriting the
-  // 77k-line file. We append a small "live overlay" footer line into the TB &
-  // GL so users see the live cash/AR/AP movement from receipts/payments/journals.
   function renderLiveOverlay(){
     try {
       const recPay   = ls('recurringPayments', []) || [];
@@ -79145,20 +82182,16 @@ function toggleSubmenu(id) {
       }
     } catch(e){ console.warn('overlay error', e); }
   }
-  // Hook into the financial refresh
+  
   const _refresh = window.refreshFinancials;
   window.refreshFinancials = function(){
     _refresh();
     renderLiveOverlay();
   };
 
-  // First paint
   document.addEventListener('DOMContentLoaded', () => setTimeout(window.refreshFinancials, 400));
   setTimeout(window.refreshFinancials, 1500);
 
-  // ---------------- 1c) Recurring report key compatibility ----------------
-  // Original report filters by `invoice.customer`; saveRecurringInvoice stores
-  // `customerName`. Normalize on read by exposing a wrapper.
   (function patchRecurringReport(){
     const tryWrap = () => {
       const fn = window.renderRecurringInvoiceReport;
@@ -79166,8 +82199,7 @@ function toggleSubmenu(id) {
       const inner = fn;
       const wrapped = function(){
         try {
-          // Ensure each record has BOTH .customer and .customerName so the
-          // existing filter logic finds them.
+         
           const list = ls('recurringInvoices', []) || [];
           let mutated = false;
           list.forEach(r => {
@@ -79185,7 +82217,6 @@ function toggleSubmenu(id) {
     setTimeout(tryWrap, 2500);
   })();
 
-  // ---------------- Storage change listener (cross-tab) ----------------
   window.addEventListener('storage', (e) => {
     if (!e.key) return;
     if (/invoices|bills|receipts|customerPayments|paymentsMade|manualJournals|recurringInvoices|recurringPayments|banks/i.test(e.key)){
@@ -79765,20 +82796,7 @@ function toggleSubmenu(id) {
 })();
 </script>
 <script>
-/* =================== ERP HOTFIX v3 ===================
-   1) Exchange-rate input on Invoice + Recurring Invoice:
-      - always visible (no hidden) when currency != KES
-      - auto-fills from localStorage.exchangeRates on currency change
-   2) Trial Balance + General Ledger feed Inventory/Stock, Non-Current
-      Assets and Non-Current Liabilities, with sub-row breakdowns matching
-      the Balance Sheet.
-   3) Transaction Locking module:
-      - rebuilds the Single-module dropdown from the Multiple list so it
-        mirrors every real module/sub-module in the app
-      - expands the save->module map so locking an umbrella module
-        (Customers, Suppliers, Accountant, Payroll) blocks every child save
-      - guarantees assertNotLocked is called from edit/delete handlers too
-   ====================================================== */
+
 (function(){
   "use strict";
   const $ = id => document.getElementById(id);
@@ -79800,7 +82818,7 @@ function toggleSubmenu(id) {
     sel.__v3Wired = true;
 
     function syncContainer(inp){
-      // unhide any wrapping container so users can see the input
+     
       let n = inp;
       for (let i=0;i<4 && n;i++){
         if (n.classList && n.classList.contains("hidden")) n.classList.remove("hidden");
@@ -79835,14 +82853,14 @@ function toggleSubmenu(id) {
   document.addEventListener("DOMContentLoaded", wireAllRates);
   setInterval(wireAllRates, 1200);
 
-  /* -------- 2) TB / GL: Inventory + Non-Current Assets + Non-Current Liabilities -------- */
+
   function inventoryTotal(){
     let t = 0;
     try {
       const inv = ls("inventory", []) || [];
       inv.forEach(i => { t += num(i.buyPrice||i.cost||i.unitCost||i.price) * num(i.qty||i.quantity||1); });
     } catch(e){}
-    // also include per-warehouse inventories saved as inventory_<warehouse>
+   
     try {
       for (let i=0;i<localStorage.length;i++){
         const k = localStorage.key(i);
@@ -79864,7 +82882,6 @@ function toggleSubmenu(id) {
 
   function fmt(n){ return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
-  // After base renderTrialBalance runs, fix inventory & inject NCA/NCL sub-rows.
   function patchTrialBalance(){
     const orig = window.renderTrialBalance;
     if (typeof orig !== "function" || orig.__v3) return;
@@ -79874,18 +82891,18 @@ function toggleSubmenu(id) {
         const tbl = document.getElementById("trialBalanceTable");
         if (!tbl) return r;
         const tbody = tbl.querySelector("tbody");
-        // (a) fix Inventory row debit
+       
         const invRow = tbody.querySelector('tr[data-account="inventory"]');
         const invTot = inventoryTotal();
         if (invRow && invTot > 0){
           invRow.querySelector(".debit").textContent  = fmt(invTot);
           invRow.querySelector(".balance").textContent = fmt(invTot);
         }
-        // (b) Non-Current Assets breakdown
+      
         injectBreakdownRows(tbody, "v3-nca", "1.2 Fixed Assets", getNonCurrentAssets(), "asset");
-        // (c) Non-Current Liabilities header + breakdown (no native rows in TB)
+       
         injectLiabilityBreakdown(tbody);
-        // (d) recompute footer totals
+       
         recomputeTbTotals(tbl);
       } catch(e){ console.warn("v3 TB patch", e); }
       return r;
@@ -79894,14 +82911,14 @@ function toggleSubmenu(id) {
   }
 
   function injectBreakdownRows(tbody, marker, sectionLabel, items, kind){
-    // remove old injected rows
+   
     tbody.querySelectorAll('tr[data-v3-marker="'+marker+'"]').forEach(n => n.remove());
     if (!items.length) return;
-    // find the section header row
+  
     const rows = Array.from(tbody.querySelectorAll("tr"));
     const header = rows.find(r => (r.textContent||"").trim().startsWith(sectionLabel));
     if (!header) return;
-    // anchor after header — insert items
+
     let anchor = header;
     items.forEach(it => {
       const name = it.name || it.title || (kind==="asset"?"Asset":"Liability");
@@ -79921,17 +82938,17 @@ function toggleSubmenu(id) {
   }
 
   function injectLiabilityBreakdown(tbody){
-    // remove old NCL section
+  
     tbody.querySelectorAll('tr[data-v3-section="ncl"]').forEach(n => n.remove());
     const items = getNonCurrentLiabilities();
     if (!items.length) return;
-    // find the LIABILITIES section header row, insert at the end of liabilities
+   
     const rows = Array.from(tbody.querySelectorAll("tr"));
     const liabHdr = rows.find(r => (r.textContent||"").trim().startsWith("2. LIABILITIES"));
     if (!liabHdr) return;
-    // find equity header row
+   
     const eqHdr = rows.find(r => (r.textContent||"").trim().startsWith("3. EQUITY")) || liabHdr.parentElement.lastElementChild;
-    // sub-header
+    
     const sub = document.createElement("tr");
     sub.className = "bg-gray-50 font-medium";
     sub.setAttribute("data-v3-section","ncl");
@@ -79956,7 +82973,7 @@ function toggleSubmenu(id) {
     tbl.querySelectorAll("tbody tr").forEach(tr => {
       const cells = tr.querySelectorAll("td");
       if (cells.length < 5) return;
-      // skip section header rows (colspan)
+      
       if (cells[0].getAttribute("colspan")) return;
       const parse = s => num(String(s||"").replace(/,/g,""));
       op += parse(cells[1].textContent);
@@ -79969,7 +82986,6 @@ function toggleSubmenu(id) {
     set("tbCreditTotal", c);   set("tbBalanceTotal", b);
   }
 
-  // GL: just make sure Inventory shows real value; append NCA/NCL summary lines.
   function patchGL(name){
     const orig = window[name];
     if (typeof orig !== "function" || orig.__v3) return;
@@ -79984,7 +83000,7 @@ function toggleSubmenu(id) {
           setVal("glInventoryDebit", invTot); setVal("glInventoryCredit", 0);
           setVal("glInventoryBalance", invTot); setVal("glInventoryRunningBalance", invTot);
         }
-        // append a Non-Current Assets / Liabilities strip below the GL table if not present
+       
         const host = document.getElementById(name === "renderGeneralLedger" ? "generalLedgerReport" : "generalLedgerDetailedReport");
         if (host){
           let strip = host.querySelector(".v3-nc-strip");
@@ -80026,7 +83042,6 @@ function toggleSubmenu(id) {
   setTimeout(applyReportPatches, 1800);
   document.addEventListener("DOMContentLoaded", applyReportPatches);
 
-  // Re-run TB/GL whenever NCA/NCL or inventory change
   window.addEventListener("storage", e => {
     if (!e.key) return;
     if (/balanceSheet|inventory/i.test(e.key)){
@@ -80036,12 +83051,11 @@ function toggleSubmenu(id) {
     }
   });
 
-  /* -------- 3) Transaction Locking rebuild -------- */
   function rebuildLockSingleDropdown(){
     const single = $("lockModuleSingle");
     const multi  = $("lockModuleMultiple");
     if (!single || !multi || single.__v3Rebuilt) return;
-    // Copy options from multi into single so users can lock any sub-module
+    
     const opts = ['<option value="">Select Module</option>'];
     Array.from(multi.options).forEach(o => {
       opts.push(`<option value="${o.value}">${o.textContent}</option>`);
@@ -80052,12 +83066,11 @@ function toggleSubmenu(id) {
     single.__v3Rebuilt = true;
   }
 
-  // Expand the save -> module map so umbrella locks block child saves.
   function expandLockModules(){
     if (!window.LOCK_MODULES_EXPANDED){
       window.LOCK_MODULES_EXPANDED = true;
     }
-    // We re-wrap assertNotLocked to also test umbrella module names.
+
     if (window.assertNotLocked && !window.assertNotLocked.__v3){
       const baseAssert = window.assertNotLocked;
       const umbrellas = {
@@ -80102,21 +83115,7 @@ function toggleSubmenu(id) {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-/* === Payroll persistence patch (added by Lovable) ===
-   Persists localStorage["payrollRecords"] to Supabase table public.app_state.
-   Requires this SQL run once in your Supabase SQL editor:
 
-     create table if not exists public.app_state (
-       key text primary key,
-       value jsonb not null,
-       updated_at timestamptz not null default now()
-     );
-     alter table public.app_state enable row level security;
-     create policy "app_state read"  on public.app_state for select using (true);
-     create policy "app_state write" on public.app_state for insert with check (true);
-     create policy "app_state upd"   on public.app_state for update using (true) with check (true);
-     grant select, insert, update on public.app_state to anon, authenticated;
-*/
 (function(){
   if(!window.supabase || !window.__SUPA_URL__) { console.warn('[payroll-sync] Supabase not available'); return; }
   const sb = window.supabase.createClient(window.__SUPA_URL__, window.__SUPA_KEY__);
@@ -80139,7 +83138,6 @@ function toggleSubmenu(id) {
     }catch(e){ console.warn('[payroll-sync] pull failed', e); }
   }
 
-  // 2) Push whenever payrollRecords changes locally (debounced).
   let t = null;
   function pushSoon(){
     clearTimeout(t);
@@ -80397,7 +83395,6 @@ function toggleSubmenu(id) {
     };
   }
 
-  // ===== Extended renderers for plan-module-driven reports =====
   const fmt = n => 'KES ' + (Number(n)||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
   function inRange(dateStr, start, end){
     if (!dateStr) return !start && !end;
@@ -80627,4 +83624,21 @@ function toggleSubmenu(id) {
   }
 })();
 </script>
-</body></html>
+<script>
+function toggleSubmenu(id) {
+  
+  const allSubmenus = document.querySelectorAll('ul[id*="Submenu"]');
+  allSubmenus.forEach(menu => {
+    if (menu.id !== id) {
+      menu.classList.add('hidden');
+    }
+  });
+
+  const submenu = document.getElementById(id);
+  if (submenu) {
+    submenu.classList.toggle('hidden');
+  }
+}
+</script>
+</body>
+</html>
