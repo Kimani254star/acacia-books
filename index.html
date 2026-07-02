@@ -1829,7 +1829,7 @@ document.addEventListener("click", function(e) {
       </button></div><div id="commLog" class="mt-4 text-sm text-gray-700 max-h-40 overflow-y-auto border-t pt-2"></div></div><!-- 🎥 Webinar Panel --><div id="webinarPanel" class="hidden fixed bottom-20 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-xl p-4 z-50"><div class="flex justify-between items-center mb-2"><h3 class="font-semibold text-red-800 text-lg">🎥 Webinar Center</h3><button onclick="toggleWebinarPanel()" class="text-gray-600 hover:text-red-600 text-xl leading-none">✖</button></div><label class="block text-sm font-medium mb-1">Webinar Title</label><input id="webinarTitle" class="border p-2 rounded w-full mb-2 text-black" placeholder="Enter title e.g., Monthly Review"><label class="block text-sm font-medium mb-1">Date & Time</label><input id="webinarDate" type="datetime-local" class="border p-2 rounded w-full mb-2 text-black"><label class="block text-sm font-medium mb-1">Webinar Link</label><input id="webinarLink" type="url" class="border p-2 rounded w-full mb-2 text-black" placeholder="Paste meeting URL (Zoom, Teams, etc.)"><div class="flex justify-between mb-2"><button onclick="addWebinar()" class="bg-red-700 text-white px-3 py-2 rounded hover:bg-red-600 text-sm">Save Webinar</button><button onclick="clearWebinars()" class="bg-gray-600 text-white px-3 py-2 rounded hover:bg-gray-700 text-sm">Clear All</button></div><div id="webinarList" class="text-sm text-gray-700 max-h-48 overflow-y-auto border-t pt-2"></div></div><!-- 🏢 Organization Details Panel --><div id="orgDetailsPanel" class="hidden fixed bottom-20 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-xl p-4 z-50"><div class="flex justify-between items-center mb-2"><h3 class="font-semibold text-blue-900 text-lg">🏢 Organization Details</h3><button onclick="toggleOrgDetails()" class="text-gray-600 hover:text-red-600 text-xl leading-none">✖</button></div><div id="orgInfoContainer" class="text-sm text-gray-700 space-y-2 max-h-80 overflow-y-auto"></div></div><!-- 📔 Acacia Notebook Panel --><div id="acaciaNotebookPanel" class="hidden fixed bottom-20 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-xl p-4 z-50"><div class="flex justify-between items-center mb-3"><h3 class="font-semibold text-purple-900 text-lg">📔 Acacia Notebook</h3><button onclick="toggleAcaciaNotebook()" class="text-gray-600 hover:text-red-600 text-xl leading-none">✖</button></div>
     <textarea id="acaciaNoteText" rows="3" placeholder="Write your notes here..." 
       class="border p-2 rounded w-full mb-2 text-sm"></textarea>
-    <div class="flex justify-between mb-3"><button onclick="saveAcaciaNote()" class="bg-purple-800 text-white px-3 py-2 rounded hover:bg-purple-700 text-sm">Save Note</button><button onclick="clearAcaciaNotes()" class="bg-gray-600 text-white px-3 py-2 rounded hover:bg-gray-700 text-sm">Clear All</button></div><div id="acaciaNoteList" class="mt-2 text-sm text-gray-700 max-h-40 overflow-y-auto border-t pt-2 mb-3"></div><h4 class="font-semibold text-purple-800 text-sm mb-1">🌐 Quick Apps</h4><div class="grid grid-cols-4 gap-2 text-center"><a href="https://zoom.us" target="_blank" class="bg-blue-700 text-white py-1 rounded text-xs hover:bg-blue-800">Zoom</a><a href="https://teams.microsoft.com" target="_blank" class="bg-blue-600 text-white py-1 rounded text-xs hover:bg-blue-700">Teams</a><a href="https://meet.google.com" target="_blank" class="bg-green-600 text-white py-1 rounded text-xs hover:bg-green-700">Meet</a><a href="https://mail.google.com" target="_blank" class="bg-red-600 text-white py-1 rounded text-xs hover:bg-red-700">Gmail</a></div></div><!-- 🎧 Support Popup --><div id="supportPopup" class="hidden mt-1 w-64 bg-white border border-gray-200 rounded shadow-lg p-1 text-gray-800 space-y-3"><p class="font-semibold text-gray-700">Contact Support</p><a href="https://wa.me/254717346231" target="_blank" class="flex items-center space-x-2 hover:text-blue-600"><i class="fab fa-whatsapp text-blue-900"></i><span>WhatsApp: 254717346231</span></a><a href="mailto:info@acaciabooks.ke" class="flex items-center space-x-2 hover:text-blue-600"><i class="fas fa-envelope text-blue-500"></i><span>Email: info@acaciabooks.ke</span></a><button onclick="toggleTawkChat()" class="flex items-center space-x-2 hover:text-blue-600"><i class="fas fa-comments text-blue-500"></i><span>Live Chat</span></button></div></div>
+    <div class="flex justify-between mb-3"><button onclick="saveAcaciaNote()" class="bg-purple-800 text-white px-3 py-2 rounded hover:bg-purple-700 text-sm">Save Note</button><button onclick="clearAcaciaNotes()" class="bg-gray-600 text-white px-3 py-2 rounded hover:bg-gray-700 text-sm">Clear All</button></div><div id="acaciaNoteList" class="mt-2 text-sm text-gray-700 max-h-40 overflow-y-auto border-t pt-2 mb-3"></div><h4 class="font-semibold text-purple-800 text-sm mb-1">🌐 Quick Apps</h4><div class="grid grid-cols-4 gap-2 text-center"><a href="https://zoom.us" target="_blank" class="bg-blue-700 text-white py-1 rounded text-xs hover:bg-blue-800">Zoom</a><a href="https://teams.microsoft.com" target="_blank" class="bg-blue-600 text-white py-1 rounded text-xs hover:bg-blue-700">Teams</a><a href="https://meet.google.com" target="_blank" class="bg-green-600 text-white py-1 rounded text-xs hover:bg-green-700">Meet</a><a href="https://mail.google.com" target="_blank" class="bg-red-600 text-white py-1 rounded text-xs hover:bg-red-700">Gmail</a><a href="Mail.html" target="_blank" class="bg-blue-900 text-white py-1 rounded text-xs hover:bg-blue-700 col-span-4 mt-1">📧 Mail Center</a></div></div><!-- 🎧 Support Popup --><div id="supportPopup" class="hidden mt-1 w-64 bg-white border border-gray-200 rounded shadow-lg p-1 text-gray-800 space-y-3"><p class="font-semibold text-gray-700">Contact Support</p><a href="https://wa.me/254717346231" target="_blank" class="flex items-center space-x-2 hover:text-blue-600"><i class="fab fa-whatsapp text-blue-900"></i><span>WhatsApp: 254717346231</span></a><a href="mailto:info@acaciabooks.ke" class="flex items-center space-x-2 hover:text-blue-600"><i class="fas fa-envelope text-blue-500"></i><span>Email: info@acaciabooks.ke</span></a><button onclick="toggleTawkChat()" class="flex items-center space-x-2 hover:text-blue-600"><i class="fas fa-comments text-blue-500"></i><span>Live Chat</span></button></div></div>
 <script>
  function toggleAppsLauncher() {
     document.getElementById('appsLauncher').classList.toggle('hidden');
@@ -2615,6 +2615,37 @@ function applyCurrency() {
     el.textContent = `${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   });
 }
+function __logMail(url){
+  try{
+    var raw=String(url||"");
+    var m=raw.replace(/^mailto:/i,"");
+    var qi=m.indexOf("?");
+    var to=qi>=0?m.slice(0,qi):m;
+    var qs=qi>=0?m.slice(qi+1):"";
+    var params={};
+    qs.split("&").forEach(function(p){if(!p)return;var kv=p.split("=");params[kv[0]]=decodeURIComponent((kv[1]||"").replace(/\+/g," "));});
+    var mail={
+      id:Date.now()+Math.floor(Math.random()*1000),
+      from:(JSON.parse(localStorage.getItem("orgInfo")||"{}").email)||"info@acaciabooks.ke",
+      to:decodeURIComponent(to||""),
+      cc:params.cc||"",
+      bcc:params.bcc||"",
+      subject:params.subject||"(No subject)",
+      priority:"Normal",
+      body:params.body||"",
+      attachments:[],
+      date:new Date().toLocaleString(),
+      status:"Sent",
+      read:false,
+      starred:false
+    };
+    var sent=JSON.parse(localStorage.getItem("mailSent")||"[]");
+    sent.unshift(mail);
+    localStorage.setItem("mailSent",JSON.stringify(sent));
+  }catch(e){}
+  return url;
+}
+
 function loadDashboard() {
   const inventoryItems = getAllInventories();  
   const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
@@ -2631,13 +2662,23 @@ function loadDashboard() {
     return sum + (qty * buy);
   }, 0);
 
-  const invoiceTotal = invoices.reduce((sum, i) => sum + (parseFloat(i.total) || 0), 0);
-  const receiptTotal = receipts.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
-  const customerBalance = invoiceTotal - receiptTotal;
+   const invoiceTotal = invoices.reduce((sum, i) => sum + (parseFloat(i.totalKES || i.total) || 0), 0);
+  const customerPaymentsDash = JSON.parse(localStorage.getItem('customerPayments') || '[]');
+  const recurringInvoicesDash = JSON.parse(localStorage.getItem('recurringInvoices') || '[]');
+  const paymentReceiptIdsDash = new Set(customerPaymentsDash.map(p => String(p.receiptId || "")).filter(Boolean));
+  const receiptTotal = customerPaymentsDash.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0)
+    + receipts.filter(r => !paymentReceiptIdsDash.has(String(r.id))).reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+  const mirroredRecurringIdsDash = new Set(invoices.map(i => String(i.recurringId || "")).filter(Boolean));
+  const recurringOutstandingDash = (Array.isArray(recurringInvoicesDash) ? recurringInvoicesDash : [])
+    .filter(rec => String(rec.status || "").toLowerCase() !== "draft" && !mirroredRecurringIdsDash.has(String(rec.id)))
+    .reduce((sum, rec) => sum + Math.max(0, (parseFloat(rec.balance != null ? rec.balance : ((parseFloat(rec.totalKES || rec.total) || 0) - (parseFloat(rec.amountPaid || rec.paid) || 0))) || 0)), 0);
+  const customerBalance = Math.max(0, invoiceTotal + recurringOutstandingDash - receiptTotal);
   const billTotal = bills.reduce((sum, b) => sum + (parseFloat(b.total) || 0), 0);
   const billPaymentTotal = billPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
   const supplierBalance = billTotal - billPaymentTotal;
-  const payrollTotal = payroll.reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
+  const payrollRecords = JSON.parse(localStorage.getItem('payrollRecords') || '[]');
+  let payrollTotal = payrollRecords.reduce((sum, p) => sum + (parseFloat(p.net || p.total) || 0), 0);
+  if (!payrollTotal) payrollTotal = payroll.reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
   const taxTotal = taxPayments.reduce((sum, tx) => sum + (parseFloat(tx.total) || 0), 0);
   const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
   const bankTotal = banks.reduce((sum, b) => {
@@ -2739,6 +2780,23 @@ function renderCharts() {
   const operations = JSON.parse(localStorage.getItem('operationalCosts') || '[]');
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  // --- Dashboard month-window filters ---
+  const __curMonth = new Date().getMonth();
+  function __winSet(filterId){
+    const sel = document.getElementById(filterId);
+    const v = sel ? sel.value : 'all';
+    if (!v || v === 'all') return null;
+    const n = parseInt(v) || 12;
+    const set = new Set();
+    for (let k = 0; k < n; k++){ let m = __curMonth - k; if (m < 0) m += 12; set.add(m); }
+    return set;
+  }
+  function __applyWin(arr, filterId){
+    const set = __winSet(filterId);
+    if (!set) return arr;
+    return arr.map((val, i) => set.has(i) ? val : 0);
+  }
+
 
   function sumByMonth(data, field = 'total') {
     const arr = new Array(12).fill(0);
@@ -2780,7 +2838,7 @@ function renderCharts() {
       labels: months,
       datasets: [{
         label: 'Net Cash Flow (Monthly)',
-        data: cashFlowMonthly,
+        data: __applyWin(cashFlowMonthly, 'cashFlowFilter'),
         backgroundColor: cashFlowMonthly.map(v =>
           v >= 0 ? 'rgba(34,197,94,0.6)' : 'rgba(239,68,68,0.6)'
         ),
@@ -2854,7 +2912,7 @@ window.receivablesChartInstance = new Chart(ctx3, {
     datasets: [
       {
         label: 'Invoices (KES)',
-        data: invoiceBuckets,
+        data: __applyWin(invoiceBuckets, 'receivablesAgingFilter'),
         backgroundColor: '#3b82f6', 
          barPercentage: 1.5,        
         categoryPercentage:1,
@@ -2862,7 +2920,7 @@ window.receivablesChartInstance = new Chart(ctx3, {
       },
       {
         label: 'Receipts (KES)',
-        data: receiptBuckets,
+        data: __applyWin(receiptBuckets, 'receivablesAgingFilter'),
         backgroundColor: '#22c55e', 
         barPercentage: 1.5,
         categoryPercentage: 1,
@@ -2911,7 +2969,7 @@ window.supplierChartInstance = new Chart(ctx4, {
     datasets: [
       {
         label: 'Supplier Payments (KES)',
-        data: paymentBuckets,
+        data: __applyWin(paymentBuckets, 'supplierAgingFilter'),
         backgroundColor: '#22c55e', 
         barPercentage: 1.5,        
         categoryPercentage:1,
@@ -2919,7 +2977,7 @@ window.supplierChartInstance = new Chart(ctx4, {
       },
       {
         label: 'Bills (KES)',
-        data: billBuckets,
+        data: __applyWin(billBuckets, 'supplierAgingFilter'),
         backgroundColor: '#ef4444', 
         barPercentage: 1.5,
         categoryPercentage: 1,
@@ -2955,7 +3013,7 @@ window.profitChartInstance = new Chart(ctxProfit, {
     labels: months,
     datasets: [{
       label: 'Monthly Profit',
-      data: profitMonthly,
+      data: __applyWin(profitMonthly, 'monthlyProfitFilter'),
       borderColor: '#10b981',
       backgroundColor: 'rgba(16,185,129,0.2)',
       fill: true,
@@ -5833,7 +5891,7 @@ Effective Date: ${entry.effectiveDate || "-"}
 `;
 
   window.location.href =
-    `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    __logMail(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
 }
 
 function clonePriceItem(item, warehouse) {
@@ -7169,7 +7227,7 @@ function emailBundle(i) {
     "Buy: " + b.buyPrice + "\n" +
     "Sell: " + b.sellPrice
   );
-  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  window.location.href = __logMail(`mailto:?subject=${subject}&body=${body}`);
 }
 function bulkDeleteBundles() {
   let bundles = JSON.parse(localStorage.getItem("bundles") || "[]");
@@ -8639,7 +8697,7 @@ Carrier: ${s.carrier || "-"}
 Tracking No: ${s.trackingNo || "-"}
 `;
   window.location.href =
-    `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    __logMail(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`);
 }
 function toggleSelectAllShipments() {
   const checked = document.getElementById("selectAllShipments").checked;
@@ -16154,7 +16212,7 @@ Statement Date: ${formatDate(c.statementDate || "")}
 `
   );
 
-  window.location.href = `mailto:${c.primaryEmail}?subject=${subject}&body=${body}`;
+  window.location.href = __logMail(`mailto:${c.primaryEmail}?subject=${subject}&body=${body}`);
 }
 function openCustomerCRM(index) {
 
@@ -17960,7 +18018,7 @@ Thank you for your business.
 ${JSON.parse(localStorage.getItem("orgInfo") || "{}").name || ""}
 `;
   const mailtoLink =
-    `mailto:${customer.primaryEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    __logMail(`mailto:${customer.primaryEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   window.location.href = mailtoLink;
 }
 function shareInvoice(invoiceId) {
@@ -20647,7 +20705,7 @@ ${JSON.parse(localStorage.getItem("orgInfo") || "{}").name || ""}
 `;
 
   const mailtoLink =
-    `mailto:${customer.primaryEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    __logMail(`mailto:${customer.primaryEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
 
   window.location.href = mailtoLink;
 }
@@ -22167,7 +22225,7 @@ Kind regards,
 ${(JSON.parse(localStorage.getItem("orgInfo") || "{}").name || "")}`;
   generateCreditNotePDF(id);
   const mailtoLink =
-    `mailto:${customer.primaryEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    __logMail(`mailto:${customer.primaryEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   window.location.href = mailtoLink;
 }
 function openAttachInvoiceModal(noteId) {
@@ -25568,7 +25626,7 @@ Total: ${inv.total}
   `;
 
   window.open(
-    `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+    __logMail(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`),
     "_blank"
   );
 
@@ -27354,7 +27412,7 @@ Bank: ${payment.bank}
 `
   );
 
-  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  window.location.href = __logMail(`mailto:?subject=${subject}&body=${body}`);
 
 }
 function previewSupplierPayment(index) {
@@ -30935,7 +30993,7 @@ Download PDF: ${url}
   `;
 
   window.location.href =
-    `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    __logMail(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
 }
 function clearPOItemForm() {
   document.getElementById("poProductSelect").value = "";
@@ -31653,7 +31711,7 @@ function emailDebitNote(index) {
   const note = notes[index];
   const subject = encodeURIComponent(`Debit Note ${note.date}`);
   const body = encodeURIComponent(JSON.stringify(note, null, 2));
-  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  window.location.href = __logMail(`mailto:?subject=${subject}&body=${body}`);
 }
 function editDebitNote(index) {
   const notes = JSON.parse(localStorage.getItem("supplierDebitNotes") || "[]");
@@ -31795,7 +31853,7 @@ function emailDebitNote(index) {
   if (!note) return;
   const subject = `Debit Note ${note.date} - ${note.supplier}`;
   const body = `Debit Note Details:\n\nSupplier: ${note.supplier}\nDate: ${note.date}\nItems: ${note.items.map(i => i.name).join(", ")}`;
-  const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const mailto = __logMail(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   window.location.href = mailto;
 }
 function cloneDebitNote(index) {
@@ -37579,7 +37637,7 @@ function emailRecurring(index) {
     "Credit: " + item.totals.credit.toFixed(2)
   );
 
-  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  window.location.href = __logMail(`mailto:?subject=${subject}&body=${body}`);
 }
 function bulkDeleteRecurringJournals() {
   let recurringList = JSON.parse(localStorage.getItem("recurringJournals") || "[]");
@@ -45516,7 +45574,7 @@ Date: ${item.date}
 `;
 
   window.location.href =
-    `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    __logMail(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
 }
 function downloadRevisionPDF(id) {
   const item = revisionHistoryData.find(r => r.id === id);
@@ -46364,7 +46422,7 @@ function emailSetting(key) {
 Status: ${value ? "Enabled" : "Disabled"}`
   );
 
-  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  window.location.href = __logMail(`mailto:?subject=${subject}&body=${body}`);
 
 }
 function toggleSetting(key) {
@@ -46701,7 +46759,7 @@ Changes:
 ${h.changes}`
   );
 
-  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  window.location.href = __logMail(`mailto:?subject=${subject}&body=${body}`);
 
 }
 
@@ -46943,7 +47001,7 @@ Reason: ${lock.reason}
 `;
 
   window.location.href =
-    `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    __logMail(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
 }
 function cloneLock(index) {
   const lock = transactionLocks[index];
@@ -72438,7 +72496,7 @@ function emailProjectProgress(index) {
     const base64data = reader.result;
     const subject = encodeURIComponent(`Project Progress Update: ${p.title}`);
     const body = encodeURIComponent(`Please find attached the project progress PDF for ${p.title}.`);
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    window.location.href = __logMail(`mailto:?subject=${subject}&body=${body}`);
     
   };
 }
@@ -73225,7 +73283,7 @@ Comment: ${t.comment}
 Date: ${t.date}`
   );
 
-  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  window.location.href = __logMail(`mailto:?subject=${subject}&body=${body}`);
 }
 function generatePlanTrackingInsights() {
   const completed = planTracking.filter(p => p.status === "Completed").length;
@@ -82445,16 +82503,30 @@ function toggleSubmenu(id) {
 
   function refreshDashboardCards(){
     const invoices = ls("invoices", []);
+    const recurringInvoices = ls("recurringInvoices", []);
     const receipts = ls("receipts", []);
     const customerPayments = ls("customerPayments", []);
     const banks = ls("banks", []);
     const paymentReceiptIds = new Set(customerPayments.map(p => String(p.receiptId || "")).filter(Boolean));
+    // Regular invoices (already include synced recurring invoices)
     const invoiceTotal = invoices.reduce((sum, inv) => sum + num(inv.totalKES || inv.total), 0);
+    // Recurring invoices that are NOT yet mirrored into the invoices list
+    const mirroredRecurringIds = new Set(invoices.map(inv => String(inv.recurringId || "")).filter(Boolean));
+    const recurringOutstanding = (Array.isArray(recurringInvoices) ? recurringInvoices : [])
+      .filter(rec => String(rec.status || "").toLowerCase() !== "draft" && !mirroredRecurringIds.has(String(rec.id)))
+      .reduce((sum, rec) => sum + Math.max(0, num(rec.balance != null ? rec.balance : (num(rec.totalKES || rec.total) - num(rec.amountPaid || rec.paid)))), 0);
     const paidTotal = customerPayments.reduce((sum, p) => sum + num(p.amount), 0) + receipts.filter(r => !paymentReceiptIds.has(String(r.id))).reduce((sum, r) => sum + num(r.amount), 0);
-    const bankTotal = banks.reduce((sum, bank) => sum + num(bank.balance || bank.initialBalance), 0);
+    // Bank balances converted to base currency (KES) using exchange rates
+    const bankTotal = banks.reduce((sum, bank) => sum + num(bank.balance || bank.initialBalance) * rateFor(bank.currency), 0);
+    // Payroll total (records persist across refresh)
+    const payrollRecords = ls("payrollRecords", []);
+    const payrollPayments = ls("payrollPayments", []);
+    let payrollTotal = (Array.isArray(payrollRecords) ? payrollRecords : []).reduce((sum, p) => sum + num(p.net || p.total), 0);
+    if (!payrollTotal) payrollTotal = (Array.isArray(payrollPayments) ? payrollPayments : []).reduce((sum, p) => sum + num(p.total || p.net), 0);
     setText("dashInvoices", invoiceTotal);
-    setText("customerOutstandingBalanceDisplay", Math.max(0, invoiceTotal - paidTotal));
+    setText("customerOutstandingBalanceDisplay", Math.max(0, invoiceTotal + recurringOutstanding - paidTotal));
     setText("dashBankTotal", bankTotal);
+    setText("dashPayroll", payrollTotal);
   }
 
   function refreshAll(){
@@ -83639,6 +83711,494 @@ function toggleSubmenu(id) {
     submenu.classList.toggle('hidden');
   }
 }
+</script>
+<script>
+// Dashboard chart filter handlers -> re-render all dashboard charts respecting each filter select
+(function(){
+  function rerender(){ try { if (typeof renderCharts === "function") renderCharts(); } catch(e){ console.warn(e); } }
+  window.renderCashFlowChart = rerender;
+  window.renderReceivablesAgingChart = rerender;
+  window.renderSupplierAgingChart = rerender;
+  window.renderProfitChart = rerender;
+  window.renderComparisonChart = rerender;
+})();
+</script>
+<script>
+/* ============================================================
+   MISSING REPORTS PATCH — 12 renderers
+   Injected 2026-07-02. Reads localStorage keys already used by
+   the app: inventory, movements, invoices, warehouses, branches,
+   bills, banks, chartOfAccounts, payrollRecords, operationalCosts,
+   taxPayments, nonCurrentAssetsBackup, exchangeRates, etc.
+   Safe: everything runs after DOMContentLoaded; each renderer
+   guards against missing data and shows "No data available".
+   ============================================================ */
+(function(){
+  "use strict";
+
+  // ---------- helpers ----------
+  function ls(key, def){
+    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
+    catch(e){ return def; }
+  }
+  function num(v){ v = Number(v); return isFinite(v) ? v : 0; }
+  function fmt(v){ return num(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function daysBetween(a,b){ if(!a||!b) return 0; var d=(new Date(b)-new Date(a))/86400000; return isFinite(d)?d:0; }
+  function monthKey(d){ if(!d) return ''; var x=new Date(d); if(isNaN(x)) return ''; return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0'); }
+  function yearKey(d){ if(!d) return ''; var x=new Date(d); return isNaN(x)?'':String(x.getFullYear()); }
+  function empty(msg){ return '<div class="p-4 text-gray-500 italic">'+esc(msg||'No data available yet.')+'</div>'; }
+  function h(title, body){ return '<h2 class="text-xl font-bold mb-4">'+esc(title)+'</h2>'+body; }
+  function tableWrap(inner){ return '<div class="overflow-x-auto"><table class="w-full border border-gray-300 text-sm">'+inner+'</table></div>'; }
+
+  // ---------- panel registry (id -> {title, renderer}) ----------
+  var PANELS = [
+    { id:'financial_financialRatios',        title:'Financial Ratios',            fn:'renderFinancialRatios' },
+    { id:'financial_businessSnapshot',       title:'Business Snapshot',           fn:'renderBusinessSnapshot' },
+    { id:'financial_multiYearTrendAnalysis', title:'Multi-Year Trend Analysis',   fn:'renderMultiYearTrend' },
+    { id:'fixedAssetsRegisterPanel',         title:'Fixed Assets Register',       fn:'renderFixedAssetsRegister' },
+    { id:'sales_salesByBranch',              title:'Sales by Branch / Warehouse', fn:'renderSalesByBranch' },
+    { id:'inventory_stockLedger',            title:'Stock Ledger',                fn:'renderStockLedger' },
+    { id:'inventory_inventoryValuationTrend',title:'Inventory Valuation Trend',   fn:'renderInventoryValuationTrend' },
+    { id:'inventory_inventoryTurnover',      title:'Inventory Turnover',          fn:'renderInventoryTurnover' },
+    { id:'inventory_stockAging',             title:'Stock Aging',                 fn:'renderStockAging' },
+    { id:'inventory_deadStock',              title:'Dead Stock',                  fn:'renderDeadStock' },
+    { id:'inventory_slowMovingStock',        title:'Slow Moving Stock',           fn:'renderSlowMovingStock' },
+    { id:'inventory_fastMovingStock',        title:'Fast Moving Stock',           fn:'renderFastMovingStock' },
+    { id:'inventory_overstockReport',        title:'Overstock Report',            fn:'renderOverstockReport' }
+  ];
+
+  // ---------- create missing panels ----------
+  function ensurePanels(){
+    var host = document.getElementById('reportsSection') || document.getElementById('reportsPanel') || document.body;
+    PANELS.forEach(function(p){
+      if(document.getElementById(p.id)) return;
+      var d = document.createElement('div');
+      d.id = p.id;
+      d.className = 'report-view hidden';
+      d.style.padding = '12px';
+      d.innerHTML = '<div class="text-gray-400 italic">Loading '+esc(p.title)+'…</div>';
+      host.appendChild(d);
+    });
+  }
+
+  // ---------- data adapters (defensive; supports common field names) ----------
+  function getInventory(){
+    var items = ls('inventory', []);
+    if(!Array.isArray(items) || !items.length){
+      // fall back to any inventory_* namespaced keys
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(k && k.indexOf('inventory_')===0){
+          var v = ls(k, null);
+          if(Array.isArray(v)) items = items.concat(v);
+        }
+      }
+    }
+    return Array.isArray(items) ? items : [];
+  }
+  function getMovements(){
+    var m = ls('movements', []);
+    return Array.isArray(m) ? m : [];
+  }
+  function getInvoices(){ var v = ls('invoices', []); return Array.isArray(v)?v:[]; }
+  function getBills(){ var v = ls('bills', []); return Array.isArray(v)?v:[]; }
+  function getWarehouses(){
+    var w = ls('warehouses', []);
+    if(!Array.isArray(w) || !w.length) w = ls('branches', []);
+    return Array.isArray(w) ? w : [];
+  }
+  function itemName(it){ return it.name || it.itemName || it.description || it.product || it.sku || it.code || 'Item'; }
+  function itemSku(it){ return it.sku || it.code || it.id || ''; }
+  function itemQty(it){ return num(it.qty!=null?it.qty:(it.quantity!=null?it.quantity:it.stock)); }
+  function itemCost(it){ return num(it.costPerUnit!=null?it.costPerUnit:(it.cost!=null?it.cost:(it.unitCost!=null?it.unitCost:it.buyingPrice))); }
+  function itemPrice(it){ return num(it.price!=null?it.price:(it.sellingPrice!=null?it.sellingPrice:it.unitPrice)); }
+  function movQty(m){ return num(m.qty!=null?m.qty:(m.quantity!=null?m.quantity:m.units)); }
+  function movType(m){ return String(m.type||m.movementType||'').toLowerCase(); }
+  function movDate(m){ return m.date || m.createdAt || m.timestamp || ''; }
+  function movItem(m){ return m.item || m.itemName || m.product || m.sku || m.code || ''; }
+  function movWarehouse(m){ return m.warehouse || m.warehouseName || m.branch || m.location || m.from || m.to || ''; }
+  function isOut(t){ return t==='out'||t==='sale'||t==='issue'||t==='dispatch'||t==='sold'||t==='transfer-out'; }
+  function isIn(t){ return t==='in'||t==='purchase'||t==='receipt'||t==='grn'||t==='return'||t==='transfer-in'||t==='opening'; }
+
+  // ---------- P&L / BS aggregates (best-effort from cached reports) ----------
+  function pnlSnapshot(){
+    var pl = ls('profitAndLoss', null) || ls('cashFlowSummary', null) || {};
+    var inv = getInvoices(), bills = getBills();
+    var revenue = num(pl.revenue) || inv.reduce(function(s,x){return s+num(x.total||x.amount||x.grandTotal);},0);
+    var cogs    = num(pl.cogs)    || 0;
+    var opex    = ls('operationalCosts', []).reduce(function(s,x){return s+num(x.amount||x.total);},0);
+    var payroll = ls('payrollRecords', []).reduce(function(s,x){return s+num(x.netPay||x.gross||x.amount);},0);
+    var tax     = ls('taxPayments', []).reduce(function(s,x){return s+num(x.amount);},0);
+    var expenses = cogs + opex + payroll + tax;
+    return { revenue:revenue, cogs:cogs, opex:opex, payroll:payroll, tax:tax, expenses:expenses, net: revenue-expenses };
+  }
+  function bsSnapshot(){
+    var banks = ls('banks', []).reduce(function(s,b){return s+num(b.balance);},0);
+    var recv = getInvoices().reduce(function(s,i){return s+Math.max(0,num(i.balance!=null?i.balance:(num(i.total||i.amount)-num(i.paid))));},0);
+    var pay  = getBills().reduce(function(s,i){return s+Math.max(0,num(i.balance!=null?i.balance:(num(i.total||i.amount)-num(i.paid))));},0);
+    var inv  = getInventory().reduce(function(s,it){return s+itemQty(it)*itemCost(it);},0);
+    var equity = num(ls('shareholderEquity', []).reduce(function(s,x){return s+num(x.amount||x.value);},0));
+    return { cash:banks, receivables:recv, payables:pay, inventory:inv, equity:equity, currentAssets:banks+recv+inv, currentLiabilities:pay };
+  }
+
+  // ============================================================
+  // 1) Financial Ratios
+  // ============================================================
+  window.renderFinancialRatios = function(){
+    var panel = document.getElementById('financial_financialRatios'); if(!panel) return;
+    var p = pnlSnapshot(), b = bsSnapshot();
+    var rows = [
+      ['Current Ratio', b.currentLiabilities? (b.currentAssets/b.currentLiabilities).toFixed(2) : '—', 'Current Assets / Current Liabilities'],
+      ['Quick Ratio',   b.currentLiabilities? ((b.currentAssets-b.inventory)/b.currentLiabilities).toFixed(2) : '—', '(CA − Inventory) / CL'],
+      ['Cash Ratio',    b.currentLiabilities? (b.cash/b.currentLiabilities).toFixed(2) : '—', 'Cash / CL'],
+      ['Gross Margin %',p.revenue? (((p.revenue-p.cogs)/p.revenue)*100).toFixed(2)+'%' : '—', '(Revenue − COGS) / Revenue'],
+      ['Net Margin %',  p.revenue? ((p.net/p.revenue)*100).toFixed(2)+'%' : '—', 'Net Profit / Revenue'],
+      ['Operating Margin %', p.revenue? (((p.revenue-p.cogs-p.opex)/p.revenue)*100).toFixed(2)+'%':'—', '(Revenue − COGS − OpEx) / Revenue'],
+      ['Return on Equity %', b.equity? ((p.net/b.equity)*100).toFixed(2)+'%':'—', 'Net Profit / Equity'],
+      ['Debt-to-Equity', b.equity? (b.payables/b.equity).toFixed(2):'—', 'Liabilities / Equity'],
+      ['Working Capital', fmt(b.currentAssets-b.currentLiabilities), 'Current Assets − Current Liabilities']
+    ];
+    var body = tableWrap(
+      '<thead><tr class="bg-gray-100"><th class="border px-2 py-1 text-left">Ratio</th><th class="border px-2 py-1 text-right">Value</th><th class="border px-2 py-1 text-left">Formula</th></tr></thead>'+
+      '<tbody>'+rows.map(function(r){return '<tr><td class="border px-2 py-1">'+esc(r[0])+'</td><td class="border px-2 py-1 text-right font-semibold">'+esc(r[1])+'</td><td class="border px-2 py-1 text-gray-500">'+esc(r[2])+'</td></tr>';}).join('')+'</tbody>'
+    );
+    panel.innerHTML = h('📊 Financial Ratios', body);
+  };
+
+  // ============================================================
+  // 2) Business Snapshot
+  // ============================================================
+  window.renderBusinessSnapshot = function(){
+    var panel = document.getElementById('financial_businessSnapshot'); if(!panel) return;
+    var p = pnlSnapshot(), b = bsSnapshot();
+    var cust = ls('customers', []).length, sup = ls('suppliers', []).length;
+    var emp = ls('employees', []).length, prod = getInventory().length;
+    function card(t,v,cls){ return '<div class="border rounded p-3 '+(cls||'bg-white')+'"><div class="text-xs text-gray-500 uppercase">'+esc(t)+'</div><div class="text-lg font-bold">'+esc(v)+'</div></div>'; }
+    var body = '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">'+
+      card('Revenue', fmt(p.revenue))+
+      card('Net Profit', fmt(p.net), p.net>=0?'bg-green-50':'bg-red-50')+
+      card('Cash on Hand', fmt(b.cash))+
+      card('Receivables', fmt(b.receivables))+
+      card('Payables', fmt(b.payables))+
+      card('Inventory Value', fmt(b.inventory))+
+      card('Working Capital', fmt(b.currentAssets-b.currentLiabilities))+
+      card('Equity', fmt(b.equity))+
+    '</div>'+
+    '<div class="grid grid-cols-2 md:grid-cols-4 gap-3">'+
+      card('Customers', cust)+ card('Suppliers', sup)+ card('Employees', emp)+ card('Products', prod)+
+    '</div>';
+    panel.innerHTML = h('🏢 Business Snapshot', body);
+  };
+
+  // ============================================================
+  // 3) Multi-Year Trend Analysis
+  // ============================================================
+  window.renderMultiYearTrend = function(){
+    var panel = document.getElementById('financial_multiYearTrendAnalysis'); if(!panel) return;
+    var inv = getInvoices(), bills = getBills();
+    var years = {};
+    function bump(map, y, k, v){ if(!y) return; map[y]=map[y]||{revenue:0,cogs:0,opex:0}; map[y][k]+=num(v); }
+    inv.forEach(function(i){ bump(years, yearKey(i.date||i.createdAt), 'revenue', i.total||i.amount||i.grandTotal); });
+    bills.forEach(function(x){ bump(years, yearKey(x.date||x.createdAt), 'cogs', x.total||x.amount); });
+    ls('operationalCosts',[]).forEach(function(x){ bump(years, yearKey(x.date), 'opex', x.amount||x.total); });
+    var keys = Object.keys(years).sort();
+    if(!keys.length){ panel.innerHTML = h('📈 Multi-Year Trend Analysis', empty('No dated invoices, bills or operational costs found.')); return; }
+    var rows = keys.map(function(y){
+      var r=years[y], net=r.revenue-r.cogs-r.opex;
+      return '<tr><td class="border px-2 py-1 font-semibold">'+y+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+fmt(r.revenue)+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+fmt(r.cogs)+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+fmt(r.opex)+'</td>'+
+        '<td class="border px-2 py-1 text-right '+(net>=0?'text-green-700':'text-red-700')+'">'+fmt(net)+'</td></tr>';
+    }).join('');
+    panel.innerHTML = h('📈 Multi-Year Trend Analysis', tableWrap(
+      '<thead><tr class="bg-gray-100"><th class="border px-2 py-1">Year</th><th class="border px-2 py-1 text-right">Revenue</th><th class="border px-2 py-1 text-right">COGS / Bills</th><th class="border px-2 py-1 text-right">OpEx</th><th class="border px-2 py-1 text-right">Net</th></tr></thead><tbody>'+rows+'</tbody>'
+    ));
+  };
+
+  // ============================================================
+  // 4) Fixed Assets Register
+  // ============================================================
+  window.renderFixedAssetsRegister = function(){
+    var panel = document.getElementById('fixedAssetsRegisterPanel'); if(!panel) return;
+    var assets = ls('nonCurrentAssetsBackup', []);
+    if(!Array.isArray(assets) || !assets.length){
+      // try any live non-current assets structure
+      assets = ls('nonCurrentAssets', []) || [];
+    }
+    if(!assets.length){ panel.innerHTML = h('🏗️ Fixed Assets Register', empty('No fixed assets recorded.')); return; }
+    var rows = assets.map(function(a){
+      var cost = num(a.cost||a.value||a.amount);
+      var dep  = num(a.depreciation||a.accumulatedDepreciation);
+      return '<tr>'+
+        '<td class="border px-2 py-1">'+esc(a.name||a.description||'—')+'</td>'+
+        '<td class="border px-2 py-1">'+esc(a.category||a.type||'—')+'</td>'+
+        '<td class="border px-2 py-1">'+esc(a.date||a.purchaseDate||'—')+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+fmt(cost)+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+fmt(dep)+'</td>'+
+        '<td class="border px-2 py-1 text-right font-semibold">'+fmt(cost-dep)+'</td>'+
+        '<td class="border px-2 py-1">'+esc(a.location||a.branch||'—')+'</td>'+
+      '</tr>';
+    }).join('');
+    panel.innerHTML = h('🏗️ Fixed Assets Register', tableWrap(
+      '<thead><tr class="bg-gray-100"><th class="border px-2 py-1">Asset</th><th class="border px-2 py-1">Category</th><th class="border px-2 py-1">Acquired</th><th class="border px-2 py-1 text-right">Cost</th><th class="border px-2 py-1 text-right">Depr.</th><th class="border px-2 py-1 text-right">NBV</th><th class="border px-2 py-1">Location</th></tr></thead><tbody>'+rows+'</tbody>'
+    ));
+  };
+
+  // ============================================================
+  // 5) Sales by Branch / Warehouse
+  // ============================================================
+  window.renderSalesByBranch = function(){
+    var panel = document.getElementById('sales_salesByBranch'); if(!panel) return;
+    var inv = getInvoices();
+    if(!inv.length){ panel.innerHTML = h('🏬 Sales by Branch / Warehouse', empty('No invoices found.')); return; }
+    var buckets = {};
+    inv.forEach(function(i){
+      var w = i.warehouse || i.branch || i.location || 'Unspecified';
+      buckets[w] = buckets[w] || { count:0, revenue:0, tax:0, discount:0 };
+      buckets[w].count++;
+      buckets[w].revenue += num(i.total||i.amount||i.grandTotal);
+      buckets[w].tax     += num(i.tax||i.vat||i.amountVAT);
+      buckets[w].discount+= num(i.discount);
+    });
+    var keys = Object.keys(buckets).sort(function(a,b){ return buckets[b].revenue-buckets[a].revenue; });
+    var total = keys.reduce(function(s,k){return s+buckets[k].revenue;},0);
+    var rows = keys.map(function(k){
+      var r=buckets[k]; var pct = total? (r.revenue/total*100).toFixed(1):'0.0';
+      return '<tr><td class="border px-2 py-1 font-semibold">'+esc(k)+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+r.count+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+fmt(r.revenue)+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+fmt(r.tax)+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+fmt(r.discount)+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+pct+'%</td></tr>';
+    }).join('');
+    panel.innerHTML = h('🏬 Sales by Branch / Warehouse', tableWrap(
+      '<thead><tr class="bg-gray-100"><th class="border px-2 py-1">Branch / Warehouse</th><th class="border px-2 py-1 text-right">Invoices</th><th class="border px-2 py-1 text-right">Revenue</th><th class="border px-2 py-1 text-right">Tax</th><th class="border px-2 py-1 text-right">Discount</th><th class="border px-2 py-1 text-right">% of Total</th></tr></thead><tbody>'+rows+
+      '<tr class="font-bold bg-gray-50"><td class="border px-2 py-1">Total</td><td class="border px-2 py-1 text-right">'+inv.length+'</td><td class="border px-2 py-1 text-right">'+fmt(total)+'</td><td class="border"></td><td class="border"></td><td class="border"></td></tr></tbody>'
+    ));
+  };
+
+  // ============================================================
+  // 6) Stock Ledger  (per-item movements with running balance)
+  // ============================================================
+  window.renderStockLedger = function(){
+    var panel = document.getElementById('inventory_stockLedger'); if(!panel) return;
+    var mv = getMovements().slice().sort(function(a,b){ return new Date(movDate(a))-new Date(movDate(b)); });
+    if(!mv.length){ panel.innerHTML = h('📒 Stock Ledger', empty('No stock movements recorded.')); return; }
+    // build filter dropdowns
+    var items = Array.from(new Set(mv.map(movItem).filter(Boolean))).sort();
+    var whs = Array.from(new Set(mv.map(movWarehouse).filter(Boolean))).sort();
+    var itemSel = '<select id="slItem" class="border rounded px-2 py-1"><option value="">All Items</option>'+items.map(function(i){return '<option>'+esc(i)+'</option>';}).join('')+'</select>';
+    var whSel = '<select id="slWh" class="border rounded px-2 py-1"><option value="">All Warehouses</option>'+whs.map(function(w){return '<option>'+esc(w)+'</option>';}).join('')+'</select>';
+    panel.innerHTML = h('📒 Stock Ledger',
+      '<div class="flex gap-2 mb-3">'+itemSel+whSel+'<button id="slBtn" class="px-3 py-1 bg-blue-900 text-white rounded">Apply</button></div>'+
+      '<div id="slBody"></div>'
+    );
+    function draw(){
+      var fi = panel.querySelector('#slItem').value;
+      var fw = panel.querySelector('#slWh').value;
+      var running = {};
+      var rows = mv.filter(function(m){
+        if(fi && movItem(m)!==fi) return false;
+        if(fw && movWarehouse(m)!==fw) return false;
+        return true;
+      }).map(function(m){
+        var key = movItem(m)+'|'+movWarehouse(m);
+        var q = movQty(m), t = movType(m);
+        var delta = isOut(t)? -q : (isIn(t)? q : q);
+        running[key] = (running[key]||0) + delta;
+        return '<tr><td class="border px-2 py-1">'+esc(movDate(m))+'</td>'+
+          '<td class="border px-2 py-1">'+esc(movItem(m))+'</td>'+
+          '<td class="border px-2 py-1">'+esc(movWarehouse(m))+'</td>'+
+          '<td class="border px-2 py-1">'+esc(t||'—')+'</td>'+
+          '<td class="border px-2 py-1 text-right">'+(delta>=0?'+':'')+delta+'</td>'+
+          '<td class="border px-2 py-1 text-right font-semibold">'+running[key]+'</td>'+
+          '<td class="border px-2 py-1">'+esc(m.ref||m.reference||m.doc||'—')+'</td></tr>';
+      }).join('');
+      panel.querySelector('#slBody').innerHTML = tableWrap(
+        '<thead><tr class="bg-gray-100"><th class="border px-2 py-1">Date</th><th class="border px-2 py-1">Item</th><th class="border px-2 py-1">Warehouse</th><th class="border px-2 py-1">Type</th><th class="border px-2 py-1 text-right">Qty</th><th class="border px-2 py-1 text-right">Running</th><th class="border px-2 py-1">Ref</th></tr></thead><tbody>'+(rows||'<tr><td colspan="7" class="text-center italic text-gray-500 p-3">No movements match the filters.</td></tr>')+'</tbody>'
+      );
+    }
+    panel.querySelector('#slBtn').onclick = draw;
+    draw();
+  };
+
+  // ============================================================
+  // 7) Inventory Valuation Trend  (monthly stock value)
+  // ============================================================
+  window.renderInventoryValuationTrend = function(){
+    var panel = document.getElementById('inventory_inventoryValuationTrend'); if(!panel) return;
+    var mv = getMovements();
+    var items = getInventory();
+    var costMap = {};
+    items.forEach(function(it){ costMap[itemName(it)] = itemCost(it); });
+    if(!mv.length){ panel.innerHTML = h('📈 Inventory Valuation Trend', empty('No movements to build a trend from.')); return; }
+    // running qty per item, sample at end of each month
+    var sorted = mv.slice().sort(function(a,b){ return new Date(movDate(a))-new Date(movDate(b)); });
+    var running = {};
+    var monthly = {}; // month -> value
+    sorted.forEach(function(m){
+      var it = movItem(m); if(!it) return;
+      var t = movType(m), q = movQty(m);
+      var delta = isOut(t)? -q : q;
+      running[it] = (running[it]||0) + delta;
+      var mk = monthKey(movDate(m)); if(!mk) return;
+      var total = 0;
+      Object.keys(running).forEach(function(k){ total += running[k] * (costMap[k]||0); });
+      monthly[mk] = total;
+    });
+    var keys = Object.keys(monthly).sort();
+    if(!keys.length){ panel.innerHTML = h('📈 Inventory Valuation Trend', empty('No dated movements found.')); return; }
+    var rows = keys.map(function(k){ return '<tr><td class="border px-2 py-1">'+k+'</td><td class="border px-2 py-1 text-right font-semibold">'+fmt(monthly[k])+'</td></tr>'; }).join('');
+    panel.innerHTML = h('📈 Inventory Valuation Trend', tableWrap(
+      '<thead><tr class="bg-gray-100"><th class="border px-2 py-1">Month</th><th class="border px-2 py-1 text-right">Stock Value (end of month)</th></tr></thead><tbody>'+rows+'</tbody>'
+    ));
+  };
+
+  // ============================================================
+  // 8) Inventory Turnover
+  // ============================================================
+  window.renderInventoryTurnover = function(){
+    var panel = document.getElementById('inventory_inventoryTurnover'); if(!panel) return;
+    var mv = getMovements(), items = getInventory();
+    if(!items.length){ panel.innerHTML = h('🔄 Inventory Turnover', empty('No inventory items.')); return; }
+    var outMap = {};
+    mv.forEach(function(m){ if(isOut(movType(m))) outMap[movItem(m)] = (outMap[movItem(m)]||0) + movQty(m); });
+    var rows = items.map(function(it){
+      var name = itemName(it), q = itemQty(it), cost = itemCost(it);
+      var sold = outMap[name]||0;
+      var avg = (q + sold)/2 || q || 1;
+      var turnover = avg? (sold/avg) : 0;
+      var days = turnover? (365/turnover) : 0;
+      return { name:name, sku:itemSku(it), qty:q, sold:sold, cost:cost, turnover:turnover, days:days };
+    }).sort(function(a,b){ return b.turnover-a.turnover; });
+    var html = tableWrap(
+      '<thead><tr class="bg-gray-100"><th class="border px-2 py-1">Item</th><th class="border px-2 py-1">SKU</th><th class="border px-2 py-1 text-right">On Hand</th><th class="border px-2 py-1 text-right">Sold</th><th class="border px-2 py-1 text-right">Turnover</th><th class="border px-2 py-1 text-right">Days on Hand</th></tr></thead><tbody>'+
+      rows.map(function(r){return '<tr><td class="border px-2 py-1">'+esc(r.name)+'</td><td class="border px-2 py-1">'+esc(r.sku)+'</td><td class="border px-2 py-1 text-right">'+r.qty+'</td><td class="border px-2 py-1 text-right">'+r.sold+'</td><td class="border px-2 py-1 text-right">'+r.turnover.toFixed(2)+'</td><td class="border px-2 py-1 text-right">'+(r.days?r.days.toFixed(0):'—')+'</td></tr>';}).join('')+
+      '</tbody>'
+    );
+    panel.innerHTML = h('🔄 Inventory Turnover', html);
+  };
+
+  // ============================================================
+  // 9) Stock Aging  (days since last inbound movement)
+  // ============================================================
+  window.renderStockAging = function(){
+    var panel = document.getElementById('inventory_stockAging'); if(!panel) return;
+    var items = getInventory(); var mv = getMovements();
+    if(!items.length){ panel.innerHTML = h('⏳ Stock Aging', empty('No inventory items.')); return; }
+    var lastIn = {};
+    mv.forEach(function(m){ if(isIn(movType(m))){ var d=new Date(movDate(m)); var k=movItem(m); if(!lastIn[k]||d>lastIn[k]) lastIn[k]=d; } });
+    var today = new Date();
+    function bucket(d){ if(d<=30) return '0-30'; if(d<=60) return '31-60'; if(d<=90) return '61-90'; if(d<=180) return '91-180'; if(d<=365) return '181-365'; return '365+'; }
+    var rows = items.map(function(it){
+      var name = itemName(it); var last = lastIn[name];
+      var d = last? Math.round((today-last)/86400000) : null;
+      var q = itemQty(it), v = q*itemCost(it);
+      return '<tr><td class="border px-2 py-1">'+esc(name)+'</td><td class="border px-2 py-1">'+esc(itemSku(it))+'</td><td class="border px-2 py-1 text-right">'+q+'</td><td class="border px-2 py-1 text-right">'+fmt(v)+'</td><td class="border px-2 py-1">'+(last?last.toISOString().slice(0,10):'—')+'</td><td class="border px-2 py-1 text-right">'+(d==null?'—':d)+'</td><td class="border px-2 py-1">'+(d==null?'—':bucket(d))+'</td></tr>';
+    }).join('');
+    panel.innerHTML = h('⏳ Stock Aging', tableWrap(
+      '<thead><tr class="bg-gray-100"><th class="border px-2 py-1">Item</th><th class="border px-2 py-1">SKU</th><th class="border px-2 py-1 text-right">Qty</th><th class="border px-2 py-1 text-right">Value</th><th class="border px-2 py-1">Last Inbound</th><th class="border px-2 py-1 text-right">Days Old</th><th class="border px-2 py-1">Bucket</th></tr></thead><tbody>'+rows+'</tbody>'
+    ));
+  };
+
+  // ============================================================
+  // 10-12) Dead / Slow / Fast / Overstock share a movement summary
+  // ============================================================
+  function movementSummary(){
+    var items = getInventory(); var mv = getMovements();
+    var out = {}, lastOut = {};
+    var since = new Date(); since.setDate(since.getDate()-90);
+    mv.forEach(function(m){
+      if(!isOut(movType(m))) return;
+      var k = movItem(m), d = new Date(movDate(m));
+      out[k] = out[k] || { total:0, last90:0 };
+      out[k].total += movQty(m);
+      if(d >= since) out[k].last90 += movQty(m);
+      if(!lastOut[k] || d>lastOut[k]) lastOut[k]=d;
+    });
+    return items.map(function(it){
+      var n = itemName(it), q = itemQty(it), c = itemCost(it);
+      var o = out[n] || { total:0, last90:0 };
+      return { name:n, sku:itemSku(it), qty:q, value:q*c, sold:o.total, sold90:o.last90, lastOut: lastOut[n]||null };
+    });
+  }
+
+  window.renderDeadStock = function(){
+    var panel = document.getElementById('inventory_deadStock'); if(!panel) return;
+    var today = new Date();
+    var dead = movementSummary().filter(function(r){
+      if(r.qty<=0) return false;
+      var days = r.lastOut? Math.round((today-r.lastOut)/86400000) : 9999;
+      return days >= 180; // no sale in 180+ days
+    }).sort(function(a,b){ return b.value-a.value; });
+    if(!dead.length){ panel.innerHTML = h('💀 Dead Stock', empty('No dead stock (nothing has gone 180+ days without a sale).')); return; }
+    var rows = dead.map(function(r){var d=r.lastOut?Math.round((today-r.lastOut)/86400000):'—';
+      return '<tr><td class="border px-2 py-1">'+esc(r.name)+'</td><td class="border px-2 py-1">'+esc(r.sku)+'</td><td class="border px-2 py-1 text-right">'+r.qty+'</td><td class="border px-2 py-1 text-right">'+fmt(r.value)+'</td><td class="border px-2 py-1">'+(r.lastOut?r.lastOut.toISOString().slice(0,10):'Never')+'</td><td class="border px-2 py-1 text-right">'+d+'</td></tr>';}).join('');
+    panel.innerHTML = h('💀 Dead Stock (180+ days no sale)', tableWrap(
+      '<thead><tr class="bg-gray-100"><th class="border px-2 py-1">Item</th><th class="border px-2 py-1">SKU</th><th class="border px-2 py-1 text-right">Qty</th><th class="border px-2 py-1 text-right">Value</th><th class="border px-2 py-1">Last Sale</th><th class="border px-2 py-1 text-right">Days Since</th></tr></thead><tbody>'+rows+'</tbody>'
+    ));
+  };
+
+  window.renderSlowMovingStock = function(){
+    var panel = document.getElementById('inventory_slowMovingStock'); if(!panel) return;
+    var slow = movementSummary().filter(function(r){ return r.qty>0 && r.sold90>0 && r.sold90 < Math.max(1, r.qty*0.25); })
+      .sort(function(a,b){ return a.sold90-b.sold90; });
+    if(!slow.length){ panel.innerHTML = h('🐢 Slow Moving Stock', empty('No slow-movers (all items with sales moved >25% of on-hand in 90 days).')); return; }
+    var rows = slow.map(function(r){return '<tr><td class="border px-2 py-1">'+esc(r.name)+'</td><td class="border px-2 py-1">'+esc(r.sku)+'</td><td class="border px-2 py-1 text-right">'+r.qty+'</td><td class="border px-2 py-1 text-right">'+r.sold90+'</td><td class="border px-2 py-1 text-right">'+fmt(r.value)+'</td></tr>';}).join('');
+    panel.innerHTML = h('🐢 Slow Moving Stock (last 90 days)', tableWrap(
+      '<thead><tr class="bg-gray-100"><th class="border px-2 py-1">Item</th><th class="border px-2 py-1">SKU</th><th class="border px-2 py-1 text-right">On Hand</th><th class="border px-2 py-1 text-right">Sold (90d)</th><th class="border px-2 py-1 text-right">Value</th></tr></thead><tbody>'+rows+'</tbody>'
+    ));
+  };
+
+  window.renderFastMovingStock = function(){
+    var panel = document.getElementById('inventory_fastMovingStock'); if(!panel) return;
+    var fast = movementSummary().filter(function(r){ return r.sold90 > 0; })
+      .sort(function(a,b){ return b.sold90-a.sold90; }).slice(0,50);
+    if(!fast.length){ panel.innerHTML = h('🚀 Fast Moving Stock', empty('No sales recorded in the last 90 days.')); return; }
+    var rows = fast.map(function(r){return '<tr><td class="border px-2 py-1">'+esc(r.name)+'</td><td class="border px-2 py-1">'+esc(r.sku)+'</td><td class="border px-2 py-1 text-right">'+r.sold90+'</td><td class="border px-2 py-1 text-right">'+r.qty+'</td><td class="border px-2 py-1 text-right">'+fmt(r.value)+'</td></tr>';}).join('');
+    panel.innerHTML = h('🚀 Fast Moving Stock (top 50, 90 days)', tableWrap(
+      '<thead><tr class="bg-gray-100"><th class="border px-2 py-1">Item</th><th class="border px-2 py-1">SKU</th><th class="border px-2 py-1 text-right">Sold (90d)</th><th class="border px-2 py-1 text-right">On Hand</th><th class="border px-2 py-1 text-right">Value</th></tr></thead><tbody>'+rows+'</tbody>'
+    ));
+  };
+
+  window.renderOverstockReport = function(){
+    var panel = document.getElementById('inventory_overstockReport'); if(!panel) return;
+    // overstock = on-hand covers > 180 days at current 90-day burn rate
+    var over = movementSummary().map(function(r){
+      var dailyBurn = r.sold90/90;
+      var daysCover = dailyBurn>0 ? r.qty/dailyBurn : (r.qty>0?9999:0);
+      r.daysCover = daysCover; return r;
+    }).filter(function(r){ return r.qty>0 && r.daysCover>=180; })
+      .sort(function(a,b){ return b.value-a.value; });
+    if(!over.length){ panel.innerHTML = h('📦 Overstock Report', empty('No overstocked items (nothing has >180 days of cover at current burn).')); return; }
+    var rows = over.map(function(r){return '<tr><td class="border px-2 py-1">'+esc(r.name)+'</td><td class="border px-2 py-1">'+esc(r.sku)+'</td><td class="border px-2 py-1 text-right">'+r.qty+'</td><td class="border px-2 py-1 text-right">'+r.sold90+'</td><td class="border px-2 py-1 text-right">'+(r.daysCover>9000?'∞':r.daysCover.toFixed(0))+'</td><td class="border px-2 py-1 text-right">'+fmt(r.value)+'</td></tr>';}).join('');
+    panel.innerHTML = h('📦 Overstock Report', tableWrap(
+      '<thead><tr class="bg-gray-100"><th class="border px-2 py-1">Item</th><th class="border px-2 py-1">SKU</th><th class="border px-2 py-1 text-right">On Hand</th><th class="border px-2 py-1 text-right">Sold (90d)</th><th class="border px-2 py-1 text-right">Days Cover</th><th class="border px-2 py-1 text-right">Value</th></tr></thead><tbody>'+rows+'</tbody>'
+    ));
+  };
+
+  // ---------- hook into showReport ----------
+  function hook(){
+    var orig = window.showReport;
+    window.showReport = function(id, el){
+      try { if(typeof orig === 'function') orig.apply(this, arguments); } catch(e){ console.warn('showReport orig failed:', e); }
+      var reg = PANELS.find(function(p){return p.id===id;});
+      if(reg && typeof window[reg.fn] === 'function'){
+        try { window[reg.fn](); } catch(e){ console.error(reg.fn+' failed:', e); }
+      }
+    };
+  }
+
+  function init(){
+    ensurePanels();
+    hook();
+    console.info('[reports-patch] 12 reports registered.');
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
 </script>
 </body>
 </html>
