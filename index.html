@@ -1291,6 +1291,7 @@ function removeCompanyData(key) {
 
 function logout() {
   localStorage.removeItem("loggedInUser");
+  ["sidebar","rightSidebar","layout"].forEach(id=>{const el=document.getElementById(id); if(el){el.classList.add("hidden"); el.style.display="none";}});
   location.reload();
 }
 
@@ -1466,6 +1467,7 @@ function showApp() {
 
   document.getElementById("layout").classList.remove("hidden");
   document.getElementById("registration-form").classList.add("hidden");
+  ["sidebar","rightSidebar"].forEach(id=>{const el=document.getElementById(id); if(el){el.classList.remove("hidden"); el.style.display="";}});
 
   const loggedIn = JSON.parse(localStorage.getItem("loggedInUser") || "null");
   if (loggedIn) {
@@ -1769,7 +1771,7 @@ document.addEventListener("click", function(e) {
     }
 });
 </script>
-<div id="notifPopup" class="hidden fixed top-14 right-4 w-72 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold">📢 Updates</h3><ul id="notifList" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul></div><div id="quickCreatePanel" class="hidden fixed top-14 right-20 w-64 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold text-gray-700">⚙️ Quick Create</h3><button onclick="openCreate('customersTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100"> Customer</button><button onclick="openCreate('invoicesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Invoice</button><button onclick="openCreate('supplierTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Supplier</button><button onclick="openCreate('employeesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Employee</button><button onclick="openCreate('inventoryTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Inventory</button><button onclick="openCreate('manualJournalsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Journal</button><button onclick="openCreate('fundsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Fund</button></div><div class="h-3"></div><div id="sidebar" class="fixed top-0 left-0 h-full w-40 bg-black text-white p-1 overflow-y-auto" style="position:fixed !important;top:0 !important;left:0 !important;height:100vh !important;z-index:40;"><img src="acaciabooks-logo.png" alt="Logo" class="w-24 mb-4 mx-auto" /><h2 class="text-xl font-bold  mb-6">AkBook</h2><ul class="space-y-5 text-sm"
+<div id="notifPopup" class="hidden fixed top-14 right-4 w-72 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold">📢 Updates</h3><ul id="notifList" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul></div><div id="quickCreatePanel" class="hidden fixed top-14 right-20 w-64 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold text-gray-700">⚙️ Quick Create</h3><button onclick="openCreate('customersTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100"> Customer</button><button onclick="openCreate('invoicesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Invoice</button><button onclick="openCreate('supplierTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Supplier</button><button onclick="openCreate('employeesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Employee</button><button onclick="openCreate('inventoryTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Inventory</button><button onclick="openCreate('manualJournalsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Journal</button><button onclick="openCreate('fundsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Fund</button></div><div class="h-3"></div><div id="sidebar" class="hidden fixed top-0 left-0 h-full w-40 bg-black text-white p-1 overflow-y-auto" style="top:0 !important;left:0 !important;height:100vh !important;z-index:40;"><img src="acaciabooks-logo.png" alt="Logo" class="w-24 mb-4 mx-auto" /><h2 class="text-xl font-bold  mb-6">AkBook</h2><ul class="space-y-5 text-sm"
 <li><button onclick="showTab('dashboard')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📊 Dashboard Hub</button></li><li><button onclick="toggleSubmenu('inventorySubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📦 Inventory Hub</button></li><ul id="inventorySubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('inventoryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Stock</button></li><li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li><li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li><li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li><li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li><li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li><li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li><li><button   onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li></ul><li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li><li><button onclick="toggleSubmenu('customerSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Sales Hub</button></li><ul id="customerSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li><li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li><li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li><li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li><li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li><li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li><li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li><li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li><li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li><li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li><li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li><ul id="supplierSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li><li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li><li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li><li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li><li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li><li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li><li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li><li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li><li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li><li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li><li><button onclick="showTab('supplierStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('accountantSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🧮 Accountant Hub</button></li><ul id="accountantSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('manualJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Manual Journals</button></li><li><button onclick="showTab('recurringJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Recurring Journals</button></li><li><button onclick="showTab('currencyAdjustmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Currency Adjustments</button></li><li><button onclick="showTab('nonCurrentAssetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Assets</button></li><li><button onclick="showTab('nonCurrentLiabilitiesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Liabilities</button></li><li><button onclick="showTab('equityTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Equity</button></li><li><button onclick="showTab('taxAdjustmentsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Adjustments</button></li><li><button onclick="showTab('chartOfAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Chart of Accounts</button></li><li><button onclick="showTab('currentAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Current Accounts</button></li><li><button onclick="showTab('budgetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Budgets</button></li><li><button onclick="showTab('transactionLockingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Transaction Locking</button></li></ul><li><button onclick="toggleSubmenu('payrollSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💵 Payroll Hub </button></li><ul id="payrollSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('employeesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Employees</button></li><li><button onclick="showTab('earningsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Allowances</button></li><li><button onclick="showTab('grossPayTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Deductions</button></li><li><button onclick="showTab('attendanceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Attendance & Leave</button></li><li><button onclick="showTab('payslipTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payslip Generation</button></li><li><button onclick="showTab('statutoryDeductionsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Statutories</button></li><li><button onclick="showTab('payrollReportsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payroll Reports</button></li><li><button onclick="showTab('integrationsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Integrations</button></li></ul><li><button onclick="showTab('reportsPanel')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📈 Reports Hub </button></li><li><button onclick="toggleSubmenu('plansSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🗂️Plans Hub </button></li><ul id="plansSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('plansTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plans Hub </button></li><li><button onclick="showTab('projectTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Project Hub</button></li><li><button onclick="showTab('planTrackingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Plan Tracking</button></li><li><button onclick="showTab('projectRevenueTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">  Project Revenue</button </li> </ul><li><button onclick="toggleSubmenu('settingsSubmenu2')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">⚙️ Settings Hub </button></li><ul id="settingsSubmenu2" class="ml-4 hidden space-y-1"><li><button onclick="showTab('orgProfileTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Org Profile </button></li><li><button onclick="showTab('warehousesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Warehouses</button></li><li><button onclick="showTab('DatacenterTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Data center</button></li><li><button onclick="showTab('systemConfigurationTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">System configuration</button></li><li><button onclick="showTab('userActivityTab')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Activity </button></li><li><button onclick="showTab('taxComplianceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Compliance</button></li><li><button onclick="showTab('userManagementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Management</button></li><li><button onclick="showTab('vatTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">VAT</button></li><li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li><li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li><li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li><li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li></ul><li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li><ul id="filesSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li><li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li></ul><li id="mailLink" class="hidden"><a href="https://kimani254star.github.io/acacia-mail/" target="_blank"
     class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">
     💬Acacia Mail Hub
@@ -1783,7 +1785,7 @@ document.addEventListener("click", function(e) {
     📁 Advanced Project Hub
   </a>
 </li>
-</li><li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li><div id="rightSidebar" class="fixed top-4 right-0 h-half w-10 bg-black  text-white flex flex-col items-center py-1 space-y-6 shadow-lg z-10"><!-- 📔 Acacia Notebook --><button id="acaciaToggle" onclick="toggleAcaciaNotebook()"
+</li><li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li><div id="rightSidebar" class="hidden fixed top-4 right-0 h-half w-10 bg-black  text-white flex flex-col items-center py-1 space-y-6 shadow-lg z-10"><!-- 📔 Acacia Notebook --><button id="acaciaToggle" onclick="toggleAcaciaNotebook()"
   class="group flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full relative text-xl">📔
   <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
     Acacia Notebook
@@ -2624,15 +2626,22 @@ function __logMail(url){
     var qs=qi>=0?m.slice(qi+1):"";
     var params={};
     qs.split("&").forEach(function(p){if(!p)return;var kv=p.split("=");params[kv[0]]=decodeURIComponent((kv[1]||"").replace(/\+/g," "));});
+    var org=JSON.parse(localStorage.getItem("orgInfo")||"{}");
+    var fromEmail=org.email||"info@acaciabooks.ke";
+    var fromName=org.name||fromEmail;
+    var toAddr=decodeURIComponent(to||"");
+    var subject=params.subject||"(No subject)";
+    var bodyText=params.body||"";
+    var now=Date.now();
     var mail={
-      id:Date.now()+Math.floor(Math.random()*1000),
-      from:(JSON.parse(localStorage.getItem("orgInfo")||"{}").email)||"info@acaciabooks.ke",
-      to:decodeURIComponent(to||""),
+      id:now+Math.floor(Math.random()*1000),
+      from:fromEmail,
+      to:toAddr,
       cc:params.cc||"",
       bcc:params.bcc||"",
-      subject:params.subject||"(No subject)",
+      subject:subject,
       priority:"Normal",
-      body:params.body||"",
+      body:bodyText,
       attachments:[],
       date:new Date().toLocaleString(),
       status:"Sent",
@@ -2642,6 +2651,36 @@ function __logMail(url){
     var sent=JSON.parse(localStorage.getItem("mailSent")||"[]");
     sent.unshift(mail);
     localStorage.setItem("mailSent",JSON.stringify(sent));
+
+    /* ---- Acacia Mail bridge: mirror ERP emails into linked mail account ---- */
+    try{
+      var ACACIA_PREFIX="acacia_data_";
+      var USERS_KEY="acaciaUsers";
+      var orgProfile=JSON.parse(localStorage.getItem("acaciaOrgProfile")||"null")||{};
+      var linkedEmail=(orgProfile.email||org.email||"").toLowerCase();
+      var users=JSON.parse(localStorage.getItem(USERS_KEY)||"[]");
+      var htmlBody=bodyText.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");
+      var preview=bodyText.replace(/\s+/g," ").slice(0,90);
+      var senderRec=users.find(function(u){return u.email.toLowerCase()===linkedEmail;});
+      if(senderRec){
+        var sKey=ACACIA_PREFIX+senderRec.email;
+        var sStore=JSON.parse(localStorage.getItem(sKey)||"null")||{mails:[],events:[],aiChat:[]};
+        sStore.mails=sStore.mails||[];
+        sStore.mails.unshift({id:"m"+now,from:senderRec.name||senderRec.email,email:senderRec.email,to:toAddr,subject:subject,preview:preview,body:htmlBody,time:now,read:true,starred:false,folder:"sent"});
+        localStorage.setItem(sKey,JSON.stringify(sStore));
+      }
+      var addrs=(toAddr+","+(params.cc||"")+","+(params.bcc||"")).split(/[,;]+/).map(function(x){return x.trim().toLowerCase();}).filter(Boolean);
+      addrs.forEach(function(addr){
+        var rec=users.find(function(u){return u.email.toLowerCase()===addr;});
+        if(!rec) return;
+        if(senderRec && rec.email===senderRec.email) return;
+        var rKey=ACACIA_PREFIX+rec.email;
+        var rStore=JSON.parse(localStorage.getItem(rKey)||"null")||{mails:[],events:[],aiChat:[]};
+        rStore.mails=rStore.mails||[];
+        rStore.mails.unshift({id:"m"+now+"_"+rec.email,from:fromName,email:fromEmail,to:rec.email,subject:subject,preview:preview,body:htmlBody,time:now,read:false,starred:false,folder:"inbox"});
+        localStorage.setItem(rKey,JSON.stringify(rStore));
+      });
+    }catch(e2){}
   }catch(e){}
   return url;
 }
@@ -3639,6 +3678,7 @@ function showApp() {
   if (authEl) authEl.classList.add('hidden');
   if (homeTabEl) homeTabEl.style.display = 'none';
   if (layoutEl) layoutEl.classList.remove('hidden');
+  ["sidebar","rightSidebar"].forEach(id=>{const el=document.getElementById(id); if(el){el.classList.remove("hidden"); el.style.display="";}});
 
   if (userEl) userEl.textContent = loggedInUser.username;
 
@@ -9272,10 +9312,21 @@ function saveRates() {
 }
 
 function convertToKES(amount, currency) {
-  if (currency === "KES") return amount;
-  const rate = exchangeRates[currency];
-  if (rate) return amount * rate;
-  return amount;
+  const amt = Number(amount) || 0;
+  if (!currency || currency === "KES") return amt;
+  let rates = {};
+  try {
+    rates = (typeof exchangeRates === "object" && exchangeRates) ? exchangeRates : {};
+  } catch (e) { rates = {}; }
+  try {
+    const stored = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
+    rates = { ...stored, ...rates };
+    // prefer stored if in-memory missing that currency
+    if (!rates[currency] && stored[currency]) rates[currency] = stored[currency];
+  } catch (e) {}
+  const rate = Number(rates[currency]);
+  if (rate && isFinite(rate) && rate > 0) return amt * rate;
+  return amt;
 }
 
 function formatCurrency(amount) {
@@ -37395,13 +37446,13 @@ function renderRecurringJournalList() {
           </button>
 
           <button
-            onclick="editRecurring(${index})"
+            onclick="editRecurringJournal(${index})"
             class="bg-blue-900 text-white px-2 py-1 rounded">
             Edit
           </button>
 
           <button
-            onclick="deleteRecurring(${index})"
+            onclick="deleteRecurringJournal(${index})"
             class="bg-blue-900 text-white px-2 py-1 rounded">
             Delete
           </button>
@@ -37669,7 +37720,7 @@ function toggleAllRecurringJournals(master) {
     cb.checked = master.checked;
   });
 }
-function previewRecurring(index) {
+function previewRecurringJournal(index) {
   const recurringList = JSON.parse(localStorage.getItem("recurringJournals") || "[]");
   const entry = recurringList[index];
   if (!entry) return alert("Entry not found.");
@@ -37745,7 +37796,7 @@ function previewRecurring(index) {
     previewWin.close();
   });
 }
-function deleteRecurring(index) {
+function deleteRecurringJournal(index) {
   const recurringList = JSON.parse(localStorage.getItem("recurringJournals") || "[]");
   const entry = recurringList[index];
   if (!entry) return;
@@ -37763,7 +37814,7 @@ function deleteRecurring(index) {
 
   alert("♻️ Recurring journal moved to Recycle Bin.");
 }
-function editRecurring(index) {
+function editRecurringJournal(index) {
   const recurringList = JSON.parse(localStorage.getItem("recurringJournals") || "[]");
   const entry = recurringList[index];
   if (!entry) return;
@@ -82501,33 +82552,77 @@ function toggleSubmenu(id) {
     save("customers", customers);
   }
 
-  function refreshDashboardCards(){
+function refreshDashboardCards() {
     const invoices = ls("invoices", []);
     const recurringInvoices = ls("recurringInvoices", []);
     const receipts = ls("receipts", []);
     const customerPayments = ls("customerPayments", []);
     const banks = ls("banks", []);
-    const paymentReceiptIds = new Set(customerPayments.map(p => String(p.receiptId || "")).filter(Boolean));
-    // Regular invoices (already include synced recurring invoices)
-    const invoiceTotal = invoices.reduce((sum, inv) => sum + num(inv.totalKES || inv.total), 0);
-    // Recurring invoices that are NOT yet mirrored into the invoices list
-    const mirroredRecurringIds = new Set(invoices.map(inv => String(inv.recurringId || "")).filter(Boolean));
-    const recurringOutstanding = (Array.isArray(recurringInvoices) ? recurringInvoices : [])
-      .filter(rec => String(rec.status || "").toLowerCase() !== "draft" && !mirroredRecurringIds.has(String(rec.id)))
-      .reduce((sum, rec) => sum + Math.max(0, num(rec.balance != null ? rec.balance : (num(rec.totalKES || rec.total) - num(rec.amountPaid || rec.paid)))), 0);
-    const paidTotal = customerPayments.reduce((sum, p) => sum + num(p.amount), 0) + receipts.filter(r => !paymentReceiptIds.has(String(r.id))).reduce((sum, r) => sum + num(r.amount), 0);
-    // Bank balances converted to base currency (KES) using exchange rates
-    const bankTotal = banks.reduce((sum, bank) => sum + num(bank.balance || bank.initialBalance) * rateFor(bank.currency), 0);
-    // Payroll total (records persist across refresh)
+
+    const paymentReceiptIds = new Set(
+        customerPayments
+            .map(p => String(p.receiptId || ""))
+            .filter(Boolean)
+    );
+
+    const invoiceTotal = invoices.reduce((sum, inv) => {
+        return sum + num(inv.totalKES || inv.total);
+    }, 0);
+
+    const mirroredRecurringIds = new Set(
+        invoices
+            .map(inv => String(inv.recurringId || ""))
+            .filter(Boolean)
+    );
+
+    const recurringOutstanding = recurringInvoices
+        .filter(rec =>
+            String(rec.status || "").toLowerCase() !== "draft" &&
+            !mirroredRecurringIds.has(String(rec.id))
+        )
+        .reduce((sum, rec) => {
+            return sum + Math.max(
+                0,
+                num(
+                    rec.balance ??
+                    (num(rec.totalKES || rec.total) - num(rec.amountPaid || rec.paid))
+                )
+            );
+        }, 0);
+
+    const paidTotal =
+        customerPayments.reduce((sum, p) => sum + num(p.amount), 0) +
+        receipts
+            .filter(r => !paymentReceiptIds.has(String(r.id)))
+            .reduce((sum, r) => sum + num(r.amount), 0);
+
+    const customerOutstanding = Math.max(
+        0,
+        invoiceTotal + recurringOutstanding - paidTotal
+    );
+
+    const bankTotal = banks.reduce((sum, bank) => {
+        return sum + num(bank.balance || bank.initialBalance) * rateFor(bank.currency);
+    }, 0);
+
     const payrollRecords = ls("payrollRecords", []);
     const payrollPayments = ls("payrollPayments", []);
-    let payrollTotal = (Array.isArray(payrollRecords) ? payrollRecords : []).reduce((sum, p) => sum + num(p.net || p.total), 0);
-    if (!payrollTotal) payrollTotal = (Array.isArray(payrollPayments) ? payrollPayments : []).reduce((sum, p) => sum + num(p.total || p.net), 0);
+
+    let payrollTotal = payrollRecords.reduce((sum, p) => {
+        return sum + num(p.net || p.total);
+    }, 0);
+
+    if (!payrollTotal) {
+        payrollTotal = payrollPayments.reduce((sum, p) => {
+            return sum + num(p.total || p.net);
+        }, 0);
+    }
+
     setText("dashInvoices", invoiceTotal);
-    setText("customerOutstandingBalanceDisplay", Math.max(0, invoiceTotal + recurringOutstanding - paidTotal));
+    setText("customerOutstandingBalanceDisplay", customerOutstanding);
     setText("dashBankTotal", bankTotal);
     setText("dashPayroll", payrollTotal);
-  }
+}
 
   function refreshAll(){
     try { normalizeRecurringInvoices(); } catch(e){}
@@ -84200,5 +84295,1717 @@ function toggleSubmenu(id) {
   else init();
 })();
 </script>
+<script>
+/* ============================================================
+   Lovable Patch v2 — Fixed Assets / Cash Flow / Trial Balance / GL
+   ============================================================ */
+(function(){
+  var num = function(v){ v = parseFloat(v); return isFinite(v)?v:0; };
+  var ls  = function(k, def){ try { return JSON.parse(localStorage.getItem(k) || 'null') ?? def; } catch(e){ return def; } };
+  var fmt = function(n){ return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
+
+  // ---- Non-current assets accessor (live first, backup fallback) ----
+  function getNonCurrentAssets(){
+    var bs = ls('balanceSheet', {}) || {};
+    var live = Array.isArray(bs.nonCurrentAssets) ? bs.nonCurrentAssets : [];
+    if (live.length) return live;
+    var backup = ls('nonCurrentAssetsBackup', []) || [];
+    return Array.isArray(backup) ? backup : [];
+  }
+  function getNonCurrentLiabilities(){
+    var bs = ls('balanceSheet', {}) || {};
+    var live = Array.isArray(bs.nonCurrentLiabilities) ? bs.nonCurrentLiabilities : [];
+    if (live.length) return live;
+    return ls('nonCurrentLiabilitiesBackup', []) || [];
+  }
+
+  // ============================================================
+  // 1) Fixed Assets Register — pull from Non-Current Assets
+  // ============================================================
+  function renderFAR(){
+    var assets = getNonCurrentAssets();
+    // Body inside static HTML
+    var body = document.getElementById('fixedAssetsRegisterBody');
+    if (body){
+      if (!assets.length){
+        body.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 p-3">No fixed assets recorded.</td></tr>';
+      } else {
+        body.innerHTML = assets.map(function(a){
+          var cost = num(a.cost||a.value||a.amount||a.purchasePrice);
+          var dep  = num(a.accumulatedDepreciation||a.depreciation||a.depAmount);
+          var nbv  = cost - dep;
+          return '<tr>'+
+            '<td class="p-2 border">'+(a.name||a.description||'—')+'</td>'+
+            '<td class="p-2 border">'+(a.code||a.assetCode||'—')+'</td>'+
+            '<td class="p-2 border">'+(a.department||a.branch||a.location||'—')+'</td>'+
+            '<td class="p-2 border">'+(a.purchaseDate||a.date||'—')+'</td>'+
+            '<td class="p-2 border text-right">'+fmt(cost)+'</td>'+
+            '<td class="p-2 border text-right">'+fmt(dep)+'</td>'+
+            '<td class="p-2 border text-right font-semibold">'+fmt(nbv)+'</td>'+
+          '</tr>';
+        }).join('');
+      }
+    }
+    // Also refresh the panel version if present
+    var panel = document.getElementById('fixedAssetsRegisterPanel');
+    if (panel){
+      var rows = assets.map(function(a){
+        var cost = num(a.cost||a.value||a.amount);
+        var dep  = num(a.accumulatedDepreciation||a.depreciation);
+        return '<tr>'+
+          '<td class="border px-2 py-1">'+(a.name||a.description||'—')+'</td>'+
+          '<td class="border px-2 py-1">'+(a.category||a.type||'—')+'</td>'+
+          '<td class="border px-2 py-1">'+(a.purchaseDate||a.date||'—')+'</td>'+
+          '<td class="border px-2 py-1 text-right">'+fmt(cost)+'</td>'+
+          '<td class="border px-2 py-1 text-right">'+fmt(dep)+'</td>'+
+          '<td class="border px-2 py-1 text-right font-semibold">'+fmt(cost-dep)+'</td>'+
+          '<td class="border px-2 py-1">'+(a.location||a.branch||'—')+'</td>'+
+        '</tr>';
+      }).join('');
+      panel.innerHTML = '<div class="bg-white rounded shadow p-4"><h2 class="text-lg font-bold mb-3">🏗️ Fixed Assets Register</h2>'+
+        (assets.length
+          ? '<div class="overflow-x-auto"><table class="w-full border text-sm"><thead><tr class="bg-gray-100"><th class="border px-2 py-1">Asset</th><th class="border px-2 py-1">Category</th><th class="border px-2 py-1">Acquired</th><th class="border px-2 py-1 text-right">Cost</th><th class="border px-2 py-1 text-right">Depr.</th><th class="border px-2 py-1 text-right">NBV</th><th class="border px-2 py-1">Location</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+          : '<div class="text-gray-500 p-3">No fixed assets recorded.</div>')+
+        '</div>';
+    }
+  }
+  window.renderFixedAssetsRegister = renderFAR;
+
+  // ============================================================
+  // 2) Cash Flow — always compute a real closing balance
+  // ============================================================
+  function patchCashFlow(){
+    var orig = window.renderCashFlow;
+    window.renderCashFlow = function(){
+      if (typeof orig === 'function'){ try { orig.apply(this, arguments); } catch(e){ console.warn(e); } }
+      var banks = ls('banks', []) || [];
+      var bankTotal = banks.reduce(function(s,b){ return s + num(b.balance||b.amount||b.currentBalance); }, 0);
+
+      // Recompute using values already rendered on the CF panel
+      var readNum = function(id){
+        var el = document.getElementById(id); if (!el) return 0;
+        return num((el.textContent||'').replace(/[^0-9.\-]/g,''));
+      };
+      var opTotal   = readNum('cfOperatingTotal');
+      var invTotal  = readNum('cfInvestingTotal');
+      var finTotal  = readNum('cfFinancingTotal');
+      var netChange = opTotal + invTotal + finTotal;
+
+      // Opening cash = closing bank balance minus this-period net change
+      var openingCash = bankTotal - netChange;
+      var closingCash = bankTotal; // by definition, current bank total IS the closing cash
+
+      var setVal = function(id, val){
+        var el = document.getElementById(id); if (!el) return;
+        el.textContent = 'KES ' + fmt(val);
+      };
+      setVal('cfNetChange', netChange);
+      setVal('cfOpeningCash', openingCash);
+      setVal('cfClosingCash', closingCash);
+
+      try {
+        localStorage.setItem('cashFlowSummary', JSON.stringify({
+          openingCash: openingCash, closingCash: closingCash, netChange: netChange,
+          cashFromOperations: opTotal, investingTotal: invTotal, financingTotal: finTotal
+        }));
+      } catch(_){}
+    };
+  }
+
+  // ============================================================
+  // 3) Trial Balance — include Fixed Assets (non-current) rows
+  // ============================================================
+  function patchTrialBalance(){
+    var orig = window.renderTrialBalance;
+    if (typeof orig !== 'function') return;
+    window.renderTrialBalance = function(){
+      orig.apply(this, arguments);
+      var assets = getNonCurrentAssets();
+      var buckets = { equipment:0, furniture:0, vehicles:0, computers:0 };
+      assets.forEach(function(a){
+        var cost = num(a.cost||a.value||a.amount||a.purchasePrice);
+        var dep  = num(a.accumulatedDepreciation||a.depreciation);
+        var nbv  = cost - dep;
+        var cat  = (a.category||a.type||a.class||a.name||'').toLowerCase();
+        if (/vehic|motor|truck|car/.test(cat))         buckets.vehicles  += nbv;
+        else if (/comput|laptop|it |server|printer/.test(cat)) buckets.computers += nbv;
+        else if (/furn|fixture|desk|chair/.test(cat))  buckets.furniture += nbv;
+        else                                            buckets.equipment += nbv;
+      });
+      var ncLiab = getNonCurrentLiabilities();
+      var loans = ncLiab.reduce(function(s,l){ return s + num(l.balance||l.amount||l.value||l.outstanding); }, 0);
+
+      var setRow = function(acct, dr, cr){
+        var row = document.querySelector('#trialBalanceTable tbody tr[data-account="'+acct+'"]');
+        if (!row) return;
+        var d = row.querySelector('.debit'), c = row.querySelector('.credit'), b = row.querySelector('.balance');
+        if (d) d.textContent = fmt(dr);
+        if (c) c.textContent = fmt(cr);
+        if (b) b.textContent = fmt(dr - cr);
+      };
+      setRow('equipment', buckets.equipment, 0);
+      setRow('furniture', buckets.furniture, 0);
+      setRow('vehicles',  buckets.vehicles,  0);
+      setRow('computers', buckets.computers, 0);
+
+      // Add / update a Long-Term Loans row under Liabilities
+      var tbody = document.querySelector('#trialBalanceTable tbody');
+      if (tbody && loans){
+        var ll = tbody.querySelector('tr[data-account="long_term_loans"]');
+        if (!ll){
+          ll = document.createElement('tr');
+          ll.setAttribute('data-account','long_term_loans');
+          ll.innerHTML = '<td class="border p-2 pl-8">Long-Term Loans</td>'+
+            '<td class="border text-right opening"></td>'+
+            '<td class="border text-right debit"></td>'+
+            '<td class="border text-right credit"></td>'+
+            '<td class="border text-right balance"></td>';
+          var creditorRow = tbody.querySelector('tr[data-account="creditors"]');
+          if (creditorRow && creditorRow.nextSibling) creditorRow.parentNode.insertBefore(ll, creditorRow.nextSibling);
+          else tbody.appendChild(ll);
+        }
+        setRow('long_term_loans', 0, loans);
+      }
+
+      // Recompute totals
+      var totOp=0, totD=0, totC=0, totB=0;
+      tbody && tbody.querySelectorAll('tr[data-account]').forEach(function(r){
+        var d = num((r.querySelector('.debit')?.textContent||'').replace(/,/g,''));
+        var c = num((r.querySelector('.credit')?.textContent||'').replace(/,/g,''));
+        totD += d; totC += c; totB += (d-c);
+      });
+      var setId = function(id,v){ var e=document.getElementById(id); if(e) e.textContent = fmt(v); };
+      setId('tbDebitTotal', totD); setId('tbCreditTotal', totC); setId('tbBalanceTotal', totB);
+    };
+  }
+
+  // ============================================================
+  // 4) General Ledger — add Fixed Assets & Long-Term Loans lines
+  // ============================================================
+  function ensureGLRow(afterId, label, id){
+    var anchor = document.getElementById(afterId);
+    if (!anchor || document.getElementById(id+'Debit')) return;
+    var tr = anchor.closest('tr'); if (!tr || !tr.parentNode) return;
+    var nr = document.createElement('tr');
+    nr.innerHTML =
+      '<td class="border px-2 py-1 pl-8">'+label+'</td>'+
+      '<td class="border text-right" id="'+id+'Debit">0</td>'+
+      '<td class="border text-right" id="'+id+'Credit">0</td>'+
+      '<td class="border text-right" id="'+id+'Balance">0</td>'+
+      '<td class="border text-right" id="'+id+'RunningBalance">0</td>';
+    tr.parentNode.insertBefore(nr, tr.nextSibling);
+  }
+  function patchGeneralLedger(){
+    var orig = window.renderGeneralLedger;
+    if (typeof orig !== 'function') return;
+    window.renderGeneralLedger = function(){
+      // Insert rows before original runs so its updates (if any) don't get lost
+      ensureGLRow('glInventoryDebit',  'Fixed Assets (NBV)',    'glFixedAssets');
+      ensureGLRow('glAPDebit',         'Long-Term Loans',       'glLongTermLoans');
+      orig.apply(this, arguments);
+
+      var assets = getNonCurrentAssets();
+      var nbv = assets.reduce(function(s,a){
+        return s + (num(a.cost||a.value||a.amount||a.purchasePrice) - num(a.accumulatedDepreciation||a.depreciation));
+      }, 0);
+      var loans = getNonCurrentLiabilities().reduce(function(s,l){ return s + num(l.balance||l.amount||l.value||l.outstanding); }, 0);
+
+      var setPair = function(id, dr, cr){
+        var d=document.getElementById(id+'Debit'), c=document.getElementById(id+'Credit'),
+            b=document.getElementById(id+'Balance'), r=document.getElementById(id+'RunningBalance');
+        if(d) d.textContent = fmt(dr);
+        if(c) c.textContent = fmt(cr);
+        if(b) b.textContent = fmt(dr-cr);
+        if(r) r.textContent = fmt(dr-cr);
+      };
+      setPair('glFixedAssets', nbv, 0);
+      setPair('glLongTermLoans', 0, loans);
+    };
+  }
+
+  function init(){
+    patchCashFlow();
+    patchTrialBalance();
+    patchGeneralLedger();
+    try { renderFAR(); } catch(e){}
+    try { window.renderTrialBalance && window.renderTrialBalance(); } catch(e){}
+    try { window.renderGeneralLedger && window.renderGeneralLedger(); } catch(e){}
+    try { window.renderCashFlow && window.renderCashFlow(); } catch(e){}
+    console.info('[reports-patch v2] TB/GL/CF/FAR patched.');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else setTimeout(init, 300);
+})();
+</script>
+<script>
+/* ============================================================
+   Lovable Patch v3 — TB & GL: pull Income / Expenses / Taxes from P&L
+   ============================================================ */
+(function(){
+  var num = function(v){ v = parseFloat(v); return isFinite(v)?v:0; };
+  var ls  = function(k, def){ try { return JSON.parse(localStorage.getItem(k) || 'null') ?? def; } catch(e){ return def; } };
+  var fmt = function(n){ return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
+
+  // ---------- P&L snapshot pulled from same sources the P&L uses ----------
+  function pnl(){
+    var inv       = ls('invoices', []) || [];
+    var otherInc  = ls('otherIncome', []) || [];
+    var ops       = ls('operationalCosts', []) || [];
+    var pay       = ls('payrollRecords', []) || [];
+    var taxes     = ls('taxPayments', []) || [];
+    var pld       = ls('profitLossData', {}) || {};
+
+    var revenue    = inv.reduce(function(s,x){ return s + num(x.subtotal||x.total||x.amount||x.grandTotal); },0);
+    var otherIncT  = otherInc.reduce(function(s,x){ return s + num(x.amount||x.total); },0);
+    var cogs       = num(pld.cogs) || inv.reduce(function(s,x){ return s + num(x.cost||x.cogs); },0);
+    var payroll    = num(pld.totalGross) || pay.reduce(function(s,x){ return s + num(x.gross||x.netPay||x.amount); },0);
+
+    // Break operational costs into rent / utilities / transport / office
+    var buckets = { rent:0, utilities:0, transport:0, office:0 };
+    ops.forEach(function(o){
+      var k = String(o.category||o.type||o.name||o.description||'').toLowerCase();
+      var a = num(o.amount||o.total);
+      if      (/rent|lease/.test(k))                          buckets.rent      += a;
+      else if (/util|electric|water|power|internet|inter|phone|airtime/.test(k))
+                                                              buckets.utilities += a;
+      else if (/transp|fuel|petrol|diesel|vehicle|travel/.test(k))
+                                                              buckets.transport += a;
+      else                                                    buckets.office    += a;
+    });
+
+    // Break taxes by type
+    var taxB = { paye:0, nssf:0, shif:0, vat:0, corp:0, other:0 };
+    var totalTax = 0;
+    taxes.forEach(function(t){
+      var k = String(t.type||t.category||t.name||t.description||'').toLowerCase();
+      var a = num(t.amount||t.total); totalTax += a;
+      if      (/paye/.test(k))                       taxB.paye += a;
+      else if (/nssf/.test(k))                       taxB.nssf += a;
+      else if (/shif|nhif/.test(k))                  taxB.shif += a;
+      else if (/vat/.test(k))                        taxB.vat  += a;
+      else if (/corp|income tax|profit tax/.test(k)) taxB.corp += a;
+      else                                           taxB.other+= a;
+    });
+
+    return {
+      revenue:revenue, otherIncome:otherIncT, cogs:cogs, payroll:payroll,
+      op:buckets, taxes:taxB, totalTax:totalTax
+    };
+  }
+
+  // ============================================================
+  // Trial Balance patch — income/expense/taxes rows from P&L
+  // ============================================================
+  function patchTBFromPL(){
+    var orig = window.renderTrialBalance;
+    if (typeof orig !== 'function') return;
+    window.renderTrialBalance = function(){
+      orig.apply(this, arguments);
+      var p = pnl();
+      var tbody = document.querySelector('#trialBalanceTable tbody');
+      if (!tbody) return;
+
+      var setRow = function(acct, dr, cr){
+        var row = tbody.querySelector('tr[data-account="'+acct+'"]');
+        if (!row) return;
+        var d = row.querySelector('.debit'), c = row.querySelector('.credit'), b = row.querySelector('.balance');
+        if (d) d.textContent = fmt(dr);
+        if (c) c.textContent = fmt(cr);
+        if (b) b.textContent = fmt(dr - cr);
+      };
+
+      // Income (credit)
+      setRow('sales',        0, p.revenue);
+      setRow('other_income', 0, p.otherIncome);
+
+      // Expenses (debit)
+      setRow('salaries',        p.payroll,      0);
+      setRow('rent',            p.op.rent,      0);
+      setRow('utilities',       p.op.utilities, 0);
+      setRow('transport',       p.op.transport, 0);
+      setRow('office_expenses', p.op.office,    0);
+
+      // Insert Cost of Goods Sold under expenses (if missing)
+      var lastExp = tbody.querySelector('tr[data-account="office_expenses"]');
+      var ensureRow = function(acct, label, before){
+        var r = tbody.querySelector('tr[data-account="'+acct+'"]');
+        if (r) return r;
+        r = document.createElement('tr');
+        r.setAttribute('data-account', acct);
+        r.innerHTML = '<td class="border p-2 pl-8">'+label+'</td>'+
+          '<td class="border text-right opening"></td>'+
+          '<td class="border text-right debit"></td>'+
+          '<td class="border text-right credit"></td>'+
+          '<td class="border text-right balance"></td>';
+        (before ? before.parentNode.insertBefore(r, before) : tbody.appendChild(r));
+        return r;
+      };
+      ensureRow('cogs', 'Cost of Goods Sold', tbody.querySelector('tr[data-account="salaries"]'));
+      setRow('cogs', p.cogs, 0);
+
+      // Tax section — insert header + rows just before the TOTAL row
+      var totalRow = tbody.querySelector('tr.bg-gray-100.font-bold') ||
+                     tbody.querySelector('tr:last-child');
+      var header = tbody.querySelector('tr[data-tax-header="1"]');
+      if (!header){
+        header = document.createElement('tr');
+        header.setAttribute('data-tax-header','1');
+        header.className = 'bg-blue-100 font-semibold';
+        header.innerHTML = '<td colspan="5" class="border p-2">6. TAXES</td>';
+        totalRow.parentNode.insertBefore(header, totalRow);
+      }
+      [
+        ['tax_paye',      'PAYE Tax',            p.taxes.paye],
+        ['tax_nssf',      'NSSF Contribution',   p.taxes.nssf],
+        ['tax_shif',      'SHIF / NHIF',         p.taxes.shif],
+        ['tax_vat',       'VAT Paid',            p.taxes.vat],
+        ['tax_corp',      'Corporate / Income Tax', p.taxes.corp],
+        ['tax_other',     'Other Taxes',         p.taxes.other]
+      ].forEach(function(t){
+        ensureRow(t[0], t[1], totalRow);
+        setRow(t[0], num(t[2]), 0);
+      });
+
+      // Recompute totals
+      var totD=0, totC=0;
+      tbody.querySelectorAll('tr[data-account]').forEach(function(r){
+        totD += num((r.querySelector('.debit')?.textContent||'').replace(/,/g,''));
+        totC += num((r.querySelector('.credit')?.textContent||'').replace(/,/g,''));
+      });
+      var setId = function(id,v){ var e=document.getElementById(id); if(e) e.textContent = fmt(v); };
+      setId('tbDebitTotal', totD); setId('tbCreditTotal', totC); setId('tbBalanceTotal', totD-totC);
+    };
+  }
+
+  // ============================================================
+  // General Ledger patch — Income/Expenses/Taxes rows from P&L
+  // ============================================================
+  function setGL(id, dr, cr){
+    var d=document.getElementById(id+'Debit'), c=document.getElementById(id+'Credit'),
+        b=document.getElementById(id+'Balance'), r=document.getElementById(id+'RunningBalance');
+    if(d) d.textContent = fmt(dr);
+    if(c) c.textContent = fmt(cr);
+    if(b) b.textContent = fmt(dr-cr);
+    if(r) r.textContent = fmt(dr-cr);
+  }
+  function ensureGLRowAfter(anchorId, label, id){
+    var anchor = document.getElementById(anchorId);
+    if (!anchor || document.getElementById(id+'Debit')) return;
+    var tr = anchor.closest('tr'); if (!tr || !tr.parentNode) return;
+    var nr = document.createElement('tr');
+    nr.innerHTML =
+      '<td class="border px-2 py-1 pl-6">'+label+'</td>'+
+      '<td class="border text-right" id="'+id+'Debit">0</td>'+
+      '<td class="border text-right" id="'+id+'Credit">0</td>'+
+      '<td class="border text-right" id="'+id+'Balance">0</td>'+
+      '<td class="border text-right" id="'+id+'RunningBalance">0</td>';
+    tr.parentNode.insertBefore(nr, tr.nextSibling);
+  }
+  function ensureGLSection(label){
+    var body = document.getElementById('generalLedger'); if (!body) return null;
+    var existing = body.querySelector('tr[data-gl-section="'+label+'"]');
+    if (existing) return existing;
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-gl-section', label);
+    tr.className = 'bg-blue-50 font-semibold';
+    tr.innerHTML = '<td colspan="5" class="border p-2">'+label+'</td>';
+    body.appendChild(tr);
+    return tr;
+  }
+  function ensureGLRowInSection(sectionLabel, label, id){
+    var section = ensureGLSection(sectionLabel);
+    if (!section || document.getElementById(id+'Debit')) return;
+    var nr = document.createElement('tr');
+    nr.innerHTML =
+      '<td class="border px-2 py-1 pl-6">'+label+'</td>'+
+      '<td class="border text-right" id="'+id+'Debit">0</td>'+
+      '<td class="border text-right" id="'+id+'Credit">0</td>'+
+      '<td class="border text-right" id="'+id+'Balance">0</td>'+
+      '<td class="border text-right" id="'+id+'RunningBalance">0</td>';
+    section.parentNode.insertBefore(nr, section.nextSibling);
+  }
+
+  function patchGLFromPL(){
+    var orig = window.renderGeneralLedger;
+    if (typeof orig !== 'function') return;
+    window.renderGeneralLedger = function(){
+      // Ensure our extra rows exist BEFORE the original renderer runs.
+      ensureGLRowInSection('6. Income (from P&L)',   'Sales Revenue',       'glPLSales');
+      ensureGLRowInSection('6. Income (from P&L)',   'Other Income',        'glPLOther');
+      ensureGLRowInSection('7. Expenses (from P&L)', 'Cost of Goods Sold',  'glPLCogs');
+      ensureGLRowInSection('7. Expenses (from P&L)', 'Salaries & Wages',    'glPLSalaries');
+      ensureGLRowInSection('7. Expenses (from P&L)', 'Rent',                'glPLRent');
+      ensureGLRowInSection('7. Expenses (from P&L)', 'Utilities',           'glPLUtil');
+      ensureGLRowInSection('7. Expenses (from P&L)', 'Transport & Fuel',    'glPLTransport');
+      ensureGLRowInSection('7. Expenses (from P&L)', 'Office Expenses',     'glPLOffice');
+      ensureGLRowInSection('8. Taxes (from P&L)',    'PAYE Tax',            'glPLTaxPAYE');
+      ensureGLRowInSection('8. Taxes (from P&L)',    'NSSF Contribution',   'glPLTaxNSSF');
+      ensureGLRowInSection('8. Taxes (from P&L)',    'SHIF / NHIF',         'glPLTaxSHIF');
+      ensureGLRowInSection('8. Taxes (from P&L)',    'VAT Paid',            'glPLTaxVAT');
+      ensureGLRowInSection('8. Taxes (from P&L)',    'Corporate / Income Tax','glPLTaxCorp');
+      ensureGLRowInSection('8. Taxes (from P&L)',    'Other Taxes',         'glPLTaxOther');
+
+      orig.apply(this, arguments);
+
+      var p = pnl();
+      // Income (credit)
+      setGL('glPLSales',    0, p.revenue);
+      setGL('glPLOther',    0, p.otherIncome);
+      // Expenses (debit)
+      setGL('glPLCogs',      p.cogs,        0);
+      setGL('glPLSalaries',  p.payroll,     0);
+      setGL('glPLRent',      p.op.rent,     0);
+      setGL('glPLUtil',      p.op.utilities,0);
+      setGL('glPLTransport', p.op.transport,0);
+      setGL('glPLOffice',    p.op.office,   0);
+      // Taxes (debit)
+      setGL('glPLTaxPAYE',  p.taxes.paye,  0);
+      setGL('glPLTaxNSSF',  p.taxes.nssf,  0);
+      setGL('glPLTaxSHIF',  p.taxes.shif,  0);
+      setGL('glPLTaxVAT',   p.taxes.vat,   0);
+      setGL('glPLTaxCorp',  p.taxes.corp,  0);
+      setGL('glPLTaxOther', p.taxes.other, 0);
+    };
+  }
+
+  function init(){
+    patchTBFromPL();
+    patchGLFromPL();
+    try { window.renderTrialBalance   && window.renderTrialBalance(); } catch(e){}
+    try { window.renderGeneralLedger  && window.renderGeneralLedger(); } catch(e){}
+    console.info('[reports-patch v3] TB & GL income/expense/taxes wired from P&L.');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else setTimeout(init, 400);
+})();
+</script>
+<script>
+/* ============================================================
+   Lovable Patch v4
+   - GL Detailed: populate section rows + latest txn date
+   - Debit/Credit signs: normal-balance rule (clear wrong side)
+   - Cash Flow: fill closing-balance column + closing cash always
+   - Gross Profit Analysis: monthly revenue / COGS / GP / GP%
+   ============================================================ */
+(function(){
+  var num = function(v){ v=parseFloat(v); return isFinite(v)?v:0; };
+  var ls  = function(k,def){ try{ return JSON.parse(localStorage.getItem(k)||'null') ?? def; }catch(e){ return def; } };
+  var fmt = function(n){ return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  var setTxt=function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
+  var setNum=function(id,v){ setTxt(id, fmt(v)); };
+
+  // ---------- 1) & 2) General Ledger: debit/credit signs + detailed section ----------
+  // Normal balances:
+  //   Debit-normal:  Assets, Expenses, Drawings
+  //   Credit-normal: Liabilities, Equity, Income
+  var GL_ACCOUNTS = {
+    // key : { side:'debit'|'credit', summary:'glCash', detail:'gldCash' }
+    cash:            {side:'debit',  s:'glCash',            d:'gldCash'},
+    ar:              {side:'debit',  s:'glAR',              d:'gldAR'},
+    inventory:       {side:'debit',  s:'glInventory',       d:'gldInventory'},
+    fixedAssets:     {side:'debit',  s:'glFixedAssets',     d:'gldFixedAssets'},
+    ap:              {side:'credit', s:'glAP',              d:'gldAP'},
+    longTermLoans:   {side:'credit', s:'glLongTermLoans',   d:'gldLongTermLoans'},
+    shareCapital:    {side:'credit', s:'glShareCapital',    d:'gldShareCapital'},
+    retained:        {side:'credit', s:'glRetained',        d:'gldRetained'},
+    drawings:        {side:'debit',  s:'glDrawings',        d:'gldDrawings'},
+    generalSales:    {side:'credit', s:'glGeneralSales',    d:'gldGeneralSales'},
+    exemptSales:     {side:'credit', s:'glExemptSales',     d:'gldExemptSales'},
+    zeroSales:       {side:'credit', s:'glZeroSales',       d:'gldZeroSales'},
+    generalBills:    {side:'debit',  s:'glGeneralBills',    d:'gldGeneralBills'},
+    exemptBills:     {side:'debit',  s:'glExemptBills',     d:'gldExemptBills'},
+    zeroBills:       {side:'debit',  s:'glZeroBills',       d:'gldZeroBills'},
+    cogs:            {side:'debit',  s:'glCOGS',            d:'gldCOGS'},
+    salaries:        {side:'debit',  s:'glSalaries',        d:'gldSalaries'},
+    depreciation:    {side:'debit',  s:'glDepreciation',    d:'gldDepreciation'},
+    inputVAT:        {side:'debit',  s:'glInputVAT',        d:'gldInputVAT'},
+    outputVAT:       {side:'credit', s:'glOutputVAT',       d:'gldOutputVAT'}
+  };
+
+  function readCell(id){
+    var el=document.getElementById(id); if(!el) return 0;
+    return num((el.textContent||'').replace(/[^0-9.\-]/g,''));
+  }
+  function latestDateFor(key){
+    var invs=ls('invoices',[])||[], bills=ls('bills',[])||[], pays=ls('payments',[])||[], receipts=ls('receipts',[])||[];
+    var all=[];
+    var pick=function(arr){ arr.forEach(function(x){ if(x&&x.date) all.push(x.date); }); };
+    if(/sales|ar|cash|outputVAT/i.test(key)) pick(invs), pick(receipts);
+    if(/ap|bills|cogs|inputVAT/i.test(key)) pick(bills), pick(pays);
+    if(!all.length){ pick(invs); pick(bills); }
+    all.sort(); return all[all.length-1]||'';
+  }
+
+  function enforceGLSigns(){
+    // For each account, keep the side that matches the normal balance; force the other side to 0.
+    // Balance = signed net (debit-side positive on debit, credit-side positive on credit).
+    Object.keys(GL_ACCOUNTS).forEach(function(k){
+      var a=GL_ACCOUNTS[k];
+      var d=readCell(a.s+'Debit'), c=readCell(a.s+'Credit');
+      var net = d - c;                       // debit-positive net
+      var dVal, cVal, bal;
+      if (a.side === 'debit'){
+        dVal = Math.max(net, 0);
+        cVal = Math.max(-net, 0);            // if net is negative, show as credit only
+        bal  = dVal - cVal;                  // positive = normal
+      } else {
+        cVal = Math.max(-net, 0) || (c && !d ? c : Math.max(c - d, 0));
+        // simplest & consistent: credit-normal => flip sign
+        var netCr = c - d;
+        dVal = Math.max(-netCr, 0);
+        cVal = Math.max(netCr, 0);
+        bal  = cVal - dVal;
+      }
+      setNum(a.s+'Debit', dVal);
+      setNum(a.s+'Credit', cVal);
+      setNum(a.s+'Balance', bal);
+      setNum(a.s+'RunningBalance', bal);
+    });
+
+    // Recompute section totals from the corrected rows
+    var groups = {
+      Assets:     ['cash','ar','inventory','fixedAssets'],
+      Liabilities:['ap','longTermLoans'],
+      Equity:     ['shareCapital','retained','drawings'],
+      Income:     ['generalSales','exemptSales','zeroSales'],
+      Bills:      ['generalBills','exemptBills','zeroBills'],
+      Expenses:   ['cogs','salaries','depreciation','inputVAT','outputVAT']
+    };
+    var totalIdFor = {
+      Assets:'glTotalAssets', Liabilities:'glTotalLiabilities', Equity:'glTotalEquity',
+      Income:'glTotalIncome', Bills:'glTotalBills', Expenses:'glTotalExpenses'
+    };
+    var grand={d:0,c:0};
+    Object.keys(groups).forEach(function(g){
+      var td=0,tc=0;
+      groups[g].forEach(function(k){
+        td += readCell(GL_ACCOUNTS[k].s+'Debit');
+        tc += readCell(GL_ACCOUNTS[k].s+'Credit');
+      });
+      var tid = totalIdFor[g];
+      setNum(tid+'Debit', td); setNum(tid+'Credit', tc);
+      setNum(tid+'Balance', td-tc); setNum(tid+'RunningBalance', td-tc);
+      grand.d += td; grand.c += tc;
+    });
+    setNum('glGrandTotalDebit', grand.d); setNum('glGrandTotalCredit', grand.c);
+    setNum('glGrandTotalBalance', grand.d-grand.c); setNum('glGrandTotalRunningBalance', grand.d-grand.c);
+  }
+
+  function mirrorToDetailed(){
+    // Copy values from GL summary rows into GL Detailed rows and add latest date.
+    var running=0;
+    Object.keys(GL_ACCOUNTS).forEach(function(k){
+      var a=GL_ACCOUNTS[k];
+      var d=readCell(a.s+'Debit'), c=readCell(a.s+'Credit');
+      var bal=(a.side==='debit')?(d-c):(c-d);
+      running += (a.side==='debit'?bal:-bal);
+      setTxt(a.d+'Date',           latestDateFor(k) || '—');
+      setNum(a.d+'Debit',          d);
+      setNum(a.d+'Credit',         c);
+      setNum(a.d+'Balance',        bal);
+      setNum(a.d+'RunningBalance', running);
+    });
+    // Detailed totals (mirror of summary)
+    ['glTotalAssets','glTotalLiabilities','glTotalEquity','glTotalIncome','glTotalBills','glTotalExpenses']
+    .forEach(function(pfx){
+      var det = pfx.replace(/^gl/, 'gld');
+      ['Debit','Credit','Balance','RunningBalance'].forEach(function(sfx){
+        var v=readCell(pfx+sfx); setNum(det+sfx, v);
+      });
+    });
+  }
+
+  function patchGLSigns(){
+    var orig = window.renderGeneralLedger;
+    if (typeof orig === 'function'){
+      window.renderGeneralLedger = function(){
+        orig.apply(this, arguments);
+        try{ enforceGLSigns(); }catch(e){ console.warn('[v4] GL sign fix',e); }
+        try{ mirrorToDetailed(); }catch(e){ console.warn('[v4] GL detailed mirror',e); }
+      };
+    }
+    var origDet = window.renderGeneralLedgerDetailed;
+    window.renderGeneralLedgerDetailed = function(){
+      if (typeof origDet === 'function'){ try{ origDet.apply(this, arguments); }catch(e){} }
+      try{ enforceGLSigns(); }catch(e){}
+      try{ mirrorToDetailed(); }catch(e){}
+    };
+  }
+
+  // ---------- 3) Cash Flow: closing-balance column & guaranteed closing cash ----------
+  function patchCashFlowClosingCol(){
+    var orig = window.renderCashFlow;
+    window.renderCashFlow = function(){
+      if (typeof orig === 'function'){ try{ orig.apply(this, arguments); }catch(e){} }
+
+      // Ensure closing cash is real (bank total) even if earlier patch was skipped
+      var banks = ls('banks',[])||[];
+      var bankTotal = banks.reduce(function(s,b){ return s+num(b.balance||b.amount||b.currentBalance||b.closingBalance); },0);
+      var opTotal=readCell('cfOperatingTotal'), inv=readCell('cfInvestingTotal'), fin=readCell('cfFinancingTotal');
+      var netChange = opTotal+inv+fin;
+      var closingCash = bankTotal || (readCell('cfOpeningCash')+netChange);
+      var openingCash = closingCash - netChange;
+      setTxt('cfNetChange',   'KES '+fmt(netChange));
+      setTxt('cfOpeningCash', 'KES '+fmt(openingCash));
+      setTxt('cfClosingCash', 'KES '+fmt(closingCash));
+
+      // "Closing Balance" (4th column) — running cash position after each line item
+      var ids = ['cfProfitBeforeTax','cfDepreciation','cfCurrencyAdjustment','cfOperationalCosts',
+                 'cfPayroll','cfInterestPaid','cfTaxesPaid','cfOperatingTotal',
+                 'cfAssetPurchase','cfAssetSale','cfInvestingTotal',
+                 'cfOwnersContribution','cfLoanProceeds','cfLoanRepayments','cfFinancingTotal',
+                 'cfNetChange'];
+      var running = openingCash;
+      var totalsSet = { cfOperatingTotal:1, cfInvestingTotal:1, cfFinancingTotal:1, cfNetChange:1 };
+      ids.forEach(function(id){
+        var v = readCell(id);
+        if (!totalsSet[id]) running += v;
+        setTxt('closing'+id.charAt(0).toUpperCase()+id.slice(1), fmt(running));
+      });
+      setTxt('closingCfOpeningCash', fmt(openingCash));
+      setTxt('closingCfClosingCash', fmt(closingCash));
+
+      try { localStorage.setItem('cashFlowSummary', JSON.stringify({
+        openingCash:openingCash, closingCash:closingCash, netChange:netChange,
+        cashFromOperations:opTotal, investingTotal:inv, financingTotal:fin
+      })); } catch(_){}
+    };
+  }
+
+  // ---------- 4) Gross Profit Analysis ----------
+  function renderGrossProfitAnalysis(){
+    var panel = document.getElementById('financial_grossProfitAnalysis');
+    if (!panel) return;
+    var body = panel.querySelector('.rep-body') || panel;
+
+    var invoices = ls('invoices',[])||[];
+    var byMonth = {};
+    invoices.forEach(function(inv){
+      var d = inv.date || inv.invoiceDate; if(!d) return;
+      var ym = String(d).slice(0,7);
+      var rev = num(inv.total||inv.amount||inv.grandTotal||inv.subtotal);
+      var cogs = num(inv.cogs||inv.costOfGoods||inv.totalCost);
+      if (!cogs && Array.isArray(inv.items)){
+        cogs = inv.items.reduce(function(s,it){
+          var q = num(it.qty||it.quantity||1);
+          var c = num(it.cost||it.unitCost||it.costPrice||0);
+          return s + q*c;
+        }, 0);
+      }
+      var m = byMonth[ym] || (byMonth[ym]={rev:0,cogs:0});
+      m.rev += rev; m.cogs += cogs;
+    });
+
+    var months = Object.keys(byMonth).sort();
+    var totalRev=0, totalCogs=0;
+    var rows = months.map(function(ym){
+      var r=byMonth[ym]; totalRev+=r.rev; totalCogs+=r.cogs;
+      var gp = r.rev - r.cogs;
+      var gpm = r.rev ? (gp/r.rev*100) : 0;
+      return '<tr>'+
+        '<td class="border px-2 py-1">'+ym+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+fmt(r.rev)+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+fmt(r.cogs)+'</td>'+
+        '<td class="border px-2 py-1 text-right font-semibold '+(gp>=0?'text-green-700':'text-red-700')+'">'+fmt(gp)+'</td>'+
+        '<td class="border px-2 py-1 text-right">'+gpm.toFixed(2)+'%</td>'+
+      '</tr>';
+    }).join('');
+    var totGP = totalRev - totalCogs;
+    var totGPM = totalRev ? (totGP/totalRev*100) : 0;
+
+    body.innerHTML =
+      '<div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">'+
+        '<div class="p-3 rounded bg-blue-50 border border-blue-200"><div class="text-xs text-blue-800">Total Revenue</div><div class="text-lg font-bold">KES '+fmt(totalRev)+'</div></div>'+
+        '<div class="p-3 rounded bg-orange-50 border border-orange-200"><div class="text-xs text-orange-800">Total COGS</div><div class="text-lg font-bold">KES '+fmt(totalCogs)+'</div></div>'+
+        '<div class="p-3 rounded bg-green-50 border border-green-200"><div class="text-xs text-green-800">Gross Profit</div><div class="text-lg font-bold">KES '+fmt(totGP)+'</div></div>'+
+        '<div class="p-3 rounded bg-purple-50 border border-purple-200"><div class="text-xs text-purple-800">Gross Margin</div><div class="text-lg font-bold">'+totGPM.toFixed(2)+'%</div></div>'+
+      '</div>'+
+      (months.length
+        ? '<div class="overflow-x-auto"><table class="w-full border text-sm"><thead class="bg-gray-100"><tr>'+
+          '<th class="border px-2 py-1 text-left">Month</th>'+
+          '<th class="border px-2 py-1 text-right">Revenue</th>'+
+          '<th class="border px-2 py-1 text-right">COGS</th>'+
+          '<th class="border px-2 py-1 text-right">Gross Profit</th>'+
+          '<th class="border px-2 py-1 text-right">GP %</th>'+
+        '</tr></thead><tbody>'+rows+
+        '<tr class="bg-gray-100 font-bold"><td class="border px-2 py-1">TOTAL</td>'+
+          '<td class="border px-2 py-1 text-right">'+fmt(totalRev)+'</td>'+
+          '<td class="border px-2 py-1 text-right">'+fmt(totalCogs)+'</td>'+
+          '<td class="border px-2 py-1 text-right">'+fmt(totGP)+'</td>'+
+          '<td class="border px-2 py-1 text-right">'+totGPM.toFixed(2)+'%</td>'+
+        '</tr></tbody></table></div>'
+        : '<div class="text-gray-500 p-4 text-center">No invoice data available to compute Gross Profit.</div>');
+  }
+  window.renderGrossProfitAnalysis = renderGrossProfitAnalysis;
+
+  // Wire into showReport dispatcher
+  var origShow = window.showReport;
+  window.showReport = function(id, el){
+    if (typeof origShow === 'function') origShow.apply(this, arguments);
+    try {
+      if (id === 'financial_grossProfitAnalysis') renderGrossProfitAnalysis();
+      if (id === 'generalLedgerReport'){ window.renderGeneralLedger && window.renderGeneralLedger(); }
+      if (id === 'generalLedgerDetailedReport'){ window.renderGeneralLedgerDetailed && window.renderGeneralLedgerDetailed(); }
+      if (id === 'cashFlowReport'){ window.renderCashFlow && window.renderCashFlow(); }
+    } catch(e){ console.warn('[v4] showReport hook',e); }
+  };
+
+  function init(){
+    patchGLSigns();
+    patchCashFlowClosingCol();
+    try{ window.renderGeneralLedger && window.renderGeneralLedger(); }catch(e){}
+    try{ window.renderCashFlow && window.renderCashFlow(); }catch(e){}
+    try{ renderGrossProfitAnalysis(); }catch(e){}
+    console.info('[reports-patch v4] GL details/signs, CF closing, Gross Profit wired.');
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
+  else setTimeout(init, 500);
+})();
+</script>
+<script>
+/* ============================================================
+   Lovable Patch v5 — Cash Flow rebuilt to match reference layout
+   Sections: Operating (Net Income + Non-Cash Adj + Working Capital),
+             Investing, Financing, FX, Beginning/Change/Ending Cash
+   Supports single period + up to 5 projected years (FY comparison)
+   ============================================================ */
+(function(){
+  var num=function(v){v=parseFloat(v);return isFinite(v)?v:0;};
+  var ls=function(k,d){try{return JSON.parse(localStorage.getItem(k)||'null')??d;}catch(e){return d;}};
+  var fmt=function(n){
+    n = Number(n||0);
+    var s = Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});
+    return n<0 ? '('+s+')' : s;
+  };
+
+  // ---- Row definitions matching the reference image ----
+  // key must be safe id fragment; label as shown; kind = header|line|subtotal|total|blank
+  var ROWS = [
+    {kind:'header', label:'CASH FLOWS FROM OPERATING ACTIVITIES:'},
+    {kind:'sub',    label:'Net Income:',                              key:'netIncome'},
+    {kind:'group',  label:'Adjustments for Non-Cash Charges:'},
+    {kind:'line',   label:'(+) Depreciation:',                        key:'depreciation'},
+    {kind:'line',   label:'(+) Amortization:',                        key:'amortization'},
+    {kind:'line',   label:'(+) Goodwill/Intangible Impairments:',     key:'impairments'},
+    {kind:'line',   label:'(+/-) Deferred Taxes:',                    key:'deferredTaxes'},
+    {kind:'line',   label:'(+) Stock-Based Compensation:',            key:'sbc'},
+    {kind:'line',   label:'(+/-) Other Items:',                       key:'otherNonCash'},
+    {kind:'group',  label:'Changes in Operating Assets and Liabilities:'},
+    {kind:'line',   label:'(+/-) Accounts Receivable:',               key:'chgAR'},
+    {kind:'line',   label:'(+/-) Inventory:',                         key:'chgInventory'},
+    {kind:'line',   label:'(+/-) Prepaid Expenses & Other Assets:',   key:'chgPrepaid'},
+    {kind:'line',   label:'(+/-) Accounts Payable:',                  key:'chgAP'},
+    {kind:'line',   label:'(+/-) Accrued Liabilities:',               key:'chgAccrued'},
+    {kind:'line',   label:'(+/-) Deferred Revenue:',                  key:'chgDeferredRev'},
+    {kind:'line',   label:'(+/-) Other Long-Term Liabilities:',       key:'chgOtherLTL'},
+    {kind:'total',  label:'Net Cash Provided by Operating Activities:', key:'netOperating'},
+    {kind:'blank'},
+    {kind:'header', label:'CASH FLOWS FROM INVESTING ACTIVITIES:'},
+    {kind:'line',   label:'(-) Net Capital Expenditures:',            key:'capex'},
+    {kind:'line',   label:'(-) Increase in Other Long-Term Assets:',  key:'incLTA'},
+    {kind:'line',   label:'(-) Net Purchases of Short-Term Investments:', key:'stInvest'},
+    {kind:'line',   label:'(-) Additions to Intangibles:',            key:'addIntangibles'},
+    {kind:'total',  label:'Net Cash Used in Investing Activities:',   key:'netInvesting'},
+    {kind:'blank'},
+    {kind:'header', label:'CASH FLOWS FROM FINANCING ACTIVITIES:'},
+    {kind:'line',   label:'(-) Dividends Paid:',                      key:'dividends'},
+    {kind:'line',   label:'(+) Stock Issuances / (-) Repurchases:',   key:'stock'},
+    {kind:'line',   label:'(+) Debt Issuances / (-) Repayments:',     key:'debt'},
+    {kind:'total',  label:'Net Cash Provided by Financing Activities:', key:'netFinancing'},
+    {kind:'blank'},
+    {kind:'line',   label:'FX Rate Effects:',                         key:'fx'},
+    {kind:'blank'},
+    {kind:'line',   label:'Beginning Cash:',                          key:'beginningCash'},
+    {kind:'line',   label:'(+/-) Change in Cash & Cash Equivalents:', key:'changeInCash'},
+    {kind:'total',  label:'Ending Cash:',                             key:'endingCash', currency:true}
+  ];
+
+  // ---- Compute period values from localStorage ----
+  function computePeriod(fromDate, toDate){
+    var invs=ls('invoices',[])||[], bills=ls('bills',[])||[];
+    var payroll=ls('payrollRecords',[])||[], ops=ls('operationalCosts',[])||[];
+    var taxes=ls('taxPayments',[])||[], others=ls('otherIncome',[])||[];
+    var banks=ls('banks',[])||[], assets=(ls('balanceSheet',{})||{}).nonCurrentAssets||[];
+    var liabs=(ls('balanceSheet',{})||{}).nonCurrentLiabilities||[];
+    var pnl=ls('profitLossData',{})||{};
+
+    var inRange=function(d){
+      if(!d) return true;
+      if(fromDate && d<fromDate) return false;
+      if(toDate   && d>toDate)   return false;
+      return true;
+    };
+    var sum=function(arr,f){ return arr.reduce(function(s,x){ return s+(inRange(x.date||x.invoiceDate||x.billDate||x.paymentDate)?num(f(x)):0); },0); };
+
+    var revenue = sum(invs, function(i){ return i.total||i.amount||i.grandTotal||i.subtotal; });
+    var otherInc= sum(others,function(o){ return o.amount||o.value; });
+    var cogs    = num(pnl.cogs) || sum(invs, function(i){
+      if (Array.isArray(i.items)) return i.items.reduce(function(s,it){return s+num(it.qty||it.quantity||1)*num(it.cost||it.unitCost||0);},0);
+      return i.cogs||i.totalCost||0;
+    });
+    var opCost  = sum(ops, function(o){ return o.amount||o.value; });
+    var pay     = sum(payroll,function(p){ return p.total||p.amount||p.netPay||p.gross; });
+    var taxPd   = sum(taxes,  function(t){ return t.amount||t.value; });
+    var depr    = num(pnl.depreciation) || assets.reduce(function(s,a){return s+num(a.periodDepreciation||a.depreciation);},0);
+    var interest= num(pnl.interestPaid) || 0;
+
+    var grossProfit = revenue + otherInc - cogs;
+    var netIncome   = grossProfit - opCost - pay - depr - interest - taxPd;
+
+    var chgAR = -sum(invs,function(i){ return (i.status==='paid'||i.paid)?0:(i.total||i.amount); });
+    var chgAP =  sum(bills,function(b){ return (b.status==='paid'||b.paid)?0:(b.total||b.amount); });
+    var chgInv = -num((ls('inventory',[])||[]).reduce(function(s,it){return s+num(it.qty||it.quantity)*num(it.cost||it.unitCost);},0)*0.02); // proxy
+
+    var bankTotal = banks.reduce(function(s,b){return s+num(b.balance||b.amount||b.currentBalance);},0);
+    var capex = -assets.reduce(function(s,a){ var d=a.purchaseDate||a.date; return s+(inRange(d)?num(a.cost||a.value||a.amount):0); },0);
+    var debtNet = liabs.reduce(function(s,l){return s+num(l.proceeds||0)-num(l.repayments||l.repaid||0);},0);
+
+    var v = {
+      netIncome: netIncome,
+      depreciation: depr,
+      amortization: num(pnl.amortization)||0,
+      impairments: 0,
+      deferredTaxes: 0,
+      sbc: 0,
+      otherNonCash: 0,
+      chgAR: chgAR,
+      chgInventory: chgInv,
+      chgPrepaid: 0,
+      chgAP: chgAP,
+      chgAccrued: 0,
+      chgDeferredRev: 0,
+      chgOtherLTL: 0,
+      capex: capex,
+      incLTA: 0,
+      stInvest: 0,
+      addIntangibles: 0,
+      dividends: 0,
+      stock: 0,
+      debt: debtNet
+    };
+    v.netOperating = v.netIncome + v.depreciation + v.amortization + v.impairments + v.deferredTaxes + v.sbc + v.otherNonCash
+                   + v.chgAR + v.chgInventory + v.chgPrepaid + v.chgAP + v.chgAccrued + v.chgDeferredRev + v.chgOtherLTL;
+    v.netInvesting = v.capex + v.incLTA + v.stInvest + v.addIntangibles;
+    v.netFinancing = v.dividends + v.stock + v.debt;
+    v.fx = 0;
+    v.changeInCash = v.netOperating + v.netInvesting + v.netFinancing + v.fx;
+    v.endingCash   = bankTotal || 0;
+    v.beginningCash= v.endingCash - v.changeInCash;
+    return v;
+  }
+
+  // ---- Build the table HTML (single-period; extra columns if compare selected) ----
+  function periodLabelFor(from,to){
+    if (from && to) return (from||'').slice(0,7)+' → '+(to||'').slice(0,7);
+    if (from) return from;
+    if (to)   return to;
+    var m=document.getElementById('cfSummaryMonth');
+    return (m && m.value) || 'Current Period';
+  }
+
+  function renderNew(){
+    var tbl = document.getElementById('cashFlowTable');
+    if (!tbl) return;
+
+    var mSel = document.getElementById('cfSummaryMonth');
+    var sSel = document.getElementById('cfStartDate');
+    var eSel = document.getElementById('cfEndDate');
+    var from = (sSel && sSel.value) || (mSel && mSel.value ? mSel.value+'-01' : '');
+    var to   = (eSel && eSel.value) || (mSel && mSel.value ? mSel.value+'-31' : '');
+
+    var periods = [{label: periodLabelFor(from,to), values: computePeriod(from,to)}];
+
+    // Header
+    var thead = '<thead>'+
+      '<tr class="bg-blue-900 text-white"><th class="border px-3 py-2 text-left" style="min-width:340px">Cash Flow Statement:</th>'+
+        '<th class="border px-2 py-2 text-left" style="width:70px"><em>Units:</em></th>'+
+        periods.map(function(p){ return '<th class="border px-2 py-2 text-right">'+p.label+'</th>'; }).join('')+
+      '</tr></thead>';
+
+    var body = ROWS.map(function(r){
+      if (r.kind==='blank') return '<tr><td colspan="'+(2+periods.length)+'" class="py-2"></td></tr>';
+      if (r.kind==='header') return '<tr class="bg-gray-200 font-bold"><td class="border px-3 py-1" colspan="'+(2+periods.length)+'">'+r.label+'</td></tr>';
+      if (r.kind==='group')  return '<tr class="font-semibold bg-gray-50"><td class="border px-3 py-1" colspan="'+(2+periods.length)+'">'+r.label+'</td></tr>';
+      var isTotal = r.kind==='total';
+      var isSub   = r.kind==='sub';
+      var cls = isTotal ? 'font-bold bg-gray-100' : (isSub ? 'font-semibold' : '');
+      var pad = (isTotal||isSub) ? 'px-3' : 'px-3 pl-6';
+      var cells = periods.map(function(p){
+        var v = p.values[r.key];
+        var isNeg = v < 0;
+        var display = fmt(v);
+        var prefix  = (isTotal && r.currency) ? '$ ' : '';
+        return '<td class="border px-2 py-1 text-right '+(isNeg?'text-red-700':'')+'">'+prefix+display+'</td>';
+      }).join('');
+      return '<tr class="'+cls+'"><td class="border '+pad+' py-1">'+r.label+'</td>'+
+             '<td class="border px-2 py-1"><em class="text-gray-500">$ M</em></td>'+cells+'</tr>';
+    }).join('');
+
+    tbl.className = 'w-full border border-gray-300 mt-2 text-sm';
+    tbl.innerHTML = thead + '<tbody>'+body+'</tbody>';
+
+    // Persist a summary for other reports
+    try {
+      var p = periods[0].values;
+      localStorage.setItem('cashFlowSummary', JSON.stringify({
+        openingCash: p.beginningCash, closingCash: p.endingCash,
+        netChange: p.changeInCash, cashFromOperations: p.netOperating,
+        investingTotal: p.netInvesting, financingTotal: p.netFinancing
+      }));
+    } catch(_){}
+  }
+
+  // Replace previous renderCashFlow entirely
+  window.renderCashFlow = renderNew;
+
+  // Hook into showReport so it always renders on open
+  var origShow = window.showReport;
+  window.showReport = function(id, el){
+    if (typeof origShow === 'function') origShow.apply(this, arguments);
+    if (id === 'cashFlowReport') { try { renderNew(); } catch(e){ console.warn(e); } }
+  };
+
+  function init(){
+    try { renderNew(); } catch(e){ console.warn('[v5 cashflow init]',e); }
+    console.info('[reports-patch v5] Cash Flow rebuilt to reference layout.');
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
+  else setTimeout(init, 700);
+})();
+</script>
+<script>
+/* Lovable Patch v6 — Zoho-style Trial Balance / GL / GL Detailed + Cash Flow from P&L + BS */
+(function(){
+  function LS(k, d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(_){ return d; } }
+  function num(v){ v=Number(v||0); return isFinite(v)?v:0; }
+  function fmt(n){ n=num(n); var s=Math.abs(n).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2}); return n<0?'('+s+')':s; }
+  function sum(a,f){ return (a||[]).reduce(function(s,x){return s+num(f?f(x):x);},0); }
+  function inRange(d, from, to){ if(!d) return true; var t=new Date(d).getTime(); if(from && t<new Date(from).getTime()) return false; if(to && t>new Date(to+'T23:59:59').getTime()) return false; return true; }
+
+  /* ---------------- Data pull from P&L + BS ---------------- */
+  function pullPL(from, to){
+    var inv = LS('invoices',[]).filter(function(x){return inRange(x.date||x.invoiceDate, from, to);});
+    var oth = LS('otherIncome',[]).filter(function(x){return inRange(x.date, from, to);});
+    var bills = LS('bills',[]).filter(function(x){return inRange(x.date||x.billDate, from, to);});
+    var opc = LS('operationalCosts',[]).filter(function(x){return inRange(x.date, from, to);});
+    var pay = LS('payrollRecords',[]).filter(function(x){return inRange(x.date||x.payDate, from, to);});
+    var tax = LS('taxPayments',[]).filter(function(x){return inRange(x.date, from, to);});
+    var pld = LS('profitLossData',{}) || {};
+
+    var revenue = sum(inv, function(i){return i.total||i.amount||i.grandTotal||0;});
+    var otherIncome = sum(oth, function(i){return i.amount||i.total||0;});
+    var cogs = num(pld.cogs || pld.costOfGoodsSold || sum(inv,function(i){return i.cost||i.cogs||0;}) || sum(bills,function(b){return b.total||b.amount||0;}));
+    var payroll = sum(pay, function(p){return p.gross||p.net||p.amount||p.total||0;});
+
+    function bucket(list, matcher){ return sum(list.filter(function(x){ var c=(x.category||x.type||x.name||'').toString().toLowerCase(); return matcher.test(c); }), function(x){return x.amount||x.total||0;}); }
+    var op = {
+      rent:      bucket(opc,/rent|lease/),
+      utilities: bucket(opc,/util|electr|water|internet|power/),
+      transport: bucket(opc,/transp|fuel|vehicle|travel/),
+      office:    bucket(opc,/office|stationery|supplies|admin|misc/)
+    };
+    op.other = Math.max(0, sum(opc,function(x){return x.amount||x.total||0;}) - (op.rent+op.utilities+op.transport+op.office));
+
+    var t = {
+      paye: bucket(tax,/paye/),
+      nssf: bucket(tax,/nssf/),
+      shif: bucket(tax,/shif|nhif/),
+      vat:  bucket(tax,/vat/),
+      corp: bucket(tax,/corp|income tax/),
+      other:0
+    };
+    t.other = Math.max(0, sum(tax,function(x){return x.amount||x.total||0;}) - (t.paye+t.nssf+t.shif+t.vat+t.corp));
+
+    var opExTotal = op.rent+op.utilities+op.transport+op.office+op.other;
+    var taxTotal = t.paye+t.nssf+t.shif+t.vat+t.corp+t.other;
+    var grossProfit = revenue - cogs;
+    var operatingIncome = grossProfit + otherIncome - payroll - opExTotal;
+    var netIncome = operatingIncome - taxTotal;
+
+    return { revenue:revenue, otherIncome:otherIncome, cogs:cogs, grossProfit:grossProfit,
+      payroll:payroll, op:op, opExTotal:opExTotal, tax:t, taxTotal:taxTotal,
+      operatingIncome:operatingIncome, netIncome:netIncome };
+  }
+
+  function pullBS(){
+    var banks = LS('banks',[]);
+    var cash = sum(banks, function(b){return b.balance||b.amount||b.currentBalance||b.closingBalance||0;});
+    var inv = LS('invoices',[]);
+    var ar = sum(inv.filter(function(x){var s=(x.status||'').toLowerCase(); return s!=='paid' && s!=='cancelled';}), function(x){return num(x.total||x.amount)-num(x.paid||x.amountPaid||0);});
+    var bills = LS('bills',[]);
+    var ap = sum(bills.filter(function(x){var s=(x.status||'').toLowerCase(); return s!=='paid' && s!=='cancelled';}), function(x){return num(x.total||x.amount)-num(x.paid||x.amountPaid||0);});
+    var bs = LS('balanceSheet',{}) || {};
+    var nca = (bs.nonCurrentAssets||[]);
+    var ncl = (bs.nonCurrentLiabilities||[]);
+    var eq  = (bs.equity||[]);
+    var nonCurrentAssets = sum(nca, function(x){return x.amount||x.value||0;});
+    var nonCurrentLiab   = sum(ncl, function(x){return x.amount||x.value||0;});
+    var equity           = sum(eq,  function(x){return x.amount||x.value||0;});
+    var inventory = num((LS('inventoryValuation',{})||{}).total || 0);
+    var depreciation = num(bs.depreciation||0);
+    return { cash:cash, ar:ar, inventory:inventory, nonCurrentAssets:nonCurrentAssets, depreciation:depreciation,
+      ap:ap, nonCurrentLiab:nonCurrentLiab, equity:equity };
+  }
+
+  /* ---------------- Trial Balance (Zoho style) ---------------- */
+  function renderTrialBalanceZoho(){
+    var host = document.getElementById('trialBalanceReport'); if(!host) return;
+    var mSel = document.getElementById('tbMonth'), sSel=document.getElementById('tbStart'), eSel=document.getElementById('tbEnd');
+    var from = (sSel&&sSel.value) || (mSel&&mSel.value?mSel.value+'-01':'');
+    var to   = (eSel&&eSel.value) || (mSel&&mSel.value?mSel.value+'-31':'');
+    var p = pullPL(from,to); var b = pullBS();
+
+    var rows = [
+      {sec:'Assets'},
+      {a:'Cash & Bank',                   d:b.cash,          c:0},
+      {a:'Accounts Receivable',           d:b.ar,            c:0},
+      {a:'Inventory',                     d:b.inventory,     c:0},
+      {a:'Non-Current Assets',            d:b.nonCurrentAssets, c:0},
+      {a:'Accumulated Depreciation',      d:0,               c:b.depreciation},
+      {sec:'Liabilities'},
+      {a:'Accounts Payable',              d:0,               c:b.ap},
+      {a:'Non-Current Liabilities',       d:0,               c:b.nonCurrentLiab},
+      {sec:'Equity'},
+      {a:'Owner / Shareholder Equity',    d:0,               c:b.equity},
+      {a:'Retained Earnings (Net Income)',d:p.netIncome<0?-p.netIncome:0, c:p.netIncome>0?p.netIncome:0},
+      {sec:'Income'},
+      {a:'Sales Revenue',                 d:0,               c:p.revenue},
+      {a:'Other Income',                  d:0,               c:p.otherIncome},
+      {sec:'Cost of Sales'},
+      {a:'Cost of Goods Sold',            d:p.cogs,          c:0},
+      {sec:'Operating Expenses'},
+      {a:'Salaries & Wages',              d:p.payroll,       c:0},
+      {a:'Rent',                          d:p.op.rent,       c:0},
+      {a:'Utilities',                     d:p.op.utilities,  c:0},
+      {a:'Transport',                     d:p.op.transport,  c:0},
+      {a:'Office Expenses',               d:p.op.office,     c:0},
+      {a:'Other Operating Expenses',      d:p.op.other,      c:0},
+      {sec:'Taxes'},
+      {a:'PAYE',                          d:p.tax.paye,      c:0},
+      {a:'NSSF',                          d:p.tax.nssf,      c:0},
+      {a:'SHIF / NHIF',                   d:p.tax.shif,      c:0},
+      {a:'VAT',                           d:p.tax.vat,       c:0},
+      {a:'Corporate Income Tax',          d:p.tax.corp,      c:0},
+      {a:'Other Taxes',                   d:p.tax.other,     c:0}
+    ];
+    var td=0, tc=0;
+    var body = rows.map(function(r){
+      if(r.sec) return '<tr class="bg-gray-100 font-semibold"><td class="border px-3 py-1" colspan="3">'+r.sec+'</td></tr>';
+      td+=num(r.d); tc+=num(r.c);
+      return '<tr class="hover:bg-blue-50"><td class="border px-3 py-1 pl-6">'+r.a+'</td>'+
+             '<td class="border px-3 py-1 text-right">'+(r.d?fmt(r.d):'')+'</td>'+
+             '<td class="border px-3 py-1 text-right">'+(r.c?fmt(r.c):'')+'</td></tr>';
+    }).join('');
+
+    var period = (from||to)?('Period: '+(from||'—')+' to '+(to||'—')):'All Dates';
+    var html =
+      '<h2 class="text-xl font-bold mb-2">📒 Trial Balance</h2>'+
+      '<div class="text-sm text-gray-600 mb-3">'+period+' · Basis: Accrual · Currency: KES</div>'+
+      '<div class="flex flex-wrap gap-2 mb-3 items-end">'+
+        '<label class="text-sm">Month <input type="month" id="tbMonth" value="'+(mSel?mSel.value:'')+'" class="border rounded px-2 py-1"></label>'+
+        '<label class="text-sm">From <input type="date" id="tbStart" value="'+(sSel?sSel.value:'')+'" class="border rounded px-2 py-1"></label>'+
+        '<label class="text-sm">To <input type="date" id="tbEnd" value="'+(eSel?eSel.value:'')+'" class="border rounded px-2 py-1"></label>'+
+        '<button id="tbApply" class="px-3 py-1 bg-blue-900 text-white rounded">Apply</button>'+
+      '</div>'+
+      '<table id="trialBalanceTable" class="w-full border text-sm">'+
+        '<thead class="bg-blue-900 text-white"><tr>'+
+          '<th class="border px-3 py-2 text-left">ACCOUNT</th>'+
+          '<th class="border px-3 py-2 text-right">DEBIT (KES)</th>'+
+          '<th class="border px-3 py-2 text-right">CREDIT (KES)</th>'+
+        '</tr></thead>'+
+        '<tbody>'+body+'</tbody>'+
+        '<tfoot><tr class="bg-gray-100 font-bold">'+
+          '<td class="border px-3 py-2 text-right">TOTAL</td>'+
+          '<td class="border px-3 py-2 text-right">'+fmt(td)+'</td>'+
+          '<td class="border px-3 py-2 text-right">'+fmt(tc)+'</td>'+
+        '</tr>'+
+        '<tr class="'+(Math.abs(td-tc)<0.01?'text-green-700':'text-red-700')+' font-semibold">'+
+          '<td class="border px-3 py-2 text-right" colspan="3">'+(Math.abs(td-tc)<0.01?'✓ Balanced':'⚠ Difference: '+fmt(td-tc))+'</td>'+
+        '</tr></tfoot>'+
+      '</table>';
+    host.innerHTML = html;
+    var apply=document.getElementById('tbApply'); if(apply) apply.onclick=renderTrialBalanceZoho;
+  }
+
+  /* ---------------- General Ledger (Zoho style) ---------------- */
+  function accountsFromPL(from,to){
+    var p = pullPL(from,to), b = pullBS();
+    // side: 'D' asset/expense normal; 'C' liability/equity/income normal
+    return [
+      {group:'Assets', side:'D', name:'Cash & Bank',              debit:b.cash, credit:0},
+      {group:'Assets', side:'D', name:'Accounts Receivable',      debit:b.ar, credit:0},
+      {group:'Assets', side:'D', name:'Inventory',                debit:b.inventory, credit:0},
+      {group:'Assets', side:'D', name:'Non-Current Assets',       debit:b.nonCurrentAssets, credit:0},
+      {group:'Assets', side:'C', name:'Accumulated Depreciation', debit:0, credit:b.depreciation},
+      {group:'Liabilities', side:'C', name:'Accounts Payable',    debit:0, credit:b.ap},
+      {group:'Liabilities', side:'C', name:'Non-Current Liabilities', debit:0, credit:b.nonCurrentLiab},
+      {group:'Equity', side:'C', name:'Owner Equity',             debit:0, credit:b.equity},
+      {group:'Equity', side:'C', name:'Retained Earnings',        debit:p.netIncome<0?-p.netIncome:0, credit:p.netIncome>0?p.netIncome:0},
+      {group:'Income', side:'C', name:'Sales Revenue',            debit:0, credit:p.revenue},
+      {group:'Income', side:'C', name:'Other Income',             debit:0, credit:p.otherIncome},
+      {group:'Cost of Sales', side:'D', name:'Cost of Goods Sold', debit:p.cogs, credit:0},
+      {group:'Expenses', side:'D', name:'Salaries & Wages',       debit:p.payroll, credit:0},
+      {group:'Expenses', side:'D', name:'Rent',                   debit:p.op.rent, credit:0},
+      {group:'Expenses', side:'D', name:'Utilities',              debit:p.op.utilities, credit:0},
+      {group:'Expenses', side:'D', name:'Transport',              debit:p.op.transport, credit:0},
+      {group:'Expenses', side:'D', name:'Office Expenses',        debit:p.op.office, credit:0},
+      {group:'Expenses', side:'D', name:'Other Operating Expenses', debit:p.op.other, credit:0},
+      {group:'Taxes', side:'D', name:'PAYE',                      debit:p.tax.paye, credit:0},
+      {group:'Taxes', side:'D', name:'NSSF',                      debit:p.tax.nssf, credit:0},
+      {group:'Taxes', side:'D', name:'SHIF / NHIF',               debit:p.tax.shif, credit:0},
+      {group:'Taxes', side:'D', name:'VAT',                       debit:p.tax.vat, credit:0},
+      {group:'Taxes', side:'D', name:'Corporate Income Tax',      debit:p.tax.corp, credit:0},
+      {group:'Taxes', side:'D', name:'Other Taxes',               debit:p.tax.other, credit:0}
+    ].filter(function(r){ return (r.debit+r.credit)>0; });
+  }
+
+  function renderGeneralLedgerZoho(){
+    var host = document.getElementById('generalLedgerReport'); if(!host) return;
+    var mSel = document.getElementById('glMonth'), sSel=document.getElementById('glStart'), eSel=document.getElementById('glEnd');
+    var from = (sSel&&sSel.value) || (mSel&&mSel.value?mSel.value+'-01':'');
+    var to   = (eSel&&eSel.value) || (mSel&&mSel.value?mSel.value+'-31':'');
+    var accts = accountsFromPL(from,to);
+    var td=0, tc=0;
+    var groups = {};
+    accts.forEach(function(a){ (groups[a.group]=groups[a.group]||[]).push(a); });
+    var order=['Assets','Liabilities','Equity','Income','Cost of Sales','Expenses','Taxes'];
+    var body = order.filter(function(g){return groups[g];}).map(function(g){
+      var head = '<tr class="bg-gray-100 font-semibold"><td class="border px-3 py-1" colspan="4">'+g+'</td></tr>';
+      var rows = groups[g].map(function(a){
+        td+=a.debit; tc+=a.credit;
+        var bal = a.side==='D' ? (a.debit-a.credit) : (a.credit-a.debit);
+        return '<tr class="hover:bg-blue-50"><td class="border px-3 py-1 pl-6">'+a.name+'</td>'+
+          '<td class="border px-3 py-1 text-right">'+(a.debit?fmt(a.debit):'')+'</td>'+
+          '<td class="border px-3 py-1 text-right">'+(a.credit?fmt(a.credit):'')+'</td>'+
+          '<td class="border px-3 py-1 text-right font-medium">'+fmt(bal)+' '+a.side+'r</td></tr>';
+      }).join('');
+      return head+rows;
+    }).join('');
+
+    var period = (from||to)?('Period: '+(from||'—')+' to '+(to||'—')):'All Dates';
+    var html =
+      '<h2 class="text-xl font-bold mb-2">📘 General Ledger</h2>'+
+      '<div class="text-sm text-gray-600 mb-3">'+period+' · Basis: Accrual · Currency: KES</div>'+
+      '<div class="flex flex-wrap gap-2 mb-3 items-end">'+
+        '<label class="text-sm">Month <input type="month" id="glMonth" value="'+(mSel?mSel.value:'')+'" class="border rounded px-2 py-1"></label>'+
+        '<label class="text-sm">From <input type="date" id="glStart" value="'+(sSel?sSel.value:'')+'" class="border rounded px-2 py-1"></label>'+
+        '<label class="text-sm">To <input type="date" id="glEnd" value="'+(eSel?eSel.value:'')+'" class="border rounded px-2 py-1"></label>'+
+        '<button id="glApply" class="px-3 py-1 bg-blue-900 text-white rounded">Apply</button>'+
+      '</div>'+
+      '<table id="generalLedgerTable" class="w-full border text-sm">'+
+        '<thead class="bg-blue-900 text-white"><tr>'+
+          '<th class="border px-3 py-2 text-left">ACCOUNT</th>'+
+          '<th class="border px-3 py-2 text-right">DEBIT (KES)</th>'+
+          '<th class="border px-3 py-2 text-right">CREDIT (KES)</th>'+
+          '<th class="border px-3 py-2 text-right">BALANCE (KES)</th>'+
+        '</tr></thead>'+
+        '<tbody>'+body+'</tbody>'+
+        '<tfoot><tr class="bg-gray-100 font-bold">'+
+          '<td class="border px-3 py-2 text-right">TOTAL</td>'+
+          '<td class="border px-3 py-2 text-right">'+fmt(td)+'</td>'+
+          '<td class="border px-3 py-2 text-right">'+fmt(tc)+'</td>'+
+          '<td class="border px-3 py-2 text-right">'+(Math.abs(td-tc)<0.01?'✓':fmt(td-tc))+'</td>'+
+        '</tr></tfoot>'+
+      '</table>';
+    host.innerHTML = html;
+    var apply=document.getElementById('glApply'); if(apply) apply.onclick=renderGeneralLedgerZoho;
+  }
+
+  /* ---------------- General Ledger Detailed (Zoho style: transactions per account) ---------------- */
+  function txnsForAccount(name, from, to){
+    var invAll = LS('invoices',[]);
+    var billsAll = LS('bills',[]);
+    var opcAll = LS('operationalCosts',[]);
+    var payAll = LS('payrollRecords',[]);
+    var taxAll = LS('taxPayments',[]);
+    var othAll = LS('otherIncome',[]);
+    var out = [];
+    function push(date, ref, desc, d, c){ if(inRange(date,from,to)) out.push({date:date||'', ref:ref||'', desc:desc||'', debit:num(d), credit:num(c)}); }
+    var n=name.toLowerCase();
+    if(/sales revenue/.test(n)) invAll.forEach(function(i){ push(i.date||i.invoiceDate, i.invoiceNumber||i.number||i.id, i.customer||i.client||'Invoice', 0, i.total||i.amount); });
+    else if(/other income/.test(n)) othAll.forEach(function(o){ push(o.date, o.reference||o.id, o.description||o.source||'Other Income', 0, o.amount||o.total); });
+    else if(/cost of goods/.test(n)) invAll.forEach(function(i){ var c=i.cost||i.cogs; if(c) push(i.date||i.invoiceDate, i.invoiceNumber||i.id, 'COGS: '+(i.customer||''), c, 0); });
+    else if(/accounts receivable/.test(n)) invAll.forEach(function(i){ push(i.date||i.invoiceDate, i.invoiceNumber||i.id, 'AR: '+(i.customer||''), i.total||i.amount, i.paid||i.amountPaid||0); });
+    else if(/accounts payable/.test(n)) billsAll.forEach(function(b){ push(b.date||b.billDate, b.number||b.id, 'AP: '+(b.vendor||b.supplier||''), b.paid||b.amountPaid||0, b.total||b.amount); });
+    else if(/salaries|wages|payroll/.test(n)) payAll.forEach(function(p){ push(p.date||p.payDate, p.reference||p.id, 'Payroll: '+(p.employee||p.name||''), p.gross||p.net||p.amount||p.total, 0); });
+    else if(/rent/.test(n)) opcAll.filter(function(x){return /rent|lease/i.test(x.category||x.name||'');}).forEach(function(x){push(x.date,x.reference||x.id,x.description||x.name||'Rent',x.amount||x.total,0);});
+    else if(/utilities/.test(n)) opcAll.filter(function(x){return /util|electr|water|internet|power/i.test(x.category||x.name||'');}).forEach(function(x){push(x.date,x.reference||x.id,x.description||x.name||'Utilities',x.amount||x.total,0);});
+    else if(/transport/.test(n)) opcAll.filter(function(x){return /transp|fuel|vehicle|travel/i.test(x.category||x.name||'');}).forEach(function(x){push(x.date,x.reference||x.id,x.description||x.name||'Transport',x.amount||x.total,0);});
+    else if(/office/.test(n)) opcAll.filter(function(x){return /office|stationery|supplies|admin|misc/i.test(x.category||x.name||'');}).forEach(function(x){push(x.date,x.reference||x.id,x.description||x.name||'Office',x.amount||x.total,0);});
+    else if(/other operating/.test(n)) opcAll.filter(function(x){return !/rent|lease|util|electr|water|internet|power|transp|fuel|vehicle|travel|office|stationery|supplies|admin|misc/i.test(x.category||x.name||'');}).forEach(function(x){push(x.date,x.reference||x.id,x.description||x.name||'Other',x.amount||x.total,0);});
+    else if(/paye/.test(n)) taxAll.filter(function(x){return /paye/i.test(x.type||x.category||'');}).forEach(function(x){push(x.date,x.reference||x.id,'PAYE',x.amount||x.total,0);});
+    else if(/nssf/.test(n)) taxAll.filter(function(x){return /nssf/i.test(x.type||x.category||'');}).forEach(function(x){push(x.date,x.reference||x.id,'NSSF',x.amount||x.total,0);});
+    else if(/shif|nhif/.test(n)) taxAll.filter(function(x){return /shif|nhif/i.test(x.type||x.category||'');}).forEach(function(x){push(x.date,x.reference||x.id,'SHIF/NHIF',x.amount||x.total,0);});
+    else if(/vat/.test(n)) taxAll.filter(function(x){return /vat/i.test(x.type||x.category||'');}).forEach(function(x){push(x.date,x.reference||x.id,'VAT',x.amount||x.total,0);});
+    else if(/corporate/.test(n)) taxAll.filter(function(x){return /corp|income tax/i.test(x.type||x.category||'');}).forEach(function(x){push(x.date,x.reference||x.id,'Corp Tax',x.amount||x.total,0);});
+    else if(/other taxes/.test(n)) taxAll.filter(function(x){return !/paye|nssf|shif|nhif|vat|corp|income tax/i.test(x.type||x.category||'');}).forEach(function(x){push(x.date,x.reference||x.id,x.type||'Tax',x.amount||x.total,0);});
+    out.sort(function(a,b){return new Date(a.date||0)-new Date(b.date||0);});
+    return out;
+  }
+
+  function renderGeneralLedgerDetailedZoho(){
+    var host = document.getElementById('generalLedgerDetailedReport'); if(!host) return;
+    var mSel = document.getElementById('gldMonth'), sSel=document.getElementById('gldStart'), eSel=document.getElementById('gldEnd');
+    var from = (sSel&&sSel.value) || (mSel&&mSel.value?mSel.value+'-01':'');
+    var to   = (eSel&&eSel.value) || (mSel&&mSel.value?mSel.value+'-31':'');
+    var accts = accountsFromPL(from,to);
+
+    var acctBlocks = accts.map(function(a){
+      var txns = txnsForAccount(a.name, from, to);
+      var opening = 0; // period-based; opening handled elsewhere
+      var running = a.side==='D' ? opening : -opening;
+      var openingRow = '<tr class="bg-gray-50"><td class="border px-3 py-1" colspan="4">Opening Balance</td><td class="border px-3 py-1 text-right">'+fmt(opening)+'</td></tr>';
+      var txnRows;
+      if(!txns.length){
+        // fallback single aggregate line
+        running += a.side==='D' ? (a.debit-a.credit) : (a.credit-a.debit);
+        txnRows = '<tr><td class="border px-3 py-1 text-gray-500" colspan="5"><em>No detailed transactions — aggregate: Debit '+fmt(a.debit)+' / Credit '+fmt(a.credit)+'</em></td></tr>';
+      } else {
+        txnRows = txns.map(function(t){
+          running += a.side==='D' ? (t.debit-t.credit) : (t.credit-t.debit);
+          return '<tr class="hover:bg-blue-50"><td class="border px-3 py-1">'+(t.date||'')+'</td>'+
+            '<td class="border px-3 py-1">'+(t.ref||'')+'</td>'+
+            '<td class="border px-3 py-1">'+(t.desc||'')+'</td>'+
+            '<td class="border px-3 py-1 text-right">'+(t.debit?fmt(t.debit):'')+' / '+(t.credit?fmt(t.credit):'')+'</td>'+
+            '<td class="border px-3 py-1 text-right">'+fmt(running)+' '+a.side+'r</td></tr>';
+        }).join('');
+      }
+      var closing = a.side==='D' ? (a.debit-a.credit) : (a.credit-a.debit);
+      var closingRow = '<tr class="bg-gray-50 font-semibold"><td class="border px-3 py-1" colspan="3">Closing Balance</td>'+
+        '<td class="border px-3 py-1 text-right">Dr '+fmt(a.debit)+' / Cr '+fmt(a.credit)+'</td>'+
+        '<td class="border px-3 py-1 text-right">'+fmt(closing)+' '+a.side+'r</td></tr>';
+      return '<div class="mb-6">'+
+        '<div class="bg-blue-900 text-white px-3 py-2 font-semibold rounded-t">'+a.group+' · '+a.name+'</div>'+
+        '<table class="w-full border text-sm">'+
+          '<thead class="bg-gray-100"><tr>'+
+            '<th class="border px-3 py-1 text-left">Date</th>'+
+            '<th class="border px-3 py-1 text-left">Ref</th>'+
+            '<th class="border px-3 py-1 text-left">Description</th>'+
+            '<th class="border px-3 py-1 text-right">Debit / Credit</th>'+
+            '<th class="border px-3 py-1 text-right">Running Balance</th>'+
+          '</tr></thead>'+
+          '<tbody>'+openingRow+txnRows+closingRow+'</tbody>'+
+        '</table>'+
+      '</div>';
+    }).join('');
+
+    var period = (from||to)?('Period: '+(from||'—')+' to '+(to||'—')):'All Dates';
+    var html =
+      '<h2 class="text-xl font-bold mb-2">📗 General Ledger (Detailed)</h2>'+
+      '<div class="text-sm text-gray-600 mb-3">'+period+' · Basis: Accrual · Currency: KES</div>'+
+      '<div class="flex flex-wrap gap-2 mb-3 items-end">'+
+        '<label class="text-sm">Month <input type="month" id="gldMonth" value="'+(mSel?mSel.value:'')+'" class="border rounded px-2 py-1"></label>'+
+        '<label class="text-sm">From <input type="date" id="gldStart" value="'+(sSel?sSel.value:'')+'" class="border rounded px-2 py-1"></label>'+
+        '<label class="text-sm">To <input type="date" id="gldEnd" value="'+(eSel?eSel.value:'')+'" class="border rounded px-2 py-1"></label>'+
+        '<button id="gldApply" class="px-3 py-1 bg-blue-900 text-white rounded">Apply</button>'+
+      '</div>'+
+      acctBlocks;
+    host.innerHTML = html;
+    var apply=document.getElementById('gldApply'); if(apply) apply.onclick=renderGeneralLedgerDetailedZoho;
+  }
+
+  /* ---------------- Cash Flow (indirect method from P&L + BS) ---------------- */
+  function renderCashFlowFromPLBS(){
+    var host = document.getElementById('cashFlowReport'); if(!host) return;
+    var mSel = document.getElementById('cfSummaryMonth'), sSel=document.getElementById('cfStartDate'), eSel=document.getElementById('cfEndDate');
+    var from = (sSel&&sSel.value) || (mSel&&mSel.value?mSel.value+'-01':'');
+    var to   = (eSel&&eSel.value) || (mSel&&mSel.value?mSel.value+'-31':'');
+    var p = pullPL(from,to); var b = pullBS();
+    var depreciation = b.depreciation || num((LS('profitLossData',{})||{}).depreciation||0);
+    // Working capital changes: use current balances as delta approx (fallback)
+    var arChange = -b.ar;         // increase in AR reduces cash
+    var apChange =  b.ap;         // increase in AP adds cash
+    var invChange = -b.inventory; // increase in inventory reduces cash
+
+    var operating = p.netIncome + depreciation + arChange + apChange + invChange;
+    var investing = -b.nonCurrentAssets;
+    var financing = b.nonCurrentLiab + b.equity;
+    var netChange = operating + investing + financing;
+    var closing = b.cash;
+    var opening = closing - netChange;
+
+    // Debit = cash inflow (increase), Credit = cash outflow (decrease)
+    var rows = [
+      {h:'Opening'},
+      {l:'Opening Cash Balance', open:true, v:opening},
+      {h:'Operating Activities'},
+      {l:'Net Income (from P&L)', v:p.netIncome},
+      {l:'+ Depreciation & Amortization', v:depreciation},
+      {l:'Change in Accounts Receivable', v:arChange},
+      {l:'Change in Inventory', v:invChange},
+      {l:'Change in Accounts Payable', v:apChange},
+      {l:'Net Cash from Operating Activities', v:operating, tot:true},
+      {h:'Investing Activities'},
+      {l:'Purchase of Non-Current Assets', v:investing},
+      {l:'Net Cash from Investing Activities', v:investing, tot:true},
+      {h:'Financing Activities'},
+      {l:'Non-Current Liabilities (Loans)', v:b.nonCurrentLiab},
+      {l:'Equity Contributions', v:b.equity},
+      {l:'Net Cash from Financing Activities', v:financing, tot:true},
+      {h:'Summary'},
+      {l:'Net Change in Cash', v:netChange, tot:true},
+      {l:'Closing Cash Balance', close:true, v:closing, tot:true}
+    ];
+
+    var running = 0;
+    var body = rows.map(function(r){
+      if(r.h) return '<tr class="bg-blue-900 text-white"><td class="border px-3 py-2 font-semibold" colspan="4">'+r.h+'</td></tr>';
+      var val = num(r.v);
+      var debit = '', credit = '';
+      if(r.open){ running = val; }
+      else if(r.close){ running = val; }
+      else { if(val>=0) debit = fmt(val); else credit = fmt(-val); if(!r.tot) running += val; }
+      var cls = r.tot?'bg-gray-100 font-bold':'';
+      var indent = r.tot||r.open||r.close?'':' pl-6';
+      return '<tr class="'+cls+'">'+
+        '<td class="border px-3 py-1'+indent+'">'+r.l+'</td>'+
+        '<td class="border px-3 py-1 text-right text-green-700">'+debit+'</td>'+
+        '<td class="border px-3 py-1 text-right text-red-700">'+credit+'</td>'+
+        '<td class="border px-3 py-1 text-right font-semibold">'+fmt(running)+'</td>'+
+      '</tr>';
+    }).join('');
+
+    var period = (from||to)?('Period: '+(from||'—')+' to '+(to||'—')):'All Dates';
+    var html =
+      '<h2 class="text-xl font-bold mb-2">📦 Cash Flow Statement</h2>'+
+      '<div class="text-sm text-gray-600 mb-3">'+period+' · Indirect Method · Derived from P&L + Balance Sheet · Currency: KES</div>'+
+      '<div class="flex flex-wrap gap-2 mb-3 items-end">'+
+        '<label class="text-sm">Month <input type="month" id="cfSummaryMonth" value="'+(mSel?mSel.value:'')+'" class="border rounded px-2 py-1"></label>'+
+        '<label class="text-sm">From <input type="date" id="cfStartDate" value="'+(sSel?sSel.value:'')+'" class="border rounded px-2 py-1"></label>'+
+        '<label class="text-sm">To <input type="date" id="cfEndDate" value="'+(eSel?eSel.value:'')+'" class="border rounded px-2 py-1"></label>'+
+        '<button id="cfApply" class="px-3 py-1 bg-blue-900 text-white rounded">Apply</button>'+
+      '</div>'+
+      '<table class="w-full border text-sm">'+
+        '<thead class="bg-gray-100"><tr>'+
+          '<th class="border px-3 py-2 text-left">Item</th>'+
+          '<th class="border px-3 py-2 text-right">Debit (KES)</th>'+
+          '<th class="border px-3 py-2 text-right">Credit (KES)</th>'+
+          '<th class="border px-3 py-2 text-right">Closing Balance (KES)</th>'+
+        '</tr></thead>'+
+        '<tbody>'+body+'</tbody>'+
+      '</table>';
+
+    host.innerHTML = html;
+    var apply=document.getElementById('cfApply'); if(apply) apply.onclick=renderCashFlowFromPLBS;
+
+    try {
+      localStorage.setItem('cashFlowSummary', JSON.stringify({
+        openingCash:opening, closingCash:closing, netChange:netChange,
+        cashFromOperations:operating, investingTotal:investing, financingTotal:financing
+      }));
+    } catch(_){}
+  }
+
+  /* ---------------- Wire up ---------------- */
+  window.renderTrialBalance = renderTrialBalanceZoho;
+  window.renderGeneralLedger = renderGeneralLedgerZoho;
+  window.renderGeneralLedgerDetailed = renderGeneralLedgerDetailedZoho;
+  window.renderCashFlow = renderCashFlowFromPLBS;
+
+  var origShow = window.showReport;
+  window.showReport = function(id, el){
+    if (typeof origShow === 'function') { try{ origShow.apply(this, arguments); }catch(_){}}
+    try{
+      if(id==='trialBalanceReport') renderTrialBalanceZoho();
+      else if(id==='generalLedgerReport') renderGeneralLedgerZoho();
+      else if(id==='generalLedgerDetailedReport') renderGeneralLedgerDetailedZoho();
+      else if(id==='cashFlowReport') renderCashFlowFromPLBS();
+    }catch(e){ console.warn('[v6 render]',e); }
+  };
+
+  function init(){
+    try{ renderTrialBalanceZoho(); }catch(_){}
+    try{ renderGeneralLedgerZoho(); }catch(_){}
+    try{ renderGeneralLedgerDetailedZoho(); }catch(_){}
+    try{ renderCashFlowFromPLBS(); }catch(_){}
+    console.info('[reports-patch v6] Zoho-style TB/GL/GL-Detailed + CF from P&L+BS.');
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
+  else setTimeout(init, 800);
+})();
+
+(function () {
+  "use strict";
+  const ls  = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+  const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+  const num  = (v)   => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+
+  function pushVatReportRow(src) {
+    if (!src) return;
+    const list = ls("vatReport", []);
+    const id   = String(src.id || src.recurringId || src.invoiceNumber || Date.now());
+  
+    const idx  = list.findIndex(r => String(r.id) === id);
+    const row  = {
+      id,
+      date:     src.date,
+      customer: src.customer || src.customerName,
+      vat:      num(src.vatKES != null ? src.vatKES : src.vat),
+      total:    num(src.totalKES != null ? src.totalKES : src.total),
+      source:   src.fromRecurring || src.recurringId ? "Recurring Invoice" : "Invoice"
+    };
+    if (idx === -1) list.push(row); else list[idx] = row;
+    save("vatReport", list);
+  }
+
+
+  function fullRefresh() {
+    try { if (typeof recalculateCustomerReceivables === "function") recalculateCustomerReceivables(); } catch(e){}
+    try { if (typeof refreshDashboardCards === "function") refreshDashboardCards(); } catch(e){}
+    try { if (typeof updateDashboardTotals === "function") updateDashboardTotals(); } catch(e){}
+    try { if (typeof loadDashboard === "function") loadDashboard(); } catch(e){}
+    try { if (typeof renderVatSummary === "function") renderVatSummary(); } catch(e){}
+    try { if (typeof renderReports === "function") renderReports(); } catch(e){}
+    try { if (typeof renderCustomers === "function") renderCustomers(); } catch(e){}
+    try { if (typeof renderAccountsReceivable === "function") renderAccountsReceivable(); } catch(e){}
+  }
+
+ 
+  if (typeof window.saveInvoice === "function") {
+    const _saveInvoice = window.saveInvoice;
+    window.saveInvoice = function patchedSaveInvoice() {
+      const r = _saveInvoice.apply(this, arguments);
+      try {
+        
+        const invs = ls("invoices", []);
+        const last = [...invs].reverse().find(i => !i.fromRecurring && !i.recurringId);
+        if (last) pushVatReportRow(last);
+      } catch(e) { console.warn("VAT sync (invoice) failed", e); }
+      fullRefresh();
+      return r;
+    };
+  }
+
+  if (typeof window.saveRecurringInvoice === "function") {
+    const _saveRecurring = window.saveRecurringInvoice;
+    window.saveRecurringInvoice = function patchedSaveRecurring() {
+      const r = _saveRecurring.apply(this, arguments);
+      try {
+       
+        if (typeof recalculateCustomerReceivables === "function") {
+          recalculateCustomerReceivables();
+        }
+      
+        const rec = ls("recurringInvoices", []);
+        const last = rec[rec.length - 1];
+        if (last) {
+          pushVatReportRow({
+            id:         last.id,
+            date:       last.date,
+            customer:   last.customerName || last.customer,
+            vatKES:     last.vat,
+            totalKES:   last.totalKES || last.total,
+            fromRecurring: true
+          });
+        }
+      } catch(e) { console.warn("recurring post-save patch failed", e); }
+      fullRefresh();
+      return r;
+    };
+  }
+
+  if (typeof window.syncRecurringToInvoices === "function") {
+    const _sync = window.syncRecurringToInvoices;
+    window.syncRecurringToInvoices = function patchedSync(recurring) {
+      const r = _sync.apply(this, arguments);
+      try {
+        const invs = ls("invoices", []);
+        const mirrored = invs.find(i => String(i.recurringId) === String(recurring?.id));
+        if (mirrored) pushVatReportRow(mirrored);
+      } catch(e) { console.warn("VAT sync (recurring mirror) failed", e); }
+      return r;
+    };
+  }
+          
+  const _getItem = Storage.prototype.getItem;
+  let _plGuard = 0;
+  if (typeof window.renderReports === "function") {
+    const _renderReports = window.renderReports;
+    window.renderReports = function patchedRenderReports() {
+      _plGuard++;
+      try {
+        Storage.prototype.getItem = function (key) {
+          // Only intercept during renderReports, and only for the recurring key.
+          if (_plGuard > 0 && key === "recurringInvoices") return "[]";
+          return _getItem.apply(this, arguments);
+        };
+        return _renderReports.apply(this, arguments);
+      } finally {
+        Storage.prototype.getItem = _getItem;
+        _plGuard--;
+      }
+    };
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    try {
+      // Backfill VAT report from any recurring invoices already saved.
+      const rec = ls("recurringInvoices", []);
+      rec.forEach(r => pushVatReportRow({
+        id: r.id, date: r.date,
+        customer: r.customerName || r.customer,
+        vatKES: r.vat, totalKES: r.totalKES || r.total,
+        fromRecurring: true
+      }));
+    } catch(e){}
+    fullRefresh();
+  });
+
+  console.log("✅ invoice/recurring/VAT/P&L patch loaded");
+})();
+
+   </script>
+
+   <!-- ================================================================
+        GLOBAL BASE CURRENCY + LANGUAGE SWITCHER
+        Applies user's Settings > Base Currency and Language across the app.
+        - Rewrites any visible "KES 1,234.56" (and other currency-code) text
+          into the chosen base currency using localStorage.exchangeRates.
+        - Translates common UI labels (English → chosen language) via a
+          built-in dictionary. Untranslated strings stay in English.
+        ================================================================ -->
+   <script>
+   (function(){
+     const LS_CUR = 'appBaseCurrency';
+     const LS_LANG = 'appLanguage';
+     const KNOWN = ['KES','USD','EUR','GBP','JPY','AUD','CAD','CHF','CNY','INR','NZD','SGD','ZAR','KRW','MXN','BRL','RUB','TRY','NOK','SEK','DKK','SAR','AED','HKD','UGX','TZS','RWF','ETB','NGN','GHS','EGP','QAR','KWD','BHD','OMR','ZMW'];
+
+     function getRates(){
+       try { return JSON.parse(localStorage.getItem('exchangeRates')||'{}')||{}; }
+       catch(e){ return {}; }
+     }
+     // Rates in localStorage are "1 <currency> = X KES" (base KES).
+     // Convert amount from `from` currency to `to` currency.
+     function convert(amount, from, to){
+       if (!isFinite(amount)) return amount;
+       if (from === to) return amount;
+       const rates = getRates();
+       const rFrom = from === 'KES' ? 1 : Number(rates[from]);
+       const rTo   = to   === 'KES' ? 1 : Number(rates[to]);
+       if (!rFrom || !rTo) return amount; // missing rate → leave as-is
+       // amount(from) * rFrom = amount in KES; ÷ rTo = amount in target
+       return amount * rFrom / rTo;
+     }
+     function fmt(n){
+       return Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+     }
+
+     // Regex: capture currency code + amount like "KES 1,234.56" or "USD -500"
+     const codeAlt = KNOWN.join('|');
+     const RX = new RegExp('\\b(' + codeAlt + ')\\s*(-?[0-9][0-9,]*(?:\\.[0-9]+)?)','g');
+
+     function convertTextNodes(root, target){
+       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+         acceptNode: (n) => {
+           if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+           const p = n.parentNode;
+           if (!p) return NodeFilter.FILTER_REJECT;
+           const tag = p.nodeName;
+           if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'OPTION' || tag === 'TEXTAREA') return NodeFilter.FILTER_REJECT;
+           // don't touch inputs / selects
+           if (p.closest && p.closest('input,select,textarea')) return NodeFilter.FILTER_REJECT;
+           return RX.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+         }
+       });
+       const nodes = [];
+       let cur; while ((cur = walker.nextNode())) nodes.push(cur);
+       nodes.forEach(n => {
+         n.nodeValue = n.nodeValue.replace(RX, (m, code, num) => {
+           const val = parseFloat(num.replace(/,/g,''));
+           if (!isFinite(val)) return m;
+           const conv = convert(val, code, target);
+           return target + ' ' + fmt(conv);
+         });
+       });
+     }
+
+     // -------- Translations (English → other) --------
+     const DICT = {
+       fr: {"Dashboard":"Tableau de bord","Inventory":"Inventaire","Funds":"Fonds","Customers":"Clients","Suppliers":"Fournisseurs","Accountant":"Comptable","Payroll":"Paie","Reports":"Rapports","Plans":"Plans","Settings":"Paramètres","Files":"Fichiers","Save":"Enregistrer","Cancel":"Annuler","Delete":"Supprimer","Edit":"Modifier","Add":"Ajouter","Search":"Rechercher","Total":"Total","Balance":"Solde","Date":"Date","Amount":"Montant","Description":"Description","Status":"Statut","Actions":"Actions","Base Currency":"Devise de base","Language":"Langue","Fiscal Year":"Exercice fiscal","Time Zone":"Fuseau horaire"},
+       sw: {"Dashboard":"Dashibodi","Inventory":"Bidhaa","Funds":"Fedha","Customers":"Wateja","Suppliers":"Wasambazaji","Accountant":"Mhasibu","Payroll":"Malipo","Reports":"Ripoti","Plans":"Mipango","Settings":"Mipangilio","Files":"Faili","Save":"Hifadhi","Cancel":"Ghairi","Delete":"Futa","Edit":"Hariri","Add":"Ongeza","Search":"Tafuta","Total":"Jumla","Balance":"Salio","Date":"Tarehe","Amount":"Kiasi","Description":"Maelezo","Status":"Hali","Actions":"Vitendo","Base Currency":"Sarafu ya Msingi","Language":"Lugha","Fiscal Year":"Mwaka wa Fedha","Time Zone":"Saa za Eneo"},
+       es: {"Dashboard":"Panel","Inventory":"Inventario","Funds":"Fondos","Customers":"Clientes","Suppliers":"Proveedores","Accountant":"Contable","Payroll":"Nómina","Reports":"Informes","Plans":"Planes","Settings":"Ajustes","Files":"Archivos","Save":"Guardar","Cancel":"Cancelar","Delete":"Eliminar","Edit":"Editar","Add":"Añadir","Search":"Buscar","Total":"Total","Balance":"Saldo","Date":"Fecha","Amount":"Importe","Description":"Descripción","Status":"Estado","Actions":"Acciones","Base Currency":"Moneda base","Language":"Idioma","Fiscal Year":"Año fiscal","Time Zone":"Zona horaria"},
+       de: {"Dashboard":"Übersicht","Inventory":"Bestand","Funds":"Mittel","Customers":"Kunden","Suppliers":"Lieferanten","Accountant":"Buchhalter","Payroll":"Gehalt","Reports":"Berichte","Plans":"Pläne","Settings":"Einstellungen","Files":"Dateien","Save":"Speichern","Cancel":"Abbrechen","Delete":"Löschen","Edit":"Bearbeiten","Add":"Hinzufügen","Search":"Suchen","Total":"Gesamt","Balance":"Saldo","Date":"Datum","Amount":"Betrag","Description":"Beschreibung","Status":"Status","Actions":"Aktionen","Base Currency":"Basiswährung","Language":"Sprache","Fiscal Year":"Geschäftsjahr","Time Zone":"Zeitzone"},
+       pt: {"Dashboard":"Painel","Inventory":"Estoque","Funds":"Fundos","Customers":"Clientes","Suppliers":"Fornecedores","Accountant":"Contador","Payroll":"Folha","Reports":"Relatórios","Plans":"Planos","Settings":"Configurações","Files":"Arquivos","Save":"Salvar","Cancel":"Cancelar","Delete":"Excluir","Edit":"Editar","Add":"Adicionar","Search":"Buscar","Total":"Total","Balance":"Saldo","Date":"Data","Amount":"Valor","Description":"Descrição","Status":"Status","Actions":"Ações","Base Currency":"Moeda base","Language":"Idioma","Fiscal Year":"Ano fiscal","Time Zone":"Fuso horário"},
+       ar: {"Dashboard":"لوحة التحكم","Inventory":"المخزون","Funds":"الأموال","Customers":"العملاء","Suppliers":"الموردون","Accountant":"المحاسب","Payroll":"الرواتب","Reports":"التقارير","Plans":"الخطط","Settings":"الإعدادات","Files":"الملفات","Save":"حفظ","Cancel":"إلغاء","Delete":"حذف","Edit":"تعديل","Add":"إضافة","Search":"بحث","Total":"الإجمالي","Balance":"الرصيد","Date":"التاريخ","Amount":"المبلغ","Description":"الوصف","Status":"الحالة","Actions":"إجراءات","Base Currency":"العملة الأساسية","Language":"اللغة","Fiscal Year":"السنة المالية","Time Zone":"المنطقة الزمنية"},
+       zh: {"Dashboard":"仪表板","Inventory":"库存","Funds":"资金","Customers":"客户","Suppliers":"供应商","Accountant":"会计","Payroll":"工资","Reports":"报告","Plans":"计划","Settings":"设置","Files":"文件","Save":"保存","Cancel":"取消","Delete":"删除","Edit":"编辑","Add":"添加","Search":"搜索","Total":"合计","Balance":"余额","Date":"日期","Amount":"金额","Description":"描述","Status":"状态","Actions":"操作","Base Currency":"基础货币","Language":"语言","Fiscal Year":"财政年度","Time Zone":"时区"}
+     };
+     function translate(lang){
+       const map = DICT[lang]; if (!map) return;
+       const keys = Object.keys(map).sort((a,b)=>b.length-a.length);
+       const rx = new RegExp('\\b(' + keys.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')\\b','g');
+       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+         acceptNode: n => {
+           if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+           const p = n.parentNode; if (!p) return NodeFilter.FILTER_REJECT;
+           const t = p.nodeName;
+           if (t==='SCRIPT'||t==='STYLE'||t==='OPTION'||t==='TEXTAREA') return NodeFilter.FILTER_REJECT;
+           if (p.closest && p.closest('input,select,textarea')) return NodeFilter.FILTER_REJECT;
+           return rx.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+         }
+       });
+       const nodes=[]; let cur; while((cur=walker.nextNode())) nodes.push(cur);
+       nodes.forEach(n => { n.nodeValue = n.nodeValue.replace(rx,(m,k)=>map[k]||m); });
+       document.documentElement.lang = lang;
+       document.documentElement.dir = (lang==='ar'||lang==='he'||lang==='fa') ? 'rtl' : 'ltr';
+     }
+
+     function getCurrent(){
+       return {
+         cur: localStorage.getItem(LS_CUR) || (document.getElementById('baseCurrency')||{}).value || 'KES',
+         lang: localStorage.getItem(LS_LANG) || (document.getElementById('language')||{}).value || 'en'
+       };
+     }
+     function applyAll(){
+       const { cur, lang } = getCurrent();
+       try { convertTextNodes(document.body, cur); } catch(e){ console.warn(e); }
+       if (lang && lang !== 'en') { try { translate(lang); } catch(e){ console.warn(e); } }
+     }
+
+     function wireControls(){
+       const bc = document.getElementById('baseCurrency');
+       const lg = document.getElementById('language');
+       if (bc){
+         const saved = localStorage.getItem(LS_CUR);
+         if (saved) bc.value = saved;
+         bc.addEventListener('change', () => {
+           localStorage.setItem(LS_CUR, bc.value);
+           // small delay so any dependent code finishes first, then re-apply
+           setTimeout(applyAll, 50);
+         });
+       }
+       if (lg){
+         const saved = localStorage.getItem(LS_LANG);
+         if (saved) lg.value = saved;
+         lg.addEventListener('change', () => {
+           localStorage.setItem(LS_LANG, lg.value);
+           // language re-apply requires reload to restore original text
+           setTimeout(() => location.reload(), 150);
+         });
+       }
+     }
+
+     function init(){
+       wireControls();
+       applyAll();
+       // Re-apply when new content is rendered (reports, tables, modals)
+       const mo = new MutationObserver((mutations) => {
+         // debounce
+         if (init._t) clearTimeout(init._t);
+         init._t = setTimeout(applyAll, 250);
+       });
+       mo.observe(document.body, { childList:true, subtree:true, characterData:true });
+       // expose for manual triggers
+       window.applyBaseCurrencyAndLanguage = applyAll;
+     }
+
+     if (document.readyState === 'loading') {
+       document.addEventListener('DOMContentLoaded', init);
+     } else {
+       init();
+     }
+   })();
+   </script>
+
 </body>
+
 </html>
