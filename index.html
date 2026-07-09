@@ -1,5 +1,8 @@
 <!DOCTYPE html><html lang="en"><head><script>window.__SUPA_URL__='https://swgyefbzplelxrjcovef.supabase.co';window.__SUPA_KEY__='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3Z3llZmJ6cGxlbHhyamNvdmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MDU4MzIsImV4cCI6MjA5NzA4MTgzMn0.U2zDNqRfdEgTgldBd7CcEhfsmGXvYZ14yh-4yYC2HlY';</script><script>
-
+/* ===== Lovable multi-company isolation layer (v2.1) =====
+   Virtualizes localStorage per company so each company only sees its own data.
+   Demo/legacy account (username/email/companyId containing "demo", or no companyId)
+   keeps using the original un-prefixed keys. */
 (function(){
   if (window.__companyNS) return;
   var REAL = window.localStorage;
@@ -32,8 +35,8 @@
     if (!c || isGlobal(k)) return k;
     return k + SEP + c;
   }
-  var dirty = {};      
-  var applying = false; 
+  var dirty = {};      // logical keys changed locally, waiting for cloud push
+  var applying = false; // true while applying remote data (prevents echo)
   function markDirty(logical){
     if (applying) return;
     var c = activeCompany();
@@ -971,11 +974,33 @@ function closeQuoteModal() {
   document.getElementById("quoteModal").style.display = "none";
 }
 </script>
-<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 relative"><button onclick="closeLogin()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button><h2 class="text-2xl font-bold text-blue-900 mb-4 text-center">Login</h2><div id="loginForm"><input id="loginUser" type="text" placeholder="Email or Username" class="w-full border p-2 mb-3 rounded" /><input id="companyId" type="text" placeholder="Company ID (optional)" class="w-full border p-2 mb-3 rounded" /><input id="loginPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><select id="userRole" class="w-full border p-2 rounded mb-3"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="human resource">Human Resource</option></select><button onclick="handleLogin()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-900 mb-2">
+<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 relative"><button onclick="closeLogin()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button><h2 class="text-2xl font-bold text-blue-900 mb-4 text-center">Login</h2><div id="loginForm"><input id="loginUser" type="text" placeholder="Email or Username" class="w-full border p-2 mb-3 rounded" /><input id="loginCompanyId" type="text" placeholder="Company ID (optional)" class="w-full border p-2 mb-3 rounded" /><input id="loginPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><select id="userRole" class="w-full border p-2 rounded mb-3"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="human resource">Human Resource</option></select><button onclick="handleLogin()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-900 mb-2">
         Login
-      </button><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="showResetForm()">Forgot Password?</a></p></div><div id="resetForm" class="hidden mt-4"><p class="mb-2 text-sm text-gray-700">Enter your username or email to reset your password.</p><input id="resetEmail" type="text" placeholder="Username or Email" class="w-full border p-2 mb-3 rounded" /><button onclick="resetPassword()" class="w-full bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 mb-2">
+      </button><p class="text-sm flex justify-between"><a href="#" class="text-blue-600 hover:underline" onclick="showRegisterForm();return false;">Create account</a><a href="#" class="text-blue-600 hover:underline" onclick="showResetForm()">Forgot Password?</a></p></div><div id="resetForm" class="hidden mt-4"><p class="mb-2 text-sm text-gray-700">Enter your username or email to reset your password.</p><input id="resetEmail" type="text" placeholder="Username or Email" class="w-full border p-2 mb-3 rounded" /><button onclick="resetPassword()" class="w-full bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 mb-2">
         Send Reset Link
-      </button><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideResetForm()">Back to Login</a></p></div></div></div>
+      </button><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideResetForm()">Back to Login</a></p></div><div id="registerForm" class="hidden"><h3 class="text-lg font-bold text-blue-900 mb-3 text-center">Create Account</h3><input id="registerUser" type="text" placeholder="Email or Username" class="w-full border p-2 mb-3 rounded" /><input id="registerPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><select id="registerRole" class="w-full border p-2 rounded mb-3"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="human resource">Human Resource</option></select><button onclick="handleRegister()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 mb-2">Create Account</button><button onclick="createWithGoogle()" type="button" class="w-full border border-blue-900 text-blue-900 py-2 rounded hover:bg-blue-50 mb-2">Sign up with Google</button><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideRegisterForm();return false;">Back to Login</a></p></div>
+<script>
+function showRegisterForm() {
+  document.getElementById('loginForm').classList.add('hidden');
+  var rf = document.getElementById('resetForm'); if (rf) rf.classList.add('hidden');
+  document.getElementById('registerForm').classList.remove('hidden');
+  var h = document.querySelector('#loginModal h2'); if (h) h.textContent = 'Sign Up';
+}
+function hideRegisterForm() {
+  document.getElementById('registerForm').classList.add('hidden');
+  document.getElementById('loginForm').classList.remove('hidden');
+  var h = document.querySelector('#loginModal h2'); if (h) h.textContent = 'Login';
+}
+function handleRegister() {
+  var u = document.getElementById('registerUser').value.trim();
+  var p = document.getElementById('registerPass').value.trim();
+  if (!u) { alert('Please enter an email or username'); return; }
+  if (!p || p.length < 4) { alert('Please enter a password (at least 4 characters)'); return; }
+  // Ensure a brand-new account never inherits the current session's company
+  localStorage.removeItem('loggedInUser');
+  registerUser();
+}
+</script></div></div>
 <script>
 function toggleBilling() {
   const yearly = document.getElementById('billingToggle').checked;
@@ -3634,11 +3659,11 @@ async function handleLogin() {
 
   const u = document.getElementById('loginUser').value.trim().toLowerCase();
   const p = document.getElementById('loginPass').value.trim();
-  const companyIdInput = document.getElementById('companyId').value.trim().toLowerCase();
+  const companyIdInput = (document.getElementById('loginCompanyId')?.value || '').trim().toLowerCase();
 
   const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
 
-  const user = storedUsers.find(x => {
+  let user = storedUsers.find(x => {
 
     const email = (x.email || "").toLowerCase();
     const username = (x.username || "").toLowerCase();
@@ -3652,6 +3677,15 @@ async function handleLogin() {
 
     return loginMatch && companyMatch && x.password === p;
   });
+
+  if (!user && companyIdInput) {
+    // Fallback: ignore the company ID filter if credentials alone match one account
+    user = storedUsers.find(x => {
+      const email = (x.email || "").toLowerCase();
+      const username = (x.username || "").toLowerCase();
+      return (email === u || username === u) && x.password === p;
+    });
+  }
 
   if (!user) {
     alert("❌ Invalid username/email, company ID or password");
@@ -82440,7 +82474,7 @@ document.addEventListener("DOMContentLoaded", renderRecycleBin);
       el.style.willChange = "auto";
     });
 
-    document.body.style.contain = "layout style paint";
+    /* removed: contain broke fixed-position modals (login popup appeared far down the page) */
 
   });
 
