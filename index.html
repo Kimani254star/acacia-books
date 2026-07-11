@@ -399,7 +399,14 @@ body {
   max-width: 100% !important;
   overflow-x: hidden !important;
 }
-</style></head><body id="appBody"><!-- 🌱 HOME  --><div id="homeTab" class="bg-white text-gray-900"><nav class="flex justify-between items-center px-2 py-1 shadow-md bg-blue-900 sticky top-0 z-50"><h1 class="text-2xl font-bold text-white">Acacia Books</h1><ul class="flex gap-6 text-white font-medium"><li><a href="#hero" class="px-2 py-1 rounded hover:bg-blue-800">Home</a></li><li><a href="#features" class="px-2 py-1 rounded hover:bg-blue-800">Features</a></li><li><a href="#pricing" class="px-2 py-1 rounded hover:bg-blue-800">Pricing</a></li><li><a href="#customers" class="px-2 py-1 rounded hover:bg-blue-800">Customers</a></li><li><a href="#resources" class="px-2 py-1 rounded hover:bg-blue-800">Resources</a></li><li><a href="#about" class="px-2 py-1 rounded hover:bg-blue-800">About</a></li><li><a href="#blog" class="px-2 py-1 rounded hover:bg-blue-800">Blog</a></li><li><a href="#contact" class="px-2 py-1 rounded hover:bg-blue-800">Contact</a></li><li><a href="#apps" class="px-2 py-1 rounded hover:bg-blue-800">Apps</a></li><li><a href="#support" class="px-2 py-1 rounded hover:bg-blue-800">Support</a></li></ul><div class="flex gap-6"><button onclick="openLogin()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
+</style><style>
+/* v5: make the Create User modal + module access list fully scrollable */
+#createUserModal > div { max-height: 90vh; overflow-y: auto; }
+#moduleAccessList { max-height: 15rem; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 0.5rem; }
+#moduleAccessList label { display: block; padding: 2px 0; cursor: pointer; }
+#moduleAccessList label:hover { background: #f3f4f6; }
+</style>
+</head><body id="appBody"><!-- 🌱 HOME  --><div id="homeTab" class="bg-white text-gray-900"><nav class="flex justify-between items-center px-2 py-1 shadow-md bg-blue-900 sticky top-0 z-50"><h1 class="text-2xl font-bold text-white">Acacia Books</h1><ul class="flex gap-6 text-white font-medium"><li><a href="#hero" class="px-2 py-1 rounded hover:bg-blue-800">Home</a></li><li><a href="#features" class="px-2 py-1 rounded hover:bg-blue-800">Features</a></li><li><a href="#pricing" class="px-2 py-1 rounded hover:bg-blue-800">Pricing</a></li><li><a href="#customers" class="px-2 py-1 rounded hover:bg-blue-800">Customers</a></li><li><a href="#resources" class="px-2 py-1 rounded hover:bg-blue-800">Resources</a></li><li><a href="#about" class="px-2 py-1 rounded hover:bg-blue-800">About</a></li><li><a href="#blog" class="px-2 py-1 rounded hover:bg-blue-800">Blog</a></li><li><a href="#contact" class="px-2 py-1 rounded hover:bg-blue-800">Contact</a></li><li><a href="#apps" class="px-2 py-1 rounded hover:bg-blue-800">Apps</a></li><li><a href="#support" class="px-2 py-1 rounded hover:bg-blue-800">Support</a></li></ul><div class="flex gap-6"><button onclick="openLogin()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
       Sign In
     </button><button id="openDemoBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
       Request Demo
@@ -977,8 +984,8 @@ function closeQuoteModal() {
 <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 relative"><button onclick="closeLogin()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button><h2 class="text-2xl font-bold text-blue-900 mb-4 text-center">Login</h2><div id="loginForm"><input id="loginUser" type="text" placeholder="Email or Username" class="w-full border p-2 mb-3 rounded" /><input id="loginCompanyId" type="text" placeholder="Company ID (optional)" class="w-full border p-2 mb-3 rounded" /><input id="loginPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><select id="userRole" class="w-full border p-2 rounded mb-3"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="human resource">Human Resource</option></select><button onclick="handleLogin()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-900 mb-2">
         Login
       </button><p class="text-sm flex justify-between"><a href="#" class="text-blue-600 hover:underline" onclick="showRegisterForm();return false;">Create account</a><a href="#" class="text-blue-600 hover:underline" onclick="showResetForm()">Forgot Password?</a></p></div><div id="resetForm" class="hidden mt-4"><p class="mb-2 text-sm text-gray-700">Enter your username or email to reset your password.</p><input id="resetEmail" type="text" placeholder="Username or Email" class="w-full border p-2 mb-3 rounded" /><button onclick="resetPassword()" class="w-full bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 mb-2">
-        Send Reset Link
-      </button><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideResetForm()">Back to Login</a></p></div><div id="registerForm" class="hidden"><h3 class="text-lg font-bold text-blue-900 mb-3 text-center">Create Account</h3><input id="registerUser" type="text" placeholder="Email or Username" class="w-full border p-2 mb-3 rounded" /><input id="registerPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><select id="registerRole" class="w-full border p-2 rounded mb-3"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="human resource">Human Resource</option></select><button onclick="handleRegister()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 mb-2">Create Account</button><button onclick="createWithGoogle()" type="button" class="w-full border border-blue-900 text-blue-900 py-2 rounded hover:bg-blue-50 mb-2">Sign up with Google</button><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideRegisterForm();return false;">Back to Login</a></p></div>
+        Send Reset Code
+      </button><div id="resetStep2" class="hidden"><p class="mb-2 text-sm text-gray-700">📧 We sent a 6-digit code to your <a href="Mail_1707.html" target="_blank" class="text-blue-600 underline font-semibold">Acacia Mail</a> inbox. Enter it below with your new password.</p><input id="resetCode" type="text" inputmode="numeric" maxlength="6" placeholder="6-digit code" class="w-full border p-2 mb-3 rounded" /><input id="resetNewPass" type="password" placeholder="New password" class="w-full border p-2 mb-3 rounded" /><button onclick="confirmReset()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 mb-2">Update Password</button></div><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideResetForm();return false;">Back to Login</a></p></div><div id="registerForm" class="hidden"><h3 class="text-lg font-bold text-blue-900 mb-3 text-center">Create Account</h3><input id="registerUser" type="text" placeholder="Email or Username" class="w-full border p-2 mb-3 rounded" /><input id="registerPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><input id="registerRole" type="hidden" value="admin" /><p class="text-xs text-gray-600 mb-3">👑 You will be the <b>Admin</b> of your company. Module access depends on the plan you choose, and you can add team members later.</p><button onclick="handleRegister()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 mb-2">Create Account</button><button onclick="createWithGoogle()" type="button" class="w-full border border-blue-900 text-blue-900 py-2 rounded hover:bg-blue-50 mb-2">Sign up with Google</button><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideRegisterForm();return false;">Back to Login</a></p></div>
 <script>
 function showRegisterForm() {
   document.getElementById('loginForm').classList.add('hidden');
@@ -999,6 +1006,90 @@ function handleRegister() {
   // Ensure a brand-new account never inherits the current session's company
   localStorage.removeItem('loggedInUser');
   registerUser();
+}
+
+/* ===== Forgot password via Acacia Mail ===== */
+var __resetPending = null;
+
+function showResetForm() {
+  document.getElementById('loginForm').classList.add('hidden');
+  var rg = document.getElementById('registerForm'); if (rg) rg.classList.add('hidden');
+  document.getElementById('resetForm').classList.remove('hidden');
+  var h = document.querySelector('#loginModal h2'); if (h) h.textContent = 'Reset Password';
+}
+function hideResetForm() {
+  document.getElementById('resetForm').classList.add('hidden');
+  var s2 = document.getElementById('resetStep2'); if (s2) s2.classList.add('hidden');
+  document.getElementById('loginForm').classList.remove('hidden');
+  var h = document.querySelector('#loginModal h2'); if (h) h.textContent = 'Login';
+}
+function resetPassword() {
+  var id = (document.getElementById('resetEmail').value || '').trim().toLowerCase();
+  if (!id) { alert('Please enter your username or email.'); return; }
+  var users = JSON.parse(localStorage.getItem('users') || '[]');
+  var user = users.find(function(u){
+    return String(u.email || '').toLowerCase() === id || String(u.username || '').toLowerCase() === id;
+  });
+  if (!user) { alert('\u274C No account found for ' + id); return; }
+  var code = String(Math.floor(100000 + Math.random() * 900000));
+  __resetPending = { id: id, code: code, expires: Date.now() + 15 * 60000 };
+  try { localStorage.setItem('passwordResetPending', JSON.stringify(__resetPending)); } catch(e){}
+  deliverResetMail(user, code);
+  var s2 = document.getElementById('resetStep2'); if (s2) s2.classList.remove('hidden');
+  alert('\uD83D\uDCE7 A 6-digit reset code was sent to your Acacia Mail inbox. Open Acacia Mail to read it, then enter the code below.');
+}
+function deliverResetMail(user, code) {
+  try {
+    var email = (user.email && user.email.indexOf('@') !== -1)
+      ? String(user.email).toLowerCase()
+      : String(user.username || 'user').toLowerCase().replace(/[^a-z0-9._-]/g, '') + '@acaciamail.co';
+    var MAIL_USERS_KEY = 'acacia_users', MAIL_PREFIX = 'acacia_data_';
+    // Make sure a mail account exists so the user can sign in and read the code
+    var mailUsers = JSON.parse(localStorage.getItem(MAIL_USERS_KEY) || '[]');
+    if (!mailUsers.some(function(u){ return String(u.email).toLowerCase() === email; })) {
+      mailUsers.push({ email: email, pass: user.password || 'acacia123', name: user.username || email.split('@')[0], created: Date.now() });
+      localStorage.setItem(MAIL_USERS_KEY, JSON.stringify(mailUsers));
+    }
+    var key = MAIL_PREFIX + email;
+    var store = JSON.parse(localStorage.getItem(key) || 'null') || { mails: [], events: [], aiChat: [] };
+    store.mails = store.mails || [];
+    var now = Date.now();
+    store.mails.unshift({
+      id: 'm' + now,
+      from: 'Acacia ERP Security',
+      email: 'security@acaciamail.co',
+      to: email,
+      subject: 'Your password reset code',
+      preview: 'Use code ' + code + ' to reset your Acacia ERP password.',
+      body: '<p>Hello ' + (user.username || '') + ',</p><p>Your Acacia ERP password reset code is:</p><h2 style="letter-spacing:6px;color:#0d4ca8">' + code + '</h2><p>Enter this code on the reset screen. It expires in 15 minutes.</p><p>If you did not request this, you can ignore this email.</p>',
+      time: now, read: false, starred: false, folder: 'inbox'
+    });
+    localStorage.setItem(key, JSON.stringify(store));
+  } catch(e){}
+}
+function confirmReset() {
+  var pending = __resetPending;
+  if (!pending) { try { pending = JSON.parse(localStorage.getItem('passwordResetPending') || 'null'); } catch(e){} }
+  if (!pending) { alert('Please request a reset code first.'); return; }
+  if (Date.now() > pending.expires) { alert('\u23F0 Code expired. Please request a new one.'); return; }
+  var code = (document.getElementById('resetCode').value || '').trim();
+  var np = (document.getElementById('resetNewPass').value || '').trim();
+  if (code !== pending.code) { alert('\u274C Wrong code. Check your Acacia Mail inbox.'); return; }
+  if (!np || np.length < 4) { alert('Please enter a new password (at least 4 characters).'); return; }
+  var users = JSON.parse(localStorage.getItem('users') || '[]');
+  var idx = users.findIndex(function(u){
+    return String(u.email || '').toLowerCase() === pending.id || String(u.username || '').toLowerCase() === pending.id;
+  });
+  if (idx === -1) { alert('Account not found.'); return; }
+  users[idx].password = np;
+  localStorage.setItem('users', JSON.stringify(users));
+  try { localStorage.removeItem('passwordResetPending'); } catch(e){}
+  __resetPending = null;
+  try { if (typeof uploadLocalStorage === 'function') uploadLocalStorage(); } catch(e){}
+  document.getElementById('resetCode').value = '';
+  document.getElementById('resetNewPass').value = '';
+  alert('\u2705 Password updated! Sign in with your new password.');
+  hideResetForm();
 }
 </script></div></div>
 <script>
@@ -2812,7 +2903,7 @@ function __logMail(url){
     /* ---- Acacia Mail bridge: mirror ERP emails into linked mail account ---- */
     try{
       var ACACIA_PREFIX="acacia_data_";
-      var USERS_KEY="acaciaUsers";
+      var USERS_KEY='acacia_users';
       var orgProfile=JSON.parse(localStorage.getItem("acaciaOrgProfile")||"null")||{};
       var linkedEmail=(orgProfile.email||org.email||"").toLowerCase();
       var users=JSON.parse(localStorage.getItem(USERS_KEY)||"[]");
@@ -3617,6 +3708,36 @@ const rolePermissions = {
     'plansTab','budgetsTab'],
 };
 
+
+/* ===== v5: full module list + plan-based access ===== */
+const APP_ALL_MODULES = ['dashboard','inventoryTab','movementTab','priceListTab','Amenend','BundleItems','BulkAdjustment','packagesTab','shipmentsTab','fundsTab','customersTab','invoicesTab','quotesTab','ordersTab','bulkInvoicesTab','creditNoteTab','salesReturnTab','receiptsTab','recurringInvoicesTab','deliveryTab','customerStatementTab','supplierTab','supplierPaymentsTab','supplierBillsTab','bulkBillingTab','taxPaymentsTab','OperationalCostsTab','supplierPurchaseOrdersTab','supplierDebitNotesTab','purchaseReturnsTab','grnTab','supplierStatementTab','manualJournalsTab','recurringJournalsTab','currencyAdjustmentsTab','nonCurrentAssetsTab','nonCurrentLiabilitiesTab','equityTab','taxAdjustmentsTab','chartOfAccountsTab','currentAccountsTab','budgetsTab','transactionLockingTab','employeesTab','earningsTab','grossPayTab','attendanceTab','payslipTab','statutoryDeductionsTab','payrollReportsTab','integrationsTab','reportsPanel','plansTab','projectTab','planTrackingTab','orgProfileTab','warehousesTab','DatacenterTab','systemConfigurationTab','userActivityTab','taxComplianceTab','userManagementTab','vatTab','preferencesTab','settingstemplateTab','costingTab','bulkCostingTab','filesTab','recycleBinTab','mailHub','crmHub'];
+
+const PAYROLL_MODULES = ['employeesTab','earningsTab','grossPayTab','attendanceTab','payslipTab','statutoryDeductionsTab','payrollReportsTab'];
+
+function getPlanAllowedModules(plan) {
+  const p = (plan || '').toLowerCase();
+  if (!p || p === 'all access') return APP_ALL_MODULES.slice();
+  if (p === 'free') return APP_ALL_MODULES.filter(m => !PAYROLL_MODULES.includes(m) && m !== 'integrationsTab' && m !== 'filesTab' && m !== 'recycleBinTab');
+  if (p === 'starter' || p === 'pro' || p === 'business') return APP_ALL_MODULES.filter(m => m !== 'integrationsTab' && m !== 'filesTab' && m !== 'recycleBinTab');
+  if (p === 'enterprise') return APP_ALL_MODULES.filter(m => m !== 'filesTab' && m !== 'recycleBinTab');
+  return APP_ALL_MODULES.slice();
+}
+
+function getAllowedTabs(user) {
+  if (!user) return [];
+  const role = (user.role || '').toLowerCase();
+  // Only module names that match real tab ids count as custom access
+  const custom = Array.isArray(user.modules) ? user.modules.filter(m => APP_ALL_MODULES.includes(m)) : [];
+  if (role === 'admin') {
+    if (!user.registered) return APP_ALL_MODULES.slice();      // demo / legacy admins: full access
+    if (custom.length) return custom;
+    return getPlanAllowedModules(user.plan);               // registered admins: everything their plan allows
+  }
+  if (custom.length) return custom;                        // team members: what the admin ticked
+  return rolePermissions[user.role] || [];
+}
+/* ===== end v5 helpers ===== */
+
 const globalPermissions = {
   admin:    { canAdd: true, canEdit: true, canDelete: true },
   account:  { canAdd: true, canEdit: true, canDelete: true },
@@ -3644,8 +3765,7 @@ function guardAction(action, callback, message) {
 
 const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
 if (loggedInUser) {
-  const userRole = loggedInUser.role;
-  const allowedTabs = rolePermissions[userRole] || [];
+  const allowedTabs = getAllowedTabs(loggedInUser);
 
   if (allowedTabs.includes('dashboard')) {
     showTab('dashboard');
@@ -3713,12 +3833,16 @@ async function handleLogin() {
 
   showApp();
   uploadLocalStorage?.();
+
+  // Give cloud sync a moment to pull this company's data, then reload so
+  // everything renders fresh (fixes "have to refresh after login").
+  setTimeout(function(){ try { location.reload(); } catch(e){} }, 1400);
 }
 function registerUser() {
 
   const input = document.getElementById('registerUser').value.trim();
   const password = document.getElementById('registerPass').value.trim();
-  const role = document.getElementById('registerRole').value;
+  const role = 'admin'; // every new account owner is the company Admin
 
   const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
 
@@ -3770,6 +3894,7 @@ function registerUser() {
   if (price === 0) {
     closeLogin();
     showApp();
+    setTimeout(function(){ try { location.reload(); } catch(e){} }, 1400);
   } else {
     window.location.href = "payment.html";
   }
@@ -3815,7 +3940,7 @@ function createWithGoogle() {
     email: cleanEmail,
     fullName,
     password,
-    role: "sales",
+    role: "admin",
     plan,
     price,
     companyId,
@@ -3851,7 +3976,7 @@ function showApp() {
   filterSidebarByRole();
 
   const role = loggedInUser.role;
-  const allowedTabs = rolePermissions[role] || [];
+  const allowedTabs = getAllowedTabs(loggedInUser);
   if (allowedTabs.includes('dashboard')) {
     showTab('dashboard');
   } else if (allowedTabs.length > 0) {
@@ -3891,14 +4016,12 @@ function logout() {
 function filterSidebarByRole() {
   const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
   if (!loggedInUser) return;
-  const role = loggedInUser.role;
-
-  const allowed = rolePermissions[role] || [];
+  const allowed = getAllowedTabs(loggedInUser);
   document.querySelectorAll('#sidebar button[onclick^="showTab"]').forEach(btn => {
     const match = btn.getAttribute('onclick').match(/showTab\('([^']+)'/);
     if (match) {
       const tab = match[1];
-      if (role !== 'admin' && !allowed.includes(tab)) {
+      if (!allowed.includes(tab)) {
         btn.classList.add('hidden');
       } else {
         btn.classList.remove('hidden');
@@ -3963,6 +4086,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function openLogin() {
   const modal = document.getElementById('loginModal');
+  // Always reset the popup to the sign-in view so the password field is visible
+  var lf = document.getElementById('loginForm'); if (lf) lf.classList.remove('hidden');
+  var rg = document.getElementById('registerForm'); if (rg) rg.classList.add('hidden');
+  var rf = document.getElementById('resetForm'); if (rf) rf.classList.add('hidden');
+  var s2 = document.getElementById('resetStep2'); if (s2) s2.classList.add('hidden');
+  var h = document.querySelector('#loginModal h2'); if (h) h.textContent = 'Login';
   modal.classList.remove('hidden');
   modal.classList.add('flex');
 }
@@ -75094,13 +75223,13 @@ RevenueModule.refresh();
 });
 </script>
 
-<!-- ORGPROFILE --><div id="orgProfileTab" class="hidden ml-84 mr-7 p-2"><div id="orgNameHeader" class="text-2xl font-bold mb-6 text-center">Organization Profile</div><form id="orgProfileForm" class="bg-white p-6 rounded shadow space-y-10"><div class="space-y-2"><h3 class="text-lg font-semibold">Basic Information</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="col-span-3"><label for="orgLogo" class="block text-sm font-medium">Organization Logo</label><input type="file" id="orgLogo" accept=".jpg,.jpeg,.png,.gif,.bmp" class="border p-2 rounded w-full" /><p class="text-xs text-gray-500 mt-1">
+<!-- ORGPROFILE --><div id="orgProfileTab" class="hidden ml-84 mr-7 p-2"><div id="orgNameHeader" class="text-2xl font-bold mb-6 text-center">Organization Profile</div><div id="orgSummaryCard" class="bg-white rounded-xl shadow p-5 mb-6 flex flex-wrap items-center gap-5"><div class="relative"><img id="orgSummaryLogo" class="hidden w-20 h-20 rounded-lg object-cover border" alt="Organization Logo" /><div id="orgSummaryLogoPlaceholder" class="w-20 h-20 rounded-lg bg-blue-100 text-blue-900 flex items-center justify-center text-3xl font-bold">🏢</div></div><div class="flex-1 min-w-[200px]"><div id="orgSummaryName" class="text-xl font-bold text-blue-900">Your Organization</div><div id="orgSummaryMeta" class="text-sm text-gray-500">Complete your profile below</div><div class="mt-2 flex flex-wrap gap-2 text-xs"><span class="bg-gray-100 px-2 py-1 rounded">ID: <b id="orgSummaryCompanyId">—</b></span><span class="bg-blue-100 text-blue-900 px-2 py-1 rounded">Plan: <b id="orgSummaryPlan">—</b></span><span class="bg-gray-100 px-2 py-1 rounded">Last saved: <b id="orgSummaryUpdated">Never</b></span></div></div><div class="w-full sm:w-56"><div class="flex justify-between text-xs text-gray-500 mb-1"><span>Profile completeness</span><span id="orgCompletenessPct">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="orgCompletenessBar" class="h-2 rounded-full bg-red-500" style="width:0%"></div></div></div></div><form id="orgProfileForm" class="bg-white p-6 rounded shadow space-y-10"><div class="space-y-2"><h3 class="text-lg font-semibold">Basic Information</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="col-span-3"><label for="orgLogo" class="block text-sm font-medium">Organization Logo</label><div class="flex items-center gap-3"><input type="file" id="orgLogo" accept=".jpg,.jpeg,.png,.gif,.bmp" class="border p-2 rounded w-full" onchange="previewOrgLogo(event)" /><img id="orgLogoPreview" class="hidden w-14 h-14 rounded object-cover border" alt="Logo preview" /></div><p class="text-xs text-gray-500 mt-1">
             Preferred: 240x240px @ 72 DPI • Max 1MB • JPG, PNG, GIF, BMP
-          </p></div><input id="orgName" type="text" placeholder="e.g., Acacia Books" class="border p-2 rounded" /><input id="orgPIN" type="text" placeholder="e.g., P000000000K" class="border p-2 rounded" /><input id="orgCurrency" type="text" placeholder="e.g., KES" class="border p-2 rounded" /><input id="orgPhone" type="text" placeholder="Phone" class="border p-2 rounded" /><input id="orgEmail" type="email" placeholder="Email" class="border p-2 rounded" /><input id="orgAddress" type="text" placeholder="Address" class="border p-2 rounded col-span-3" /></div></div><div class="space-y-2"><h3 class="text-lg font-semibold">Contacts & Industry</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><input id="orgIndustry" type="text" placeholder="e.g., Agriculture" class="border p-2 rounded" /><input id="orgLocation" type="text" placeholder="Organization Location" class="border p-2 rounded" /><div class="flex items-center gap-2 col-span-3"><input type="checkbox" id="diffPaymentAddress" class="h-4 w-4" /><label for="diffPaymentAddress" class="text-sm">Add a different address for payment stubs?</label></div><input id="primaryContact" type="text" placeholder="Primary Contact Name" class="border p-2 rounded" /><input id="primaryContactEmail" type="email" placeholder="e.g., account.com" class="border p-2 rounded" /></div></div><div class="space-y-2"><h3 class="text-lg font-semibold">Settings</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="sm:col-span-1"><label for="baseCurrency" class="block text-sm font-medium text-blue-900 mb-1">Base Currency</label><select id="baseCurrency" class="border p-2 rounded w-full"><option value="USD">🇺🇸 USD – US Dollar</option><option value="EUR">🇪🇺 EUR – Euro</option><option value="GBP">🇬🇧 GBP – British Pound</option><option value="JPY">🇯🇵 JPY – Japanese Yen</option><option value="AUD">🇦🇺 AUD – Australian Dollar</option><option value="CAD">🇨🇦 CAD – Canadian Dollar</option><option value="CHF">🇨🇭 CHF – Swiss Franc</option><option value="CNY">🇨🇳 CNY – Chinese Yuan</option><option value="INR">🇮🇳 INR – Indian Rupee</option><option value="KES">🇰🇪 KES – Kenyan Shilling</option><option value="NZD">🇳🇿 NZD – New Zealand Dollar</option><option value="SGD">🇸🇬 SGD – Singapore Dollar</option><option value="ZAR">🇿🇦 ZAR – South African Rand</option><option value="KRW">🇰🇷 KRW – South Korean Won</option><option value="MXN">🇲🇽 MXN – Mexican Peso</option><option value="BRL">🇧🇷 BRL – Brazilian Real</option><option value="RUB">🇷🇺 RUB – Russian Ruble</option><option value="TRY">🇹🇷 TRY – Turkish Lira</option><option value="NOK">🇳🇴 NOK – Norwegian Krone</option><option value="SEK">🇸🇪 SEK – Swedish Krona</option><option value="DKK">🇩🇰 DKK – Danish Krone</option><option value="SAR">🇸🇦 SAR – Saudi Riyal</option><option value="AED">🇦🇪 AED – UAE Dirham</option><option value="HKD">🇭🇰 HKD – Hong Kong Dollar</option></select></div><div class="sm:col-span-1"><label for="fiscalYear" class="block text-sm font-medium text-blue-900 mb-1">Fiscal Year</label><select id="fiscalYear" class="border p-2 rounded w-full"><option value="">Select Fiscal Year</option><option value="January - December">January – December</option><option value="April - March">April – March</option><option value="July - June">July – June</option><option value="October - September">October – September</option></select></div><div class="sm:col-span-1"><label for="reportBasis" class="block text-sm font-medium text-blue-900 mb-1">Report Basis</label><select id="reportBasis" class="border p-2 rounded w-full"><option value="">Select Report Basis</option><option value="Accrual">Accrual</option><option value="Cash">Cash</option></select></div><div class="sm:col-span-1"><label for="language" class="block text-sm font-medium text-blue-900 mb-1">Language</label><select id="language" class="border p-2 rounded w-full"><option value="">Select Language</option><option value="en">English 🇬🇧</option><option value="fr">French 🇫🇷</option><option value="sw">Swahili 🇰🇪</option><option value="es">Spanish 🇪🇸</option><option value="de">German 🇩🇪</option><option value="pt">Portuguese 🇵🇹</option><option value="ar">Arabic 🇸🇦</option><option value="hi">Hindi 🇮🇳</option><option value="zh">Chinese 🇨🇳</option><option value="ru">Russian 🇷🇺</option><option value="ja">Japanese 🇯🇵</option><option value="ko">Korean 🇰🇷</option><option value="it">Italian 🇮🇹</option><option value="nl">Dutch 🇳🇱</option><option value="tr">Turkish 🇹🇷</option><option value="vi">Vietnamese 🇻🇳</option><option value="th">Thai 🇹🇭</option><option value="fa">Persian 🇮🇷</option><option value="id">Indonesian 🇮🇩</option><option value="he">Hebrew 🇮🇱</option></select></div><div class="sm:col-span-1"><label for="timeZone" class="block text-sm font-medium text-blue-900 mb-1">Time Zone</label><select id="timeZone" class="border p-2 rounded w-full"><option value="">Select Time Zone</option><option value="Africa/Nairobi">(GMT+03:00) Africa/Nairobi</option><option value="Europe/London">(GMT+00:00) Europe/London</option><option value="America/New_York">(GMT-05:00) America/New_York</option><option value="America/Chicago">(GMT-06:00) America/Chicago</option><option value="America/Denver">(GMT-07:00) America/Denver</option><option value="America/Los_Angeles">(GMT-08:00) America/Los_Angeles</option><option value="Asia/Dubai">(GMT+04:00) Asia/Dubai</option><option value="Asia/Kolkata">(GMT+05:30) Asia/Kolkata</option><option value="Asia/Tokyo">(GMT+09:00) Asia/Tokyo</option><option value="Asia/Shanghai">(GMT+08:00) Asia/Shanghai</option><option value="Europe/Paris">(GMT+01:00) Europe/Paris</option><option value="Europe/Berlin">(GMT+01:00) Europe/Berlin</option><option value="Europe/Moscow">(GMT+03:00) Europe/Moscow</option><option value="Australia/Sydney">(GMT+10:00) Australia/Sydney</option><option value="Australia/Perth">(GMT+08:00) Australia/Perth</option><option value="America/Sao_Paulo">(GMT-03:00) America/Sao_Paulo</option><option value="America/Toronto">(GMT-05:00) America/Toronto</option><option value="America/Mexico_City">(GMT-06:00) America/Mexico_City</option><option value="Asia/Jakarta">(GMT+07:00) Asia/Jakarta</option><option value="Africa/Johannesburg">(GMT+02:00) Africa/Johannesburg</option></select></div><div class="sm:col-span-1"><label for="dateFormat" class="block text-sm font-medium text-blue-900 mb-1">Date Format</label><select id="dateFormat" class="border p-2 rounded w-full"><option value="">Select Date Format</option><option value="DD/MM/YYYY">DD/MM/YYYY</option><option value="MM/DD/YYYY">MM/DD/YYYY</option><option value="YYYY-MM-DD">YYYY-MM-DD</option><option value="DD.MM.YYYY">DD.MM.YYYY</option><option value="YYYY/MM/DD">YYYY/MM/DD</option><option value="DD-MM-YYYY">DD-MM-YYYY</option><option value="MM-DD-YYYY">MM-DD-YYYY</option><option value="YYYY.MM.DD">YYYY.MM.DD</option><option value="D MMM, YYYY">D MMM, YYYY</option><option value="MMM D, YYYY">MMM D, YYYY</option></select></div><div class="sm:col-span-1"><label for="companyId" class="block text-sm font-medium text-blue-900 mb-1">Company ID</label><input id="companyId" type="text" readonly class="border p-2 rounded bg-gray-100 text-gray-700 w-full" /><button type="button"
+          </p></div><input id="orgName" type="text" placeholder="e.g., Acacia Books" class="border p-2 rounded" /><input id="orgPIN" type="text" placeholder="e.g., P000000000K" class="border p-2 rounded" /><input id="orgCurrency" type="text" placeholder="e.g., KES" class="border p-2 rounded" /><input id="orgPhone" type="text" placeholder="Phone" class="border p-2 rounded" /><input id="orgEmail" type="email" placeholder="Email" class="border p-2 rounded" /><input id="orgAddress" type="text" placeholder="Address" class="border p-2 rounded col-span-3" /><input id="orgWebsite" type="text" placeholder="Website (e.g., www.acacia.co.ke)" class="border p-2 rounded" /><input id="orgRegNumber" type="text" placeholder="Business Registration No." class="border p-2 rounded" /><select id="orgBusinessType" class="border p-2 rounded"><option value="">Business Type</option><option>Sole Proprietorship</option><option>Partnership</option><option>Limited Company (LTD)</option><option>Public Limited Company (PLC)</option><option>NGO / Non-Profit</option><option>Cooperative / SACCO</option><option>Other</option></select><input id="orgVATNumber" type="text" placeholder="VAT / Tax Number" class="border p-2 rounded" /></div></div><div class="space-y-2"><h3 class="text-lg font-semibold">Contacts & Industry</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><input id="orgIndustry" type="text" placeholder="e.g., Agriculture" class="border p-2 rounded" /><input id="orgLocation" type="text" placeholder="Organization Location" class="border p-2 rounded" /><div class="flex items-center gap-2 col-span-3"><input type="checkbox" id="diffPaymentAddress" class="h-4 w-4" /><label for="diffPaymentAddress" class="text-sm">Add a different address for payment stubs?</label></div><input id="primaryContact" type="text" placeholder="Primary Contact Name" class="border p-2 rounded" /><input id="primaryContactEmail" type="email" placeholder="e.g., account.com" class="border p-2 rounded" /></div></div><div class="space-y-2"><h3 class="text-lg font-semibold">Settings</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="sm:col-span-1"><label for="baseCurrency" class="block text-sm font-medium text-blue-900 mb-1">Base Currency</label><select id="baseCurrency" class="border p-2 rounded w-full"><option value="USD">🇺🇸 USD – US Dollar</option><option value="EUR">🇪🇺 EUR – Euro</option><option value="GBP">🇬🇧 GBP – British Pound</option><option value="JPY">🇯🇵 JPY – Japanese Yen</option><option value="AUD">🇦🇺 AUD – Australian Dollar</option><option value="CAD">🇨🇦 CAD – Canadian Dollar</option><option value="CHF">🇨🇭 CHF – Swiss Franc</option><option value="CNY">🇨🇳 CNY – Chinese Yuan</option><option value="INR">🇮🇳 INR – Indian Rupee</option><option value="KES">🇰🇪 KES – Kenyan Shilling</option><option value="NZD">🇳🇿 NZD – New Zealand Dollar</option><option value="SGD">🇸🇬 SGD – Singapore Dollar</option><option value="ZAR">🇿🇦 ZAR – South African Rand</option><option value="KRW">🇰🇷 KRW – South Korean Won</option><option value="MXN">🇲🇽 MXN – Mexican Peso</option><option value="BRL">🇧🇷 BRL – Brazilian Real</option><option value="RUB">🇷🇺 RUB – Russian Ruble</option><option value="TRY">🇹🇷 TRY – Turkish Lira</option><option value="NOK">🇳🇴 NOK – Norwegian Krone</option><option value="SEK">🇸🇪 SEK – Swedish Krona</option><option value="DKK">🇩🇰 DKK – Danish Krone</option><option value="SAR">🇸🇦 SAR – Saudi Riyal</option><option value="AED">🇦🇪 AED – UAE Dirham</option><option value="HKD">🇭🇰 HKD – Hong Kong Dollar</option></select></div><div class="sm:col-span-1"><label for="fiscalYear" class="block text-sm font-medium text-blue-900 mb-1">Fiscal Year</label><select id="fiscalYear" class="border p-2 rounded w-full"><option value="">Select Fiscal Year</option><option value="January - December">January – December</option><option value="April - March">April – March</option><option value="July - June">July – June</option><option value="October - September">October – September</option></select></div><div class="sm:col-span-1"><label for="reportBasis" class="block text-sm font-medium text-blue-900 mb-1">Report Basis</label><select id="reportBasis" class="border p-2 rounded w-full"><option value="">Select Report Basis</option><option value="Accrual">Accrual</option><option value="Cash">Cash</option></select></div><div class="sm:col-span-1"><label for="language" class="block text-sm font-medium text-blue-900 mb-1">Language</label><select id="language" class="border p-2 rounded w-full"><option value="">Select Language</option><option value="en">English 🇬🇧</option><option value="fr">French 🇫🇷</option><option value="sw">Swahili 🇰🇪</option><option value="es">Spanish 🇪🇸</option><option value="de">German 🇩🇪</option><option value="pt">Portuguese 🇵🇹</option><option value="ar">Arabic 🇸🇦</option><option value="hi">Hindi 🇮🇳</option><option value="zh">Chinese 🇨🇳</option><option value="ru">Russian 🇷🇺</option><option value="ja">Japanese 🇯🇵</option><option value="ko">Korean 🇰🇷</option><option value="it">Italian 🇮🇹</option><option value="nl">Dutch 🇳🇱</option><option value="tr">Turkish 🇹🇷</option><option value="vi">Vietnamese 🇻🇳</option><option value="th">Thai 🇹🇭</option><option value="fa">Persian 🇮🇷</option><option value="id">Indonesian 🇮🇩</option><option value="he">Hebrew 🇮🇱</option></select></div><div class="sm:col-span-1"><label for="timeZone" class="block text-sm font-medium text-blue-900 mb-1">Time Zone</label><select id="timeZone" class="border p-2 rounded w-full"><option value="">Select Time Zone</option><option value="Africa/Nairobi">(GMT+03:00) Africa/Nairobi</option><option value="Europe/London">(GMT+00:00) Europe/London</option><option value="America/New_York">(GMT-05:00) America/New_York</option><option value="America/Chicago">(GMT-06:00) America/Chicago</option><option value="America/Denver">(GMT-07:00) America/Denver</option><option value="America/Los_Angeles">(GMT-08:00) America/Los_Angeles</option><option value="Asia/Dubai">(GMT+04:00) Asia/Dubai</option><option value="Asia/Kolkata">(GMT+05:30) Asia/Kolkata</option><option value="Asia/Tokyo">(GMT+09:00) Asia/Tokyo</option><option value="Asia/Shanghai">(GMT+08:00) Asia/Shanghai</option><option value="Europe/Paris">(GMT+01:00) Europe/Paris</option><option value="Europe/Berlin">(GMT+01:00) Europe/Berlin</option><option value="Europe/Moscow">(GMT+03:00) Europe/Moscow</option><option value="Australia/Sydney">(GMT+10:00) Australia/Sydney</option><option value="Australia/Perth">(GMT+08:00) Australia/Perth</option><option value="America/Sao_Paulo">(GMT-03:00) America/Sao_Paulo</option><option value="America/Toronto">(GMT-05:00) America/Toronto</option><option value="America/Mexico_City">(GMT-06:00) America/Mexico_City</option><option value="Asia/Jakarta">(GMT+07:00) Asia/Jakarta</option><option value="Africa/Johannesburg">(GMT+02:00) Africa/Johannesburg</option></select></div><div class="sm:col-span-1"><label for="dateFormat" class="block text-sm font-medium text-blue-900 mb-1">Date Format</label><select id="dateFormat" class="border p-2 rounded w-full"><option value="">Select Date Format</option><option value="DD/MM/YYYY">DD/MM/YYYY</option><option value="MM/DD/YYYY">MM/DD/YYYY</option><option value="YYYY-MM-DD">YYYY-MM-DD</option><option value="DD.MM.YYYY">DD.MM.YYYY</option><option value="YYYY/MM/DD">YYYY/MM/DD</option><option value="DD-MM-YYYY">DD-MM-YYYY</option><option value="MM-DD-YYYY">MM-DD-YYYY</option><option value="YYYY.MM.DD">YYYY.MM.DD</option><option value="D MMM, YYYY">D MMM, YYYY</option><option value="MMM D, YYYY">MMM D, YYYY</option></select></div><div class="sm:col-span-1"><label for="companyId" class="block text-sm font-medium text-blue-900 mb-1">Company ID</label><input id="companyId" type="text" readonly class="border p-2 rounded bg-gray-100 text-gray-700 w-full" /><button type="button"
           onclick="generateCompanyId()"
           class="mt-2 px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     Generate New ID
-  </button></div></div></div><div class="space-y-2 mt-4"><h3 class="text-lg font-semibold text-blue-900">Subsidiary Companies</h3><div id="subsidiaryFields" class="space-y-3"><div class="grid grid-cols-2 sm:grid-cols-3 gap-3 subsidiary-field border rounded-lg p-3 bg-gray-50"><input type="text" class="subName border p-2 rounded" placeholder="Subsidiary Name" /><input type="text" class="subLocation border p-2 rounded" placeholder="Location" /><input type="text" class="subType border p-2 rounded" placeholder="Type of Company" /><input type="text" class="subWorth border p-2 rounded" placeholder="Worth (e.g., $500,000)" /><input type="email" class="subEmail border p-2 rounded" placeholder="Email" /><input type="text" class="subPhone border p-2 rounded" placeholder="Phone Number" /></div></div><button type="button"
+  </button></div></div></div><div class="space-y-2 mt-4"><h3 class="text-lg font-semibold text-blue-900">Additional Custom Fields</h3><p class="text-xs text-gray-500">Add extra details like slogan, branch code, or bank details for your documents.</p><div id="additionalFields" class="space-y-2"></div><button type="button" onclick="addAdditionalField()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">+ Add Custom Field</button></div><div class="space-y-2 mt-4"><h3 class="text-lg font-semibold text-blue-900">Subsidiary Companies</h3><div id="subsidiaryFields" class="space-y-3"><div class="grid grid-cols-2 sm:grid-cols-3 gap-3 subsidiary-field border rounded-lg p-3 bg-gray-50"><input type="text" class="subName border p-2 rounded" placeholder="Subsidiary Name" /><input type="text" class="subLocation border p-2 rounded" placeholder="Location" /><input type="text" class="subType border p-2 rounded" placeholder="Type of Company" /><input type="text" class="subWorth border p-2 rounded" placeholder="Worth (e.g., $500,000)" /><input type="email" class="subEmail border p-2 rounded" placeholder="Email" /><input type="text" class="subPhone border p-2 rounded" placeholder="Phone Number" /></div></div><button type="button"
           onclick="addSubsidiaryField()"
           class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
     + Add Another Subsidiary
@@ -75883,7 +76012,7 @@ Save
       Data access is restricted.
     </span></div></div><!-- ✅ User Management Module --><div id="userManagementTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-2xl font-bold mb-4">👥 User Management</h2><button onclick="openCreateUserModal()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
     ➕ Add User
-  </button><div id="userTableContainer"><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Username</th><th class="border p-2 text-left">Role</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="userTableBody" class="bg-white"></tbody></table></div></div><div id="createUserModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white p-6 rounded shadow w-[400px] max-w-full"><h2 class="text-xl font-bold mb-4" id="modalTitle">👤 Create New User</h2><input id="newUsername" class="w-full mb-2 p-2 border rounded" placeholder="Username" /><input id="newPassword" type="password" class="w-full mb-2 p-2 border rounded" placeholder="Password" /><select id="newRole" class="w-full mb-2 p-2 border rounded"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="custom">Custom</option></select><input id="customRoleInput" class="w-full mb-2 p-2 border rounded hidden" placeholder="Enter custom role name" /><div class="mb-4"><label class="block font-semibold mb-1">Module Access</label><label><input type="checkbox" value="dashboard"> 📊 Dashboard Hub</label><label><input type="checkbox" value="inventoryTab"> 📦 Stock</label><label><input type="checkbox" value="movementTab"> Movement</label><label><input type="checkbox" value="priceListTab"> Price List</label><label><input type="checkbox" value="Amenend"> Amendments</label><label><input type="checkbox" value="BundleItems"> Bundle Items</label><label><input type="checkbox" value="BulkAdjustment"> Bulk Adjustments</label><label><input type="checkbox" value="packagesTab"> Packages</label><label><input type="checkbox" value="shipmentsTab"> Shipments</label><label><input type="checkbox" value="fundsTab"> 💰 Funds Hub</label><label><input type="checkbox" value="customersTab"> Customer</label><label><input type="checkbox" value="invoicesTab"> Invoices</label><label><input type="checkbox" value="quotesTab"> Quotes</label><label><input type="checkbox" value="ordersTab"> Orders</label><label><input type="checkbox" value="bulkInvoicesTab"> Bulk Invoicing</label><label><input type="checkbox" value="creditNoteTab"> Credit Notes</label><label><input type="checkbox" value="salesReturnTab"> Sales Returns</label><label><input type="checkbox" value="receiptsTab"> Receipts</label><label><input type="checkbox" value="recurringInvoicesTab"> Recurring Invoices</label><label><input type="checkbox" value="deliveryTab"> Delivery</label><label><input type="checkbox" value="customerStatementTab"> Statements</label><label><input type="checkbox" value="supplierTab"> Supplier</label><label><input type="checkbox" value="supplierPaymentsTab"> Supplier Payments</label><label><input type="checkbox" value="supplierBillsTab"> Bills</label><label><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label><label><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label><label><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label><label><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label><label><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label><label><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label><label><input type="checkbox" value="grnTab"> Goods Received</label><label><input type="checkbox" value="supplierStatementTab"> Supplier Statement</label><label><input type="checkbox" value="manualJournalsTab"> Manual Journals</label><label><input type="checkbox" value="recurringJournalsTab"> Recurring Journals</label><label><input type="checkbox" value="currencyAdjustmentsTab"> Currency Adjustments</label><label><input type="checkbox" value="nonCurrentAssetsTab"> Non-Current Assets</label><label><input type="checkbox" value="nonCurrentLiabilitiesTab"> Non-Current Liabilities</label><label><input type="checkbox" value="equityTab"> Equity</label><label><input type="checkbox" value="taxAdjustmentsTab"> Tax Adjustments</label><label><input type="checkbox" value="chartOfAccountsTab"> Chart of Accounts</label><label><input type="checkbox" value="currentAccountsTab"> Current Accounts</label><label><input type="checkbox" value="budgetsTab"> Budgets</label><label><input type="checkbox" value="transactionLockingTab"> Transaction Locking</label><label><input type="checkbox" value="employeesTab"> Employees</label><label><input type="checkbox" value="earningsTab"> Earnings & Allowances</label><label><input type="checkbox" value="grossPayTab"> Earnings & Deductions</label><label><input type="checkbox" value="attendanceTab"> Attendance & Leave</label><label><input type="checkbox" value="payslipTab"> Payslip Generation</label><label><input type="checkbox" value="statutoryDeductionsTab"> Statutories</label><label><input type="checkbox" value="payrollReportsTab"> Payroll Reports</label><label><input type="checkbox" value="integrationsTab"> Integrations</label><label><input type="checkbox" value="reportsPanel"> 📈 Reports Hub</label><label><input type="checkbox" value="plansTab"> Plans Hub</label><label><input type="checkbox" value="projectTab"> Project Hub</label><label><input type="checkbox" value="planTrackingTab"> Plan Tracking</label><label><input type="checkbox" value="orgProfileTab"> Org Profile</label><label><input type="checkbox" value="warehousesTab"> Warehouses</label><label><input type="checkbox" value="DatacenterTab"> Data Center</label><label><input type="checkbox" value="systemConfigurationTab"> System Configuration</label><label><input type="checkbox" value="userActivityTab"> User Activity</label><label><input type="checkbox" value="taxComplianceTab"> Tax Compliance</label><label><input type="checkbox" value="userManagementTab"> User Management</label><label><input type="checkbox" value="vatTab"> VAT</label><label><input type="checkbox" value="preferencesTab"> Preferences</label><label><input type="checkbox" value="settingstemplateTab"> Customization</label><label><input type="checkbox" value="costingTab"> Costing</label><label><input type="checkbox" value="bulkCostingTab"> Bulk Costing</label><label><input type="checkbox" value="filesTab"> File Manager</label><label><input type="checkbox" value="recycleBinTab"> Recycle Bin</label><label><input type="checkbox" value="mailHub"> 💬 Acacia Mail Hub</label><label><input type="checkbox" value="crmHub"> 🏢 CRM Portal Hub</label></div><div class="flex justify-end space-x-2"><button onclick="saveUser()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button><button onclick="closeCreateUserModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button></div><p id="userCreateMsg" class="text-green-600 text-sm mt-2 hidden">✅ User saved successfully.</p></div></div>
+  </button><div id="userTableContainer"><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Username</th><th class="border p-2 text-left">Role</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="userTableBody" class="bg-white"></tbody></table></div></div><div id="createUserModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white p-6 rounded shadow w-[400px] max-w-full"><h2 class="text-xl font-bold mb-4" id="modalTitle">👤 Create New User</h2><input id="newUsername" class="w-full mb-2 p-2 border rounded" placeholder="Username" /><input id="newPassword" type="password" class="w-full mb-2 p-2 border rounded" placeholder="Password" /><select id="newRole" class="w-full mb-2 p-2 border rounded"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="custom">Custom</option></select><input id="customRoleInput" class="w-full mb-2 p-2 border rounded hidden" placeholder="Enter custom role name" /><div class="mb-4" id="moduleAccessList"><label class="block font-semibold mb-1">Module Access</label><label><input type="checkbox" value="dashboard"> 📊 Dashboard Hub</label><label><input type="checkbox" value="inventoryTab"> 📦 Stock</label><label><input type="checkbox" value="movementTab"> Movement</label><label><input type="checkbox" value="priceListTab"> Price List</label><label><input type="checkbox" value="Amenend"> Amendments</label><label><input type="checkbox" value="BundleItems"> Bundle Items</label><label><input type="checkbox" value="BulkAdjustment"> Bulk Adjustments</label><label><input type="checkbox" value="packagesTab"> Packages</label><label><input type="checkbox" value="shipmentsTab"> Shipments</label><label><input type="checkbox" value="fundsTab"> 💰 Funds Hub</label><label><input type="checkbox" value="customersTab"> Customer</label><label><input type="checkbox" value="invoicesTab"> Invoices</label><label><input type="checkbox" value="quotesTab"> Quotes</label><label><input type="checkbox" value="ordersTab"> Orders</label><label><input type="checkbox" value="bulkInvoicesTab"> Bulk Invoicing</label><label><input type="checkbox" value="creditNoteTab"> Credit Notes</label><label><input type="checkbox" value="salesReturnTab"> Sales Returns</label><label><input type="checkbox" value="receiptsTab"> Receipts</label><label><input type="checkbox" value="recurringInvoicesTab"> Recurring Invoices</label><label><input type="checkbox" value="deliveryTab"> Delivery</label><label><input type="checkbox" value="customerStatementTab"> Statements</label><label><input type="checkbox" value="supplierTab"> Supplier</label><label><input type="checkbox" value="supplierPaymentsTab"> Supplier Payments</label><label><input type="checkbox" value="supplierBillsTab"> Bills</label><label><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label><label><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label><label><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label><label><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label><label><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label><label><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label><label><input type="checkbox" value="grnTab"> Goods Received</label><label><input type="checkbox" value="supplierStatementTab"> Supplier Statement</label><label><input type="checkbox" value="manualJournalsTab"> Manual Journals</label><label><input type="checkbox" value="recurringJournalsTab"> Recurring Journals</label><label><input type="checkbox" value="currencyAdjustmentsTab"> Currency Adjustments</label><label><input type="checkbox" value="nonCurrentAssetsTab"> Non-Current Assets</label><label><input type="checkbox" value="nonCurrentLiabilitiesTab"> Non-Current Liabilities</label><label><input type="checkbox" value="equityTab"> Equity</label><label><input type="checkbox" value="taxAdjustmentsTab"> Tax Adjustments</label><label><input type="checkbox" value="chartOfAccountsTab"> Chart of Accounts</label><label><input type="checkbox" value="currentAccountsTab"> Current Accounts</label><label><input type="checkbox" value="budgetsTab"> Budgets</label><label><input type="checkbox" value="transactionLockingTab"> Transaction Locking</label><label><input type="checkbox" value="employeesTab"> Employees</label><label><input type="checkbox" value="earningsTab"> Earnings & Allowances</label><label><input type="checkbox" value="grossPayTab"> Earnings & Deductions</label><label><input type="checkbox" value="attendanceTab"> Attendance & Leave</label><label><input type="checkbox" value="payslipTab"> Payslip Generation</label><label><input type="checkbox" value="statutoryDeductionsTab"> Statutories</label><label><input type="checkbox" value="payrollReportsTab"> Payroll Reports</label><label><input type="checkbox" value="integrationsTab"> Integrations</label><label><input type="checkbox" value="reportsPanel"> 📈 Reports Hub</label><label><input type="checkbox" value="plansTab"> Plans Hub</label><label><input type="checkbox" value="projectTab"> Project Hub</label><label><input type="checkbox" value="planTrackingTab"> Plan Tracking</label><label><input type="checkbox" value="orgProfileTab"> Org Profile</label><label><input type="checkbox" value="warehousesTab"> Warehouses</label><label><input type="checkbox" value="DatacenterTab"> Data Center</label><label><input type="checkbox" value="systemConfigurationTab"> System Configuration</label><label><input type="checkbox" value="userActivityTab"> User Activity</label><label><input type="checkbox" value="taxComplianceTab"> Tax Compliance</label><label><input type="checkbox" value="userManagementTab"> User Management</label><label><input type="checkbox" value="vatTab"> VAT</label><label><input type="checkbox" value="preferencesTab"> Preferences</label><label><input type="checkbox" value="settingstemplateTab"> Customization</label><label><input type="checkbox" value="costingTab"> Costing</label><label><input type="checkbox" value="bulkCostingTab"> Bulk Costing</label><label><input type="checkbox" value="filesTab"> File Manager</label><label><input type="checkbox" value="recycleBinTab"> Recycle Bin</label><label><input type="checkbox" value="mailHub"> 💬 Acacia Mail Hub</label><label><input type="checkbox" value="crmHub"> 🏢 CRM Portal Hub</label></div><div class="flex justify-end space-x-2"><button onclick="saveUser()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button><button onclick="closeCreateUserModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button></div><p id="userCreateMsg" class="text-green-600 text-sm mt-2 hidden">✅ User saved successfully.</p></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <style>
@@ -76693,108 +76822,248 @@ function addAdditionalField() {
   container.appendChild(fieldDiv);
 }
 
+/* ===== Advanced Organization Profile (v6) ===== */
+function getOrgStorageKey() {
+  try {
+    const user = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+    if (user && user.companyId) return "orgInfo_" + user.companyId;
+  } catch (e) {}
+  return null;
+}
+
+function collectSubsidiaries() {
+  const subs = [];
+  document.querySelectorAll('#subsidiaryFields .subsidiary-field').forEach(div => {
+    const g = cls => (div.querySelector('.' + cls) ? div.querySelector('.' + cls).value.trim() : "");
+    const s = { name: g('subName'), location: g('subLocation'), type: g('subType'), worth: g('subWorth'), email: g('subEmail'), phone: g('subPhone') };
+    if (s.name || s.location || s.email || s.phone) subs.push(s);
+  });
+  return subs;
+}
+
+function escAttr(v) { return String(v || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+
+function addSubsidiaryField(s) {
+  s = s || {};
+  const container = document.getElementById('subsidiaryFields');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'grid grid-cols-2 sm:grid-cols-3 gap-3 subsidiary-field border rounded-lg p-3 bg-gray-50';
+  div.innerHTML = `
+    <input type="text" class="subName border p-2 rounded" placeholder="Subsidiary Name" value="${escAttr(s.name)}" />
+    <input type="text" class="subLocation border p-2 rounded" placeholder="Location" value="${escAttr(s.location)}" />
+    <input type="text" class="subType border p-2 rounded" placeholder="Type of Company" value="${escAttr(s.type)}" />
+    <input type="text" class="subWorth border p-2 rounded" placeholder="Worth (e.g., $500,000)" value="${escAttr(s.worth)}" />
+    <input type="email" class="subEmail border p-2 rounded" placeholder="Email" value="${escAttr(s.email)}" />
+    <div class="flex gap-2">
+      <input type="text" class="subPhone border p-2 rounded w-full" placeholder="Phone Number" value="${escAttr(s.phone)}" />
+      <button type="button" onclick="removeSubsidiaryRow(this)" title="Remove subsidiary" class="text-red-600 font-bold px-2 rounded border border-red-300 hover:bg-red-50">✕</button>
+    </div>`;
+  container.appendChild(div);
+}
+
+function removeSubsidiaryRow(btn) {
+  const row = btn.closest('.subsidiary-field');
+  if (row) row.remove();
+}
+
+function addAdditionalField(label, value) {
+  const container = document.getElementById('additionalFields');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'grid grid-cols-2 gap-2 additional-field';
+  div.innerHTML = `
+    <input type="text" class="labelName border p-2 rounded" placeholder="Field Name (e.g., Slogan)" value="${escAttr(label)}" />
+    <div class="flex gap-2">
+      <input type="text" class="labelValue border p-2 rounded w-full" placeholder="Value" value="${escAttr(value)}" />
+      <button type="button" onclick="this.closest('.additional-field').remove()" title="Remove field" class="text-red-600 font-bold px-2 rounded border border-red-300 hover:bg-red-50">✕</button>
+    </div>`;
+  container.appendChild(div);
+}
+
+function previewOrgLogo(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 1024 * 1024) {
+    alert("⚠️ Logo must be 1MB or smaller.");
+    event.target.value = "";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('orgLogoPreview');
+    if (img) { img.src = e.target.result; img.classList.remove('hidden'); }
+  };
+  reader.readAsDataURL(file);
+}
+
+function computeOrgCompleteness(orgInfo) {
+  const fields = ['name','pin','currency','phone','email','address','industry','location','primaryContact','primaryContactEmail','baseCurrency','fiscalYear','reportBasis','language','timeZone','dateFormat','companyId','website','regNumber','businessType','vatNumber','logo'];
+  const filled = fields.filter(f => orgInfo && orgInfo[f]).length;
+  return Math.round((filled / fields.length) * 100);
+}
+
+function updateOrgSummary(orgInfo) {
+  orgInfo = orgInfo || JSON.parse(localStorage.getItem('orgInfo') || '{}');
+  const user = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('orgSummaryName', orgInfo.name || 'Your Organization');
+  set('orgSummaryMeta', [orgInfo.businessType, orgInfo.industry, orgInfo.location].filter(Boolean).join(' • ') || 'Complete your profile below');
+  set('orgSummaryCompanyId', orgInfo.companyId || '—');
+  set('orgSummaryPlan', user.plan ? (user.plan.charAt(0).toUpperCase() + user.plan.slice(1)) : '—');
+  set('orgSummaryUpdated', orgInfo.updatedAt ? new Date(orgInfo.updatedAt).toLocaleString() : 'Never');
+  const pct = computeOrgCompleteness(orgInfo);
+  set('orgCompletenessPct', pct + '%');
+  const bar = document.getElementById('orgCompletenessBar');
+  if (bar) {
+    bar.style.width = pct + '%';
+    bar.className = 'h-2 rounded-full transition-all duration-500 ' + (pct >= 80 ? 'bg-green-500' : pct >= 40 ? 'bg-yellow-500' : 'bg-red-500');
+  }
+  const img = document.getElementById('orgSummaryLogo');
+  const ph = document.getElementById('orgSummaryLogoPlaceholder');
+  if (img && ph) {
+    if (orgInfo.logo) { img.src = orgInfo.logo; img.classList.remove('hidden'); ph.classList.add('hidden'); }
+    else { img.classList.add('hidden'); ph.classList.remove('hidden'); }
+  }
+}
+
 function saveOrgInfo() {
   const additionalFields = [];
   document.querySelectorAll('.additional-field').forEach(div => {
-    const label = div.querySelector('.labelName').value.trim();
-    const value = div.querySelector('.labelValue').value.trim();
+    const ln = div.querySelector('.labelName');
+    const lv = div.querySelector('.labelValue');
+    const label = ln ? ln.value.trim() : "";
+    const value = lv ? lv.value.trim() : "";
     if (label && value) additionalFields.push({ label, value });
   });
 
+  const existing = JSON.parse(localStorage.getItem('orgInfo') || '{}');
   const logoInput = document.getElementById('orgLogo');
-  const logoFile = logoInput.files[0];
+  const logoFile = logoInput && logoInput.files[0];
 
   if (logoFile) {
     const reader = new FileReader();
     reader.onload = e => finalizeSave(e.target.result);
     reader.readAsDataURL(logoFile);
   } else {
-    finalizeSave(null);
+    finalizeSave(existing.logo || null); // keep the previously saved logo
   }
 
   function finalizeSave(logoBase64) {
+    const val = id => { const el = document.getElementById(id); return el ? el.value : ""; };
     const orgInfo = {
-      name: document.getElementById('orgName').value,
-      pin: document.getElementById('orgPIN').value,
-      currency: document.getElementById('orgCurrency').value,
-      phone: document.getElementById('orgPhone').value,
-      email: document.getElementById('orgEmail').value,
-      address: document.getElementById('orgAddress').value,
+      name: val('orgName'),
+      pin: val('orgPIN'),
+      currency: val('orgCurrency'),
+      phone: val('orgPhone'),
+      email: val('orgEmail'),
+      address: val('orgAddress'),
       logo: logoBase64,
-      industry: document.getElementById('orgIndustry').value,
-      location: document.getElementById('orgLocation').value,
-      differentPaymentAddress: document.getElementById('diffPaymentAddress').checked,
-      primaryContact: document.getElementById('primaryContact').value,
-      primaryContactEmail: document.getElementById('primaryContactEmail').value,
-      baseCurrency: document.getElementById('baseCurrency').value,
-      fiscalYear: document.getElementById('fiscalYear').value,
-      reportBasis: document.getElementById('reportBasis').value,
-      language: document.getElementById('language').value,
-      timeZone: document.getElementById('timeZone').value,
-      dateFormat: document.getElementById('dateFormat').value,
-      companyId: document.getElementById('companyId').value,
-      additionalFields
+      industry: val('orgIndustry'),
+      location: val('orgLocation'),
+      website: val('orgWebsite'),
+      regNumber: val('orgRegNumber'),
+      businessType: val('orgBusinessType'),
+      vatNumber: val('orgVATNumber'),
+      differentPaymentAddress: !!(document.getElementById('diffPaymentAddress') && document.getElementById('diffPaymentAddress').checked),
+      primaryContact: val('primaryContact'),
+      primaryContactEmail: val('primaryContactEmail'),
+      baseCurrency: val('baseCurrency'),
+      fiscalYear: val('fiscalYear'),
+      reportBasis: val('reportBasis'),
+      language: val('language'),
+      timeZone: val('timeZone'),
+      dateFormat: val('dateFormat'),
+      companyId: val('companyId'),
+      subsidiaries: collectSubsidiaries(),
+      additionalFields,
+      updatedAt: new Date().toISOString()
     };
 
-   localStorage.setItem('orgInfo', JSON.stringify(orgInfo));
+    localStorage.setItem('orgInfo', JSON.stringify(orgInfo));
+    const scopedKey = getOrgStorageKey();
+    if (scopedKey) localStorage.setItem(scopedKey, JSON.stringify(orgInfo)); // per-company copy
 
-localStorage.setItem('acaciaCompanyDetails', JSON.stringify({
-  name: orgInfo.name,
-  email: orgInfo.email,
-  phone: orgInfo.phone,
-  address: orgInfo.address,
-  logo: orgInfo.logo
-}));
+    localStorage.setItem('acaciaCompanyDetails', JSON.stringify({
+      name: orgInfo.name,
+      email: orgInfo.email,
+      phone: orgInfo.phone,
+      address: orgInfo.address,
+      logo: orgInfo.logo
+    }));
 
-document.getElementById('orgNameHeader').textContent = orgInfo.name || "Organization Profile";
+    document.getElementById('orgNameHeader').textContent = orgInfo.name || "Organization Profile";
 
     if (orgInfo.language) applyLanguage(orgInfo.language);
     if (orgInfo.dateFormat) applyDateFormat();
     if (orgInfo.baseCurrency) applyCurrency();
 
+    updateOrgSummary(orgInfo);
     alert("✅ Organization info saved successfully!");
   }
 }
 
 
 function loadOrgInfo() {
-  const saved = localStorage.getItem('orgInfo');
+  const scopedKey = getOrgStorageKey();
+  let saved = null;
+
+  if (scopedKey) {
+    saved = localStorage.getItem(scopedKey);
+    if (!saved && localStorage.getItem('orgInfo')) {
+      // first login on this browser after upgrade: adopt existing profile once
+      saved = localStorage.getItem('orgInfo');
+      localStorage.setItem(scopedKey, saved);
+    }
+    if (saved) localStorage.setItem('orgInfo', saved); // keep shared readers in sync with this company
+  } else {
+    saved = localStorage.getItem('orgInfo');
+  }
+
+  updateOrgSummary(saved ? JSON.parse(saved) : {});
   if (!saved) return;
   const orgInfo = JSON.parse(saved);
 
-  
-  document.getElementById('orgName').value = orgInfo.name || "";
-  document.getElementById('orgPIN').value = orgInfo.pin || "";
-  document.getElementById('orgCurrency').value = orgInfo.currency || "";
-  document.getElementById('orgPhone').value = orgInfo.phone || "";
-  document.getElementById('orgEmail').value = orgInfo.email || "";
-  document.getElementById('orgAddress').value = orgInfo.address || "";
-  document.getElementById('orgIndustry').value = orgInfo.industry || "";
-  document.getElementById('orgLocation').value = orgInfo.location || "";
-  document.getElementById('diffPaymentAddress').checked = orgInfo.differentPaymentAddress || false;
-  document.getElementById('primaryContact').value = orgInfo.primaryContact || "";
-  document.getElementById('primaryContactEmail').value = orgInfo.primaryContactEmail || "";
-  document.getElementById('baseCurrency').value = orgInfo.baseCurrency || "";
-  document.getElementById('fiscalYear').value = orgInfo.fiscalYear || "";
-  document.getElementById('reportBasis').value = orgInfo.reportBasis || "";
-  document.getElementById('language').value = orgInfo.language || "";
-  document.getElementById('timeZone').value = orgInfo.timeZone || "";
-  document.getElementById('dateFormat').value = orgInfo.dateFormat || "";
-  document.getElementById('companyId').value = orgInfo.companyId || "";
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ""; };
+  setVal('orgName', orgInfo.name);
+  setVal('orgPIN', orgInfo.pin);
+  setVal('orgCurrency', orgInfo.currency);
+  setVal('orgPhone', orgInfo.phone);
+  setVal('orgEmail', orgInfo.email);
+  setVal('orgAddress', orgInfo.address);
+  setVal('orgIndustry', orgInfo.industry);
+  setVal('orgLocation', orgInfo.location);
+  setVal('orgWebsite', orgInfo.website);
+  setVal('orgRegNumber', orgInfo.regNumber);
+  setVal('orgBusinessType', orgInfo.businessType);
+  setVal('orgVATNumber', orgInfo.vatNumber);
+  const diff = document.getElementById('diffPaymentAddress');
+  if (diff) diff.checked = orgInfo.differentPaymentAddress || false;
+  setVal('primaryContact', orgInfo.primaryContact);
+  setVal('primaryContactEmail', orgInfo.primaryContactEmail);
+  setVal('baseCurrency', orgInfo.baseCurrency);
+  setVal('fiscalYear', orgInfo.fiscalYear);
+  setVal('reportBasis', orgInfo.reportBasis);
+  setVal('language', orgInfo.language);
+  setVal('timeZone', orgInfo.timeZone);
+  setVal('dateFormat', orgInfo.dateFormat);
+  setVal('companyId', orgInfo.companyId);
 
-
-  if (orgInfo.additionalFields && orgInfo.additionalFields.length > 0) {
-    const container = document.getElementById('additionalFields');
+  const container = document.getElementById('additionalFields');
+  if (container) {
     container.innerHTML = "";
-    orgInfo.additionalFields.forEach(f => {
-      const div = document.createElement('div');
-      div.className = 'grid grid-cols-2 gap-2 additional-field';
-      div.innerHTML = `
-        <input type="text" class="labelName border p-2 rounded" value="${f.label}" />
-        <input type="text" class="labelValue border p-2 rounded" value="${f.value}" />
-      `;
-      container.appendChild(div);
-    });
+    (orgInfo.additionalFields || []).forEach(f => addAdditionalField(f.label, f.value));
+  }
+
+  const subContainer = document.getElementById('subsidiaryFields');
+  if (subContainer && orgInfo.subsidiaries && orgInfo.subsidiaries.length > 0) {
+    subContainer.innerHTML = "";
+    orgInfo.subsidiaries.forEach(s => addSubsidiaryField(s));
+  }
+
+  if (orgInfo.logo) {
+    const img = document.getElementById('orgLogoPreview');
+    if (img) { img.src = orgInfo.logo; img.classList.remove('hidden'); }
   }
 
   document.getElementById('orgNameHeader').textContent = orgInfo.name || "Organization Profile";
@@ -77621,7 +77890,10 @@ function saveUser() {
     password,
     role,
     customRole: role === 'custom' ? customRoleName : null,
-    modules
+    modules,
+    companyId: String((JSON.parse(localStorage.getItem('loggedInUser') || 'null') || {}).companyId || ''),
+    registered: new Date().toISOString(),
+    provider: 'local'
   };
 
   let users = JSON.parse(localStorage.getItem('users')) || [];
@@ -77650,7 +77922,13 @@ function renderUserTable() {
 
   tbody.innerHTML = '';
 
+  const __me = JSON.parse(localStorage.getItem('loggedInUser') || 'null') || {};
+  const __myCid = String(__me.companyId || '');
+
   users.forEach((user, index) => {
+
+    // Only show users belonging to the logged-in company (demo users stay in the demo company)
+    if (String(user.companyId || '') !== __myCid) return;
 
     const row = document.createElement('tr');
 
@@ -87618,8 +87896,13 @@ function toggleSubmenu(id) {
         }
       }
     } catch(e){ console.warn('[companySync] cloud account lookup failed', e); }
+    var beforeUser = NS.nGet.call(NS.real, 'loggedInUser');
     var r = origHandleLogin ? await origHandleLogin.apply(this, arguments) : undefined;
     try { if (NS.currentUser()) await window.startCloudSync(); } catch(e){}
+    try {
+      var afterUser = NS.nGet.call(NS.real, 'loggedInUser');
+      if (afterUser && afterUser !== beforeUser) setTimeout(function(){ location.reload(); }, 900);
+    } catch(e){}
     return r;
   };
 
@@ -87627,8 +87910,14 @@ function toggleSubmenu(id) {
     var orig = window[fnName];
     if (typeof orig !== 'function') return;
     window[fnName] = async function(){
+      var beforeUser = NS.nGet.call(NS.real, 'loggedInUser');
       var r = await orig.apply(this, arguments);
       try { if (NS.currentUser()) await window.startCloudSync(); } catch(e){}
+      try {
+        var price = parseFloat(NS.nGet.call(NS.real, 'selectedPrice') || '0') || 0;
+        var afterUser = NS.nGet.call(NS.real, 'loggedInUser');
+        if (!price && afterUser && afterUser !== beforeUser) setTimeout(function(){ location.reload(); }, 900);
+      } catch(e){}
       return r;
     };
   }
