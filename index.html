@@ -46,6 +46,12 @@
       return;
     }
     dirty[logical] = 1;
+    try {
+      var sk = '__stamps_' + c;
+      var st = {}; try { st = JSON.parse(nGet.call(REAL, sk) || '{}'); } catch(_e){}
+      st[logical] = new Date().toISOString();
+      nSet.call(REAL, sk, JSON.stringify(st));
+    } catch(_e){}
     if (window.__companySyncKick) window.__companySyncKick();
   }
   function vGetItem(k){ return Storage.prototype.getItem.call(REAL, phys(k)); }
@@ -110,6 +116,10 @@
     isGlobal: isGlobal, activeCompany: activeCompany, currentUser: currentUser,
     phys: phys, dirty: dirty,
     setApplying: function(b){ applying = !!b; },
+    getStamp: function(logical){
+      var c = activeCompany(); if (!c) return null;
+      try { var st = JSON.parse(nGet.call(REAL, '__stamps_' + c) || '{}'); return st[logical] || null; } catch(e){ return null; }
+    },
     companyKeys: function(){
       var c = activeCompany(); if (!c) return [];
       var out = [], i, K, suf = SEP + c;
@@ -406,7 +416,7 @@ body {
 #moduleAccessList label { display: block; padding: 2px 0; cursor: pointer; }
 #moduleAccessList label:hover { background: #f3f4f6; }
 </style>
-</head><body id="appBody"><!-- 🌱 HOME  --><div id="homeTab" class="bg-white text-gray-900"><nav class="flex justify-between items-center px-2 py-1 shadow-md bg-blue-900 sticky top-0 z-50"><h1 class="text-2xl font-bold text-white">Acacia Books</h1><ul class="flex gap-6 text-white font-medium"><li><a href="#hero" class="px-2 py-1 rounded hover:bg-blue-800">Home</a></li><li><a href="#features" class="px-2 py-1 rounded hover:bg-blue-800">Features</a></li><li><a href="#pricing" class="px-2 py-1 rounded hover:bg-blue-800">Pricing</a></li><li><a href="#customers" class="px-2 py-1 rounded hover:bg-blue-800">Customers</a></li><li><a href="#resources" class="px-2 py-1 rounded hover:bg-blue-800">Resources</a></li><li><a href="#about" class="px-2 py-1 rounded hover:bg-blue-800">About</a></li><li><a href="#blog" class="px-2 py-1 rounded hover:bg-blue-800">Blog</a></li><li><a href="#contact" class="px-2 py-1 rounded hover:bg-blue-800">Contact</a></li><li><a href="#apps" class="px-2 py-1 rounded hover:bg-blue-800">Apps</a></li><li><a href="#support" class="px-2 py-1 rounded hover:bg-blue-800">Support</a></li></ul><div class="flex gap-6"><button onclick="openLogin()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
+<style id="cambriaFont">body, body *, button, input, select, textarea { font-family: Cambria, Georgia, "Times New Roman", serif !important; }</style></head><body id="appBody"><!-- 🌱 HOME  --><div id="homeTab" class="bg-white text-gray-900"><nav class="flex justify-between items-center px-2 py-1 shadow-md bg-blue-900 sticky top-0 z-50"><h1 class="text-2xl font-bold text-white">Acacia Books</h1><ul class="flex gap-6 text-white font-medium"><li><a href="#hero" class="px-2 py-1 rounded hover:bg-blue-800">Home</a></li><li><a href="#features" class="px-2 py-1 rounded hover:bg-blue-800">Features</a></li><li><a href="#pricing" class="px-2 py-1 rounded hover:bg-blue-800">Pricing</a></li><li><a href="#customers" class="px-2 py-1 rounded hover:bg-blue-800">Customers</a></li><li><a href="#resources" class="px-2 py-1 rounded hover:bg-blue-800">Resources</a></li><li><a href="#about" class="px-2 py-1 rounded hover:bg-blue-800">About</a></li><li><a href="#blog" class="px-2 py-1 rounded hover:bg-blue-800">Blog</a></li><li><a href="#contact" class="px-2 py-1 rounded hover:bg-blue-800">Contact</a></li><li><a href="#apps" class="px-2 py-1 rounded hover:bg-blue-800">Apps</a></li><li><a href="#support" class="px-2 py-1 rounded hover:bg-blue-800">Support</a></li></ul><div class="flex gap-6"><button onclick="openLogin()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
       Sign In
     </button><button id="openDemoBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
       Request Demo
@@ -2019,7 +2029,7 @@ document.addEventListener("click", function(e) {
 });
 </script>
 <div id="notifPopup" class="hidden fixed top-14 right-4 w-72 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold">📢 Updates</h3><ul id="notifList" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul></div><div id="quickCreatePanel" class="hidden fixed top-14 right-20 w-64 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold text-gray-700">⚙️ Quick Create</h3><button onclick="openCreate('customersTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100"> Customer</button><button onclick="openCreate('invoicesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Invoice</button><button onclick="openCreate('supplierTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Supplier</button><button onclick="openCreate('employeesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Employee</button><button onclick="openCreate('inventoryTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Inventory</button><button onclick="openCreate('manualJournalsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Journal</button><button onclick="openCreate('fundsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Fund</button></div><div class="h-3"></div><div id="sidebar" class="hidden fixed top-0 left-0 h-full w-40 bg-black text-white p-1 overflow-y-auto" style="top:0 !important;left:0 !important;height:100vh !important;z-index:40;"><img src="acaciabooks-logo.png" alt="Logo" class="w-24 mb-4 mx-auto" /><h2 class="text-xl font-bold  mb-6">AkBook</h2><ul class="space-y-5 text-sm"
-<li><button onclick="showTab('dashboard')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📊 Dashboard Hub</button></li><li><button onclick="toggleSubmenu('inventorySubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📦 Inventory Hub</button></li><ul id="inventorySubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('inventoryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Stock</button></li><li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li><li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li><li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li><li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li><li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li><li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li><li><button   onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li></ul><li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li><li><button onclick="toggleSubmenu('customerSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Sales Hub</button></li><ul id="customerSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li><li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li><li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li><li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li><li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li><li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li><li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li><li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li><li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li><li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li><li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li><ul id="supplierSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li><li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li><li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li><li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li><li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li><li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li><li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li><li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li><li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li><li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li><li><button onclick="showTab('supplierStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('accountantSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🧮 Accountant Hub</button></li><ul id="accountantSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('manualJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Manual Journals</button></li><li><button onclick="showTab('recurringJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Recurring Journals</button></li><li><button onclick="showTab('currencyAdjustmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Currency Adjustments</button></li><li><button onclick="showTab('nonCurrentAssetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Assets</button></li><li><button onclick="showTab('nonCurrentLiabilitiesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Liabilities</button></li><li><button onclick="showTab('equityTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Equity</button></li><li><button onclick="showTab('taxAdjustmentsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Adjustments</button></li><li><button onclick="showTab('chartOfAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Chart of Accounts</button></li><li><button onclick="showTab('currentAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Current Accounts</button></li><li><button onclick="showTab('budgetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Budgets</button></li><li><button onclick="showTab('transactionLockingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Transaction Locking</button></li></ul><li><button onclick="toggleSubmenu('payrollSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💵 Payroll Hub </button></li><ul id="payrollSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('employeesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Employees</button></li><li><button onclick="showTab('earningsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Allowances</button></li><li><button onclick="showTab('grossPayTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Deductions</button></li><li><button onclick="showTab('attendanceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Attendance & Leave</button></li><li><button onclick="showTab('payslipTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payslip Generation</button></li><li><button onclick="showTab('statutoryDeductionsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Statutories</button></li><li><button onclick="showTab('payrollReportsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payroll Reports</button></li><li><button onclick="showTab('integrationsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Integrations</button></li></ul><li><button onclick="showTab('reportsPanel')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📈 Reports Hub </button></li><li><button onclick="toggleSubmenu('plansSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🗂️Plans Hub </button></li><ul id="plansSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('plansTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plans Hub </button></li><li><button onclick="showTab('projectTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Project Hub</button></li><li><button onclick="showTab('planTrackingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Plan Tracking</button></li><li><button onclick="showTab('projectRevenueTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">  Project Revenue</button </li> </ul><li><button onclick="toggleSubmenu('settingsSubmenu2')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">⚙️ Settings Hub </button></li><ul id="settingsSubmenu2" class="ml-4 hidden space-y-1"><li><button onclick="showTab('orgProfileTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Org Profile </button></li><li><button onclick="showTab('warehousesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Warehouses</button></li><li><button onclick="showTab('DatacenterTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Data center</button></li><li><button onclick="showTab('systemConfigurationTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">System configuration</button></li><li><button onclick="showTab('userActivityTab')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Activity </button></li><li><button onclick="showTab('taxComplianceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Compliance</button></li><li><button onclick="showTab('userManagementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Management</button></li><li><button onclick="showTab('vatTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">VAT</button></li><li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li><li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li><li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li><li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li></ul><li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li><ul id="filesSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li><li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li></ul><li id="mailLink" class="hidden"><a href="https://kimani254star.github.io/acacia-mail/" target="_blank"
+<li><button onclick="showTab('dashboard')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📊 Dashboard Hub</button></li><li><button onclick="toggleSubmenu('inventorySubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📦 Inventory Hub</button></li><ul id="inventorySubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('inventoryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Stock</button></li><li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li><li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li><li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li><li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li><li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li><li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li><li><button   onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li></ul><li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li><li><button onclick="toggleSubmenu('customerSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Sales Hub</button></li><ul id="customerSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li><li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li><li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li><li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li><li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li><li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li><li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li><li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li><li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li><li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li><li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li><ul id="supplierSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li><li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li><li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li><li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li><li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li><li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li><li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li><li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li><li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li><li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li><li><button onclick="showTab('supplierStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('accountantSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🧮 Accountant Hub</button></li><ul id="accountantSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('manualJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Manual Journals</button></li><li><button onclick="showTab('recurringJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Recurring Journals</button></li><li><button onclick="showTab('currencyAdjustmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Currency Adjustments</button></li><li><button onclick="showTab('nonCurrentAssetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Assets</button></li><li><button onclick="showTab('nonCurrentLiabilitiesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Liabilities</button></li><li><button onclick="showTab('equityTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Equity</button></li><li><button onclick="showTab('taxAdjustmentsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Adjustments</button></li><li><button onclick="showTab('chartOfAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Chart of Accounts</button></li><li><button onclick="showTab('currentAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Current Accounts</button></li><li><button onclick="showTab('budgetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Budgets</button></li><li><button onclick="showTab('transactionLockingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Transaction Locking</button></li></ul><li><button onclick="toggleSubmenu('payrollSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💵 Payroll Hub </button></li><ul id="payrollSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('employeesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Employees</button></li><li><button onclick="showTab('earningsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Allowances</button></li><li><button onclick="showTab('grossPayTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Deductions</button></li><li><button onclick="showTab('attendanceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Attendance & Leave</button></li><li><button onclick="showTab('payslipTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payslip Generation</button></li><li><button onclick="showTab('statutoryDeductionsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Statutories</button></li><li><button onclick="showTab('payrollReportsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payroll Reports</button></li><li><button onclick="showTab('integrationsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Integrations</button></li></ul><li><button onclick="showTab('reportsPanel')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📈 Reports Hub </button></li><li><button onclick="toggleSubmenu('plansSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🗂️Plans Hub </button></li><ul id="plansSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('plansTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plans Hub </button></li><li><button onclick="showTab('projectTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Project Hub</button></li><li><button onclick="showTab('plansTab'); if(window.phGoStep) phGoStep(5);" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plan Revenue</button></li><li><button onclick="showTab('projectRevenueTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">  Project Revenue</button </li> </ul><li><button onclick="toggleSubmenu('settingsSubmenu2')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">⚙️ Settings Hub </button></li><ul id="settingsSubmenu2" class="ml-4 hidden space-y-1"><li><button onclick="showTab('orgProfileTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Org Profile </button></li><li><button onclick="showTab('warehousesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Warehouses</button></li><li><button onclick="showTab('DatacenterTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Data center</button></li><li><button onclick="showTab('systemConfigurationTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">System configuration</button></li><li><button onclick="showTab('userActivityTab')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Activity </button></li><li><button onclick="showTab('taxComplianceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Compliance</button></li><li><button onclick="showTab('userManagementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Management</button></li><li><button onclick="showTab('vatTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">VAT</button></li><li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li><li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li><li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li><li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li></ul><li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li><ul id="filesSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li><li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li></ul><li id="mailLink" class="hidden"><a href="https://kimani254star.github.io/acacia-mail/" target="_blank"
     class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">
     💬Acacia Mail Hub
   </a></li><li id="crmLink"><a href="https://kimani254star.github.io/acacia-crm/?from=books" target="_blank"
@@ -3710,7 +3720,7 @@ const rolePermissions = {
 
 
 /* ===== v5: full module list + plan-based access ===== */
-const APP_ALL_MODULES = ['dashboard','inventoryTab','movementTab','priceListTab','Amenend','BundleItems','BulkAdjustment','packagesTab','shipmentsTab','fundsTab','customersTab','invoicesTab','quotesTab','ordersTab','bulkInvoicesTab','creditNoteTab','salesReturnTab','receiptsTab','recurringInvoicesTab','deliveryTab','customerStatementTab','supplierTab','supplierPaymentsTab','supplierBillsTab','bulkBillingTab','taxPaymentsTab','OperationalCostsTab','supplierPurchaseOrdersTab','supplierDebitNotesTab','purchaseReturnsTab','grnTab','supplierStatementTab','manualJournalsTab','recurringJournalsTab','currencyAdjustmentsTab','nonCurrentAssetsTab','nonCurrentLiabilitiesTab','equityTab','taxAdjustmentsTab','chartOfAccountsTab','currentAccountsTab','budgetsTab','transactionLockingTab','employeesTab','earningsTab','grossPayTab','attendanceTab','payslipTab','statutoryDeductionsTab','payrollReportsTab','integrationsTab','reportsPanel','plansTab','projectTab','planTrackingTab','orgProfileTab','warehousesTab','DatacenterTab','systemConfigurationTab','userActivityTab','taxComplianceTab','userManagementTab','vatTab','preferencesTab','settingstemplateTab','costingTab','bulkCostingTab','filesTab','recycleBinTab','mailHub','crmHub'];
+const APP_ALL_MODULES = ['dashboard','inventoryTab','movementTab','priceListTab','Amenend','BundleItems','BulkAdjustment','packagesTab','shipmentsTab','fundsTab','customersTab','invoicesTab','quotesTab','ordersTab','bulkInvoicesTab','creditNoteTab','salesReturnTab','receiptsTab','recurringInvoicesTab','deliveryTab','customerStatementTab','supplierTab','supplierPaymentsTab','supplierBillsTab','bulkBillingTab','taxPaymentsTab','OperationalCostsTab','supplierPurchaseOrdersTab','supplierDebitNotesTab','purchaseReturnsTab','grnTab','supplierStatementTab','manualJournalsTab','recurringJournalsTab','currencyAdjustmentsTab','nonCurrentAssetsTab','nonCurrentLiabilitiesTab','equityTab','taxAdjustmentsTab','chartOfAccountsTab','currentAccountsTab','budgetsTab','transactionLockingTab','employeesTab','earningsTab','grossPayTab','attendanceTab','payslipTab','statutoryDeductionsTab','payrollReportsTab','integrationsTab','reportsPanel','plansTab','projectTab','orgProfileTab','warehousesTab','DatacenterTab','systemConfigurationTab','userActivityTab','taxComplianceTab','userManagementTab','vatTab','preferencesTab','settingstemplateTab','costingTab','bulkCostingTab','filesTab','recycleBinTab','mailHub','crmHub'];
 
 const PAYROLL_MODULES = ['employeesTab','earningsTab','grossPayTab','attendanceTab','payslipTab','statutoryDeductionsTab','payrollReportsTab'];
 
@@ -68037,27 +68047,153 @@ window.addEventListener(
   }
 );
 </script>
-<!-- 🗂️ Plans Module --><div id="plansTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-1xl font-bold mb-4 text-left">Strategic & Operational Plans</h2><!-- 🔎 Plans Search --><div class="relative mb-2 mt-2"><input
-    type="text"
-    id="plansSearch"
-    placeholder="Search Plans (/)"
-    class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-    oninput="searchPlans()"
-  /><!-- Search Icon --><svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div><!-- Plans Actions Button --><div class="relative inline-block"><button id="plansActionsBtn" class="inline-flex items-center rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-      Plan Actions
-      <svg class="ml-2 h-4 w-4 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button><div id="plansDropdown" class="hidden absolute bg-white border rounded shadow mt-1 w-48 z-10"><button onclick="sortPlans('title')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Title</button><button onclick="sortPlans('department')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Department</button><button onclick="sortPlans('priority')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Priority</button><hr class="my-1 border-gray-200"><input type="file" id="plansCSVFile" accept=".csv" class="hidden" onchange="importPlansCSV(event)"><button onclick="document.getElementById('plansCSVFile').click()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Import CSV</button><button onclick="exportPlansCSV()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Export CSV</button><button onclick="resetPlans()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Reset</button></div></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Create Plan</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="block text-sm font-medium mb-1">Plan Title</label><input id="planTitle" placeholder="e.g., Increase Sales by 15%" class="border p-2 rounded" style="width: 700px;"></div><div><label class="block text-sm font-medium mb-1">Department</label><select id="projectDepartment" class="border p-2 rounded w-full"><option value="All">All Departments</option><option value="Management">Management</option><option value="Finance">Finance</option><option value="Accounting">Accounting</option><option value="Marketing">Marketing</option><option value="Sales">Sales</option><option value="Operations">Operations</option><option value="Procurement">Procurement</option><option value="Human Resource">Human Resource</option><option value="IT">IT</option><option value="Customer Service">Customer Service</option><option value="Logistics">Logistics</option><option value="Production">Production</option><option value="Administration">Administration</option><option value="Legal">Legal</option><option value="Research & Development">Research & Development</option></select></div><div><label class="block text-sm font-medium mb-1">Goal Type</label><select id="goalType" class="border p-2 rounded" style="width: 700px;"><option>Strategic</option><option>Operational</option><option>Performance</option><option>Development</option></select></div><div><label class="block text-sm font-medium mb-1">Priority</label><select id="planPriority" class="border p-2 rounded" style="width: 700px;"><option>High</option><option>Medium</option><option>Low</option></select></div><div><label class="block text-sm font-medium mb-1">Start Date</label><input id="planStartDate" type="date" class="border p-2 rounded" style="width: 700px;"></div><div><label class="block text-sm font-medium mb-1">End Date</label><input id="planEndDate" type="date" class="border p-2 rounded" style="width: 700px;"></div><div class="col-span-2"><label class="block text-sm font-medium mb-1">Target Metric</label><input id="planTarget" placeholder="e.g., KES 2M in Q1, 2000 new customers, etc." class="border p-2 rounded" style="width: 700px;"></div><div class="col-span-2"><label class="block text-sm font-medium mb-1">Description</label>
-        <textarea id="planDescription" rows="3" placeholder="Brief plan overview..." class="border p-2 rounded" style="width: 700px;"></textarea>
-      </div><div class="col-span-2"><label class="block text-sm font-medium mb-1">Linked Budget (Optional)</label><input id="linkedBudget" placeholder="e.g., Marketing Q1 Budget" class="border p-2 rounded" style="width: 700px;"></div></div><button onclick="addPlan()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-600 width: 700px;">Add Plan</button></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">All Plans</h3><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Title</th><th class="border p-2">Department</th><th class="border p-2">Goal Type</th><th class="border p-2">Priority</th><th class="border p-2">Target Metric</th><th class="border p-2">Start Date</th><th class="border p-2">End Date</th><th class="border p-2">Status</th><th class="border p-2">Actions</th></tr></thead><tbody id="plansTableBody"></tbody></table></div><!-- 2. Plan Progress Tracking --><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Track Progress</h3><div class="flex flex-col gap-4 mb-4"><select id="progressPlanTitle" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Plan --</option></select><input id="progressValue" type="number" placeholder="Progress %" class="border p-2 rounded" style="width: 700px;"><input id="progressComment" placeholder="Comments / Updates" class="border p-2 rounded" style="width: 700px;"></div><button onclick="updatePlanProgress()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-600">
-    Update Progress
-  </button><div class="mt-4"><h4 class="font-semibold mb-2">Progress History</h4><table class="w-full border text-sm" id="progressTable"><thead class="bg-gray-200"><tr><th class="border p-2">Plan Title</th><th class="border p-2">Progress (%)</th><th class="border p-2">Comment</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="progressTableBody"></tbody></table></div></div><!-- 3. Performance Dashboard --><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Performance Dashboard</h3><canvas id="plansChart" height="120" class="mb-4"></canvas><div id="plansSummary" class="text-sm space-y-2"></div></div><!-- 4. Plan Reviews / Revisions --><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Plan Reviews & Revisions</h3><div class="mb-4"><label class="block text-sm font-medium mb-1">Select Plan to Review</label><select id="reviewPlanSelector" onchange="loadPlanForRevision()"
-            class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Plan --</option></select></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="block text-sm font-medium mb-1">Plan Title</label><input id="revTitle" class="border p-2 rounded" style="width:700px;"></div><div><label class="block text-sm font-medium mb-1">Department / Project</label><input id="revDepartment" class="border p-2 rounded" style="width:700px;"></div><div><label class="block text-sm font-medium mb-1">Goal Type</label><select id="revGoalType" class="border p-2 rounded" style="width:700px;"><option>Strategic</option><option>Operational</option><option>Performance</option><option>Development</option></select></div><div><label class="block text-sm font-medium mb-1">Priority</label><select id="revPriority" class="border p-2 rounded" style="width:700px;"><option>High</option><option>Medium</option><option>Low</option></select></div><div><label class="block text-sm font-medium mb-1">Start Date</label><input id="revStartDate" type="date" class="border p-2 rounded" style="width:700px;"></div><div><label class="block text-sm font-medium mb-1">End Date</label><input id="revEndDate" type="date" class="border p-2 rounded" style="width:700px;"></div><div class="col-span-2"><label class="block text-sm font-medium mb-1">Target Metric</label><input id="revTarget" class="border p-2 rounded" style="width:700px;"></div><div class="col-span-2"><label class="block text-sm font-medium mb-1">Description</label>
-      <textarea id="revDescription" rows="3" class="border p-2 rounded" style="width:700px;"></textarea>
-    </div><div class="col-span-2"><label class="block text-sm font-medium mb-1">Linked Budget (Optional)</label><input id="revBudget" class="border p-2 rounded" style="width:700px;"></div></div><div class="mt-4"><label class="block text-sm font-medium mb-1">Revision Action</label><select id="reviewAction" class="border p-2 rounded" style="width:700px;"><option value="Extend">Extend</option><option value="Revise">Revise</option><option value="Close">Close</option></select><label class="block text-sm font-medium mb-1 mt-3">Reason / Note</label><input id="reviewComment" class="border p-2 rounded" style="width:700px;"></div><button onclick="applyRevision()"
-          class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4">
-    Apply Revision
-  </button><div class="mt-6"><h4 class="font-semibold mb-2">Revision History</h4><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Plan</th><th class="border p-2">Action</th><th class="border p-2">Comment</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="planReviewHistory"></tbody></table></div></div><!-- 5. Plan Ownership & Responsibility --><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Ownership & Responsibility</h3><div class="flex flex-col gap-4 mb-4"><select id="ownershipPlanTitle" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Plan --</option></select><select id="planOwner" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Owner --</option></select><select id="planTeam" class="border p-2 rounded" style="width: 700px;" multiple><option value="">-- Select Owner --</option></select><select id="planStatus" class="border p-2 rounded" style="width: 700px;"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>On Hold</option></select><input id="planAssignmentDate" type="date" class="border p-2 rounded" style="width: 700px;"></div><button onclick="assignPlanOwner()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-600">
-    Assign / Update
-  </button><div class="mt-4"><h4 class="font-semibold mb-2">Ownership Records</h4><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Plan</th><th class="border p-2">Owner</th><th class="border p-2">Team</th><th class="border p-2">Status</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="ownershipTableBody"></tbody></table></div></div><!-- 6. Import / Export --><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Import / Export Plans</h3><input type="file" id="importPlansCSV" class="block mb-2"><button onclick="importPlans()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Import</button><button onclick="exportPlans()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-800">Export</button></div><!-- 7. AI / Smart Recommendations --><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">AI Insights & Suggestions</h3><button onclick="generatePlanInsights()" class="bg-blue-900 text-white px-1 py-1 rounded">Generate Insights</button><div class="mt-4"><h4 class="font-semibold mb-2">Insights Table</h4><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Plan</th><th class="border p-2">Planned Progress (%)</th><th class="border p-2">Actual Progress (%)</th><th class="border p-2">Status</th><th class="border p-2">Suggestion</th></tr></thead><tbody id="insightsTableBody"></tbody></table></div></div><div class="mt-4"><canvas id="insightsChart" style="max-height:300px;"></canvas></div></div><!-- Company Projects--><div id="projectTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-1xl font-bold mb-4 text-left">Company Projects</h2><div class="relative mb-2 mt-2"><input
+<!-- 🗂️ Plans Module (reworked flow) --><div id="plansTab" class="hidden ml-84 mr-7 p-2">
+<h2 class="text-1xl font-bold mb-2 text-left">🗂️ Strategic & Operational Plans</h2>
+<!-- Stepper -->
+<div class="bg-white rounded shadow p-3 mb-4">
+  <div class="flex flex-wrap gap-2 items-center" id="phStepper">
+    <button onclick="phGoStep(1)" data-step="1" class="ph-step-btn bg-blue-900 text-white px-3 py-1 rounded text-sm">1️⃣ Create Plan</button>
+    <span class="text-gray-400">→</span>
+    <button onclick="phGoStep(2)" data-step="2" class="ph-step-btn bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm">2️⃣ Ownership</button>
+    <span class="text-gray-400">→</span>
+    <button onclick="phGoStep(3)" data-step="3" class="ph-step-btn bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm">3️⃣ Track Progress</button>
+    <span class="text-gray-400">→</span>
+    <button onclick="phGoStep(4)" data-step="4" class="ph-step-btn bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm">4️⃣ Review & Revise</button>
+    <span class="text-gray-400">→</span>
+    <button onclick="phGoStep(5)" data-step="5" class="ph-step-btn bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm">5️⃣ 💰 Revenue</button>
+  </div>
+  <!-- Working plan selector (steps 2-5) -->
+  <div id="phPlanPickerWrap" class="mt-3 hidden">
+    <label class="text-sm font-medium mr-2">Working on plan:</label>
+    <select id="phSelPlan" onchange="phOnSelPlan()" class="border p-1 rounded text-sm" style="min-width:320px;"></select>
+    <span id="phSelPlanInfo" class="text-xs text-gray-600 ml-2"></span>
+  </div>
+</div>
+
+<!-- STEP 1: Create / Edit Plan -->
+<div id="phStep1" class="ph-step bg-white p-4 rounded shadow mb-4">
+  <h3 class="text-lg font-semibold mb-3" id="phFormTitle">Step 1 · Create Plan</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div><label class="block text-sm font-medium mb-1">Plan Title *</label><input id="phTitle" class="border p-2 rounded w-full" placeholder="e.g., Increase Q3 Sales by 20%"></div>
+    <div><label class="block text-sm font-medium mb-1">Department</label><input id="phDept" class="border p-2 rounded w-full" placeholder="e.g., Sales"></div>
+    <div><label class="block text-sm font-medium mb-1">Goal Type</label><select id="phGoal" class="border p-2 rounded w-full"><option>Increase Sales / Revenue</option><option>Strategic</option><option>Operational</option><option>Performance</option><option>Development</option><option>Cost Reduction</option></select></div>
+    <div><label class="block text-sm font-medium mb-1">Priority</label><select id="phPriority" class="border p-2 rounded w-full"><option>High</option><option>Medium</option><option>Low</option></select></div>
+    <div><label class="block text-sm font-medium mb-1">Start Date</label><input id="phStart" type="date" class="border p-2 rounded w-full"></div>
+    <div><label class="block text-sm font-medium mb-1">End Date</label><input id="phEnd" type="date" class="border p-2 rounded w-full"></div>
+    <div><label class="block text-sm font-medium mb-1">Target Metric</label><input id="phTarget" class="border p-2 rounded w-full" placeholder="e.g., 20% sales growth"></div>
+    <div><label class="block text-sm font-medium mb-1">Revenue Target (KES) <span class="text-xs text-gray-500">— for sales plans</span></label><input id="phTargetAmount" type="number" min="0" class="border p-2 rounded w-full" placeholder="e.g., 500000"></div>
+    <div class="sm:col-span-2"><label class="block text-sm font-medium mb-1">Description</label><textarea id="phDesc" rows="2" class="border p-2 rounded w-full" placeholder="Brief plan overview..."></textarea></div>
+    <div class="sm:col-span-2"><label class="block text-sm font-medium mb-1">Linked Budget (optional)</label><input id="phBudget" class="border p-2 rounded w-full" placeholder="e.g., Marketing Q1 Budget"></div>
+  </div>
+  <div class="mt-3 flex gap-2">
+    <button onclick="phSavePlan()" id="phSaveBtn" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Save Plan → Next</button>
+    <button onclick="phClearForm()" class="bg-gray-200 px-4 py-1 rounded">Clear</button>
+  </div>
+</div>
+
+<!-- STEP 2: Ownership -->
+<div id="phStep2" class="ph-step hidden bg-white p-4 rounded shadow mb-4">
+  <h3 class="text-lg font-semibold mb-3">Step 2 · Ownership & Responsibility</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div><label class="block text-sm font-medium mb-1">Owner</label><select id="phOwner" class="border p-2 rounded w-full"></select></div>
+    <div><label class="block text-sm font-medium mb-1">Team (Ctrl-click for multiple)</label><select id="phTeam" class="border p-2 rounded w-full" multiple size="4"></select></div>
+    <div><label class="block text-sm font-medium mb-1">Status</label><select id="phOwnStatus" class="border p-2 rounded w-full"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>On Hold</option></select></div>
+    <div><label class="block text-sm font-medium mb-1">Assignment Date</label><input id="phOwnDate" type="date" class="border p-2 rounded w-full"></div>
+  </div>
+  <div class="mt-3 flex gap-2">
+    <button onclick="phAssignOwner()" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Assign → Next</button>
+    <button onclick="phGoStep(3)" class="bg-gray-200 px-4 py-1 rounded">Skip</button>
+  </div>
+  <div class="mt-4"><h4 class="font-semibold mb-2 text-sm">Ownership for this plan</h4><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Owner</th><th class="border p-2">Team</th><th class="border p-2">Status</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="phOwnBody"></tbody></table></div>
+</div>
+
+<!-- STEP 3: Track Progress -->
+<div id="phStep3" class="ph-step hidden bg-white p-4 rounded shadow mb-4">
+  <h3 class="text-lg font-semibold mb-3">Step 3 · Track Progress</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div><label class="block text-sm font-medium mb-1">Progress (%)</label><input id="phProg" type="number" min="0" max="100" class="border p-2 rounded w-full" placeholder="e.g., 60"></div>
+    <div><label class="block text-sm font-medium mb-1">Status</label><select id="phProgStatus" class="border p-2 rounded w-full"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>Delayed</option><option>On Hold</option></select></div>
+    <div><label class="block text-sm font-medium mb-1">Responsible Person</label><input id="phProgPerson" class="border p-2 rounded w-full" placeholder="e.g., Jane Doe"></div>
+    <div><label class="block text-sm font-medium mb-1">Comment / Update</label><input id="phProgComment" class="border p-2 rounded w-full" placeholder="Brief progress update..."></div>
+  </div>
+  <div class="mt-3 flex gap-2">
+    <button onclick="phAddProgress()" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Add Update → Next</button>
+    <button onclick="phGoStep(4)" class="bg-gray-200 px-4 py-1 rounded">Skip</button>
+  </div>
+  <div class="mt-4"><h4 class="font-semibold mb-2 text-sm">Progress history for this plan</h4><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Progress</th><th class="border p-2">Status</th><th class="border p-2">Person</th><th class="border p-2">Comment</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="phProgBody"></tbody></table></div>
+</div>
+
+<!-- STEP 4: Review & Revise -->
+<div id="phStep4" class="ph-step hidden bg-white p-4 rounded shadow mb-4">
+  <h3 class="text-lg font-semibold mb-3">Step 4 · Review & Revise</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div><label class="block text-sm font-medium mb-1">Action</label><select id="phRevAction" class="border p-2 rounded w-full"><option value="Extend">Extend (new end date)</option><option value="Revise">Revise</option><option value="Close">Close plan</option></select></div>
+    <div><label class="block text-sm font-medium mb-1">New End Date (for Extend)</label><input id="phRevNewEnd" type="date" class="border p-2 rounded w-full"></div>
+    <div class="sm:col-span-2"><label class="block text-sm font-medium mb-1">Reason / Note</label><input id="phRevComment" class="border p-2 rounded w-full" placeholder="Reason or note"></div>
+  </div>
+  <div class="mt-3 flex gap-2">
+    <button onclick="phApplyRevision()" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Apply → Next</button>
+    <button onclick="phGoStep(5)" class="bg-gray-200 px-4 py-1 rounded">Skip</button>
+  </div>
+  <div class="mt-4"><h4 class="font-semibold mb-2 text-sm">Revision history for this plan</h4><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Action</th><th class="border p-2">Comment</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="phRevBody"></tbody></table></div>
+</div>
+
+<!-- STEP 5: Revenue -->
+<div id="phStep5" class="ph-step hidden bg-white p-4 rounded shadow mb-4">
+  <h3 class="text-lg font-semibold mb-1">Step 5 · 💰 Plan Revenue</h3>
+  <p class="text-xs text-gray-600 mb-3">For sales plans: pull invoices raised during the plan period, link them to the plan with the customer and the fund (bank account) the money goes to. The plan's revenue and progress update automatically.</p>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+    <div class="p-3 border rounded bg-green-50"><div class="text-xs font-semibold text-gray-600">Revenue Collected</div><div id="phRevCollected" class="text-lg font-bold text-green-700">KES 0</div></div>
+    <div class="p-3 border rounded bg-blue-50"><div class="text-xs font-semibold text-gray-600">Revenue Target</div><div id="phRevTarget" class="text-lg font-bold text-blue-900">—</div></div>
+    <div class="p-3 border rounded bg-yellow-50"><div class="text-xs font-semibold text-gray-600">Achievement</div><div id="phRevPct" class="text-lg font-bold text-yellow-700">—</div><div class="w-full bg-gray-200 rounded h-2 mt-1"><div id="phRevBar" class="bg-green-600 h-2 rounded" style="width:0%"></div></div></div>
+  </div>
+
+  <div class="border rounded p-3 mb-4">
+    <h4 class="font-semibold text-sm mb-2">🧾 Pull invoices related to this plan</h4>
+    <div class="flex flex-wrap gap-2 items-end mb-2">
+      <div><label class="block text-xs font-medium">Customer filter</label><select id="phInvCustomer" class="border p-1 rounded text-sm"><option value="">All customers</option></select></div>
+      <div><label class="block text-xs font-medium">From</label><input id="phInvFrom" type="date" class="border p-1 rounded text-sm"></div>
+      <div><label class="block text-xs font-medium">To</label><input id="phInvTo" type="date" class="border p-1 rounded text-sm"></div>
+      <button onclick="phPullInvoices()" class="bg-blue-900 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">🔄 Pull Invoices</button>
+    </div>
+    <div class="overflow-x-auto"><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2"><input type="checkbox" id="phInvAll" onchange="phToggleAllInv(this)"></th><th class="border p-2">Invoice #</th><th class="border p-2">Date</th><th class="border p-2">Customer</th><th class="border p-2">Amount (KES)</th><th class="border p-2">Status</th><th class="border p-2">Linked?</th></tr></thead><tbody id="phInvBody"><tr><td colspan="7" class="border p-2 text-center text-gray-500">Click “Pull Invoices” to load invoices within the plan period.</td></tr></tbody></table></div>
+    <div class="flex flex-wrap gap-2 items-end mt-2">
+      <div><label class="block text-xs font-medium">Fund / bank account for selected</label><select id="phInvFund" class="border p-1 rounded text-sm"></select></div>
+      <button onclick="phLinkSelected()" class="bg-green-700 text-white px-3 py-1 rounded text-sm hover:bg-green-600">➕ Link selected to plan</button>
+    </div>
+  </div>
+
+  <div class="border rounded p-3 mb-4">
+    <h4 class="font-semibold text-sm mb-2">✍️ Add revenue manually (no invoice)</h4>
+    <div class="flex flex-wrap gap-2 items-end">
+      <div><label class="block text-xs font-medium">Customer</label><select id="phManCustomer" class="border p-1 rounded text-sm"></select></div>
+      <div><label class="block text-xs font-medium">Amount (KES)</label><input id="phManAmount" type="number" min="0" class="border p-1 rounded text-sm" placeholder="0.00"></div>
+      <div><label class="block text-xs font-medium">Fund / bank</label><select id="phManFund" class="border p-1 rounded text-sm"></select></div>
+      <div><label class="block text-xs font-medium">Note</label><input id="phManNote" class="border p-1 rounded text-sm" placeholder="e.g., cash sale"></div>
+      <button onclick="phAddManualRevenue()" class="bg-blue-900 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">Add</button>
+    </div>
+  </div>
+
+  <h4 class="font-semibold text-sm mb-2">Linked revenue for this plan</h4>
+  <div class="overflow-x-auto"><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Source</th><th class="border p-2">Invoice #</th><th class="border p-2">Customer</th><th class="border p-2">Amount (KES)</th><th class="border p-2">Fund</th><th class="border p-2">Date Linked</th><th class="border p-2">Actions</th></tr></thead><tbody id="phRevBody2"></tbody><tfoot><tr class="bg-gray-100 font-bold"><td class="border p-2" colspan="3">Total</td><td class="border p-2" id="phRevTotalCell">0</td><td class="border p-2" colspan="3"></td></tr></tfoot></table></div>
+</div>
+
+<!-- Plans Overview (single table – no repetition) -->
+<div class="bg-white p-4 rounded shadow mb-6">
+  <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
+    <h3 class="text-lg font-semibold">📋 All Plans</h3>
+    <div class="flex gap-2 items-center">
+      <input type="text" id="phSearch" oninput="phRenderOverview()" placeholder="Search plans…" class="border rounded px-2 py-1 text-sm">
+      <input type="file" id="phCSVFile" accept=".csv,.xlsx" class="hidden" onchange="phImportPlans(event)">
+      <button onclick="document.getElementById('phCSVFile').click()" class="bg-gray-200 px-3 py-1 rounded text-sm">Import</button>
+      <button onclick="phExportPlans()" class="bg-gray-200 px-3 py-1 rounded text-sm">Export</button>
+    </div>
+  </div>
+  <div class="overflow-x-auto"><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Title</th><th class="border p-2">Department</th><th class="border p-2">Goal</th><th class="border p-2">Priority</th><th class="border p-2">Period</th><th class="border p-2">Owner</th><th class="border p-2">Progress</th><th class="border p-2">Status</th><th class="border p-2">Revenue (KES)</th><th class="border p-2">Actions</th></tr></thead><tbody id="phOverviewBody"></tbody></table></div>
+</div>
+</div>
+
+<div id="projectTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-1xl font-bold mb-4 text-left">Company Projects</h2><div class="relative mb-2 mt-2"><input
       type="text"
       id="projectsSearch"
       placeholder="Search Projects (/)"
@@ -68072,24 +68208,7 @@ window.addEventListener(
       + Add Another Expense
     </button></div><button onclick="updateProjectProgress()" class="bg-blue-900 text-white px-3 py-2 rounded hover:bg-blue-600">
     Update Progress
-  </button><div class="mt-4"><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Project</th><th class="border p-2">Progress (%)</th><th class="border p-2">Status</th><th class="border p-2">Comment</th><th class="border p-2">Expenses</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="projectProgressTable"></tbody></table></div></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Project Analytics</h3><canvas id="projectsChart" height="120"></canvas></div></div><!-- plan Tracking --><div id="planTrackingTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-1xl font-bold mb-4 text-left">📊 Plan Tracking Dashboard</h2><div class="relative mb-2 mt-2"><input
-    type="text"
-    id="planTrackingSearch"
-    placeholder="Search Plan Tracking (/)"
-    class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-    oninput="searchPlanTracking()"
-  /><svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div><div class="relative inline-block ml-2"><button id="planTrackingActionsBtn" class="inline-flex items-center rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-    Plan Tracking Actions
-    <svg class="ml-2 h-4 w-4 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button><div id="planTrackingDropdown" class="hidden absolute bg-white border rounded shadow mt-1 w-48 z-10"><button onclick="sortPlanTracking('title')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Plan</button><button onclick="sortPlanTracking('progress')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Progress</button><button onclick="sortPlanTracking('status')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Status</button><hr class="my-1 border-gray-200"><input type="file" id="planTrackingCSVFile" accept=".csv" class="hidden" onchange="importPlanTrackingCSV(event)"><button onclick="document.getElementById('planTrackingCSVFile').click()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Import CSV</button><button onclick="exportPlanTrackingCSV()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Export CSV</button><button onclick="resetPlanTracking()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Reset</button></div></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Update Plan Progress</h3><div class="space-y-4"><div><label class="block text-sm font-medium mb-1">Plan Title</label><select
-    id="trackPlanTitle"
-    class="border p-2 rounded"
-    style="width: 700px;"
-  ></select></div><div><label class="block text-sm font-medium mb-1">Progress (%)</label><input id="trackProgress" type="number" placeholder="e.g., 60" class="border p-2 rounded" style="width: 700px;"></div><div><label class="block text-sm font-medium mb-1">Current Status</label><select id="trackStatus" class="border p-2 rounded" style="width: 700px;"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>Delayed</option><option>On Hold</option></select></div><div class="col-span-2"><label class="block text-sm font-medium mb-1">Comment / Update</label>
-        <textarea id="trackComment" rows="2" placeholder="Brief progress update..." class="border p-2 rounded" style="width: 700px;"></textarea>
-      </div><div><label class="block text-sm font-medium mb-1">Responsible Person</label><input id="trackPerson" placeholder="e.g., Jane Doe" class="border p-2 rounded" style="width: 700px;"></div></div><button onclick="addPlanTracking()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-600 width: 700px;">Add Progress</button></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Plan Tracking Table</h3><div class="overflow-x-auto"><table class="w-full text-sm border"><thead class="bg-gray-100 text-gray-800"><tr><th class="p-2 border">Plan Title</th><th class="p-2 border">Progress (%)</th><th class="p-2 border">Status</th><th class="p-2 border">Responsible</th><th class="p-2 border">Comment</th><th class="p-2 border">Date Updated</th></tr></thead><tbody id="planTrackingTable" class="text-gray-700"></tbody></table></div></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">📈 Progress Analytics</h3><canvas id="planTrackingChart" height="120" class="mb-4"></canvas><div id="planTrackingSummary" class="text-sm text-gray-700 space-y-2"></div></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">🔄 Review & Adjust Plans</h3><div class="space-y-4 mb-4"><div><input id="adjustPlanTitle" placeholder="Plan Title"  class="border p-2 rounded" style="width: 700px;"></div><div><select id="adjustAction"  class="border p-2 rounded" style="width: 700px;"><option value="Extend">Extend</option><option value="Revise">Revise</option><option value="Close">Close</option></select></div><div><input id="adjustComment"  placeholder="Reason or Note"  class="border p-2 rounded" style="width: 700px;"></div></div><button onclick="revisePlanTracking()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-600"  style="width: 700px;">
-    Apply Adjustment
-  </button><div id="planTrackingHistory" class="text-xs text-gray-600 mt-3"></div></div><div class="bg-white p-4 rounded shadow"><h3 class="text-lg font-semibold mb-3">🤖 AI Insights</h3><button onclick="generatePlanTrackingInsights()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-600 width: 700px;">Generate Insights</button><div id="planTrackingInsights" class="text-xs text-gray-600 mt-3"></div></div></div>
-  <div id="projectRevenueTab" class="hidden ml-84 mr-7 p-2">
+  </button><div class="mt-4"><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Project</th><th class="border p-2">Progress (%)</th><th class="border p-2">Status</th><th class="border p-2">Comment</th><th class="border p-2">Expenses</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="projectProgressTable"></tbody></table></div></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Project Analytics</h3><canvas id="projectsChart" height="120"></canvas></div></div><div id="projectRevenueTab" class="hidden ml-84 mr-7 p-2">
 
 <div class="bg-white rounded-lg shadow-md p-5 mb-6">
 
@@ -70111,18 +70230,20 @@ function searchInsights() {
     row.style.display = [...row.cells].some(cell => cell.textContent.toLowerCase().includes(query)) ? '' : 'none';
   });
 }
-document.getElementById('plansActionsBtn').addEventListener('click', function() {
-  const dropdown = document.getElementById('plansDropdown');
-  dropdown.classList.toggle('hidden');
-});
-
-window.addEventListener('click', function(e) {
-  const btn = document.getElementById('plansActionsBtn');
-  const dropdown = document.getElementById('plansDropdown');
-  if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
-    dropdown.classList.add('hidden');
-  }
-});
+var __phLegacyBtn = document.getElementById('plansActionsBtn');
+if (__phLegacyBtn) {
+  __phLegacyBtn.addEventListener('click', function() {
+    const dropdown = document.getElementById('plansDropdown');
+    if (dropdown) dropdown.classList.toggle('hidden');
+  });
+  window.addEventListener('click', function(e) {
+    const btn = document.getElementById('plansActionsBtn');
+    const dropdown = document.getElementById('plansDropdown');
+    if (btn && dropdown && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
+}
 
 function sortPlans(key) {
   plans.sort((a, b) => (a[key] > b[key] ? 1 : -1));
@@ -71893,20 +72014,7 @@ document.addEventListener("DOMContentLoaded", function () {
   progressUpdates = loadFromLocalStorage("planProgress");
   planRevisions = loadFromLocalStorage("planRevisions");
   planOwnerships = loadFromLocalStorage("planOwnerships");
-
-  renderPlans();
-  renderPlansTable();
-  renderProgress();
-  renderProgressTable();
-  renderRevisions();
-  renderOwnerships();
-  renderPlansReport();
-  renderPlanDropdown();
-  renderOwnershipDropdowns();
-  renderOwnerships();
-  renderRevisionDropdown();       
-  renderRevisionHistoryTable();
-  renderPlansChart();  
+  try { renderPlansReport(); } catch(e) {}
 });
 </script>
 <script>
@@ -72915,19 +73023,20 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-document.getElementById('planTrackingActionsBtn').addEventListener('click', function () {
-  const dropdown = document.getElementById('planTrackingDropdown');
-  dropdown.classList.toggle('hidden');
-});
-
-window.addEventListener('click', function (e) {
-  const btn = document.getElementById('planTrackingActionsBtn');
-  const dropdown = document.getElementById('planTrackingDropdown');
-
-  if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
-    dropdown.classList.add('hidden');
-  }
-});
+var __ptLegacyBtn = document.getElementById('planTrackingActionsBtn');
+if (__ptLegacyBtn) {
+  __ptLegacyBtn.addEventListener('click', function () {
+    const dropdown = document.getElementById('planTrackingDropdown');
+    if (dropdown) dropdown.classList.toggle('hidden');
+  });
+  window.addEventListener('click', function (e) {
+    const btn = document.getElementById('planTrackingActionsBtn');
+    const dropdown = document.getElementById('planTrackingDropdown');
+    if (btn && dropdown && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.add('hidden');
+    }
+  });
+}
 
 let planTracking = loadFromLocalStorage("planTracking");
 let planTrackingRevisions = loadFromLocalStorage("planTrackingRevisions");
@@ -73662,13 +73771,7 @@ function clearPlanTrackingForm() {
   document.getElementById("trackPerson").value = "";
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  renderTrackPlanDropdown();
-  renderAdjustPlanDropdown();
-  renderPlanTracking();
-  renderPlanTrackingChart();
-  renderPlanTrackingRevisions();
-});
+/* Plan Tracking merged into Plans Hub flow (v8) */
 </script>
 <script>
 const RevenueModule={
@@ -76010,9 +76113,12 @@ Save
       Restricted
     </span><span id="dataAdminPreviewHint" class="ml-2 text-gray-600 text-sm">
       Data access is restricted.
-    </span></div></div><!-- ✅ User Management Module --><div id="userManagementTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-2xl font-bold mb-4">👥 User Management</h2><button onclick="openCreateUserModal()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    </span></div></div><!-- ✅ User Management Module -->
+    <div id="userManagementTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-1xl font-bold mb-4">👥 User Management</h2><button onclick="openCreateUserModal()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
     ➕ Add User
-  </button><div id="userTableContainer"><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Username</th><th class="border p-2 text-left">Role</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="userTableBody" class="bg-white"></tbody></table></div></div><div id="createUserModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white p-6 rounded shadow w-[400px] max-w-full"><h2 class="text-xl font-bold mb-4" id="modalTitle">👤 Create New User</h2><input id="newUsername" class="w-full mb-2 p-2 border rounded" placeholder="Username" /><input id="newPassword" type="password" class="w-full mb-2 p-2 border rounded" placeholder="Password" /><select id="newRole" class="w-full mb-2 p-2 border rounded"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="custom">Custom</option></select><input id="customRoleInput" class="w-full mb-2 p-2 border rounded hidden" placeholder="Enter custom role name" /><div class="mb-4" id="moduleAccessList"><label class="block font-semibold mb-1">Module Access</label><label><input type="checkbox" value="dashboard"> 📊 Dashboard Hub</label><label><input type="checkbox" value="inventoryTab"> 📦 Stock</label><label><input type="checkbox" value="movementTab"> Movement</label><label><input type="checkbox" value="priceListTab"> Price List</label><label><input type="checkbox" value="Amenend"> Amendments</label><label><input type="checkbox" value="BundleItems"> Bundle Items</label><label><input type="checkbox" value="BulkAdjustment"> Bulk Adjustments</label><label><input type="checkbox" value="packagesTab"> Packages</label><label><input type="checkbox" value="shipmentsTab"> Shipments</label><label><input type="checkbox" value="fundsTab"> 💰 Funds Hub</label><label><input type="checkbox" value="customersTab"> Customer</label><label><input type="checkbox" value="invoicesTab"> Invoices</label><label><input type="checkbox" value="quotesTab"> Quotes</label><label><input type="checkbox" value="ordersTab"> Orders</label><label><input type="checkbox" value="bulkInvoicesTab"> Bulk Invoicing</label><label><input type="checkbox" value="creditNoteTab"> Credit Notes</label><label><input type="checkbox" value="salesReturnTab"> Sales Returns</label><label><input type="checkbox" value="receiptsTab"> Receipts</label><label><input type="checkbox" value="recurringInvoicesTab"> Recurring Invoices</label><label><input type="checkbox" value="deliveryTab"> Delivery</label><label><input type="checkbox" value="customerStatementTab"> Statements</label><label><input type="checkbox" value="supplierTab"> Supplier</label><label><input type="checkbox" value="supplierPaymentsTab"> Supplier Payments</label><label><input type="checkbox" value="supplierBillsTab"> Bills</label><label><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label><label><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label><label><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label><label><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label><label><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label><label><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label><label><input type="checkbox" value="grnTab"> Goods Received</label><label><input type="checkbox" value="supplierStatementTab"> Supplier Statement</label><label><input type="checkbox" value="manualJournalsTab"> Manual Journals</label><label><input type="checkbox" value="recurringJournalsTab"> Recurring Journals</label><label><input type="checkbox" value="currencyAdjustmentsTab"> Currency Adjustments</label><label><input type="checkbox" value="nonCurrentAssetsTab"> Non-Current Assets</label><label><input type="checkbox" value="nonCurrentLiabilitiesTab"> Non-Current Liabilities</label><label><input type="checkbox" value="equityTab"> Equity</label><label><input type="checkbox" value="taxAdjustmentsTab"> Tax Adjustments</label><label><input type="checkbox" value="chartOfAccountsTab"> Chart of Accounts</label><label><input type="checkbox" value="currentAccountsTab"> Current Accounts</label><label><input type="checkbox" value="budgetsTab"> Budgets</label><label><input type="checkbox" value="transactionLockingTab"> Transaction Locking</label><label><input type="checkbox" value="employeesTab"> Employees</label><label><input type="checkbox" value="earningsTab"> Earnings & Allowances</label><label><input type="checkbox" value="grossPayTab"> Earnings & Deductions</label><label><input type="checkbox" value="attendanceTab"> Attendance & Leave</label><label><input type="checkbox" value="payslipTab"> Payslip Generation</label><label><input type="checkbox" value="statutoryDeductionsTab"> Statutories</label><label><input type="checkbox" value="payrollReportsTab"> Payroll Reports</label><label><input type="checkbox" value="integrationsTab"> Integrations</label><label><input type="checkbox" value="reportsPanel"> 📈 Reports Hub</label><label><input type="checkbox" value="plansTab"> Plans Hub</label><label><input type="checkbox" value="projectTab"> Project Hub</label><label><input type="checkbox" value="planTrackingTab"> Plan Tracking</label><label><input type="checkbox" value="orgProfileTab"> Org Profile</label><label><input type="checkbox" value="warehousesTab"> Warehouses</label><label><input type="checkbox" value="DatacenterTab"> Data Center</label><label><input type="checkbox" value="systemConfigurationTab"> System Configuration</label><label><input type="checkbox" value="userActivityTab"> User Activity</label><label><input type="checkbox" value="taxComplianceTab"> Tax Compliance</label><label><input type="checkbox" value="userManagementTab"> User Management</label><label><input type="checkbox" value="vatTab"> VAT</label><label><input type="checkbox" value="preferencesTab"> Preferences</label><label><input type="checkbox" value="settingstemplateTab"> Customization</label><label><input type="checkbox" value="costingTab"> Costing</label><label><input type="checkbox" value="bulkCostingTab"> Bulk Costing</label><label><input type="checkbox" value="filesTab"> File Manager</label><label><input type="checkbox" value="recycleBinTab"> Recycle Bin</label><label><input type="checkbox" value="mailHub"> 💬 Acacia Mail Hub</label><label><input type="checkbox" value="crmHub"> 🏢 CRM Portal Hub</label></div><div class="flex justify-end space-x-2"><button onclick="saveUser()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button><button onclick="closeCreateUserModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button></div><p id="userCreateMsg" class="text-green-600 text-sm mt-2 hidden">✅ User saved successfully.</p></div></div>
+  </button><div id="userTableContainer"><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Username</th><th class="border p-2 text-left">Role</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="userTableBody" class="bg-white"></tbody></table></div></div>
+ <div id="createUserModal"
+class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-opacity-50"><div class="bg-white p-6 rounded shadow w-[400px] max-w-full"><h2 class="text-xl font-bold mb-4" id="modalTitle">👤 Create New User</h2><input id="newUsername" class="w-full mb-2 p-2 border rounded" placeholder="Username" /><input id="newPassword" type="password" class="w-full mb-2 p-2 border rounded" placeholder="Password" /><select id="newRole" class="w-full mb-2 p-2 border rounded"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="custom">Custom</option></select><input id="customRoleInput" class="w-full mb-2 p-2 border rounded hidden" placeholder="Enter custom role name" /><div class="mb-4" id="moduleAccessList"><label class="block font-semibold mb-1">Module Access</label><label><input type="checkbox" value="dashboard"> 📊 Dashboard Hub</label><label><input type="checkbox" value="inventoryTab"> 📦 Stock</label><label><input type="checkbox" value="movementTab"> Movement</label><label><input type="checkbox" value="priceListTab"> Price List</label><label><input type="checkbox" value="Amenend"> Amendments</label><label><input type="checkbox" value="BundleItems"> Bundle Items</label><label><input type="checkbox" value="BulkAdjustment"> Bulk Adjustments</label><label><input type="checkbox" value="packagesTab"> Packages</label><label><input type="checkbox" value="shipmentsTab"> Shipments</label><label><input type="checkbox" value="fundsTab"> 💰 Funds Hub</label><label><input type="checkbox" value="customersTab"> Customer</label><label><input type="checkbox" value="invoicesTab"> Invoices</label><label><input type="checkbox" value="quotesTab"> Quotes</label><label><input type="checkbox" value="ordersTab"> Orders</label><label><input type="checkbox" value="bulkInvoicesTab"> Bulk Invoicing</label><label><input type="checkbox" value="creditNoteTab"> Credit Notes</label><label><input type="checkbox" value="salesReturnTab"> Sales Returns</label><label><input type="checkbox" value="receiptsTab"> Receipts</label><label><input type="checkbox" value="recurringInvoicesTab"> Recurring Invoices</label><label><input type="checkbox" value="deliveryTab"> Delivery</label><label><input type="checkbox" value="customerStatementTab"> Statements</label><label><input type="checkbox" value="supplierTab"> Supplier</label><label><input type="checkbox" value="supplierPaymentsTab"> Supplier Payments</label><label><input type="checkbox" value="supplierBillsTab"> Bills</label><label><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label><label><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label><label><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label><label><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label><label><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label><label><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label><label><input type="checkbox" value="grnTab"> Goods Received</label><label><input type="checkbox" value="supplierStatementTab"> Supplier Statement</label><label><input type="checkbox" value="manualJournalsTab"> Manual Journals</label><label><input type="checkbox" value="recurringJournalsTab"> Recurring Journals</label><label><input type="checkbox" value="currencyAdjustmentsTab"> Currency Adjustments</label><label><input type="checkbox" value="nonCurrentAssetsTab"> Non-Current Assets</label><label><input type="checkbox" value="nonCurrentLiabilitiesTab"> Non-Current Liabilities</label><label><input type="checkbox" value="equityTab"> Equity</label><label><input type="checkbox" value="taxAdjustmentsTab"> Tax Adjustments</label><label><input type="checkbox" value="chartOfAccountsTab"> Chart of Accounts</label><label><input type="checkbox" value="currentAccountsTab"> Current Accounts</label><label><input type="checkbox" value="budgetsTab"> Budgets</label><label><input type="checkbox" value="transactionLockingTab"> Transaction Locking</label><label><input type="checkbox" value="employeesTab"> Employees</label><label><input type="checkbox" value="earningsTab"> Earnings & Allowances</label><label><input type="checkbox" value="grossPayTab"> Earnings & Deductions</label><label><input type="checkbox" value="attendanceTab"> Attendance & Leave</label><label><input type="checkbox" value="payslipTab"> Payslip Generation</label><label><input type="checkbox" value="statutoryDeductionsTab"> Statutories</label><label><input type="checkbox" value="payrollReportsTab"> Payroll Reports</label><label><input type="checkbox" value="integrationsTab"> Integrations</label><label><input type="checkbox" value="reportsPanel"> 📈 Reports Hub</label><label><input type="checkbox" value="plansTab"> Plans Hub</label><label><input type="checkbox" value="projectTab"> Project Hub</label><label><input type="checkbox" value="planTrackingTab"> Plan Tracking</label><label><input type="checkbox" value="orgProfileTab"> Org Profile</label><label><input type="checkbox" value="warehousesTab"> Warehouses</label><label><input type="checkbox" value="DatacenterTab"> Data Center</label><label><input type="checkbox" value="systemConfigurationTab"> System Configuration</label><label><input type="checkbox" value="userActivityTab"> User Activity</label><label><input type="checkbox" value="taxComplianceTab"> Tax Compliance</label><label><input type="checkbox" value="userManagementTab"> User Management</label><label><input type="checkbox" value="vatTab"> VAT</label><label><input type="checkbox" value="preferencesTab"> Preferences</label><label><input type="checkbox" value="settingstemplateTab"> Customization</label><label><input type="checkbox" value="costingTab"> Costing</label><label><input type="checkbox" value="bulkCostingTab"> Bulk Costing</label><label><input type="checkbox" value="filesTab"> File Manager</label><label><input type="checkbox" value="recycleBinTab"> Recycle Bin</label><label><input type="checkbox" value="mailHub"> 💬 Acacia Mail Hub</label><label><input type="checkbox" value="crmHub"> 🏢 CRM Portal Hub</label></div><div class="flex justify-end space-x-2"><button onclick="saveUser()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button><button onclick="closeCreateUserModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button></div><p id="userCreateMsg" class="text-green-600 text-sm mt-2 hidden">✅ User saved successfully.</p></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <style>
@@ -76927,6 +77033,24 @@ function updateOrgSummary(orgInfo) {
   }
 }
 
+function shrinkLogoDataUrl(dataUrl, cb) {
+  try {
+    const img = new Image();
+    img.onload = function(){
+      const MAX = 400;
+      let w = img.width, h = img.height;
+      if (w <= MAX && h <= MAX && dataUrl.length < 150000) return cb(dataUrl);
+      const scale = Math.min(MAX / w, MAX / h, 1);
+      w = Math.max(1, Math.round(w * scale)); h = Math.max(1, Math.round(h * scale));
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      cb(c.toDataURL('image/png'));
+    };
+    img.onerror = function(){ cb(dataUrl); };
+    img.src = dataUrl;
+  } catch(e){ cb(dataUrl); }
+}
+
 function saveOrgInfo() {
   const additionalFields = [];
   document.querySelectorAll('.additional-field').forEach(div => {
@@ -76943,7 +77067,7 @@ function saveOrgInfo() {
 
   if (logoFile) {
     const reader = new FileReader();
-    reader.onload = e => finalizeSave(e.target.result);
+    reader.onload = e => shrinkLogoDataUrl(e.target.result, finalizeSave);
     reader.readAsDataURL(logoFile);
   } else {
     finalizeSave(existing.logo || null); // keep the previously saved logo
@@ -76980,9 +77104,11 @@ function saveOrgInfo() {
       updatedAt: new Date().toISOString()
     };
 
-    localStorage.setItem('orgInfo', JSON.stringify(orgInfo));
-    const scopedKey = getOrgStorageKey();
-    if (scopedKey) localStorage.setItem(scopedKey, JSON.stringify(orgInfo)); // per-company copy
+    try {
+      localStorage.setItem('orgInfo', JSON.stringify(orgInfo));
+      const scopedKey = getOrgStorageKey();
+      if (scopedKey) localStorage.setItem(scopedKey, JSON.stringify(orgInfo)); // per-company copy
+    } catch(e) { alert('\u26a0\ufe0f Could not save profile \u2014 storage is full. Try a smaller logo.'); return; }
 
     localStorage.setItem('acaciaCompanyDetails', JSON.stringify({
       name: orgInfo.name,
@@ -77090,40 +77216,45 @@ function applyLanguage(lang) {
   setText("button[onclick=\"toggleSubmenu('filesSubmenu')\"]", t.files);
   setText("button[onclick=\"logout()\"]", t.logout);
 
- 
   setText("button[onclick=\"showTab('inventoryTab')\"]", t.stock);
   setText("button[onclick=\"showTab('movementTab')\"]", t.movement);
   setText("button[onclick=\"showTab('priceListTab')\"]", t.priceList);
   setText("button[onclick=\"showTab('Amenend')\"]", t.amendments);
+  setText("button[onclick=\"showTab('BundleItems')\"]", t.bundleItems);
   setText("button[onclick=\"showTab('BulkAdjustment')\"]", t.bulkAdjustments);
+  setText("button[onclick=\"showTab('packagesTab')\"]", t.packages);
 
   setText("button[onclick=\"showTab('customersTab')\"]", t.customer);
   setText("button[onclick=\"showTab('invoicesTab')\"]", t.invoices);
   setText("button[onclick=\"showTab('quotesTab')\"]", t.quotes);
+  setText("button[onclick=\"showTab('ordersTab')\"]", t.orders);
+  setText("button[onclick=\"showTab('bulkInvoicesTab')\"]", t.bulkInvoices);
   setText("button[onclick=\"showTab('creditNoteTab')\"]", t.creditNotes);
   setText("button[onclick=\"showTab('salesReturnTab')\"]", t.salesReturns);
   setText("button[onclick=\"showTab('receiptsTab')\"]", t.receipts);
+  setText("button[onclick=\"showTab('recurringInvoicesTab')\"]", t.recurringInvoices);
   setText("button[onclick=\"showTab('deliveryTab')\"]", t.delivery);
   setText("button[onclick=\"showTab('customerStatementTab')\"]", t.statement);
 
   setText("button[onclick=\"showTab('supplierTab')\"]", t.supplier);
   setText("button[onclick=\"showTab('supplierBillsTab')\"]", t.bills);
+  setText("button[onclick=\"showTab('bulkBillingTab')\"]", t.bulkBilling);
   setText("button[onclick=\"showTab('taxPaymentsTab')\"]", t.taxPayments);
   setText("button[onclick=\"showTab('OperationalCostsTab')\"]", t.operationalCosts);
-  setText("button[onclick=\"showTab('supplierPurchaseOrdersTab')\"]", t.purchaseOrders);
+  setText("button[onclick=\"showTab('supplierPurchaseOrdersTab')\"]", t.orders);
   setText("button[onclick=\"showTab('supplierPaymentsTab')\"]", t.payments);
   setText("button[onclick=\"showTab('supplierDebitNotesTab')\"]", t.debitNotes);
   setText("button[onclick=\"showTab('purchaseReturnsTab')\"]", t.returns);
   setText("button[onclick=\"showTab('grnTab')\"]", t.goodsReceived);
   setText("button[onclick=\"showTab('supplierStatementTab')\"]", t.statement);
 
-  
   setText("button[onclick=\"showTab('manualJournalsTab')\"]", t.manualJournals);
   setText("button[onclick=\"showTab('recurringJournalsTab')\"]", t.recurringJournals);
   setText("button[onclick=\"showTab('currencyAdjustmentsTab')\"]", t.currencyAdjustments);
   setText("button[onclick=\"showTab('nonCurrentAssetsTab')\"]", t.nonCurrentAssets);
   setText("button[onclick=\"showTab('nonCurrentLiabilitiesTab')\"]", t.nonCurrentLiabilities);
   setText("button[onclick=\"showTab('equityTab')\"]", t.equity);
+  setText("button[onclick=\"showTab('taxAdjustmentsTab')\"]", t.taxAdjustments);
   setText("button[onclick=\"showTab('chartOfAccountsTab')\"]", t.chartOfAccounts);
   setText("button[onclick=\"showTab('currentAccountsTab')\"]", t.currentAccounts);
   setText("button[onclick=\"showTab('budgetsTab')\"]", t.budgets);
@@ -77134,16 +77265,19 @@ function applyLanguage(lang) {
   setText("button[onclick=\"showTab('grossPayTab')\"]", t.earningsDeductions);
   setText("button[onclick=\"showTab('attendanceTab')\"]", t.attendanceLeave);
   setText("button[onclick=\"showTab('payslipTab')\"]", t.payslipGeneration);
-  setText("button[onclick=\"showTab('statutoryDeductionsTab')\"]", t.statutories);
+  setText("button[onclick=\"showTab('statutoryDeductionsTab')\"]", t.statutory);
   setText("button[onclick=\"showTab('payrollReportsTab')\"]", t.payrollReports);
   setText("button[onclick=\"showTab('integrationsTab')\"]", t.integrations);
 
-  setText("button[onclick=\"showTab('plansTab')\"]", t.plansSub);
+  setText("button[onclick=\"showTab('plansTab')\"]", t.plans);
+  setText("button[onclick=\"showTab('projectTab')\"]", t.projects);
   setText("button[onclick=\"showTab('planTrackingTab')\"]", t.planTracking);
 
   setText("button[onclick=\"showTab('orgProfileTab')\"]", t.orgProfile);
   setText("button[onclick=\"showTab('warehousesTab')\"]", t.warehouses);
   setText("button[onclick=\"showTab('openingBalancesTab')\"]", t.openingBalances);
+  setText("button[onclick=\"showTab('DatacenterTab')\"]", t.dataCenter);
+  setText("button[onclick=\"showTab('systemConfigurationTab')\"]", t.systemConfiguration);
   setText("button[onclick=\"showTab('taxComplianceTab')\"]", t.taxCompliance);
   setText("button[onclick=\"showTab('userManagementTab')\"]", t.userManagement);
   setText("button[onclick=\"showTab('vatTab')\"]", t.vat);
@@ -77152,7 +77286,6 @@ function applyLanguage(lang) {
   setText("button[onclick=\"showTab('costingTab')\"]", t.costing);
   setText("button[onclick=\"showTab('bulkCostingTab')\"]", t.bulkCosting);
 
-  
   setText("button[onclick=\"showTab('filesTab')\"]", t.fileManager);
   setText("button[onclick=\"showTab('recycleBinTab')\"]", t.recycleBin);
 
@@ -77163,7 +77296,6 @@ function applyLanguage(lang) {
   setTip("#webinarToggle span", t.webinar);
   setTip("#commToggle span", t.communication);
   setTip("#orgDetailsToggle span", t.organizationDetails);
-
 
   setText("#orgProfileForm button", t.saveButton);
 }
@@ -77356,7 +77488,52 @@ function formatCurrency(amount) {
 }
 
 function convertCurrency(amount, currency) {
-  const rates = { KES: 1, USD: 0.0075, GBP: 0.0058, EUR: 0.0069 };
+ const rates = {
+  KES: 1,
+  USD: 0.0075,
+  EUR: 0.0069,
+  GBP: 0.0058,
+  AUD: 0.0114,
+  CAD: 0.0103,
+  CHF: 0.0064,
+  CNY: 0.0538,
+  JPY: 1.11,
+  INR: 0.65,
+  ZAR: 0.13,
+  NGN: 11.5,
+  UGX: 27.2,
+  TZS: 19.8,
+  RWF: 10.7,
+  ETB: 1.05,
+  GHS: 0.079,
+  EGP: 0.37,
+  AED: 0.0275,
+  SAR: 0.0281,
+  QAR: 0.0273,
+  KWD: 0.0023,
+  BHD: 0.0028,
+  OMR: 0.0029,
+  TRY: 0.30,
+  RUB: 0.59,
+  SGD: 0.0096,
+  HKD: 0.0588,
+  NZD: 0.0124,
+  SEK: 0.072,
+  NOK: 0.075,
+  DKK: 0.051,
+  PLN: 0.029,
+  BRL: 0.041,
+  MXN: 0.14,
+  PKR: 2.13,
+  BDT: 0.91,
+  LKR: 2.28,
+  IDR: 122,
+  MYR: 0.032,
+  THB: 0.24,
+  KRW: 10.3,
+  VND: 196,
+  PHP: 0.43
+};
   return amount * (rates[currency] || 1);
 }
 
@@ -81801,6 +81978,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   renderFolders();
   renderFileList();
+  try { const st0 = getStore(); if (st0 && st0.currentFolder && st0.currentFolder !== "Home") openFolder(st0.currentFolder); } catch(e){}
 });
 
 function getStore() {
@@ -81809,18 +81987,21 @@ function getStore() {
 function saveStore(data) {
   localStorage.setItem("fileManager", JSON.stringify(data));
 }
+function renderFiles() { renderFileList(); }
 
 function createFolder() {
   const input = document.getElementById("newFolderName");
   const name = input.value.trim();
   const store = getStore();
 
-  if (!name || store.folders.includes(name)) return;
+  if (!name) return alert("Enter a folder name first.");
+  if (store.folders.includes(name)) return alert("A folder with that name already exists.");
 
   store.folders.push(name);
   saveStore(store);
   input.value = "";
   renderFolders();
+  alert("\ud83d\udcc1 Folder \"" + name + "\" created.");
 }
 
 function renderFolders() {
@@ -81830,6 +82011,9 @@ function renderFolders() {
   const folderList = document.getElementById("folderList");
 
   if (!folderList) return;
+
+  const counts = {};
+  store.files.forEach(fl => { counts[fl.folder] = (counts[fl.folder] || 0) + 1; });
 
   folderList.innerHTML = store.folders.map((f, index) => `
 
@@ -81843,6 +82027,7 @@ function renderFolders() {
         <div class="font-semibold">
           ${f}
         </div>
+        <div class="text-xs text-gray-500">${counts[f] || 0} file(s)</div>
 
       </div>
 
@@ -81908,12 +82093,16 @@ function editFolder(index) {
   const newName = prompt("Edit Folder Name", currentName);
 
   if (!newName || !newName.trim()) return;
+  if (currentName === "Home") return alert("The Home folder cannot be renamed.");
 
   store.folders[index] = newName.trim();
+  store.files.forEach(f => { if (f.folder === currentName) f.folder = newName.trim(); });
+  if (store.currentFolder === currentName) store.currentFolder = newName.trim();
 
   saveStore(store);
 
   renderFolders();
+  renderFileList();
 
   alert("Folder updated successfully");
 
@@ -81948,15 +82137,22 @@ function deleteFolder(index) {
 
   const store = getStore();
 
-  if (!confirm("Delete this folder?")) return;
+  const fname = store.folders[index];
+  if (fname === "Home") return alert("The Home folder cannot be deleted.");
+  if (!confirm("Delete this folder? Its files will be moved to Home.")) return;
 
   store.folders.splice(index, 1);
+  store.files.forEach(f => { if (f.folder === fname) f.folder = "Home"; });
+  if (store.currentFolder === fname) store.currentFolder = "Home";
 
   saveStore(store);
 
   renderFolders();
+  renderFileList();
+  const bc = document.getElementById("breadcrumb");
+  if (bc && store.currentFolder === "Home") bc.textContent = "Home";
 
-  alert("Folder deleted successfully");
+  alert("Folder deleted \u2014 its files were moved to Home");
 
 }
 function toggleFolderMenu(index) {
@@ -81989,8 +82185,10 @@ function cloneFolder(name) {
   const store = getStore();
 
   const clonedName = `${name} Copy`;
+  if (store.folders.includes(clonedName)) return alert("A folder called \"" + clonedName + "\" already exists.");
 
   store.folders.push(clonedName);
+  store.files.filter(f => f.folder === name).forEach(f => store.files.push({ ...f, folder: clonedName }));
 
   saveStore(store);
 
@@ -82052,7 +82250,8 @@ function openFolder(folder) {
   const store = getStore();
   store.currentFolder = folder;
   saveStore(store);
-  document.getElementById("breadcrumb").textContent = `Home / ${folder}`;
+  const bc = document.getElementById("breadcrumb");
+  if (bc) bc.innerHTML = folder === "Home" ? "Home" : `<span class="text-blue-900 cursor-pointer underline" onclick="openFolder('Home')">Home</span> / ${folder}`;
   renderFileList();
 }
 
@@ -82074,8 +82273,9 @@ function uploadFiles(inputFiles = null) {
         folder: store.currentFolder,
         content: e.target.result
       });
-      saveStore(store);
+      try { saveStore(store); } catch(err) { store.files.pop(); alert("\u26a0\ufe0f Storage full \u2014 could not store " + file.name + ". Try a smaller file."); }
       renderFileList();
+      renderFolders();
     };
     reader.readAsDataURL(file);
   });
@@ -82158,6 +82358,11 @@ function renderFileList() {
 
           <div id="file-menu-${i}"
             class="hidden absolute right-0 mt-1 w-44 bg-white border rounded shadow z-50 flex flex-col">
+
+            <button onclick="moveFile(${i})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Move to\u2026
+            </button>
 
             <button onclick="cloneFile(${i})"
               class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
@@ -82243,6 +82448,23 @@ function cloneFile(index) {
 
 }
 
+function moveFile(index) {
+  const store = getStore();
+  const files = store.files.filter(f => f.folder === store.currentFolder);
+  const file = files[index];
+  if (!file) return;
+  const options = store.folders.filter(f => f !== store.currentFolder);
+  if (!options.length) return alert("No other folders yet. Create one first.");
+  const dest = prompt("Move \"" + file.name + "\" to which folder?\n\nAvailable: " + options.join(", "), options[0]);
+  if (!dest) return;
+  if (!store.folders.includes(dest.trim())) return alert("Folder not found: " + dest);
+  file.folder = dest.trim();
+  saveStore(store);
+  renderFileList();
+  renderFolders();
+  alert("File moved to " + dest.trim());
+}
+
 function downloadFile(index) {
 
   const store = getStore();
@@ -82255,31 +82477,18 @@ function downloadFile(index) {
 
   if (!file) return;
 
-  const content = `
-FILE DETAILS
-
-Name: ${file.name}
-Type: ${file.type}
-Size: ${file.size}
-Date: ${file.date}
-Folder: ${file.folder}
-`;
-
-  const blob = new Blob([content], {
-    type: "text/plain"
-  });
-
-  const url = URL.createObjectURL(blob);
-
   const a = document.createElement("a");
 
-  a.href = url;
-
-  a.download = `${file.name}.txt`;
+  if (file.content) {
+    a.href = file.content;
+    a.download = file.name;
+  } else {
+    const blob = new Blob(["FILE DETAILS\n\nName: " + file.name], { type: "text/plain" });
+    a.href = URL.createObjectURL(blob);
+    a.download = file.name + ".txt";
+  }
 
   a.click();
-
-  URL.revokeObjectURL(url);
 
 }
 
@@ -87779,6 +87988,27 @@ function toggleSubmenu(id) {
   }
   window.__companySyncKick = kick;
 
+  function flushNow(){
+    var c = comp(); if (!c) return;
+    var keys = Object.keys(NS.dirty); if (!keys.length) return;
+    var rows = [];
+    keys.forEach(function(k){
+      if (k === '@users') return;
+      var raw = NS.nGet.call(NS.real, k + NS.SEP + c);
+      rows.push({ company_id: c, key: k, value: raw === null ? null : raw, updated_at: new Date().toISOString() });
+      delete NS.dirty[k];
+    });
+    if (!rows.length) return;
+    try {
+      fetch(window.__SUPA_URL__ + '/rest/v1/company_state?on_conflict=company_id,key', {
+        method: 'POST', keepalive: true,
+        headers: { 'apikey': window.__SUPA_KEY__, 'Authorization': 'Bearer ' + window.__SUPA_KEY__, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
+        body: JSON.stringify(rows)
+      });
+    } catch(e){}
+  }
+  window.addEventListener('pagehide', flushNow);
+
   function pushAllCompanyKeys(){
     var keys = NS.companyKeys(), i;
     for (i = 0; i < keys.length; i++) NS.dirty[keys[i]] = 1;
@@ -87818,10 +88048,12 @@ function toggleSubmenu(id) {
     var c = comp();
     if (!c) return;
     try {
-      var res = await sb.from('company_state').select('key,value').eq('company_id', c);
+      var res = await sb.from('company_state').select('key,value,updated_at').eq('company_id', c);
       if (res.error){ console.warn('[companySync] pull error', res.error); return; }
       NS.setApplying(true);
       (res.data || []).forEach(function(row){
+        var localTs = NS.getStamp ? NS.getStamp(row.key) : null;
+        if (localTs && row.updated_at && Date.parse(row.updated_at) < Date.parse(localTs)) return; /* local copy is newer - keep it */
         if (row.value === null) NS.nRem.call(NS.real, row.key + NS.SEP + c);
         else NS.nSet.call(NS.real, row.key + NS.SEP + c, row.value);
       });
@@ -87937,6 +88169,363 @@ function toggleSubmenu(id) {
 })();
 
 </script>
+<script>
+/* ===== Reworked Plans Hub: guided flow + Revenue module (v8) ===== */
+(function(){
+function phLoad(k){ try{return JSON.parse(localStorage.getItem(k)||"[]");}catch(e){return [];} }
+function phSave(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){console.warn("save failed",k,e);} }
+function phFmt(n){ n=parseFloat(n)||0; return "KES " + n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function phEsc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function g(id){ return document.getElementById(id); }
+
+// use the app's shared globals so the Reports panel stays in sync
+function P(){ if(typeof plans!=="undefined"&&Array.isArray(plans)) return plans; window.__phPlans=window.__phPlans||phLoad("plans"); return window.__phPlans; }
+function setP(a){ if(typeof plans!=="undefined"){ plans=a; } else { window.__phPlans=a; } phSave("plans",a); }
+function PU(){ if(typeof progressUpdates!=="undefined"&&Array.isArray(progressUpdates)) return progressUpdates; window.__phPU=window.__phPU||phLoad("planProgress"); return window.__phPU; }
+function setPU(a){ if(typeof progressUpdates!=="undefined"){ progressUpdates=a; } else { window.__phPU=a; } phSave("planProgress",a); }
+function PR(){ if(typeof planRevisions!=="undefined"&&Array.isArray(planRevisions)) return planRevisions; window.__phPR=window.__phPR||phLoad("planRevisions"); return window.__phPR; }
+function setPR(a){ if(typeof planRevisions!=="undefined"){ planRevisions=a; } else { window.__phPR=a; } phSave("planRevisions",a); }
+function PO(){ if(typeof planOwnerships!=="undefined"&&Array.isArray(planOwnerships)) return planOwnerships; window.__phPO=window.__phPO||phLoad("planOwnerships"); return window.__phPO; }
+function setPO(a){ if(typeof planOwnerships!=="undefined"){ planOwnerships=a; } else { window.__phPO=a; } phSave("planOwnerships",a); }
+let planRevenue = phLoad("planRevenue");
+
+let phEditIndex = null;
+let phStep = 1;
+
+function phRefreshReports(){
+  ["renderPlansReport","renderPlansStatusOverview"].forEach(fn=>{ try{ if(typeof window[fn]==="function") window[fn](); }catch(e){} });
+}
+
+/* ---------- navigation ---------- */
+window.phGoStep = function(n){
+  phStep = n;
+  document.querySelectorAll(".ph-step").forEach(el=>el.classList.add("hidden"));
+  const sec = g("phStep"+n); if(sec) sec.classList.remove("hidden");
+  document.querySelectorAll(".ph-step-btn").forEach(b=>{
+    const active = parseInt(b.dataset.step)===n;
+    b.className = "ph-step-btn " + (active?"bg-blue-900 text-white":"bg-gray-200 text-gray-700") + " px-3 py-1 rounded text-sm";
+  });
+  const wrap = g("phPlanPickerWrap");
+  if(wrap) wrap.classList.toggle("hidden", n===1);
+  if(n>1){ phFillPlanPicker(); phOnSelPlan(); }
+};
+
+function phFillPlanPicker(){
+  const sel = g("phSelPlan"); if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = P().map((p,i)=>`<option value="${i}">${phEsc(p.title)} (${phEsc(p.goalType||p.type||"")})</option>`).join("");
+  if(cur && sel.querySelector(`option[value="${cur}"]`)) sel.value = cur;
+}
+function phCurPlan(){
+  const sel = g("phSelPlan");
+  const i = sel ? parseInt(sel.value) : NaN;
+  return isNaN(i) ? null : P()[i];
+}
+window.phOnSelPlan = function(){
+  const p = phCurPlan();
+  const info = g("phSelPlanInfo");
+  if(info) info.textContent = p ? `${p.startDate||"?"} → ${p.endDate||"?"} · ${p.status||"Not Started"} · progress ${p.progress||0}%` : "No plan yet — create one in Step 1.";
+  phRenderOwn(); phRenderProg(); phRenderRev(); phRenderRevenue();
+  const from=g("phInvFrom"), to=g("phInvTo");
+  if(p && from && !from.value) from.value = p.startDate||"";
+  if(p && to && !to.value) to.value = p.endDate||"";
+};
+
+/* ---------- step 1: create/edit ---------- */
+window.phSavePlan = function(){
+  const title = g("phTitle").value.trim();
+  if(!title) return alert("Please enter a plan title!");
+  const data = {
+    title, department: g("phDept").value.trim(),
+    goalType: g("phGoal").value, priority: g("phPriority").value,
+    startDate: g("phStart").value, endDate: g("phEnd").value,
+    target: g("phTarget").value.trim(),
+    targetAmount: parseFloat(g("phTargetAmount").value)||0,
+    description: g("phDesc").value.trim(), linkedBudget: g("phBudget").value.trim(),
+  };
+  const arr = P();
+  if(phEditIndex!==null && arr[phEditIndex]){
+    Object.assign(arr[phEditIndex], data);
+  } else {
+    arr.push(Object.assign({progress:0,status:"Not Started",owner:"",team:[],dateCreated:new Date().toLocaleString()},data));
+  }
+  const idx = phEditIndex!==null?phEditIndex:arr.length-1;
+  phEditIndex = null; g("phSaveBtn").textContent="Save Plan → Next"; g("phFormTitle").textContent="Step 1 · Create Plan";
+  setP(arr); phClearForm(); phRenderOverview(); phRefreshReports();
+  phGoStep(2);
+  const sel=g("phSelPlan"); if(sel){ phFillPlanPicker(); sel.value=String(idx); phOnSelPlan(); }
+};
+window.phClearForm = function(){
+  ["phTitle","phDept","phStart","phEnd","phTarget","phTargetAmount","phDesc","phBudget"].forEach(id=>{ if(g(id)) g(id).value=""; });
+};
+window.phEditPlan = function(i){
+  const p = P()[i]; if(!p) return;
+  phEditIndex = i;
+  g("phTitle").value=p.title||""; g("phDept").value=p.department||"";
+  g("phGoal").value=p.goalType||"Strategic"; g("phPriority").value=p.priority||"Medium";
+  g("phStart").value=p.startDate||""; g("phEnd").value=p.endDate||"";
+  g("phTarget").value=p.target||""; g("phTargetAmount").value=p.targetAmount||"";
+  g("phDesc").value=p.description||""; g("phBudget").value=p.linkedBudget||"";
+  g("phSaveBtn").textContent="Update Plan"; g("phFormTitle").textContent="Step 1 · Edit Plan";
+  phGoStep(1); g("phTitle").focus();
+};
+window.phDeletePlan = function(i){
+  const arr=P(); const p=arr[i]; if(!p) return;
+  if(!confirm(`Delete plan "${p.title}"? Its progress, revisions and linked revenue records will also be removed.`)) return;
+  const t=p.title;
+  arr.splice(i,1); setP(arr);
+  setPU(PU().filter(r=>r.title!==t));
+  setPR(PR().filter(r=>r.title!==t));
+  setPO(PO().filter(r=>r.planTitle!==t));
+  planRevenue = planRevenue.filter(r=>r.planTitle!==t); phSave("planRevenue",planRevenue);
+  phFillPlanPicker(); phOnSelPlan(); phRenderOverview(); phRefreshReports();
+};
+
+/* ---------- step 2: ownership ---------- */
+function phUsers(){
+  let us=[]; try{ us=JSON.parse(localStorage.getItem("users")||"[]"); }catch(e){}
+  let me=null; try{ me=JSON.parse(localStorage.getItem("loggedInUser")||"null"); }catch(e){}
+  if(me&&me.companyId) us=us.filter(u=>u.companyId===me.companyId);
+  return us.map(u=>u.username);
+}
+function phFillOwnerSelects(){
+  const names=phUsers();
+  const opts = '<option value="">-- Select --</option>'+names.map(n=>`<option>${phEsc(n)}</option>`).join("");
+  if(g("phOwner")) g("phOwner").innerHTML=opts;
+  if(g("phTeam")) g("phTeam").innerHTML=names.map(n=>`<option>${phEsc(n)}</option>`).join("");
+}
+window.phAssignOwner = function(){
+  const p=phCurPlan(); if(!p) return alert("Create/select a plan first.");
+  const owner=g("phOwner").value; if(!owner) return alert("Select an owner.");
+  const team=[...g("phTeam").selectedOptions].map(o=>o.value);
+  const status=g("phOwnStatus").value;
+  const date=g("phOwnDate").value||new Date().toISOString().slice(0,10);
+  const arr=PO(); arr.push({planTitle:p.title,owner,team,status,date}); setPO(arr);
+  p.owner=owner; p.team=team; p.status=status; setP(P());
+  phRenderOwn(); phRenderOverview(); phRefreshReports(); phGoStep(3);
+};
+function phRenderOwn(){
+  const tb=g("phOwnBody"); if(!tb) return;
+  const p=phCurPlan();
+  const rows=p?PO().map((o,i)=>({o,i})).filter(x=>x.o.planTitle===p.title):[];
+  tb.innerHTML=rows.length?rows.map(x=>`<tr><td class="border p-2">${phEsc(x.o.owner)}</td><td class="border p-2">${phEsc((x.o.team||[]).join(", "))}</td><td class="border p-2">${phEsc(x.o.status)}</td><td class="border p-2">${phEsc(x.o.date)}</td><td class="border p-2 text-center"><button onclick="phDelOwn(${x.i})" class="text-red-600">🗑</button></td></tr>`).join(""):'<tr><td colspan="5" class="border p-2 text-center text-gray-500">No ownership records yet.</td></tr>';
+}
+window.phDelOwn=function(i){ const arr=PO(); arr.splice(i,1); setPO(arr); phRenderOwn(); phRefreshReports(); };
+
+/* ---------- step 3: progress ---------- */
+window.phAddProgress = function(){
+  const p=phCurPlan(); if(!p) return alert("Create/select a plan first.");
+  const prog=Math.max(0,Math.min(100,parseFloat(g("phProg").value)||0));
+  const rec={title:p.title,progress:prog,status:g("phProgStatus").value,person:g("phProgPerson").value.trim(),comment:g("phProgComment").value.trim(),date:new Date().toLocaleString()};
+  const arr=PU(); arr.push(rec); setPU(arr);
+  p.progress=prog; p.status=rec.status; setP(P());
+  ["phProg","phProgPerson","phProgComment"].forEach(id=>g(id).value="");
+  phRenderProg(); phRenderOverview(); phOnSelPlan(); phRefreshReports(); phGoStep(4);
+};
+function phRenderProg(){
+  const tb=g("phProgBody"); if(!tb) return;
+  const p=phCurPlan();
+  const rows=p?PU().map((r,i)=>({r,i})).filter(x=>x.r.title===p.title):[];
+  tb.innerHTML=rows.length?rows.map(x=>`<tr><td class="border p-2">${x.r.progress}%</td><td class="border p-2">${phEsc(x.r.status)}</td><td class="border p-2">${phEsc(x.r.person)}</td><td class="border p-2">${phEsc(x.r.comment)}</td><td class="border p-2">${phEsc(x.r.date)}</td><td class="border p-2 text-center"><button onclick="phDelProg(${x.i})" class="text-red-600">🗑</button></td></tr>`).join(""):'<tr><td colspan="6" class="border p-2 text-center text-gray-500">No progress updates yet.</td></tr>';
+}
+window.phDelProg=function(i){ const arr=PU(); arr.splice(i,1); setPU(arr); phRenderProg(); phRefreshReports(); };
+
+/* ---------- step 4: review ---------- */
+window.phApplyRevision = function(){
+  const p=phCurPlan(); if(!p) return alert("Create/select a plan first.");
+  const action=g("phRevAction").value;
+  const comment=g("phRevComment").value.trim();
+  const newEnd=g("phRevNewEnd").value;
+  if(action==="Extend"){ if(!newEnd) return alert("Pick the new end date for the extension."); p.endDate=newEnd; }
+  if(action==="Close"){ p.status="Completed"; }
+  const arr=PR(); arr.push({title:p.title,action,comment,date:new Date().toLocaleString()}); setPR(arr);
+  setP(P());
+  g("phRevComment").value=""; g("phRevNewEnd").value="";
+  phRenderRev(); phRenderOverview(); phOnSelPlan(); phRefreshReports(); phGoStep(5);
+};
+function phRenderRev(){
+  const tb=g("phRevBody"); if(!tb) return;
+  const p=phCurPlan();
+  const rows=p?PR().map((r,i)=>({r,i})).filter(x=>x.r.title===p.title):[];
+  tb.innerHTML=rows.length?rows.map(x=>`<tr><td class="border p-2">${phEsc(x.r.action)}</td><td class="border p-2">${phEsc(x.r.comment)}</td><td class="border p-2">${phEsc(x.r.date)}</td><td class="border p-2 text-center"><button onclick="phDelRev(${x.i})" class="text-red-600">🗑</button></td></tr>`).join(""):'<tr><td colspan="4" class="border p-2 text-center text-gray-500">No revisions yet.</td></tr>';
+}
+window.phDelRev=function(i){ const arr=PR(); arr.splice(i,1); setPR(arr); phRenderRev(); phRefreshReports(); };
+
+/* ---------- step 5: revenue ---------- */
+function phInvoices(){
+  let inv=phLoad("invoices");
+  try{ if(typeof loadCompanyData==="function"){ const c=loadCompanyData("invoices"); if(Array.isArray(c)) c.forEach(x=>{ if(!inv.some(y=>String(y.id)===String(x.id))) inv.push(x); }); } }catch(e){}
+  return inv;
+}
+function phBanks(){
+  let b=phLoad("banks");
+  try{ if(typeof loadCompanyData==="function"){ const c=loadCompanyData("banks"); if(Array.isArray(c)) c.forEach(x=>{ if(!b.some(y=>y.name===x.name)) b.push(x); }); } }catch(e){}
+  return b;
+}
+function phCustomers(){
+  let cs=phLoad("customers");
+  try{ if(typeof loadCompanyData==="function"){ const c=loadCompanyData("customers"); if(Array.isArray(c)) c.forEach(x=>{ if(!cs.some(y=>y.name===x.name)) cs.push(x); }); } }catch(e){}
+  return cs;
+}
+function phFillRevenueSelects(){
+  const banks=phBanks();
+  const bankOpts='<option value="">— Unassigned —</option>'+banks.map(b=>`<option>${phEsc(b.name)}</option>`).join("");
+  if(g("phInvFund")) g("phInvFund").innerHTML=bankOpts;
+  if(g("phManFund")) g("phManFund").innerHTML=bankOpts;
+  const custs=phCustomers().map(c=>c.name).filter(Boolean);
+  if(g("phInvCustomer")) g("phInvCustomer").innerHTML='<option value="">All customers</option>'+custs.map(c=>`<option>${phEsc(c)}</option>`).join("");
+  if(g("phManCustomer")) g("phManCustomer").innerHTML='<option value="">— Select customer —</option>'+custs.map(c=>`<option>${phEsc(c)}</option>`).join("");
+}
+window.phPullInvoices = function(){
+  const p=phCurPlan(); if(!p) return alert("Create/select a plan first.");
+  const from=g("phInvFrom").value, to=g("phInvTo").value, cust=g("phInvCustomer").value;
+  const linked=new Set(planRevenue.filter(r=>r.planTitle===p.title&&r.invoiceNumber).map(r=>r.invoiceNumber));
+  const rows=phInvoices().filter(inv=>{
+    const d=inv.date||"";
+    if(from&&d&&d<from) return false;
+    if(to&&d&&d>to) return false;
+    if(cust&&inv.customer!==cust) return false;
+    return true;
+  });
+  const tb=g("phInvBody");
+  tb.innerHTML=rows.length?rows.map(inv=>{
+    const no=inv.invoiceNumber||inv.number||inv.id;
+    const amt=parseFloat(inv.totalKES||inv.total)||0;
+    const isL=linked.has(no);
+    return `<tr><td class="border p-2 text-center">${isL?"":`<input type="checkbox" class="phInvChk" data-no="${phEsc(no)}" data-cust="${phEsc(inv.customer||"")}" data-amt="${amt}" data-date="${phEsc(inv.date||"")}">`}</td><td class="border p-2">${phEsc(no)}</td><td class="border p-2">${phEsc(inv.date||"")}</td><td class="border p-2">${phEsc(inv.customer||"")}</td><td class="border p-2 text-right">${amt.toLocaleString()}</td><td class="border p-2">${phEsc(inv.status||"")}</td><td class="border p-2 text-center">${isL?"✅ linked":"—"}</td></tr>`;
+  }).join(""):'<tr><td colspan="7" class="border p-2 text-center text-gray-500">No invoices found in this period/filter.</td></tr>';
+  const all=g("phInvAll"); if(all) all.checked=false;
+};
+window.phToggleAllInv=function(cb){ document.querySelectorAll(".phInvChk").forEach(c=>c.checked=cb.checked); };
+window.phLinkSelected = function(){
+  const p=phCurPlan(); if(!p) return alert("Create/select a plan first.");
+  const fund=g("phInvFund").value;
+  const chks=[...document.querySelectorAll(".phInvChk:checked")];
+  if(!chks.length) return alert("Tick at least one invoice to link.");
+  chks.forEach(c=>{
+    planRevenue.push({id:Date.now()+Math.random(),planTitle:p.title,source:"invoice",invoiceNumber:c.dataset.no,invDate:c.dataset.date,customer:c.dataset.cust,amount:parseFloat(c.dataset.amt)||0,fund,date:new Date().toLocaleString()});
+  });
+  phSave("planRevenue",planRevenue);
+  phAfterRevenueChange(p);
+  phPullInvoices();
+  alert(`✅ ${chks.length} invoice(s) linked to "${p.title}".`);
+};
+window.phAddManualRevenue = function(){
+  const p=phCurPlan(); if(!p) return alert("Create/select a plan first.");
+  const amount=parseFloat(g("phManAmount").value)||0;
+  if(amount<=0) return alert("Enter an amount greater than zero.");
+  planRevenue.push({id:Date.now()+Math.random(),planTitle:p.title,source:"manual",invoiceNumber:"",invDate:"",customer:g("phManCustomer").value,amount,fund:g("phManFund").value,note:g("phManNote").value.trim(),date:new Date().toLocaleString()});
+  phSave("planRevenue",planRevenue);
+  g("phManAmount").value=""; g("phManNote").value="";
+  phAfterRevenueChange(p);
+};
+window.phUnlinkRevenue=function(id){
+  planRevenue=planRevenue.filter(r=>String(r.id)!==String(id));
+  phSave("planRevenue",planRevenue);
+  const p=phCurPlan(); if(p) phAfterRevenueChange(p); else phRenderRevenue();
+  phPullInvoices();
+};
+window.phUpdateRevFund=function(id,val){
+  const r=planRevenue.find(r=>String(r.id)===String(id)); if(r){ r.fund=val; phSave("planRevenue",planRevenue); phRenderRevenue(); }
+};
+function phCollected(title){ return planRevenue.filter(r=>r.planTitle===title).reduce((s,r)=>s+(parseFloat(r.amount)||0),0); }
+function phAfterRevenueChange(p){
+  const collected=phCollected(p.title);
+  if(p.targetAmount>0){
+    p.progress=Math.min(100,Math.round(collected/p.targetAmount*100));
+    p.status=p.progress>=100?"Completed":(p.progress>0?"In Progress":p.status);
+    setP(P());
+  }
+  phRenderRevenue(); phRenderOverview(); phOnSelPlanInfoOnly(); phRefreshReports();
+}
+function phOnSelPlanInfoOnly(){
+  const p=phCurPlan(); const info=g("phSelPlanInfo");
+  if(info&&p) info.textContent=`${p.startDate||"?"} → ${p.endDate||"?"} · ${p.status||"Not Started"} · progress ${p.progress||0}%`;
+}
+function phRenderRevenue(){
+  const p=phCurPlan();
+  phFillRevenueSelects();
+  const banks=phBanks().map(b=>b.name);
+  const tb=g("phRevBody2"); if(!tb) return;
+  const rows=p?planRevenue.filter(r=>r.planTitle===p.title):[];
+  tb.innerHTML=rows.length?rows.map(r=>{
+    const fundSel=`<select onchange="phUpdateRevFund('${r.id}',this.value)" class="border rounded text-xs p-1"><option value="">— Unassigned —</option>${banks.map(b=>`<option ${r.fund===b?"selected":""}>${phEsc(b)}</option>`).join("")}</select>`;
+    return `<tr><td class="border p-2">${r.source==="invoice"?"🧾 Invoice":"✍️ Manual"}</td><td class="border p-2">${phEsc(r.invoiceNumber||"-")}</td><td class="border p-2">${phEsc(r.customer||"-")}</td><td class="border p-2 text-right">${(parseFloat(r.amount)||0).toLocaleString()}</td><td class="border p-2">${fundSel}</td><td class="border p-2">${phEsc(r.date||"")}</td><td class="border p-2 text-center"><button onclick="phUnlinkRevenue('${r.id}')" class="text-red-600" title="Unlink">🗑</button></td></tr>`;
+  }).join(""):'<tr><td colspan="7" class="border p-2 text-center text-gray-500">No revenue linked to this plan yet.</td></tr>';
+  const total=rows.reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
+  if(g("phRevTotalCell")) g("phRevTotalCell").textContent=total.toLocaleString();
+  if(g("phRevCollected")) g("phRevCollected").textContent=phFmt(total);
+  const tgt=p&&p.targetAmount>0?p.targetAmount:0;
+  if(g("phRevTarget")) g("phRevTarget").textContent=tgt?phFmt(tgt):"— set in Step 1";
+  const pct=tgt?Math.min(100,Math.round(total/tgt*100)):0;
+  if(g("phRevPct")) g("phRevPct").textContent=tgt?pct+"%":"—";
+  if(g("phRevBar")) g("phRevBar").style.width=pct+"%";
+}
+
+/* ---------- overview ---------- */
+window.phRenderOverview = function(){
+  const tb=g("phOverviewBody"); if(!tb) return;
+  const q=(g("phSearch")?g("phSearch").value:"").toLowerCase();
+  const arr=P();
+  const rows=arr.map((p,i)=>({p,i})).filter(x=>!q||JSON.stringify(x.p).toLowerCase().includes(q));
+  tb.innerHTML=rows.length?rows.map(x=>{
+    const p=x.p, rev=phCollected(p.title);
+    const prog=parseFloat(p.progress)||0;
+    return `<tr>
+      <td class="border p-2 font-medium">${phEsc(p.title)}</td>
+      <td class="border p-2">${phEsc(p.department||"")}</td>
+      <td class="border p-2">${phEsc(p.goalType||p.type||"")}</td>
+      <td class="border p-2">${phEsc(p.priority||"")}</td>
+      <td class="border p-2 text-xs">${phEsc(p.startDate||"")}<br>→ ${phEsc(p.endDate||"")}</td>
+      <td class="border p-2">${phEsc(p.owner||"")}</td>
+      <td class="border p-2" style="min-width:90px;"><div class="w-full bg-gray-200 rounded h-2"><div class="bg-blue-700 h-2 rounded" style="width:${prog}%"></div></div><span class="text-xs">${prog}%</span></td>
+      <td class="border p-2">${phEsc(p.status||"")}</td>
+      <td class="border p-2 text-right">${rev?rev.toLocaleString():"—"}</td>
+      <td class="border p-2 whitespace-nowrap text-center">
+        <button title="Edit" onclick="phEditPlan(${x.i})">✏️</button>
+        <button title="Track progress" onclick="phJump(${x.i},3)">📊</button>
+        <button title="Revenue" onclick="phJump(${x.i},5)">💰</button>
+        <button title="Delete" onclick="phDeletePlan(${x.i})" class="text-red-600">🗑</button>
+      </td></tr>`;
+  }).join(""):'<tr><td colspan="10" class="border p-2 text-center text-gray-500">No plans yet — create your first plan in Step 1.</td></tr>';
+};
+window.phJump=function(i,step){ phGoStep(step); const sel=g("phSelPlan"); if(sel){ sel.value=String(i); phOnSelPlan(); } };
+
+/* ---------- import / export ---------- */
+window.phExportPlans=function(){
+  if(typeof XLSX==="undefined") return alert("Export library not loaded.");
+  const ws=XLSX.utils.json_to_sheet(P().map(p=>({Title:p.title,Department:p.department,Goal:p.goalType,Priority:p.priority,Start:p.startDate,End:p.endDate,TargetMetric:p.target,RevenueTarget:p.targetAmount||0,Status:p.status,Progress:p.progress,Revenue:phCollected(p.title),Description:p.description})));
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Plans"); XLSX.writeFile(wb,"Plans.xlsx");
+};
+window.phImportPlans=function(ev){
+  const file=ev.target.files[0]; if(!file||typeof XLSX==="undefined") return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+    const json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    const arr=P();
+    json.forEach(r=>arr.push({title:r.Title||"",department:r.Department||"",goalType:r.Goal||r.Type||"",priority:r.Priority||"",startDate:r.Start||"",endDate:r.End||"",target:r.TargetMetric||"",targetAmount:parseFloat(r.RevenueTarget)||0,description:r.Description||"",progress:parseFloat(r.Progress)||0,status:r.Status||"Not Started",owner:"",team:[],dateCreated:new Date().toLocaleString()}));
+    setP(arr); phRenderOverview(); phFillPlanPicker(); phRefreshReports();
+    alert("✅ Plans imported!");
+  };
+  reader.readAsArrayBuffer(file);
+};
+
+/* ---------- init ---------- */
+window.phInit = function(){
+  planRevenue = phLoad("planRevenue");
+  phFillOwnerSelects();
+  phFillRevenueSelects();
+  phFillPlanPicker();
+  phRenderOverview();
+  phGoStep(1);
+  phRefreshReports();
+};
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>{ try{phInit();}catch(e){console.warn("phInit",e);} });
+else { try{phInit();}catch(e){console.warn("phInit",e);} }
+})();
+</script>
+
 </body>
 
 </html>
