@@ -2028,7 +2028,19 @@ document.addEventListener("click", function(e) {
     }
 });
 </script>
-<div id="notifPopup" class="hidden fixed top-14 right-4 w-72 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold">📢 Updates</h3><ul id="notifList" class="space-y-2 text-sm max-h-64 overflow-y-auto"></ul></div><div id="quickCreatePanel" class="hidden fixed top-14 right-20 w-64 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold text-gray-700">⚙️ Quick Create</h3><button onclick="openCreate('customersTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100"> Customer</button><button onclick="openCreate('invoicesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Invoice</button><button onclick="openCreate('supplierTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Supplier</button><button onclick="openCreate('employeesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Employee</button><button onclick="openCreate('inventoryTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Inventory</button><button onclick="openCreate('manualJournalsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Journal</button><button onclick="openCreate('fundsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Fund</button></div><div class="h-3"></div><div id="sidebar" class="hidden fixed top-0 left-0 h-full w-40 bg-black text-white p-1 overflow-y-auto" style="top:0 !important;left:0 !important;height:100vh !important;z-index:40;"><img src="acaciabooks-logo.png" alt="Logo" class="w-24 mb-4 mx-auto" /><h2 class="text-xl font-bold  mb-6">AkBook</h2><ul class="space-y-5 text-sm"
+<div id="notifPopup" class="hidden fixed top-14 right-4 w-72 h-[50vh] flex flex-col bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+
+    <div class="border-b border-gray-100 bg-white px-1 py-1 flex items-center justify-between shrink-0">
+        <h3 class="font-bold text-sm text-black">📢 Updates</h3>
+        <button onclick="toggleNotifPopup()" aria-label="Close" class="text-xs text-gray-400 hover:text-red-600 transition px-1">✕</button>
+    </div>
+
+    <div class="p-1 bg-white flex-1 overflow-y-auto custom-scrollbar">
+        <ul id="notifList" class="space-y-1 text-xs text-black">
+        </ul>
+    </div>
+
+</div><div id="quickCreatePanel" class="hidden fixed top-14 right-20 w-64 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold text-gray-700">⚙️ Quick Create</h3><button onclick="openCreate('customersTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100"> Customer</button><button onclick="openCreate('invoicesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Invoice</button><button onclick="openCreate('supplierTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Supplier</button><button onclick="openCreate('employeesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Employee</button><button onclick="openCreate('inventoryTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Inventory</button><button onclick="openCreate('manualJournalsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Journal</button><button onclick="openCreate('fundsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Fund</button></div><div class="h-3"></div><div id="sidebar" class="hidden fixed top-0 left-0 h-full w-40 bg-black text-white p-1 overflow-y-auto" style="top:0 !important;left:0 !important;height:100vh !important;z-index:40;"><img src="acaciabooks-logo.png" alt="Logo" class="w-24 mb-4 mx-auto" /><h2 class="text-xl font-bold  mb-6">AkBook</h2><ul class="space-y-5 text-sm"
 <li><button onclick="showTab('dashboard')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📊 Dashboard Hub</button></li><li><button onclick="toggleSubmenu('inventorySubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📦 Inventory Hub</button></li><ul id="inventorySubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('inventoryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Stock</button></li><li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li><li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li><li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li><li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li><li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li><li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li><li><button   onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li></ul><li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li><li><button onclick="toggleSubmenu('customerSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Sales Hub</button></li><ul id="customerSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li><li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li><li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li><li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li><li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li><li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li><li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li><li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li><li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li><li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li><li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li><ul id="supplierSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li><li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li><li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li><li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li><li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li><li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li><li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li><li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li><li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li><li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li><li><button onclick="showTab('supplierStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('accountantSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🧮 Accountant Hub</button></li><ul id="accountantSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('manualJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Manual Journals</button></li><li><button onclick="showTab('recurringJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Recurring Journals</button></li><li><button onclick="showTab('currencyAdjustmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Currency Adjustments</button></li><li><button onclick="showTab('nonCurrentAssetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Assets</button></li><li><button onclick="showTab('nonCurrentLiabilitiesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Liabilities</button></li><li><button onclick="showTab('equityTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Equity</button></li><li><button onclick="showTab('taxAdjustmentsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Adjustments</button></li><li><button onclick="showTab('chartOfAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Chart of Accounts</button></li><li><button onclick="showTab('currentAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Current Accounts</button></li><li><button onclick="showTab('budgetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Budgets</button></li><li><button onclick="showTab('transactionLockingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Transaction Locking</button></li></ul><li><button onclick="toggleSubmenu('payrollSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💵 Payroll Hub </button></li><ul id="payrollSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('employeesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Employees</button></li><li><button onclick="showTab('earningsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Allowances</button></li><li><button onclick="showTab('grossPayTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Deductions</button></li><li><button onclick="showTab('attendanceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Attendance & Leave</button></li><li><button onclick="showTab('payslipTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payslip Generation</button></li><li><button onclick="showTab('statutoryDeductionsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Statutories</button></li><li><button onclick="showTab('payrollReportsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payroll Reports</button></li><li><button onclick="showTab('integrationsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Integrations</button></li></ul><li><button onclick="showTab('reportsPanel')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📈 Reports Hub </button></li><li><button onclick="toggleSubmenu('plansSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🗂️Plans Hub </button></li><ul id="plansSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('plansTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plans Hub </button></li><li><button onclick="showTab('projectTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Project Hub</button></li><li><button onclick="showTab('plansTab'); if(window.phGoStep) phGoStep(5);" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plan Revenue</button></li><li><button onclick="showTab('projectRevenueTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">  Project Revenue</button </li> </ul><li><button onclick="toggleSubmenu('settingsSubmenu2')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">⚙️ Settings Hub </button></li><ul id="settingsSubmenu2" class="ml-4 hidden space-y-1"><li><button onclick="showTab('orgProfileTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Org Profile </button></li><li><button onclick="showTab('warehousesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Warehouses</button></li><li><button onclick="showTab('DatacenterTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Data center</button></li><li><button onclick="showTab('systemConfigurationTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">System configuration</button></li><li><button onclick="showTab('userActivityTab')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Activity </button></li><li><button onclick="showTab('taxComplianceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Compliance</button></li><li><button onclick="showTab('userManagementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Management</button></li><li><button onclick="showTab('vatTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">VAT</button></li><li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li><li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li><li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li><li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li></ul><li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li><ul id="filesSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li><li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li></ul><li id="mailLink" class="hidden"><a href="https://kimani254star.github.io/acacia-mail/" target="_blank"
     class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">
     💬Acacia Mail Hub
@@ -2078,17 +2090,307 @@ document.addEventListener("click", function(e) {
     class="group bg-gray-900 hover:bg-gray-800 text-white rounded-full p-1 flex items-center justify-center shadow-lg relative">🎧
     <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
       Support
-    </span></button><!-- 💬 Communication Panel --><div id="commPanel" class="hidden fixed bottom-20 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-xl p-4 z-50"><div class="flex justify-between items-center mb-2"><h3 class="font-semibold text-blue-900">Internal Communication</h3><button onclick="toggleCommPanel()" class="text-gray-600 hover:text-red-600">✖</button></div><label class="block text-sm font-medium mb-1">Select Recipient</label><select id="commUser" class="border p-2 rounded w-full mb-2 text-black"><option value="">-- Choose Recipient --</option><option>Admin</option><option>Sales</option><option>Finance</option><option>Operations</option><option>Support</option></select>
-   <textarea id="commMessage" rows="3" placeholder="Type your message..." 
-  class="border p-2 rounded w-full mb-2 text-black"></textarea>
-    <label class="block text-sm font-medium mb-1">Attach Report (optional)</label><input type="file" id="commFile" class="text-sm mb-3 w-full"><div class="flex justify-between"><button onclick="sendPrivateMessage()" class="bg-blue-900 text-white px-3 py-2 rounded hover:bg-blue-800">
-        Send Message
-      </button><button onclick="sharePrivateReport()" class="bg-green-700 text-white px-3 py-2 rounded hover:bg-green-600">
-        Share Report
-      </button></div><div id="commLog" class="mt-4 text-sm text-gray-700 max-h-40 overflow-y-auto border-t pt-2"></div></div><!-- 🎥 Webinar Panel --><div id="webinarPanel" class="hidden fixed bottom-20 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-xl p-4 z-50"><div class="flex justify-between items-center mb-2"><h3 class="font-semibold text-red-800 text-lg">🎥 Webinar Center</h3><button onclick="toggleWebinarPanel()" class="text-gray-600 hover:text-red-600 text-xl leading-none">✖</button></div><label class="block text-sm font-medium mb-1">Webinar Title</label><input id="webinarTitle" class="border p-2 rounded w-full mb-2 text-black" placeholder="Enter title e.g., Monthly Review"><label class="block text-sm font-medium mb-1">Date & Time</label><input id="webinarDate" type="datetime-local" class="border p-2 rounded w-full mb-2 text-black"><label class="block text-sm font-medium mb-1">Webinar Link</label><input id="webinarLink" type="url" class="border p-2 rounded w-full mb-2 text-black" placeholder="Paste meeting URL (Zoom, Teams, etc.)"><div class="flex justify-between mb-2"><button onclick="addWebinar()" class="bg-red-700 text-white px-3 py-2 rounded hover:bg-red-600 text-sm">Save Webinar</button><button onclick="clearWebinars()" class="bg-gray-600 text-white px-3 py-2 rounded hover:bg-gray-700 text-sm">Clear All</button></div><div id="webinarList" class="text-sm text-gray-700 max-h-48 overflow-y-auto border-t pt-2"></div></div><!-- 🏢 Organization Details Panel --><div id="orgDetailsPanel" class="hidden fixed bottom-20 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-xl p-4 z-50"><div class="flex justify-between items-center mb-2"><h3 class="font-semibold text-blue-900 text-lg">🏢 Organization Details</h3><button onclick="toggleOrgDetails()" class="text-gray-600 hover:text-red-600 text-xl leading-none">✖</button></div><div id="orgInfoContainer" class="text-sm text-gray-700 space-y-2 max-h-80 overflow-y-auto"></div></div><!-- 📔 Acacia Notebook Panel --><div id="acaciaNotebookPanel" class="hidden fixed bottom-20 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-xl p-4 z-50"><div class="flex justify-between items-center mb-3"><h3 class="font-semibold text-purple-900 text-lg">📔 Acacia Notebook</h3><button onclick="toggleAcaciaNotebook()" class="text-gray-600 hover:text-red-600 text-xl leading-none">✖</button></div>
-    <textarea id="acaciaNoteText" rows="3" placeholder="Write your notes here..." 
-      class="border p-2 rounded w-full mb-2 text-sm"></textarea>
-    <div class="flex justify-between mb-3"><button onclick="saveAcaciaNote()" class="bg-purple-800 text-white px-3 py-2 rounded hover:bg-purple-700 text-sm">Save Note</button><button onclick="clearAcaciaNotes()" class="bg-gray-600 text-white px-3 py-2 rounded hover:bg-gray-700 text-sm">Clear All</button></div><div id="acaciaNoteList" class="mt-2 text-sm text-gray-700 max-h-40 overflow-y-auto border-t pt-2 mb-3"></div><h4 class="font-semibold text-purple-800 text-sm mb-1">🌐 Quick Apps</h4><div class="grid grid-cols-4 gap-2 text-center"><a href="https://zoom.us" target="_blank" class="bg-blue-700 text-white py-1 rounded text-xs hover:bg-blue-800">Zoom</a><a href="https://teams.microsoft.com" target="_blank" class="bg-blue-600 text-white py-1 rounded text-xs hover:bg-blue-700">Teams</a><a href="https://meet.google.com" target="_blank" class="bg-green-600 text-white py-1 rounded text-xs hover:bg-green-700">Meet</a><a href="https://mail.google.com" target="_blank" class="bg-red-600 text-white py-1 rounded text-xs hover:bg-red-700">Gmail</a><a href="Mail.html" target="_blank" class="bg-blue-900 text-white py-1 rounded text-xs hover:bg-blue-700 col-span-4 mt-1">📧 Mail Center</a></div></div><!-- 🎧 Support Popup --><div id="supportPopup" class="hidden mt-1 w-64 bg-white border border-gray-200 rounded shadow-lg p-1 text-gray-800 space-y-3"><p class="font-semibold text-gray-700">Contact Support</p><a href="https://wa.me/254717346231" target="_blank" class="flex items-center space-x-2 hover:text-blue-600"><i class="fab fa-whatsapp text-blue-900"></i><span>WhatsApp: 254717346231</span></a><a href="mailto:info@acaciabooks.ke" class="flex items-center space-x-2 hover:text-blue-600"><i class="fas fa-envelope text-blue-500"></i><span>Email: info@acaciabooks.ke</span></a><button onclick="toggleTawkChat()" class="flex items-center space-x-2 hover:text-blue-600"><i class="fas fa-comments text-blue-500"></i><span>Live Chat</span></button></div></div>
+    </span></button>
+    <!-- 💬 Communication Panel --><div id="commPanel" class="hidden fixed bottom-20 right-4 w-[430px] max-w-[95vw] h-[80vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+
+    <div class="bg-white text-black border-b border-gray-200 px-1 py-1 flex justify-between items-center shrink-0">
+        <div>
+            <h3 class="text-lg font-bold">💬 Internal Communication</h3>
+            <p class="text-xs text-gray-500">Send messages & reports securely</p>
+        </div>
+        <button onclick="toggleCommPanel()" class="text-xl text-black hover:text-red-600">✖</button>
+    </div>
+
+    <div class="p-1 space-y-2 overflow-y-auto flex-1 custom-scrollbar">
+
+        <div class="grid grid-cols-2 gap-1">
+            <div>
+                <label class="text-xs font-semibold text-black">Recipient</label>
+                <select id="commUser" class="w-full mt-0.5 border rounded-lg p-1 bg-white text-black text-xs focus:ring-2 focus:ring-blue-600">
+                    <option value="">Choose Recipient</option>
+                    <option>Admin</option>
+                    <option>Sales</option>
+                    <option>Finance</option>
+                    <option>Operations</option>
+                    <option>Support</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-black">Priority</label>
+                <select id="commPriority" class="w-full mt-0.5 border rounded-lg p-1 bg-white text-black text-xs focus:ring-2 focus:ring-blue-600">
+                    <option value="normal">Normal</option>
+                    <option value="urgent">⚠️ Urgent</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex justify-between items-center">
+                <label class="text-xs font-semibold text-black">Message</label>
+                <div class="flex gap-1">
+                    <button onclick="insertTemplate('Invoice Link')" class="text-[9px] bg-gray-100 text-gray-600 px-1 py-0.5 rounded hover:bg-gray-200">🧾 Invoice Template</button>
+                    <button onclick="insertTemplate('Report Update')" class="text-[9px] bg-gray-100 text-gray-600 px-1 py-0.5 rounded hover:bg-gray-200">📊 Report Template</button>
+                </div>
+            </div>
+            <textarea id="commMessage" rows="3" placeholder="Type your message..." class="w-full mt-0.5 border rounded-lg p-1 text-xs resize-none bg-white text-black focus:ring-2 focus:ring-blue-600"></textarea>
+        </div>
+
+        <div>
+            <label class="text-xs font-semibold text-black">Attachment</label>
+            <input id="commFile" type="file" class="w-full mt-0.5 border rounded-lg p-1 text-xs bg-white text-black">
+        </div>
+
+        <div class="grid grid-cols-2 gap-1">
+            <button onclick="sendPrivateMessage()" class="bg-blue-900 hover:bg-blue-800 text-white rounded-lg py-1 text-xs font-semibold transition-all transform hover:-translate-y-0.5">
+                📩 Send Message
+            </button>
+            <button onclick="sharePrivateReport()" class="bg-green-700 hover:bg-green-600 text-white rounded-lg py-1 text-xs font-semibold transition-all transform hover:-translate-y-0.5">
+                📄 Share Report
+            </button>
+        </div>
+
+        <div>
+            <div class="flex justify-between items-center mb-1">
+                <h4 class="text-xs font-semibold text-black">Recent Activity</h4>
+                <div class="flex gap-1 text-[10px]">
+                    <span class="inline-flex items-center text-green-600 bg-green-50 px-1 rounded">🟢 Live Connection</span>
+                </div>
+            </div>
+            <div id="commLog" class="border rounded-lg bg-white text-black p-1 h-32 overflow-y-auto text-xs space-y-1">
+            </div>
+        </div>
+
+    </div>
+</div>
+<div id="webinarPanel" class="hidden fixed bottom-20 right-4 w-[480px] max-w-[95vw] h-[80vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+
+    <div class="flex items-center justify-between px-1 py-1 border-b border-gray-200 bg-white shrink-0">
+        <div>
+            <h3 class="text-2xl font-bold text-black">🎥 Webinar Center</h3>
+            <p class="text-sm text-gray-500">Schedule, organize and manage webinars</p>
+        </div>
+        <button onclick="toggleWebinarPanel()" aria-label="Close Panel" class="w-10 h-10 rounded-full hover:bg-red-50 hover:text-red-600 text-2xl transition">✕</button>
+    </div>
+
+    <div class="p-1 bg-white space-y-3 overflow-y-auto flex-1 custom-scrollbar">
+
+        <div class="bg-gradient-to-r Carmel from-red-50 to-orange-50 border border-red-100 rounded-2xl px-1 py-1 flex items-start gap-1">
+            <span class="text-lg">📢</span>
+            <div class="flex-1">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-red-700 bg-red-100 px-1 rounded-full">New Module</span>
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-600 text-[10px]">✕</button>
+                </div>
+                <h5 class="text-xs font-bold text-gray-900 mt-0.5">Interactive Q&A Session Hub</h5>
+                <p class="text-[11px] text-gray-600">You can now lock links, track registrations, and stream live directly to attendees.</p>
+                <a href="#" onclick="openWebinarGuide()" class="inline-block mt-1 text-[11px] font-bold text-red-600 hover:underline">📖 View Setup Guide &rarr;</a>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-0.5">Webinar Title</label>
+            <input id="webinarTitle" type="text" placeholder="Monthly Finance Meeting" class="w-full rounded-2xl border border-gray-300 px-1 py-1 bg-white text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-1">
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-0.5">Date & Time</label>
+                <input id="webinarDate" type="datetime-local" class="w-full rounded-2xl border border-gray-300 px-1 py-1 bg-white text-black focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-0.5">Meeting Link</label>
+                <input id="webinarLink" type="url" placeholder="https://meeting-link.com" class="w-full rounded-2xl border border-gray-300 px-1 py-1 bg-white text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm">
+            </div>
+        </div>
+
+        <div class="flex gap-1">
+            <button onclick="addWebinar()" class="flex-1 bg-red-700 hover:bg-red-600 text-white rounded-2xl px-1 py-1 font-semibold transition-all shadow-sm transform hover:-translate-y-0.5 text-sm">
+                ➕ Save Webinar
+            </button>
+            <button onclick="clearWebinars()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl px-1 py-1 font-semibold transition-all text-sm">
+                🗑 Clear All
+            </button>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-1">
+                <h4 class="text-sm font-bold text-gray-800">📅 Upcoming Webinars</h4>
+                <span class="text-[10px] bg-red-100 text-red-700 px-1 py-1 rounded-full font-medium">Scheduled</span>
+            </div>
+            <div id="webinarList" class="bg-gray-50 border border-gray-200 rounded-2xl h-36 overflow-y-auto px-1 py-1 text-black text-xs space-y-1">
+            </div>
+        </div>
+
+    </div>
+</div>
+<div id="orgDetailsPanel" class="hidden fixed bottom-20 right-4 w-[430px] max-w-[95vw] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+
+<div class="bg-white text-black border-b border-gray-200 px-5 py-4 flex justify-between items-center">
+<div>
+<h3 class="font-bold text-lg">🏢 Organization Details</h3>
+<p class="text-xs text-gray-500">Company information</p>
+</div>
+<button onclick="toggleOrgDetails()" class="text-xl text-black hover:text-red-600">✖</button>
+</div>
+
+<div id="orgInfoContainer" class="p-5 max-h-[500px] overflow-y-auto bg-white text-black text-sm space-y-3"></div>
+
+</div>
+
+<div id="acaciaNotebookPanel" class="hidden fixed bottom-20 right-4 w-[500px] max-w-[95vw] h-[80vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+
+    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white shrink-0">
+        <div>
+            <h3 class="text-2xl font-bold text-black">📔 Acacia Notebook</h3>
+            <p class="text-sm text-gray-500">Capture ideas, reminders and quick notes</p>
+        </div>
+        <button onclick="toggleAcaciaNotebook()" aria-label="Close Notebook" class="w-10 h-10 rounded-full hover:bg-purple-100 hover:text-purple-700 text-xl flex items-center justify-center transition">
+            ✕
+        </button>
+    </div>
+
+    <div class="p-4 bg-white space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+        
+        <div>
+            <div class="flex items-center justify-between mb-1">
+                <label class="block text-sm font-semibold text-gray-700">New Note</label>
+                <div class="flex gap-1">
+                    <button onclick="setNoteCategory('Work')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-md hover:bg-blue-100 transition">Work</button>
+                    <button onclick="setNoteCategory('Personal')" class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-md hover:bg-green-100 transition">Personal</button>
+                    <button onclick="setNoteCategory('Urgent')" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-md hover:bg-red-100 transition">Urgent</button>
+                </div>
+            </div>
+            <textarea id="acaciaNoteText" rows="5" placeholder="Write your notes here..." class="w-full border border-gray-300 rounded-2xl p-3 bg-white text-black placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"></textarea>
+        </div>
+
+        <div class="flex gap-2">
+            <button onclick="saveAcaciaNote()" class="flex-1 bg-purple-700 hover:bg-purple-600 text-white rounded-2xl py-2.5 font-semibold shadow-sm hover:shadow transition-all">
+                💾 Save Note
+            </button>
+            <button onclick="clearAcaciaNotes()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl px-4 py-2.5 font-semibold transition-all">
+                🗑 Clear All
+            </button>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <h4 class="text-lg font-bold text-gray-800">📝 Saved Notes</h4>
+                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">Local Storage</span>
+            </div>
+            <div id="acaciaNoteList" class="h-44 overflow-y-auto rounded-2xl border border-gray-200 bg-gray-50 p-2 text-sm text-black space-y-1">
+            </div>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <h4 class="text-lg font-bold text-gray-800">🚀 Quick Apps</h4>
+                <span class="text-xs text-gray-500">One-click access</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+                <a href="https://zoom.us" target="_blank" class="flex flex-col items-center justify-center rounded-2xl bg-blue-700 hover:bg-blue-800 text-white px-1 py-1 transition-all transform hover:-translate-y-0.5 shadow-sm">
+                    <span class="text-2xl">🎥</span>
+                    <span class="mt-0.5 text-xs font-semibold">Zoom</span>
+                </a>
+
+                <a href="https://teams.microsoft.com" target="_blank" class="flex flex-col items-center justify-center rounded-2xl bg-blue-600 hover:bg-blue-700 text-white px-1 py-1 transition-all transform hover:-translate-y-0.5 shadow-sm">
+                    <span class="text-2xl">👥</span>
+                    <span class="mt-0.5 text-xs font-semibold">Teams</span>
+                </a>
+
+                <a href="https://meet.google.com" target="_blank" class="flex flex-col items-center justify-center rounded-2xl bg-green-600 hover:bg-green-700 text-white px-1 py-1 transition-all transform hover:-translate-y-0.5 shadow-sm">
+                    <span class="text-2xl">📹</span>
+                    <span class="mt-0.5 text-xs font-semibold">Meet</span>
+                </a>
+
+                <a href="https://mail.google.com" target="_blank" class="flex flex-col items-center justify-center rounded-2xl bg-red-600 hover:bg-red-700 text-white px-1 py-1 transition-all transform hover:-translate-y-0.5 shadow-sm">
+                    <span class="text-2xl">📧</span>
+                    <span class="mt-0.5 text-xs font-semibold">Gmail</span>
+                </a>
+
+                <a href="Mail.html" target="_blank" class="col-span-2 flex items-center justify-center rounded-2xl bg-indigo-950 hover:bg-indigo-900 text-white font-semibold shadow-sm transition-all transform hover:-translate-y-0.5 px-1 py-1">
+                    📨 Open Mail Center
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- 🤖 AI Support Popup -->
+<div id="supportPopup" class="hidden fixed bottom-20 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-xl z-50">
+
+    <div class="bg-blue-900 text-white px-1 py-1 rounded-t-lg flex justify-between items-center">
+        <div>
+            <h3 class="font-bold">🤖 Acacia AI Support</h3>
+            <small class="text-blue-100">Ask me anything about Acacia ERP</small>
+        </div>
+        <button onclick="toggleSupportPopup()" class="text-white text-xl">✕</button>
+    </div>
+
+    <div id="supportMessages" class="h-72 overflow-y-auto px-1 py-1 bg-white text-black text-sm space-y-1">
+        <div class="bg-white border border-gray-300 rounded-lg shadow-sm px-1 py-1">
+            <h2 class="text-lg font-bold text-blue-900 mb-1">🤖 Welcome to Acacia AI Support</h2>
+            <p class="text-gray-700 mb-1">I'm your intelligent Acacia ERP assistant. I can answer questions, guide you through features, troubleshoot common issues, and help you get the most out of the system.</p>
+            
+            <div class="grid grid-cols-2 gap-1 text-xs mb-1">
+                <div>📄 Invoices</div>
+                <div>👥 Customers</div>
+                <div>📦 Inventory</div>
+                <div>🚚 Suppliers</div>
+                <div>💳 Banking</div>
+                <div>📊 Reports</div>
+                <div>💰 Expenses</div>
+                <div>🧾 Taxes & VAT</div>
+                <div>📑 Quotations</div>
+                <div>🛒 Purchase Orders</div>
+                <div>📥 Goods Received</div>
+                <div>📦 Warehouses</div>
+                <div>📚 Journal Entries</div>
+                <div>🏦 Reconciliation</div>
+                <div>👨‍💼 HR & Payroll</div>
+                <div>🏢 CRM</div>
+                <div>📁 Projects</div>
+                <div>🏭 Manufacturing</div>
+                <div>💼 Fixed Assets</div>
+                <div>📧 Mail & Communication</div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg px-1 py-1 mb-1">
+                <p class="font-semibold text-blue-900 mb-0.5">💬 Try asking:</p>
+                <ul class="list-disc ml-4 space-y-0.5 text-gray-700 text-xs">
+                    <li>How do I create an invoice?</li>
+                    <li>How do I add inventory?</li>
+                    <li>How do I reconcile a bank account?</li>
+                    <li>How do I connect eTIMS?</li>
+                    <li>How do I generate financial reports?</li>
+                    <li>Why is my Profit & Loss different?</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="border-t px-1 py-1 bg-gray-50 flex flex-col gap-1">
+        <div class="flex gap-1">
+            <a href="https://wa.me/254717346231" target="_blank" class="flex-1 flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white px-1 py-1 rounded text-xs font-semibold transition">
+                📱 WhatsApp
+            </a>
+            <a href="mailto:info@acaciabooks.ke" class="flex-1 flex items-center justify-center gap-1 bg-gray-600 hover:bg-gray-700 text-white px-1 py-1 rounded text-xs font-semibold transition">
+                📧 Email
+            </a>
+            <button onclick="toggleTawkChat()" class="flex-1 flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-1 py-1 rounded text-xs font-semibold transition">
+                💬 Chat
+            </button>
+        </div>
+    </div>
+
+    <div class="border-t px-1 py-1">
+        <input id="supportQuestion" type="text" class="w-full border border-gray-300 rounded px-1 py-1 mb-1 text-black placeholder-gray-500 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type your question...">
+        <button onclick="sendSupportQuestion()" class="w-full bg-blue-900 hover:bg-blue-800 text-white px-1 py-1 rounded font-semibold transition">Send</button>
+    </div>
+
+</div>
+</div>
 <script>
  function toggleAppsLauncher() {
     document.getElementById('appsLauncher').classList.toggle('hidden');
@@ -2173,6 +2475,406 @@ function loadOrgDetails() {
   }
 
   container.innerHTML = html;
+}
+</script>
+<script>
+  const SUPPORT_KB=[
+
+{
+keywords:["invoice","create invoice","new invoice"],
+answer:`To create an invoice:
+
+1. Open Sales.
+2. Click Invoices.
+3. Click New Invoice.
+4. Select the customer.
+5. Add products or services.
+6. Click Save.`
+},
+
+{
+keywords:["customer","add customer","new customer"],
+answer:`Go to Customers.
+
+Click Add Customer.
+
+Enter the customer's information.
+
+Click Save.`
+},
+
+{
+keywords:["inventory","stock","warehouse"],
+answer:`Go to Inventory.
+
+Select the warehouse.
+
+Click Add Item.
+
+Enter the item details and save.`
+},
+
+{
+keywords:["supplier"],
+answer:`Go to Purchases.
+
+Open Suppliers.
+
+Click Add Supplier.
+
+Fill in the supplier information and save.`
+},
+
+{
+keywords:["quotation","quote"],
+answer:`Go to Sales.
+
+Open Quotations.
+
+Click New Quotation.
+
+Select a customer and add items.
+
+Save the quotation.`
+},
+
+{
+keywords:["backup"],
+answer:`Go to Settings.
+
+Open Backup & Restore.
+
+Click Export Backup.`
+},
+
+{
+keywords:["bank"],
+answer:`Go to Banking.
+
+Select the bank account.
+
+You can reconcile, transfer money or view transactions.`
+}
+
+];
+function searchKnowledge(question){
+
+question=question.toLowerCase();
+
+for(const item of SUPPORT_KB){
+
+for(const keyword of item.keywords){
+
+if(question.includes(keyword.toLowerCase())){
+
+return item.answer;
+
+}
+
+}
+
+}
+
+return null;
+
+}
+function sendSupportQuestion(){
+
+const input=document.getElementById("supportQuestion");
+
+const messages=document.getElementById("supportMessages");
+
+const question=input.value.trim();
+
+if(question==="") return;
+
+messages.innerHTML+=`
+<div class="text-right mb-2">
+<div class="inline-block bg-blue-900 text-white p-2 rounded-lg max-w-xs">
+${question}
+</div>
+</div>
+`;
+
+const answer=searchKnowledge(question);
+
+if(answer){
+
+messages.innerHTML+=`
+<div class="text-left mb-2">
+<div class="inline-block bg-white border p-2 rounded-lg max-w-xs">
+${answer.replace(/\n/g,"<br>")}
+</div>
+</div>
+`;
+
+document.getElementById("supportEscalation").classList.add("hidden");
+
+}else{
+
+messages.innerHTML+=`
+<div class="text-left mb-2">
+<div class="inline-block bg-yellow-50 border border-yellow-300 p-2 rounded-lg max-w-xs">
+I'm not confident enough to answer that question.
+
+Please contact our support team below.
+</div>
+</div>
+`;
+
+document.getElementById("supportEscalation").classList.remove("hidden");
+
+}
+
+messages.scrollTop=messages.scrollHeight;
+
+input.value="";
+
+}
+const SUPPORT_SUGGESTIONS=[
+"How do I create an invoice?",
+"How do I add a customer?",
+"How do I add inventory?",
+"How do I reconcile a bank?",
+"How do I create a quotation?",
+"How do I restore a backup?"
+];
+
+const supportHistory=[];
+
+function initSupport(){
+
+const messages=document.getElementById("supportMessages");
+
+let html=`
+<div class="bg-white p-3 rounded shadow mb-2">
+👋 Hello!
+
+I'm Acacia AI.
+
+I can help you with invoices, inventory, customers, suppliers, banking, reports, CRM and more.
+</div>
+
+<div class="mt-2">
+`;
+
+SUPPORT_SUGGESTIONS.forEach(q=>{
+
+html+=`
+<button
+onclick="askSuggestion('${q.replace(/'/g,"\\'")}')"
+class="block w-full text-left mb-2 bg-blue-50 hover:bg-blue-100 rounded p-2 text-sm">
+${q}
+</button>
+`;
+
+});
+
+html+="</div>";
+
+messages.innerHTML=html;
+
+document.getElementById("supportEscalation").classList.add("hidden");
+
+}
+
+function askSuggestion(question){
+
+document.getElementById("supportQuestion").value=question;
+
+sendSupportQuestion();
+
+}
+
+document.getElementById("supportQuestion").addEventListener("keypress",function(e){
+
+if(e.key==="Enter"){
+
+e.preventDefault();
+
+sendSupportQuestion();
+
+}
+
+});
+
+function addAIMessage(text){
+
+const messages=document.getElementById("supportMessages");
+
+messages.innerHTML+=`
+<div class="text-left mb-2">
+<div class="inline-block bg-white border p-2 rounded-lg max-w-xs">
+${text}
+</div>
+</div>
+`;
+
+messages.scrollTop=messages.scrollHeight;
+
+}
+
+function addUserMessage(text){
+
+const messages=document.getElementById("supportMessages");
+
+messages.innerHTML+=`
+<div class="text-right mb-2">
+<div class="inline-block bg-blue-900 text-white p-2 rounded-lg max-w-xs">
+${text}
+</div>
+</div>
+`;
+
+messages.scrollTop=messages.scrollHeight;
+
+}
+
+function showTyping(){
+
+const messages=document.getElementById("supportMessages");
+
+messages.innerHTML+=`
+<div id="typingIndicator" class="text-left mb-2">
+<div class="inline-block bg-gray-200 p-2 rounded-lg">
+Thinking...
+</div>
+</div>
+`;
+
+messages.scrollTop=messages.scrollHeight;
+
+}
+
+function hideTyping(){
+
+const typing=document.getElementById("typingIndicator");
+
+if(typing) typing.remove();
+
+}
+
+const oldSendSupportQuestion=sendSupportQuestion;
+
+sendSupportQuestion=function(){
+
+const input=document.getElementById("supportQuestion");
+
+const question=input.value.trim();
+
+if(question==="") return;
+
+supportHistory.push({
+role:"user",
+text:question
+});
+
+addUserMessage(question);
+
+input.value="";
+
+showTyping();
+
+setTimeout(async()=>{
+
+const answer=searchKnowledge(question);
+
+hideTyping();
+
+if(answer){
+
+supportHistory.push({
+role:"assistant",
+text:answer
+});
+
+addAIMessage(answer.replace(/\n/g,"<br>"));
+
+document.getElementById("supportEscalation").classList.add("hidden");
+
+}else{
+
+if(typeof askOpenAISupport==="function"){
+
+await askOpenAISupport(question);
+
+}else{
+
+addAIMessage("I couldn't confidently answer that question. Please contact our support team below.");
+
+document.getElementById("supportEscalation").classList.remove("hidden");
+
+}
+
+}
+
+},700);
+
+};
+
+initSupport();
+
+async function askOpenAISupport(question){
+
+try{
+
+const response=await fetch("/api/support",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+question,
+
+history:supportHistory
+
+})
+
+});
+
+if(!response.ok){
+
+throw new Error("Request failed");
+
+}
+
+const data=await response.json();
+
+if(data.supportRequired){
+
+addAIMessage("I couldn't confidently answer that question.<br><br>Please contact our support team below.");
+
+document.getElementById("supportEscalation").classList.remove("hidden");
+
+return;
+
+}
+
+supportHistory.push({
+
+role:"assistant",
+
+text:data.answer
+
+});
+
+addAIMessage(data.answer.replace(/\n/g,"<br>"));
+
+document.getElementById("supportEscalation").classList.add("hidden");
+
+}
+catch(e){
+
+addAIMessage("I'm unable to reach the AI service right now. Please contact support using WhatsApp, Email or Live Chat.");
+
+document.getElementById("supportEscalation").classList.remove("hidden");
+
+}
+
 }
 </script>
 <script>
@@ -2780,7 +3482,8 @@ window.addEventListener("DOMContentLoaded", () => {
   renderAcaciaNotes?.();
 });
 </script>
-<div class="mt-6 text-xs text-center text-gray-300"><p>@Acacia books 2025</p><p>developer Joseph Kimani</p></ul></div><!-- Main content wrapper --><main id="contentArea" class="ml-40 p-1"><h2 class="text-xl font-italic mb-1 text-left flex items-center gap-2"><img id="userAvatar" src="https://via.placeholder.com/32" alt="User Avatar" class="w-8 h-8 rounded-full" onclick="triggerFileInput()">
+<div class="mt-6 text-xs text-center text-gray-300"><p>@Acacia books 2025</p><p>developer Joseph Kimani</p></ul></div><!-- Main content wrapper -->
+<main id="contentArea" class="ml-40 p-1"><h2 class="text-xl font-italic mb-1 text-left flex items-center gap-2"><img id="userAvatar" src="https://via.placeholder.com/32" alt="User Avatar" class="w-8 h-8 rounded-full" onclick="triggerFileInput()">
   Welcome, <span id="currentUser">User</span></h2><input type="file" id="fileInput" class="hidden" accept="image/*" onchange="previewImage(event)">
 <script>
   document.addEventListener("DOMContentLoaded", () => {
