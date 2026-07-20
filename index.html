@@ -1473,6 +1473,24 @@ async function signUpWithGoogle() {
   };
 
   stored.push(newUser);
+  let companies = JSON.parse(localStorage.getItem("companies") || "[]");
+
+if (!companies.find(c => c.companyId === companyId)) {
+
+    companies.push({
+        companyId,
+        companyName,
+        ownerName: fullName,
+        email: cleanEmail,
+        plan,
+        price,
+        status,
+        registered: newUser.registered,
+        expiry
+    });
+
+    localStorage.setItem("companies", JSON.stringify(companies));
+}
 
   localStorage.setItem("users", JSON.stringify(stored));
   localStorage.setItem("loggedInUser", JSON.stringify(newUser));
@@ -4664,7 +4682,24 @@ function createWithGoogle() {
   };
 
   stored.push(newUser);
+  let companies = JSON.parse(localStorage.getItem("companies") || "[]");
 
+if (!companies.find(c => c.companyId === companyId)) {
+
+    companies.push({
+        companyId: companyId,
+        companyName: fullName + "'s Company", // replace with actual company name if you collect it
+        ownerName: fullName,
+        email: cleanEmail,
+        plan: plan,
+        price: price,
+        status: price === 0 ? "active" : "pending",
+        registered: new Date().toISOString(),
+        expiry: expiry.toISOString()
+    });
+
+    localStorage.setItem("companies", JSON.stringify(companies));
+ }
   localStorage.setItem("users", JSON.stringify(stored));
   localStorage.setItem("loggedInUser", JSON.stringify(newUser));
 
