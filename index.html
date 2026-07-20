@@ -4400,6 +4400,22 @@ defaultUsers.forEach(u => {
 });
 
 localStorage.setItem("users", JSON.stringify(users));
+let companies = JSON.parse(localStorage.getItem("companies") || "[]");
+
+if (!companies.find(c => c.companyId === "Speartech")) {
+
+    companies.push({
+        companyId: "Speartech",
+        companyName: "Speartech",
+        ownerName: "Joseph",
+        email: "demo@speartech.com",
+        plan: "Enterprise",
+        status: "active",
+        registered: new Date().toISOString()
+    });
+
+    localStorage.setItem("companies", JSON.stringify(companies));
+}
 
 const rolePermissions = {
   admin: [ 'dashboard', 'inventoryTab', 'fundsTab', 'customersTab', 'invoicesTab', 'quotesTab',
