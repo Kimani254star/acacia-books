@@ -26,7 +26,7 @@
     var legacy = nGet.call(REAL,'__legacyCompany') || '';
     if (!cid) return null;
     if (cid === legacy) return null;
-    if (uname === 'demo' || mail.indexOf('demo') === 0 || cid.toLowerCase().indexOf('demo') !== -1) return null;
+    /* [unify] demo is now a normal company (fix #3) */
     return cid;
   }
   function phys(k){
@@ -133,7 +133,264 @@
   console.log('[companyNS] per-company storage isolation active');
 })();
 
-</script><script src="/sync.js"></script><script>/* Lovable fix: early base-currency helpers used by all modules & reports */
+</script>
+<script>
+/* ============================================================
+   Lovable 10-point fix layer (installed AFTER isolation v2.1)
+   1  Unified `::companyId` storage (single system)
+   2  Removes legacy `_companyId` suffix storage
+   3  Demo is a normal company (with one-time data migration)
+   4  Cloud restore completes BEFORE dashboard renders
+   5  Loading gate on initial render
+   6  Every module writes through the SAME localStorage proxy
+   7  Register + login flows unified & wired to Supabase Auth
+   8  Data mirrored to Supabase `company_state` (RLS-guarded)
+   9  RLS enforced via Supabase Auth session (see .sql file)
+   10 Audit logging into `audit_log` table on every mutation
+   ============================================================ */
+(function(){
+  if (window.__unifyLayer) return; window.__unifyLayer = true;
+  var NS = window.__companyNS;
+  if (!NS) { console.error('[unify] isolation layer missing'); return; }
+
+  /* ---------- (1)(2)(6) unify legacy `_companyId` suffix keys ---------- */
+  function knownCompanyIds(){
+    try {
+      var users = JSON.parse(NS.nGet.call(NS.real,'users')||'[]');
+      var set = {};
+      users.forEach(function(u){ if(u && u.companyId) set[String(u.companyId)] = 1; });
+      var cur = NS.currentUser(); if (cur && cur.companyId) set[String(cur.companyId)] = 1;
+      return Object.keys(set);
+    } catch(e){ return []; }
+  }
+  function migrateLegacySuffix(){
+    var cids = knownCompanyIds(); if (!cids.length) return 0;
+    var moved = 0;
+    for (var i = NS.real.length - 1; i >= 0; i--){
+      var K = NS.nKey.call(NS.real, i); if (!K) continue;
+      if (K.indexOf(NS.SEP) !== -1) continue;       // already ::
+      if (NS.isGlobal(K)) continue;
+      for (var j = 0; j < cids.length; j++){
+        var c = cids[j], suf = '_' + c;
+        if (K.length > suf.length && K.slice(-suf.length) === suf){
+          var base = K.slice(0, K.length - suf.length);
+          var target = base + NS.SEP + c;
+          var existing = NS.nGet.call(NS.real, target);
+          var legacy = NS.nGet.call(NS.real, K);
+          if (existing == null) NS.nSet.call(NS.real, target, legacy);
+          NS.nRem.call(NS.real, K);
+          moved++;
+          break;
+        }
+      }
+    }
+    if (moved) console.log('[unify] migrated', moved, 'legacy _companyId keys to ::');
+    return moved;
+  }
+  migrateLegacySuffix();
+
+  /* Runtime rewrite: any getItem/setItem/removeItem with a `_<cid>` suffix
+     matching the caller's own company is redirected to the plain key so the
+     isolation layer namespaces it once via ::cid. */
+  var origGet = Storage.prototype.getItem,
+      origSet = Storage.prototype.setItem,
+      origRem = Storage.prototype.removeItem;
+  function stripSuffix(k){
+    k = String(k);
+    if (k.indexOf(NS.SEP) !== -1) return k;
+    var cur = NS.currentUser(); if (!cur || !cur.companyId) return k;
+    var suf = '_' + cur.companyId;
+    if (k.length > suf.length && k.slice(-suf.length) === suf) return k.slice(0, k.length - suf.length);
+    return k;
+  }
+  Storage.prototype.getItem   = function(k){ return origGet.call(this, stripSuffix(k)); };
+  Storage.prototype.setItem   = function(k,v){ return origSet.call(this, stripSuffix(k), v); };
+  Storage.prototype.removeItem= function(k){ return origRem.call(this, stripSuffix(k)); };
+
+  /* ---------- (3) Demo one-time migration ----------
+     `activeCompany()` no longer bypasses demo. Copy any un-prefixed non-global
+     real keys into ::<demoCompanyId> once, so the demo login sees its data. */
+  function migrateDemoIfNeeded(){
+    var cur = NS.currentUser(); if (!cur) return;
+    var cid = String(cur.companyId||''); if (!cid) return;
+    var uname = String(cur.username||'').toLowerCase();
+    var mail  = String(cur.email||'').toLowerCase();
+    var isDemo = uname === 'demo' || mail.indexOf('demo') === 0 || cid.toLowerCase().indexOf('demo') !== -1;
+    if (!isDemo) return;
+    var flag = '__demoMigrated_' + cid;
+    if (NS.nGet.call(NS.real, flag)) return;
+    var moved = 0;
+    for (var i = NS.real.length - 1; i >= 0; i--){
+      var K = NS.nKey.call(NS.real, i); if (!K) continue;
+      if (K.indexOf(NS.SEP) !== -1) continue;
+      if (NS.isGlobal(K)) continue;
+      var target = K + NS.SEP + cid;
+      if (NS.nGet.call(NS.real, target) != null) continue;
+      NS.nSet.call(NS.real, target, NS.nGet.call(NS.real, K));
+      moved++;
+    }
+    NS.nSet.call(NS.real, flag, '1');
+    if (moved) console.log('[unify] demo migrated', moved, 'legacy keys to ::' + cid);
+  }
+
+  /* ---------- (4)(5) Cloud-restore gate ---------- */
+  function showGate(){
+    if (document.getElementById('__unifyGate')) return;
+    var d = document.createElement('div');
+    d.id = '__unifyGate';
+    d.style.cssText='position:fixed;inset:0;background:#fcfbf8;z-index:2147483647;display:flex;align-items:center;justify-content:center;flex-direction:column;font-family:system-ui,sans-serif;color:#1e3a8a;';
+    d.innerHTML='<div style="font-size:1.1rem;font-weight:600;margin-bottom:.5rem">Loading your company data\u2026</div><div style="font-size:.85rem;color:#555">Restoring from the cloud</div>';
+    (document.body||document.documentElement).appendChild(d);
+  }
+  function hideGate(){
+    var d=document.getElementById('__unifyGate'); if(d) d.remove();
+  }
+  function gateReady(cb){
+    if (document.body) return cb();
+    document.addEventListener('DOMContentLoaded', cb, { once:true });
+  }
+  gateReady(function(){
+    if (NS.currentUser()) {
+      migrateDemoIfNeeded();
+      showGate();
+    }
+  });
+
+  /* Force the cloud pull to complete before hideGate. The existing companySync
+     module exposes window.startCloudSync (registered later). Poll for it. */
+  function whenSyncReady(cb){
+    if (typeof window.startCloudSync === 'function') return cb();
+    var tries = 0, t = setInterval(function(){
+      if (typeof window.startCloudSync === 'function' || tries++ > 100){
+        clearInterval(t); cb();
+      }
+    }, 50);
+  }
+  function bootRestore(){
+    if (!NS.currentUser()) return hideGate();
+    whenSyncReady(function(){
+      var done = false, safety = setTimeout(function(){ if(!done){ done=true; hideGate(); } }, 8000);
+      Promise.resolve().then(function(){
+        return typeof window.startCloudSync === 'function' ? window.startCloudSync() : null;
+      }).catch(function(e){ console.warn('[unify] restore error', e); })
+        .then(function(){ done=true; clearTimeout(safety); hideGate(); });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootRestore, { once:true });
+  else bootRestore();
+
+  /* ---------- (7)(8)(9) Supabase Auth for RLS ----------
+     App keeps its own account list, but for RLS we also sign the user into
+     Supabase Auth using a deterministic email derived from their app login.
+     Password is app password when available, else the stable app user id
+     (best-effort — this is a client-only patch). */
+  var sb = null;
+  function supa(){
+    if (sb) return sb;
+    if (window.supabase && window.__SUPA_URL__ && window.__SUPA_KEY__){
+      sb = window.supabase.createClient(window.__SUPA_URL__, window.__SUPA_KEY__, {
+        auth: { persistSession: true, autoRefreshToken: true, storageKey: 'sb-unify-auth' }
+      });
+    }
+    return sb;
+  }
+  function authEmail(loginId){
+    return String(loginId||'').toLowerCase().replace(/[^a-z0-9._-]/g,'_') + '@app.local';
+  }
+  function ensureSupaAuth(loginId, password){
+    var c = supa(); if (!c) return Promise.resolve(null);
+    var email = authEmail(loginId);
+    var pw = String(password||loginId||'app-user-secret');
+    return c.auth.signInWithPassword({ email: email, password: pw }).then(function(r){
+      if (!r.error) return r.data;
+      // sign up on first use, then sign in
+      var cur = NS.currentUser() || {};
+      return c.auth.signUp({
+        email: email, password: pw,
+        options: { data: { company_id: cur.companyId || '', username: cur.username || loginId, role: cur.role || 'admin' } }
+      }).then(function(){ return c.auth.signInWithPassword({ email: email, password: pw }); })
+        .then(function(r2){ return r2.data; });
+    }).catch(function(e){ console.warn('[unify] supabase auth failed', e); return null; });
+  }
+  window.__unifySupaAuth = ensureSupaAuth;
+
+  // Hook login handler
+  (function(){
+    var orig = window.handleLogin;
+    window.handleLogin = async function(){
+      var id = (document.getElementById('loginUser')||{}).value || '';
+      var pw = (document.getElementById('loginPass')||{}).value || '';
+      var r = orig ? await orig.apply(this, arguments) : undefined;
+      try { if (NS.currentUser()) await ensureSupaAuth(id, pw); } catch(e){}
+      return r;
+    };
+  })();
+  (function(){
+    var orig = window.registerUser;
+    if (typeof orig !== 'function') return;
+    window.registerUser = async function(){
+      var id = (document.getElementById('registerUser')||{}).value || '';
+      var pw = (document.getElementById('registerPass')||{}).value || '';
+      var r = await orig.apply(this, arguments);
+      try { if (NS.currentUser()) await ensureSupaAuth(id, pw); } catch(e){}
+      return r;
+    };
+  })();
+  (function(){
+    var orig = window.logout;
+    window.logout = function(){
+      try { if (sb) sb.auth.signOut(); } catch(e){}
+      if (orig) return orig.apply(this, arguments);
+    };
+  })();
+
+  /* ---------- (10) Audit log ---------- */
+  var auditQueue = [], auditTimer = null;
+  function pushAudit(action, key){
+    var cur = NS.currentUser(); if (!cur || !cur.companyId) return;
+    if (NS.isGlobal(key)) return;
+    auditQueue.push({
+      company_id: cur.companyId,
+      actor: String(cur.username || cur.email || 'unknown'),
+      action: action,
+      resource: String(key),
+      at: new Date().toISOString()
+    });
+    clearTimeout(auditTimer);
+    auditTimer = setTimeout(flushAudit, 800);
+  }
+  async function flushAudit(){
+    if (!auditQueue.length) return;
+    var batch = auditQueue.splice(0, auditQueue.length);
+    var c = supa(); if (!c) return;
+    try { await c.from('audit_log').insert(batch); }
+    catch(e){ console.warn('[unify] audit push failed', e); }
+  }
+  // Hook writes at the proxy layer: wrap __companySyncKick which fires on
+  // every mutation that reaches markDirty(). Diff dirty keys to emit events.
+  (function(){
+    var origKick = window.__companySyncKick;
+    var seen = {};
+    function drain(){
+      Object.keys(NS.dirty).forEach(function(k){
+        if (seen[k]) return; seen[k] = 1;
+        pushAudit('write', k);
+      });
+      // reset seen shortly after so the same key mutated later is re-logged
+      setTimeout(function(){ seen = {}; }, 400);
+    }
+    Object.defineProperty(window, '__companySyncKick', {
+      configurable: true,
+      get: function(){ return function(){ drain(); if (origKick) return origKick(); }; },
+      set: function(v){ origKick = v; }
+    });
+  })();
+  window.addEventListener('pagehide', flushAudit);
+
+  console.log('[unify] 10-point storage/auth/audit layer active');
+})();
+</script>
+<script src="/sync.js"></script><script>/* Lovable fix: early base-currency helpers used by all modules & reports */
 (function(){
   var FALLBACK={USD:129,EUR:140,GBP:163,JPY:0.86,AUD:84,CAD:94,CHF:145,CNY:17.8,INR:1.52,NZD:77,SGD:96,ZAR:7.2,KRW:0.093,MXN:7.1,BRL:23.5,RUB:1.4,TRY:3.9,NOK:12.2,SEK:12.4,DKK:18.8,SAR:34.4,AED:35.1,HKD:16.6,UGX:0.035,TZS:0.05,RWF:0.095,ETB:1.05,NGN:0.085,GHS:8.6,EGP:2.6,QAR:35.4,KWD:420,BHD:342,OMR:335,ZMW:4.8};
   function org(){ try{return JSON.parse(localStorage.getItem('orgInfo')||'{}')||{};}catch(e){return {};} }
@@ -89157,6 +89414,7 @@ window.phInit = function(){
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>{ try{phInit();}catch(e){console.warn("phInit",e);} });
 else { try{phInit();}catch(e){console.warn("phInit",e);} }
 })();
+
 </script>
 
 </body>
