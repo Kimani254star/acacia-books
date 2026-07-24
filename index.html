@@ -1,8 +1,5 @@
 <!DOCTYPE html><html lang="en"><head><script>window.__SUPA_URL__='https://swgyefbzplelxrjcovef.supabase.co';window.__SUPA_KEY__='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3Z3llZmJ6cGxlbHhyamNvdmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MDU4MzIsImV4cCI6MjA5NzA4MTgzMn0.U2zDNqRfdEgTgldBd7CcEhfsmGXvYZ14yh-4yYC2HlY';</script><script>
-/* ===== Lovable multi-company isolation layer (v2.1) =====
-   Virtualizes localStorage per company so each company only sees its own data.
-   Demo/legacy account (username/email/companyId containing "demo", or no companyId)
-   keeps using the original un-prefixed keys. */
+
 (function(){
   if (window.__companyNS) return;
   var REAL = window.localStorage;
@@ -26,7 +23,7 @@
     var legacy = nGet.call(REAL,'__legacyCompany') || '';
     if (!cid) return null;
     if (cid === legacy) return null;
-    /* [unify] demo is now a normal company (fix #3) */
+    if (uname === 'demo' || mail.indexOf('demo') === 0 || cid.toLowerCase().indexOf('demo') !== -1) return null;
     return cid;
   }
   function phys(k){
@@ -35,13 +32,13 @@
     if (!c || isGlobal(k)) return k;
     return k + SEP + c;
   }
-  var dirty = {};      // logical keys changed locally, waiting for cloud push
-  var applying = false; // true while applying remote data (prevents echo)
+  var dirty = {};      
+  var applying = false; 
   function markDirty(logical){
     if (applying) return;
     var c = activeCompany();
     if (!c || isGlobal(logical)) {
-      // account list changes still sync (for cross-device login)
+     
       if (logical === 'users') { dirty['@users'] = 1; if (window.__companySyncKick) window.__companySyncKick(); }
       return;
     }
@@ -133,266 +130,7 @@
   console.log('[companyNS] per-company storage isolation active');
 })();
 
-</script>
-<script>
-/* ============================================================
-   Lovable 10-point fix layer (installed AFTER isolation v2.1)
-   1  Unified `::companyId` storage (single system)
-   2  Removes legacy `_companyId` suffix storage
-   3  Demo is a normal company (with one-time data migration)
-   4  Cloud restore completes BEFORE dashboard renders
-   5  Loading gate on initial render
-   6  Every module writes through the SAME localStorage proxy
-   7  Register + login flows unified & wired to Supabase Auth
-   8  Data mirrored to Supabase `company_state` (RLS-guarded)
-   9  RLS enforced via Supabase Auth session (see .sql file)
-   10 Audit logging into `audit_log` table on every mutation
-   ============================================================ */
-(function(){
-  if (window.__unifyLayer) return; window.__unifyLayer = true;
-  var NS = window.__companyNS;
-  if (!NS) { console.error('[unify] isolation layer missing'); return; }
-
-  /* ---------- (1)(2)(6) unify legacy `_companyId` suffix keys ---------- */
-  function knownCompanyIds(){
-    try {
-      var users = JSON.parse(NS.nGet.call(NS.real,'users')||'[]');
-      var set = {};
-      users.forEach(function(u){ if(u && u.companyId) set[String(u.companyId)] = 1; });
-      var cur = NS.currentUser(); if (cur && cur.companyId) set[String(cur.companyId)] = 1;
-      return Object.keys(set);
-    } catch(e){ return []; }
-  }
-  function migrateLegacySuffix(){
-    var cids = knownCompanyIds(); if (!cids.length) return 0;
-    var moved = 0;
-    for (var i = NS.real.length - 1; i >= 0; i--){
-      var K = NS.nKey.call(NS.real, i); if (!K) continue;
-      if (K.indexOf(NS.SEP) !== -1) continue;       // already ::
-      if (NS.isGlobal(K)) continue;
-      for (var j = 0; j < cids.length; j++){
-        var c = cids[j], suf = '_' + c;
-        if (K.length > suf.length && K.slice(-suf.length) === suf){
-          var base = K.slice(0, K.length - suf.length);
-          var target = base + NS.SEP + c;
-          var existing = NS.nGet.call(NS.real, target);
-          var legacy = NS.nGet.call(NS.real, K);
-          if (existing == null) NS.nSet.call(NS.real, target, legacy);
-          NS.nRem.call(NS.real, K);
-          moved++;
-          break;
-        }
-      }
-    }
-    if (moved) console.log('[unify] migrated', moved, 'legacy _companyId keys to ::');
-    return moved;
-  }
-  migrateLegacySuffix();
-
-  /* Runtime rewrite: any getItem/setItem/removeItem with a `_<cid>` suffix
-     matching the caller's own company is redirected to the plain key so the
-     isolation layer namespaces it once via ::cid. */
-  var origGet = Storage.prototype.getItem,
-      origSet = Storage.prototype.setItem,
-      origRem = Storage.prototype.removeItem;
-  function stripSuffix(k){
-    k = String(k);
-    if (k.indexOf(NS.SEP) !== -1) return k;
-    var cur = NS.currentUser(); if (!cur || !cur.companyId) return k;
-    var suf = '_' + cur.companyId;
-    if (k.length > suf.length && k.slice(-suf.length) === suf) return k.slice(0, k.length - suf.length);
-    return k;
-  }
-  Storage.prototype.getItem   = function(k){ return origGet.call(this, stripSuffix(k)); };
-  Storage.prototype.setItem   = function(k,v){ return origSet.call(this, stripSuffix(k), v); };
-  Storage.prototype.removeItem= function(k){ return origRem.call(this, stripSuffix(k)); };
-
-  /* ---------- (3) Demo one-time migration ----------
-     `activeCompany()` no longer bypasses demo. Copy any un-prefixed non-global
-     real keys into ::<demoCompanyId> once, so the demo login sees its data. */
-  function migrateDemoIfNeeded(){
-    var cur = NS.currentUser(); if (!cur) return;
-    var cid = String(cur.companyId||''); if (!cid) return;
-    var uname = String(cur.username||'').toLowerCase();
-    var mail  = String(cur.email||'').toLowerCase();
-    var isDemo = uname === 'demo' || mail.indexOf('demo') === 0 || cid.toLowerCase().indexOf('demo') !== -1;
-    if (!isDemo) return;
-    var flag = '__demoMigrated_' + cid;
-    if (NS.nGet.call(NS.real, flag)) return;
-    var moved = 0;
-    for (var i = NS.real.length - 1; i >= 0; i--){
-      var K = NS.nKey.call(NS.real, i); if (!K) continue;
-      if (K.indexOf(NS.SEP) !== -1) continue;
-      if (NS.isGlobal(K)) continue;
-      var target = K + NS.SEP + cid;
-      if (NS.nGet.call(NS.real, target) != null) continue;
-      NS.nSet.call(NS.real, target, NS.nGet.call(NS.real, K));
-      moved++;
-    }
-    NS.nSet.call(NS.real, flag, '1');
-    if (moved) console.log('[unify] demo migrated', moved, 'legacy keys to ::' + cid);
-  }
-
-  /* ---------- (4)(5) Cloud-restore gate ---------- */
-  function showGate(){
-    if (document.getElementById('__unifyGate')) return;
-    var d = document.createElement('div');
-    d.id = '__unifyGate';
-    d.style.cssText='position:fixed;inset:0;background:#fcfbf8;z-index:2147483647;display:flex;align-items:center;justify-content:center;flex-direction:column;font-family:system-ui,sans-serif;color:#1e3a8a;';
-    d.innerHTML='<div style="font-size:1.1rem;font-weight:600;margin-bottom:.5rem">Loading your company data\u2026</div><div style="font-size:.85rem;color:#555">Restoring from the cloud</div>';
-    (document.body||document.documentElement).appendChild(d);
-  }
-  function hideGate(){
-    var d=document.getElementById('__unifyGate'); if(d) d.remove();
-  }
-  window.__unifyShowGate = showGate;
-  window.__unifyHideGate = hideGate;
-  function gateReady(cb){
-    if (document.body) return cb();
-    document.addEventListener('DOMContentLoaded', cb, { once:true });
-  }
-  gateReady(function(){
-    if (NS.currentUser()) {
-      migrateDemoIfNeeded();
-      showGate();
-    }
-  });
-
-  /* Force the cloud pull to complete before hideGate. The existing companySync
-     module exposes window.startCloudSync (registered later). Poll for it. */
-  function whenSyncReady(cb){
-    if (typeof window.startCloudSync === 'function') return cb();
-    var tries = 0, t = setInterval(function(){
-      if (typeof window.startCloudSync === 'function' || tries++ > 100){
-        clearInterval(t); cb();
-      }
-    }, 50);
-  }
-  function bootRestore(){
-    if (!NS.currentUser()) return hideGate();
-    whenSyncReady(function(){
-      var done = false, safety = setTimeout(function(){ if(!done){ done=true; hideGate(); } }, 8000);
-      Promise.resolve().then(function(){
-        return typeof window.startCloudSync === 'function' ? window.startCloudSync() : null;
-      }).catch(function(e){ console.warn('[unify] restore error', e); })
-        .then(function(){ done=true; clearTimeout(safety); hideGate(); });
-    });
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootRestore, { once:true });
-  else bootRestore();
-
-  /* ---------- (7)(8)(9) Supabase Auth for RLS ----------
-     App keeps its own account list, but for RLS we also sign the user into
-     Supabase Auth using a deterministic email derived from their app login.
-     Password is app password when available, else the stable app user id
-     (best-effort — this is a client-only patch). */
-  var sb = null;
-  function supa(){
-    if (sb) return sb;
-    if (window.supabase && window.__SUPA_URL__ && window.__SUPA_KEY__){
-      sb = window.supabase.createClient(window.__SUPA_URL__, window.__SUPA_KEY__, {
-        auth: { persistSession: true, autoRefreshToken: true, storageKey: 'sb-unify-auth' }
-      });
-    }
-    return sb;
-  }
-  function authEmail(loginId){
-    return String(loginId||'').toLowerCase().replace(/[^a-z0-9._-]/g,'_') + '@app.local';
-  }
-  function ensureSupaAuth(loginId, password){
-    var c = supa(); if (!c) return Promise.resolve(null);
-    var email = authEmail(loginId);
-    var pw = String(password||loginId||'app-user-secret');
-    return c.auth.signInWithPassword({ email: email, password: pw }).then(function(r){
-      if (!r.error) return r.data;
-      // sign up on first use, then sign in
-      var cur = NS.currentUser() || {};
-      return c.auth.signUp({
-        email: email, password: pw,
-        options: { data: { company_id: cur.companyId || '', username: cur.username || loginId, role: cur.role || 'admin' } }
-      }).then(function(){ return c.auth.signInWithPassword({ email: email, password: pw }); })
-        .then(function(r2){ return r2.data; });
-    }).catch(function(e){ console.warn('[unify] supabase auth failed', e); return null; });
-  }
-  window.__unifySupaAuth = ensureSupaAuth;
-
-  // Hook login handler
-  (function(){
-    var orig = window.handleLogin;
-    window.handleLogin = async function(){
-      var id = (document.getElementById('loginUser')||{}).value || '';
-      var pw = (document.getElementById('loginPass')||{}).value || '';
-      var r = orig ? await orig.apply(this, arguments) : undefined;
-      try { if (NS.currentUser()) await ensureSupaAuth(id, pw); } catch(e){}
-      return r;
-    };
-  })();
-  (function(){
-    var orig = window.registerUser;
-    if (typeof orig !== 'function') return;
-    window.registerUser = async function(){
-      var id = (document.getElementById('registerUser')||{}).value || '';
-      var pw = (document.getElementById('registerPass')||{}).value || '';
-      var r = await orig.apply(this, arguments);
-      try { if (NS.currentUser()) await ensureSupaAuth(id, pw); } catch(e){}
-      return r;
-    };
-  })();
-  (function(){
-    var orig = window.logout;
-    window.logout = function(){
-      try { if (sb) sb.auth.signOut(); } catch(e){}
-      if (orig) return orig.apply(this, arguments);
-    };
-  })();
-
-  /* ---------- (10) Audit log ---------- */
-  var auditQueue = [], auditTimer = null;
-  function pushAudit(action, key){
-    var cur = NS.currentUser(); if (!cur || !cur.companyId) return;
-    if (NS.isGlobal(key)) return;
-    auditQueue.push({
-      company_id: cur.companyId,
-      actor: String(cur.username || cur.email || 'unknown'),
-      action: action,
-      resource: String(key),
-      at: new Date().toISOString()
-    });
-    clearTimeout(auditTimer);
-    auditTimer = setTimeout(flushAudit, 800);
-  }
-  async function flushAudit(){
-    if (!auditQueue.length) return;
-    var batch = auditQueue.splice(0, auditQueue.length);
-    var c = supa(); if (!c) return;
-    try { await c.from('audit_log').insert(batch); }
-    catch(e){ console.warn('[unify] audit push failed', e); }
-  }
-  // Hook writes at the proxy layer: wrap __companySyncKick which fires on
-  // every mutation that reaches markDirty(). Diff dirty keys to emit events.
-  (function(){
-    var origKick = window.__companySyncKick;
-    var seen = {};
-    function drain(){
-      Object.keys(NS.dirty).forEach(function(k){
-        if (seen[k]) return; seen[k] = 1;
-        pushAudit('write', k);
-      });
-      // reset seen shortly after so the same key mutated later is re-logged
-      setTimeout(function(){ seen = {}; }, 400);
-    }
-    Object.defineProperty(window, '__companySyncKick', {
-      configurable: true,
-      get: function(){ return function(){ drain(); if (origKick) return origKick(); }; },
-      set: function(v){ origKick = v; }
-    });
-  })();
-  window.addEventListener('pagehide', flushAudit);
-
-  console.log('[unify] 10-point storage/auth/audit layer active');
-})();
-</script>
-<script src="/sync.js"></script><script>/* Lovable fix: early base-currency helpers used by all modules & reports */
+</script><script src="/sync.js"></script><script>/* Lovable fix: early base-currency helpers used by all modules & reports */
 (function(){
   var FALLBACK={USD:129,EUR:140,GBP:163,JPY:0.86,AUD:84,CAD:94,CHF:145,CNY:17.8,INR:1.52,NZD:77,SGD:96,ZAR:7.2,KRW:0.093,MXN:7.1,BRL:23.5,RUB:1.4,TRY:3.9,NOK:12.2,SEK:12.4,DKK:18.8,SAR:34.4,AED:35.1,HKD:16.6,UGX:0.035,TZS:0.05,RWF:0.095,ETB:1.05,NGN:0.085,GHS:8.6,EGP:2.6,QAR:35.4,KWD:420,BHD:342,OMR:335,ZMW:4.8};
   function org(){ try{return JSON.parse(localStorage.getItem('orgInfo')||'{}')||{};}catch(e){return {};} }
@@ -1272,12 +1010,12 @@ function handleRegister() {
   var p = document.getElementById('registerPass').value.trim();
   if (!u) { alert('Please enter an email or username'); return; }
   if (!p || p.length < 4) { alert('Please enter a password (at least 4 characters)'); return; }
-  // Ensure a brand-new account never inherits the current session's company
+
   localStorage.removeItem('loggedInUser');
   registerUser();
 }
 
-/* ===== Forgot password via Acacia Mail ===== */
+
 var __resetPending = null;
 
 function showResetForm() {
@@ -1313,7 +1051,7 @@ function deliverResetMail(user, code) {
       ? String(user.email).toLowerCase()
       : String(user.username || 'user').toLowerCase().replace(/[^a-z0-9._-]/g, '') + '@acaciamail.co';
     var MAIL_USERS_KEY = 'acacia_users', MAIL_PREFIX = 'acacia_data_';
-    // Make sure a mail account exists so the user can sign in and read the code
+ 
     var mailUsers = JSON.parse(localStorage.getItem(MAIL_USERS_KEY) || '[]');
     if (!mailUsers.some(function(u){ return String(u.email).toLowerCase() === email; })) {
       mailUsers.push({ email: email, pass: user.password || 'acacia123', name: user.username || email.split('@')[0], created: Date.now() });
@@ -3951,7 +3689,7 @@ function renderCharts() {
   const operations = JSON.parse(localStorage.getItem('operationalCosts') || '[]');
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  // --- Dashboard month-window filters ---
+
   const __curMonth = new Date().getMonth();
   function __winSet(filterId){
     const sel = document.getElementById(filterId);
@@ -4594,7 +4332,6 @@ const rolePermissions = {
 };
 
 
-/* ===== v5: full module list + plan-based access ===== */
 const APP_ALL_MODULES = ['dashboard','inventoryTab','movementTab','priceListTab','Amenend','BundleItems','BulkAdjustment','packagesTab','shipmentsTab','fundsTab','customersTab','invoicesTab','quotesTab','ordersTab','bulkInvoicesTab','creditNoteTab','salesReturnTab','receiptsTab','recurringInvoicesTab','deliveryTab','customerStatementTab','supplierTab','supplierPaymentsTab','supplierBillsTab','bulkBillingTab','taxPaymentsTab','OperationalCostsTab','supplierPurchaseOrdersTab','supplierDebitNotesTab','purchaseReturnsTab','grnTab','supplierStatementTab','manualJournalsTab','recurringJournalsTab','currencyAdjustmentsTab','nonCurrentAssetsTab','nonCurrentLiabilitiesTab','equityTab','taxAdjustmentsTab','chartOfAccountsTab','currentAccountsTab','budgetsTab','transactionLockingTab','employeesTab','earningsTab','grossPayTab','attendanceTab','payslipTab','statutoryDeductionsTab','payrollReportsTab','integrationsTab','reportsPanel','plansTab','projectTab','orgProfileTab','warehousesTab','DatacenterTab','systemConfigurationTab','userActivityTab','taxComplianceTab','userManagementTab','vatTab','preferencesTab','settingstemplateTab','costingTab','bulkCostingTab','filesTab','recycleBinTab','mailHub','crmHub'];
 
 const PAYROLL_MODULES = ['employeesTab','earningsTab','grossPayTab','attendanceTab','payslipTab','statutoryDeductionsTab','payrollReportsTab'];
@@ -4611,17 +4348,17 @@ function getPlanAllowedModules(plan) {
 function getAllowedTabs(user) {
   if (!user) return [];
   const role = (user.role || '').toLowerCase();
-  // Only module names that match real tab ids count as custom access
+  
   const custom = Array.isArray(user.modules) ? user.modules.filter(m => APP_ALL_MODULES.includes(m)) : [];
   if (role === 'admin') {
-    if (!user.registered) return APP_ALL_MODULES.slice();      // demo / legacy admins: full access
+    if (!user.registered) return APP_ALL_MODULES.slice();      
     if (custom.length) return custom;
-    return getPlanAllowedModules(user.plan);               // registered admins: everything their plan allows
+    return getPlanAllowedModules(user.plan);               
   }
-  if (custom.length) return custom;                        // team members: what the admin ticked
+  if (custom.length) return custom;                      
   return rolePermissions[user.role] || [];
 }
-/* ===== end v5 helpers ===== */
+
 
 const globalPermissions = {
   admin:    { canAdd: true, canEdit: true, canDelete: true },
@@ -4684,7 +4421,7 @@ async function handleLogin() {
   });
 
   if (!user && companyIdInput) {
-    // Fallback: ignore the company ID filter if credentials alone match one account
+   
     user = storedUsers.find(x => {
       const email = (x.email || "").toLowerCase();
       const username = (x.username || "").toLowerCase();
@@ -4716,27 +4453,16 @@ async function handleLogin() {
     document.getElementById("crmLink")?.classList.add("hidden");
   }
 
-  // Show restore gate and pull cloud data BEFORE rendering the dashboard.
-  // Fixes "login doesn't load unless I refresh".
-  try { window.__unifyShowGate && window.__unifyShowGate(); } catch(e){}
-  try {
-    if (typeof window.startCloudSync === 'function') {
-      await Promise.race([
-        window.startCloudSync(),
-        new Promise(r => setTimeout(r, 6000))
-      ]);
-    }
-  } catch (e) { console.warn('post-login sync failed', e); }
-  try { window.__unifyHideGate && window.__unifyHideGate(); } catch(e){}
   showApp();
-  try { uploadLocalStorage?.(); } catch(e){}
-  try { window.dispatchEvent(new Event('app:login-ready')); } catch(e){}
+  uploadLocalStorage?.();
+
+  setTimeout(function(){ try { location.reload(); } catch(e){} }, 1400);
 }
 function registerUser() {
 
   const input = document.getElementById('registerUser').value.trim();
   const password = document.getElementById('registerPass').value.trim();
-  const role = 'admin'; // every new account owner is the company Admin
+  const role = 'admin'; 
 
   const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
 
@@ -4851,7 +4577,7 @@ if (!companies.find(c => c.companyId === companyId)) {
 
     companies.push({
         companyId: companyId,
-        companyName: fullName + "'s Company", // replace with actual company name if you collect it
+        companyName: fullName + "'s Company", 
         ownerName: fullName,
         email: cleanEmail,
         plan: plan,
@@ -4997,7 +4723,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function openLogin() {
   const modal = document.getElementById('loginModal');
-  // Always reset the popup to the sign-in view so the password field is visible
+  
   var lf = document.getElementById('loginForm'); if (lf) lf.classList.remove('hidden');
   var rg = document.getElementById('registerForm'); if (rg) rg.classList.add('hidden');
   var rf = document.getElementById('resetForm'); if (rf) rf.classList.add('hidden');
@@ -10527,7 +10253,7 @@ function convertToKES(amount, currency) {
   try {
     const stored = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
     rates = { ...stored, ...rates };
-    // prefer stored if in-memory missing that currency
+   
     if (!rates[currency] && stored[currency]) rates[currency] = stored[currency];
   } catch (e) {}
   const rate = Number(rates[currency]);
@@ -10809,7 +10535,7 @@ function viewBank(index) {
     section.classList.remove("hidden");
   } else {
     section.classList.add("hidden");
-    // Clear the per-bank filter so the rest of the app is unaffected
+    
     localStorage.removeItem("selectedBankIndex");
     if (typeof renderManualTransactions === "function") renderManualTransactions();
     if (typeof updateBankSummary === "function") updateBankSummary();
@@ -10819,10 +10545,7 @@ function viewBank(index) {
   const bank = banks[index];
   localStorage.setItem("selectedBankIndex", index);
 
-  // Only pre-select the manual-transaction bank (this section's own form).
-  // Do NOT touch expenseBank / reconcileBank / payrollBank — those belong to
-  // other modules and selecting them here was leaking the bank filter across
-  // the whole site and overwriting balances.
+ 
   const manualSelect = document.getElementById("manualBank");
   if (manualSelect) {
     for (let opt of manualSelect.options) {
@@ -10830,7 +10553,6 @@ function viewBank(index) {
     }
   }
 
-  // Filter the Manual Transactions table to this bank only
   if (typeof renderManualTransactions === "function") {
     renderManualTransactions(bank.name);
   }
@@ -18170,7 +17892,7 @@ let editingInvoiceId = null;
 
 function searchInvoices() {
   const input = document.getElementById('invoiceSearch').value.toLowerCase();
-  const table = document.getElementById('invoiceTableBody'); // tbody id
+  const table = document.getElementById('invoiceTableBody');
   const rows = table.querySelectorAll('tr');
 
   rows.forEach(row => {
@@ -18434,7 +18156,6 @@ function clearItemInputs() {
     return;
   }
 
-  // Block selling product items with zero or insufficient stock
   const itemTypeSel = document.getElementById("invoiceItemType");
   const itemType = (itemTypeSel?.value || "product").toLowerCase();
   const availableQty = parseFloat(selectedOption.dataset.qty) || 0;
@@ -18709,8 +18430,7 @@ function renderInvoices() {
     if (!tbody) return;
     tbody.innerHTML = "";
     invoices = JSON.parse(localStorage.getItem("invoices")) || [];
-    // Build a display-only list that excludes recurring-sourced invoices. Do NOT mutate storage,
-    // so recurring occurrences still count toward dashboard totals and customer balance.
+   
     let _displayInvoices = invoices;
     try {
         const _rec = JSON.parse(localStorage.getItem("recurringInvoices")) || [];
@@ -19702,7 +19422,7 @@ function reversePayment(id) {
   let difference = paid - newPaid;
   if (difference <= 0) return alert("Nothing to reverse.");
 
-  // Walk receipts newest-first, refund bank balances accordingly
+  
   let remaining = difference;
   for (let i = receipts.length - 1; i >= 0 && remaining > 0; i--) {
     if (String(receipts[i].invoiceId) !== String(invoice.id)) continue;
@@ -19710,7 +19430,7 @@ function reversePayment(id) {
     const amt = parseFloat(r.amount) || 0;
     const take = Math.min(amt, remaining);
 
-    // Roll back bank balance
+
     let bank = null;
     if (typeof r.bankIndex === "number" && banks[r.bankIndex]) bank = banks[r.bankIndex];
     else if (r.bankName) bank = banks.find(b => b.name === r.bankName);
@@ -19726,7 +19446,7 @@ function reversePayment(id) {
   localStorage.setItem("receipts", JSON.stringify(receipts));
   localStorage.setItem("banks", JSON.stringify(banks));
 
-  // Update invoice
+
   const finalPaid = receipts
     .filter(r => String(r.invoiceId) === String(invoice.id))
     .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
@@ -19738,7 +19458,7 @@ function reversePayment(id) {
   invoices[index] = invoice;
   localStorage.setItem("invoices", JSON.stringify(invoices));
 
-  // Roll back Customer Receivables (chart of accounts + per-customer)
+
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   const custAcc = accounts.find(a => a.name === "Customer Receivables");
   if (custAcc) {
@@ -19749,7 +19469,7 @@ function reversePayment(id) {
     updateCustomerReceivables(invoice.customer, difference);
   }
 
-  // Roll back customerPayments records (newest first)
+ 
   let customerPayments = JSON.parse(localStorage.getItem("customerPayments") || "[]");
   let remainCP = difference;
   for (let i = customerPayments.length - 1; i >= 0 && remainCP > 0; i--) {
@@ -19763,7 +19483,7 @@ function reversePayment(id) {
   }
   localStorage.setItem("customerPayments", JSON.stringify(customerPayments));
 
-  // Update transactions — keep cumulative row, or drop if fully reversed
+
   const updateTxStore = key => {
     let arr = JSON.parse(localStorage.getItem(key) || "[]");
     if (finalPaid <= 0) {
@@ -21173,7 +20893,7 @@ let quoteItems = [];
 let editingQuoteIndex = null;
 function searchQuotes() {
   const input = document.getElementById('quoteSearch').value.toLowerCase();
-  const table = document.getElementById('quotesTable'); // tbody
+  const table = document.getElementById('quotesTable');
   const rows = table.querySelectorAll('tr');
 
   rows.forEach(row => {
@@ -26190,7 +25910,6 @@ function renderRecurringInvoiceItems() {
   const tbody = document.getElementById("recurringInvoiceItemTableBody");
   tbody.innerHTML = "";
 
-  // --- Live VAT / subtotal / total summary ---
   try {
     const sub = recurringInvoiceItems.reduce((s,i)=>s + (Number(i.qty)||0)*(Number(i.price)||0), 0);
     const vat = recurringInvoiceItems.reduce((s,i)=>s + (Number(i.vat)||0), 0);
@@ -26281,16 +26000,16 @@ function deductStockFromInvoice(items) {
   localStorage.setItem("inventories", JSON.stringify(inventory));
 }
 function syncRecurringToInvoices(recurring) {
-  // Create or update a real invoice in the Invoices list from a recurring template.
+ 
   let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
 
   const total = Number(recurring.total) || 0;
   const vat = Number(recurring.vat) || 0;
   const totalKES = (recurring.currency && recurring.currency !== "KES")
-    ? total // recurring stores its total already in the entered currency
+    ? total 
     : total;
 
-  // Normalize items to the invoice item shape used elsewhere in the app.
+  
   const items = (recurring.items || []).map(it => ({
     desc: it.desc,
     sku: it.sku,
@@ -26305,7 +26024,7 @@ function syncRecurringToInvoices(recurring) {
   const existing = invoices.find(inv => String(inv.recurringId) === String(recurring.id));
 
   if (existing) {
-    // Update the linked invoice but keep its number, id and any payments made.
+    
     const prevTotalKES = Number(existing.totalKES) || Number(existing.total) || 0;
     existing.date = recurring.date;
     existing.customer = recurring.customerName;
@@ -26383,9 +26102,7 @@ function saveRecurringInvoice(status = "active") {
   }
 
   const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-  // Trust the user's actual selection. Match strictly on id-like fields first;
-  // only fall back to name match when the label is non-empty (prevents
-  // accidentally returning customers[0] when ids are missing).
+
   let customer = customers.find(c =>
     String(c.id ?? "") === String(customerId) ||
     String(c.customerId ?? "") === String(customerId) ||
@@ -26397,7 +26114,7 @@ function saveRecurringInvoice(status = "active") {
       String(c.customerName ?? "") === String(customerLabel)
     );
   }
-  // Selected dropdown text is the source of truth for display name.
+ 
   const resolvedCustomerName = customerLabel || customer?.name || customer?.customerName || "Unknown Customer";
   const resolvedCustomerId = customer?.id || customer?.customerId || customerId || resolvedCustomerName;
 
@@ -26405,7 +26122,7 @@ function saveRecurringInvoice(status = "active") {
   const vat = recurringInvoiceItems.reduce((s, i) => s + Number(i.vat || 0), 0);
   const total = subtotal + vat;
 
-  // capture previous values when editing so we can adjust deltas correctly
+ 
   let prev = null;
   if (editingRecurringInvoiceIndex !== null && recurringInvoices[editingRecurringInvoiceIndex]) {
     prev = recurringInvoices[editingRecurringInvoiceIndex];
@@ -26450,11 +26167,11 @@ function saveRecurringInvoice(status = "active") {
 
   localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
 
-  // --- Customer balance sync (delta) ---
+
   try {
     const prevTotal = prev ? Number(prev.total || 0) : 0;
     const delta = total - prevTotal;
-    // if customer changed on edit, reverse prev from old customer and add new total to new customer
+    
     const oldCustomerKey = prev ? (prev.customerId || prev.customerName) : null;
     const newCustomerKey = resolvedCustomerId || resolvedCustomerName;
     const sameCustomer = String(oldCustomerKey || "") === String(newCustomerKey || "");
@@ -26475,7 +26192,7 @@ function saveRecurringInvoice(status = "active") {
     localStorage.setItem("customers", JSON.stringify(customers));
   } catch(e) { console.warn("customer balance sync failed", e); }
 
-  // Sync this recurring entry into the main invoices list (tagged so it stays out of the normal invoice table but counts in dashboard totals)
+  
   try { if (typeof syncRecurringToInvoices === "function") syncRecurringToInvoices(invoice); } catch(e) { console.warn("syncRecurringToInvoices failed", e); }
 
   recurringInvoiceItems = [];
@@ -26486,7 +26203,7 @@ function saveRecurringInvoice(status = "active") {
   if (netDaysEl) netDaysEl.value = "";
   if (termsEl) termsEl.value = "";
 
-  // refresh totals across the app
+ 
   try { if (typeof renderCustomers === "function") renderCustomers(); } catch(e){}
   try { if (typeof renderAccountsReceivable === "function") renderAccountsReceivable(); } catch(e){}
   try { if (typeof renderCustomerStatement === "function") renderCustomerStatement(); } catch(e){}
@@ -26587,7 +26304,7 @@ function deleteRecurring(index) {
   recurringInvoices.splice(realIndex, 1);
   localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
 
-  // Remove the linked invoice (the recurring-sourced occurrence) from the main invoices list
+ 
   try {
     let _invs = JSON.parse(localStorage.getItem("invoices") || "[]");
     const _before = _invs.length;
@@ -26641,7 +26358,7 @@ function previewRecurring(id) {
   document.getElementById("previewRecurringInvoiceTotal").textContent = inv.total.toFixed(2);
   document.getElementById("previewRecurringInvoiceBalance").textContent = inv.total.toFixed(2);
 
-  // Terms, net days, due date
+  
   const termsEl = document.getElementById("previewRecurringInvoiceTerms");
   if (termsEl) termsEl.textContent = (inv.terms && String(inv.terms).trim()) ? inv.terms : "-";
   const netEl = document.getElementById("previewRecurringInvoiceNetDays");
@@ -26690,7 +26407,7 @@ function recordRecurringPayment(index) {
   const today = new Date().toISOString().split("T")[0];
   const paymentId = crypto.randomUUID();
 
-  // 1) recurringPayments log
+
   const payment = {
     id: paymentId,
     invoiceNumber: inv.number,
@@ -26706,7 +26423,7 @@ function recordRecurringPayment(index) {
   payments.push(payment);
   localStorage.setItem("recurringPayments", JSON.stringify(payments));
 
-  // 2) Receipts entry (so it renders on Receipts page)
+  
   const receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
   receipts.push({
     id: paymentId,
@@ -26725,11 +26442,10 @@ function recordRecurringPayment(index) {
   });
   localStorage.setItem("receipts", JSON.stringify(receipts));
 
-  // 3) Bank balance up
+
   bank.balance = (Number(bank.balance)||0) + amount;
   localStorage.setItem("banks", JSON.stringify(banks));
 
-  // 4) Manual transaction entry (Money In)
   const manualTx = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
   const allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
   const txEntry = {
@@ -26748,18 +26464,18 @@ function recordRecurringPayment(index) {
   localStorage.setItem("manualTransactions", JSON.stringify(manualTx));
   localStorage.setItem("transactions", JSON.stringify(allTx));
 
-  // 5) Customer receivables down (balance card)
+ 
   if (typeof updateCustomerReceivables === "function" && inv.customerName) {
     updateCustomerReceivables(inv.customerName, -amount);
   }
 
-  // 6) Update recurring invoice paid/balance/status
+  
   inv.paid = (Number(inv.paid)||0) + amount;
   inv.balance = (Number(inv.total)||0) - inv.paid;
   if (inv.balance <= 0) inv.status = "Paid";
   localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
 
-  // 7) Refresh UI
+ 
   renderRecurringInvoices();
   if (typeof renderReceipts === "function") renderReceipts();
   if (typeof renderManualTransactions === "function") renderManualTransactions();
@@ -26785,16 +26501,16 @@ function reverseRecurringPayment(index) {
   const last = related[related.length - 1];
   const amt = Number(last.amount)||0;
 
-  // 1) remove from recurringPayments
+  
   payments = payments.filter(p => p.id !== last.id);
   localStorage.setItem("recurringPayments", JSON.stringify(payments));
 
-  // 2) remove receipt
+
   let receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
   receipts = receipts.filter(r => r.id !== last.id);
   localStorage.setItem("receipts", JSON.stringify(receipts));
 
-  // 3) reverse bank balance
+
   const banks = JSON.parse(localStorage.getItem("banks") || "[]");
   const bank = banks.find(b => b.name === last.bank);
   if (bank) {
@@ -26802,7 +26518,7 @@ function reverseRecurringPayment(index) {
     localStorage.setItem("banks", JSON.stringify(banks));
   }
 
-  // 4) remove manual transaction + transactions entry
+  
   let manualTx = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
   manualTx = manualTx.filter(t => t.id !== last.id);
   localStorage.setItem("manualTransactions", JSON.stringify(manualTx));
@@ -26810,18 +26526,18 @@ function reverseRecurringPayment(index) {
   allTx = allTx.filter(t => t.id !== last.id);
   localStorage.setItem("transactions", JSON.stringify(allTx));
 
-  // 5) restore customer receivables
+  
   if (typeof updateCustomerReceivables === "function" && (last.customerName || inv.customerName)) {
     updateCustomerReceivables(last.customerName || inv.customerName, amt);
   }
 
-  // 6) update recurring invoice state
+ 
   inv.paid = Math.max(0, (Number(inv.paid)||0) - amt);
   inv.balance = (Number(inv.total)||0) - inv.paid;
   if (inv.balance > 0) inv.status = "Active";
   localStorage.setItem("recurringInvoices", JSON.stringify(recurringInvoices));
 
-  // 7) refresh
+
   renderRecurringInvoices();
   if (typeof renderReceipts === "function") renderReceipts();
   if (typeof renderManualTransactions === "function") renderManualTransactions();
@@ -29052,7 +28768,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 <script>
-// ---------------------- GLOBAL VARS ----------------------
+
 let billItems = [];
 let editIndex = -1;
 let currentEditingBillIndex = null;
@@ -29071,7 +28787,7 @@ function searchSupplierBills() {
   });
 }
 
-// ---------------------- INVENTORY FUNCTIONS ----------------------
+
 function getInventory(warehouse) {
   return JSON.parse(localStorage.getItem('inventory_' + warehouse) || '[]');
 }
@@ -29090,7 +28806,7 @@ function getAllInventories() {
     });
 }
 
-// ---------------------- BILL CHART OF ACCOUNTS ----------------------
+
 function populateBillChartOfAccountDropdown() {
   const select = document.getElementById("billChartOfAccount");
   if (!select) return; 
@@ -29098,32 +28814,32 @@ function populateBillChartOfAccountDropdown() {
  
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
 
-  // Allowed types: Expenses + Liabilities
+  
   const allowedTypes = [
-    // 🔹 Expenses
+   
     "Expense", "Cost of Goods Sold", "Other Expense", "Depreciation",
     "Personnel Costs", "Marketing Expense", "Finance Costs",
     "Repairs & Maintenance", "Insurance Costs",
 
-    // 🔹 Liabilities
+   
     "Liability", "Other Current Liability", "Accounts Payable",
     "Non Current Liability", "Other Liability", "Credit Card"
   ];
 
-  // Filter by allowed types
+  
   const filteredAccounts = accounts.filter(acc => allowedTypes.includes(acc.type));
 
-  // Sort filtered accounts by code (numeric sort if possible)
+  
   filteredAccounts.sort((a, b) => {
     const codeA = a.code || "";
     const codeB = b.code || "";
     return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: "base" });
   });
 
-  // Clear existing options
+  
   select.innerHTML = '<option value="">Select Account</option>';
 
-  // Populate dropdown
+
   filteredAccounts.forEach(acc => {
     const option = document.createElement("option");
     option.value = acc.name; 
@@ -29132,8 +28848,7 @@ function populateBillChartOfAccountDropdown() {
   });
 }
 
-// ---------------------- CALL POPULATE ----------------------
-// 1️⃣ When page loads
+
 document.addEventListener("DOMContentLoaded", populateBillChartOfAccountDropdown);
 
 function addAccount() {
@@ -29141,7 +28856,7 @@ function addAccount() {
   populateBillChartOfAccountDropdown();
 }
 
-// ---------------------- SUPPLIER DROPDOWN ----------------------
+
 function populateSupplierDropdownById(id) {
   const dropdown = document.getElementById(id);
   if (!dropdown) return;
@@ -29209,13 +28924,13 @@ document.getElementById('billItemDesc')?.addEventListener('change', () => {
   }
 });
 
-// ---------------------- BILL NUMBER ----------------------
+
 function generateBillNumber() {
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
   return `BIL-${String(bills.length + 1).padStart(4, '0')}`;
 }
 
-// ---------------------- BILL ITEMS ----------------------
+
 function addBillItem() {
   const selVal = document.getElementById('billItemDesc').value;
   if (!selVal) { 
@@ -29282,7 +28997,7 @@ function addBillItem() {
   clearBillItemForm();
 }
 
-// ---------------------- RENDER BILL ITEMS ----------------------
+
 function renderBillItems() {
   const tbody = document.getElementById('billItemsTableBody');
   tbody.innerHTML = '';
@@ -29324,7 +29039,7 @@ function renderBillItems() {
   document.getElementById('billTotalAmount').value = totalAmount.toFixed(2);
 }
 
-// ---------------------- EDIT / REMOVE ----------------------
+
 function editBillItem(index) {
   const item = billItems[index];
   editIndex = index;
@@ -29339,7 +29054,7 @@ function removeBillItem(index) {
   renderBillItems();
 }
 
-// ---------------------- CLEAR FORM ----------------------
+
 function clearBillItemForm() {
   document.getElementById('billItemDesc').value = '';
   document.getElementById('billItemQty').value = '';
@@ -29348,7 +29063,7 @@ function clearBillItemForm() {
   document.getElementById('billItemTax').value = '16';
 }
 
-// ---------------------- SAVE BILL ----------------------
+
 function saveSupplierBill() {
   const date = document.getElementById('billDate').value;
   const supplier = document.getElementById('billSupplier').value;
@@ -29361,7 +29076,7 @@ function saveSupplierBill() {
     return;
   }
 
-  // ------------------ NORMALIZE ITEMS ------------------
+
   billItems = billItems.map(item => ({
     ...item,
     sku: (item.sku || "").trim(),
@@ -29373,7 +29088,7 @@ function saveSupplierBill() {
     vat: parseFloat(item.vat) || 0
   }));
 
-  // ------------------ MERGE DUPLICATES ------------------
+
   const mergedItems = [];
   billItems.forEach(item => {
     const existing = mergedItems.find(i =>
@@ -29391,7 +29106,7 @@ function saveSupplierBill() {
     }
   });
 
-  // ------------------ DUE DATE ------------------
+  
   let due = '';
   if (date) {
     const dueDate = new Date(date);
@@ -29399,12 +29114,12 @@ function saveSupplierBill() {
     due = dueDate.toISOString().split('T')[0];
   }
 
-  // ------------------ TOTALS ------------------
+ 
   const subtotal = mergedItems.reduce((sum, i) => sum + i.subtotal, 0);
   const vat = mergedItems.reduce((sum, i) => sum + i.vat, 0);
   const total = subtotal + vat;
 
-  // ------------------ TAX GROUPING ------------------
+  
   let purchasesGeneral = 0, purchasesOther = 0, purchasesZero = 0, purchasesExempt = 0;
 
   mergedItems.forEach(item => {
@@ -29421,7 +29136,7 @@ function saveSupplierBill() {
     }
   });
 
-  // ------------------ BILL OBJECT ------------------
+  
   const bill = {
     billNumber,
     date,
@@ -29442,13 +29157,13 @@ function saveSupplierBill() {
 
   let bills = JSON.parse(localStorage.getItem('bills') || '[]');
 
-  // ------------------ EDIT MODE FIX ------------------
+ 
   if (typeof currentEditingBillIndex === 'number' && currentEditingBillIndex > -1) {
     const oldBill = bills[currentEditingBillIndex];
 
     updateSupplierBalance(oldBill.supplier, -oldBill.total);
 
-    // Reverse old inventory (grouped)
+   
     const reverseMap = {};
 
     oldBill.items.forEach(item => {
@@ -29488,7 +29203,7 @@ function saveSupplierBill() {
   updateAccountsPayable();
   renderAccountsPayable?.();
 
-  // ------------------ BALANCE SHEET ------------------
+ 
   let balanceSheet = JSON.parse(localStorage.getItem("balanceSheet") || '{}');
 
   if (!balanceSheet.currentAssets) balanceSheet.currentAssets = {};
@@ -29504,7 +29219,7 @@ function saveSupplierBill() {
   if (typeof renderInventorySummary === 'function') renderInventorySummary();
   if (typeof renderInventoryTable === 'function') renderInventoryTable();
 
-  // ------------------ UPDATE INVENTORY (FIXED) ------------------
+  
   const warehouseMap = {};
 
   mergedItems.forEach(item => {
@@ -29521,7 +29236,6 @@ function saveSupplierBill() {
       (p.name || "").trim().toLowerCase() === item.desc
     );
 
-    // Extra fallback by SKU only
     if (!product && item.sku) {
       product = inventory.find(p => (p.sku || "").trim() === item.sku);
     }
@@ -29560,12 +29274,12 @@ function saveSupplierBill() {
     }
   });
 
-  // ✅ SAVE ONCE PER WAREHOUSE (CRITICAL FIX)
+  
   Object.keys(warehouseMap).forEach(wh => {
     saveInventory(wh, warehouseMap[wh]);
   });
 
-  // ------------------ RESET UI ------------------
+ 
   billItems = [];
   renderBillItems();
   clearBillItemForm();
@@ -29607,12 +29321,12 @@ function updateSupplierBalance(supplierName, amountChange) {
 
   localStorage.setItem("suppliers", JSON.stringify(suppliers));
 
-  // Refresh supplier table if open
+ 
   if (typeof renderSuppliers === "function") {
     renderSuppliers();
   }
 }
-// ---------------------- LOAD BILLS ----------------------
+
 function loadSupplierBills() {
   const tbody = document.getElementById('supplierBillsList');
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
@@ -29851,7 +29565,7 @@ function toggleSelectAllBills(source) {
   });
 
 }
-// ✏️ Edit Supplier Bill — Anyone with edit rights
+
 function editSupplierBill(index) {
   guardAction('canEdit', () => {
     const bills = JSON.parse(localStorage.getItem('bills') || '[]');
@@ -29884,7 +29598,7 @@ function recordBillPayment(index) {
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   let supplierAcc = accounts.find(a => a.name === "Supplier Payments");
 
-  // Auto-create Supplier Payments account if missing
+ 
   if (!supplierAcc) {
     supplierAcc = {
       name: "Supplier Payments",
@@ -29896,7 +29610,7 @@ function recordBillPayment(index) {
     localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
   }
 
-  // Create modal
+ 
   const modal = document.createElement("div");
   modal.style.position = "fixed";
   modal.style.top = 0;
@@ -29915,7 +29629,7 @@ function recordBillPayment(index) {
   content.style.borderRadius = "8px";
   content.style.width = "400px";
 
-  // Build bank options
+ 
   const bankOptions = banks.map(b => `<option value="${b.name}">${b.name} (${b.currency} ${b.balance.toFixed(2)})</option>`).join("");
 
   const alreadyPaid = parseFloat(bill.paidAmount) || 0;
@@ -29949,12 +29663,12 @@ function recordBillPayment(index) {
   modal.appendChild(content);
   document.body.appendChild(modal);
 
-  // Cancel button
+ 
   document.getElementById("cancelPaymentBtn").onclick = () => {
     document.body.removeChild(modal);
   };
 
-  // Save button
+  
   document.getElementById("savePaymentBtn").onclick = () => {
     let inputAmount = parseFloat(document.getElementById("paymentAmountInput").value);
     if (isNaN(inputAmount) || inputAmount <= 0 || inputAmount > outstanding + 0.0001) {
@@ -29973,10 +29687,10 @@ function recordBillPayment(index) {
     const paymentInBankCurrency = inputAmount / exchangeRate;
     if (bank.balance < paymentInBankCurrency) return alert("Insufficient funds in selected bank");
 
-    // Deduct from bank
+  k
     bank.balance -= paymentInBankCurrency;
 
-    // Update bill (cumulative)
+    
     const newPaid = alreadyPaid + inputAmount;
     bill.paidAmount = newPaid;
     bill.amountPaid = newPaid;
@@ -29986,7 +29700,7 @@ function recordBillPayment(index) {
     else bill.status = "Unpaid";
     bills[index] = bill;
 
-    // Append a payment record (do not overwrite previous partials)
+    
     let payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
     const paymentRecord = {
       id: Date.now(),
@@ -30000,7 +29714,7 @@ function recordBillPayment(index) {
     };
     payments.push(paymentRecord);
 
-    // Manual transactions — keep a cumulative row per bill
+    
     let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
     let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
     const tx = {
@@ -30019,15 +29733,14 @@ function recordBillPayment(index) {
     manualTransactions.push(tx);
     allTx.push(tx);
 
-    // Update Supplier Payments account
+   
     supplierAcc.amount = (parseFloat(supplierAcc.amount) || 0) - inputAmount;
 
-    // Reduce supplier outstanding balance
     if (typeof updateSupplierBalance === "function") {
       updateSupplierBalance(bill.supplier, -inputAmount);
     }
 
-    // Save all
+    
     localStorage.setItem('bills', JSON.stringify(bills));
     localStorage.setItem("billPayments", JSON.stringify(payments));
     localStorage.setItem('banks', JSON.stringify(banks));
@@ -30035,7 +29748,7 @@ function recordBillPayment(index) {
     localStorage.setItem("transactions", JSON.stringify(allTx));
     localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
-    // Refresh UI
+   
     loadSupplierBills();
     if (typeof renderSupplierPayments === "function") renderSupplierPayments();
     if (typeof renderManualTransactions === "function") renderManualTransactions();
@@ -30076,7 +29789,6 @@ function reverseBillPayment(index) {
   const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
   const supplierAcc = accounts.find(a => a.name === "Supplier Payments");
 
-  // Roll back bank balances using recorded payments (newest first)
   let payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
   let remaining = reverseAmount;
   for (let i = payments.length - 1; i >= 0 && remaining > 0; i--) {
@@ -30094,28 +29806,26 @@ function reverseBillPayment(index) {
     }
     remaining -= take;
   }
-  // If no detailed payment rows exist, roll back the full amount on the first bank
+  
   if (remaining > 0 && banks.length) {
     banks[0].balance = (parseFloat(banks[0].balance) || 0) + remaining;
     remaining = 0;
   }
 
-  // Restore Supplier Payments account
   if (supplierAcc) supplierAcc.amount = (parseFloat(supplierAcc.amount) || 0) + reverseAmount;
 
-  // Reverse supplier outstanding balance (paying reduced supplier liability; reversing adds back)
+  
   if (typeof updateSupplierBalance === "function") {
     updateSupplierBalance(bill.supplier, reverseAmount);
   }
 
-  // Remove / adjust manual transactions for this bill
   let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
   let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
   if (newPaid <= 0) {
     manualTransactions = manualTransactions.filter(t => !(t.ref === bill.billNumber && t.type === "Vendor Payment"));
     allTx = allTx.filter(t => !(t.ref === bill.billNumber && t.type === "Vendor Payment"));
   } else {
-    // Update the latest Vendor Payment row to the new cumulative amount
+   
     for (let i = manualTransactions.length - 1; i >= 0; i--) {
       const t = manualTransactions[i];
       if (t.ref === bill.billNumber && t.type === "Vendor Payment") { t.amount = newPaid; break; }
@@ -30126,7 +29836,7 @@ function reverseBillPayment(index) {
     }
   }
 
-  // Update bill
+ 
   bill.paidAmount = newPaid;
   bill.amountPaid = newPaid;
   bill.balance = Math.max(total - newPaid, 0);
@@ -30151,37 +29861,33 @@ function reverseBillPayment(index) {
 
   alert(`Reversed ${window.__fmtBase(reverseAmount)} KES on Bill ${bill.billNumber}. New paid: ${window.__fmtBase(newPaid)} KES.`);
 }
-// ---------------------- PREVIEW ----------------------
+
 function previewBill(index) {
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
   const bill = bills[index];
   if (!bill) return;
 
-  // Company info
   const orgInfo = JSON.parse(localStorage.getItem('orgInfo') || '{}');
 
-  // Supplier info
+
   const suppliers = JSON.parse(localStorage.getItem('suppliers') || '[]');
   const supplier = suppliers.find(s => s.name === bill.supplier) || {};
 
-  // Populate bill header
   document.getElementById('previewBillNumber').textContent = bill.billNumber || '';
   document.getElementById('previewBillDate').textContent = bill.date || '';
 
-  // Company info
   document.getElementById('previewBillCompanyName').textContent = orgInfo.name || 'My Company Ltd';
   document.getElementById('previewBillCompanyPIN').textContent = orgInfo.pin || 'P00000000';
   document.getElementById('previewBillCompanyAddress').textContent = orgInfo.address || '123 Business Rd, Nairobi';
 
-  // Supplier info
   document.getElementById('previewBillSupplierName').textContent = supplier.name || bill.supplier;
   document.getElementById('previewBillSupplierPIN').textContent = supplier.krapin || '';
   document.getElementById('previewBillSupplierAddress').textContent = supplier.address || '';
 
-  // Build items table
+  
 let itemsHTML = '';
 bill.items.forEach((item, idx) => {
-  // ✅ Proper tax label mapping
+
   let taxLabel = '';
   if (item.taxRate === "16") taxLabel = "16%";
   else if (item.taxRate === "8") taxLabel = "8%";
@@ -30201,7 +29907,7 @@ bill.items.forEach((item, idx) => {
 });
 document.getElementById('previewBillItems').innerHTML = itemsHTML;
 
-  // Totals
+ 
   const subtotal = bill.items.reduce((sum, i) => sum + i.subtotal, 0);
   const totalVAT = bill.items.reduce((sum, i) => sum + i.vat, 0);
   const totalAmount = subtotal + totalVAT;
@@ -30210,11 +29916,11 @@ document.getElementById('previewBillItems').innerHTML = itemsHTML;
   document.getElementById('previewBillVAT').textContent = `KES ${totalVAT.toFixed(2)}`;
   document.getElementById('previewBillTotal').textContent = `KES ${totalAmount.toFixed(2)}`;
 
-  // Show modal
+ 
   document.getElementById('supplierBillPreviewModal').classList.remove('hidden');
 }
 
-// Close modal
+
 function closeSupplierPreview() {
   document.getElementById("supplierBillPreviewModal").classList.add("hidden");
 }
@@ -30222,7 +29928,7 @@ function downloadSupplierBillCSV() {
   const billNumber = document.getElementById('previewBillNumber').textContent || "Unknown";
   let csvContent = "Description,Quantity,Unit Price,VAT,Total\n";
 
-  // Loop through rows
+ 
   document.querySelectorAll('#previewBillItems tr').forEach(tr => {
     const row = Array.from(tr.querySelectorAll('td'))
       .map(td => td.textContent.replace(/KES\s*/g, "").replace(/,/g, "").trim()) // Remove KES and commas
@@ -30230,7 +29936,7 @@ function downloadSupplierBillCSV() {
     csvContent += row + "\n";
   });
 
-  // Add totals
+ 
   const subtotal = document.getElementById('previewBillSubtotal').textContent.replace(/KES\s*/g, "").trim();
   const vat = document.getElementById('previewBillVAT').textContent.replace(/KES\s*/g, "").trim();
   const total = document.getElementById('previewBillTotal').textContent.replace(/KES\s*/g, "").trim();
@@ -32084,7 +31790,7 @@ function convertPO(index) {
   if (!confirm(`Convert PO ${po.poNumber} to a Bill?`)) return;
   if (!confirm("Approve conversion? This cannot be undone.")) return;
 
-  // 1) Create GRN entry (preserve existing behavior)
+  
   let grnList = JSON.parse(localStorage.getItem("grn") || "[]");
   grnList.push({
     fromPO: po.poNumber,
@@ -32096,7 +31802,7 @@ function convertPO(index) {
   });
   localStorage.setItem("grn", JSON.stringify(grnList));
 
-  // 2) Create a draft Bill from the PO
+  
   const bills = JSON.parse(localStorage.getItem("bills") || "[]");
   const dup = bills.find(b => b.sourcePOId === po.poNumber);
   if (dup) {
@@ -32140,7 +31846,7 @@ function convertPO(index) {
   bills.push(newBill);
   localStorage.setItem("bills", JSON.stringify(bills));
 
-  // Mark PO as converted
+ 
   const poList = getPOList();
   if (poList[index]) {
     poList[index].converted = true;
@@ -40681,7 +40387,7 @@ function searchCOA() {
     });
 }
 
-// ===== Chart of Accounts running-balance ledger =====
+
 function getCOAPostings() {
   return JSON.parse(localStorage.getItem("coaPostings") || "[]");
 }
@@ -42315,7 +42021,7 @@ function populateAssetAccounts() {
       opt.textContent = acc.name;
       select.appendChild(opt);
     });
-  // Populate bank dropdown too
+
   const bankSel = document.getElementById("nonCurrentAssetBankSelect");
   if (bankSel) {
     const prev = bankSel.value;
@@ -42380,17 +42086,17 @@ function addNonCurrentAsset() {
     purchaseDate: new Date().toISOString().split("T")[0]
   };
 
-  // Helpers for bank + manual transaction sync
+  
   const syncBankForAsset = (oldA, newA) => {
     const banks = JSON.parse(localStorage.getItem("banks") || "[]");
     let mt = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
-    // refund old bank
+   
     if (oldA && oldA.bankName) {
       const ob = banks.find(b => b.name === oldA.bankName);
       if (ob) ob.balance = parseFloat(ob.balance || 0) + parseFloat(oldA.value || 0);
       mt = mt.filter(t => !(t.source === "asset_purchase" && t.assetId === oldA.id));
     }
-    // deduct new bank + log
+  
     if (newA && newA.bankName) {
       const nb = banks.find(b => b.name === newA.bankName);
       if (nb) nb.balance = parseFloat(nb.balance || 0) - parseFloat(newA.value || 0);
@@ -42408,7 +42114,7 @@ function addNonCurrentAsset() {
       };
       mt.push(tx);
       if (typeof manualTransactions !== "undefined" && Array.isArray(manualTransactions)) {
-        // refresh in-memory list
+    
         manualTransactions.length = 0;
         mt.forEach(t => manualTransactions.push(t));
       }
@@ -42483,7 +42189,7 @@ function deleteNonCurrentAsset(index) {
   if (!asset.id) asset.id = crypto.randomUUID();
   moveToRecycle(asset, "File", "NonCurrentAssets");
 
-  // Refund bank + remove its purchase transaction
+
   if (asset.bankName) {
     const banks = JSON.parse(localStorage.getItem("banks") || "[]");
     const b = banks.find(x => x.name === asset.bankName);
@@ -42845,14 +42551,14 @@ function processAssetSale(bankName, salePrice, ref) {
 
   const today = new Date().toISOString().split("T")[0];
 
-  // Always post the full sale proceeds to Other Income
+  
   otherIncomes.push({
     date: today,
     description: `Sale of ${asset.name}`,
     amount: salePrice,
     type: "Asset Disposal"
   });
-  // If sold at a loss, post only the shortfall to Operational Costs / Expenses
+
   if (profitLoss < 0) {
     operationalCosts.push({
       date: today,
@@ -45038,7 +44744,7 @@ window.deleteNonCurrentLiability = function(index) {
 window.payNonCurrentLiability = function(index) {
   const banks = JSON.parse(localStorage.getItem("banks") || "[]");
 
-  // Use the global balanceSheet so renders + sync reflect the change
+
   window.balanceSheet = window.balanceSheet || JSON.parse(localStorage.getItem("balanceSheet") || "{}");
   balanceSheet.nonCurrentLiabilities = balanceSheet.nonCurrentLiabilities || [];
 
@@ -45137,7 +44843,7 @@ window.payNonCurrentLiability = function(index) {
       reference
     });
 
-    // Reduce the displayed liability balance (BS reads liab.amount/total)
+  
     const _curAmt = Number(liability.amount || liability.total || liability.principal || 0);
     liability.amount = Math.max(0, _curAmt - principalPortion);
     liability.total = liability.amount;
@@ -45210,7 +44916,7 @@ window.undoLiabilityPayment = function(liabilityIndex, paymentId) {
   if (bank) bank.balance += payment.amount;
 
   liability.payments.splice(index, 1);
-  // Restore the displayed BS amount by the principal portion we deducted earlier
+
   liability.amount = Number(liability.amount || liability.total || 0) + Number(payment.principalPortion || payment.amount || 0);
   liability.total = liability.amount;
 
@@ -45518,7 +45224,7 @@ window.editIncrease = function (liabilityIndex, increaseIndex) {
 
   newBank.balance += newAmount;
   liability.principal += newAmount;
-  // Keep BS-displayed amount in sync: removed old increase, added new
+
   liability.amount = Number(liability.amount || liability.total || 0) - Number(increase.amount || 0) + newAmount;
   liability.total = liability.amount;
 
@@ -57618,7 +57324,7 @@ function renderReports() {
 
   const equityFromRecords = equityRecords.reduce((sum, rec) => sum + parseFloatSafe(rec.value), 0);
 
-  // Combine regular + recurring invoices for revenue, broken down by Chart of Account
+
   const _allRevSources = [
     ...invoices.map(i => ({ ...i, _acct: i.account || i.accountCode || i.chartAccount || "Sales Revenue" })),
     ...recurringInvoicesPL.map(i => ({ ...i, _acct: i.accountCode || i.account || i.chartAccount || "Sales Revenue" }))
@@ -57799,7 +57505,7 @@ if (pnlOperationalCostsBreakdown) {
   });
 }
 
-// === Current Accounts breakdown (per employee) ===
+
 try {
   const _ca = JSON.parse(localStorage.getItem("currentAccounts") || "[]");
   const _caGrouped = {};
@@ -64764,7 +64470,7 @@ function showReport(panelId, element) {
     renderWriteOffReport();
   }
 
-  // Auto-render report content when a report panel is opened from the sidebar.
+ 
   var reportRenderers = {
     profitMarginPanel: "renderProfitMargin",
     purchaseByItemReport: "renderPurchaseByItem",
@@ -67601,12 +67307,12 @@ function getPreviousMonth(monthStr) {
 
     const [y, m] = monthStr.split("-");
 
-    const d = new Date(y, m - 2); // previous month
+    const d = new Date(y, m - 2); 
 
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-/* ===================== UI TOGGLES ===================== */
+
 
 function toggleSalesComparisonGroupBy() {}
 
@@ -71212,7 +70918,7 @@ let planOwnerships = loadFromLocalStorage("planOwnerships");
 function addPlan() {
   const newPlan = {
     title: document.getElementById("planTitle").value.trim(),
-    department: document.getElementById("projectDepartment").value.trim(), // <-- fixed
+    department: document.getElementById("projectDepartment").value.trim(),
     goalType: document.getElementById("goalType").value,
     priority: document.getElementById("planPriority").value,
     startDate: document.getElementById("planStartDate").value,
@@ -76662,7 +76368,7 @@ Save
   <div id="confirmationMsg" class="mt-3 text-green-700 font-medium hidden"></div>
 </div>
 
-<!-- Preferences enhancement script -->
+
 <script>
 (function(){
   const STORAGE_KEY = 'acacia_prefs_v2';
@@ -76712,7 +76418,7 @@ Save
     if(el) el.textContent = v ? '● Unsaved changes' : '✔ All changes saved';
     if(el) el.className = 'text-sm ' + (v ? 'text-orange-600 font-semibold' : 'text-gray-500'); }
 
-  // ------- Section tab switching -------
+ 
   document.querySelectorAll('#prefSectionTabs .pref-tab').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       document.querySelectorAll('#prefSectionTabs .pref-tab').forEach(b=>{
@@ -76727,7 +76433,7 @@ Save
     });
   });
 
-  // ------- Search filter -------
+ 
   document.getElementById('prefSearch').addEventListener('input', e=>{
     const q = e.target.value.toLowerCase();
     document.querySelectorAll('#preferencesTab .pref-section label').forEach(l=>{
@@ -76737,7 +76443,7 @@ Save
     });
   });
 
-  // ------- Appearance -------
+  
   function applyAppearance(){
     document.documentElement.style.setProperty('--accent', prefs.accent);
     document.body.style.fontSize = prefs.fontSize+'px';
@@ -76771,7 +76477,7 @@ Save
     });
   });
 
-  // ------- Localization -------
+ 
   function renderLocalePreview(){
     const d=new Date();
     const nf = new Intl.NumberFormat(prefs.lang==='ar'?'ar-EG':prefs.lang,{style:'currency',currency:prefs.currency});
@@ -76794,7 +76500,7 @@ Save
     });
   });
 
-  // ------- Notifications matrix -------
+  
   function renderNotify(){
     const tb = document.getElementById('notifyRows'); tb.innerHTML='';
     NOTIFY_EVENTS.forEach(([k,label])=>{
@@ -76828,7 +76534,6 @@ Save
     }catch(e){}
   });
 
-  // ------- Document defaults -------
   const docMap = {docInvPrefix:'docInvPrefix',docInvNext:'docInvNext',docQuotePrefix:'docQuotePrefix',
     docPOPrefix:'docPOPrefix',docRcptPrefix:'docRcptPrefix',docCNPrefix:'docCNPrefix',
     docTerms:'docTerms',docTax:'docTax',docRound:'docRound',docFooter:'docFooter'};
@@ -76853,7 +76558,6 @@ Save
     r.readAsDataURL(f);
   });
 
-  // ------- Security -------
   const secMap = {sec2FA:'sec2FA',secTimeout:'secTimeout',secPwMin:'secPwMin',
     secPwExpiry:'secPwExpiry',secMaxAttempts:'secMaxAttempts',secIPs:'secIPs'};
   Object.entries(secMap).forEach(([id,key])=>{
@@ -76880,7 +76584,6 @@ Save
     lbl.textContent = score<40?'Weak':score<70?'Moderate':'Strong';
   }
 
-  // ------- Audit rendering + actions -------
   function renderAudit(filter=''){
     const rows = loadAudit().slice().reverse();
     const tb=document.getElementById('auditRows'); if(!tb) return;
@@ -76904,7 +76607,7 @@ Save
     a.download='preferences-audit-'+Date.now()+'.csv'; a.click();
   });
 
-  // ------- Import / Export prefs -------
+  
   document.getElementById('exportPrefsBtn').addEventListener('click', ()=>{
     const blob=new Blob([JSON.stringify(prefs,null,2)],{type:'application/json'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
@@ -76921,7 +76624,7 @@ Save
     r.readAsText(f);
   });
 
-  // ------- Save / Reset -------
+  
   const saveBtn=document.getElementById('saveBtn');
   saveBtn.addEventListener('click', ()=>{
     save(prefs); markDirty(false);
@@ -76936,9 +76639,9 @@ Save
   });
   window.addEventListener('beforeunload', e=>{ if(dirty){ e.preventDefault(); e.returnValue=''; } });
 
-  // ------- Initial paint -------
+
   function applyAll(){
-    // Appearance
+   
     document.getElementById('uiDensity').value=prefs.density;
     document.getElementById('fontSize').value=prefs.fontSize;
     document.getElementById('fontSizeVal').textContent=prefs.fontSize;
@@ -76951,7 +76654,7 @@ Save
       sw.classList.toggle('border-black', sw.dataset.accent===prefs.accent);
     });
     applyAppearance();
-    // Locale
+    
     document.getElementById('localeLang').value=prefs.lang;
     document.getElementById('localeTZ').value=prefs.tz;
     document.getElementById('localeDate').value=prefs.dateFmt;
@@ -76961,20 +76664,20 @@ Save
     document.getElementById('localeWeekStart').value=prefs.weekStart;
     document.getElementById('localeFiscal').value=prefs.fiscal;
     renderLocalePreview();
-    // Notify
+    
     document.getElementById('quietStart').value=prefs.quietStart;
     document.getElementById('quietEnd').value=prefs.quietEnd;
     document.getElementById('digestFreq').value=prefs.digest;
     document.getElementById('notifySound').value=prefs.sound;
     renderNotify();
-    // Docs
+  
     ['docInvPrefix','docInvNext','docQuotePrefix','docPOPrefix','docRcptPrefix','docCNPrefix','docTerms','docTax','docRound','docFooter'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.value=prefs[id];
     });
     document.getElementById('docShowLogo').checked=!!prefs.docShowLogo;
     document.getElementById('docShowSignature').checked=!!prefs.docShowSignature;
     if(prefs.docLogo){ const img=document.getElementById('docLogoPreview'); img.src=prefs.docLogo; img.classList.remove('hidden'); }
-    // Security
+   
     ['sec2FA','secTimeout','secPwMin','secPwExpiry','secMaxAttempts','secIPs'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.value=prefs[id];
     });
@@ -76984,7 +76687,7 @@ Save
     updatePwStrength();
     renderAudit();
   }
-  // Expose in case app opens tab after DOM ready
+
   window.__initPrefsAdvanced = applyAll;
   document.addEventListener('DOMContentLoaded', applyAll);
   if (document.readyState !== 'loading') applyAll();
@@ -77286,7 +76989,6 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     </div>
   </div>
 
-  <!-- PRINT LAYOUT -->
   <div id="cPrint" class="cust-section hidden">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div>
@@ -77319,7 +77021,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     </div>
   </div>
 
-  <!-- WATERMARK -->
+  
   <div id="cWater" class="cust-section hidden">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
@@ -77357,7 +77059,6 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     </div>
   </div>
 
-  <!-- MENU / WIDGETS -->
   <div id="cMenu" class="cust-section hidden">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div>
@@ -77372,7 +77073,6 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     </div>
   </div>
 
-  <!-- LABELS -->
   <div id="cLabels" class="cust-section hidden">
     <p class="text-sm text-gray-600 mb-3">Rename any term in the app to match your business vocabulary.</p>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="labelsGrid"></div>
@@ -77424,9 +77124,9 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
   ];
   const DEFAULTS = {
     brand:{logo:'',favicon:'',slogan:'Empowering your business',primary:'#1e3a8a',secondary:'#f59e0b',accent:'#10b981',headingFont:'Inter',bodyFont:'Inter',radius:8},
-    fields:{}, // {ModuleName:[{id,label,type,options,required,onDoc,default}]}
+    fields:{}, 
     numbering:DEFAULT_NUM.slice(),
-    terms:[], // {id,title,docType,body}
+    terms:[], 
     email:JSON.parse(JSON.stringify(DEFAULT_EMAIL)),
     print:{paper:'A4',orient:'portrait',margin:15,header:true,footer:true,pageNums:true,headerText:'{{company}}',footerText:'Page {{page}} of {{total}}'},
     watermark:{enabled:'off',text:'CONFIDENTIAL',opacity:15,rotate:-30,color:'#888888',image:''},
@@ -77441,7 +77141,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     el.textContent=v?'● Unsaved changes':'✔ All changes saved';
     el.className='text-sm '+(v?'text-orange-600 font-semibold':'text-gray-500'); }
 
-  // Tabs
+
   document.querySelectorAll('#custTabs .cust-tab').forEach(btn=>{
     btn.addEventListener('click',()=>{
       document.querySelectorAll('#custTabs .cust-tab').forEach(b=>{b.classList.remove('border-orange-500','text-orange-600');b.classList.add('border-transparent','text-gray-500');});
@@ -77451,7 +77151,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     });
   });
 
-  // Search
+
   document.getElementById('custSearch').addEventListener('input',e=>{
     const q=e.target.value.toLowerCase();
     document.querySelectorAll('#advCustomization .cust-section label').forEach(l=>{
@@ -77460,7 +77160,6 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     });
   });
 
-  // ===== BRAND =====
   function renderBrand(){
     document.getElementById('brandSlogan').value=state.brand.slogan;
     document.getElementById('brandPrimary').value=state.brand.primary;
@@ -77494,7 +77193,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     document.getElementById(id).addEventListener('input',e=>{ state.brand[map[id]] = id==='brandRadius'?+e.target.value:e.target.value; updateBrandPreview(); md(); });
   });
 
-  // ===== CUSTOM FIELDS =====
+  
   function renderFields(){
     const mod=document.getElementById('cfModule').value;
     state.fields[mod] = state.fields[mod]||[];
@@ -77530,7 +77229,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     renderFields(); md();
   });
 
-  // ===== NUMBERING =====
+
   function preview(n){ return (n.prefix||'')+String(n.next).padStart(+n.pad||0,'0')+(n.suffix||''); }
   function renderNum(){
     const tb=document.getElementById('numRows');
@@ -77557,7 +77256,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     });
   }
 
-  // ===== TERMS LIBRARY =====
+  
   function renderTerms(){
     const list=document.getElementById('termsList');
     list.innerHTML = state.terms.length ? state.terms.map((t,i)=>`
@@ -77580,7 +77279,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     document.getElementById('termTitle').value=''; document.getElementById('termBody').value=''; renderTerms(); md();
   });
 
-  // ===== EMAIL TEMPLATES =====
+  
   function renderEmail(){
     const ev=document.getElementById('emEvent').value;
     state.email[ev] = state.email[ev] || {s:'',b:''};
@@ -77604,7 +77303,6 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     document.getElementById('emPreviewBox').classList.remove('hidden');
   });
 
-  // ===== PRINT =====
   function renderPrint(){
     const p=state.print;
     document.getElementById('prPaper').value=p.paper;
@@ -77627,7 +77325,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     document.getElementById(id).addEventListener('change',e=>{ state.print[map[id]]=e.target.checked; md(); });
   });
 
-  // ===== WATERMARK =====
+ 
   function updateWM(){
     const w=state.watermark, p=document.getElementById('wmPreview');
     p.textContent = w.enabled==='off' ? '' : (w.text||'');
@@ -77652,7 +77350,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
   document.getElementById('wmRotate').addEventListener('input',e=>{ state.watermark.rotate=+e.target.value; document.getElementById('wmRotateVal').textContent=e.target.value; updateWM(); md(); });
   document.getElementById('wmImage').addEventListener('change',e=>readFile(e.target,d=>{ state.watermark.image=d; md(); }));
 
-  // ===== MENU / WIDGETS =====
+ 
   const MENU_LABELS = {dashboard:'📊 Dashboard',inventoryTab:'📦 Inventory',fundsTab:'💰 Funds',customersTab:'👥 Customers',invoicesTab:'🧾 Invoices',supplierTab:'🏭 Suppliers',manualJournalsTab:'📔 Journals',employeesTab:'💵 Payroll',reportsPanel:'📈 Reports',plansTab:'🗂️ Plans',orgProfileTab:'🏢 Org Profile',preferencesTab:'⚙️ Preferences',settingstemplateTab:'🎨 Customization',filesTab:'📁 Files'};
   function renderMenu(){
     const c=document.getElementById('menuVisibilityList');
@@ -77684,7 +77382,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     c.querySelectorAll('[data-wi]').forEach(cb=>cb.addEventListener('change',e=>{ state.widgets[+cb.dataset.wi].on=cb.checked; md(); }));
   }
 
-  // ===== LABELS =====
+  
   function renderLabels(){
     const g=document.getElementById('labelsGrid');
     g.innerHTML=Object.keys(state.labels).map(k=>`
@@ -77695,7 +77393,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     g.querySelectorAll('[data-lk]').forEach(inp=>inp.addEventListener('input',e=>{ state.labels[inp.dataset.lk]=inp.value; md(); }));
   }
 
-  // ===== Save / Reset / Import / Export =====
+ 
   function flash(msg){ const m=document.getElementById('custMsg'); m.textContent='✔ '+msg; m.classList.remove('hidden'); setTimeout(()=>m.classList.add('hidden'),2500); }
   document.getElementById('custSaveBtn').addEventListener('click',()=>{ save(); md(false); flash('Customization saved.'); });
   document.getElementById('custResetBtn').addEventListener('click',()=>{
@@ -77971,7 +77669,7 @@ function saveOrgInfo() {
     reader.onload = e => shrinkLogoDataUrl(e.target.result, finalizeSave);
     reader.readAsDataURL(logoFile);
   } else {
-    finalizeSave(existing.logo || null); // keep the previously saved logo
+    finalizeSave(existing.logo || null); 
   }
 
   function finalizeSave(logoBase64) {
@@ -78008,7 +77706,7 @@ function saveOrgInfo() {
     try {
       localStorage.setItem('orgInfo', JSON.stringify(orgInfo));
       const scopedKey = getOrgStorageKey();
-      if (scopedKey) localStorage.setItem(scopedKey, JSON.stringify(orgInfo)); // per-company copy
+      if (scopedKey) localStorage.setItem(scopedKey, JSON.stringify(orgInfo)); 
     } catch(e) { alert('\u26a0\ufe0f Could not save profile \u2014 storage is full. Try a smaller logo.'); return; }
 
     localStorage.setItem('acaciaCompanyDetails', JSON.stringify({
@@ -78038,11 +77736,11 @@ function loadOrgInfo() {
   if (scopedKey) {
     saved = localStorage.getItem(scopedKey);
     if (!saved && localStorage.getItem('orgInfo')) {
-      // first login on this browser after upgrade: adopt existing profile once
+     
       saved = localStorage.getItem('orgInfo');
       localStorage.setItem(scopedKey, saved);
     }
-    if (saved) localStorage.setItem('orgInfo', saved); // keep shared readers in sync with this company
+    if (saved) localStorage.setItem('orgInfo', saved); 
   } else {
     saved = localStorage.getItem('orgInfo');
   }
@@ -79005,7 +78703,7 @@ function renderUserTable() {
 
   users.forEach((user, index) => {
 
-    // Only show users belonging to the logged-in company (demo users stay in the demo company)
+
     if (String(user.companyId || '') !== __myCid) return;
 
     const row = document.createElement('tr');
@@ -80064,7 +79762,7 @@ function saveBalances() {
 
   localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
 
-  // Sync opening balances back into Chart of Accounts
+
   try {
     const coa = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
     if (Array.isArray(coa) && coa.length) {
@@ -84216,7 +83914,7 @@ function toggleSubmenu(id) {
     const netChange = cashFromOperations + investingTotal + financingTotal;
     const currentBank = banks.reduce((s,b)=>s+num(b.balance),0);
     const excludedInflows = manualTx.reduce((s,t)=>(t.type==="Owner Contribution"||t.type==="Other Income")?s+num(t.amount):s,0);
-    const openingCash = currentBank - excludedInflows - netChange; // working backwards
+    const openingCash = currentBank - excludedInflows - netChange; 
     const closingCash = openingCash + netChange;
 
     const setVal = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=KES(v); };
@@ -84420,7 +84118,7 @@ function toggleSubmenu(id) {
     var keys = Object.keys(sample).filter(function(k){
       var v = sample[k];
       if(v===null||v===undefined) return true;
-      if(typeof v==='object') return false; // skip nested
+      if(typeof v==='object') return false; 
       return true;
     });
  
@@ -84536,7 +84234,7 @@ function toggleSubmenu(id) {
     { sel:'bulkInvoiceProductSelect',      tax:'bulkInvoiceItemTax',      price:'bulkInvoiceItemPrice',      qty:'bulkInvoiceItemQty',      desc:null,                        vat:'sell', addSel:"button[onclick='addBulkInvoiceItem()']" }
   ];
 
-  // --- VAT mapping: item's "sellVat"/"buyVat" string -> tax <select> option value
+ 
   function mapVat(rule) {
     if (rule == null || rule === '') return null;
     const r = String(rule).trim().toLowerCase().replace('%','');
@@ -84679,7 +84377,7 @@ function toggleSubmenu(id) {
         const origVal  = opt.value;
         const origText = opt.textContent;
         const suffix = ' | Batch: ' + info.batchNo + (info.expiry ? ' (Exp ' + info.expiry + ')' : '');
-        // Temporarily suffix value so the host's addX handler captures it in the line description
+       
         opt.value = origVal + suffix;
         setTimeout(function () { opt.value = origVal; opt.textContent = origText; bs.value = ''; }, 0);
       }, true);
@@ -85742,7 +85440,7 @@ function refreshDashboardCards() {
   const ls = (k,f) => { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : f; } catch(e){ return f; } };
   const num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; };
 
-  /* -------- 1) Exchange-rate inputs (Invoice + Recurring) -------- */
+  
   function rateFor(cur){
     cur = String(cur||"KES").toUpperCase();
     if (cur==="KES") return 1;
@@ -86030,7 +85728,7 @@ function refreshDashboardCards() {
         const extra = new Set();
         list.forEach(m => { const u = umbrellas[m]; if (u) extra.add(u); });
         extra.forEach(u => list.push(u));
-        // Also test colon-prefix form e.g. "Customers:Invoices"
+       
         list.forEach(m => {
           const u = umbrellas[m];
           if (u) list.push(u + ":" + m.replace(/\s+/g,""));
@@ -86056,11 +85754,11 @@ function refreshDashboardCards() {
 <script>
 
 (function(){
-  return; /* superseded by per-company cloud sync v2.1 */
+  return; 
   const sb = window.supabase.createClient(window.__SUPA_URL__, window.__SUPA_KEY__);
   const KEY = 'payrollRecords';
 
-  // 1) Pull on load, then re-run any UI renders that depend on payrollRecords.
+ 
   async function pull(){
     try{
       const { data, error } = await sb.from('app_state').select('value').eq('key', KEY).maybeSingle();
@@ -86580,7 +86278,7 @@ function toggleSubmenu(id) {
 }
 </script>
 <script>
-// Dashboard chart filter handlers -> re-render all dashboard charts respecting each filter select
+
 (function(){
   function rerender(){ try { if (typeof renderCharts === "function") renderCharts(); } catch(e){ console.warn(e); } }
   window.renderCashFlowChart = rerender;
@@ -86591,19 +86289,11 @@ function toggleSubmenu(id) {
 })();
 </script>
 <script>
-/* ============================================================
-   MISSING REPORTS PATCH — 12 renderers
-   Injected 2026-07-02. Reads localStorage keys already used by
-   the app: inventory, movements, invoices, warehouses, branches,
-   bills, banks, chartOfAccounts, payrollRecords, operationalCosts,
-   taxPayments, nonCurrentAssetsBackup, exchangeRates, etc.
-   Safe: everything runs after DOMContentLoaded; each renderer
-   guards against missing data and shows "No data available".
-   ============================================================ */
+
 (function(){
   "use strict";
 
-  // ---------- helpers ----------
+  
   function ls(key, def){
     try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
     catch(e){ return def; }
@@ -86618,7 +86308,7 @@ function toggleSubmenu(id) {
   function h(title, body){ return '<h2 class="text-xl font-bold mb-4">'+esc(title)+'</h2>'+body; }
   function tableWrap(inner){ return '<div class="overflow-x-auto"><table class="w-full border border-gray-300 text-sm">'+inner+'</table></div>'; }
 
-  // ---------- panel registry (id -> {title, renderer}) ----------
+ 
   var PANELS = [
     { id:'financial_financialRatios',        title:'Financial Ratios',            fn:'renderFinancialRatios' },
     { id:'financial_businessSnapshot',       title:'Business Snapshot',           fn:'renderBusinessSnapshot' },
@@ -86635,7 +86325,7 @@ function toggleSubmenu(id) {
     { id:'inventory_overstockReport',        title:'Overstock Report',            fn:'renderOverstockReport' }
   ];
 
-  // ---------- create missing panels ----------
+ 
   function ensurePanels(){
     var host = document.getElementById('reportsSection') || document.getElementById('reportsPanel') || document.body;
     PANELS.forEach(function(p){
@@ -86649,11 +86339,10 @@ function toggleSubmenu(id) {
     });
   }
 
-  // ---------- data adapters (defensive; supports common field names) ----------
   function getInventory(){
     var items = ls('inventory', []);
     if(!Array.isArray(items) || !items.length){
-      // fall back to any inventory_* namespaced keys
+     
       for(var i=0;i<localStorage.length;i++){
         var k = localStorage.key(i);
         if(k && k.indexOf('inventory_')===0){
@@ -86688,7 +86377,6 @@ function toggleSubmenu(id) {
   function isOut(t){ return t==='out'||t==='sale'||t==='issue'||t==='dispatch'||t==='sold'||t==='transfer-out'; }
   function isIn(t){ return t==='in'||t==='purchase'||t==='receipt'||t==='grn'||t==='return'||t==='transfer-in'||t==='opening'; }
 
-  // ---------- P&L / BS aggregates (best-effort from cached reports) ----------
   function pnlSnapshot(){
     var pl = ls('profitAndLoss', null) || ls('cashFlowSummary', null) || {};
     var inv = getInvoices(), bills = getBills();
@@ -86709,9 +86397,6 @@ function toggleSubmenu(id) {
     return { cash:banks, receivables:recv, payables:pay, inventory:inv, equity:equity, currentAssets:banks+recv+inv, currentLiabilities:pay };
   }
 
-  // ============================================================
-  // 1) Financial Ratios
-  // ============================================================
   window.renderFinancialRatios = function(){
     var panel = document.getElementById('financial_financialRatios'); if(!panel) return;
     var p = pnlSnapshot(), b = bsSnapshot();
@@ -86733,9 +86418,7 @@ function toggleSubmenu(id) {
     panel.innerHTML = h('📊 Financial Ratios', body);
   };
 
-  // ============================================================
-  // 2) Business Snapshot
-  // ============================================================
+  
   window.renderBusinessSnapshot = function(){
     var panel = document.getElementById('financial_businessSnapshot'); if(!panel) return;
     var p = pnlSnapshot(), b = bsSnapshot();
@@ -86758,9 +86441,6 @@ function toggleSubmenu(id) {
     panel.innerHTML = h('🏢 Business Snapshot', body);
   };
 
-  // ============================================================
-  // 3) Multi-Year Trend Analysis
-  // ============================================================
   window.renderMultiYearTrend = function(){
     var panel = document.getElementById('financial_multiYearTrendAnalysis'); if(!panel) return;
     var inv = getInvoices(), bills = getBills();
@@ -86784,14 +86464,11 @@ function toggleSubmenu(id) {
     ));
   };
 
-  // ============================================================
-  // 4) Fixed Assets Register
-  // ============================================================
   window.renderFixedAssetsRegister = function(){
     var panel = document.getElementById('fixedAssetsRegisterPanel'); if(!panel) return;
     var assets = ls('nonCurrentAssetsBackup', []);
     if(!Array.isArray(assets) || !assets.length){
-      // try any live non-current assets structure
+     
       assets = ls('nonCurrentAssets', []) || [];
     }
     if(!assets.length){ panel.innerHTML = h('🏗️ Fixed Assets Register', empty('No fixed assets recorded.')); return; }
@@ -86813,9 +86490,6 @@ function toggleSubmenu(id) {
     ));
   };
 
-  // ============================================================
-  // 5) Sales by Branch / Warehouse
-  // ============================================================
   window.renderSalesByBranch = function(){
     var panel = document.getElementById('sales_salesByBranch'); if(!panel) return;
     var inv = getInvoices();
@@ -86846,14 +86520,11 @@ function toggleSubmenu(id) {
     ));
   };
 
-  // ============================================================
-  // 6) Stock Ledger  (per-item movements with running balance)
-  // ============================================================
   window.renderStockLedger = function(){
     var panel = document.getElementById('inventory_stockLedger'); if(!panel) return;
     var mv = getMovements().slice().sort(function(a,b){ return new Date(movDate(a))-new Date(movDate(b)); });
     if(!mv.length){ panel.innerHTML = h('📒 Stock Ledger', empty('No stock movements recorded.')); return; }
-    // build filter dropdowns
+    
     var items = Array.from(new Set(mv.map(movItem).filter(Boolean))).sort();
     var whs = Array.from(new Set(mv.map(movWarehouse).filter(Boolean))).sort();
     var itemSel = '<select id="slItem" class="border rounded px-2 py-1"><option value="">All Items</option>'+items.map(function(i){return '<option>'+esc(i)+'</option>';}).join('')+'</select>';
@@ -86891,9 +86562,6 @@ function toggleSubmenu(id) {
     draw();
   };
 
-  // ============================================================
-  // 7) Inventory Valuation Trend  (monthly stock value)
-  // ============================================================
   window.renderInventoryValuationTrend = function(){
     var panel = document.getElementById('inventory_inventoryValuationTrend'); if(!panel) return;
     var mv = getMovements();
@@ -86901,10 +86569,10 @@ function toggleSubmenu(id) {
     var costMap = {};
     items.forEach(function(it){ costMap[itemName(it)] = itemCost(it); });
     if(!mv.length){ panel.innerHTML = h('📈 Inventory Valuation Trend', empty('No movements to build a trend from.')); return; }
-    // running qty per item, sample at end of each month
+ 
     var sorted = mv.slice().sort(function(a,b){ return new Date(movDate(a))-new Date(movDate(b)); });
     var running = {};
-    var monthly = {}; // month -> value
+    var monthly = {}; 
     sorted.forEach(function(m){
       var it = movItem(m); if(!it) return;
       var t = movType(m), q = movQty(m);
@@ -86923,9 +86591,6 @@ function toggleSubmenu(id) {
     ));
   };
 
-  // ============================================================
-  // 8) Inventory Turnover
-  // ============================================================
   window.renderInventoryTurnover = function(){
     var panel = document.getElementById('inventory_inventoryTurnover'); if(!panel) return;
     var mv = getMovements(), items = getInventory();
@@ -86948,9 +86613,6 @@ function toggleSubmenu(id) {
     panel.innerHTML = h('🔄 Inventory Turnover', html);
   };
 
-  // ============================================================
-  // 9) Stock Aging  (days since last inbound movement)
-  // ============================================================
   window.renderStockAging = function(){
     var panel = document.getElementById('inventory_stockAging'); if(!panel) return;
     var items = getInventory(); var mv = getMovements();
@@ -86970,9 +86632,6 @@ function toggleSubmenu(id) {
     ));
   };
 
-  // ============================================================
-  // 10-12) Dead / Slow / Fast / Overstock share a movement summary
-  // ============================================================
   function movementSummary(){
     var items = getInventory(); var mv = getMovements();
     var out = {}, lastOut = {};
@@ -86998,7 +86657,7 @@ function toggleSubmenu(id) {
     var dead = movementSummary().filter(function(r){
       if(r.qty<=0) return false;
       var days = r.lastOut? Math.round((today-r.lastOut)/86400000) : 9999;
-      return days >= 180; // no sale in 180+ days
+      return days >= 180;
     }).sort(function(a,b){ return b.value-a.value; });
     if(!dead.length){ panel.innerHTML = h('💀 Dead Stock', empty('No dead stock (nothing has gone 180+ days without a sale).')); return; }
     var rows = dead.map(function(r){var d=r.lastOut?Math.round((today-r.lastOut)/86400000):'—';
@@ -87032,7 +86691,7 @@ function toggleSubmenu(id) {
 
   window.renderOverstockReport = function(){
     var panel = document.getElementById('inventory_overstockReport'); if(!panel) return;
-    // overstock = on-hand covers > 180 days at current 90-day burn rate
+    
     var over = movementSummary().map(function(r){
       var dailyBurn = r.sold90/90;
       var daysCover = dailyBurn>0 ? r.qty/dailyBurn : (r.qty>0?9999:0);
@@ -87046,7 +86705,7 @@ function toggleSubmenu(id) {
     ));
   };
 
-  // ---------- hook into showReport ----------
+  
   function hook(){
     var orig = window.showReport;
     window.showReport = function(id, el){
@@ -87068,15 +86727,13 @@ function toggleSubmenu(id) {
 })();
 </script>
 <script>
-/* ============================================================
-   Lovable Patch v2 — Fixed Assets / Cash Flow / Trial Balance / GL
-   ============================================================ */
+
 (function(){
   var num = function(v){ v = parseFloat(v); return isFinite(v)?v:0; };
   var ls  = function(k, def){ try { return JSON.parse(localStorage.getItem(k) || 'null') ?? def; } catch(e){ return def; } };
   var fmt = function(n){ return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
 
-  // ---- Non-current assets accessor (live first, backup fallback) ----
+  
   function getNonCurrentAssets(){
     var bs = ls('balanceSheet', {}) || {};
     var live = Array.isArray(bs.nonCurrentAssets) ? bs.nonCurrentAssets : [];
@@ -87091,12 +86748,9 @@ function toggleSubmenu(id) {
     return ls('nonCurrentLiabilitiesBackup', []) || [];
   }
 
-  // ============================================================
-  // 1) Fixed Assets Register — pull from Non-Current Assets
-  // ============================================================
   function renderFAR(){
     var assets = getNonCurrentAssets();
-    // Body inside static HTML
+   
     var body = document.getElementById('fixedAssetsRegisterBody');
     if (body){
       if (!assets.length){
@@ -87118,7 +86772,7 @@ function toggleSubmenu(id) {
         }).join('');
       }
     }
-    // Also refresh the panel version if present
+   
     var panel = document.getElementById('fixedAssetsRegisterPanel');
     if (panel){
       var rows = assets.map(function(a){
@@ -87143,9 +86797,6 @@ function toggleSubmenu(id) {
   }
   window.renderFixedAssetsRegister = renderFAR;
 
-  // ============================================================
-  // 2) Cash Flow — always compute a real closing balance
-  // ============================================================
   function patchCashFlow(){
     var orig = window.renderCashFlow;
     window.renderCashFlow = function(){
@@ -87153,7 +86804,7 @@ function toggleSubmenu(id) {
       var banks = ls('banks', []) || [];
       var bankTotal = banks.reduce(function(s,b){ return s + num(b.balance||b.amount||b.currentBalance); }, 0);
 
-      // Recompute using values already rendered on the CF panel
+     
       var readNum = function(id){
         var el = document.getElementById(id); if (!el) return 0;
         return num((el.textContent||'').replace(/[^0-9.\-]/g,''));
@@ -87163,9 +86814,8 @@ function toggleSubmenu(id) {
       var finTotal  = readNum('cfFinancingTotal');
       var netChange = opTotal + invTotal + finTotal;
 
-      // Opening cash = closing bank balance minus this-period net change
       var openingCash = bankTotal - netChange;
-      var closingCash = bankTotal; // by definition, current bank total IS the closing cash
+      var closingCash = bankTotal; 
 
       var setVal = function(id, val){
         var el = document.getElementById(id); if (!el) return;
@@ -87184,9 +86834,6 @@ function toggleSubmenu(id) {
     };
   }
 
-  // ============================================================
-  // 3) Trial Balance — include Fixed Assets (non-current) rows
-  // ============================================================
   function patchTrialBalance(){
     var orig = window.renderTrialBalance;
     if (typeof orig !== 'function') return;
@@ -87220,7 +86867,6 @@ function toggleSubmenu(id) {
       setRow('vehicles',  buckets.vehicles,  0);
       setRow('computers', buckets.computers, 0);
 
-      // Add / update a Long-Term Loans row under Liabilities
       var tbody = document.querySelector('#trialBalanceTable tbody');
       if (tbody && loans){
         var ll = tbody.querySelector('tr[data-account="long_term_loans"]');
@@ -87239,7 +86885,6 @@ function toggleSubmenu(id) {
         setRow('long_term_loans', 0, loans);
       }
 
-      // Recompute totals
       var totOp=0, totD=0, totC=0, totB=0;
       tbody && tbody.querySelectorAll('tr[data-account]').forEach(function(r){
         var d = num((r.querySelector('.debit')?.textContent||'').replace(/,/g,''));
@@ -87251,9 +86896,6 @@ function toggleSubmenu(id) {
     };
   }
 
-  // ============================================================
-  // 4) General Ledger — add Fixed Assets & Long-Term Loans lines
-  // ============================================================
   function ensureGLRow(afterId, label, id){
     var anchor = document.getElementById(afterId);
     if (!anchor || document.getElementById(id+'Debit')) return;
@@ -87271,7 +86913,7 @@ function toggleSubmenu(id) {
     var orig = window.renderGeneralLedger;
     if (typeof orig !== 'function') return;
     window.renderGeneralLedger = function(){
-      // Insert rows before original runs so its updates (if any) don't get lost
+     
       ensureGLRow('glInventoryDebit',  'Fixed Assets (NBV)',    'glFixedAssets');
       ensureGLRow('glAPDebit',         'Long-Term Loans',       'glLongTermLoans');
       orig.apply(this, arguments);
@@ -87310,15 +86952,13 @@ function toggleSubmenu(id) {
 })();
 </script>
 <script>
-/* ============================================================
-   Lovable Patch v3 — TB & GL: pull Income / Expenses / Taxes from P&L
-   ============================================================ */
+
 (function(){
   var num = function(v){ v = parseFloat(v); return isFinite(v)?v:0; };
   var ls  = function(k, def){ try { return JSON.parse(localStorage.getItem(k) || 'null') ?? def; } catch(e){ return def; } };
   var fmt = function(n){ return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
 
-  // ---------- P&L snapshot pulled from same sources the P&L uses ----------
+ 
   function pnl(){
     var inv       = ls('invoices', []) || [];
     var otherInc  = ls('otherIncome', []) || [];
@@ -87332,7 +86972,7 @@ function toggleSubmenu(id) {
     var cogs       = num(pld.cogs) || inv.reduce(function(s,x){ return s + num(x.cost||x.cogs); },0);
     var payroll    = num(pld.totalGross) || pay.reduce(function(s,x){ return s + num(x.gross||x.netPay||x.amount); },0);
 
-    // Break operational costs into rent / utilities / transport / office
+    
     var buckets = { rent:0, utilities:0, transport:0, office:0 };
     ops.forEach(function(o){
       var k = String(o.category||o.type||o.name||o.description||'').toLowerCase();
@@ -87345,7 +86985,6 @@ function toggleSubmenu(id) {
       else                                                    buckets.office    += a;
     });
 
-    // Break taxes by type
     var taxB = { paye:0, nssf:0, shif:0, vat:0, corp:0, other:0 };
     var totalTax = 0;
     taxes.forEach(function(t){
@@ -87365,9 +87004,6 @@ function toggleSubmenu(id) {
     };
   }
 
-  // ============================================================
-  // Trial Balance patch — income/expense/taxes rows from P&L
-  // ============================================================
   function patchTBFromPL(){
     var orig = window.renderTrialBalance;
     if (typeof orig !== 'function') return;
@@ -87386,18 +87022,17 @@ function toggleSubmenu(id) {
         if (b) b.textContent = fmt(dr - cr);
       };
 
-      // Income (credit)
+      
       setRow('sales',        0, p.revenue);
       setRow('other_income', 0, p.otherIncome);
 
-      // Expenses (debit)
+    
       setRow('salaries',        p.payroll,      0);
       setRow('rent',            p.op.rent,      0);
       setRow('utilities',       p.op.utilities, 0);
       setRow('transport',       p.op.transport, 0);
       setRow('office_expenses', p.op.office,    0);
 
-      // Insert Cost of Goods Sold under expenses (if missing)
       var lastExp = tbody.querySelector('tr[data-account="office_expenses"]');
       var ensureRow = function(acct, label, before){
         var r = tbody.querySelector('tr[data-account="'+acct+'"]');
@@ -87415,7 +87050,6 @@ function toggleSubmenu(id) {
       ensureRow('cogs', 'Cost of Goods Sold', tbody.querySelector('tr[data-account="salaries"]'));
       setRow('cogs', p.cogs, 0);
 
-      // Tax section — insert header + rows just before the TOTAL row
       var totalRow = tbody.querySelector('tr.bg-gray-100.font-bold') ||
                      tbody.querySelector('tr:last-child');
       var header = tbody.querySelector('tr[data-tax-header="1"]');
@@ -87438,7 +87072,7 @@ function toggleSubmenu(id) {
         setRow(t[0], num(t[2]), 0);
       });
 
-      // Recompute totals
+    
       var totD=0, totC=0;
       tbody.querySelectorAll('tr[data-account]').forEach(function(r){
         totD += num((r.querySelector('.debit')?.textContent||'').replace(/,/g,''));
@@ -87449,9 +87083,6 @@ function toggleSubmenu(id) {
     };
   }
 
-  // ============================================================
-  // General Ledger patch — Income/Expenses/Taxes rows from P&L
-  // ============================================================
   function setGL(id, dr, cr){
     var d=document.getElementById(id+'Debit'), c=document.getElementById(id+'Credit'),
         b=document.getElementById(id+'Balance'), r=document.getElementById(id+'RunningBalance');
@@ -87501,7 +87132,7 @@ function toggleSubmenu(id) {
     var orig = window.renderGeneralLedger;
     if (typeof orig !== 'function') return;
     window.renderGeneralLedger = function(){
-      // Ensure our extra rows exist BEFORE the original renderer runs.
+      
       ensureGLRowInSection('6. Income (from P&L)',   'Sales Revenue',       'glPLSales');
       ensureGLRowInSection('6. Income (from P&L)',   'Other Income',        'glPLOther');
       ensureGLRowInSection('7. Expenses (from P&L)', 'Cost of Goods Sold',  'glPLCogs');
@@ -87520,17 +87151,17 @@ function toggleSubmenu(id) {
       orig.apply(this, arguments);
 
       var p = pnl();
-      // Income (credit)
+      
       setGL('glPLSales',    0, p.revenue);
       setGL('glPLOther',    0, p.otherIncome);
-      // Expenses (debit)
+      
       setGL('glPLCogs',      p.cogs,        0);
       setGL('glPLSalaries',  p.payroll,     0);
       setGL('glPLRent',      p.op.rent,     0);
       setGL('glPLUtil',      p.op.utilities,0);
       setGL('glPLTransport', p.op.transport,0);
       setGL('glPLOffice',    p.op.office,   0);
-      // Taxes (debit)
+     
       setGL('glPLTaxPAYE',  p.taxes.paye,  0);
       setGL('glPLTaxNSSF',  p.taxes.nssf,  0);
       setGL('glPLTaxSHIF',  p.taxes.shif,  0);
@@ -87552,13 +87183,7 @@ function toggleSubmenu(id) {
 })();
 </script>
 <script>
-/* ============================================================
-   Lovable Patch v4
-   - GL Detailed: populate section rows + latest txn date
-   - Debit/Credit signs: normal-balance rule (clear wrong side)
-   - Cash Flow: fill closing-balance column + closing cash always
-   - Gross Profit Analysis: monthly revenue / COGS / GP / GP%
-   ============================================================ */
+
 (function(){
   var num = function(v){ v=parseFloat(v); return isFinite(v)?v:0; };
   var ls  = function(k,def){ try{ return JSON.parse(localStorage.getItem(k)||'null') ?? def; }catch(e){ return def; } };
@@ -87566,12 +87191,9 @@ function toggleSubmenu(id) {
   var setTxt=function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
   var setNum=function(id,v){ setTxt(id, fmt(v)); };
 
-  // ---------- 1) & 2) General Ledger: debit/credit signs + detailed section ----------
-  // Normal balances:
-  //   Debit-normal:  Assets, Expenses, Drawings
-  //   Credit-normal: Liabilities, Equity, Income
+
   var GL_ACCOUNTS = {
-    // key : { side:'debit'|'credit', summary:'glCash', detail:'gldCash' }
+   
     cash:            {side:'debit',  s:'glCash',            d:'gldCash'},
     ar:              {side:'debit',  s:'glAR',              d:'gldAR'},
     inventory:       {side:'debit',  s:'glInventory',       d:'gldInventory'},
@@ -87609,20 +87231,19 @@ function toggleSubmenu(id) {
   }
 
   function enforceGLSigns(){
-    // For each account, keep the side that matches the normal balance; force the other side to 0.
-    // Balance = signed net (debit-side positive on debit, credit-side positive on credit).
+  
     Object.keys(GL_ACCOUNTS).forEach(function(k){
       var a=GL_ACCOUNTS[k];
       var d=readCell(a.s+'Debit'), c=readCell(a.s+'Credit');
-      var net = d - c;                       // debit-positive net
+      var net = d - c;                       
       var dVal, cVal, bal;
       if (a.side === 'debit'){
         dVal = Math.max(net, 0);
-        cVal = Math.max(-net, 0);            // if net is negative, show as credit only
-        bal  = dVal - cVal;                  // positive = normal
+        cVal = Math.max(-net, 0);          
+        bal  = dVal - cVal;                  
       } else {
         cVal = Math.max(-net, 0) || (c && !d ? c : Math.max(c - d, 0));
-        // simplest & consistent: credit-normal => flip sign
+       
         var netCr = c - d;
         dVal = Math.max(-netCr, 0);
         cVal = Math.max(netCr, 0);
@@ -87634,7 +87255,7 @@ function toggleSubmenu(id) {
       setNum(a.s+'RunningBalance', bal);
     });
 
-    // Recompute section totals from the corrected rows
+   
     var groups = {
       Assets:     ['cash','ar','inventory','fixedAssets'],
       Liabilities:['ap','longTermLoans'],
@@ -87664,7 +87285,7 @@ function toggleSubmenu(id) {
   }
 
   function mirrorToDetailed(){
-    // Copy values from GL summary rows into GL Detailed rows and add latest date.
+   
     var running=0;
     Object.keys(GL_ACCOUNTS).forEach(function(k){
       var a=GL_ACCOUNTS[k];
@@ -87677,7 +87298,7 @@ function toggleSubmenu(id) {
       setNum(a.d+'Balance',        bal);
       setNum(a.d+'RunningBalance', running);
     });
-    // Detailed totals (mirror of summary)
+   
     ['glTotalAssets','glTotalLiabilities','glTotalEquity','glTotalIncome','glTotalBills','glTotalExpenses']
     .forEach(function(pfx){
       var det = pfx.replace(/^gl/, 'gld');
@@ -87704,13 +87325,13 @@ function toggleSubmenu(id) {
     };
   }
 
-  // ---------- 3) Cash Flow: closing-balance column & guaranteed closing cash ----------
+  
   function patchCashFlowClosingCol(){
     var orig = window.renderCashFlow;
     window.renderCashFlow = function(){
       if (typeof orig === 'function'){ try{ orig.apply(this, arguments); }catch(e){} }
 
-      // Ensure closing cash is real (bank total) even if earlier patch was skipped
+      
       var banks = ls('banks',[])||[];
       var bankTotal = banks.reduce(function(s,b){ return s+num(b.balance||b.amount||b.currentBalance||b.closingBalance); },0);
       var opTotal=readCell('cfOperatingTotal'), inv=readCell('cfInvestingTotal'), fin=readCell('cfFinancingTotal');
@@ -87721,7 +87342,7 @@ function toggleSubmenu(id) {
       setTxt('cfOpeningCash', 'KES '+fmt(openingCash));
       setTxt('cfClosingCash', 'KES '+fmt(closingCash));
 
-      // "Closing Balance" (4th column) — running cash position after each line item
+      
       var ids = ['cfProfitBeforeTax','cfDepreciation','cfCurrencyAdjustment','cfOperationalCosts',
                  'cfPayroll','cfInterestPaid','cfTaxesPaid','cfOperatingTotal',
                  'cfAssetPurchase','cfAssetSale','cfInvestingTotal',
@@ -87744,7 +87365,6 @@ function toggleSubmenu(id) {
     };
   }
 
-  // ---------- 4) Gross Profit Analysis ----------
   function renderGrossProfitAnalysis(){
     var panel = document.getElementById('financial_grossProfitAnalysis');
     if (!panel) return;
@@ -87810,7 +87430,6 @@ function toggleSubmenu(id) {
   }
   window.renderGrossProfitAnalysis = renderGrossProfitAnalysis;
 
-  // Wire into showReport dispatcher
   var origShow = window.showReport;
   window.showReport = function(id, el){
     if (typeof origShow === 'function') origShow.apply(this, arguments);
@@ -87835,12 +87454,7 @@ function toggleSubmenu(id) {
 })();
 </script>
 <script>
-/* ============================================================
-   Lovable Patch v5 — Cash Flow rebuilt to match reference layout
-   Sections: Operating (Net Income + Non-Cash Adj + Working Capital),
-             Investing, Financing, FX, Beginning/Change/Ending Cash
-   Supports single period + up to 5 projected years (FY comparison)
-   ============================================================ */
+
 (function(){
   var num=function(v){v=parseFloat(v);return isFinite(v)?v:0;};
   var ls=function(k,d){try{return JSON.parse(localStorage.getItem(k)||'null')??d;}catch(e){return d;}};
@@ -87850,8 +87464,7 @@ function toggleSubmenu(id) {
     return n<0 ? '('+s+')' : s;
   };
 
-  // ---- Row definitions matching the reference image ----
-  // key must be safe id fragment; label as shown; kind = header|line|subtotal|total|blank
+ 
   var ROWS = [
     {kind:'header', label:'CASH FLOWS FROM OPERATING ACTIVITIES:'},
     {kind:'sub',    label:'Net Income:',                              key:'netIncome'},
@@ -87892,7 +87505,6 @@ function toggleSubmenu(id) {
     {kind:'total',  label:'Ending Cash:',                             key:'endingCash', currency:true}
   ];
 
-  // ---- Compute period values from localStorage ----
   function computePeriod(fromDate, toDate){
     var invs=ls('invoices',[])||[], bills=ls('bills',[])||[];
     var payroll=ls('payrollRecords',[])||[], ops=ls('operationalCosts',[])||[];
@@ -87926,7 +87538,7 @@ function toggleSubmenu(id) {
 
     var chgAR = -sum(invs,function(i){ return (i.status==='paid'||i.paid)?0:(i.total||i.amount); });
     var chgAP =  sum(bills,function(b){ return (b.status==='paid'||b.paid)?0:(b.total||b.amount); });
-    var chgInv = -num((ls('inventory',[])||[]).reduce(function(s,it){return s+num(it.qty||it.quantity)*num(it.cost||it.unitCost);},0)*0.02); // proxy
+    var chgInv = -num((ls('inventory',[])||[]).reduce(function(s,it){return s+num(it.qty||it.quantity)*num(it.cost||it.unitCost);},0)*0.02); 
 
     var bankTotal = banks.reduce(function(s,b){return s+num(b.balance||b.amount||b.currentBalance);},0);
     var capex = -assets.reduce(function(s,a){ var d=a.purchaseDate||a.date; return s+(inRange(d)?num(a.cost||a.value||a.amount):0); },0);
@@ -87966,7 +87578,7 @@ function toggleSubmenu(id) {
     return v;
   }
 
-  // ---- Build the table HTML (single-period; extra columns if compare selected) ----
+  
   function periodLabelFor(from,to){
     if (from && to) return (from||'').slice(0,7)+' → '+(to||'').slice(0,7);
     if (from) return from;
@@ -87987,7 +87599,7 @@ function toggleSubmenu(id) {
 
     var periods = [{label: periodLabelFor(from,to), values: computePeriod(from,to)}];
 
-    // Header
+  
     var thead = '<thead>'+
       '<tr class="bg-blue-900 text-white"><th class="border px-3 py-2 text-left" style="min-width:340px">Cash Flow Statement:</th>'+
         '<th class="border px-2 py-2 text-left" style="width:70px"><em>Units:</em></th>'+
@@ -88016,7 +87628,7 @@ function toggleSubmenu(id) {
     tbl.className = 'w-full border border-gray-300 mt-2 text-sm';
     tbl.innerHTML = thead + '<tbody>'+body+'</tbody>';
 
-    // Persist a summary for other reports
+  
     try {
       var p = periods[0].values;
       localStorage.setItem('cashFlowSummary', JSON.stringify({
@@ -88027,10 +87639,9 @@ function toggleSubmenu(id) {
     } catch(_){}
   }
 
-  // Replace previous renderCashFlow entirely
   window.renderCashFlow = renderNew;
 
-  // Hook into showReport so it always renders on open
+
   var origShow = window.showReport;
   window.showReport = function(id, el){
     if (typeof origShow === 'function') origShow.apply(this, arguments);
@@ -88046,7 +87657,7 @@ function toggleSubmenu(id) {
 })();
 </script>
 <script>
-/* Lovable Patch v6 — Zoho-style Trial Balance / GL / GL Detailed + Cash Flow from P&L + BS */
+
 (function(){
   function LS(k, d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(_){ return d; } }
   function num(v){ v=Number(v||0); return isFinite(v)?v:0; }
@@ -88054,7 +87665,7 @@ function toggleSubmenu(id) {
   function sum(a,f){ return (a||[]).reduce(function(s,x){return s+num(f?f(x):x);},0); }
   function inRange(d, from, to){ if(!d) return true; var t=new Date(d).getTime(); if(from && t<new Date(from).getTime()) return false; if(to && t>new Date(to+'T23:59:59').getTime()) return false; return true; }
 
-  /* ---------------- Data pull from P&L + BS ---------------- */
+
   function pullPL(from, to){
     var inv = LS('invoices',[]).filter(function(x){return inRange(x.date||x.invoiceDate, from, to);});
     var oth = LS('otherIncome',[]).filter(function(x){return inRange(x.date, from, to);});
@@ -88119,7 +87730,7 @@ function toggleSubmenu(id) {
       ap:ap, nonCurrentLiab:nonCurrentLiab, equity:equity };
   }
 
-  /* ---------------- Trial Balance (Zoho style) ---------------- */
+  
   function renderTrialBalanceZoho(){
     var host = document.getElementById('trialBalanceReport'); if(!host) return;
     var mSel = document.getElementById('tbMonth'), sSel=document.getElementById('tbStart'), eSel=document.getElementById('tbEnd');
@@ -88199,10 +87810,9 @@ function toggleSubmenu(id) {
     var apply=document.getElementById('tbApply'); if(apply) apply.onclick=renderTrialBalanceZoho;
   }
 
-  /* ---------------- General Ledger (Zoho style) ---------------- */
   function accountsFromPL(from,to){
     var p = pullPL(from,to), b = pullBS();
-    // side: 'D' asset/expense normal; 'C' liability/equity/income normal
+   
     return [
       {group:'Assets', side:'D', name:'Cash & Bank',              debit:b.cash, credit:0},
       {group:'Assets', side:'D', name:'Accounts Receivable',      debit:b.ar, credit:0},
@@ -88283,7 +87893,6 @@ function toggleSubmenu(id) {
     var apply=document.getElementById('glApply'); if(apply) apply.onclick=renderGeneralLedgerZoho;
   }
 
-  /* ---------------- General Ledger Detailed (Zoho style: transactions per account) ---------------- */
   function txnsForAccount(name, from, to){
     var invAll = LS('invoices',[]);
     var billsAll = LS('bills',[]);
@@ -88324,12 +87933,12 @@ function toggleSubmenu(id) {
 
     var acctBlocks = accts.map(function(a){
       var txns = txnsForAccount(a.name, from, to);
-      var opening = 0; // period-based; opening handled elsewhere
+      var opening = 0; 
       var running = a.side==='D' ? opening : -opening;
       var openingRow = '<tr class="bg-gray-50"><td class="border px-3 py-1" colspan="4">Opening Balance</td><td class="border px-3 py-1 text-right">'+fmt(opening)+'</td></tr>';
       var txnRows;
       if(!txns.length){
-        // fallback single aggregate line
+       
         running += a.side==='D' ? (a.debit-a.credit) : (a.credit-a.debit);
         txnRows = '<tr><td class="border px-3 py-1 text-gray-500" colspan="5"><em>No detailed transactions — aggregate: Debit '+fmt(a.debit)+' / Credit '+fmt(a.credit)+'</em></td></tr>';
       } else {
@@ -88376,7 +87985,6 @@ function toggleSubmenu(id) {
     var apply=document.getElementById('gldApply'); if(apply) apply.onclick=renderGeneralLedgerDetailedZoho;
   }
 
-  /* ---------------- Cash Flow (indirect method from P&L + BS) ---------------- */
   function renderCashFlowFromPLBS(){
     var host = document.getElementById('cashFlowReport'); if(!host) return;
     var mSel = document.getElementById('cfSummaryMonth'), sSel=document.getElementById('cfStartDate'), eSel=document.getElementById('cfEndDate');
@@ -88384,10 +87992,10 @@ function toggleSubmenu(id) {
     var to   = (eSel&&eSel.value) || (mSel&&mSel.value?mSel.value+'-31':'');
     var p = pullPL(from,to); var b = pullBS();
     var depreciation = b.depreciation || num((LS('profitLossData',{})||{}).depreciation||0);
-    // Working capital changes: use current balances as delta approx (fallback)
-    var arChange = -b.ar;         // increase in AR reduces cash
-    var apChange =  b.ap;         // increase in AP adds cash
-    var invChange = -b.inventory; // increase in inventory reduces cash
+  
+    var arChange = -b.ar;        
+    var apChange =  b.ap;        
+    var invChange = -b.inventory; 
 
     var operating = p.netIncome + depreciation + arChange + apChange + invChange;
     var investing = -b.nonCurrentAssets;
@@ -88396,7 +88004,6 @@ function toggleSubmenu(id) {
     var closing = b.cash;
     var opening = closing - netChange;
 
-    // Debit = cash inflow (increase), Credit = cash outflow (decrease)
     var rows = [
       {h:'Opening'},
       {l:'Opening Cash Balance', open:true, v:opening},
@@ -88468,7 +88075,6 @@ function toggleSubmenu(id) {
     } catch(_){}
   }
 
-  /* ---------------- Wire up ---------------- */
   window.renderTrialBalance = renderTrialBalanceZoho;
   window.renderGeneralLedger = renderGeneralLedgerZoho;
   window.renderGeneralLedgerDetailed = renderGeneralLedgerDetailedZoho;
@@ -88597,7 +88203,7 @@ function toggleSubmenu(id) {
       _plGuard++;
       try {
         Storage.prototype.getItem = function (key) {
-          // Only intercept during renderReports, and only for the recurring key.
+          
           if (_plGuard > 0 && key === "recurringInvoices") return "[]";
           return _getItem.apply(this, arguments);
         };
@@ -88611,7 +88217,7 @@ function toggleSubmenu(id) {
 
   document.addEventListener("DOMContentLoaded", function () {
     try {
-      // Backfill VAT report from any recurring invoices already saved.
+     
       const rec = ls("recurringInvoices", []);
       rec.forEach(r => pushVatReportRow({
         id: r.id, date: r.date,
@@ -88628,25 +88234,13 @@ function toggleSubmenu(id) {
 
    </script>
 
-   <!-- ================================================================
-        GLOBAL BASE CURRENCY + LANGUAGE SWITCHER (v2 — full-site fix)
-        Applies Settings > Base Currency and Language across the app.
-        - Rewrites visible amounts in ANY known currency notation
-          ("KES 1,234.56", "Ksh 500", "1,234 KES", "(KES 200)") into the
-          chosen base currency.
-        - Fixes the regex state bug that skipped every other text node.
-        - Falls back to built-in exchange rates when none are stored in
-          localStorage.exchangeRates (stored rates always take priority).
-        - Converts data-amount / pricing values instead of just relabeling.
-        - Translates common UI labels for ALL languages in the dropdown.
-        ================================================================ -->
    <script>
    (function(){
      const LS_CUR = 'appBaseCurrency';
      const LS_LANG = 'appLanguage';
      const KNOWN = ['KES','USD','EUR','GBP','JPY','AUD','CAD','CHF','CNY','INR','NZD','SGD','ZAR','KRW','MXN','BRL','RUB','TRY','NOK','SEK','DKK','SAR','AED','HKD','UGX','TZS','RWF','ETB','NGN','GHS','EGP','QAR','KWD','BHD','OMR','ZMW'];
      const ALIAS = { 'KSH':'KES', 'KSHS':'KES' };
-     // Fallback rates: 1 <currency> = X KES. Stored localStorage.exchangeRates overrides these.
+     
      const FALLBACK = {USD:129,EUR:140,GBP:163,JPY:0.86,AUD:84,CAD:94,CHF:145,CNY:17.8,INR:1.52,NZD:77,SGD:96,ZAR:7.2,KRW:0.093,MXN:7.1,BRL:23.5,RUB:1.4,TRY:3.9,NOK:12.2,SEK:12.4,DKK:18.8,SAR:34.4,AED:35.1,HKD:16.6,UGX:0.035,TZS:0.05,RWF:0.095,ETB:1.05,NGN:0.085,GHS:8.6,EGP:2.6,QAR:35.4,KWD:420,BHD:342,OMR:335,ZMW:4.8};
 
      function getOrg(){
@@ -88662,7 +88256,7 @@ function toggleSubmenu(id) {
        code = String(code||'').toUpperCase();
        return ALIAS[code] || code;
      }
-     // Convert amount from `from` currency to `to` currency (rates are base-KES).
+   
      function convert(amount, from, to){
        if (!isFinite(amount)) return null;
        from = norm(from); to = norm(to);
@@ -88670,7 +88264,7 @@ function toggleSubmenu(id) {
        const rates = getRates();
        const rFrom = from === 'KES' ? 1 : Number(rates[from]);
        const rTo   = to   === 'KES' ? 1 : Number(rates[to]);
-       if (!rFrom || !rTo) return null; // missing rate → leave as-is
+       if (!rFrom || !rTo) return null; 
        return amount * rFrom / rTo;
      }
      function fmt(n){
@@ -88685,21 +88279,19 @@ function toggleSubmenu(id) {
        };
      }
 
-     // Expose helpers so other code (data-amount renderers, pricing) can convert too.
+    
      window.__getBaseCurrency = function(){ return getCurrent().cur; };
      window.__convertToBase = function(amount, from){
        const v = convert(Number(amount), from || 'KES', getCurrent().cur);
        return v == null ? Number(amount) : v;
      };
 
-     // Regexes: "KES 1,234.56", "Ksh500", "(KES 200)" and suffix "1,234.56 KES"
      const codeAlt = KNOWN.join('|') + '|Ksh|KSh|KSH|ksh|Kshs|KShs';
      const RX_PRE = new RegExp('\\b(' + codeAlt + ')\\.?\\s*(-?[0-9][0-9,]*(?:\\.[0-9]+)?)','g');
      const RX_SUF = new RegExp('(-?[0-9][0-9,]*(?:\\.[0-9]+)?)\\s*(' + codeAlt + ')\\b','g');
      const RX_LABEL = new RegExp('\\(\\s*(' + KNOWN.join('|') + ')\\s*\\)','g');
 
-     // IMPORTANT: reset lastIndex — a global regex used with .test() keeps
-     // internal state and silently skips every other node (the old bug).
+    
      function hasMatch(rx, s){
        rx.lastIndex = 0;
        const r = rx.test(s);
@@ -88722,7 +88314,7 @@ function toggleSubmenu(id) {
          if (conv == null) return m;
          return fmt(conv) + ' ' + target;
        });
-       // Relabel bare currency codes in headers like "Amount (KES)" / "Total in KES"
+      
        out = out.replace(RX_LABEL, (m, code) => m.replace(code, target));
        return out;
      }
@@ -88747,7 +88339,6 @@ function toggleSubmenu(id) {
        });
      }
 
-     // -------- Translations (English → other), all dropdown languages --------
      const DICT = {
        fr: {"Dashboard":"Tableau de bord","Inventory":"Inventaire","Funds":"Fonds","Customers":"Clients","Suppliers":"Fournisseurs","Accountant":"Comptable","Payroll":"Paie","Reports":"Rapports","Plans":"Plans","Settings":"Paramètres","Files":"Fichiers","Save":"Enregistrer","Cancel":"Annuler","Delete":"Supprimer","Edit":"Modifier","Add":"Ajouter","Search":"Rechercher","Total":"Total","Balance":"Solde","Date":"Date","Amount":"Montant","Description":"Description","Status":"Statut","Actions":"Actions","Base Currency":"Devise de base","Language":"Langue","Fiscal Year":"Exercice fiscal","Time Zone":"Fuseau horaire","Invoices":"Factures","Bills":"Factures fournisseurs","Payments":"Paiements","Expenses":"Dépenses","Print":"Imprimer","Export":"Exporter","Paid":"Payé","Due Date":"Échéance","Subtotal":"Sous-total","Tax":"Taxe"},
        sw: {"Dashboard":"Dashibodi","Inventory":"Bidhaa","Funds":"Fedha","Customers":"Wateja","Suppliers":"Wasambazaji","Accountant":"Mhasibu","Payroll":"Malipo","Reports":"Ripoti","Plans":"Mipango","Settings":"Mipangilio","Files":"Faili","Save":"Hifadhi","Cancel":"Ghairi","Delete":"Futa","Edit":"Hariri","Add":"Ongeza","Search":"Tafuta","Total":"Jumla","Balance":"Salio","Date":"Tarehe","Amount":"Kiasi","Description":"Maelezo","Status":"Hali","Actions":"Vitendo","Base Currency":"Sarafu ya Msingi","Language":"Lugha","Fiscal Year":"Mwaka wa Fedha","Time Zone":"Saa za Eneo","Invoices":"Ankara","Bills":"Bili","Payments":"Malipo","Expenses":"Matumizi","Print":"Chapisha","Export":"Hamisha","Paid":"Imelipwa","Due Date":"Tarehe ya Mwisho","Subtotal":"Jumla ndogo","Tax":"Kodi"},
@@ -88805,7 +88396,7 @@ function toggleSubmenu(id) {
        if (lg && savedL && lg.value !== savedL) lg.value = savedL;
      }
 
-     // Event delegation: works even if the Settings section is rendered later.
+    
      document.addEventListener('change', function(e){
        const t = e.target;
        if (!t || !t.id) return;
@@ -88823,7 +88414,7 @@ function toggleSubmenu(id) {
            const org = getOrg(); org.language = t.value;
            localStorage.setItem('orgInfo', JSON.stringify(org));
          } catch(err){}
-         // language re-apply requires reload to restore original text
+
          setTimeout(() => location.reload(), 150);
        }
      });
@@ -88831,13 +88422,13 @@ function toggleSubmenu(id) {
      function init(){
        syncControls();
        applyAll();
-       // Re-apply when new content is rendered (reports, tables, modals)
+       
        const mo = new MutationObserver(() => {
          if (init._t) clearTimeout(init._t);
          init._t = setTimeout(applyAll, 250);
        });
        mo.observe(document.body, { childList:true, subtree:true, characterData:true });
-       // expose for manual triggers
+      
        window.applyBaseCurrencyAndLanguage = applyAll;
      }
 
@@ -88850,10 +88441,7 @@ function toggleSubmenu(id) {
    </script>
 
 <script>
-/* ===== Lovable per-company cloud sync (v2.1) =====
-   Stores each company's data in Supabase table `company_state` (one row per key per company)
-   and accounts in `app_accounts`, so the same login shows the same company data on any
-   browser/device. Requires the SQL in supabase_setup_company_sync.sql to be run once. */
+
 (function(){
   var NS = window.__companyNS;
   if (!NS) { console.warn('[companySync] isolation layer missing'); return; }
@@ -88863,7 +88451,6 @@ function toggleSubmenu(id) {
 
   function comp(){ return NS.activeCompany(); }
 
-  /* ---------- push ---------- */
   async function pushDirty(){
     var c = comp();
     var keys = Object.keys(NS.dirty);
@@ -88916,7 +88503,6 @@ function toggleSubmenu(id) {
     kick();
   }
 
-  /* ---------- accounts (cross-device login) ---------- */
   async function pushAccounts(){
     try {
       var users = JSON.parse(NS.nGet.call(NS.real, 'users') || '[]');
@@ -88944,7 +88530,7 @@ function toggleSubmenu(id) {
     } catch(e){ return null; }
   }
 
-  /* ---------- pull ---------- */
+  
   async function pullCompany(){
     var c = comp();
     if (!c) return;
@@ -88963,7 +88549,6 @@ function toggleSubmenu(id) {
     } catch(e){ NS.setApplying(false); console.warn('[companySync] pull failed', e); }
   }
 
-  /* ---------- realtime (other browsers) ---------- */
   var refreshTimer = null;
   function refreshUI(){
     clearTimeout(refreshTimer);
@@ -88998,7 +88583,7 @@ function toggleSubmenu(id) {
       .subscribe();
   }
 
-  /* ---------- public API used by the app ---------- */
+ 
   window.startCloudSync = async function(){
     await pullCompany();
     subscribeCompanyChanges();
@@ -89009,7 +88594,7 @@ function toggleSubmenu(id) {
   window.uploadLocalStorage = pushAllCompanyKeys;
   window.realtimeSync = subscribeCompanyChanges;
 
-  /* ---------- login fallback: account may only exist in the cloud ---------- */
+
   var origHandleLogin = window.handleLogin;
   window.handleLogin = async function(){
     try {
@@ -89057,7 +88642,7 @@ function toggleSubmenu(id) {
   wrapAfter('registerUser');
   wrapAfter('createWithGoogle');
 
-  /* on page load: if already logged in, pull + subscribe */
+
   function boot(){
     if (NS.currentUser()){
       window.startCloudSync().then(refreshUI);
@@ -89071,7 +88656,7 @@ function toggleSubmenu(id) {
 
 </script>
 <script>
-/* ===== Reworked Plans Hub: guided flow + Revenue module (v8) ===== */
+
 (function(){
 function phLoad(k){ try{return JSON.parse(localStorage.getItem(k)||"[]");}catch(e){return [];} }
 function phSave(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){console.warn("save failed",k,e);} }
@@ -89079,7 +88664,6 @@ function phFmt(n){ n=parseFloat(n)||0; return "KES " + n.toLocaleString(undefine
 function phEsc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function g(id){ return document.getElementById(id); }
 
-// use the app's shared globals so the Reports panel stays in sync
 function P(){ if(typeof plans!=="undefined"&&Array.isArray(plans)) return plans; window.__phPlans=window.__phPlans||phLoad("plans"); return window.__phPlans; }
 function setP(a){ if(typeof plans!=="undefined"){ plans=a; } else { window.__phPlans=a; } phSave("plans",a); }
 function PU(){ if(typeof progressUpdates!=="undefined"&&Array.isArray(progressUpdates)) return progressUpdates; window.__phPU=window.__phPU||phLoad("planProgress"); return window.__phPU; }
@@ -89097,7 +88681,7 @@ function phRefreshReports(){
   ["renderPlansReport","renderPlansStatusOverview"].forEach(fn=>{ try{ if(typeof window[fn]==="function") window[fn](); }catch(e){} });
 }
 
-/* ---------- navigation ---------- */
+
 window.phGoStep = function(n){
   phStep = n;
   document.querySelectorAll(".ph-step").forEach(el=>el.classList.add("hidden"));
@@ -89426,295 +89010,6 @@ if(document.readyState==="loading") document.addEventListener("DOMContentLoaded"
 else { try{phInit();}catch(e){console.warn("phInit",e);} }
 })();
 
-</script>
-
-
-<!-- ===== Extended Features: Workflow Automation, Email Notifications, Advanced Analytics ===== -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<style>
-  #toolsFab{position:fixed;bottom:20px;right:20px;z-index:9998;background:#1e3a8a;color:#fff;border:none;border-radius:999px;padding:12px 18px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.2);cursor:pointer}
-  #toolsFab:hover{background:#162e6b}
-  #toolsModal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:9999}
-  #toolsModal.open{display:flex}
-  #toolsModal .card{background:#fff;width:min(920px,95vw);max-height:90vh;overflow:auto;border-radius:12px;padding:22px;font-family:system-ui,sans-serif}
-  #toolsModal h2{margin:0 0 10px;color:#1e3a8a;font-size:1.35rem;font-weight:700}
-  #toolsModal .tabs{display:flex;gap:6px;border-bottom:1px solid #e5e7eb;margin-bottom:14px;flex-wrap:wrap}
-  #toolsModal .tab{padding:8px 14px;cursor:pointer;border-radius:8px 8px 0 0;color:#475569;font-weight:500}
-  #toolsModal .tab.active{background:#eef2ff;color:#1e3a8a;border-bottom:2px solid #1e3a8a}
-  #toolsModal .pane{display:none}
-  #toolsModal .pane.active{display:block}
-  #toolsModal input,#toolsModal select,#toolsModal textarea{border:1px solid #d1d5db;border-radius:6px;padding:8px;font-size:.9rem;width:100%;box-sizing:border-box}
-  #toolsModal label{font-size:.8rem;color:#374151;display:block;margin:8px 0 4px;font-weight:500}
-  #toolsModal button.primary{background:#1e3a8a;color:#fff;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;font-weight:500}
-  #toolsModal button.ghost{background:transparent;color:#1e3a8a;border:1px solid #1e3a8a;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.85rem}
-  #toolsModal table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:10px}
-  #toolsModal th,#toolsModal td{border-bottom:1px solid #e5e7eb;padding:6px 8px;text-align:left}
-  #toolsModal .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-  #toolsModal .stat{background:#f8fafc;border-radius:8px;padding:12px}
-  #toolsModal .stat .n{font-size:1.5rem;font-weight:700;color:#1e3a8a}
-  #toolsModal .stat .l{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
-</style>
-<button id="toolsFab" onclick="LovableTools.open()" title="Automation, Email, Analytics">⚙ Tools</button>
-<div id="toolsModal" onclick="if(event.target.id==='toolsModal')LovableTools.close()">
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h2>Business Tools</h2>
-      <button class="ghost" onclick="LovableTools.close()">Close ✕</button>
-    </div>
-    <div class="tabs">
-      <div class="tab active" data-t="wf" onclick="LovableTools.tab('wf')">Workflow Automation</div>
-      <div class="tab" data-t="em" onclick="LovableTools.tab('em')">Email Notifications</div>
-      <div class="tab" data-t="an" onclick="LovableTools.tab('an')">Advanced Analytics</div>
-    </div>
-
-    <div class="pane active" data-p="wf">
-      <p style="color:#64748b;font-size:.85rem">Trigger actions automatically when data changes. Rules run in your browser and are scoped to your company.</p>
-      <div class="grid2">
-        <div>
-          <label>Rule name</label><input id="wfName" placeholder="e.g. Notify on new invoice"/>
-          <label>When key matches (regex)</label><input id="wfKey" placeholder="e.g. ^invoices"/>
-          <label>Action</label>
-          <select id="wfAction">
-            <option value="notify">Show notification</option>
-            <option value="email">Queue email</option>
-            <option value="log">Log to audit</option>
-          </select>
-          <label>Message / recipient</label><input id="wfArg" placeholder="Message text or email address"/>
-          <div style="margin-top:10px"><button class="primary" onclick="LovableTools.saveRule()">Save rule</button></div>
-        </div>
-        <div>
-          <label>Active rules</label>
-          <div id="wfList"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="pane" data-p="em">
-      <p style="color:#64748b;font-size:.85rem">Configure the sender and send one-off or automated notifications. Emails queue locally and are dispatched via your default mail client (or Supabase Edge function if configured).</p>
-      <div class="grid2">
-        <div>
-          <label>From name</label><input id="emFrom" placeholder="Acme Ltd"/>
-          <label>Reply-to</label><input id="emReply" placeholder="you@company.com"/>
-          <label>Signature</label><textarea id="emSig" rows="3" placeholder="— The team"></textarea>
-          <div style="margin-top:10px"><button class="primary" onclick="LovableTools.saveEmail()">Save settings</button></div>
-        </div>
-        <div>
-          <label>Send a notification now</label>
-          <input id="emTo" placeholder="to@example.com" style="margin-bottom:6px"/>
-          <input id="emSubj" placeholder="Subject" style="margin-bottom:6px"/>
-          <textarea id="emBody" rows="4" placeholder="Message"></textarea>
-          <div style="margin-top:8px;display:flex;gap:6px">
-            <button class="primary" onclick="LovableTools.sendEmail()">Send</button>
-            <button class="ghost" onclick="LovableTools.viewQueue()">View queue</button>
-          </div>
-          <div id="emQueue" style="margin-top:10px;font-size:.8rem;color:#475569"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="pane" data-p="an">
-      <p style="color:#64748b;font-size:.85rem">KPIs and trends across your invoices, orders, quotes and leads.</p>
-      <div class="grid2" id="anStats"></div>
-      <div style="margin-top:14px"><canvas id="anChart" height="120"></canvas></div>
-      <div style="margin-top:10px;font-size:.8rem;color:#64748b">Data source: your company's stored records. Refresh after new entries.</div>
-      <div style="margin-top:8px"><button class="primary" onclick="LovableTools.renderAnalytics()">Refresh</button></div>
-    </div>
-  </div>
-</div>
-<script>
-(function(){
-  var NS = window.__companyStore;
-  function cid(){ try { return (JSON.parse(localStorage.getItem('loggedInUser'))||{}).companyId || ''; } catch(e){ return ''; } }
-  function nsKey(k){ var c = cid(); return c ? k+'::'+c : k; }
-  function readJson(k, d){ try { return JSON.parse(localStorage.getItem(nsKey(k)) || localStorage.getItem(k) || 'null') ?? d; } catch(e){ return d; } }
-  function writeJson(k, v){ localStorage.setItem(nsKey(k), JSON.stringify(v)); }
-
-  /* ---------- (A) Workflow Automation ---------- */
-  function rules(){ return readJson('__wfRules', []); }
-  function saveRules(r){ writeJson('__wfRules', r); renderRules(); }
-  function renderRules(){
-    var box = document.getElementById('wfList'); if (!box) return;
-    var r = rules();
-    if (!r.length){ box.innerHTML = '<div style="color:#94a3b8;font-size:.85rem;padding:8px">No rules yet.</div>'; return; }
-    box.innerHTML = '<table><tr><th>Name</th><th>Match</th><th>Action</th><th></th></tr>' +
-      r.map(function(x,i){ return '<tr><td>'+esc(x.name)+'</td><td><code>'+esc(x.key)+'</code></td><td>'+esc(x.action)+'</td><td><button class="ghost" onclick="LovableTools.delRule('+i+')">Delete</button></td></tr>'; }).join('') + '</table>';
-  }
-  function esc(s){ return String(s||'').replace(/[<>&"]/g, function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
-
-  function fireRules(key, op){
-    var r = rules(); if (!r.length) return;
-    r.forEach(function(rule){
-      try {
-        var re = new RegExp(rule.key);
-        if (!re.test(key)) return;
-        if (rule.action === 'notify') notify(rule.name + ': ' + key);
-        else if (rule.action === 'email') queueEmail({ to: rule.arg, subject: rule.name, body: 'Trigger: '+op+' '+key });
-        else if (rule.action === 'log') console.log('[workflow]', rule.name, op, key);
-      } catch(e){}
-    });
-  }
-  function notify(msg){
-    var d = document.createElement('div');
-    d.style.cssText='position:fixed;top:20px;right:20px;background:#1e3a8a;color:#fff;padding:12px 16px;border-radius:8px;z-index:99999;box-shadow:0 6px 20px rgba(0,0,0,.25);font-family:system-ui;font-size:.9rem;max-width:320px';
-    d.textContent = msg;
-    document.body.appendChild(d);
-    setTimeout(function(){ d.style.opacity='0'; d.style.transition='opacity .4s'; setTimeout(function(){ d.remove(); }, 500); }, 3500);
-  }
-
-  // Hook storage mutations to fire workflow rules
-  var _set = Storage.prototype.setItem;
-  var _rem = Storage.prototype.removeItem;
-  Storage.prototype.setItem = function(k, v){ var r = _set.apply(this, arguments); try { if (this === localStorage) fireRules(String(k), 'set'); } catch(e){} return r; };
-  Storage.prototype.removeItem = function(k){ var r = _rem.apply(this, arguments); try { if (this === localStorage) fireRules(String(k), 'remove'); } catch(e){} return r; };
-
-  /* ---------- (B) Email Notifications ---------- */
-  function emailCfg(){ return readJson('__emCfg', { from:'', reply:'', sig:'' }); }
-  function saveEmailCfg(c){ writeJson('__emCfg', c); }
-  function queue(){ return readJson('__emQueue', []); }
-  function saveQueue(q){ writeJson('__emQueue', q); }
-  function queueEmail(m){
-    var q = queue(); q.push(Object.assign({ at: new Date().toISOString(), status:'queued' }, m)); saveQueue(q);
-    // Try to dispatch via Supabase edge function if available, else fall back to mailto
-    dispatchEmail(m);
-  }
-  function dispatchEmail(m){
-    var url = window.__SUPA_URL__, key = window.__SUPA_KEY__;
-    if (url && key){
-      fetch(url.replace(/\/$/,'') + '/functions/v1/send-email', {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+key, 'apikey':key },
-        body: JSON.stringify({ to:m.to, subject:m.subject, body:m.body, from: emailCfg().from, reply: emailCfg().reply })
-      }).then(function(r){ if(!r.ok) throw new Error(r.status); markSent(m, 'sent'); })
-        .catch(function(){ mailtoFallback(m); markSent(m, 'mailto'); });
-    } else {
-      mailtoFallback(m); markSent(m, 'mailto');
-    }
-  }
-  function mailtoFallback(m){
-    var cfg = emailCfg();
-    var body = (m.body || '') + '\n\n' + (cfg.sig || '');
-    var href = 'mailto:' + encodeURIComponent(m.to||'') + '?subject=' + encodeURIComponent(m.subject||'') + '&body=' + encodeURIComponent(body);
-    try { window.open(href, '_blank'); } catch(e){}
-  }
-  function markSent(m, status){
-    var q = queue();
-    for (var i=q.length-1;i>=0;i--){ if (q[i].to===m.to && q[i].subject===m.subject && q[i].status==='queued'){ q[i].status=status; break; } }
-    saveQueue(q);
-  }
-
-  /* ---------- (C) Advanced Analytics ---------- */
-  var chart;
-  function scanRecords(){
-    // Look for common company arrays: invoices, orders, quotes, leads, customers
-    var keys = ['invoices','orders','quotes','leads','customers','sales','purchases'];
-    var out = {};
-    keys.forEach(function(k){
-      var raw = localStorage.getItem(nsKey(k)) || localStorage.getItem(k);
-      if (!raw) return;
-      try { var arr = JSON.parse(raw); if (Array.isArray(arr)) out[k] = arr; } catch(e){}
-    });
-    return out;
-  }
-  function totalOf(arr){
-    return arr.reduce(function(s,x){
-      var v = parseFloat(x.total ?? x.amount ?? x.price ?? x.value ?? 0);
-      return s + (isNaN(v)?0:v);
-    }, 0);
-  }
-  function byMonth(arr){
-    var m = {};
-    arr.forEach(function(x){
-      var d = new Date(x.date || x.createdAt || x.created_at || Date.now());
-      if (isNaN(d)) return;
-      var k = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-      var v = parseFloat(x.total ?? x.amount ?? x.price ?? 0); if (isNaN(v)) v=0;
-      m[k] = (m[k]||0) + v;
-    });
-    return m;
-  }
-  function renderAnalytics(){
-    var data = scanRecords();
-    var stats = document.getElementById('anStats'); if (!stats) return;
-    var cards = [];
-    Object.keys(data).forEach(function(k){
-      cards.push('<div class="stat"><div class="n">'+data[k].length+'</div><div class="l">'+k+'</div></div>');
-      var t = totalOf(data[k]);
-      if (t>0) cards.push('<div class="stat"><div class="n">'+t.toLocaleString(undefined,{maximumFractionDigits:2})+'</div><div class="l">'+k+' value</div></div>');
-    });
-    if (!cards.length) cards.push('<div class="stat"><div class="n">0</div><div class="l">no data yet</div></div>');
-    stats.innerHTML = cards.join('');
-
-    // Build a monthly trend from the richest source
-    var series = null, label = 'records';
-    ['invoices','orders','sales','quotes'].forEach(function(k){ if (data[k] && data[k].length && !series){ series = byMonth(data[k]); label = k; } });
-    var ctx = document.getElementById('anChart'); if (!ctx || !window.Chart) return;
-    if (chart) chart.destroy();
-    var labels = series ? Object.keys(series).sort() : [];
-    var values = labels.map(function(l){ return series[l]; });
-    chart = new Chart(ctx, {
-      type:'line',
-      data:{ labels: labels, datasets:[{ label: label+' by month', data: values, borderColor:'#1e3a8a', backgroundColor:'rgba(30,58,138,.15)', tension:.3, fill:true }] },
-      options:{ responsive:true, plugins:{ legend:{ display:true } }, scales:{ y:{ beginAtZero:true } } }
-    });
-  }
-
-  /* ---------- Public API ---------- */
-  window.LovableTools = {
-    open: function(){
-      if (!cid()){ alert('Please log in first.'); return; }
-      document.getElementById('toolsModal').classList.add('open');
-      renderRules();
-      var c = emailCfg();
-      var f=document.getElementById('emFrom'); if(f) f.value=c.from||'';
-      var r=document.getElementById('emReply'); if(r) r.value=c.reply||'';
-      var s=document.getElementById('emSig'); if(s) s.value=c.sig||'';
-      renderAnalytics();
-    },
-    close: function(){ document.getElementById('toolsModal').classList.remove('open'); },
-    tab: function(t){
-      document.querySelectorAll('#toolsModal .tab').forEach(function(x){ x.classList.toggle('active', x.dataset.t===t); });
-      document.querySelectorAll('#toolsModal .pane').forEach(function(x){ x.classList.toggle('active', x.dataset.p===t); });
-      if (t==='an') renderAnalytics();
-    },
-    saveRule: function(){
-      var name=document.getElementById('wfName').value.trim();
-      var key=document.getElementById('wfKey').value.trim();
-      var action=document.getElementById('wfAction').value;
-      var arg=document.getElementById('wfArg').value.trim();
-      if (!name || !key){ alert('Name and key pattern required'); return; }
-      var r = rules(); r.push({ name:name, key:key, action:action, arg:arg }); saveRules(r);
-      document.getElementById('wfName').value=''; document.getElementById('wfKey').value=''; document.getElementById('wfArg').value='';
-    },
-    delRule: function(i){ var r=rules(); r.splice(i,1); saveRules(r); },
-    saveEmail: function(){
-      saveEmailCfg({
-        from: document.getElementById('emFrom').value.trim(),
-        reply: document.getElementById('emReply').value.trim(),
-        sig: document.getElementById('emSig').value
-      });
-      notify('Email settings saved');
-    },
-    sendEmail: function(){
-      var m = {
-        to: document.getElementById('emTo').value.trim(),
-        subject: document.getElementById('emSubj').value.trim(),
-        body: document.getElementById('emBody').value
-      };
-      if (!m.to || !m.subject){ alert('Recipient and subject required'); return; }
-      queueEmail(m);
-      notify('Email queued');
-      document.getElementById('emTo').value=''; document.getElementById('emSubj').value=''; document.getElementById('emBody').value='';
-    },
-    viewQueue: function(){
-      var q = queue().slice(-10).reverse();
-      var box = document.getElementById('emQueue');
-      if (!q.length){ box.innerHTML='<em>Queue is empty.</em>'; return; }
-      box.innerHTML = '<b>Recent:</b><br>' + q.map(function(m){ return '['+m.status+'] '+esc(m.to)+' — '+esc(m.subject); }).join('<br>');
-    },
-    renderAnalytics: renderAnalytics,
-    queueEmail: queueEmail
-  };
-})();
 </script>
 
 </body>
