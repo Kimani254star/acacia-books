@@ -1,11 +1,3 @@
--- =====================================================================
--- Lovable multi-company setup — items 8, 9, 10
--- Run once in the Supabase SQL editor for project swgyefbzplelxrjcovef.
--- Assumes users authenticate via supabase.auth (email/password), and that
--- their JWT metadata includes `company_id` (the patched HTML does this).
--- =====================================================================
-
--- ---------- helper: read company_id claim from JWT ----------
 create or replace function public.current_company_id()
 returns text
 language sql stable
@@ -83,7 +75,3 @@ create policy al_read on public.audit_log
 create policy al_insert on public.audit_log
   for insert to authenticated
   with check (company_id = public.current_company_id());
--- No UPDATE / DELETE policy => audit rows are append-only.
-
--- ---------- realtime for cross-device sync ----------
-alter publication supabase_realtime add table public.company_state;
