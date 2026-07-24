@@ -245,6 +245,8 @@
   function hideGate(){
     var d=document.getElementById('__unifyGate'); if(d) d.remove();
   }
+  window.__unifyShowGate = showGate;
+  window.__unifyHideGate = hideGate;
   function gateReady(cb){
     if (document.body) return cb();
     document.addEventListener('DOMContentLoaded', cb, { once:true });
@@ -4714,12 +4716,21 @@ async function handleLogin() {
     document.getElementById("crmLink")?.classList.add("hidden");
   }
 
+  // Show restore gate and pull cloud data BEFORE rendering the dashboard.
+  // Fixes "login doesn't load unless I refresh".
+  try { window.__unifyShowGate && window.__unifyShowGate(); } catch(e){}
+  try {
+    if (typeof window.startCloudSync === 'function') {
+      await Promise.race([
+        window.startCloudSync(),
+        new Promise(r => setTimeout(r, 6000))
+      ]);
+    }
+  } catch (e) { console.warn('post-login sync failed', e); }
+  try { window.__unifyHideGate && window.__unifyHideGate(); } catch(e){}
   showApp();
-  uploadLocalStorage?.();
-
-  // Give cloud sync a moment to pull this company's data, then reload so
-  // everything renders fresh (fixes "have to refresh after login").
-  setTimeout(function(){ try { location.reload(); } catch(e){} }, 1400);
+  try { uploadLocalStorage?.(); } catch(e){}
+  try { window.dispatchEvent(new Event('app:login-ready')); } catch(e){}
 }
 function registerUser() {
 
@@ -89415,6 +89426,295 @@ if(document.readyState==="loading") document.addEventListener("DOMContentLoaded"
 else { try{phInit();}catch(e){console.warn("phInit",e);} }
 })();
 
+</script>
+
+
+<!-- ===== Extended Features: Workflow Automation, Email Notifications, Advanced Analytics ===== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  #toolsFab{position:fixed;bottom:20px;right:20px;z-index:9998;background:#1e3a8a;color:#fff;border:none;border-radius:999px;padding:12px 18px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.2);cursor:pointer}
+  #toolsFab:hover{background:#162e6b}
+  #toolsModal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:9999}
+  #toolsModal.open{display:flex}
+  #toolsModal .card{background:#fff;width:min(920px,95vw);max-height:90vh;overflow:auto;border-radius:12px;padding:22px;font-family:system-ui,sans-serif}
+  #toolsModal h2{margin:0 0 10px;color:#1e3a8a;font-size:1.35rem;font-weight:700}
+  #toolsModal .tabs{display:flex;gap:6px;border-bottom:1px solid #e5e7eb;margin-bottom:14px;flex-wrap:wrap}
+  #toolsModal .tab{padding:8px 14px;cursor:pointer;border-radius:8px 8px 0 0;color:#475569;font-weight:500}
+  #toolsModal .tab.active{background:#eef2ff;color:#1e3a8a;border-bottom:2px solid #1e3a8a}
+  #toolsModal .pane{display:none}
+  #toolsModal .pane.active{display:block}
+  #toolsModal input,#toolsModal select,#toolsModal textarea{border:1px solid #d1d5db;border-radius:6px;padding:8px;font-size:.9rem;width:100%;box-sizing:border-box}
+  #toolsModal label{font-size:.8rem;color:#374151;display:block;margin:8px 0 4px;font-weight:500}
+  #toolsModal button.primary{background:#1e3a8a;color:#fff;border:none;border-radius:6px;padding:8px 14px;cursor:pointer;font-weight:500}
+  #toolsModal button.ghost{background:transparent;color:#1e3a8a;border:1px solid #1e3a8a;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.85rem}
+  #toolsModal table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:10px}
+  #toolsModal th,#toolsModal td{border-bottom:1px solid #e5e7eb;padding:6px 8px;text-align:left}
+  #toolsModal .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  #toolsModal .stat{background:#f8fafc;border-radius:8px;padding:12px}
+  #toolsModal .stat .n{font-size:1.5rem;font-weight:700;color:#1e3a8a}
+  #toolsModal .stat .l{font-size:.75rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
+</style>
+<button id="toolsFab" onclick="LovableTools.open()" title="Automation, Email, Analytics">⚙ Tools</button>
+<div id="toolsModal" onclick="if(event.target.id==='toolsModal')LovableTools.close()">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2>Business Tools</h2>
+      <button class="ghost" onclick="LovableTools.close()">Close ✕</button>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-t="wf" onclick="LovableTools.tab('wf')">Workflow Automation</div>
+      <div class="tab" data-t="em" onclick="LovableTools.tab('em')">Email Notifications</div>
+      <div class="tab" data-t="an" onclick="LovableTools.tab('an')">Advanced Analytics</div>
+    </div>
+
+    <div class="pane active" data-p="wf">
+      <p style="color:#64748b;font-size:.85rem">Trigger actions automatically when data changes. Rules run in your browser and are scoped to your company.</p>
+      <div class="grid2">
+        <div>
+          <label>Rule name</label><input id="wfName" placeholder="e.g. Notify on new invoice"/>
+          <label>When key matches (regex)</label><input id="wfKey" placeholder="e.g. ^invoices"/>
+          <label>Action</label>
+          <select id="wfAction">
+            <option value="notify">Show notification</option>
+            <option value="email">Queue email</option>
+            <option value="log">Log to audit</option>
+          </select>
+          <label>Message / recipient</label><input id="wfArg" placeholder="Message text or email address"/>
+          <div style="margin-top:10px"><button class="primary" onclick="LovableTools.saveRule()">Save rule</button></div>
+        </div>
+        <div>
+          <label>Active rules</label>
+          <div id="wfList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pane" data-p="em">
+      <p style="color:#64748b;font-size:.85rem">Configure the sender and send one-off or automated notifications. Emails queue locally and are dispatched via your default mail client (or Supabase Edge function if configured).</p>
+      <div class="grid2">
+        <div>
+          <label>From name</label><input id="emFrom" placeholder="Acme Ltd"/>
+          <label>Reply-to</label><input id="emReply" placeholder="you@company.com"/>
+          <label>Signature</label><textarea id="emSig" rows="3" placeholder="— The team"></textarea>
+          <div style="margin-top:10px"><button class="primary" onclick="LovableTools.saveEmail()">Save settings</button></div>
+        </div>
+        <div>
+          <label>Send a notification now</label>
+          <input id="emTo" placeholder="to@example.com" style="margin-bottom:6px"/>
+          <input id="emSubj" placeholder="Subject" style="margin-bottom:6px"/>
+          <textarea id="emBody" rows="4" placeholder="Message"></textarea>
+          <div style="margin-top:8px;display:flex;gap:6px">
+            <button class="primary" onclick="LovableTools.sendEmail()">Send</button>
+            <button class="ghost" onclick="LovableTools.viewQueue()">View queue</button>
+          </div>
+          <div id="emQueue" style="margin-top:10px;font-size:.8rem;color:#475569"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pane" data-p="an">
+      <p style="color:#64748b;font-size:.85rem">KPIs and trends across your invoices, orders, quotes and leads.</p>
+      <div class="grid2" id="anStats"></div>
+      <div style="margin-top:14px"><canvas id="anChart" height="120"></canvas></div>
+      <div style="margin-top:10px;font-size:.8rem;color:#64748b">Data source: your company's stored records. Refresh after new entries.</div>
+      <div style="margin-top:8px"><button class="primary" onclick="LovableTools.renderAnalytics()">Refresh</button></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var NS = window.__companyStore;
+  function cid(){ try { return (JSON.parse(localStorage.getItem('loggedInUser'))||{}).companyId || ''; } catch(e){ return ''; } }
+  function nsKey(k){ var c = cid(); return c ? k+'::'+c : k; }
+  function readJson(k, d){ try { return JSON.parse(localStorage.getItem(nsKey(k)) || localStorage.getItem(k) || 'null') ?? d; } catch(e){ return d; } }
+  function writeJson(k, v){ localStorage.setItem(nsKey(k), JSON.stringify(v)); }
+
+  /* ---------- (A) Workflow Automation ---------- */
+  function rules(){ return readJson('__wfRules', []); }
+  function saveRules(r){ writeJson('__wfRules', r); renderRules(); }
+  function renderRules(){
+    var box = document.getElementById('wfList'); if (!box) return;
+    var r = rules();
+    if (!r.length){ box.innerHTML = '<div style="color:#94a3b8;font-size:.85rem;padding:8px">No rules yet.</div>'; return; }
+    box.innerHTML = '<table><tr><th>Name</th><th>Match</th><th>Action</th><th></th></tr>' +
+      r.map(function(x,i){ return '<tr><td>'+esc(x.name)+'</td><td><code>'+esc(x.key)+'</code></td><td>'+esc(x.action)+'</td><td><button class="ghost" onclick="LovableTools.delRule('+i+')">Delete</button></td></tr>'; }).join('') + '</table>';
+  }
+  function esc(s){ return String(s||'').replace(/[<>&"]/g, function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
+
+  function fireRules(key, op){
+    var r = rules(); if (!r.length) return;
+    r.forEach(function(rule){
+      try {
+        var re = new RegExp(rule.key);
+        if (!re.test(key)) return;
+        if (rule.action === 'notify') notify(rule.name + ': ' + key);
+        else if (rule.action === 'email') queueEmail({ to: rule.arg, subject: rule.name, body: 'Trigger: '+op+' '+key });
+        else if (rule.action === 'log') console.log('[workflow]', rule.name, op, key);
+      } catch(e){}
+    });
+  }
+  function notify(msg){
+    var d = document.createElement('div');
+    d.style.cssText='position:fixed;top:20px;right:20px;background:#1e3a8a;color:#fff;padding:12px 16px;border-radius:8px;z-index:99999;box-shadow:0 6px 20px rgba(0,0,0,.25);font-family:system-ui;font-size:.9rem;max-width:320px';
+    d.textContent = msg;
+    document.body.appendChild(d);
+    setTimeout(function(){ d.style.opacity='0'; d.style.transition='opacity .4s'; setTimeout(function(){ d.remove(); }, 500); }, 3500);
+  }
+
+  // Hook storage mutations to fire workflow rules
+  var _set = Storage.prototype.setItem;
+  var _rem = Storage.prototype.removeItem;
+  Storage.prototype.setItem = function(k, v){ var r = _set.apply(this, arguments); try { if (this === localStorage) fireRules(String(k), 'set'); } catch(e){} return r; };
+  Storage.prototype.removeItem = function(k){ var r = _rem.apply(this, arguments); try { if (this === localStorage) fireRules(String(k), 'remove'); } catch(e){} return r; };
+
+  /* ---------- (B) Email Notifications ---------- */
+  function emailCfg(){ return readJson('__emCfg', { from:'', reply:'', sig:'' }); }
+  function saveEmailCfg(c){ writeJson('__emCfg', c); }
+  function queue(){ return readJson('__emQueue', []); }
+  function saveQueue(q){ writeJson('__emQueue', q); }
+  function queueEmail(m){
+    var q = queue(); q.push(Object.assign({ at: new Date().toISOString(), status:'queued' }, m)); saveQueue(q);
+    // Try to dispatch via Supabase edge function if available, else fall back to mailto
+    dispatchEmail(m);
+  }
+  function dispatchEmail(m){
+    var url = window.__SUPA_URL__, key = window.__SUPA_KEY__;
+    if (url && key){
+      fetch(url.replace(/\/$/,'') + '/functions/v1/send-email', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+key, 'apikey':key },
+        body: JSON.stringify({ to:m.to, subject:m.subject, body:m.body, from: emailCfg().from, reply: emailCfg().reply })
+      }).then(function(r){ if(!r.ok) throw new Error(r.status); markSent(m, 'sent'); })
+        .catch(function(){ mailtoFallback(m); markSent(m, 'mailto'); });
+    } else {
+      mailtoFallback(m); markSent(m, 'mailto');
+    }
+  }
+  function mailtoFallback(m){
+    var cfg = emailCfg();
+    var body = (m.body || '') + '\n\n' + (cfg.sig || '');
+    var href = 'mailto:' + encodeURIComponent(m.to||'') + '?subject=' + encodeURIComponent(m.subject||'') + '&body=' + encodeURIComponent(body);
+    try { window.open(href, '_blank'); } catch(e){}
+  }
+  function markSent(m, status){
+    var q = queue();
+    for (var i=q.length-1;i>=0;i--){ if (q[i].to===m.to && q[i].subject===m.subject && q[i].status==='queued'){ q[i].status=status; break; } }
+    saveQueue(q);
+  }
+
+  /* ---------- (C) Advanced Analytics ---------- */
+  var chart;
+  function scanRecords(){
+    // Look for common company arrays: invoices, orders, quotes, leads, customers
+    var keys = ['invoices','orders','quotes','leads','customers','sales','purchases'];
+    var out = {};
+    keys.forEach(function(k){
+      var raw = localStorage.getItem(nsKey(k)) || localStorage.getItem(k);
+      if (!raw) return;
+      try { var arr = JSON.parse(raw); if (Array.isArray(arr)) out[k] = arr; } catch(e){}
+    });
+    return out;
+  }
+  function totalOf(arr){
+    return arr.reduce(function(s,x){
+      var v = parseFloat(x.total ?? x.amount ?? x.price ?? x.value ?? 0);
+      return s + (isNaN(v)?0:v);
+    }, 0);
+  }
+  function byMonth(arr){
+    var m = {};
+    arr.forEach(function(x){
+      var d = new Date(x.date || x.createdAt || x.created_at || Date.now());
+      if (isNaN(d)) return;
+      var k = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      var v = parseFloat(x.total ?? x.amount ?? x.price ?? 0); if (isNaN(v)) v=0;
+      m[k] = (m[k]||0) + v;
+    });
+    return m;
+  }
+  function renderAnalytics(){
+    var data = scanRecords();
+    var stats = document.getElementById('anStats'); if (!stats) return;
+    var cards = [];
+    Object.keys(data).forEach(function(k){
+      cards.push('<div class="stat"><div class="n">'+data[k].length+'</div><div class="l">'+k+'</div></div>');
+      var t = totalOf(data[k]);
+      if (t>0) cards.push('<div class="stat"><div class="n">'+t.toLocaleString(undefined,{maximumFractionDigits:2})+'</div><div class="l">'+k+' value</div></div>');
+    });
+    if (!cards.length) cards.push('<div class="stat"><div class="n">0</div><div class="l">no data yet</div></div>');
+    stats.innerHTML = cards.join('');
+
+    // Build a monthly trend from the richest source
+    var series = null, label = 'records';
+    ['invoices','orders','sales','quotes'].forEach(function(k){ if (data[k] && data[k].length && !series){ series = byMonth(data[k]); label = k; } });
+    var ctx = document.getElementById('anChart'); if (!ctx || !window.Chart) return;
+    if (chart) chart.destroy();
+    var labels = series ? Object.keys(series).sort() : [];
+    var values = labels.map(function(l){ return series[l]; });
+    chart = new Chart(ctx, {
+      type:'line',
+      data:{ labels: labels, datasets:[{ label: label+' by month', data: values, borderColor:'#1e3a8a', backgroundColor:'rgba(30,58,138,.15)', tension:.3, fill:true }] },
+      options:{ responsive:true, plugins:{ legend:{ display:true } }, scales:{ y:{ beginAtZero:true } } }
+    });
+  }
+
+  /* ---------- Public API ---------- */
+  window.LovableTools = {
+    open: function(){
+      if (!cid()){ alert('Please log in first.'); return; }
+      document.getElementById('toolsModal').classList.add('open');
+      renderRules();
+      var c = emailCfg();
+      var f=document.getElementById('emFrom'); if(f) f.value=c.from||'';
+      var r=document.getElementById('emReply'); if(r) r.value=c.reply||'';
+      var s=document.getElementById('emSig'); if(s) s.value=c.sig||'';
+      renderAnalytics();
+    },
+    close: function(){ document.getElementById('toolsModal').classList.remove('open'); },
+    tab: function(t){
+      document.querySelectorAll('#toolsModal .tab').forEach(function(x){ x.classList.toggle('active', x.dataset.t===t); });
+      document.querySelectorAll('#toolsModal .pane').forEach(function(x){ x.classList.toggle('active', x.dataset.p===t); });
+      if (t==='an') renderAnalytics();
+    },
+    saveRule: function(){
+      var name=document.getElementById('wfName').value.trim();
+      var key=document.getElementById('wfKey').value.trim();
+      var action=document.getElementById('wfAction').value;
+      var arg=document.getElementById('wfArg').value.trim();
+      if (!name || !key){ alert('Name and key pattern required'); return; }
+      var r = rules(); r.push({ name:name, key:key, action:action, arg:arg }); saveRules(r);
+      document.getElementById('wfName').value=''; document.getElementById('wfKey').value=''; document.getElementById('wfArg').value='';
+    },
+    delRule: function(i){ var r=rules(); r.splice(i,1); saveRules(r); },
+    saveEmail: function(){
+      saveEmailCfg({
+        from: document.getElementById('emFrom').value.trim(),
+        reply: document.getElementById('emReply').value.trim(),
+        sig: document.getElementById('emSig').value
+      });
+      notify('Email settings saved');
+    },
+    sendEmail: function(){
+      var m = {
+        to: document.getElementById('emTo').value.trim(),
+        subject: document.getElementById('emSubj').value.trim(),
+        body: document.getElementById('emBody').value
+      };
+      if (!m.to || !m.subject){ alert('Recipient and subject required'); return; }
+      queueEmail(m);
+      notify('Email queued');
+      document.getElementById('emTo').value=''; document.getElementById('emSubj').value=''; document.getElementById('emBody').value='';
+    },
+    viewQueue: function(){
+      var q = queue().slice(-10).reverse();
+      var box = document.getElementById('emQueue');
+      if (!q.length){ box.innerHTML='<em>Queue is empty.</em>'; return; }
+      box.innerHTML = '<b>Recent:</b><br>' + q.map(function(m){ return '['+m.status+'] '+esc(m.to)+' — '+esc(m.subject); }).join('<br>');
+    },
+    renderAnalytics: renderAnalytics,
+    queueEmail: queueEmail
+  };
+})();
 </script>
 
 </body>
