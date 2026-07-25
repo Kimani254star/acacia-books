@@ -1,8 +1,5 @@
 <!DOCTYPE html><html lang="en"><head><script>window.__SUPA_URL__='https://swgyefbzplelxrjcovef.supabase.co';window.__SUPA_KEY__='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3Z3llZmJ6cGxlbHhyamNvdmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MDU4MzIsImV4cCI6MjA5NzA4MTgzMn0.U2zDNqRfdEgTgldBd7CcEhfsmGXvYZ14yh-4yYC2HlY';</script><script>
-/* ===== Lovable multi-company isolation layer (v2.1) =====
-   Virtualizes localStorage per company so each company only sees its own data.
-   Demo/legacy account (username/email/companyId containing "demo", or no companyId)
-   keeps using the original un-prefixed keys. */
+/* ===== Lovable multi-company isolation layer (v3) ===== */
 (function(){
   if (window.__companyNS) return;
   var REAL = window.localStorage;
@@ -21,13 +18,7 @@
     var u = currentUser();
     if (!u) return null;
     var cid = String(u.companyId || '');
-    var uname = String(u.username || '').toLowerCase();
-    var mail = String(u.email || '').toLowerCase();
-    var legacy = nGet.call(REAL,'__legacyCompany') || '';
-    if (!cid) return null;
-    if (cid === legacy) return null;
-    if (uname === 'demo' || mail.indexOf('demo') === 0 || cid.toLowerCase().indexOf('demo') !== -1) return null;
-    return cid;
+    return cid || null;
   }
   function phys(k){
     k = String(k);
@@ -111,8 +102,46 @@
   try {
     Object.defineProperty(window, 'localStorage', { get: function(){ return proxy; }, configurable: true });
   } catch(e){ console.warn('[companyNS] could not virtualize localStorage', e); }
+  function allRealKeys(){
+    var out = [], i, K;
+    for (i = 0; i < REAL.length; i++){ K = nKey.call(REAL, i); if (K != null) out.push(K); }
+    return out;
+  }
+  function migrateCompany(cid){
+    cid = String(cid || activeCompany() || '');
+    if (!cid) return 0;
+    var moved = 0, keys = allRealKeys(), i, K, base, target;
+    var underscoreSuffix = '_' + cid;
+    for (i = 0; i < keys.length; i++){
+      K = keys[i];
+      if (K.indexOf(SEP) !== -1) continue;
+      if (K.length > underscoreSuffix.length && K.slice(-underscoreSuffix.length) === underscoreSuffix){
+        base = K.slice(0, K.length - underscoreSuffix.length);
+        target = base + SEP + cid;
+        if (nGet.call(REAL, target) === null) nSet.call(REAL, target, nGet.call(REAL, K));
+        nRem.call(REAL, K);
+        moved++;
+      }
+    }
+    var claimed = nGet.call(REAL, '__nsClaimedBy');
+    if (!claimed){
+      keys = allRealKeys();
+      for (i = 0; i < keys.length; i++){
+        K = keys[i];
+        if (K.indexOf(SEP) !== -1 || isGlobal(K)) continue;
+        target = K + SEP + cid;
+        if (nGet.call(REAL, target) === null) nSet.call(REAL, target, nGet.call(REAL, K));
+        nRem.call(REAL, K);
+        moved++;
+      }
+      nSet.call(REAL, '__nsClaimedBy', cid);
+    }
+    nRem.call(REAL, '__legacyCompany');
+    return moved;
+  }
   window.__companyNS = {
     real: REAL, nGet: nGet, nSet: nSet, nRem: nRem, nKey: nKey, SEP: SEP,
+    migrate: migrateCompany, allRealKeys: allRealKeys,
     isGlobal: isGlobal, activeCompany: activeCompany, currentUser: currentUser,
     phys: phys, dirty: dirty,
     setApplying: function(b){ applying = !!b; },
@@ -1350,16 +1379,9 @@ function getLoggedInUser() {
 }
 
 function getCompanyKey(key) {
-
-  const user = getLoggedInUser();
-
-  const companyId =
-    user.companyId ||
-    user.companyName ||
-    "default_company";
-
-  return `${key}_${companyId}`;
+  return key;
 }
+
 
 function saveCompanyData(key, data) {
 
@@ -1473,6 +1495,24 @@ async function signUpWithGoogle() {
   };
 
   stored.push(newUser);
+  let companies = JSON.parse(localStorage.getItem("companies") || "[]");
+
+if (!companies.find(c => c.companyId === companyId)) {
+
+    companies.push({
+        companyId,
+        companyName,
+        ownerName: fullName,
+        email: cleanEmail,
+        plan,
+        price,
+        status,
+        registered: newUser.registered,
+        expiry
+    });
+
+    localStorage.setItem("companies", JSON.stringify(companies));
+}
 
   localStorage.setItem("users", JSON.stringify(stored));
   localStorage.setItem("loggedInUser", JSON.stringify(newUser));
@@ -1520,13 +1560,7 @@ function getLoggedInUser() {
 }
 
 function getCompanyKey(key) {
-  const user = getLoggedInUser();
-
-  if (!user.companyId) {
-    return key;
-  }
-
-  return `${key}_${user.companyId}`;
+  return key;
 }
 
 function saveCompanyData(key, data) {
@@ -1784,12 +1818,11 @@ function login(identifier, password) {
   ];
 
   companyKeys.forEach(key => {
-    const companyKey = `${key}_${user.companyId}`;
-
-    if (!localStorage.getItem(companyKey)) {
-      localStorage.setItem(companyKey, JSON.stringify([]));
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, JSON.stringify([]));
     }
   });
+
 
   alert(`✅ Welcome back, ${user.fullName || user.username}`);
 
@@ -2054,7 +2087,9 @@ document.addEventListener("click", function(e) {
     📁 Advanced Project Hub
   </a>
 </li>
-</li><li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li><div id="rightSidebar" class="hidden fixed top-4 right-0 h-half w-10 bg-black  text-white flex flex-col items-center py-1 space-y-6 shadow-lg z-10"><!-- 📔 Acacia Notebook --><button id="acaciaToggle" onclick="toggleAcaciaNotebook()"
+</li><li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li>
+<div id="rightSidebar" class="hidden fixed top-4 right-0 h-half w-10 bg-black  text-white flex flex-col items-center py-1 space-y-6 shadow-lg z-10">
+  <!-- 📔 Acacia Notebook --><button id="acaciaToggle" onclick="toggleAcaciaNotebook()"
   class="group flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full relative text-xl">📔
   <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
     Acacia Notebook
@@ -2317,78 +2352,154 @@ document.addEventListener("click", function(e) {
     </div>
 </div>
 
-<!-- 🤖 AI Support Popup -->
-<div id="supportPopup" class="hidden fixed bottom-20 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-xl z-50">
+<div id="supportPopup" class="hidden fixed bottom-20 right-4 w-96 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col font-sans transition-all duration-300">
 
-    <div class="bg-blue-900 text-white px-1 py-1 rounded-t-lg flex justify-between items-center">
+    <div class="bg-black text-white p-3 flex justify-between items-center shadow-md">
+    <div class="flex items-center gap-2.5">
+        <div class="relative">
+            <div class="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-600 flex items-center justify-center text-base">🤖</div>
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-black rounded-full"></span>
+        </div>
         <div>
-            <h3 class="font-bold">🤖 Acacia AI Support</h3>
-            <small class="text-blue-100">Ask me anything about Acacia ERP</small>
+            <h3 class="font-bold text-sm tracking-wide leading-none text-white">Acacia AI Support</h3>
+            <small class="text-neutral-400 text-[11px] leading-tight block mt-0.5">Ask me anything about Acacia ERP</small>
         </div>
-        <button onclick="toggleSupportPopup()" class="text-white text-xl">✕</button>
     </div>
+    <button onclick="toggleSupportPopup()" class="text-neutral-400 hover:text-white hover:bg-white/10 w-7 h-7 rounded-lg flex items-center justify-center text-lg transition-colors">✕</button>
+</div>
 
-    <div id="supportMessages" class="h-72 overflow-y-auto px-1 py-1 bg-white text-black text-sm space-y-1">
-        <div class="bg-white border border-gray-300 rounded-lg shadow-sm px-1 py-1">
-            <h2 class="text-lg font-bold text-blue-900 mb-1">🤖 Welcome to Acacia AI Support</h2>
-            <p class="text-gray-700 mb-1">I'm your intelligent Acacia ERP assistant. I can answer questions, guide you through features, troubleshoot common issues, and help you get the most out of the system.</p>
+    <div id="supportMessages" class="h-80 overflow-y-auto p-3 bg-slate-50 text-slate-800 text-sm space-y-3">
+        <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm space-y-3">
+            <div class="flex items-center gap-2">
+                <span class="text-lg">👋</span>
+                <h2 class="text-sm font-bold text-slate-900">Welcome to Acacia AI Support</h2>
+            </div>
+            <p class="text-slate-600 text-xs leading-relaxed">I'm your intelligent Acacia ERP assistant. I can answer questions, guide you through features, troubleshoot common issues, and help you get the most out of the system.</p>
             
-            <div class="grid grid-cols-2 gap-1 text-xs mb-1">
-                <div>📄 Invoices</div>
-                <div>👥 Customers</div>
-                <div>📦 Inventory</div>
-                <div>🚚 Suppliers</div>
-                <div>💳 Banking</div>
-                <div>📊 Reports</div>
-                <div>💰 Expenses</div>
-                <div>🧾 Taxes & VAT</div>
-                <div>📑 Quotations</div>
-                <div>🛒 Purchase Orders</div>
-                <div>📥 Goods Received</div>
-                <div>📦 Warehouses</div>
-                <div>📚 Journal Entries</div>
-                <div>🏦 Reconciliation</div>
-                <div>👨‍💼 HR & Payroll</div>
-                <div>🏢 CRM</div>
-                <div>📁 Projects</div>
-                <div>🏭 Manufacturing</div>
-                <div>💼 Fixed Assets</div>
-                <div>📧 Mail & Communication</div>
+            <div class="grid grid-cols-2 gap-1.5 text-[11px] text-slate-700 bg-slate-100/70 p-2 rounded-lg border border-slate-200/60">
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>📄 Invoices</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>👥 Customers</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>📦 Inventory</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>🚚 Suppliers</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>💳 Banking</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>📊 Reports</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>💰 Expenses</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>🧾 Taxes & VAT</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>📑 Quotations</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>🛒 Purchase Orders</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>📥 Goods Received</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>📦 Warehouses</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>📚 Journal Entries</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>🏦 Reconciliation</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>👨‍💼 HR & Payroll</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>🏢 CRM</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>📁 Projects</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>🏭 Manufacturing</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>💼 Fixed Assets</div>
+                <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>📧 Mail & Comm.</div>
             </div>
 
-            <div class="bg-blue-50 border border-blue-200 rounded-lg px-1 py-1 mb-1">
-                <p class="font-semibold text-blue-900 mb-0.5">💬 Try asking:</p>
-                <ul class="list-disc ml-4 space-y-0.5 text-gray-700 text-xs">
-                    <li>How do I create an invoice?</li>
-                    <li>How do I add inventory?</li>
-                    <li>How do I reconcile a bank account?</li>
-                    <li>How do I connect eTIMS?</li>
-                    <li>How do I generate financial reports?</li>
-                    <li>Why is my Profit & Loss different?</li>
-                </ul>
-            </div>
-        </div>
+          <div class="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700/80 rounded-xl p-3 shadow-lg">
+    <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-700/60">
+        <span class="font-bold text-slate-100 text-xs tracking-wide flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-blue-400 fill-current" viewBox="0 0 20 20">
+                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 103.636 5.05l-.707.707a1 1 0 001.414 1.414l.707-.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1a1 1 0 112 0v1a1 1 0 11-2 0zM12 14a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Suggested Prompts
+        </span>
+        <span class="text-[10px] bg-blue-500/20 text-blue-300 font-semibold px-2 py-0.5 rounded-full border border-blue-500/30">AI Quick-Click</span>
     </div>
 
-    <div class="border-t px-1 py-1 bg-gray-50 flex flex-col gap-1">
-        <div class="flex gap-1">
-            <a href="https://wa.me/254717346231" target="_blank" class="flex-1 flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white px-1 py-1 rounded text-xs font-semibold transition">
-                📱 WhatsApp
-            </a>
-            <a href="mailto:info@acaciabooks.ke" class="flex-1 flex items-center justify-center gap-1 bg-gray-600 hover:bg-gray-700 text-white px-1 py-1 rounded text-xs font-semibold transition">
-                📧 Email
-            </a>
-            <button onclick="toggleTawkChat()" class="flex-1 flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-1 py-1 rounded text-xs font-semibold transition">
-                💬 Chat
+    <div class="grid grid-cols-1 gap-1.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700">
+        <button onclick="document.getElementById('supportQuestion').value='How do I connect eTIMS & file VAT returns?'" 
+            class="group flex items-center justify-between text-left text-[11px] font-medium text-slate-200 bg-slate-800/80 hover:bg-blue-600/20 hover:border-blue-500/50 p-2 rounded-lg border border-slate-700/60 transition-all">
+            <span class="flex items-center gap-1.5 truncate">
+                <span class="text-xs">🇰🇪</span>
+                <span class="truncate">Connect eTIMS & Sync Tax Compliance</span>
+            </span>
+            <span class="text-[10px] text-blue-400 group-hover:translate-x-0.5 transition-transform">→</span>
+        </button>
+
+        <button onclick="document.getElementById('supportQuestion').value='How do I create recurring invoices & bulk receipts?'" 
+            class="group flex items-center justify-between text-left text-[11px] font-medium text-slate-200 bg-slate-800/80 hover:bg-emerald-600/20 hover:border-emerald-500/50 p-2 rounded-lg border border-slate-700/60 transition-all">
+            <span class="flex items-center gap-1.5 truncate">
+                <span class="text-xs">🧾</span>
+                <span class="truncate">Create Invoices & Recurring Billing</span>
+            </span>
+            <span class="text-[10px] text-emerald-400 group-hover:translate-x-0.5 transition-transform">→</span>
+        </button>
+
+        <button onclick="document.getElementById('supportQuestion').value='How do I manage stock adjustments across warehouses?'" 
+            class="group flex items-center justify-between text-left text-[11px] font-medium text-slate-200 bg-slate-800/80 hover:bg-amber-600/20 hover:border-amber-500/50 p-2 rounded-lg border border-slate-700/60 transition-all">
+            <span class="flex items-center gap-1.5 truncate">
+                <span class="text-xs">📦</span>
+                <span class="truncate">Manage Stock Movements & Bundles</span>
+            </span>
+            <span class="text-[10px] text-amber-400 group-hover:translate-x-0.5 transition-transform">→</span>
+        </button>
+
+        <button onclick="document.getElementById('supportQuestion').value='How do I reconcile bank accounts and manual journals?'" 
+            class="group flex items-center justify-between text-left text-[11px] font-medium text-slate-200 bg-slate-800/80 hover:bg-purple-600/20 hover:border-purple-500/50 p-2 rounded-lg border border-slate-700/60 transition-all">
+            <span class="flex items-center gap-1.5 truncate">
+                <span class="text-xs">💰</span>
+                <span class="truncate">Reconcile Bank Accounts & Journals</span>
+            </span>
+            <span class="text-[10px] text-purple-400 group-hover:translate-x-0.5 transition-transform">→</span>
+        </button>
+
+        <button onclick="document.getElementById('supportQuestion').value='How do I generate payslips & statutory reports?'" 
+            class="group flex items-center justify-between text-left text-[11px] font-medium text-slate-200 bg-slate-800/80 hover:bg-indigo-600/20 hover:border-indigo-500/50 p-2 rounded-lg border border-slate-700/60 transition-all">
+            <span class="flex items-center gap-1.5 truncate">
+                <span class="text-xs">👥</span>
+                <span class="truncate">Run Payroll & Statutory Deductions</span>
+            </span>
+            <span class="text-[10px] text-indigo-400 group-hover:translate-x-0.5 transition-transform">→</span>
+        </button>
+
+        <button onclick="document.getElementById('supportQuestion').value='How do I generate Profit & Loss and budget reports?'" 
+            class="group flex items-center justify-between text-left text-[11px] font-medium text-slate-200 bg-slate-800/80 hover:bg-rose-600/20 hover:border-rose-500/50 p-2 rounded-lg border border-slate-700/60 transition-all">
+            <span class="flex items-center gap-1.5 truncate">
+                <span class="text-xs">📈</span>
+                <span class="truncate">Generate P&L and Financial Reports</span>
+            </span>
+            <span class="text-[10px] text-rose-400 group-hover:translate-x-0.5 transition-transform">→</span>
+        </button>
+    </div>
+</div>
+  </div>
+</div>
+    <div class="px-3 py-2 bg-slate-100 border-t border-slate-200">
+    <div class="grid grid-cols-4 gap-1.5">
+        <a href="https://wa.me/254717346231" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#20ba5a] active:bg-[#1da851] text-white py-1.5 px-2 rounded-lg text-xs font-bold shadow-sm transition-all">
+            <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.842-1.001z"/></svg>
+            <span>WhatsApp</span>
+        </a>
+        
+        <a href="https://x.com" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-1.5 bg-black hover:bg-neutral-800 active:bg-neutral-900 text-white py-1.5 px-2 rounded-lg text-xs font-bold shadow-sm transition-all">
+            <span class="text-sm leading-none font-sans shrink-0">𝕏</span>
+            <span>X</span>
+        </a>
+
+        <a href="mailto:info@acaciabooks.ke" class="flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-900 active:bg-black text-white py-1.5 px-2 rounded-lg text-xs font-bold shadow-sm transition-all">
+            <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+            <span>Email</span>
+        </a>
+
+        <button onclick="toggleTawkChat()" class="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white py-1.5 px-2 rounded-lg text-xs font-bold shadow-sm transition-all">
+            <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zm-4 0H9v2h2V9z" clip-rule="evenodd"/></svg>
+            <span>Chat</span>
+        </button>
+    </div>
+</div>
+
+    <div class="p-3 bg-white border-t border-slate-200 flex flex-col gap-2">
+        <form onsubmit="event.preventDefault(); sendSupportQuestion();" class="flex gap-1.5">
+            <input id="supportQuestion" type="text" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all" placeholder="Type your question...">
+            <button type="submit" class="bg-blue-900 hover:bg-blue-800 active:bg-indigo-950 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center justify-center gap-1">
+                <span>Send</span>
             </button>
-        </div>
+        </form>
     </div>
-
-    <div class="border-t px-1 py-1">
-        <input id="supportQuestion" type="text" class="w-full border border-gray-300 rounded px-1 py-1 mb-1 text-black placeholder-gray-500 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type your question...">
-        <button onclick="sendSupportQuestion()" class="w-full bg-blue-900 hover:bg-blue-800 text-white px-1 py-1 rounded font-semibold transition">Send</button>
-    </div>
-
 </div>
 </div>
 <script>
@@ -2478,404 +2589,220 @@ function loadOrgDetails() {
 }
 </script>
 <script>
-  const SUPPORT_KB=[
-
-{
-keywords:["invoice","create invoice","new invoice"],
-answer:`To create an invoice:
-
-1. Open Sales.
-2. Click Invoices.
-3. Click New Invoice.
-4. Select the customer.
-5. Add products or services.
-6. Click Save.`
-},
-
-{
-keywords:["customer","add customer","new customer"],
-answer:`Go to Customers.
-
-Click Add Customer.
-
-Enter the customer's information.
-
-Click Save.`
-},
-
-{
-keywords:["inventory","stock","warehouse"],
-answer:`Go to Inventory.
-
-Select the warehouse.
-
-Click Add Item.
-
-Enter the item details and save.`
-},
-
-{
-keywords:["supplier"],
-answer:`Go to Purchases.
-
-Open Suppliers.
-
-Click Add Supplier.
-
-Fill in the supplier information and save.`
-},
-
-{
-keywords:["quotation","quote"],
-answer:`Go to Sales.
-
-Open Quotations.
-
-Click New Quotation.
-
-Select a customer and add items.
-
-Save the quotation.`
-},
-
-{
-keywords:["backup"],
-answer:`Go to Settings.
-
-Open Backup & Restore.
-
-Click Export Backup.`
-},
-
-{
-keywords:["bank"],
-answer:`Go to Banking.
-
-Select the bank account.
-
-You can reconcile, transfer money or view transactions.`
-}
-
-];
-function searchKnowledge(question){
-
-question=question.toLowerCase();
-
-for(const item of SUPPORT_KB){
-
-for(const keyword of item.keywords){
-
-if(question.includes(keyword.toLowerCase())){
-
-return item.answer;
-
-}
-
-}
-
-}
-
-return null;
-
-}
-function sendSupportQuestion(){
-
-const input=document.getElementById("supportQuestion");
-
-const messages=document.getElementById("supportMessages");
-
-const question=input.value.trim();
-
-if(question==="") return;
-
-messages.innerHTML+=`
-<div class="text-right mb-2">
-<div class="inline-block bg-blue-900 text-white p-2 rounded-lg max-w-xs">
-${question}
-</div>
-</div>
-`;
-
-const answer=searchKnowledge(question);
-
-if(answer){
-
-messages.innerHTML+=`
-<div class="text-left mb-2">
-<div class="inline-block bg-white border p-2 rounded-lg max-w-xs">
-${answer.replace(/\n/g,"<br>")}
-</div>
-</div>
-`;
-
-document.getElementById("supportEscalation").classList.add("hidden");
-
-}else{
-
-messages.innerHTML+=`
-<div class="text-left mb-2">
-<div class="inline-block bg-yellow-50 border border-yellow-300 p-2 rounded-lg max-w-xs">
-I'm not confident enough to answer that question.
-
-Please contact our support team below.
-</div>
-</div>
-`;
-
-document.getElementById("supportEscalation").classList.remove("hidden");
-
-}
-
-messages.scrollTop=messages.scrollHeight;
-
-input.value="";
-
-}
-const SUPPORT_SUGGESTIONS=[
-"How do I create an invoice?",
-"How do I add a customer?",
-"How do I add inventory?",
-"How do I reconcile a bank?",
-"How do I create a quotation?",
-"How do I restore a backup?"
+ const SUPPORT_KB = [
+    {
+        keywords: ["etims", "tax", "vat", "kra", "compliance"],
+        answer: `To manage eTIMS & Tax Compliance:\n\n1. Go to Integrations & Compliance.\n2. Select Tax Compliance / eTIMS.\n3. Configure your KRA eTIMS API keys.\n4. Ensure VAT and Tax Adjustments are set up under Funds Hub.`
+    },
+    {
+        keywords: ["invoice", "create invoice", "recurring invoice", "bulk invoicing"],
+        answer: `To manage Invoices:\n\n1. Open Funds Hub -> Customer.\n2. Click Invoices or Recurring Invoices.\n3. Click New Invoice (or Bulk Invoicing for batch processing).\n4. Select Customer, add line items, and click Save & Issue.`
+    },
+    {
+        keywords: ["inventory", "stock", "warehouse", "bundle", "packages", "movement"],
+        answer: `To manage Stock & Warehouses:\n\n1. Open Stock Hub.\n2. Navigate to Movements, Warehouses, or Bundle Items.\n3. Click Add / Adjust Stock or Bulk Adjustments.\n4. Input item quantities, select location, and save.`
+    },
+    {
+        keywords: ["payroll", "employee", "payslip", "statutory", "attendance", "leave"],
+        answer: `To process Payroll & Employee Management:\n\n1. Open Employees Hub.\n2. Configure Attendance & Leave, Earnings & Allowances, or Deductions.\n3. Click Payslip Generation to run monthly payroll.\n4. View Statutories & Payroll Reports.`
+    },
+    {
+        keywords: ["reconcile", "bank", "journal", "funds", "receipts", "payments"],
+        answer: `To manage Banking & Reconciliations:\n\n1. Open Funds Hub -> Current Accounts / Manual Journals.\n2. Select Bank Account and click Reconcile.\n3. Match incoming Receipts or Supplier Payments against bank entries.`
+    },
+    {
+        keywords: ["report", "profit", "loss", "p&l", "budget", "chart of accounts"],
+        answer: `To access Reports Hub & Financials:\n\n1. Go to Reports Hub.\n2. Select Profit & Loss, Budgets, or Chart of Accounts.\n3. Filter by date range or Org Profile.\n4. Export to PDF or Excel.`
+    },
+    {
+        keywords: ["customer", "add customer", "crm"],
+        answer: `To manage Customers & CRM:\n\n1. Open CRM Portal Hub or Funds Hub -> Customer.\n2. Click Add Customer.\n3. Fill in contact information and credit terms, then save.`
+    },
+    {
+        keywords: ["supplier", "bills", "purchase order", "goods received"],
+        answer: `To manage Suppliers & Purchases:\n\n1. Open Funds Hub -> Supplier.\n2. Select Bills, Purchase Orders, or Goods Received.\n3. Click New Record, assign supplier details, and save.`
+    },
+    {
+        keywords: ["quote", "quotation", "orders", "sales return"],
+        answer: `To issue Quotes & Orders:\n\n1. Open Funds Hub -> Customer.\n2. Select Quotes or Orders.\n3. Click Create New, select items, and send directly via Acacia Mail Hub.`
+    },
+    {
+        keywords: ["backup", "data center", "recycle bin", "system configuration"],
+        answer: `To manage Data & Settings:\n\n1. Go to Data Center or System Configuration.\n2. Access File Manager or Recycle Bin for deleted records.\n3. Run manual data backups or configure preferences.`
+    }
 ];
 
-const supportHistory=[];
+const SUPPORT_SUGGESTIONS = [
+    "How do I connect eTIMS & file VAT returns?",
+    "How do I create recurring invoices & bulk receipts?",
+    "How do I manage stock adjustments across warehouses?",
+    "How do I reconcile bank accounts and manual journals?",
+    "How do I generate payslips & statutory reports?",
+    "How do I generate Profit & Loss and budget reports?"
+];
 
-function initSupport(){
+const supportHistory = [];
 
-const messages=document.getElementById("supportMessages");
-
-let html=`
-<div class="bg-white p-3 rounded shadow mb-2">
-👋 Hello!
-
-I'm Acacia AI.
-
-I can help you with invoices, inventory, customers, suppliers, banking, reports, CRM and more.
-</div>
-
-<div class="mt-2">
-`;
-
-SUPPORT_SUGGESTIONS.forEach(q=>{
-
-html+=`
-<button
-onclick="askSuggestion('${q.replace(/'/g,"\\'")}')"
-class="block w-full text-left mb-2 bg-blue-50 hover:bg-blue-100 rounded p-2 text-sm">
-${q}
-</button>
-`;
-
-});
-
-html+="</div>";
-
-messages.innerHTML=html;
-
-document.getElementById("supportEscalation").classList.add("hidden");
-
+function searchKnowledge(question) {
+    const q = question.toLowerCase();
+    for (const item of SUPPORT_KB) {
+        for (const keyword of item.keywords) {
+            if (q.includes(keyword.toLowerCase())) {
+                return item.answer;
+            }
+        }
+    }
+    return null;
 }
 
-function askSuggestion(question){
-
-document.getElementById("supportQuestion").value=question;
-
-sendSupportQuestion();
-
+function addUserMessage(text) {
+    const messages = document.getElementById("supportMessages");
+    if (!messages) return;
+    messages.innerHTML += `
+        <div class="text-right mb-2">
+            <div class="inline-block bg-blue-900 text-white p-2.5 rounded-lg max-w-xs text-xs">
+                ${text}
+            </div>
+        </div>
+    `;
+    messages.scrollTop = messages.scrollHeight;
 }
 
-document.getElementById("supportQuestion").addEventListener("keypress",function(e){
-
-if(e.key==="Enter"){
-
-e.preventDefault();
-
-sendSupportQuestion();
-
+function addAIMessage(text) {
+    const messages = document.getElementById("supportMessages");
+    if (!messages) return;
+    messages.innerHTML += `
+        <div class="text-left mb-2">
+            <div class="inline-block bg-white border border-slate-200 text-slate-800 p-2.5 rounded-lg max-w-xs text-xs shadow-sm leading-relaxed">
+                ${text}
+            </div>
+        </div>
+    `;
+    messages.scrollTop = messages.scrollHeight;
 }
 
-});
-
-function addAIMessage(text){
-
-const messages=document.getElementById("supportMessages");
-
-messages.innerHTML+=`
-<div class="text-left mb-2">
-<div class="inline-block bg-white border p-2 rounded-lg max-w-xs">
-${text}
-</div>
-</div>
-`;
-
-messages.scrollTop=messages.scrollHeight;
-
+function showTyping() {
+    const messages = document.getElementById("supportMessages");
+    if (!messages) return;
+    messages.innerHTML += `
+        <div id="typingIndicator" class="text-left mb-2">
+            <div class="inline-block bg-slate-200 text-slate-600 p-2 rounded-lg text-xs font-medium animate-pulse">
+                Thinking...
+            </div>
+        </div>
+    `;
+    messages.scrollTop = messages.scrollHeight;
 }
 
-function addUserMessage(text){
-
-const messages=document.getElementById("supportMessages");
-
-messages.innerHTML+=`
-<div class="text-right mb-2">
-<div class="inline-block bg-blue-900 text-white p-2 rounded-lg max-w-xs">
-${text}
-</div>
-</div>
-`;
-
-messages.scrollTop=messages.scrollHeight;
-
+function hideTyping() {
+    const typing = document.getElementById("typingIndicator");
+    if (typing) typing.remove();
 }
 
-function showTyping(){
+async function askOpenAISupport(question) {
+    try {
+        const response = await fetch("/api/support", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question, history: supportHistory })
+        });
 
-const messages=document.getElementById("supportMessages");
+        if (!response.ok) throw new Error("Request failed");
 
-messages.innerHTML+=`
-<div id="typingIndicator" class="text-left mb-2">
-<div class="inline-block bg-gray-200 p-2 rounded-lg">
-Thinking...
-</div>
-</div>
-`;
+        const data = await response.json();
 
-messages.scrollTop=messages.scrollHeight;
+        if (data.supportRequired || !data.answer) {
+            addAIMessage("I couldn't confidently answer that question.<br><br>Please contact our support team below.");
+            const esc = document.getElementById("supportEscalation");
+            if (esc) esc.classList.remove("hidden");
+            return;
+        }
 
+        supportHistory.push({ role: "assistant", text: data.answer });
+        addAIMessage(data.answer.replace(/\n/g, "<br>"));
+        const esc = document.getElementById("supportEscalation");
+        if (esc) esc.classList.add("hidden");
+    } catch (e) {
+        addAIMessage("I couldn't find an exact match in my offline database, and the live support service is unreachable. Please contact support using WhatsApp, Email or Live Chat below.");
+        const esc = document.getElementById("supportEscalation");
+        if (esc) esc.classList.remove("hidden");
+    }
 }
 
-function hideTyping(){
+function sendSupportQuestion() {
+    const input = document.getElementById("supportQuestion");
+    if (!input) return;
+    const question = input.value.trim();
+    if (question === "") return;
 
-const typing=document.getElementById("typingIndicator");
+    supportHistory.push({ role: "user", text: question });
+    addUserMessage(question);
+    input.value = "";
 
-if(typing) typing.remove();
+    showTyping();
 
+    setTimeout(async () => {
+        const answer = searchKnowledge(question);
+        hideTyping();
+
+        if (answer) {
+            supportHistory.push({ role: "assistant", text: answer });
+            addAIMessage(answer.replace(/\n/g, "<br>"));
+            const esc = document.getElementById("supportEscalation");
+            if (esc) esc.classList.add("hidden");
+        } else {
+            await askOpenAISupport(question);
+        }
+    }, 400);
 }
 
-const oldSendSupportQuestion=sendSupportQuestion;
-
-sendSupportQuestion=function(){
-
-const input=document.getElementById("supportQuestion");
-
-const question=input.value.trim();
-
-if(question==="") return;
-
-supportHistory.push({
-role:"user",
-text:question
-});
-
-addUserMessage(question);
-
-input.value="";
-
-showTyping();
-
-setTimeout(async()=>{
-
-const answer=searchKnowledge(question);
-
-hideTyping();
-
-if(answer){
-
-supportHistory.push({
-role:"assistant",
-text:answer
-});
-
-addAIMessage(answer.replace(/\n/g,"<br>"));
-
-document.getElementById("supportEscalation").classList.add("hidden");
-
-}else{
-
-if(typeof askOpenAISupport==="function"){
-
-await askOpenAISupport(question);
-
-}else{
-
-addAIMessage("I couldn't confidently answer that question. Please contact our support team below.");
-
-document.getElementById("supportEscalation").classList.remove("hidden");
-
+function askSuggestion(question) {
+    const input = document.getElementById("supportQuestion");
+    if (input) {
+        input.value = question;
+        sendSupportQuestion();
+    }
 }
 
+function initSupport() {
+    const messages = document.getElementById("supportMessages");
+    if (!messages) return;
+
+    let html = `
+        <div class="bg-white border border-slate-200 p-3 rounded-lg shadow-sm mb-3 text-xs text-slate-800 leading-relaxed">
+            👋 <strong>Hello!</strong><br><br>
+            I'm <strong>Acacia AI Support</strong>. Ask me anything about Stock, Funds, eTIMS, Payroll, or Reports.
+        </div>
+        <div class="mt-2 flex flex-col gap-1.5">
+    `;
+
+    SUPPORT_SUGGESTIONS.forEach(q => {
+        const escapedQ = q.replace(/'/g, "\\'");
+        html += `
+            <button onclick="askSuggestion('${escapedQ}')" class="block w-full text-left bg-blue-50/70 hover:bg-blue-100/80 border border-blue-100 rounded-lg p-2 text-xs text-blue-900 transition-colors">
+                • ${q}
+            </button>
+        `;
+    });
+
+    html += "</div>";
+    messages.innerHTML = html;
+
+    const esc = document.getElementById("supportEscalation");
+    if (esc) esc.classList.add("hidden");
+
+    const input = document.getElementById("supportQuestion");
+    if (input) {
+        input.addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                sendSupportQuestion();
+            }
+        });
+    }
 }
-
-},700);
-
-};
 
 initSupport();
-
-async function askOpenAISupport(question){
-
-try{
-
-const response=await fetch("/api/support",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-question,
-
-history:supportHistory
-
-})
-
-});
-
-if(!response.ok){
-
-throw new Error("Request failed");
-
-}
-
-const data=await response.json();
-
-if(data.supportRequired){
-
-addAIMessage("I couldn't confidently answer that question.<br><br>Please contact our support team below.");
-
-document.getElementById("supportEscalation").classList.remove("hidden");
-
-return;
-
-}
-
-supportHistory.push({
-
-role:"assistant",
-
-text:data.answer
-
-});
-
-addAIMessage(data.answer.replace(/\n/g,"<br>"));
-
-document.getElementById("supportEscalation").classList.add("hidden");
-
-}
-catch(e){
-
-addAIMessage("I'm unable to reach the AI service right now. Please contact support using WhatsApp, Email or Live Chat.");
-
-document.getElementById("supportEscalation").classList.remove("hidden");
-
-}
-
-}
 </script>
 <script>
 
@@ -4383,6 +4310,7 @@ defaultUsers.forEach(u => {
 
 localStorage.setItem("users", JSON.stringify(users));
 
+
 const rolePermissions = {
   admin: [ 'dashboard', 'inventoryTab', 'fundsTab', 'customersTab', 'invoicesTab', 'quotesTab',
            'creditNoteTab', 'salesReturnTab', 'receiptsTab', 'supplierTab', 'expensesTab', 'supplierBillsTab',
@@ -4527,9 +4455,11 @@ async function handleLogin() {
 
   localStorage.setItem("loggedInUser", JSON.stringify(user));
 
+  try { window.__companyNS && window.__companyNS.migrate(user.companyId); } catch (err) {}
+
   try {
-    await downloadLocalStorage();
-    realtimeSync();
+    await window.__netGuard(typeof downloadLocalStorage === "function" ? downloadLocalStorage() : null, 6000);
+    if (typeof realtimeSync === "function") realtimeSync();
   } catch (err) {}
 
   closeLogin();
@@ -4545,11 +4475,9 @@ async function handleLogin() {
   }
 
   showApp();
-  uploadLocalStorage?.();
-
-  // Give cloud sync a moment to pull this company's data, then reload so
-  // everything renders fresh (fixes "have to refresh after login").
-  setTimeout(function(){ try { location.reload(); } catch(e){} }, 1400);
+  try { uploadLocalStorage?.(); } catch (err) {}
+  try { window.logAudit("login", "Authentication", user.username || user.email || ""); } catch (err) {}
+  return true;
 }
 function registerUser() {
 
@@ -4664,7 +4592,24 @@ function createWithGoogle() {
   };
 
   stored.push(newUser);
+  let companies = JSON.parse(localStorage.getItem("companies") || "[]");
 
+if (!companies.find(c => c.companyId === companyId)) {
+
+    companies.push({
+        companyId: companyId,
+        companyName: fullName + "'s Company", // replace with actual company name if you collect it
+        ownerName: fullName,
+        email: cleanEmail,
+        plan: plan,
+        price: price,
+        status: price === 0 ? "active" : "pending",
+        registered: new Date().toISOString(),
+        expiry: expiry.toISOString()
+    });
+
+    localStorage.setItem("companies", JSON.stringify(companies));
+ }
   localStorage.setItem("users", JSON.stringify(stored));
   localStorage.setItem("loggedInUser", JSON.stringify(newUser));
 
@@ -79185,6 +79130,33 @@ function deleteUser(index) {
   const user = users[index];
   if (!user) return;
 
+  const me = JSON.parse(localStorage.getItem('loggedInUser') || 'null') || {};
+
+  if (!window.canManageUsers()) {
+    alert('🚫 You do not have permission to delete users.');
+    return;
+  }
+
+  if (String(user.companyId || '') !== String(me.companyId || '')) {
+    alert('🚫 That user belongs to another company.');
+    return;
+  }
+
+  if ((user.username || '') === (me.username || '') && (user.email || '') === (me.email || '')) {
+    alert('🚫 You cannot delete the account you are signed in with.');
+    return;
+  }
+
+  if (String(user.role || '').toLowerCase() === 'admin') {
+    const admins = users.filter(u =>
+      String(u.companyId || '') === String(me.companyId || '') &&
+      String(u.role || '').toLowerCase() === 'admin');
+    if (admins.length <= 1) {
+      alert('🚫 A company must keep at least one Admin.');
+      return;
+    }
+  }
+
   if (!confirm(`⚠️ Are you sure you want to delete user "${user.username || 'Unknown'}"?`)) return;
 
   if (!user.id) user.id = crypto.randomUUID();
@@ -79193,6 +79165,8 @@ function deleteUser(index) {
  
   users.splice(index, 1);
   localStorage.setItem('users', JSON.stringify(users));
+
+  try { window.logAudit('delete', 'User Management', user.username || user.email || ''); } catch (e) {}
 
   renderUserTable();
   alert('♻️ User moved to Recycle Bin.');
@@ -79366,18 +79340,18 @@ async function backupZIP() {
     }
   } catch (e) {}
 
+  const __keys = [];
+
   for (let i = 0; i < localStorage.length; i++) {
-
     const key = localStorage.key(i);
-
-    if (!key) continue;
-
-    const raw = localStorage.getItem(key);
-
-    if (raw === null) continue;
-
-    zip.file(`${key}.txt`, raw);
+    if (key) __keys.push(key);
   }
+
+  __keys.forEach(key => {
+    const raw = localStorage.getItem(key);
+    if (raw === null || raw === undefined) return;
+    zip.file(`${key}.txt`, raw);
+  });
 
   const blob = await zip.generateAsync({
     type: "blob"
@@ -79436,18 +79410,34 @@ async function restoreZIP(event) {
 
     const zip = await JSZip.loadAsync(file);
 
+    const NS = window.__companyNS;
+    const cid = NS ? NS.activeCompany() : null;
+
+    if (!cid) {
+      alert("❌ Sign in to a company before restoring a backup.");
+      return;
+    }
+
     localStorage.clear();
 
-    for (const fname of Object.keys(zip.files)) {
+    const names = Object.keys(zip.files);
+
+    for (const fname of names) {
 
       if (!fname.endsWith(".txt")) continue;
 
       const raw = await zip.file(fname).async("string");
 
-      const key = fname.replace(".txt", "");
+      let key = fname.slice(0, -4);
 
-      localStorage.setItem(key, raw);
+      if (key.indexOf(NS.SEP) !== -1) key = key.split(NS.SEP)[0];
+
+      if (NS.isGlobal(key)) continue;
+
+      NS.nSet.call(NS.real, key + NS.SEP + cid, raw);
     }
+
+    try { window.logAudit("restore", "Backup", file.name + " (" + names.length + " keys)"); } catch (e) {}
 
     backupLogs = JSON.parse(localStorage.getItem("backupLogs") || "[]");
 
@@ -88818,12 +88808,13 @@ function toggleSubmenu(id) {
       var idEl = document.getElementById('loginUser');
       var id = idEl ? idEl.value.trim().toLowerCase() : '';
       if (id){
+        window.__loginBusy(true);
         var users = JSON.parse(NS.nGet.call(NS.real, 'users') || '[]');
         var local = users.find(function(x){
           return String(x.email || '').toLowerCase() === id || String(x.username || '').toLowerCase() === id;
         });
         if (!local){
-          var remote = await fetchAccount(id);
+          var remote = await window.__netGuard(fetchAccount(id), 6000);
           if (remote){
             users.push(remote);
             NS.nSet.call(NS.real, 'users', JSON.stringify(users));
@@ -88832,11 +88823,13 @@ function toggleSubmenu(id) {
       }
     } catch(e){ console.warn('[companySync] cloud account lookup failed', e); }
     var beforeUser = NS.nGet.call(NS.real, 'loggedInUser');
-    var r = origHandleLogin ? await origHandleLogin.apply(this, arguments) : undefined;
-    try { if (NS.currentUser()) await window.startCloudSync(); } catch(e){}
+    var r;
+    try { r = origHandleLogin ? await origHandleLogin.apply(this, arguments) : undefined; }
+    finally { window.__loginBusy(false); }
+    try { if (NS.currentUser()) await window.__netGuard(window.startCloudSync(), 8000); } catch(e){}
     try {
       var afterUser = NS.nGet.call(NS.real, 'loggedInUser');
-      if (afterUser && afterUser !== beforeUser) setTimeout(function(){ location.reload(); }, 900);
+      if (afterUser && afterUser !== beforeUser) refreshUI();
     } catch(e){}
     return r;
   };
@@ -88856,6 +88849,16 @@ function toggleSubmenu(id) {
       return r;
     };
   }
+  function wrapRegisterMigrate(){
+    var reg = window.registerUser;
+    if (typeof reg !== 'function') return;
+    window.registerUser = function(){
+      var r = reg.apply(this, arguments);
+      try { NS.migrate(); } catch(e){}
+      return r;
+    };
+  }
+  wrapRegisterMigrate();
   wrapAfter('registerUser');
   wrapAfter('createWithGoogle');
 
@@ -89227,8 +89230,317 @@ window.phInit = function(){
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>{ try{phInit();}catch(e){console.warn("phInit",e);} });
 else { try{phInit();}catch(e){console.warn("phInit",e);} }
 })();
+
 </script>
 
+<script>
+(function(){
+  window.__netGuard = function(p, ms){
+    if (!p || typeof p.then !== 'function') return Promise.resolve(null);
+    return Promise.race([
+      p.catch(function(){ return null; }),
+      new Promise(function(res){ setTimeout(function(){ res(null); }, ms || 6000); })
+    ]);
+  };
+
+  var busyBtn = null, busyText = '';
+  window.__loginBusy = function(on){
+    try {
+      if (on){
+        busyBtn = document.querySelector('#loginModal button[onclick="handleLogin()"]');
+        if (!busyBtn) return;
+        busyText = busyBtn.innerHTML;
+        busyBtn.disabled = true;
+        busyBtn.style.opacity = '0.7';
+        busyBtn.innerHTML = 'Signing in…';
+      } else if (busyBtn){
+        busyBtn.disabled = false;
+        busyBtn.style.opacity = '';
+        busyBtn.innerHTML = busyText || 'Login';
+        busyBtn = null;
+      }
+    } catch(e){}
+  };
+
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter') return;
+    var modal = document.getElementById('loginModal');
+    if (!modal || modal.classList.contains('hidden')) return;
+    var t = e.target;
+    if (t && (t.id === 'loginUser' || t.id === 'loginPass' || t.id === 'loginCompanyId')){
+      e.preventDefault();
+      if (typeof window.handleLogin === 'function') window.handleLogin();
+    }
+  });
+
+  function me(){
+    try { return JSON.parse(localStorage.getItem('loggedInUser') || 'null') || {}; } catch(e){ return {}; }
+  }
+  window.currentRole = function(){ return String(me().role || '').toLowerCase(); };
+  window.hasRole = function(){
+    var r = window.currentRole(), i;
+    for (i = 0; i < arguments.length; i++){ if (String(arguments[i]).toLowerCase() === r) return true; }
+    return false;
+  };
+  window.canManageUsers = function(){ return window.hasRole('admin'); };
+
+  var AUDIT_MAX = 5000;
+  window.logAudit = function(action, module, details){
+    try {
+      var u = me();
+      var logs = JSON.parse(localStorage.getItem('auditLogs') || '[]');
+      if (!Array.isArray(logs)) logs = [];
+      logs.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+        time: new Date().toISOString(),
+        date: new Date().toLocaleString(),
+        user: u.username || u.email || 'unknown',
+        role: u.role || '',
+        companyId: u.companyId || '',
+        action: String(action || ''),
+        module: String(module || ''),
+        details: typeof details === 'string' ? details : JSON.stringify(details || '')
+      });
+      if (logs.length > AUDIT_MAX) logs = logs.slice(logs.length - AUDIT_MAX);
+      localStorage.setItem('auditLogs', JSON.stringify(logs));
+    } catch(e){}
+  };
+
+  function org(){
+    try { return JSON.parse(localStorage.getItem('orgInfo') || '{}') || {}; } catch(e){ return {}; }
+  }
+  window.getFiscalYearStartMonth = function(){
+    var m = parseInt(org().fiscalYearStartMonth, 10);
+    return (m >= 1 && m <= 12) ? m : 1;
+  };
+  window.getFiscalYear = function(d){
+    var date = d ? new Date(d) : new Date();
+    if (isNaN(date.getTime())) date = new Date();
+    var sm = window.getFiscalYearStartMonth();
+    var y = date.getFullYear();
+    if ((date.getMonth() + 1) < sm) y -= 1;
+    var start = new Date(y, sm - 1, 1);
+    var end = new Date(y + 1, sm - 1, 0);
+    function iso(x){
+      return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+    }
+    return {
+      startMonth: sm,
+      year: y,
+      start: iso(start),
+      end: iso(end),
+      label: sm === 1 ? String(y) : (iso(start) + ' → ' + iso(end))
+    };
+  };
+  window.inFiscalYear = function(d, fy){
+    var f = fy || window.getFiscalYear();
+    var v = String(d || '').slice(0, 10);
+    return !!v && v >= f.start && v <= f.end;
+  };
+  window.filterByFiscalYear = function(rows, dateField, fy){
+    if (!Array.isArray(rows)) return [];
+    var f = fy || window.getFiscalYear();
+    var field = dateField || 'date';
+    return rows.filter(function(r){ return r && window.inFiscalYear(r[field], f); });
+  };
+
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  function injectFiscalField(){
+    var form = document.getElementById('orgProfileForm');
+    if (!form || document.getElementById('orgFiscalYearStart')) return;
+    var host = document.getElementById('orgCurrency');
+    var wrap = document.createElement('div');
+    wrap.className = 'flex flex-col';
+    var html = '<label class="text-sm font-semibold text-gray-700 mb-1">Fiscal Year Start</label>' +
+      '<select id="orgFiscalYearStart" class="border rounded p-2">';
+    for (var i = 1; i <= 12; i++) html += '<option value="' + i + '">' + MONTHS[i - 1] + '</option>';
+    html += '</select><span class="text-xs text-gray-500 mt-1" id="orgFiscalYearHint"></span>';
+    wrap.innerHTML = html;
+    var anchor = host && host.parentElement ? host.parentElement : form.firstElementChild;
+    if (anchor && anchor.parentElement) anchor.parentElement.insertBefore(wrap, anchor.nextSibling);
+    else form.appendChild(wrap);
+
+    var sel = document.getElementById('orgFiscalYearStart');
+    sel.value = String(window.getFiscalYearStartMonth());
+    updateHint();
+    sel.addEventListener('change', function(){
+      var o = org();
+      o.fiscalYearStartMonth = parseInt(sel.value, 10) || 1;
+      localStorage.setItem('orgInfo', JSON.stringify(o));
+      window.logAudit('update', 'Organization Profile', 'Fiscal year start = ' + MONTHS[o.fiscalYearStartMonth - 1]);
+      updateHint();
+      applyFiscalDefaults(true);
+    });
+    function updateHint(){
+      var f = window.getFiscalYear();
+      var hint = document.getElementById('orgFiscalYearHint');
+      if (hint) hint.textContent = 'Current fiscal year: ' + f.start + ' to ' + f.end;
+    }
+  }
+
+  function applyFiscalDefaults(force){
+    var f = window.getFiscalYear();
+    document.querySelectorAll('input[type="date"]').forEach(function(el){
+      var id = (el.id || '').toLowerCase();
+      var isFrom = /from|start/.test(id);
+      var isTo = /to$|to[^a-z]|end/.test(id);
+      if (!isFrom && !isTo) return;
+      if (!force && el.value) return;
+      if (!el.dataset.fyManaged && el.value && !force) return;
+      el.dataset.fyManaged = '1';
+      el.value = isFrom ? f.start : f.end;
+    });
+    document.querySelectorAll('[data-fiscal-year-label]').forEach(function(el){ el.textContent = f.label; });
+  }
+  window.applyFiscalYearDefaults = applyFiscalDefaults;
+
+  window.exportTableCSV = function(table, filename){
+    if (typeof table === 'string') table = document.querySelector(table);
+    if (!table) { alert('Nothing to export.'); return; }
+    var rows = [];
+    table.querySelectorAll('tr').forEach(function(tr){
+      var cells = [];
+      tr.querySelectorAll('th,td').forEach(function(td){
+        var txt = (td.innerText || '').replace(/\s+/g, ' ').trim();
+        cells.push('"' + txt.replace(/"/g, '""') + '"');
+      });
+      if (cells.length) rows.push(cells.join(','));
+    });
+    if (!rows.length) { alert('Nothing to export.'); return; }
+    var blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (filename || 'export') + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    window.logAudit('export', 'Data Export', a.download);
+  };
+
+  function addExportButtons(){
+    document.querySelectorAll('.report-panel, [id$="Panel"], [id$="Report"]').forEach(function(panel){
+      if (panel.offsetParent === null) return;
+      if (panel.querySelector(':scope > .__csvBar')) return;
+      var table = panel.querySelector('table');
+      if (!table) return;
+      var bar = document.createElement('div');
+      bar.className = '__csvBar';
+      bar.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin:8px 0';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = '⬇ Export CSV';
+      btn.className = 'bg-blue-900 text-white px-3 py-1 rounded text-sm hover:bg-blue-800';
+      btn.onclick = function(){ window.exportTableCSV(table, panel.id || 'report'); };
+      bar.appendChild(btn);
+      panel.insertBefore(bar, panel.firstChild);
+    });
+  }
+
+  function guardUserButtons(){
+    var allowed = window.canManageUsers();
+    document.querySelectorAll('#userTableBody button').forEach(function(b){
+      var oc = b.getAttribute('onclick') || '';
+      if (!/openCreateUserModal|deleteUser|cloneUser/.test(oc)) return;
+      b.disabled = !allowed;
+      b.style.opacity = allowed ? '' : '0.45';
+      b.style.cursor = allowed ? '' : 'not-allowed';
+      b.title = allowed ? '' : 'Admins only';
+    });
+  }
+
+  function wrapUserModal(){
+    var orig = window.openCreateUserModal;
+    if (typeof orig !== 'function' || orig.__guarded) return;
+    var wrapped = function(index){
+      if (!window.canManageUsers()){
+        alert('🚫 You do not have permission to manage users.');
+        return;
+      }
+      return orig.apply(this, arguments);
+    };
+    wrapped.__guarded = true;
+    window.openCreateUserModal = wrapped;
+  }
+
+  function wrapBankTransactions(){
+    if (window.viewTransactions && window.viewTransactions.__perBank) return;
+    if (typeof window.viewTransactions !== 'function') return;
+    var fn = function(index){
+      var list = (typeof banks !== 'undefined' && Array.isArray(banks)) ? banks : [];
+      var bank = list[index];
+      if (!bank) return;
+      var all = (typeof transactions !== 'undefined' && Array.isArray(transactions)) ? transactions : [];
+      var rows = all.filter(function(t){
+        return String(t.bank || '') === String(bank.name || '') ||
+               String(t.bankId || '') === String(bank.id || '___');
+      });
+      var fy = window.getFiscalYear();
+      var inFy = rows.filter(function(t){ return window.inFiscalYear(t.date, fy); });
+      var host = document.getElementById('__bankTxModal');
+      if (!host){
+        host = document.createElement('div');
+        host.id = '__bankTxModal';
+        host.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+        document.body.appendChild(host);
+      }
+      host.style.display = 'flex';
+      var body = inFy.length ? inFy.map(function(t){
+        return '<tr><td class="border px-2 py-1">' + (t.date || '') + '</td>' +
+               '<td class="border px-2 py-1">' + (t.type || t.category || '') + '</td>' +
+               '<td class="border px-2 py-1">' + ((t.description || t.ref || '') + '') + '</td>' +
+               '<td class="border px-2 py-1 text-right">' + Number(t.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</td></tr>';
+      }).join('') : '<tr><td colspan="4" class="border px-2 py-4 text-center text-gray-500">No transactions for this bank in the current fiscal year.</td></tr>';
+      host.innerHTML = '<div class="bg-white rounded-lg shadow-lg w-full max-w-3xl p-5 max-h-[85vh] overflow-auto">' +
+        '<div class="flex items-center justify-between mb-3">' +
+          '<h3 class="text-lg font-bold text-blue-900">' + (bank.name || 'Bank') + ' — Transactions</h3>' +
+          '<button id="__bankTxClose" class="text-gray-500 hover:text-gray-800">✕</button>' +
+        '</div>' +
+        '<p class="text-xs text-gray-500 mb-2">Fiscal year ' + fy.start + ' → ' + fy.end + ' · ' + inFy.length + ' of ' + rows.length + ' records</p>' +
+        '<table id="__bankTxTable" class="w-full text-sm border"><thead><tr class="bg-gray-100">' +
+          '<th class="border px-2 py-1 text-left">Date</th><th class="border px-2 py-1 text-left">Type</th>' +
+          '<th class="border px-2 py-1 text-left">Description</th><th class="border px-2 py-1 text-right">Amount</th>' +
+        '</tr></thead><tbody>' + body + '</tbody></table>' +
+        '<div class="flex justify-end gap-2 mt-3">' +
+          '<button id="__bankTxCsv" class="bg-blue-900 text-white px-3 py-1 rounded text-sm">⬇ Export CSV</button>' +
+        '</div></div>';
+      document.getElementById('__bankTxClose').onclick = function(){ host.style.display = 'none'; };
+      document.getElementById('__bankTxCsv').onclick = function(){
+        window.exportTableCSV('#__bankTxTable', 'bank_' + String(bank.name || 'account').replace(/\s+/g, '_'));
+      };
+    };
+    fn.__perBank = true;
+    window.viewTransactions = fn;
+  }
+
+  function tick(){
+    injectFiscalField();
+    applyFiscalDefaults(false);
+    addExportButtons();
+    guardUserButtons();
+    wrapUserModal();
+    wrapBankTransactions();
+  }
+
+  function boot(){
+    tick();
+    var t = null;
+    var mo = new MutationObserver(function(){
+      clearTimeout(t);
+      t = setTimeout(tick, 400);
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+    try {
+      var NS = window.__companyNS;
+      if (NS && NS.currentUser()) NS.migrate();
+    } catch(e){}
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
 </body>
 
 </html>
