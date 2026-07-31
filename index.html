@@ -2074,7 +2074,7 @@ document.addEventListener("click", function(e) {
     </div>
 
 </div><div id="quickCreatePanel" class="hidden fixed top-14 right-20 w-64 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold text-gray-700">⚙️ Quick Create</h3><button onclick="openCreate('customersTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100"> Customer</button><button onclick="openCreate('invoicesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Invoice</button><button onclick="openCreate('supplierTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Supplier</button><button onclick="openCreate('employeesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Employee</button><button onclick="openCreate('inventoryTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Inventory</button><button onclick="openCreate('manualJournalsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Journal</button><button onclick="openCreate('fundsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Fund</button></div><div class="h-3"></div><div id="sidebar" class="hidden fixed top-0 left-0 h-full w-40 bg-black text-white p-1 overflow-y-auto" style="top:0 !important;left:0 !important;height:100vh !important;z-index:40;"><img src="acaciabooks-logo.png" alt="Logo" class="w-24 mb-4 mx-auto" /><h2 class="text-xl font-bold  mb-6">AkBook</h2><ul class="space-y-5 text-sm"
-<li><button onclick="showTab('dashboard')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📊 Dashboard Hub</button></li><li><button onclick="toggleSubmenu('inventorySubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📦 Inventory Hub</button></li><ul id="inventorySubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('inventoryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Stock</button></li><li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li><li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li><li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li><li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li><li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li><li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li><li><button   onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li></ul><li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li><li><button onclick="toggleSubmenu('customerSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Sales Hub</button></li><ul id="customerSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li><li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li><li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li><li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li><li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li><li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li><li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li><li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li><li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li><li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li><li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li><ul id="supplierSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li><li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li><li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li><li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li><li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li><li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li><li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li><li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li><li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li><li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li><li><button onclick="showTab('supplierStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('accountantSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🧮 Accountant Hub</button></li><ul id="accountantSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('manualJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Manual Journals</button></li><li><button onclick="showTab('recurringJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Recurring Journals</button></li><li><button onclick="showTab('currencyAdjustmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Currency Adjustments</button></li><li><button onclick="showTab('nonCurrentAssetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Assets</button></li><li><button onclick="showTab('nonCurrentLiabilitiesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Liabilities</button></li><li><button onclick="showTab('equityTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Equity</button></li><li><button onclick="showTab('taxAdjustmentsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Adjustments</button></li><li><button onclick="showTab('chartOfAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Chart of Accounts</button></li><li><button onclick="showTab('currentAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Current Accounts</button></li><li><button onclick="showTab('budgetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Budgets</button></li><li><button onclick="showTab('transactionLockingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Transaction Locking</button></li></ul><li><button onclick="toggleSubmenu('payrollSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💵 Payroll Hub </button></li><ul id="payrollSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('employeesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Employees</button></li><li><button onclick="showTab('earningsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Allowances</button></li><li><button onclick="showTab('grossPayTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Deductions</button></li><li><button onclick="showTab('attendanceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Attendance & Leave</button></li><li><button onclick="showTab('payslipTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payslip Generation</button></li><li><button onclick="showTab('statutoryDeductionsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Statutories</button></li><li><button onclick="showTab('payrollReportsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payroll Reports</button></li><li><button onclick="showTab('integrationsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Integrations</button></li></ul><li><button onclick="showTab('reportsPanel')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📈 Reports Hub </button></li><li><button onclick="toggleSubmenu('plansSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🗂️Plans Hub </button></li><ul id="plansSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('plansTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plans Hub </button></li><li><button onclick="showTab('projectTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Project Hub</button></li><li><button onclick="showTab('plansTab'); if(window.phGoStep) phGoStep(5);" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plan Revenue</button></li><li><button onclick="showTab('projectRevenueTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">  Project Revenue</button </li> </ul><li><button onclick="toggleSubmenu('settingsSubmenu2')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">⚙️ Settings Hub </button></li><ul id="settingsSubmenu2" class="ml-4 hidden space-y-1"><li><button onclick="showTab('orgProfileTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Org Profile </button></li><li><button onclick="showTab('warehousesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Warehouses</button></li><li><button onclick="showTab('DatacenterTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Data center</button></li><li><button onclick="showTab('systemConfigurationTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">System configuration</button></li><li><button onclick="showTab('userActivityTab')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Activity </button></li><li><button onclick="showTab('taxComplianceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Compliance</button></li><li><button onclick="showTab('userManagementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Management</button></li><li><button onclick="showTab('vatTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">VAT</button></li><li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li><li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li><li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li><li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li></ul><li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li><ul id="filesSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li><li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li></ul><li id="mailLink" class="hidden"><a href="https://kimani254star.github.io/acacia-mail/" target="_blank"
+<li><button onclick="showTab('dashboard')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📊 Dashboard Hub</button></li><li><button onclick="toggleSubmenu('inventorySubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📦 Inventory Hub</button></li><ul id="inventorySubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('inventoryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Stock</button></li><li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li><li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li><li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li><li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li><li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li><li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li><li><button   onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li></ul><li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li><li><button onclick="toggleSubmenu('customerSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Sales Hub</button></li><ul id="customerSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li><li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li><li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li><li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li><li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li><li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li><li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li><li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li><li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li><li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li><li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li><ul id="supplierSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li><li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li><li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li><li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li><li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li><li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li><li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li><li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li><li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li><li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li><li><button onclick="showTab('supplierStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('accountantSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🧮 Accountant Hub</button></li><ul id="accountantSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('manualJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Manual Journals</button></li><li><button onclick="showTab('recurringJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Recurring Journals</button></li><li><button onclick="showTab('currencyAdjustmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Currency Adjustments</button></li><li><button onclick="showTab('nonCurrentAssetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Assets</button></li><li><button onclick="showTab('nonCurrentLiabilitiesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Liabilities</button></li><li><button onclick="showTab('equityTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Equity</button></li><li><button onclick="showTab('taxAdjustmentsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Adjustments</button></li><li><button onclick="showTab('chartOfAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Chart of Accounts</button></li><li><button onclick="showTab('currentAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Current Accounts</button></li><li><button onclick="showTab('budgetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Budgets</button></li><li><button onclick="showTab('transactionLockingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Transaction Locking</button></li></ul><li><button onclick="toggleSubmenu('payrollSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💵 Payroll Hub </button></li><ul id="payrollSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('employeesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Employees</button></li><li><button onclick="showTab('earningsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Allowances</button></li><li><button onclick="showTab('grossPayTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Deductions</button></li><li><button onclick="showTab('attendanceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Attendance & Leave</button></li><li><button onclick="showTab('payslipTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payslip Generation</button></li><li><button onclick="showTab('statutoryDeductionsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Statutories</button></li><li><button onclick="showTab('payrollReportsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payroll Reports</button></li><li><button onclick="showTab('integrationsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Integrations</button></li></ul><li><button onclick="showTab('reportsPanel')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📈 Reports Hub </button></li><li><button onclick="toggleSubmenu('plansSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🗂️Plans Hub </button></li><ul id="plansSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('plansTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plans Hub </button></li><li><button onclick="showTab('projectTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Project Hub</button></li><li><button onclick="showTab('plansTab'); if(window.phGoStep) phGoStep(5);" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plan Revenue</button></li><li><button onclick="showTab('projectRevenueTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">  Project Revenue</button </li> </ul><li><button onclick="toggleSubmenu('settingsSubmenu2')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">⚙️ Settings Hub </button></li><ul id="settingsSubmenu2" class="ml-4 hidden space-y-1"><li><button onclick="showTab('orgProfileTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Org Profile </button></li><li><button onclick="showTab('warehousesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Warehouses</button></li><li><button onclick="showTab('DatacenterTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Data center</button></li><li><button onclick="showTab('systemConfigurationTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">System configuration</button></li><li><button onclick="showTab('userActivityTab')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Activity </button></li><li><button onclick="showTab('taxComplianceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Compliance</button></li><li><button onclick="showTab('userManagementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Management</button></li><li><button onclick="showTab('vatTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">VAT</button></li><li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li><li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li><li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li><li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li><li><button onclick="toggleSupportPopup()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🆘 Help & Support</button></li></ul><li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li><ul id="filesSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li><li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li></ul><li id="mailLink" class="hidden"><a href="https://kimani254star.github.io/acacia-mail/" target="_blank"
     class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">
     💬 Mail Hub
   </a></li><li id="crmLink"><a href="https://kimani254star.github.io/acacia-crm/?from=books" target="_blank"
@@ -2121,10 +2121,6 @@ document.addEventListener("click", function(e) {
     class="group flex items-center justify-center w-8 h-10 bg-gray-800 hover:bg-gray-700 rounded-full relative">🏢
     <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
       Organization Details
-    </span></button><!-- 🎧 Support --><button id="SupportPopupTongle" onclick="toggleSupportPopup()"
-    class="group bg-gray-900 hover:bg-gray-800 text-white rounded-full p-1 flex items-center justify-center shadow-lg relative">🎧
-    <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
-      Support
     </span></button>
     <!-- 💬 Communication Panel --><div id="commPanel" class="hidden fixed bottom-20 right-4 w-[430px] max-w-[95vw] h-[80vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
 
@@ -2287,20 +2283,24 @@ document.addEventListener("click", function(e) {
     <div class="p-4 bg-white space-y-4 overflow-y-auto flex-1 custom-scrollbar">
         
         <div>
+            <input type="hidden" id="acaciaNoteEditIndex" value="-1" />
             <div class="flex items-center justify-between mb-1">
                 <label class="block text-sm font-semibold text-gray-700">New Note</label>
                 <div class="flex gap-1">
-                    <button onclick="setNoteCategory('Work')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-md hover:bg-blue-100 transition">Work</button>
-                    <button onclick="setNoteCategory('Personal')" class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-md hover:bg-green-100 transition">Personal</button>
-                    <button onclick="setNoteCategory('Urgent')" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-md hover:bg-red-100 transition">Urgent</button>
+                    <button id="acaciaCatWork" onclick="setNoteCategory('Work')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-md hover:bg-blue-100 transition">Work</button>
+                    <button id="acaciaCatPersonal" onclick="setNoteCategory('Personal')" class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-md hover:bg-green-100 transition">Personal</button>
+                    <button id="acaciaCatUrgent" onclick="setNoteCategory('Urgent')" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-md hover:bg-red-100 transition">Urgent</button>
                 </div>
             </div>
             <textarea id="acaciaNoteText" rows="5" placeholder="Write your notes here..." class="w-full border border-gray-300 rounded-2xl p-3 bg-white text-black placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"></textarea>
         </div>
 
         <div class="flex gap-2">
-            <button onclick="saveAcaciaNote()" class="flex-1 bg-purple-700 hover:bg-purple-600 text-white rounded-2xl py-2.5 font-semibold shadow-sm hover:shadow transition-all">
+            <button id="acaciaSaveNoteBtn" onclick="saveAcaciaNote()" class="flex-1 bg-purple-700 hover:bg-purple-600 text-white rounded-2xl py-2.5 font-semibold shadow-sm hover:shadow transition-all">
                 💾 Save Note
+            </button>
+            <button id="acaciaCancelEditBtn" onclick="cancelAcaciaNoteEdit()" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl px-4 py-2.5 font-semibold transition-all">
+                Cancel
             </button>
             <button onclick="clearAcaciaNotes()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl px-4 py-2.5 font-semibold transition-all">
                 🗑 Clear All
@@ -2312,6 +2312,7 @@ document.addEventListener("click", function(e) {
                 <h4 class="text-lg font-bold text-gray-800">📝 Saved Notes</h4>
                 <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">Local Storage</span>
             </div>
+            <input type="text" id="acaciaNoteSearch" placeholder="Search notes..." oninput="renderAcaciaNotes()" class="w-full mb-2 border border-gray-300 rounded-xl px-3 py-1.5 text-sm bg-white text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600" />
             <div id="acaciaNoteList" class="h-44 overflow-y-auto rounded-2xl border border-gray-200 bg-gray-50 p-2 text-sm text-black space-y-1">
             </div>
         </div>
@@ -2352,6 +2353,8 @@ document.addEventListener("click", function(e) {
     </div>
 </div>
 
+<button id="helpFabButton" onclick="toggleSupportPopup()" title="Help & Support"
+  class="fixed bottom-4 right-4 z-50 w-12 h-12 rounded-full bg-blue-900 hover:bg-blue-800 text-white text-xl font-bold shadow-2xl flex items-center justify-center transition-transform hover:scale-105">?</button>
 <div id="supportPopup" class="hidden fixed bottom-20 right-4 w-96 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col font-sans transition-all duration-300">
 
     <div class="bg-black text-white p-3 flex justify-between items-center shadow-md">
@@ -2367,6 +2370,8 @@ document.addEventListener("click", function(e) {
     </div>
     <button onclick="toggleSupportPopup()" class="text-neutral-400 hover:text-white hover:bg-white/10 w-7 h-7 rounded-lg flex items-center justify-center text-lg transition-colors">✕</button>
 </div>
+
+    <div id="supportContextBar" class="hidden items-center justify-between gap-2 bg-blue-50 border-b border-blue-100 px-3 py-1.5 text-[11px] text-blue-900"></div>
 
     <div id="supportMessages" class="h-80 overflow-y-auto p-3 bg-slate-50 text-slate-800 text-sm space-y-3">
         <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm space-y-3">
@@ -2583,80 +2588,108 @@ function loadOrgDetails() {
  const SUPPORT_KB = [
     {
         module: "Dashboard Hub",
+        tab: "dashboard",
         keywords: ["dashboard", "home", "overview", "kpi", "kpis", "performance metrics", "activity monitoring", "navigate dashboard"],
         answer: `📊 <b>Dashboard Hub</b> — Business overview, KPIs, performance metrics & activity monitoring.\n\nHow to get there:\n1. Open the left sidebar and click <b>📊 Dashboard Hub</b>.\n2. The landing view shows KPI cards, charts, and recent activity.\n3. Use the date filter at the top to change the reporting period.\n4. Click any KPI card to jump straight into that module's detail view.`
     },
     {
         module: "Funds Hub / Sales",
+        tab: "invoicesTab",
         keywords: ["invoice", "create invoice", "recurring invoice", "bulk invoicing", "customer statement", "credit note", "delivery", "receipts", "sales hub", "navigate sales", "navigate funds"],
         answer: `💰 <b>Funds Hub → Sales</b> — Customers, invoices, quotes, orders, receipts, returns, deliveries & statements.\n\nHow to get there:\n1. Sidebar → <b>💰 Funds Hub</b> → <b>Customer</b> section.\n2. Choose the tab you need: <b>Invoices</b>, <b>Recurring Invoices</b>, <b>Quotes</b>, <b>Orders</b>, <b>Receipts</b>, <b>Sales Return</b>, <b>Delivery</b>, <b>Credit Note</b>, or <b>Customer Statement</b>.\n3. Click <b>New Invoice</b> (or <b>Bulk Invoicing</b> for batch), add line items, then <b>Save & Issue</b>.`
     },
     {
         module: "Customers / CRM",
+        tab: "customersTab",
         keywords: ["customer", "add customer", "crm", "crm portal", "leads", "opportunities", "navigate customers", "navigate crm"],
         answer: `👥 <b>Customers & CRM</b>\n\nHow to get there:\n1. Sidebar → <b>💰 Funds Hub</b> → <b>Customer</b> → <b>Customers</b> tab (or Sidebar → <b>🏢 CRM Portal Hub</b> for leads/opportunities).\n2. Click <b>Add Customer</b>, fill in contact info and credit terms, then <b>Save</b>.\n3. Use the CRM Portal Hub to track leads, follow-ups, and communication history.`
     },
     {
         module: "Purchase Hub / Suppliers",
+        tab: "supplierTab",
         keywords: ["supplier", "bills", "purchase order", "goods received", "grn", "debit note", "purchase returns", "supplier payments", "navigate purchase", "navigate suppliers"],
         answer: `🛒 <b>Purchase Hub</b> — Suppliers, bills, payments, purchase orders, quotations, GRNs & returns.\n\nHow to get there:\n1. Sidebar → <b>🛒 Purchase Hub</b> → <b>Supplier</b> section.\n2. Choose <b>Bills</b>, <b>Purchase Orders</b>, <b>Goods Received (GRN)</b>, <b>Supplier Payments</b>, <b>Debit Notes</b>, or <b>Purchase Returns</b>.\n3. Click <b>New Record</b>, select the supplier, add items, then <b>Save</b>.`
     },
     {
         module: "Inventory Hub",
+        tab: "inventoryTab",
         keywords: ["inventory", "stock", "warehouse", "bundle", "packages", "movement", "price list", "shipment", "adjustment", "navigate inventory", "navigate stock"],
         answer: `📦 <b>Inventory Hub</b> — Stock control, movements, pricing, bundles, packages, adjustments & shipments.\n\nHow to get there:\n1. Sidebar → <b>📦 Inventory Hub</b>.\n2. Pick a tab: <b>Movements</b>, <b>Warehouses</b>, <b>Bundle Items</b>, <b>Packages</b>, <b>Price List</b>, or <b>Shipments</b>.\n3. Click <b>Add / Adjust Stock</b> (or <b>Bulk Adjustments</b>), enter item quantities and location, then <b>Save</b>.`
     },
     {
         module: "Accountant Hub",
+        tab: "chartOfAccountsTab",
         keywords: ["reconcile", "bank", "journal", "manual journal", "recurring journal", "chart of accounts", "equity", "assets", "liabilities", "currency adjustment", "accountant", "navigate accounting", "navigate accountant"],
         answer: `🧮 <b>Accountant Hub</b> — Journals, budgets, chart of accounts, assets, liabilities & tax adjustments.\n\nHow to get there:\n1. Sidebar → <b>🧮 Accountant Hub</b>.\n2. For banking: open <b>Current Accounts</b>, select a bank account, and click <b>Reconcile</b> to match Receipts/Payments.\n3. For entries: open <b>Manual Journals</b> or <b>Recurring Journals</b>.\n4. For structure: open <b>Chart of Accounts</b>, <b>Non-Current Assets/Liabilities</b>, or <b>Equity</b>.`
     },
     {
         module: "Payroll Hub",
+        tab: "employeesTab",
         keywords: ["payroll", "employee", "payslip", "statutory", "attendance", "leave", "earnings", "gross pay", "deductions", "navigate payroll", "navigate employees"],
         answer: `💵 <b>Payroll Hub</b> — Employees, attendance, earnings, deductions, payslips, statutory compliance & reports.\n\nHow to get there:\n1. Sidebar → <b>💵 Payroll Hub</b> → <b>Employees</b> tab to manage staff records.\n2. Open <b>Attendance</b>, <b>Earnings</b>, or <b>Deductions</b> to set inputs for the period.\n3. Click <b>Payslip Generation</b> to run payroll for the month.\n4. Open <b>Statutory Deductions</b> and <b>Payroll Reports</b> for compliance filings.`
     },
     {
         module: "Reports Hub",
+        tab: "reportsPanel",
         keywords: ["report", "profit", "loss", "p&l", "budget", "financials", "navigate reports"],
         answer: `📈 <b>Reports Hub</b>\n\nHow to get there:\n1. Sidebar → <b>📈 Reports Hub</b>.\n2. Choose <b>Profit & Loss</b>, <b>Budgets</b>, or module-specific reports (Sales, Purchases, Inventory, Payroll).\n3. Filter by date range and Org Profile, then click <b>Export</b> to download as PDF or Excel.`
     },
     {
         module: "Tax & eTIMS",
+        tab: "taxComplianceTab",
         keywords: ["etims", "tax", "vat", "kra", "compliance", "tax adjustments", "tax payments", "navigate tax"],
         answer: `🇰🇪 <b>Tax Compliance & eTIMS</b>\n\nHow to get there:\n1. Sidebar → <b>🧮 Accountant Hub</b> → <b>Tax Compliance</b> (or the VAT tab).\n2. Configure your KRA eTIMS API keys under <b>Integrations</b>.\n3. Set up <b>Tax Adjustments</b> and <b>Tax Payments</b> before you validate compliance and transmit.`
     },
     {
         module: "Settings Hub",
+        tab: "orgProfileTab",
         keywords: ["settings", "user management", "preferences", "org profile", "transaction locking", "opening balances", "system configuration", "navigate settings"],
         answer: `⚙️ <b>Settings Hub</b>\n\nHow to get there:\n1. Sidebar → <b>⚙️ Settings Hub</b>.\n2. For company details: <b>Org Profile</b>. For access control: <b>User Management</b>.\n3. For locking periods: <b>Transaction Locking</b>. For balances at go-live: <b>Opening Balances</b>.\n4. General app behaviour lives under <b>Preferences</b> and <b>System Configuration</b>.`
     },
     {
         module: "Data Center",
+        tab: "DatacenterTab",
         keywords: ["backup", "data center", "recycle bin", "user activity", "audit trail", "restore", "navigate data"],
         answer: `🗄️ <b>Data Center</b>\n\nHow to get there:\n1. Sidebar → <b>Settings Hub</b> → <b>Data Center</b>.\n2. Use <b>Recycle Bin</b> to restore deleted records.\n3. Use <b>User Activity</b> for the audit trail, and run manual backups from the same screen.`
     },
     {
         module: "Files Hub",
+        tab: "filesTab",
         keywords: ["files", "documents", "attachments", "file manager", "navigate files"],
         answer: `📁 <b>Files Hub</b>\n\nHow to get there:\n1. Sidebar → <b>📁 Files Hub</b>.\n2. Upload, organize into folders, and attach documents to invoices, bills, or contracts from here.`
     },
     {
         module: "Projects",
+        tab: "projectTab",
         keywords: ["project", "project tracking", "project revenue", "navigate projects"],
         answer: `🗂️ <b>Project Hub</b>\n\nHow to get there:\n1. Sidebar → <b>Project Hub</b>.\n2. Open <b>Plan Tracking</b> to monitor milestones, or <b>Project Revenue</b> to see project profitability.`
     },
     {
         module: "Mail",
+        tab: null,
         keywords: ["mail", "email", "acacia mail", "gmail", "navigate mail"],
         answer: `💬 <b>Acacia Mail Hub</b>\n\nHow to get there:\n1. Sidebar → <b>💬 Acacia Mail Hub</b>, or click <b>Open Mail Center</b> in the quick-links panel.\n2. Send invoices, quotes, or statements directly to customers/suppliers from any record's <b>Send</b> button.`
     },
     {
         module: "Plans & Billing",
+        tab: "plansTab",
         keywords: ["plan", "subscription", "pricing", "upgrade", "billing plan", "navigate plans"],
         answer: `🗂️ <b>Plans Hub</b>\n\nHow to get there:\n1. Sidebar → <b>Plans Hub</b> (or the <b>Pricing</b> section on the home page).\n2. Compare plans and click <b>Choose Plan</b> to upgrade. Contact support for enterprise/custom billing.`
     }
 ];
+
+// Reverse lookup: which KB module "owns" a given tab id, so the popup can
+// tell what module the user is currently looking at.
+const TAB_TO_KB_MODULE = {};
+SUPPORT_KB.forEach(item => { if (item.tab) TAB_TO_KB_MODULE[item.tab] = item.module; });
+
+function getCurrentModuleContext() {
+    const tab = localStorage.getItem("lastTab");
+    if (!tab) return null;
+    const moduleName = TAB_TO_KB_MODULE[tab];
+    if (!moduleName) return null;
+    return SUPPORT_KB.find(x => x.module === moduleName) || null;
+}
 
 const SUPPORT_SUGGESTIONS = [
     "How do I connect eTIMS & file VAT returns?",
@@ -2693,7 +2726,7 @@ function searchKnowledge(question) {
             best = item;
         }
     }
-    return best ? best.answer : null;
+    return best;
 }
 
 // Lets any module's guide be pulled up directly, e.g. from the "Browse by
@@ -2705,10 +2738,18 @@ function askModuleGuide(moduleName) {
     showTyping();
     setTimeout(() => {
         hideTyping();
-        addAIMessage(item.answer.replace(/\n/g, "<br>"));
+        addAIMessage(item.answer.replace(/\n/g, "<br>"), item.tab);
         const esc = document.getElementById("supportEscalation");
         if (esc) esc.classList.add("hidden");
     }, 300);
+}
+
+// Closes the popup and switches straight to the relevant screen.
+function navigateToTab(tabId) {
+    if (!tabId || typeof showTab !== "function") return;
+    showTab(tabId);
+    const popup = document.getElementById("supportPopup");
+    if (popup) popup.classList.add("hidden");
 }
 
 function addUserMessage(text) {
@@ -2724,13 +2765,17 @@ function addUserMessage(text) {
     messages.scrollTop = messages.scrollHeight;
 }
 
-function addAIMessage(text) {
+function addAIMessage(text, tabId) {
     const messages = document.getElementById("supportMessages");
     if (!messages) return;
+    const goBtn = tabId
+        ? `<div class="mt-1.5"><button onclick="navigateToTab('${tabId}')" class="text-[11px] font-semibold text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg px-2 py-1 inline-flex items-center gap-1">📍 Take me there</button></div>`
+        : "";
     messages.innerHTML += `
         <div class="text-left mb-2">
             <div class="inline-block bg-white border border-slate-200 text-slate-800 p-2.5 rounded-lg max-w-xs text-xs shadow-sm leading-relaxed">
                 ${text}
+                ${goBtn}
             </div>
         </div>
     `;
@@ -2806,10 +2851,10 @@ function sendSupportQuestion() {
 
     setTimeout(async () => {
         try {
-            const answer = searchKnowledge(question);
-            if (answer) {
-                supportHistory.push({ role: "assistant", text: answer });
-                addAIMessage(answer.replace(/\n/g, "<br>"));
+            const match = searchKnowledge(question);
+            if (match) {
+                supportHistory.push({ role: "assistant", text: match.answer });
+                addAIMessage(match.answer.replace(/\n/g, "<br>"), match.tab);
                 const esc = document.getElementById("supportEscalation");
                 if (esc) esc.classList.add("hidden");
             } else {
@@ -2876,9 +2921,27 @@ initSupport();
 </script>
 <script>
 
+function updateSupportContext() {
+    const bar = document.getElementById("supportContextBar");
+    if (!bar) return;
+    const item = typeof getCurrentModuleContext === "function" ? getCurrentModuleContext() : null;
+    if (!item) {
+        bar.classList.add("hidden");
+        bar.classList.remove("flex");
+        bar.innerHTML = "";
+        return;
+    }
+    bar.classList.remove("hidden");
+    bar.classList.add("flex");
+    bar.innerHTML = `<span>📍 You're in <b>${item.module}</b></span>` +
+        `<button onclick="askModuleGuide('${item.module}')" class="font-semibold underline hover:text-blue-700">Get help with this</button>`;
+}
+
 function toggleSupportPopup() {
   const popup = document.getElementById("supportPopup");
+  const wasHidden = popup.classList.contains("hidden");
   popup.classList.toggle("hidden");
+  if (wasHidden) updateSupportContext();
 }
 function toggleTawkChat() {
   if (window.Tawk_API && typeof window.Tawk_API.toggle === 'function') {
@@ -3284,59 +3347,6 @@ function clearWebinars() {
   }
 }
 
-function toggleAcaciaNotebook() {
-  const panel = document.getElementById("acaciaNotebookPanel");
-  panel.classList.toggle("hidden");
-  if (!panel.classList.contains("hidden")) renderAcaciaNotes();
-}
-
-function loadAcaciaNotes() {
-  return JSON.parse(localStorage.getItem("acaciaNotes")) || [];
-}
-
-function saveAcaciaNote() {
-  const text = document.getElementById("acaciaNoteText").value.trim();
-  if (!text) return alert("Please type a note before saving.");
-  const notes = loadAcaciaNotes();
-  notes.push({ text, date: new Date().toLocaleString() });
-  localStorage.setItem("acaciaNotes", JSON.stringify(notes));
-  document.getElementById("acaciaNoteText").value = "";
-  renderAcaciaNotes();
-}
-
-function renderAcaciaNotes() {
-  const notes = loadAcaciaNotes();
-  const container = document.getElementById("acaciaNoteList");
-  if (!container) return;
-  if (notes.length === 0) {
-    container.innerHTML = "<p class='text-gray-500'>No saved notes yet.</p>";
-    return;
-  }
-  container.innerHTML = notes.map((n, i) => `
-    <div class="border-b py-1 flex justify-between items-start">
-      <div>
-        <div>${n.text}</div>
-        <div class="text-xs text-gray-500">${n.date}</div>
-      </div>
-      <button onclick="deleteAcaciaNote(${i})" class="text-red-600 text-xs hover:underline">Delete</button>
-    </div>
-  `).join("");
-}
-
-function deleteAcaciaNote(index) {
-  const notes = loadAcaciaNotes();
-  notes.splice(index, 1);
-  localStorage.setItem("acaciaNotes", JSON.stringify(notes));
-  renderAcaciaNotes();
-}
-
-function clearAcaciaNotes() {
-  if (confirm("Clear all notes?")) {
-    localStorage.removeItem("acaciaNotes");
-    renderAcaciaNotes();
-  }
-}
-
 window.addEventListener("DOMContentLoaded", () => {
   renderWebinars?.();
   renderAcaciaNotes?.();
@@ -3434,6 +3444,34 @@ function clearWebinars() {
 }
 </script>
 <script>
+let acaciaActiveCategory = null;
+
+const ACACIA_CATEGORY_STYLES = {
+  Work:     "bg-blue-50 text-blue-600",
+  Personal: "bg-green-50 text-green-600",
+  Urgent:   "bg-red-50 text-red-600",
+  General:  "bg-gray-100 text-gray-600"
+};
+
+function setNoteCategory(cat) {
+  const next = (acaciaActiveCategory === cat) ? null : cat;
+  applyNoteCategoryUI(next);
+}
+
+function applyNoteCategoryUI(cat) {
+  acaciaActiveCategory = cat || null;
+
+  ["Work", "Personal", "Urgent"].forEach(c => {
+    const btn = document.getElementById(`acaciaCat${c}`);
+    if (!btn) return;
+    if (c === acaciaActiveCategory) {
+      btn.classList.add("ring-2", "ring-offset-1", "ring-purple-500", "font-bold");
+    } else {
+      btn.classList.remove("ring-2", "ring-offset-1", "ring-purple-500", "font-bold");
+    }
+  });
+}
+
 function toggleAcaciaNotebook() {
   const panel = document.getElementById("acaciaNotebookPanel");
   panel.classList.toggle("hidden");
@@ -3445,23 +3483,95 @@ function loadAcaciaNotes() { return JSON.parse(localStorage.getItem("acaciaNotes
 function saveAcaciaNote() {
   const text = document.getElementById("acaciaNoteText").value.trim();
   if (!text) return alert("Please type a note before saving.");
+
   const notes = loadAcaciaNotes();
-  notes.push({ text, date: new Date().toLocaleString() });
+  const category = acaciaActiveCategory || "General";
+
+  const editField = document.getElementById("acaciaNoteEditIndex");
+  const editIndex = editField ? parseInt(editField.value) : -1;
+  const isEditing = editIndex > -1 && notes[editIndex];
+
+  if (isEditing) {
+    notes[editIndex] = { ...notes[editIndex], text, category };
+  } else {
+    notes.push({ text, category, date: new Date().toLocaleString() });
+  }
+
   localStorage.setItem("acaciaNotes", JSON.stringify(notes));
   document.getElementById("acaciaNoteText").value = "";
+  cancelAcaciaNoteEdit();
   renderAcaciaNotes();
+}
+
+function editAcaciaNote(index) {
+  const notes = loadAcaciaNotes();
+  const note = notes[index];
+  if (!note) return;
+
+  document.getElementById("acaciaNoteText").value = note.text;
+  document.getElementById("acaciaNoteEditIndex").value = index;
+
+  applyNoteCategoryUI(note.category && note.category !== "General" ? note.category : null);
+
+  const saveBtn = document.getElementById("acaciaSaveNoteBtn");
+  if (saveBtn) saveBtn.textContent = "✏️ Update Note";
+
+  const cancelBtn = document.getElementById("acaciaCancelEditBtn");
+  if (cancelBtn) cancelBtn.classList.remove("hidden");
+}
+
+function cancelAcaciaNoteEdit() {
+  const editField = document.getElementById("acaciaNoteEditIndex");
+  if (editField) editField.value = "-1";
+
+  applyNoteCategoryUI(null);
+
+  const saveBtn = document.getElementById("acaciaSaveNoteBtn");
+  if (saveBtn) saveBtn.textContent = "💾 Save Note";
+
+  const cancelBtn = document.getElementById("acaciaCancelEditBtn");
+  if (cancelBtn) cancelBtn.classList.add("hidden");
 }
 
 function renderAcaciaNotes() {
   const notes = loadAcaciaNotes();
   const container = document.getElementById("acaciaNoteList");
   if (!container) return;
-  if (notes.length === 0) { container.innerHTML = "<p class='text-gray-500'>No saved notes yet.</p>"; return; }
-  container.innerHTML = notes.map((n, i) => `
-    <div class="border-b py-1 flex justify-between items-start">
-      <div><div>${n.text}</div><div class="text-xs text-gray-500">${n.date}</div></div>
-      <button onclick="deleteAcaciaNote(${i})" class="text-red-600 text-xs hover:underline">Delete</button>
-    </div>`).join("");
+
+  const searchBox = document.getElementById("acaciaNoteSearch");
+  const query = searchBox ? searchBox.value.trim().toLowerCase() : "";
+
+  const indexed = notes.map((n, i) => ({ n, i }));
+  const filtered = query
+    ? indexed.filter(({ n }) => (n.text || "").toLowerCase().includes(query) || (n.category || "").toLowerCase().includes(query))
+    : indexed;
+
+  if (notes.length === 0) {
+    container.innerHTML = "<p class='text-gray-500'>No saved notes yet.</p>";
+    return;
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = "<p class='text-gray-500'>No notes match your search.</p>";
+    return;
+  }
+
+  container.innerHTML = filtered.map(({ n, i }) => {
+    const category = n.category || "General";
+    const badgeClass = ACACIA_CATEGORY_STYLES[category] || ACACIA_CATEGORY_STYLES.General;
+    return `
+    <div class="border-b py-1 flex justify-between items-start gap-2">
+      <div class="flex-1">
+        <span class="inline-block text-[10px] px-1.5 py-0.5 rounded ${badgeClass} mb-0.5">${category}</span>
+        <div>${n.text}</div>
+        <div class="text-xs text-gray-500">${n.date}</div>
+      </div>
+      <div class="flex flex-col gap-1 shrink-0">
+        <button onclick="editAcaciaNote(${i})" class="text-blue-600 text-xs hover:underline">Edit</button>
+        <button onclick="deleteAcaciaNote(${i})" class="text-red-600 text-xs hover:underline">Delete</button>
+      </div>
+    </div>`;
+  }).join("");
 }
 
 function deleteAcaciaNote(index) {
@@ -16590,7 +16700,7 @@ button:hover {
     }
   });
 </script>
-  <div class="bg-white p-6 rounded shadow mb-6"><h2 class="text-xl font-bold mb-4">Add Bulk Invoice</h2><div class="mb-4"><input id="bulkInvoiceDate" type="date" class="border p-2 rounded" style="width:700px;" /></div><div class="mb-4"><label for="bulkInvoiceCustomers" class="block font-semibold mb-1">Select Customer(s):</label><select id="bulkInvoiceCustomers" class="border p-2 rounded" style="width:700px;" multiple></select></div><div class="mb-4"><label for="bulkInvoiceNetDays" class="block font-semibold mb-1">Payment Terms:</label><select id="bulkInvoiceNetDays" class="border p-2 rounded" style="width:700px;"><option value="">Select Term</option><option value="15">On Receipt + 15 days</option><option value="30">On Receipt + 30 days</option><option value="45">On Receipt + 45 days</option><option value="60">On Receipt + 60 days</option><option value="90">On Receipt + 90 days</option><option value="120">On Receipt + 120 days</option></select></div><div class="mb-4"><label for="bulkChartAccountSelect" class="block font-semibold mb-1">Chart of Account:</label><select id="bulkChartAccountSelect" class="border p-2 rounded" style="width:700px;"><option value="">Select Account</option></select></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4"><div><label for="bulkInvoiceNumber" class="block font-semibold mb-1">Invoice Number:</label><input id="bulkInvoiceNumber" type="text" class="border bg-gray-100 p-2 rounded" style="width:700px;" readonly /></div><div><label for="bulkItemType" class="block font-semibold mb-1">Item Type:</label><select id="bulkItemType" class="border p-2 rounded" style="width:700px;"><option value="">Select Item Type</option><option value="product">Product</option><option value="service">Service</option><option value="subscription">Subscription</option><option value="digital">Digital Product</option><option value="physical">Physical Product</option><option value="consultation">Consultation</option><option value="rental">Rental</option><option value="package">Package</option><option value="membership">Membership</option><option value="other">Other</option></select></div></div><div class="grid grid-cols-2 gap-4 mb-4"><div><label for="bulkInvoiceCurrency" class="block font-semibold mb-1">Currency:</label><select id="bulkInvoiceCurrency" class="border p-2 rounded"><option value="KES">KES (Base Currency)</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="ZAR">ZAR</option><option value="NGN">NGN</option><option value="UGX">UGX</option><option value="TZS">TZS</option></select></div><div><label for="bulkInvoiceCurrencyRate" class="block font-semibold mb-1">Exchange Rate:</label><input id="bulkInvoiceCurrencyRate" type="number" class="border p-2 rounded" value="1" step="0.01" /></div></div><div class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4"><select id="bulkInvoiceProductSelect" class="border p-2 rounded"><option value="">Select Item</option></select><input id="bulkInvoiceItemQty" type="number" placeholder="Qty" min="1" class="border p-2 rounded" /><input id="bulkInvoiceItemPrice" type="number" placeholder="Unit Price" min="0" step="0.01" class="border p-2 rounded" /><input id="bulkInvoiceItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded" /><select id="bulkInvoiceItemTax" class="border p-2 rounded"><option value="16">VAT 16%</option><option value="8">VAT 8%</option><option value="0">Zero Rated</option><option value="exempt">Exempt</option><option value="export">Export</option></select></div><button type="button" onclick="addBulkInvoiceItem()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Add</button><div class="overflow-x-auto mb-4 mt-4"><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2">Description</th><th class="p-2">Qty</th><th class="p-2">Unit Price</th><th class="p-2">Discount %</th><th class="p-2">VAT</th><th class="p-2">Subtotal</th><th class="p-2">Action</th></tr></thead><tbody id="bulkInvoiceItemTableBody"><tr><td colspan="7" class="p-3 text-center text-gray-500">No items added</td></tr></tbody></table></div><div class="grid grid-cols-2 gap-4 mb-4"><input id="bulkInvoiceVAT" type="number" placeholder="Total VAT" class="border p-2 rounded bg-gray-100" readonly /><input id="bulkInvoiceTotal" type="number" placeholder="Total Amount" class="border p-2 rounded bg-gray-100" readonly /></div><button id="saveDraftBtn" onclick="saveDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button><button id="saveBulkInvoiceBtn" onclick="saveBulkInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save Bulk Invoice</button></div><div class="bg-white p-6 rounded shadow"><h2 class="text-lg font-semibold mb-4">Bulk Invoice List</h2><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2">Invoice #</th><th class="p-2">Date</th><th class="p-2">Customer(s)</th><th class="p-2">Terms</th><th class="p-2">Due Date</th><th class="p-2">Currency</th><th class="p-2">Total</th><th class="p-2">Status</th><th class="p-2">VAT</th><th class="p-2">Actions</th></tr></thead><tbody id="bulkInvoiceTable"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
+  <div class="bg-white p-6 rounded shadow mb-6"><h2 class="text-xl font-bold mb-4">Add Bulk Invoice</h2><div class="mb-4"><input id="bulkInvoiceDate" type="date" class="border p-2 rounded" style="width:700px;" /></div><div class="mb-4"><label for="bulkInvoiceCustomers" class="block font-semibold mb-1">Select Customer(s):</label><select id="bulkInvoiceCustomers" class="border p-2 rounded" style="width:700px;" multiple></select></div><div class="mb-4"><label for="bulkInvoiceNetDays" class="block font-semibold mb-1">Payment Terms:</label><select id="bulkInvoiceNetDays" class="border p-2 rounded" style="width:700px;"><option value="">Select Term</option><option value="15">On Receipt + 15 days</option><option value="30">On Receipt + 30 days</option><option value="45">On Receipt + 45 days</option><option value="60">On Receipt + 60 days</option><option value="90">On Receipt + 90 days</option><option value="120">On Receipt + 120 days</option></select></div><div class="mb-4"><label for="bulkChartAccountSelect" class="block font-semibold mb-1">Chart of Account:</label><select id="bulkChartAccountSelect" class="border p-2 rounded" style="width:700px;"><option value="">Select Account</option></select></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4"><div><label for="bulkInvoiceNumber" class="block font-semibold mb-1">Invoice Number:</label><input id="bulkInvoiceNumber" type="text" class="border bg-gray-100 p-2 rounded" style="width:700px;" readonly /></div><div><label for="bulkItemType" class="block font-semibold mb-1">Item Type:</label><select id="bulkItemType" class="border p-2 rounded" style="width:700px;"><option value="">Select Item Type</option><option value="product">Product</option><option value="service">Service</option><option value="subscription">Subscription</option><option value="digital">Digital Product</option><option value="physical">Physical Product</option><option value="consultation">Consultation</option><option value="rental">Rental</option><option value="package">Package</option><option value="membership">Membership</option><option value="other">Other</option></select></div></div><div class="grid grid-cols-2 gap-4 mb-4"><div><label for="bulkInvoiceCurrency" class="block font-semibold mb-1">Currency:</label><select id="bulkInvoiceCurrency" class="border p-2 rounded"><option value="KES">KES (Base Currency)</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="ZAR">ZAR</option><option value="NGN">NGN</option><option value="UGX">UGX</option><option value="TZS">TZS</option></select></div><div><label for="bulkInvoiceCurrencyRate" class="block font-semibold mb-1">Exchange Rate:</label><input id="bulkInvoiceCurrencyRate" type="number" class="border p-2 rounded" value="1" step="0.01" /></div></div><div class="grid grid-cols-1 sm:grid-cols-6 gap-4 mb-4"><select id="bulkInvoiceProductSelect" class="border p-2 rounded"><option value="">Select Item</option></select><input id="bulkInvoiceItemQty" type="number" placeholder="Qty" min="1" class="border p-2 rounded" /><input id="bulkInvoiceItemPrice" type="number" placeholder="Unit Price" min="0" step="0.01" class="border p-2 rounded" /><input id="bulkInvoiceItemDiscount" type="number" placeholder="Discount %" class="border p-2 rounded" /><select id="bulkInvoiceItemTax" class="border p-2 rounded"><option value="16">VAT 16%</option><option value="8">VAT 8%</option><option value="0">Zero Rated</option><option value="exempt">Exempt</option><option value="export">Export</option></select></div><button type="button" onclick="addBulkInvoiceItem()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Add</button><div class="overflow-x-auto mb-4 mt-4"><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2">Description</th><th class="p-2">Qty</th><th class="p-2">Unit Price</th><th class="p-2">Discount %</th><th class="p-2">VAT</th><th class="p-2">Subtotal</th><th class="p-2">Action</th></tr></thead><tbody id="bulkInvoiceItemTableBody"><tr><td colspan="7" class="p-3 text-center text-gray-500">No items added</td></tr></tbody></table></div><div class="grid grid-cols-2 gap-4 mb-4"><input id="bulkInvoiceVAT" type="number" placeholder="Total VAT" class="border p-2 rounded bg-gray-100" readonly /><input id="bulkInvoiceTotal" type="number" placeholder="Total Amount" class="border p-2 rounded bg-gray-100" readonly /></div><button id="saveDraftBtn" onclick="saveDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button><button id="saveBulkInvoiceBtn" onclick="saveBulkInvoice()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save Bulk Invoice</button></div><div class="bg-white p-6 rounded shadow"><h2 class="text-lg font-semibold mb-4">Bulk Invoice List</h2><button onclick="deleteSelectedBulkInvoices()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800 mb-2">Bulk Delete</button><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2"><input type="checkbox" onclick="toggleSelectAllBulkInvoices(this)"></th><th class="p-2">Invoice #</th><th class="p-2">Date</th><th class="p-2">Customer(s)</th><th class="p-2">Terms</th><th class="p-2">Due Date</th><th class="p-2">Currency</th><th class="p-2">Total</th><th class="p-2">Status</th><th class="p-2">VAT</th><th class="p-2">Actions</th></tr></thead><tbody id="bulkInvoiceTable"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
     Total Count: <span id="totalCount">0</span></div><div>
     Show
     <select id="itemsPerPageSelect" class="border rounded px-1"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select>
@@ -23402,7 +23512,7 @@ function updateBulkInvoicePlaceholder() {
   if (visibleRows.length === 0) {
     const placeholder = document.createElement('tr');
     placeholder.classList.add('placeholder');
-    placeholder.innerHTML = `<td colspan="10" class="text-center text-gray-500 p-2">No bulk invoices found</td>`;
+    placeholder.innerHTML = `<td colspan="11" class="text-center text-gray-500 p-2">No bulk invoices found</td>`;
     tbody.appendChild(placeholder);
   }
 }
@@ -23745,6 +23855,7 @@ function renderBulkInvoices() {
 
     table.innerHTML += `
       <tr>
+        <td class="p-2 border text-center"><input type="checkbox" class="bulk-invoice-checkbox" value="${inv.invoiceNo}"></td>
         <td class="p-2 border">${inv.invoiceNo}</td>
         <td class="p-2 border">${formatDate(inv.date)}</td>
         <td class="p-2 border">${inv.customers.join(", ")}</td>
@@ -23978,6 +24089,56 @@ function deleteBulkInvoice(invoiceNo) {
   renderBulkInvoices();
 
   alert("♻️ Bulk invoice moved to Recycle Bin & stock restored ✅");
+}
+function toggleSelectAllBulkInvoices(source) {
+  const checkboxes = document.querySelectorAll(".bulk-invoice-checkbox");
+  checkboxes.forEach(cb => { cb.checked = source.checked; });
+}
+function deleteSelectedBulkInvoices() {
+  let invoices = JSON.parse(localStorage.getItem("bulkInvoices") || "[]");
+
+  const selected = Array.from(
+    document.querySelectorAll(".bulk-invoice-checkbox:checked")
+  ).map(cb => cb.value);
+
+  if (selected.length === 0) {
+    alert("No bulk invoices selected");
+    return;
+  }
+
+  if (!confirm(`You selected ${selected.length} bulk invoice(s). Proceed?`)) return;
+  if (!confirm("This action cannot be undone. Confirm delete?")) return;
+
+  selected.forEach(invoiceNo => {
+    const invoiceIndex = invoices.findIndex(inv => inv.invoiceNo === invoiceNo);
+    if (invoiceIndex === -1) return;
+
+    const invoice = invoices[invoiceIndex];
+    if (!invoice.id) invoice.id = crypto.randomUUID();
+
+    moveToRecycle(invoice, "File", "BulkInvoices");
+
+    if (invoice.items) {
+      invoice.items.forEach(item => {
+        const productName = (item.desc || "").trim();
+        const qty = parseFloat(item.qty) || 0;
+        const sku = item.sku || "";
+
+        const restored = restoreStock(productName, qty, sku);
+        if (!restored) {
+          console.warn(`[stock] Could not restore item on bulk delete:`, productName, qty);
+        }
+      });
+    }
+
+    invoices.splice(invoiceIndex, 1);
+  });
+
+  localStorage.setItem("bulkInvoices", JSON.stringify(invoices));
+
+  renderBulkInvoices();
+
+  alert("♻️ Selected bulk invoices moved to Recycle Bin & stock restored ✅");
 }
 function pushBulkInvoiceToETIMS(invoiceNo) {
   const invoices = JSON.parse(localStorage.getItem("bulkInvoices") || "[]");
@@ -32645,6 +32806,58 @@ function applyBillToLedger(bill) {
   updateAccountsPayable();
 }
 
+// Fully reverses everything applyBillToLedger() applied for a bill:
+// supplier balance, balance sheet (inventory asset / accounts payable),
+// warehouse stock, and accounts payable totals — the same "places" a
+// single Bill delete rolls back, so Bulk Bill delete matches it exactly.
+function reverseBillFromLedger(bill) {
+  updateSupplierBalance(bill.supplier, -(bill.total || 0));
+
+  let balanceSheet = JSON.parse(localStorage.getItem("balanceSheet") || '{}');
+  if (!balanceSheet.currentAssets) balanceSheet.currentAssets = {};
+  if (!balanceSheet.currentLiabilities) balanceSheet.currentLiabilities = {};
+  balanceSheet.currentAssets.inventory = (balanceSheet.currentAssets.inventory || 0) - (bill.subtotal || 0);
+  balanceSheet.currentLiabilities.accountsPayable = (balanceSheet.currentLiabilities.accountsPayable || 0) - (bill.subtotal || 0);
+  localStorage.setItem("balanceSheet", JSON.stringify(balanceSheet));
+
+  const warehouseMap = {};
+  (bill.items || []).forEach(item => {
+    if (item.type !== 'product') return;
+
+    if (!warehouseMap[item.warehouse]) warehouseMap[item.warehouse] = getInventory(item.warehouse);
+    let inventory = warehouseMap[item.warehouse];
+
+    let product = inventory.find(p =>
+      (p.sku || "").trim() === (item.sku || "").trim() &&
+      (p.name || "").trim().toLowerCase() === (item.desc || "").trim().toLowerCase()
+    );
+    if (!product && item.sku) {
+      product = inventory.find(p => (p.sku || "").trim() === (item.sku || "").trim());
+    }
+
+    if (product) {
+      product.qty = (parseFloat(product.qty) || 0) - parseFloat(item.qty || 0);
+      product.history = product.history || [];
+      product.history.push({ date: new Date().toLocaleString(), type: "Bill Deleted", ref: bill.billNumber, qty: -Math.abs(item.qty) });
+    }
+  });
+  Object.keys(warehouseMap).forEach(wh => saveInventory(wh, warehouseMap[wh]));
+
+  updateAccountsPayable();
+}
+
+// Removes the matching entry (by billNumber) that saveBulkBill() also
+// pushed into the main "bills" ledger array, so a bulk bill delete doesn't
+// leave a duplicate/orphaned bill behind in Bills, Accounts Payable, etc.
+function removeMirroredBill(billNumber) {
+  if (!billNumber) return;
+  let bills = JSON.parse(localStorage.getItem('bills') || '[]');
+  const idx = bills.findIndex(b => b.billNumber === billNumber);
+  if (idx === -1) return;
+  bills.splice(idx, 1);
+  localStorage.setItem('bills', JSON.stringify(bills));
+}
+
 function saveBulkBill() {
   const date = document.getElementById('bulkBillDate').value;
   const suppliers = [...document.getElementById('bulkBillingSupplier').selectedOptions].map(opt => opt.value);
@@ -32958,6 +33171,11 @@ function deleteSelectedBulkBills() {
 
     moveToRecycle(bill, "File", "BulkBills");
 
+    // Roll back everything saving the bill applied — supplier balance,
+    // inventory, balance sheet, accounts payable — same as a single Bill delete.
+    reverseBillFromLedger(bill);
+    removeMirroredBill(bill.billNumber);
+
     bills.splice(index, 1);
 
   });
@@ -32965,8 +33183,15 @@ function deleteSelectedBulkBills() {
   localStorage.setItem("bulkBills", JSON.stringify(bills));
 
   loadBulkBills();
+  if (typeof loadSupplierBills === 'function') loadSupplierBills();
+  if (typeof renderSuppliers === 'function') renderSuppliers();
+  if (typeof renderAccountsPayable === 'function') renderAccountsPayable();
+  if (typeof renderInventorySummary === 'function') renderInventorySummary();
+  if (typeof renderInventoryTable === 'function') renderInventoryTable();
+  if (typeof renderCreditcontrolAnalysis === 'function') renderCreditcontrolAnalysis();
+  if (typeof loadDashboard === 'function') loadDashboard();
 
-  alert("♻️ Selected bulk bills moved to Recycle Bin.");
+  alert("♻️ Selected bulk bills moved to Recycle Bin & inventory/supplier/accounts rolled back.");
 }
 
 function toggleSelectAllBulkBills(source) {
@@ -32989,20 +33214,93 @@ function deleteBulkBill(index) {
 
   moveToRecycle(bill, "File", "BulkBills");
 
+  // Roll back everything saving the bill applied — supplier balance,
+  // inventory, balance sheet, accounts payable — same as a single Bill delete.
+  reverseBillFromLedger(bill);
+  removeMirroredBill(bill.billNumber);
+
   bills.splice(index, 1);
   localStorage.setItem('bulkBills', JSON.stringify(bills));
 
   loadBulkBills();
+  if (typeof loadSupplierBills === 'function') loadSupplierBills();
+  if (typeof renderSuppliers === 'function') renderSuppliers();
+  if (typeof renderAccountsPayable === 'function') renderAccountsPayable();
+  if (typeof renderInventorySummary === 'function') renderInventorySummary();
+  if (typeof renderInventoryTable === 'function') renderInventoryTable();
+  if (typeof renderCreditcontrolAnalysis === 'function') renderCreditcontrolAnalysis();
+  if (typeof loadDashboard === 'function') loadDashboard();
 
-  alert('♻️ Bulk Bill moved to Recycle Bin.');
+  alert('♻️ Bulk Bill moved to Recycle Bin & inventory/supplier/accounts rolled back.');
 }
 
 function previewBulkBill(index){
-  const bills=JSON.parse(localStorage.getItem('bulkBills')||'[]');
-  const bill=bills[index];
-  if(!bill) return;
-  console.log('Preview Bulk Bill:', bill);
-  alert(`Preview Bulk Bill: ${bill.billNumber} for ${bill.suppliers.join(', ')} Total: ${window.__fmtBase(bill.total)} ${bill.currency}`);
+  const bills = JSON.parse(localStorage.getItem('bulkBills') || '[]');
+  const bill = bills[index];
+  if (!bill) return;
+
+  // Company info
+  const orgInfo = JSON.parse(localStorage.getItem('orgInfo') || '{}');
+
+  // Supplier info (bulk bills store a single supplier per generated bill)
+  const suppliersList = JSON.parse(localStorage.getItem('suppliers') || '[]');
+  const supplier = suppliersList.find(s => s.name === bill.supplier) || {};
+
+  const currency = bill.currency || 'KES';
+
+  // Populate bill header
+  document.getElementById('previewBillNumber').textContent = bill.billNumber || '';
+  document.getElementById('previewBillDate').textContent = bill.date || '';
+
+  // Company info
+  document.getElementById('previewBillCompanyName').textContent = orgInfo.name || 'My Company Ltd';
+  document.getElementById('previewBillCompanyPIN').textContent = orgInfo.pin || 'P00000000';
+  document.getElementById('previewBillCompanyAddress').textContent = orgInfo.address || '123 Business Rd, Nairobi';
+
+  // Supplier info
+  document.getElementById('previewBillSupplierName').textContent = supplier.name || bill.supplier || '';
+  document.getElementById('previewBillSupplierPIN').textContent = supplier.krapin || '';
+  document.getElementById('previewBillSupplierAddress').textContent = supplier.address || '';
+
+  // Build items table
+  let itemsHTML = '';
+  (bill.items || []).forEach(item => {
+    let taxLabel = '';
+    if (item.taxRate === "16") taxLabel = "16%";
+    else if (item.taxRate === "8") taxLabel = "8%";
+    else if (item.taxRate === "0") taxLabel = "Zero Rated";
+    else if (item.taxRate === "exempt") taxLabel = "Exempt";
+    else if (item.taxRate === "import") taxLabel = "Imports";
+
+    const qty = parseFloat(item.qty) || 0;
+    const price = parseFloat(item.price) || 0;
+    const vat = parseFloat(item.vat) || 0;
+    const lineTotal = (parseFloat(item.subtotal) || 0) + vat;
+
+    itemsHTML += `
+      <tr>
+        <td class="p-2">${item.desc || ''}</td>
+        <td class="p-2">${qty}</td>
+        <td class="p-2">${currency} ${price.toFixed(2)}</td>
+        <td class="p-2">${currency} ${vat.toFixed(2)} (${taxLabel})</td>
+        <td class="p-2">${currency} ${lineTotal.toFixed(2)}</td>
+      </tr>
+    `;
+  });
+  document.getElementById('previewBillItems').innerHTML = itemsHTML ||
+    '<tr><td colspan="5" class="p-3 text-center text-gray-500">No items on this bill</td></tr>';
+
+  // Totals
+  const subtotal = (bill.items || []).reduce((sum, i) => sum + (parseFloat(i.subtotal) || 0), 0);
+  const totalVAT = (bill.items || []).reduce((sum, i) => sum + (parseFloat(i.vat) || 0), 0);
+  const totalAmount = bill.total != null ? parseFloat(bill.total) : subtotal + totalVAT;
+
+  document.getElementById('previewBillSubtotal').textContent = `${currency} ${subtotal.toFixed(2)}`;
+  document.getElementById('previewBillVAT').textContent = `${currency} ${totalVAT.toFixed(2)}`;
+  document.getElementById('previewBillTotal').textContent = `${currency} ${totalAmount.toFixed(2)}`;
+
+  // Show modal
+  document.getElementById('supplierBillPreviewModal').classList.remove('hidden');
 }
 
 
@@ -53445,8 +53743,32 @@ document.addEventListener('click', (e) => {
   }
 });
 
+let attendanceSortDir = {};
 function sortAttendance(key) {
-  console.log('Sort attendance by', key);
+  let attendance = JSON.parse(localStorage.getItem("attendance") || "[]");
+
+  const dir = attendanceSortDir[key] === 'asc' ? 'desc' : 'asc';
+  attendanceSortDir = { [key]: dir };
+
+  attendance.sort((a, b) => {
+    let va = a[key], vb = b[key];
+    if (key === 'days') {
+      va = parseFloat(va) || 0;
+      vb = parseFloat(vb) || 0;
+    } else {
+      va = (va || '').toString().toLowerCase();
+      vb = (vb || '').toString().toLowerCase();
+    }
+    if (va < vb) return dir === 'asc' ? -1 : 1;
+    if (va > vb) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  localStorage.setItem("attendance", JSON.stringify(attendance));
+  renderAttendanceTable();
+
+  const dropdown = document.getElementById('attendanceDropdown');
+  if (dropdown) dropdown.classList.add('hidden');
 }
 
 function exportAttendanceCSV() {
@@ -53454,16 +53776,25 @@ function exportAttendanceCSV() {
 }
 
 function resetAttendance() {
-  console.log('Reset attendance records');
+  const searchBox = document.getElementById('attendanceSearch');
+  if (searchBox) searchBox.value = '';
+
+  renderAttendanceTable();
+
+  const dropdown = document.getElementById('attendanceDropdown');
+  if (dropdown) dropdown.classList.add('hidden');
 }
 </script>
-  <div class="bg-white p-6 rounded shadow mb-6 space-y-4"><div class="grid grid-cols-1 sm:grid-cols-1 gap-4"><select id="attEmpID" class="border p-2 rounded" style="width: 700px;"><option value="">Select Employee</option></select></div><div class="grid grid-cols-1 sm:grid-cols-1 gap-4"><input id="attDate" type="date" class="border p-2 rounded" style="width: 700px;" /></div><div class="grid grid-cols-1 sm:grid-cols-1 gap-4"><select id="attType" class="border p-2 rounded" style="width: 700px;"><option value="Present">Present</option><option value="Sick Leave">Sick Leave</option><option value="Annual Leave">Annual Leave</option><option value="Unpaid Leave">Unpaid Leave</option><option value="Absent">Absent</option></select></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><input id="attDays" type="number" step="0.5" min="0" max="21" value="1"
-             placeholder="Leave Days" class="border p-2 rounded" style="width: 700px;"/><input id="attNote" type="text" placeholder="Notes (optional)" class="border p-2 rounded" style="width: 700px;"/></div><button onclick="addAttendance()"
+  <div class="bg-white p-6 rounded shadow mb-6 space-y-4"><input type="hidden" id="attendanceEditIndex" value="-1" /><div class="grid grid-cols-1 sm:grid-cols-1 gap-4"><select id="attEmpID" class="border p-2 rounded" style="width: 700px;"><option value="">Select Employee</option></select></div><div class="grid grid-cols-1 sm:grid-cols-1 gap-4"><input id="attDate" type="date" class="border p-2 rounded" style="width: 700px;" /></div><div class="grid grid-cols-1 sm:grid-cols-1 gap-4"><select id="attType" class="border p-2 rounded" style="width: 700px;"><option value="Present">Present</option><option value="Sick Leave">Sick Leave</option><option value="Annual Leave">Annual Leave</option><option value="Unpaid Leave">Unpaid Leave</option><option value="Absent">Absent</option></select></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><input id="attDays" type="number" step="0.5" min="0" max="21" value="1"
+             placeholder="Leave Days" class="border p-2 rounded" style="width: 700px;"/><input id="attNote" type="text" placeholder="Notes (optional)" class="border p-2 rounded" style="width: 700px;"/></div><button id="attendanceSaveBtn" onclick="addAttendance()"
             class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
       Save Attendance
+    </button><button id="attendanceCancelEditBtn" onclick="cancelAttendanceEdit()"
+            class="hidden border border-gray-500 text-gray-700 bg-white font-bold px-1 py-1 rounded hover:bg-gray-100 ml-1">
+      Cancel Edit
     </button></div><div class="bg-white p-6 rounded shadow"><h3 class="text-lg font-semibold mb-4">Attendance Records</h3><button onclick="exportAttendanceCSV()" class="mb-2 bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-500">
     Export CSV
-  </button><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><tr><th class="p-2 border">Employee ID</th><th class="p-2 border">Date</th><th class="p-2 border">Type</th><th class="p-2 border">Days</th><th class="p-2 border">Note</th><th class="p-2 border">Remaining Leave</th><th class="p-2 border">Actions</th></tr></thead><tbody id="attendanceTableBody"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
+  </button><button onclick="deleteSelectedAttendance()" class="mb-2 ml-1 border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><tr><th class="p-2 border"><input type="checkbox" onclick="toggleSelectAllAttendance(this)"></th><th class="p-2 border">Employee ID</th><th class="p-2 border">Date</th><th class="p-2 border">Type</th><th class="p-2 border">Days</th><th class="p-2 border">Note</th><th class="p-2 border">Remaining Leave</th><th class="p-2 border">Actions</th></tr></thead><tbody id="attendanceTableBody"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
     Total Count: <span id="totalCount">0</span></div><div>
     Show
     <select id="itemsPerPageSelect" class="border rounded px-1"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select>
@@ -55903,11 +56234,16 @@ function addAttendance() {
   const attendance =
     JSON.parse(localStorage.getItem("attendance") || "[]");
 
+  const editIndexField = document.getElementById("attendanceEditIndex");
+  const editIndex = editIndexField ? parseInt(editIndexField.value) : -1;
+  const isEditing = editIndex > -1 && attendance[editIndex];
+
   let totalLeaveUsed = attendance
 
-    .filter(a =>
+    .filter((a, i) =>
       a.empID === empID &&
-      a.type === "Annual Leave"
+      a.type === "Annual Leave" &&
+      i !== editIndex
     )
 
     .reduce((sum, a) =>
@@ -55942,7 +56278,7 @@ function addAttendance() {
 
   }
 
-  const newRecord = {
+  const record = {
 
     empID,
     date,
@@ -55952,7 +56288,11 @@ function addAttendance() {
 
   };
 
-  attendance.push(newRecord);
+  if (isEditing) {
+    attendance[editIndex] = record;
+  } else {
+    attendance.push(record);
+  }
 
   localStorage.setItem(
     "attendance",
@@ -55971,10 +56311,22 @@ function addAttendance() {
 
   document.getElementById("attDays").value = 1;
 
-  alert("✅ Attendance saved successfully!");
+  cancelAttendanceEdit();
+
+  alert(isEditing ? "✅ Attendance record updated successfully!" : "✅ Attendance saved successfully!");
 
   renderAttendanceTable();
 
+}
+function cancelAttendanceEdit() {
+  const editIndexField = document.getElementById("attendanceEditIndex");
+  if (editIndexField) editIndexField.value = "-1";
+
+  const saveBtn = document.getElementById("attendanceSaveBtn");
+  if (saveBtn) saveBtn.textContent = "Save Attendance";
+
+  const cancelBtn = document.getElementById("attendanceCancelEditBtn");
+  if (cancelBtn) cancelBtn.classList.add("hidden");
 }
   function renderAttendanceTable() {
 
@@ -55994,7 +56346,7 @@ function addAttendance() {
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="p-2 text-center">
+        <td colspan="8" class="p-2 text-center">
           No attendance records found.
         </td>
       </tr>
@@ -56025,6 +56377,10 @@ function addAttendance() {
     const row = document.createElement("tr");
 
     row.innerHTML = `
+
+      <td class="p-2 border text-center">
+        <input type="checkbox" class="attendance-checkbox" value="${index}">
+      </td>
 
       <td class="p-2 border">
         ${record.empID}
@@ -56072,7 +56428,7 @@ function addAttendance() {
 
         <button
           class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900"
-          onclick="viewHistory(${index})">
+          onclick="viewAttendanceHistory('${record.empID}')">
           History
         </button>
 
@@ -56113,6 +56469,26 @@ function addAttendance() {
 
   });
 
+}
+function viewAttendanceHistory(empID) {
+  const attendance = JSON.parse(localStorage.getItem("attendance") || "[]");
+  const records = attendance.filter(r => r.empID === empID);
+
+  if (records.length === 0) {
+    alert("No attendance history found for this employee.");
+    return;
+  }
+
+  let message = `Attendance History for ${empID}\n\n`;
+  records.forEach(r => {
+    message += `Date: ${r.date || 'N/A'}\n`;
+    message += `Type: ${r.type || 'N/A'}\n`;
+    message += `Days: ${r.days || 0}\n`;
+    if (r.note) message += `Note: ${r.note}\n`;
+    message += `-----------------------------\n`;
+  });
+
+  alert(message);
 }
 function toggleAttendanceMenu(index) {
 
@@ -56283,8 +56659,14 @@ function editAttendance(index) {
   document.getElementById("attNote").value = rec.note;
   document.getElementById("attDays").value = rec.days || 0;
 
-  
   document.getElementById("attendanceEditIndex").value = index;
+
+  const saveBtn = document.getElementById("attendanceSaveBtn");
+  if (saveBtn) saveBtn.textContent = "Update Attendance";
+
+  const cancelBtn = document.getElementById("attendanceCancelEditBtn");
+  if (cancelBtn) cancelBtn.classList.remove("hidden");
+
   alert("✏️ You are now editing this attendance record. Save to update.");
 }
 
@@ -56313,6 +56695,49 @@ function deleteAttendance(index) {
   renderAttendanceTable();
 
   alert("♻️ Attendance record moved to Recycle Bin.");
+}
+function toggleSelectAllAttendance(source) {
+  const checkboxes = document.querySelectorAll(".attendance-checkbox");
+  checkboxes.forEach(cb => { cb.checked = source.checked; });
+}
+function deleteSelectedAttendance() {
+  const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+  const role = loggedInUser.role?.toLowerCase();
+
+  if (role !== "human resource" && role !== "admin") {
+    alert("🚫 Only HR or Admin can delete attendance records.");
+    return;
+  }
+
+  let attendance = JSON.parse(localStorage.getItem("attendance") || "[]");
+
+  const selected = Array.from(
+    document.querySelectorAll(".attendance-checkbox:checked")
+  ).map(cb => parseInt(cb.value));
+
+  if (selected.length === 0) {
+    alert("No attendance records selected");
+    return;
+  }
+
+  if (!confirm(`You selected ${selected.length} attendance record(s). Proceed?`)) return;
+  if (!confirm("This action cannot be undone. Confirm delete?")) return;
+
+  selected.sort((a, b) => b - a).forEach(index => {
+    const record = attendance[index];
+    if (!record) return;
+
+    if (!record.id) record.id = crypto.randomUUID();
+    moveToRecycle(record, "File", "Attendance");
+
+    attendance.splice(index, 1);
+  });
+
+  localStorage.setItem("attendance", JSON.stringify(attendance));
+
+  renderAttendanceTable();
+
+  alert("♻️ Selected attendance records moved to Recycle Bin.");
 }
   function exportAttendanceCSV() {
     const attendance = JSON.parse(localStorage.getItem("attendance") || "[]");
@@ -71265,7 +71690,7 @@ function renderLeaveSummary() {
           </button>
 
           <button
-            onclick="viewHistory(${index})"
+            onclick="viewAttendanceHistory('${record.empID}')"
             class="bg-green-700 text-white px-2 py-1 rounded text-xs hover:bg-green-600">
             History
           </button>
