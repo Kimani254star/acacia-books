@@ -658,8 +658,8 @@ setInterval(nextSlide, 9000);
   </button></div></div></section><div id="registration-form" class="max-w-xl mx-auto mt-8 bg-white p-6 rounded shadow hidden"><h2 class="text-2xl font-bold mb-4">Register & Subscribe</h2><p id="selected-plan" class="mb-4 text-blue-900 font-semibold"></p><form action="" method="POST" class="space-y-4"><div id="google-signup" class="mb-4"><button onclick="signUpWithGoogle()" type="button"
             class="bg-white border border-gray-300 text-gray-800 py-2 px-4 rounded w-full flex items-center justify-center hover:bg-gray-100"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 mr-2" alt="Google Logo" />
             Sign up with Google
-          </button><div class="text-center my-2 text-gray-500 text-sm">or</div></div><div id="payment-section"><input type="hidden" name="plan" id="plan-input"><input type="hidden" name="price" id="price-input"><input type="text" name="companyName" id="company-name" placeholder="Company Name" required class="w-full border p-2 rounded"><input type="text" name="fullName" id="fullName" placeholder="Full Name" required class="w-full border p-2 rounded"><input type="email" name="email" id="email" placeholder="Email" required class="w-full border p-2 rounded"><input type="password" name="password" id="password" placeholder="Password" required class="w-full border p-2 rounded"><input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm Password" required class="w-full border p-2 rounded"><div><label class="block font-medium mb-1 text-blue-900">Choose Payment Method:</label><select name="paymentMethod" id="payment-method" required onchange="togglePaymentFields()"
-               class="w-full border border-blue-900 text-blue-900 bg-blue-50 p-2 rounded"><option value="">-- Select --</option><option value="mpesa">MPESA</option><option value="bank">Bank Transfer</option><option value="card">Credit Card</option></select></div><div id="mpesa-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Pay to MPESA Till/Paybill: <strong>0717346231</strong></p><input type="text" name="mpesaNumber" placeholder="Your MPESA Phone Number" class="w-full border p-2 rounded"></div><div id="bank-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Deposit to Bank Account: <strong>1177731215</strong></p><input type="text" name="bankRef" placeholder="Bank Transfer Reference" class="w-full border p-2 rounded"></div><div id="card-fields" class="hidden space-y-2"><input type="text" name="cardNumber" placeholder="Card Number" class="w-full border p-2 rounded"><input type="text" name="expiry" placeholder="MM/YY" class="w-full border p-2 rounded"><input type="text" name="cvv" placeholder="CVV" class="w-full border p-2 rounded"></div><button type="submit" class="bg-blue-900 text-white px-4 py-2 rounded w-full">Pay & Register</button></div></form></div></section></section><!-- ⭐ TESTIMONIALS --><section id="customers" class="py-20 bg-gray-300 text-center"><h2 class="text-2xl font-bold text-blue-800 mb-8">
+          </button><div class="text-center my-2 text-gray-500 text-sm">or</div></div><div id="payment-section"><input type="hidden" name="plan" id="plan-input"><input type="hidden" name="price" id="price-input"><input type="text" name="companyName" id="company-name" placeholder="Company Name" required class="w-full border p-2 rounded"><input type="text" name="fullName" id="fullName" placeholder="Full Name" required class="w-full border p-2 rounded"><input type="email" name="email" id="email" placeholder="Email" required class="w-full border p-2 rounded"><input type="password" name="password" id="password" placeholder="Password" required class="w-full border p-2 rounded"><input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm Password" required class="w-full border p-2 rounded"><div class="flex flex-col sm:flex-row sm:items-end gap-3"><div class="flex-1"><label class="block font-medium mb-1 text-blue-900">Choose Payment Method:</label><select name="paymentMethod" id="payment-method" required onchange="togglePaymentFields()"
+               class="w-full border border-blue-900 text-blue-900 bg-blue-50 p-2 rounded"><option value="">-- Select --</option><option value="mpesa">MPESA</option><option value="bank">Bank Transfer</option><option value="card">Credit Card</option><option value="airtel">Airtel Money</option><option value="paypal">PayPal</option><option value="cheque">Cheque / Manual Deposit</option></select></div><button type="submit" class="bg-blue-900 text-white px-4 py-2 rounded sm:w-52 w-full">Pay & Register</button></div><div id="mpesa-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Pay to MPESA Till/Paybill: <strong>0717346231</strong></p><input type="text" name="mpesaNumber" placeholder="Your MPESA Phone Number" class="w-full border p-2 rounded"></div><div id="bank-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Deposit to Bank Account: <strong>1177731215</strong></p><input type="text" name="bankRef" placeholder="Bank Transfer Reference" class="w-full border p-2 rounded"></div><div id="card-fields" class="hidden space-y-2"><input type="text" name="cardNumber" placeholder="Card Number" class="w-full border p-2 rounded"><input type="text" name="expiry" placeholder="MM/YY" class="w-full border p-2 rounded"><input type="text" name="cvv" placeholder="CVV" class="w-full border p-2 rounded"></div><div id="airtel-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Pay to Airtel Money Number: <strong>0731858997</strong></p><input type="text" name="airtelNumber" placeholder="Your Airtel Money Phone Number" class="w-full border p-2 rounded"></div><div id="paypal-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Pay via PayPal to: <strong>billing@acaciabooks.com</strong></p><input type="email" name="paypalEmail" placeholder="Your PayPal Email" class="w-full border p-2 rounded"></div><div id="cheque-fields" class="hidden space-y-2"><p class="text-sm text-blue-900 mb-2">Make cheque payable to: <strong>Acacia Books Ltd</strong></p><input type="text" name="chequeNumber" placeholder="Cheque Number" class="w-full border p-2 rounded"><input type="text" name="chequeBank" placeholder="Issuing Bank" class="w-full border p-2 rounded"></div></div></form></div></section></section><!-- ⭐ TESTIMONIALS --><section id="customers" class="py-20 bg-gray-300 text-center"><h2 class="text-2xl font-bold text-blue-800 mb-8">
     What Our Customers Say
   </h2><div id="testimonial-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-8xl mx-auto px-4"><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><img
         src="https://randomuser.me/api/portraits/women/68.jpg"
@@ -1024,7 +1024,7 @@ function closeQuoteModal() {
         Login
       </button><p class="text-sm flex justify-between"><a href="#" class="text-blue-600 hover:underline" onclick="showRegisterForm();return false;">Create account</a><a href="#" class="text-blue-600 hover:underline" onclick="showResetForm()">Forgot Password?</a></p></div><div id="resetForm" class="hidden mt-4"><p class="mb-2 text-sm text-gray-700">Enter your username or email to reset your password.</p><input id="resetEmail" type="text" placeholder="Username or Email" class="w-full border p-2 mb-3 rounded" /><button onclick="resetPassword()" class="w-full bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 mb-2">
         Send Reset Code
-      </button><div id="resetStep2" class="hidden"><p class="mb-2 text-sm text-gray-700">📧 We sent a 6-digit code to your <a href="mail.html" target="_blank" class="text-blue-600 underline font-semibold">Acacia Mail</a> inbox. Enter it below with your new password.</p><input id="resetCode" type="text" inputmode="numeric" maxlength="6" placeholder="6-digit code" class="w-full border p-2 mb-3 rounded" /><input id="resetNewPass" type="password" placeholder="New password" class="w-full border p-2 mb-3 rounded" /><button onclick="confirmReset()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 mb-2">Update Password</button></div><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideResetForm();return false;">Back to Login</a></p></div><div id="registerForm" class="hidden"><h3 class="text-lg font-bold text-blue-900 mb-3 text-center">Create Account</h3><input id="registerUser" type="text" placeholder="Email or Username" class="w-full border p-2 mb-3 rounded" /><input id="registerPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><input id="registerRole" type="hidden" value="admin" /><p class="text-xs text-gray-600 mb-3">👑 You will be the <b>Admin</b> of your company. Module access depends on the plan you choose, and you can add team members later.</p><button onclick="handleRegister()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 mb-2">Create Account</button><button onclick="createWithGoogle()" type="button" class="w-full border border-blue-900 text-blue-900 py-2 rounded hover:bg-blue-50 mb-2">Sign up with Google</button><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideRegisterForm();return false;">Back to Login</a></p></div>
+      </button><div id="resetStep2" class="hidden"><p class="mb-2 text-sm text-gray-700">📧 We sent a 6-digit code to your <a href="mail.html" target="_blank" class="text-blue-600 underline font-semibold">Acacia Mail</a> inbox. Enter it below with your new password.</p><input id="resetCode" type="text" inputmode="numeric" maxlength="6" placeholder="6-digit code" class="w-full border p-2 mb-3 rounded" /><input id="resetNewPass" type="password" placeholder="New password" class="w-full border p-2 mb-3 rounded" /><button onclick="confirmReset()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 mb-2">Update Password</button></div><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideResetForm();return false;">Back to Login</a></p></div><div id="registerForm" class="hidden"><h3 class="text-lg font-bold text-blue-900 mb-3 text-center">Create Account</h3><div id="registerAccountStep"><input id="registerCompanyName" type="text" placeholder="Company Name" class="w-full border p-2 mb-3 rounded" /><select id="registerCompanyCountry" class="w-full border p-2 mb-3 rounded text-gray-700"><option value="">Select Country</option><option>Kenya</option><option>Tanzania</option><option>Uganda</option><option>Rwanda</option><option>Burundi</option><option>South Sudan</option><option>Ethiopia</option><option>Somalia</option><option>DR Congo</option><option>Zambia</option><option>Malawi</option><option>Mozambique</option><option>Lesotho</option><option>South Africa</option><option>Ghana</option><option>Nigeria</option><option>Egypt</option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>India</option><option>United Arab Emirates</option><option>Other</option></select><input id="registerUser" type="text" placeholder="Email or Username" class="w-full border p-2 mb-3 rounded" /><input id="registerPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><input id="registerRole" type="hidden" value="admin" /><p class="text-xs text-gray-600 mb-3">👑 You will be the <b>Admin</b> of your company. Module access depends on the plan you choose, and you can add team members later.</p><button onclick="handleRegister()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 mb-2">Create Account</button><button onclick="createWithGoogle()" type="button" class="w-full border border-blue-900 text-blue-900 py-2 rounded hover:bg-blue-50 mb-2">Sign up with Google</button><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideRegisterForm();return false;">Back to Login</a></p></div><div id="regPaymentStep" class="hidden"><p id="regPaymentSummary" class="text-sm text-blue-900 mb-3"></p><div class="flex items-end gap-2 mb-3"><div class="flex-1"><label class="block text-sm font-medium mb-1 text-blue-900">Choose Payment Method:</label><select id="regPaymentMethod" onchange="toggleRegPaymentFields()" class="w-full border border-blue-900 text-blue-900 bg-blue-50 p-2 rounded"><option value="">-- Select --</option><option value="mpesa">MPESA</option><option value="bank">Bank Transfer</option><option value="card">Credit Card</option><option value="airtel">Airtel Money</option><option value="paypal">PayPal</option><option value="cheque">Cheque / Manual Deposit</option></select></div><button onclick="completeRegPayment()" class="bg-blue-900 text-white px-3 py-2 rounded whitespace-nowrap">Complete Payment</button></div><div id="reg-mpesa-fields" class="hidden mb-3"><label class="block text-sm font-medium mb-1 text-blue-900">Country</label><select id="regMpesaCountry" onchange="updateMpesaPaybill()" class="w-full border p-2 mb-2 rounded"><option value="Kenya" data-till="0717346231">Kenya</option><option value="Tanzania" data-till="">Tanzania</option><option value="Uganda" data-till="">Uganda</option><option value="DR Congo" data-till="">DR Congo</option><option value="Mozambique" data-till="">Mozambique</option><option value="Lesotho" data-till="">Lesotho</option><option value="Ghana" data-till="">Ghana</option></select><p id="regMpesaInstructions" class="text-sm text-blue-900 mb-2">Pay to MPESA Till/Paybill: <strong id="regMpesaTill">0717346231</strong></p><input id="regMpesaNumber" type="text" placeholder="Your MPESA Phone Number" class="w-full border p-2 rounded"></div><div id="reg-bank-fields" class="hidden mb-3"><p class="text-sm text-blue-900 mb-2">Deposit to Bank Account: <strong>1177731215</strong></p><input id="regBankRef" type="text" placeholder="Bank Transfer Reference" class="w-full border p-2 rounded"></div><div id="reg-card-fields" class="hidden mb-3 space-y-2"><input id="regCardName" type="text" placeholder="Name on Card" class="w-full border p-2 rounded"><input id="regCardNumber" type="text" placeholder="Card Number" class="w-full border p-2 rounded"><div class="flex gap-2"><input id="regCardExpiry" type="text" placeholder="MM/YY" class="w-1/2 border p-2 rounded"><input id="regCardCvv" type="text" placeholder="CVV" class="w-1/2 border p-2 rounded"></div><select id="regCardCountry" class="w-full border p-2 rounded"><option value="">Billing Country</option><option>Kenya</option><option>Tanzania</option><option>Uganda</option><option>Nigeria</option><option>Ghana</option><option>South Africa</option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>India</option><option>United Arab Emirates</option><option>Other</option></select><input id="regCardPostal" type="text" placeholder="Postal Code" class="w-full border p-2 rounded"></div><div id="reg-airtel-fields" class="hidden mb-3"><p class="text-sm text-blue-900 mb-2">Pay to Airtel Money Number: <strong>0731858997</strong></p><input id="regAirtelNumber" type="text" placeholder="Your Airtel Money Phone Number" class="w-full border p-2 rounded"></div><div id="reg-paypal-fields" class="hidden mb-3"><p class="text-sm text-blue-900 mb-2">Pay via PayPal to: <strong>billing@acaciabooks.com</strong></p><input id="regPaypalEmail" type="email" placeholder="Your PayPal Email" class="w-full border p-2 rounded"></div><div id="reg-cheque-fields" class="hidden mb-3 space-y-2"><p class="text-sm text-blue-900 mb-2">Make cheque payable to: <strong>Acacia Books Ltd</strong></p><input id="regChequeNumber" type="text" placeholder="Cheque Number" class="w-full border p-2 rounded"><input id="regChequeBank" type="text" placeholder="Issuing Bank" class="w-full border p-2 rounded"></div><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="backToRegisterAccount();return false;">Back</a></p></div></div>
 <script>
 function showRegisterForm() {
   document.getElementById('loginForm').classList.add('hidden');
@@ -1038,13 +1038,121 @@ function hideRegisterForm() {
   var h = document.querySelector('#loginModal h2'); if (h) h.textContent = 'Login';
 }
 function handleRegister() {
+  var c = document.getElementById('registerCompanyName').value.trim();
+  var country = document.getElementById('registerCompanyCountry').value;
   var u = document.getElementById('registerUser').value.trim();
   var p = document.getElementById('registerPass').value.trim();
+  if (!c) { alert('Please enter your company name'); return; }
+  if (!country) { alert('Please select your company\u2019s country'); return; }
   if (!u) { alert('Please enter an email or username'); return; }
   if (!p || p.length < 4) { alert('Please enter a password (at least 4 characters)'); return; }
   // Ensure a brand-new account never inherits the current session's company
   localStorage.removeItem('loggedInUser');
   registerUser();
+}
+
+/* ===== In-modal payment step (Create Account -> pick plan -> pay, without leaving the modal) ===== */
+const MPESA_TILLS = {
+  'Kenya': '0717346231'
+  // Add real paybill/till numbers for other countries here as they become available.
+};
+function toggleRegPaymentFields() {
+  ['reg-mpesa-fields','reg-bank-fields','reg-card-fields','reg-airtel-fields','reg-paypal-fields','reg-cheque-fields'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+  var method = document.getElementById('regPaymentMethod').value;
+  var showId = {
+    mpesa: 'reg-mpesa-fields',
+    bank: 'reg-bank-fields',
+    card: 'reg-card-fields',
+    airtel: 'reg-airtel-fields',
+    paypal: 'reg-paypal-fields',
+    cheque: 'reg-cheque-fields'
+  }[method];
+  if (showId) {
+    var el = document.getElementById(showId);
+    if (el) el.classList.remove('hidden');
+  }
+  if (method === 'mpesa') updateMpesaPaybill();
+}
+function updateMpesaPaybill() {
+  var country = document.getElementById('regMpesaCountry').value;
+  var till = MPESA_TILLS[country];
+  var tillEl = document.getElementById('regMpesaTill');
+  var instrEl = document.getElementById('regMpesaInstructions');
+  if (till) {
+    if (tillEl) tillEl.textContent = till;
+    if (instrEl) instrEl.classList.remove('hidden');
+  } else if (instrEl) {
+    instrEl.innerHTML = 'M-Pesa paybill for <strong>' + country + '</strong> is not set up yet \u2014 please contact support for the correct number before paying.';
+  }
+}
+function backToRegisterAccount() {
+  // Drop the pending account/company we created for the payment step so the
+  // person can freely edit details and try again without a "user exists" error.
+  try {
+    var loggedIn = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+    if (loggedIn && loggedIn.status === 'pending') {
+      var users = JSON.parse(localStorage.getItem('users') || '[]').filter(function(u){ return u.username !== loggedIn.username || u.companyId !== loggedIn.companyId; });
+      localStorage.setItem('users', JSON.stringify(users));
+      var companies = JSON.parse(localStorage.getItem('companies') || '[]').filter(function(c){ return c.companyId !== loggedIn.companyId; });
+      localStorage.setItem('companies', JSON.stringify(companies));
+      localStorage.removeItem('loggedInUser');
+    }
+  } catch(e){}
+  var accStep = document.getElementById('registerAccountStep');
+  var payStep = document.getElementById('regPaymentStep');
+  if (accStep && payStep) { payStep.classList.add('hidden'); accStep.classList.remove('hidden'); }
+}
+function completeRegPayment() {
+  var method = document.getElementById('regPaymentMethod').value;
+  if (!method) { alert('Please choose a payment method.'); return; }
+
+  var fieldVal = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+
+  var referenceByMethod = {
+    mpesa: function(){
+      var country = document.getElementById('regMpesaCountry').value;
+      var num = fieldVal('regMpesaNumber');
+      return num ? (num + ' (' + country + ')') : '';
+    },
+    bank: function(){ return fieldVal('regBankRef'); },
+    card: function(){
+      var name = fieldVal('regCardName'), num = fieldVal('regCardNumber'), exp = fieldVal('regCardExpiry'), cvv = fieldVal('regCardCvv'), country = fieldVal('regCardCountry');
+      return (name && num && exp && cvv && country) ? (name + ' \u2014 card ending ' + num.slice(-4) + ' (' + country + ')') : '';
+    },
+    airtel: function(){ return fieldVal('regAirtelNumber'); },
+    paypal: function(){ return fieldVal('regPaypalEmail'); },
+    cheque: function(){
+      var no = fieldVal('regChequeNumber'), bank = fieldVal('regChequeBank');
+      return (no && bank) ? (no + ' / ' + bank) : '';
+    }
+  };
+  var reference = referenceByMethod[method] ? referenceByMethod[method]() : '';
+  if (!reference) { alert('Please fill in all the payment details for the selected method.'); return; }
+
+  var loggedIn = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+  if (!loggedIn) { alert('Something went wrong \u2014 please try creating your account again.'); return; }
+
+  var payments = JSON.parse(localStorage.getItem('payments') || '[]');
+  payments.push({
+    id: 'pay_' + Date.now(),
+    username: loggedIn.username,
+    companyId: loggedIn.companyId,
+    plan: loggedIn.plan,
+    amount: loggedIn.price,
+    method: method,
+    reference: reference,
+    status: 'pending_verification',
+    submittedAt: new Date().toISOString()
+  });
+  localStorage.setItem('payments', JSON.stringify(payments));
+  try { if (typeof logAudit === 'function') logAudit('payment submitted', 'auth', loggedIn.username + ' via ' + method); } catch(e){}
+
+  alert('\u2705 Payment details received! We\u2019ll verify it shortly \u2014 loading your account now.');
+  if (typeof closeLogin === 'function') closeLogin();
+  if (typeof showApp === 'function') showApp();
 }
 
 /* ===== Forgot password via Acacia Mail ===== */
@@ -1166,210 +1274,217 @@ function toggleBilling() {
   form.scrollIntoView({ behavior: 'smooth' });
 }
   function togglePaymentFields() {
-  document.getElementById('mpesa-fields').classList.add('hidden');
-  document.getElementById('bank-fields').classList.add('hidden');
-  document.getElementById('card-fields').classList.add('hidden');
+  ['mpesa-fields','bank-fields','card-fields','airtel-fields','paypal-fields','cheque-fields'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
 
   const method = document.getElementById('payment-method').value;
-
-  if (method === 'mpesa') {
-    document.getElementById('mpesa-fields').classList.remove('hidden');
-  } else if (method === 'bank') {
-    document.getElementById('bank-fields').classList.remove('hidden');
-  } else if (method === 'card') {
-    document.getElementById('card-fields').classList.remove('hidden');
+  const showId = {
+    mpesa: 'mpesa-fields',
+    bank: 'bank-fields',
+    card: 'card-fields',
+    airtel: 'airtel-fields',
+    paypal: 'paypal-fields',
+    cheque: 'cheque-fields'
+  }[method];
+  if (showId) {
+    const el = document.getElementById(showId);
+    if (el) el.classList.remove('hidden');
   }
 }
 
+/* Capture the payment details and actually load the user into the app,
+   instead of letting the form do a native POST (which just reloads the
+   page and loses everything). */
+(function(){
+  function wireForm(){
+    const form = document.querySelector('#registration-form form');
+    if (!form) { setTimeout(wireForm, 300); return; }
+    if (form.__wired) return;
+    form.__wired = true;
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      completeRegistrationPayment();
+    });
+  }
+  wireForm();
+})();
+
+function completeRegistrationPayment(){
+  const method = document.getElementById('payment-method').value;
+  if (!method) { alert('Please choose a payment method.'); return; }
+
+  const fieldVal = function(name){
+    const el = document.querySelector('#registration-form [name="' + name + '"]');
+    return el ? el.value.trim() : '';
+  };
+
+  const referenceByMethod = {
+    mpesa: function(){ return fieldVal('mpesaNumber'); },
+    bank: function(){ return fieldVal('bankRef'); },
+    card: function(){
+      const num = fieldVal('cardNumber'), exp = fieldVal('expiry'), cvv = fieldVal('cvv');
+      return (num && exp && cvv) ? ('Card ending ' + num.slice(-4)) : '';
+    },
+    airtel: function(){ return fieldVal('airtelNumber'); },
+    paypal: function(){ return fieldVal('paypalEmail'); },
+    cheque: function(){
+      const no = fieldVal('chequeNumber'), bank = fieldVal('chequeBank');
+      return (no && bank) ? (no + ' / ' + bank) : '';
+    }
+  };
+
+  const reference = referenceByMethod[method] ? referenceByMethod[method]() : '';
+  if (!reference) { alert('Please fill in the payment details for the selected method.'); return; }
+
+  const loggedIn = JSON.parse(localStorage.getItem('loggedInUser') || 'null');
+  if (!loggedIn) { alert('Something went wrong \u2014 please try creating your account again.'); return; }
+
+  const payments = JSON.parse(localStorage.getItem('payments') || '[]');
+  payments.push({
+    id: 'pay_' + Date.now(),
+    username: loggedIn.username,
+    companyId: loggedIn.companyId,
+    plan: document.getElementById('plan-input').value || loggedIn.plan,
+    amount: document.getElementById('price-input').value || loggedIn.price,
+    method: method,
+    reference: reference,
+    status: 'pending_verification',
+    submittedAt: new Date().toISOString()
+  });
+  localStorage.setItem('payments', JSON.stringify(payments));
+  try { if (typeof logAudit === 'function') logAudit('payment submitted', 'auth', loggedIn.username + ' via ' + method); } catch(e){}
+
+  document.getElementById('registration-form').classList.add('hidden');
+  alert('\u2705 Payment details received! We\'ll verify it shortly \u2014 loading your account now.');
+  if (typeof closeLogin === 'function') closeLogin();
+  if (typeof showApp === 'function') showApp();
+}
+
 const planUserLimits = {
-  Free: { admin: 1, sales: 1, store: 1, hr: 1, account: 1, procure: 1 }, 
-  Starter: { admin: 2, sales: 1, store: 1, hr: 1, account: 1, procure: 1 }, 
-  Pro: { admin: 3, sales: 6, store: 2, hr: 2, account: 2, procure: 2 }, 
-  Business: { admin: 4, sales: 4, store: 2, hr: 2, account: 2, procure: 2 }, 
-  Enterprise: { admin: 4, sales: 5, store: 2, hr: 2, account: 2, procure: 2 },
-  AllAccess: { admin: 5,  sales: 5, store: 5, hr: 5, account: 5, procure: 5 }
+  Free: { admin: 1, account: 1, sales: 1, procure: 1, store: 1, audit: 1, hr: 1 },
+  Starter: { admin: 2, account: 2, sales: 2, procure: 2, store: 2, audit: 2, hr: 2 },
+  Pro: { admin: 3, account: 3, sales: 3, procure: 3, store: 3, audit: 3, hr: 3 },
+  Business: { admin: 4, account: 4, sales: 4, procure: 4, store: 4, audit: 4, hr: 4 },
+  Enterprise: { admin: 5, account: 5, sales: 5, procure: 5, store: 5, audit: 5, hr: 5 },
+  "All Access": { admin: 6, account: 6, sales: 6, procure: 6, store: 6, audit: 6, hr: 6 }
 };
-function canAddUser(plan, role) {
+function canAddUser(companyId, plan, role) {
   const limits = planUserLimits[plan];
   if (!limits) return false;
 
   const users = JSON.parse(localStorage.getItem("users") || "[]");
 
-  const currentCount = users.filter(u => u.plan === plan && u.role === role).length;
+  const currentCount = users.filter(u => String(u.companyId || '') === String(companyId) && u.role === role).length;
 
   return currentCount < (limits[role] || 0);
 }
 
-const accessMatrix = {
-  Free: {
-    dashboard: true,
-    funds: true,
-    reports: true,
+// Plan order matches the spreadsheet columns: Free, Starter, Pro, Business, Enterprise, All Access
+const PLAN_ORDER = ['Free', 'Starter', 'Pro', 'Business', 'Enterprise', 'All Access'];
 
-    inventory: ['stock'],
-    customers: ['customer', 'invoices', 'quotes', 'creditNotes', 'salesReturns', 'receipts', 'delivery', 'statement'],
-    suppliers: ['supplier', 'bills', 'operationalCosts', 'taxPayments', 'purchaseOrders', 'payments', 'debitNotes', 'purchaseReturns', 'grn', 'statement'],
-    accountant: ['chartOfAccounts'],
-    payroll: [],
-    settings: ['orgProfile', 'warehouses']
-  },
-
-  Starter: {
-    dashboard: true,
-    funds: true,
-    reports: true,
-    inventory: ['stock','movement','priceList','Amendments'],
-    customers: 'all',
-    suppliers: 'all',
-    accountant: ['chartOfAccounts','manualJournals'],
-    payroll: ['employees','attendance'],
-    settings: ['orgProfile','warehouses']
-  },
-
-Pro: {
-    dashboard: true,
-    funds: true,
-    reports: true,
-    inventory: 'all',
-    customers: 'all',
-    suppliers: 'all',
-    accountant: 'all',
-    payroll: ['employees','attendance','earnings','payslip'],
-    settings: 'all'
-  },
-
-  Business: {
-    dashboard: true,
-    funds: true,
-    reports: true,
-    inventory: 'all',
-    customers: 'all',
-    suppliers: 'all',
-    accountant: 'all',
-    payroll: 'all',
-    settings: 'all'
-  },
-
-  Enterprise: {
-    dashboard: true,
-    funds: true,
-    reports: true,
-    inventory: 'all',
-    customers: 'all',
-    suppliers: 'all',
-    accountant: 'all',
-    payroll: 'all',
-    settings: 'all',
-    integrations: true,
-    deployment: true
-  },
-
-  AllAccess: {
-    dashboard: true,
-    funds: true,
-    reports: true,
-    inventory: 'all',
-    customers: 'all',
-    suppliers: 'all',
-    accountant: 'all',
-    payroll: 'all',
-    settings: 'all',
-    integrations: true,
-    deployment: true,
-    files: true,         
-    prioritySupport: true 
-  }
+// One row per Hub/Submodule from Acacia_ERP_Module_Submodules_Plans.xlsx.
+// Each value array is [Free, Starter, Pro, Business, Enterprise, All Access] -> true/false.
+const submoduleAccess = {
+  // Dashboard hub
+  dashboard:                 [true,  true,  true,  true,  true,  true],
+  // Inventory hub
+  inventoryTab:               [true,  true,  true,  true,  true,  true],   // Stock
+  movementTab:                [true,  true,  true,  true,  true,  true],   // Movement
+  priceListTab:               [false, true,  true,  true,  true,  true],  // Price List
+  Amenend:                    [true,  true,  true,  true,  true,  true],   // Amendments
+  BundleItems:                [false, false, false, true,  true,  true],  // Bundle Items
+  BulkAdjustment:             [false, false, false, false, true,  true],  // Bulk Adjustments
+  packagesTab:                [true,  true,  true,  true,  true,  true],   // Packages
+  shipmentsTab:                [true,  true,  true,  true,  true,  true],  // Shipments
+  // Funds hub
+  fundsTab:                   [true,  true,  true,  true,  true,  true],
+  // Sales hub
+  customersTab:               [true,  true,  true,  true,  true,  true],   // Customers
+  invoicesTab:                [true,  true,  true,  true,  true,  true],   // Invoices
+  quotesTab:                  [false, true,  true,  true,  true,  true],  // Quotes
+  ordersTab:                  [false, false, true,  true,  true,  true],  // Orders
+  bulkInvoicesTab:            [false, false, false, false, true,  true],  // Bulk Invoicing
+  creditNoteTab:              [false, false, false, true,  true,  true],  // Credit Notes
+  salesReturnTab:             [false, false, false, true,  true,  true],  // Sales Returns
+  receiptsTab:                [true,  true,  true,  true,  true,  true],   // Receipts
+  recurringInvoicesTab:       [false, false, false, false, true,  true],  // Recurring Invoices
+  deliveryTab:                [true,  true,  true,  true,  true,  true],   // Delivery
+  customerStatementTab:       [true,  true,  true,  true,  true,  true],   // Statement (Sales)
+  // Purchase hub
+  supplierTab:                [true,  true,  true,  true,  true,  true],   // Suppliers
+  supplierPaymentsTab:        [true,  true,  true,  true,  true,  true],   // Payments
+  supplierBillsTab:           [false, true,  true,  true,  true,  true],  // Bills
+  bulkBillingTab:             [false, false, false, true,  true,  true],  // Bulk Billing
+  taxPaymentsTab:             [false, false, false, true,  true,  true],  // Tax Payments
+  OperationalCostsTab:        [true,  true,  true,  true,  true,  true],   // Operational Costs
+  supplierPurchaseOrdersTab:  [false, false, true,  true,  true,  true],  // Purchase Orders
+  supplierDebitNotesTab:      [false, false, true,  true,  true,  true],  // Debit Notes
+  purchaseReturnsTab:         [false, false, false, true,  true,  true],  // Returns
+  grnTab:                     [true,  true,  true,  true,  true,  true],   // Goods Received
+  supplierStatementTab:       [true,  true,  true,  true,  true,  true],   // Statement (Purchase)
+  // Accountant hub
+  manualJournalsTab:          [true,  true,  true,  true,  true,  true],   // Manual Journals
+  recurringJournalsTab:       [false, false, true,  true,  true,  true],  // Recurring Journals
+  currencyAdjustmentsTab:     [false, false, true,  true,  true,  true],  // Currency Adjustments
+  nonCurrentAssetsTab:        [false, false, false, true,  true,  true],  // Non-Current Assets
+  nonCurrentLiabilitiesTab:   [false, false, false, true,  true,  true],  // Non-Current Liabilities
+  equityTab:                  [false, false, false, true,  true,  true],  // Equity
+  taxAdjustmentsTab:          [false, false, false, true,  true,  true],  // Tax Adjustments
+  chartOfAccountsTab:         [true,  true,  true,  true,  true,  true],   // Chart of Accounts
+  currentAccountsTab:         [true,  true,  true,  true,  true,  true],   // Current Accounts
+  budgetsTab:                 [false, false, true,  true,  true,  true],  // Budgets
+  transactionLockingTab:      [true,  true,  true,  true,  true,  true],   // Transaction Locking
+  // Payroll hub
+  employeesTab:               [true,  true,  true,  true,  true,  true],   // Employees
+  earningsTab:                [true,  true,  true,  true,  true,  true],   // Earnings & Allowances
+  grossPayTab:                [false, false, false, true,  true,  true],  // Earnings & Deductions
+  attendanceTab:              [true,  true,  true,  true,  true,  true],   // Attendance & Leave
+  payslipTab:                 [false, false, false, true,  true,  true],  // Payslip Generation
+  statutoryDeductionsTab:     [false, false, false, false, true,  true],  // Statutories
+  payrollReportsTab:          [false, false, false, false, false, true],  // Payroll Reports
+  integrationsTab:            [true,  true,  true,  true,  true,  true],   // Integrations
+  // Reports hub (Basic/Standard/Advanced/Advanced/Enterprise/Full — every plan gets some level)
+  reportsPanel:               [true,  true,  true,  true,  true,  true],
+  // Plans hub
+  plansTab:                   [false, true,  true,  true,  true,  true],  // Plans Hub
+  projectTab:                 [false, false, true,  true,  true,  true],  // Project Hub
+  projectRevenueTab:          [false, false, false, true,  true,  true],  // Plan Revenue
+  // Settings hub
+  orgProfileTab:              [true,  true,  true,  true,  true,  true],   // Org Profile
+  warehousesTab:              [true,  true,  true,  true,  true,  true],   // Warehouses
+  DatacenterTab:              [true,  true,  true,  true,  true,  true],   // Data Center
+  systemConfigurationTab:     [false, false, false, true,  true,  true],  // System Configuration
+  userActivityTab:            [false, false, false, true,  true,  true],  // User Activity
+  taxComplianceTab:           [true,  true,  true,  true,  true,  true],   // Tax Compliance
+  userManagementTab:          [true,  true,  true,  true,  true,  true],   // User Management
+  vatTab:                     [false, false, true,  true,  true,  true],  // VAT
+  preferencesTab:             [true,  true,  true,  true,  true,  true],   // Preferences
+  settingstemplateTab:        [false, true,  true,  true,  true,  true],  // Customization
+  costingTab:                 [false, false, true,  true,  true,  true],  // Costing
+  bulkCostingTab:             [false, false, false, true,  true,  true],  // Bulk Costing
+  // Files hub
+  filesTab:                   [true,  true,  true,  true,  true,  true],   // File Manager
+  recycleBinTab:              [true,  true,  true,  true,  true,  true],   // Recycle Bin
+  // Mail hub
+  mailHub:                    [true,  true,  true,  true,  true,  true],   // Mail Hub
+  // CRM hub
+  crmHub:                     [false, false, true,  true,  true,  true]   // CRM Hub
 };
 
 function renderTabsBasedOnPlan(plan) {
-  const access = accessMatrix[plan];
-  if (!access) return;
+  const planIndex = PLAN_ORDER.indexOf(plan);
+  if (planIndex === -1) return;
 
   const hide = id => document.getElementById(id)?.classList.add('hidden');
   const show = id => document.getElementById(id)?.classList.remove('hidden');
 
-  const isAllowed = (moduleAccess, submodule) =>
-    moduleAccess === 'all' || moduleAccess?.includes(submodule);
-
-  access.dashboard ? show('dashboard') : hide('dashboard');
-  access.funds ? show('fundsTab') : hide('fundsTab');
-  access.reports ? show('reportsPanel') : hide('reportsPanel');
-
-  isAllowed(access.inventory,'stock') ? show('inventoryTab') : hide('inventoryTab');
-  isAllowed(access.inventory,'movement') ? show('movementTab') : hide('movementTab');
-  isAllowed(access.inventory,'priceList') ? show('priceListTab') : hide('priceListTab');
-  isAllowed(access.inventory,'Amendments') ? show('Amenend') : hide('Amenend');
-
-  isAllowed(access.customers,'customer') ? show('customersTab') : hide('customersTab');
-  isAllowed(access.customers,'invoices') ? show('invoicesTab') : hide('invoicesTab');
-  isAllowed(access.customers,'quotes') ? show('quotesTab') : hide('quotesTab');
-  isAllowed(access.customers,'creditNotes') ? show('creditNoteTab') : hide('creditNoteTab');
-  isAllowed(access.customers,'salesReturns') ? show('salesReturnTab') : hide('salesReturnTab');
-  isAllowed(access.customers,'receipts') ? show('receiptsTab') : hide('receiptsTab');
-  isAllowed(access.customers,'delivery') ? show('deliveryTab') : hide('deliveryTab');
-  isAllowed(access.customers,'statement') ? show('customerStatementTab') : hide('customerStatementTab');
-
-  isAllowed(access.suppliers,'supplier') ? show('supplierTab') : hide('supplierTab');
-  isAllowed(access.suppliers,'bills') ? show('supplierBillsTab') : hide('supplierBillsTab');
-  isAllowed(access.suppliers,'taxPayments') ? show('taxPaymentsTab') : hide('taxPaymentsTab');
-  isAllowed(access.suppliers,'operationalCosts') ? show('OperationalCostsTab') : hide('OperationalCostsTab');
-  isAllowed(access.suppliers,'purchaseOrders') ? show('supplierPurchaseOrdersTab') : hide('supplierPurchaseOrdersTab');
-  isAllowed(access.suppliers,'payments') ? show('supplierPaymentsTab') : hide('supplierPaymentsTab');
-  isAllowed(access.suppliers,'debitNotes') ? show('supplierDebitNotesTab') : hide('supplierDebitNotesTab');
-  isAllowed(access.suppliers,'purchaseReturns') ? show('purchaseReturnsTab') : hide('purchaseReturnsTab');
-  isAllowed(access.suppliers,'grn') ? show('grnTab') : hide('grnTab');
-  isAllowed(access.suppliers,'statement') ? show('supplierStatementTab') : hide('supplierStatementTab');
-
-  if (access.accountant === 'all') {
-    ['chartOfAccountsTab','manualJournalsTab','recurringJournalsTab','currencyAdjustmentsTab','nonCurrentAssetsTab','nonCurrentLiabilitiesTab','budgetsTab','transactionLockingTab'].forEach(show);
-  } else {
-    isAllowed(access.accountant,'chartOfAccounts') ? show('chartOfAccountsTab') : hide('chartOfAccountsTab');
-    isAllowed(access.accountant,'manualJournals') ? show('manualJournalsTab') : hide('manualJournalsTab');
-    isAllowed(access.accountant,'recurringJournals') ? show('recurringJournalsTab') : hide('recurringJournalsTab');
-    isAllowed(access.accountant,'currencyAdjustments') ? show('currencyAdjustmentsTab') : hide('currencyAdjustmentsTab');
-    isAllowed(access.accountant,'assets') ? show('nonCurrentAssetsTab') : hide('nonCurrentAssetsTab');
-    isAllowed(access.accountant,'liabilities') ? show('nonCurrentLiabilitiesTab') : hide('nonCurrentLiabilitiesTab');
-    isAllowed(access.accountant,'budgets') ? show('budgetsTab') : hide('budgetsTab');
-    isAllowed(access.accountant,'transactionLocking') ? show('transactionLockingTab') : hide('transactionLockingTab');
-  }
-
-  if (access.payroll === 'all') {
-    ['employeesTab','earningsTab','attendanceTab','payslipTab','grossPayTab','statutoryDeductionsTab','payrollReportsTab','integrationsTab'].forEach(show);
-  } else {
-    ['employees','earnings','attendance','payslip','grossPay','statutoryDeductions','payrollReports','integrations'].forEach(sub =>
-      isAllowed(access.payroll,sub) ? show(sub+'Tab') : hide(sub+'Tab')
-    );
-  }
-
-  if (access.settings === 'all') {
-    ['orgProfileTab','warehousesTab','openingBalancesTab','vatTab','preferencesTab','settingstemplateTab','userManagementTab','taxComplianceTab'].forEach(show);
-  } else {
-    isAllowed(access.settings,'orgProfile') ? show('orgProfileTab') : hide('orgProfileTab');
-    isAllowed(access.settings,'warehouses') ? show('warehousesTab') : hide('warehousesTab');
-    isAllowed(access.settings,'openingBalances') ? show('openingBalancesTab') : hide('openingBalancesTab');
-    isAllowed(access.settings,'vat') ? show('vatTab') : hide('vatTab');
-    isAllowed(access.settings,'preferences') ? show('preferencesTab') : hide('preferencesTab');
-    isAllowed(access.settings,'template') ? show('settingstemplateTab') : hide('settingstemplateTab');
-    isAllowed(access.settings,'userManagement') ? show('userManagementTab') : hide('userManagementTab');
-    isAllowed(access.settings,'taxCompliance') ? show('taxComplianceTab') : hide('taxComplianceTab');
-    show('bulkCostingTab');
-  }
+  Object.keys(submoduleAccess).forEach(tabId => {
+    const allowed = submoduleAccess[tabId][planIndex];
+    allowed ? show(tabId) : hide(tabId);
+  });
 }
-
-  function togglePaymentFields() {
-    const method = document.getElementById('payment-method').value;
-    document.getElementById('mpesa-fields').classList.add('hidden');
-    document.getElementById('bank-fields').classList.add('hidden');
-    document.getElementById('card-fields').classList.add('hidden');
-
-    if (method === 'mpesa') {
-      document.getElementById('mpesa-fields').classList.remove('hidden');
-    } else if (method === 'bank') {
-      document.getElementById('bank-fields').classList.remove('hidden');
-    } else if (method === 'card') {
-      document.getElementById('card-fields').classList.remove('hidden');
-    }
-  }
 
 function getLoggedInUser() {
 
@@ -4601,12 +4716,11 @@ const APP_ALL_MODULES = ['dashboard','inventoryTab','movementTab','priceListTab'
 const PAYROLL_MODULES = ['employeesTab','earningsTab','grossPayTab','attendanceTab','payslipTab','statutoryDeductionsTab','payrollReportsTab'];
 
 function getPlanAllowedModules(plan) {
-  const p = (plan || '').toLowerCase();
-  if (!p || p === 'all access') return APP_ALL_MODULES.slice();
-  if (p === 'free') return APP_ALL_MODULES.filter(m => !PAYROLL_MODULES.includes(m) && m !== 'integrationsTab' && m !== 'filesTab' && m !== 'recycleBinTab');
-  if (p === 'starter' || p === 'pro' || p === 'business') return APP_ALL_MODULES.filter(m => m !== 'integrationsTab' && m !== 'filesTab' && m !== 'recycleBinTab');
-  if (p === 'enterprise') return APP_ALL_MODULES.filter(m => m !== 'filesTab' && m !== 'recycleBinTab');
-  return APP_ALL_MODULES.slice();
+  // Single source of truth: submoduleAccess (built directly from
+  // Acacia_ERP_Module_Submodules_Plans.xlsx) + PLAN_ORDER, defined above.
+  const idx = PLAN_ORDER.indexOf(plan);
+  if (idx === -1) return APP_ALL_MODULES.slice(); // unknown plan: fail open to avoid locking someone out entirely
+  return Object.keys(submoduleAccess).filter(tabId => submoduleAccess[tabId][idx]);
 }
 
 function getAllowedTabs(user) {
@@ -4726,6 +4840,8 @@ async function handleLogin() {
 }
 function registerUser() {
 
+  const companyName = document.getElementById('registerCompanyName').value.trim();
+  const companyCountry = document.getElementById('registerCompanyCountry').value;
   const input = document.getElementById('registerUser').value.trim();
   const password = document.getElementById('registerPass').value.trim();
   const role = 'admin'; // every new account owner is the company Admin
@@ -4761,6 +4877,8 @@ function registerUser() {
   const newUser = {
     username: isEmail ? clean.split("@")[0] : clean,
     email: isEmail ? clean : "",
+    companyName,
+    companyCountry,
     password,
     role,
     plan,
@@ -4776,6 +4894,40 @@ function registerUser() {
 
   localStorage.setItem("users", JSON.stringify(storedUsers));
   localStorage.setItem("loggedInUser", JSON.stringify(newUser));
+
+  // Only seed the org profile the first time this company is created —
+  // don't clobber an existing company's profile when a teammate/admin
+  // re-registers under the same companyId.
+  if (!loggedIn || !loggedIn.companyId) {
+    let companies = JSON.parse(localStorage.getItem("companies") || "[]");
+    if (!companies.find(c => c.companyId === companyId)) {
+      companies.push({
+        companyId,
+        companyName,
+        ownerName: newUser.username,
+        email: newUser.email,
+        plan,
+        price,
+        status: newUser.status,
+        registered: newUser.registered,
+        expiry: newUser.expiry
+      });
+      localStorage.setItem("companies", JSON.stringify(companies));
+    }
+
+    // Seed the Organization Profile with the company name so it appears
+    // right away in Settings > Org Profile. Everything else (PIN, address,
+    // currency, etc.) is left blank for the user to fill in later.
+    const orgInfo = {
+      name: companyName,
+      email: newUser.email,
+      location: companyCountry,
+      companyId,
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem('orgInfo', JSON.stringify(orgInfo));
+    localStorage.setItem('orgInfo_' + companyId, JSON.stringify(orgInfo));
+  }
 
   if (price === 0) {
     closeLogin();
@@ -19792,6 +19944,26 @@ document.addEventListener("DOMContentLoaded", () => {
     populateSalesPersonDropdown();
 });
 function generateInvoiceNumber() {
+  // Uses the "Invoice" row from Advanced Customization > Numbering
+  // (prefix, zero-padding, next number, suffix) instead of a hardcoded
+  // "INV-0001" format, and advances that counter each time a number is
+  // issued so numbers keep incrementing app-wide, not just within this
+  // page's session.
+  const CUST_KEY = 'acacia_customization_v1';
+  let cust;
+  try { cust = JSON.parse(localStorage.getItem(CUST_KEY) || 'null'); } catch (e) { cust = null; }
+  const rule = cust && Array.isArray(cust.numbering)
+    ? cust.numbering.find(n => n.doc === 'Invoice')
+    : null;
+
+  if (rule) {
+    const num = (rule.prefix || '') + String(rule.next).padStart(+rule.pad || 0, '0') + (rule.suffix || '');
+    rule.next = (+rule.next || 0) + 1;
+    try { localStorage.setItem(CUST_KEY, JSON.stringify(cust)); } catch (e) {}
+    return num;
+  }
+
+  // Fall back to the old behavior if no customization has been saved yet.
   let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
 
   let numbers = invoices
@@ -20879,16 +21051,40 @@ if (invoice.etimsStatus === "SUBMITTED" && invoice.etims) {
   }
   const invoiceNumber = invoice.invoiceNumber || `INV-${invoice.id}`;
   const total = Number(invoice.total) || 0;
-  const subject = `Invoice ${invoiceNumber}`;
-  const body =
+  const companyName = JSON.parse(localStorage.getItem("orgInfo") || "{}").name || "";
+
+  // Use the "invoiceSent" template from Advanced Customization > Email
+  // Templates if one has been configured, otherwise fall back to the
+  // original hardcoded text.
+  let cust = null;
+  try { cust = JSON.parse(localStorage.getItem('acacia_customization_v1') || 'null'); } catch (e) {}
+  const tpl = cust && cust.email && cust.email.invoiceSent;
+
+  const vars = {
+    customer: customer.name || '',
+    invoice: invoiceNumber,
+    amount: formatCurrency(total, invoice.currency),
+    due: invoice.dueDate || invoice.date || '',
+    company: companyName
+  };
+  const fill = s => String(s || '').replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] != null ? vars[k] : '');
+
+  let subject, body;
+  if (tpl && (tpl.s || tpl.b)) {
+    subject = fill(tpl.s);
+    body = fill(tpl.b);
+  } else {
+    subject = `Invoice ${invoiceNumber}`;
+    body =
 `Hello ${customer.name},
 Please find your invoice details below:
 Invoice Number: ${invoiceNumber}
 Invoice Date: ${invoice.date}
 Total Amount: ${formatCurrency(total, invoice.currency)}
 Thank you for your business.
-${JSON.parse(localStorage.getItem("orgInfo") || "{}").name || ""}
+${companyName}
 `;
+  }
   const mailtoLink =
     __logMail(`mailto:${customer.primaryEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   window.location.href = mailtoLink;
@@ -20934,13 +21130,55 @@ function printPreview() {
       }
     })
     .join("\n");
+
+  // Pull Brand Kit + Print Layout + Watermark from Advanced Customization
+  // so printed invoices actually reflect those settings.
+  let cust = null;
+  try { cust = JSON.parse(localStorage.getItem('acacia_customization_v1') || 'null'); } catch (e) {}
+  const brand = (cust && cust.brand) || {};
+  const print = (cust && cust.print) || { paper: 'A4', orient: 'portrait', margin: 15 };
+  const wm = (cust && cust.watermark) || { enabled: 'off' };
+
+  const pageSize = (print.orient === 'landscape') ? (print.paper + ' landscape') : print.paper;
+  const marginMm = (print.margin != null ? print.margin : 15) + 'mm';
+
+  let watermarkHtml = '';
+  if (wm.enabled && wm.enabled !== 'off' && wm.text) {
+    watermarkHtml = `<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(${wm.rotate||0}deg);
+      font-size:64px;font-weight:bold;color:${wm.color||'#888888'};opacity:${(wm.opacity!=null?wm.opacity:15)/100};
+      pointer-events:none;z-index:9999;white-space:nowrap;">${wm.text}</div>`;
+  }
+
+  // Custom Fields (module "Invoice", marked "onDoc") — shown with their
+  // configured default value, since invoices don't yet have per-record
+  // inputs for these.
+  let customFieldsHtml = '';
+  const invoiceFields = (cust && cust.fields && cust.fields['Invoice']) || [];
+  const onDocFields = invoiceFields.filter(f => f.onDoc);
+  if (onDocFields.length) {
+    customFieldsHtml = `<div style="margin-top:12px;font-size:12px;">` +
+      onDocFields.map(f => `<div><strong>${f.label}:</strong> ${f.options || ''}</div>`).join('') +
+      `</div>`;
+  }
+
+  // Terms Library — snippets tagged "Invoice" or "All" are appended
+  // automatically as Terms & Conditions.
+  let termsHtml = '';
+  const terms = (cust && Array.isArray(cust.terms)) ? cust.terms.filter(t => t.docType === 'Invoice' || t.docType === 'All') : [];
+  if (terms.length) {
+    termsHtml = `<div style="margin-top:16px;border-top:1px solid #ccc;padding-top:8px;font-size:11px;color:#333;">` +
+      `<div style="font-weight:bold;margin-bottom:4px;">Terms & Conditions</div>` +
+      terms.map(t => `<div style="margin-bottom:6px;"><strong>${t.title}:</strong> ${String(t.body||'').replace(/\n/g,'<br>')}</div>`).join('') +
+      `</div>`;
+  }
+
   printWindow.document.write(`
     <html><head><title>Print Invoice</title>
         <style>
           ${styles}
 
           /* Force white background and print-safe styles */
-          @page { size: A4; margin: 15mm; }
+          @page { size: ${pageSize}; margin: ${marginMm}; }
           body {
             font-family: Arial, sans-serif;
             background: white;
@@ -20952,9 +21190,15 @@ function printPreview() {
           th { background-color: #f5f5f5; }
           img { max-width: 200px; }
           #invoiceQRCode img { width: 100px; height: 100px; }
+          ${brand.accent ? `#invoiceTemplateWrapper { border-top: 4px solid ${brand.accent}; }` : ''}
+          ${brand.primary ? `#invoiceTemplateWrapper th { background-color: ${brand.primary}22; }` : ''}
+          ${brand.bodyFont ? `body { font-family: ${brand.bodyFont}, Arial, sans-serif; }` : ''}
         </style>
       </head><body>
+        ${watermarkHtml}
         ${printableContent.outerHTML}
+        ${customFieldsHtml}
+        ${termsHtml}
       </body></html>
   `);
   printWindow.document.close();
@@ -82479,6 +82723,8 @@ RevenueModule.refresh();
         Add Warehouse
       </button></div><table class="w-full border mt-4"><thead class="bg-gray-100"><tr><th class="p-2 border">Name</th><th class="p-2 border">Branch</th><th class="p-2 border">Street 1</th><th class="p-2 border">Street 2</th><th class="p-2 border">City</th><th class="p-2 border">State</th><th class="p-2 border">Country</th><th class="p-2 border">ZIP</th><th class="p-2 border">Phone</th><th class="p-2 border">Email</th><th class="p-2 border">Stock Value</th><th class="p-2 border">Actions</th></tr></thead><tbody id="warehouseList"></tbody></table></div></div><div id="DatacenterTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-2xl font-bold mb-6 text-center">Data center</h2><div class="border rounded-xl p-4 mt-6 bg-gray-50"><h3 class="font-semibold mb-2">Data</h3><div class="flex flex-wrap gap-2"><button class="px-3 py-1.5 rounded bg-blue-900 text-white" onclick="backupZIP()">
 Download ZIP Backup
+</button><button class="px-3 py-1.5 rounded bg-green-700 text-white" onclick="backupExcel()">
+Download Excel Backup
 </button><label class="px-3 py-1.5 rounded bg-blue-900 text-white cursor-pointer">
 Restore ZIP Backup
 <input type="file" accept=".zip" class="hidden" onchange="restoreZIP(event)" /></label></div></div><div class="border rounded-xl p-4 mt-6 bg-white shadow"><h3 class="font-semibold mb-3 text-blue-900">Backup & Restore History</h3><div class="overflow-auto max-h-[300px]"><table class="min-w-full text-sm table-auto border"><thead class="bg-gray-200"><tr><th class="p-2 text-left">Date</th><th class="p-2 text-left">User</th><th class="p-2 text-left">Action</th><th class="p-2 text-left">File</th><th class="p-2 text-left">Size</th><th class="p-2 text-left">Status</th><th class="p-2 text-center">Actions</th></tr></thead><tbody id="backupHistoryTable"></tbody></table></div></div></div><!-- System Configuration --><div id="systemConfigurationTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-1xl font-bold mb-4 text-left">Opening Balances</h2><!-- 🔎 Opening Balances Search --><div class="relative mb-4 mt-2"><input
@@ -83241,14 +83487,14 @@ Save
     </span><span id="dataAdminPreviewHint" class="ml-2 text-gray-600 text-sm">
       Data access is restricted.
     </span></div></div><!-- ✅ User Management Module -->
-    <div id="userManagementTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-1xl font-bold mb-4">👥 User Management</h2><button onclick="openCreateUserModal()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
+    <div id="userManagementTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-1xl font-bold mb-4">👥 User Management</h2><button id="addUserBtn" onclick="openCreateUserModal()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
     ➕ Add User
   </button>
-  <button onclick="bulkDeleteUsers()" class="bg-red-600 text-white font-bold px-3 py-1 rounded hover:bg-red-700 ml-2">
+  <button id="bulkDeleteUsersBtn" onclick="bulkDeleteUsers()" class="bg-red-600 text-white font-bold px-3 py-1 rounded hover:bg-red-700 ml-2">
     🗑️ Bulk Delete Selected
   </button><div id="userTableContainer"><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-center w-10"><input type="checkbox" onclick="toggleSelectAllUsers(this)"></th><th class="border p-2 text-left">Username</th><th class="border p-2 text-left">Role</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="userTableBody" class="bg-white"></tbody></table></div></div>
  <div id="createUserModal"
-class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-opacity-50"><div class="bg-white p-6 rounded shadow w-[400px] max-w-full"><h2 class="text-xl font-bold mb-4" id="modalTitle">👤 Create New User</h2><input id="newUsername" class="w-full mb-2 p-2 border rounded" placeholder="Username" /><input id="newPassword" type="password" class="w-full mb-2 p-2 border rounded" placeholder="Password" /><select id="newRole" class="w-full mb-2 p-2 border rounded"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="custom">Custom</option></select><input id="customRoleInput" class="w-full mb-2 p-2 border rounded hidden" placeholder="Enter custom role name" /><div class="mb-4" id="moduleAccessList"><label class="block font-semibold mb-1">Module Access</label><label><input type="checkbox" value="dashboard"> 📊 Dashboard Hub</label><label><input type="checkbox" value="inventoryTab"> 📦 Stock</label><label><input type="checkbox" value="movementTab"> Movement</label><label><input type="checkbox" value="priceListTab"> Price List</label><label><input type="checkbox" value="Amenend"> Amendments</label><label><input type="checkbox" value="BundleItems"> Bundle Items</label><label><input type="checkbox" value="BulkAdjustment"> Bulk Adjustments</label><label><input type="checkbox" value="packagesTab"> Packages</label><label><input type="checkbox" value="shipmentsTab"> Shipments</label><label><input type="checkbox" value="fundsTab"> 💰 Funds Hub</label><label><input type="checkbox" value="customersTab"> Customer</label><label><input type="checkbox" value="invoicesTab"> Invoices</label><label><input type="checkbox" value="quotesTab"> Quotes</label><label><input type="checkbox" value="ordersTab"> Orders</label><label><input type="checkbox" value="bulkInvoicesTab"> Bulk Invoicing</label><label><input type="checkbox" value="creditNoteTab"> Credit Notes</label><label><input type="checkbox" value="salesReturnTab"> Sales Returns</label><label><input type="checkbox" value="receiptsTab"> Receipts</label><label><input type="checkbox" value="recurringInvoicesTab"> Recurring Invoices</label><label><input type="checkbox" value="deliveryTab"> Delivery</label><label><input type="checkbox" value="customerStatementTab"> Statements</label><label><input type="checkbox" value="supplierTab"> Supplier</label><label><input type="checkbox" value="supplierPaymentsTab"> Supplier Payments</label><label><input type="checkbox" value="supplierBillsTab"> Bills</label><label><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label><label><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label><label><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label><label><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label><label><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label><label><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label><label><input type="checkbox" value="grnTab"> Goods Received</label><label><input type="checkbox" value="supplierStatementTab"> Supplier Statement</label><label><input type="checkbox" value="manualJournalsTab"> Manual Journals</label><label><input type="checkbox" value="recurringJournalsTab"> Recurring Journals</label><label><input type="checkbox" value="currencyAdjustmentsTab"> Currency Adjustments</label><label><input type="checkbox" value="nonCurrentAssetsTab"> Non-Current Assets</label><label><input type="checkbox" value="nonCurrentLiabilitiesTab"> Non-Current Liabilities</label><label><input type="checkbox" value="equityTab"> Equity</label><label><input type="checkbox" value="taxAdjustmentsTab"> Tax Adjustments</label><label><input type="checkbox" value="chartOfAccountsTab"> Chart of Accounts</label><label><input type="checkbox" value="currentAccountsTab"> Current Accounts</label><label><input type="checkbox" value="budgetsTab"> Budgets</label><label><input type="checkbox" value="transactionLockingTab"> Transaction Locking</label><label><input type="checkbox" value="employeesTab"> Employees</label><label><input type="checkbox" value="earningsTab"> Earnings & Allowances</label><label><input type="checkbox" value="grossPayTab"> Earnings & Deductions</label><label><input type="checkbox" value="attendanceTab"> Attendance & Leave</label><label><input type="checkbox" value="payslipTab"> Payslip Generation</label><label><input type="checkbox" value="statutoryDeductionsTab"> Statutories</label><label><input type="checkbox" value="payrollReportsTab"> Payroll Reports</label><label><input type="checkbox" value="integrationsTab"> Integrations</label><label><input type="checkbox" value="reportsPanel"> 📈 Reports Hub</label><label><input type="checkbox" value="plansTab"> Plans Hub</label><label><input type="checkbox" value="projectTab"> Project Hub</label><label><input type="checkbox" value="planTrackingTab"> Plan Tracking</label><label><input type="checkbox" value="orgProfileTab"> Org Profile</label><label><input type="checkbox" value="warehousesTab"> Warehouses</label><label><input type="checkbox" value="DatacenterTab"> Data Center</label><label><input type="checkbox" value="systemConfigurationTab"> System Configuration</label><label><input type="checkbox" value="userActivityTab"> User Activity</label><label><input type="checkbox" value="taxComplianceTab"> Tax Compliance</label><label><input type="checkbox" value="userManagementTab"> User Management</label><label><input type="checkbox" value="vatTab"> VAT</label><label><input type="checkbox" value="preferencesTab"> Preferences</label><label><input type="checkbox" value="settingstemplateTab"> Customization</label><label><input type="checkbox" value="costingTab"> Costing</label><label><input type="checkbox" value="bulkCostingTab"> Bulk Costing</label><label><input type="checkbox" value="filesTab"> File Manager</label><label><input type="checkbox" value="recycleBinTab"> Recycle Bin</label><label><input type="checkbox" value="mailHub"> 💬 Acacia Mail Hub</label><label><input type="checkbox" value="crmHub"> 🏢 CRM Portal Hub</label></div><div class="flex justify-end space-x-2"><button onclick="saveUser()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button><button onclick="closeCreateUserModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button></div><p id="userCreateMsg" class="text-green-600 text-sm mt-2 hidden">✅ User saved successfully.</p></div></div>
+class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-opacity-50"><div class="bg-white p-6 rounded shadow w-[400px] max-w-full"><h2 class="text-xl font-bold mb-4" id="modalTitle">👤 Create New User</h2><input id="newUsername" class="w-full mb-2 p-2 border rounded" placeholder="Username" /><input id="newPassword" type="password" class="w-full mb-2 p-2 border rounded" placeholder="Password" /><select id="newRole" class="w-full mb-2 p-2 border rounded"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="audit">Audit</option><option value="hr">Human Resource</option><option value="custom">Custom</option></select><input id="customRoleInput" class="w-full mb-2 p-2 border rounded hidden" placeholder="Enter custom role name" /><div class="mb-4" id="moduleAccessList"><label class="block font-semibold mb-1">Module Access</label><label><input type="checkbox" value="dashboard"> 📊 Dashboard Hub</label><label><input type="checkbox" value="inventoryTab"> 📦 Stock</label><label><input type="checkbox" value="movementTab"> Movement</label><label><input type="checkbox" value="priceListTab"> Price List</label><label><input type="checkbox" value="Amenend"> Amendments</label><label><input type="checkbox" value="BundleItems"> Bundle Items</label><label><input type="checkbox" value="BulkAdjustment"> Bulk Adjustments</label><label><input type="checkbox" value="packagesTab"> Packages</label><label><input type="checkbox" value="shipmentsTab"> Shipments</label><label><input type="checkbox" value="fundsTab"> 💰 Funds Hub</label><label><input type="checkbox" value="customersTab"> Customer</label><label><input type="checkbox" value="invoicesTab"> Invoices</label><label><input type="checkbox" value="quotesTab"> Quotes</label><label><input type="checkbox" value="ordersTab"> Orders</label><label><input type="checkbox" value="bulkInvoicesTab"> Bulk Invoicing</label><label><input type="checkbox" value="creditNoteTab"> Credit Notes</label><label><input type="checkbox" value="salesReturnTab"> Sales Returns</label><label><input type="checkbox" value="receiptsTab"> Receipts</label><label><input type="checkbox" value="recurringInvoicesTab"> Recurring Invoices</label><label><input type="checkbox" value="deliveryTab"> Delivery</label><label><input type="checkbox" value="customerStatementTab"> Statements</label><label><input type="checkbox" value="supplierTab"> Supplier</label><label><input type="checkbox" value="supplierPaymentsTab"> Supplier Payments</label><label><input type="checkbox" value="supplierBillsTab"> Bills</label><label><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label><label><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label><label><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label><label><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label><label><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label><label><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label><label><input type="checkbox" value="grnTab"> Goods Received</label><label><input type="checkbox" value="supplierStatementTab"> Supplier Statement</label><label><input type="checkbox" value="manualJournalsTab"> Manual Journals</label><label><input type="checkbox" value="recurringJournalsTab"> Recurring Journals</label><label><input type="checkbox" value="currencyAdjustmentsTab"> Currency Adjustments</label><label><input type="checkbox" value="nonCurrentAssetsTab"> Non-Current Assets</label><label><input type="checkbox" value="nonCurrentLiabilitiesTab"> Non-Current Liabilities</label><label><input type="checkbox" value="equityTab"> Equity</label><label><input type="checkbox" value="taxAdjustmentsTab"> Tax Adjustments</label><label><input type="checkbox" value="chartOfAccountsTab"> Chart of Accounts</label><label><input type="checkbox" value="currentAccountsTab"> Current Accounts</label><label><input type="checkbox" value="budgetsTab"> Budgets</label><label><input type="checkbox" value="transactionLockingTab"> Transaction Locking</label><label><input type="checkbox" value="employeesTab"> Employees</label><label><input type="checkbox" value="earningsTab"> Earnings & Allowances</label><label><input type="checkbox" value="grossPayTab"> Earnings & Deductions</label><label><input type="checkbox" value="attendanceTab"> Attendance & Leave</label><label><input type="checkbox" value="payslipTab"> Payslip Generation</label><label><input type="checkbox" value="statutoryDeductionsTab"> Statutories</label><label><input type="checkbox" value="payrollReportsTab"> Payroll Reports</label><label><input type="checkbox" value="integrationsTab"> Integrations</label><label><input type="checkbox" value="reportsPanel"> 📈 Reports Hub</label><label><input type="checkbox" value="plansTab"> Plans Hub</label><label><input type="checkbox" value="projectTab"> Project Hub</label><label><input type="checkbox" value="planTrackingTab"> Plan Tracking</label><label><input type="checkbox" value="orgProfileTab"> Org Profile</label><label><input type="checkbox" value="warehousesTab"> Warehouses</label><label><input type="checkbox" value="DatacenterTab"> Data Center</label><label><input type="checkbox" value="systemConfigurationTab"> System Configuration</label><label><input type="checkbox" value="userActivityTab"> User Activity</label><label><input type="checkbox" value="taxComplianceTab"> Tax Compliance</label><label><input type="checkbox" value="userManagementTab"> User Management</label><label><input type="checkbox" value="vatTab"> VAT</label><label><input type="checkbox" value="preferencesTab"> Preferences</label><label><input type="checkbox" value="settingstemplateTab"> Customization</label><label><input type="checkbox" value="costingTab"> Costing</label><label><input type="checkbox" value="bulkCostingTab"> Bulk Costing</label><label><input type="checkbox" value="filesTab"> File Manager</label><label><input type="checkbox" value="recycleBinTab"> Recycle Bin</label><label><input type="checkbox" value="mailHub"> 💬 Acacia Mail Hub</label><label><input type="checkbox" value="crmHub"> 🏢 CRM Portal Hub</label></div><div class="flex justify-end space-x-2"><button onclick="saveUser()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button><button onclick="closeCreateUserModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button></div><p id="userCreateMsg" class="text-green-600 text-sm mt-2 hidden">✅ User saved successfully.</p></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <style>
@@ -83666,6 +83912,56 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
   function load(){ try{ return Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),JSON.parse(localStorage.getItem(KEY)||'{}')); }catch(e){ return JSON.parse(JSON.stringify(DEFAULTS)); } }
   function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
   let state = load(), dirty=false;
+
+  // ===== Apply Menu visibility + Labels to the main app sidebar =====
+  // (Custom Fields, Terms, and Email Templates are applied where invoices
+  // are actually generated/sent; Menu and Labels affect the sidebar UI
+  // itself, so they're applied here, right after settings load.)
+  function applyMenuVisibility(){
+    const MENU_SEL = {
+      dashboard: "showTab('dashboard')",
+      inventoryTab: "showTab('inventoryTab')",
+      fundsTab: "showTab('fundsTab')",
+      customersTab: "showTab('customersTab')",
+      invoicesTab: "showTab('invoicesTab')",
+      supplierTab: "showTab('supplierTab')",
+      manualJournalsTab: "showTab('manualJournalsTab')",
+      employeesTab: "showTab('employeesTab')",
+      reportsPanel: "showTab('reportsPanel')",
+      plansTab: "showTab('plansTab')",
+      orgProfileTab: "showTab('orgProfileTab')",
+      preferencesTab: "showTab('preferencesTab')",
+      settingstemplateTab: "showTab('settingstemplateTab')",
+      filesTab: "showTab('filesTab')"
+    };
+    Object.keys(MENU_SEL).forEach(key=>{
+      if(state.menu[key] === false){
+        const btn = document.querySelector(`button[onclick*="${MENU_SEL[key]}"]`);
+        if(btn){ const li = btn.closest('li'); (li||btn).style.display = 'none'; }
+      }
+    });
+  }
+  function applyLabels(){
+    // Only the sidebar items with a clear, unambiguous 1:1 match to a
+    // Labels key are renamed, to avoid mis-relabeling unrelated text
+    // elsewhere in the app.
+    const MAP = [
+      { sel: `button[onclick*="showTab('customersTab')"]`, key: 'Customer' },
+      { sel: `button[onclick*="showTab('supplierTab')"]`,  key: 'Supplier' },
+      { sel: `button[onclick*="showTab('invoicesTab')"]`,  key: 'Invoice', plural: true },
+      { sel: `button[onclick*="showTab('quotesTab')"]`,    key: 'Quote',   plural: true },
+      { sel: `button[onclick*="showTab('employeesTab')"]`, key: 'Employee',plural: true },
+      { sel: `button[onclick*="showTab('warehousesTab')"]`,key: 'Warehouse',plural: true }
+    ];
+    MAP.forEach(m=>{
+      const val = state.labels[m.key];
+      if(!val) return;
+      const btn = document.querySelector(m.sel);
+      if(!btn) return;
+      btn.textContent = m.plural ? (val + (val.slice(-1)==='s' ? '' : 's')) : val;
+    });
+  }
+  try { applyMenuVisibility(); applyLabels(); } catch(e){}
   function md(v=true){ dirty=v; const el=document.getElementById('custDirty');
     el.textContent=v?'● Unsaved changes':'✔ All changes saved';
     el.className='text-sm '+(v?'text-orange-600 font-semibold':'text-gray-500'); }
@@ -83926,7 +84222,19 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
 
   // ===== Save / Reset / Import / Export =====
   function flash(msg){ const m=document.getElementById('custMsg'); m.textContent='✔ '+msg; m.classList.remove('hidden'); setTimeout(()=>m.classList.add('hidden'),2500); }
-  document.getElementById('custSaveBtn').addEventListener('click',()=>{ save(); md(false); flash('Customization saved.'); });
+  function syncBrandToOrgInfo(){
+    // Invoices (and most other documents) already read their logo from
+    // orgInfo.logo, not from this Brand Kit. Rather than rewire every
+    // document template, mirror the Brand Kit logo into orgInfo.logo
+    // here so it "just shows up" wherever the logo already appears.
+    if(!state.brand.logo) return;
+    try{
+      const org = JSON.parse(localStorage.getItem('orgInfo')||'{}');
+      org.logo = state.brand.logo;
+      localStorage.setItem('orgInfo', JSON.stringify(org));
+    }catch(e){}
+  }
+  document.getElementById('custSaveBtn').addEventListener('click',()=>{ save(); syncBrandToOrgInfo(); md(false); flash('Customization saved.'); });
   document.getElementById('custResetBtn').addEventListener('click',()=>{
     if(!confirm('Reset ALL customization to defaults?')) return;
     state=JSON.parse(JSON.stringify(DEFAULTS)); save(); renderAll(); md(false); flash('Reset to defaults.');
@@ -85192,6 +85500,17 @@ function saveUser() {
   const modules = Array.from(document.querySelectorAll('#moduleAccessList input:checked'))
     .map(cb => cb.value);
 
+  const loggedIn = JSON.parse(localStorage.getItem('loggedInUser') || 'null') || {};
+  const companyId = String(loggedIn.companyId || '');
+
+  if (editingUserIndex === null && role !== 'custom') {
+    if (!canAddUser(companyId, loggedIn.plan, role)) {
+      const limit = (planUserLimits[loggedIn.plan] || {})[role];
+      alert(`User limit reached: the ${loggedIn.plan} plan allows only ${limit ?? 0} ${role} user(s). Upgrade your plan to add more.`);
+      return;
+    }
+  }
+
   const user = {
     username,
     password,
@@ -85330,6 +85649,11 @@ document.addEventListener("click", function(e) {
 });
 
 function cloneUser(index) {
+
+  if (!window.canEditUsers()) {
+    alert('🚫 You do not have permission to do that. Please contact your administrator.');
+    return;
+  }
 
   let users = JSON.parse(localStorage.getItem("users") || "[]");
 
@@ -85487,24 +85811,36 @@ const ALL_MODULES = [
 
 function previewUserPermissions(index, btn) {
 
-  const users = JSON.parse(localStorage.getItem("users")) || [];
-  const user = users[index];
-  if (!user) return;
+  const existing = document.querySelector(".permission-preview-row");
+  const alreadyOpenForThisUser = existing && existing.dataset.userIndex === String(index);
 
   document.querySelectorAll(".permission-preview-row")
     .forEach(el => el.remove());
+
+  if (alreadyOpenForThisUser) return; // clicking Preview again just closes it
+
+  const users = JSON.parse(localStorage.getItem("users")) || [];
+  const user = users[index];
+  if (!user) return;
 
   const tr = btn.closest("tr");
 
   const previewRow = document.createElement("tr");
   previewRow.className = "permission-preview-row";
+  previewRow.dataset.userIndex = String(index);
 
   previewRow.innerHTML = `
-    <td colspan="3" class="border bg-gray-50 p-4">
+    <td colspan="4" class="border bg-gray-50 p-4">
 
-      <h3 class="font-bold text-lg mb-3">
-        👁 Permissions for ${user.username}
-      </h3>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-lg">
+          👁 Permissions for ${user.username}
+        </h3>
+        <button type="button" onclick="this.closest('tr').remove()"
+          class="bg-gray-300 text-gray-800 font-bold px-3 py-1 rounded hover:bg-gray-400">
+          ✖ Close
+        </button>
+      </div>
 
       <table class="w-full border text-sm">
         <thead class="bg-blue-900 text-white">
@@ -85536,6 +85872,13 @@ function previewUserPermissions(index, btn) {
         </tbody>
 
       </table>
+
+      <div class="flex justify-end mt-3">
+        <button type="button" onclick="this.closest('tr').remove()"
+          class="bg-blue-900 text-white font-bold px-4 py-2 rounded hover:bg-blue-800">
+          Done
+        </button>
+      </div>
 
     </td>
   `;
@@ -85666,8 +86009,8 @@ function deleteUser(index) {
 
   const me = JSON.parse(localStorage.getItem('loggedInUser') || 'null') || {};
 
-  if (!window.canManageUsers()) {
-    alert('🚫 You do not have permission to delete users.');
+  if (!window.canDeleteUsers()) {
+    alert('🚫 You do not have permission to delete users. Please contact your administrator.');
     return;
   }
 
@@ -85713,8 +86056,8 @@ function toggleSelectAllUsers(headerCb) {
 }
 
 function bulkDeleteUsers() {
-  if (!window.canManageUsers || !window.canManageUsers()) {
-    alert('🚫 You do not have permission to delete users.');
+  if (!window.canDeleteUsers || !window.canDeleteUsers()) {
+    alert('🚫 You do not have permission to delete users. Please contact your administrator.');
     return;
   }
 
@@ -85937,6 +86280,87 @@ function saveBackupLogs() {
   localStorage.setItem("backupLogs", JSON.stringify(backupLogs));
 }
 
+function backupExcel() {
+  // Exports the current company's data as a readable multi-sheet Excel
+  // workbook (one sheet per data type) instead of the raw ZIP-of-JSON
+  // backup. This is for reading/reviewing data — for a full system
+  // restore, use "Download ZIP Backup" / "Restore ZIP Backup" instead.
+  let company = "Company";
+  try {
+    const orgInfo = JSON.parse(localStorage.getItem("orgInfo") || "{}");
+    if (orgInfo.name) company = orgInfo.name.replace(/\s+/g, "_");
+  } catch (e) {}
+
+  // Known structured data keys used across the app's reports/modules.
+  const DATA_KEYS = [
+    "invoices", "quotations", "receipts", "deliveries", "creditNotes", "debitNotes",
+    "customers", "customerPayments",
+    "bills", "purchaseOrders", "grns", "suppliers", "salesReturns",
+    "inventory", "employees", "payroll",
+    "transactions", "transfers", "bankAccounts",
+    "vatReport", "journalEntries", "chartOfAccounts",
+    "users", "auditLogs", "userActivities"
+  ];
+
+  const wb = XLSX.utils.book_new();
+  let sheetsAdded = 0;
+
+  DATA_KEYS.forEach(key => {
+    let raw;
+    try { raw = localStorage.getItem(key); } catch (e) { return; }
+    if (!raw) return;
+    let data;
+    try { data = JSON.parse(raw); } catch (e) { return; }
+    if (!Array.isArray(data) || data.length === 0) return;
+
+    // Flatten so nested objects/arrays don't break the sheet — stringify
+    // any non-primitive field instead of skipping the row.
+    const flat = data.map(row => {
+      if (typeof row !== "object" || row === null) return { value: row };
+      const out = {};
+      Object.keys(row).forEach(k => {
+        const v = row[k];
+        out[k] = (v !== null && typeof v === "object") ? JSON.stringify(v) : v;
+      });
+      return out;
+    });
+
+    try {
+      const ws = XLSX.utils.json_to_sheet(flat);
+      // Sheet names are capped at 31 characters by the xlsx format.
+      const sheetName = key.slice(0, 31);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      sheetsAdded++;
+    } catch (e) { /* skip a sheet that fails to build rather than aborting the whole export */ }
+  });
+
+  if (sheetsAdded === 0) {
+    alert("No data found to export yet.");
+    return;
+  }
+
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[:T]/g, "-").split(".")[0];
+  const filename = `${company}_Data_${timestamp}.xlsx`;
+  XLSX.writeFile(wb, filename);
+
+  try {
+    const log = {
+      id: Date.now().toString(),
+      date: new Date().toLocaleString(),
+      user: localStorage.getItem("currentUser") || "Admin",
+      action: "Excel Export",
+      file: filename,
+      size: "-",
+      status: "Success",
+      path: ""
+    };
+    backupLogs.push(log);
+    saveBackupLogs();
+    renderBackupHistory();
+  } catch (e) {}
+}
+
 async function backupZIP() {
   const zip = new JSZip();
 
@@ -86030,7 +86454,27 @@ async function restoreZIP(event) {
 
     localStorage.clear();
 
+    // localStorage has a small quota (usually 5-10MB) shared by ALL
+    // companies signed into this browser, not just the current one.
+    // Earlier restores/sessions for OTHER companies can leave their data
+    // sitting in this same shared quota, so a restore that would fit fine
+    // on its own can still fail with a quota error. Since all real data
+    // lives in Supabase, it's safe to drop other companies' locally
+    // cached copies here — they'll simply be re-downloaded next time
+    // that company signs in.
+    try {
+      var freed = 0;
+      NS.allRealKeys().forEach(function(k){
+        if (k.indexOf(NS.SEP) === -1) return; // not a company-scoped key
+        if (k.slice(-(NS.SEP + cid).length) === (NS.SEP + cid)) return; // belongs to this company, keep it
+        NS.nRem.call(NS.real, k);
+        freed++;
+      });
+    } catch (eFree) {}
+
     const names = Object.keys(zip.files);
+
+    const failedKeys = [];
 
     for (const fname of names) {
 
@@ -86044,7 +86488,14 @@ async function restoreZIP(event) {
 
       if (NS.isGlobal(key)) continue;
 
-      NS.nSet.call(NS.real, key + NS.SEP + cid, raw);
+      // A single oversized key (e.g. inventory with embedded images)
+      // shouldn't abort the entire restore — skip it, keep going, and
+      // report it at the end so the user knows what didn't come back.
+      try {
+        NS.nSet.call(NS.real, key + NS.SEP + cid, raw);
+      } catch (eWrite) {
+        failedKeys.push(key);
+      }
     }
 
     try { window.logAudit("restore", "Backup", file.name + " (" + names.length + " keys)"); } catch (e) {}
@@ -86085,7 +86536,11 @@ async function restoreZIP(event) {
 
     addRestoreLog(file.name);
 
-    alert("✅ Full system restore completed.");
+    if (failedKeys.length > 0) {
+      alert("⚠️ Restore completed, but " + failedKeys.length + " item(s) were too large to fit in browser storage and were skipped:\n" + failedKeys.join(", ") + "\n\nEverything else was restored successfully.");
+    } else {
+      alert("✅ Full system restore completed.");
+    }
 
     location.reload();
 
@@ -86093,7 +86548,11 @@ async function restoreZIP(event) {
 
     console.error(err);
 
-    alert("❌ Restore failed: " + err.message);
+    if (String(err && err.message || "").toLowerCase().indexOf("quota") !== -1) {
+      alert("❌ Restore failed: this backup is too large for the browser's local storage limit, even after freeing space from other companies. Try removing large image attachments from Inventory before backing up, or restore on a browser/profile that isn't already storing other companies' data.");
+    } else {
+      alert("❌ Restore failed: " + err.message);
+    }
   }
 }
 
@@ -95935,7 +96394,32 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     for (i = 0; i < arguments.length; i++){ if (String(arguments[i]).toLowerCase() === r) return true; }
     return false;
   };
-  window.canManageUsers = function(){ return window.hasRole('admin'); };
+
+  // Reads the actual per-module view/edit/delete grants set via the User Management
+  // "Preview" panel (stored on the user's own record, not just the loggedInUser snapshot).
+  window.hasPermission = function(moduleId, action){
+    if (window.hasRole('admin')) return true; // admins always have full access
+    var loggedIn = me();
+    if (!loggedIn || !loggedIn.username) return false;
+    var users;
+    try { users = JSON.parse(localStorage.getItem('users') || '[]'); } catch(e){ users = []; }
+    var rec = users.find(function(u){
+      return String(u.companyId || '') === String(loggedIn.companyId || '') && u.username === loggedIn.username;
+    });
+    var perms = (rec && rec.permissions) || {};
+    var p = perms[moduleId];
+    return !!(p && p[action]);
+  };
+
+  window.requirePermission = function(moduleId, action, label){
+    if (window.hasPermission(moduleId, action)) return true;
+    alert('🚫 You don\'t have permission to ' + (label || action) + '. Please contact your administrator.');
+    return false;
+  };
+
+  window.canEditUsers = function(){ return window.hasRole('admin') || window.hasPermission('userManagementTab', 'edit'); };
+  window.canDeleteUsers = function(){ return window.hasRole('admin') || window.hasPermission('userManagementTab', 'delete'); };
+  window.canManageUsers = function(){ return window.canEditUsers() || window.canDeleteUsers(); };
 
   var AUDIT_MAX = 5000;
   window.logAudit = function(action, module, details){
@@ -96092,23 +96576,40 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
   }
 
   function guardUserButtons(){
-    var allowed = window.canManageUsers();
-    document.querySelectorAll('#userTableBody button').forEach(function(b){
-      var oc = b.getAttribute('onclick') || '';
-      if (!/openCreateUserModal|deleteUser|cloneUser/.test(oc)) return;
+    function apply(b, allowed){
       b.disabled = !allowed;
       b.style.opacity = allowed ? '' : '0.45';
       b.style.cursor = allowed ? '' : 'not-allowed';
-      b.title = allowed ? '' : 'Admins only';
+      b.title = allowed ? '' : 'Not permitted \u2014 contact your administrator';
+    }
+
+    document.querySelectorAll('#userTableBody button').forEach(function(b){
+      var oc = b.getAttribute('onclick') || '';
+      var allowed;
+      if (/deleteUser/.test(oc)) {
+        allowed = window.canDeleteUsers();
+      } else if (/openCreateUserModal|cloneUser/.test(oc)) {
+        allowed = window.canEditUsers();
+      } else {
+        return;
+      }
+      apply(b, allowed);
     });
+
+    var addBtn = document.getElementById('addUserBtn');
+    if (addBtn) apply(addBtn, window.hasRole('admin'));
+
+    var bulkBtn = document.getElementById('bulkDeleteUsersBtn');
+    if (bulkBtn) apply(bulkBtn, window.canDeleteUsers());
   }
 
   function wrapUserModal(){
     var orig = window.openCreateUserModal;
     if (typeof orig !== 'function' || orig.__guarded) return;
     var wrapped = function(index){
-      if (!window.canManageUsers()){
-        alert('🚫 You do not have permission to manage users.');
+      var allowed = (index === null || index === undefined) ? window.hasRole('admin') : window.canEditUsers();
+      if (!allowed){
+        alert('🚫 You do not have permission to do that. Please contact your administrator.');
         return;
       }
       return orig.apply(this, arguments);
@@ -97041,7 +97542,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
       '<a href="#pricing" onclick="closeLogin()" class="text-xs text-blue-600 hover:underline">Compare all plans</a></div>' +
       '<p id="regPlanSummary" class="text-xs text-gray-600 mt-1"></p></div>');
     const btn = form.querySelector('button[onclick*="handleRegister"]');
-    form.insertBefore(wrap, btn);
+    btn.parentNode.insertBefore(wrap, btn);
 
     function summary(){
       const sel = document.getElementById('regPlan');
@@ -97095,28 +97596,44 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
       const price = num(localStorage.getItem('selectedPrice'));
       if (price > 0) {
         const users = J('users', []);
+        const companyNameEl = document.getElementById('registerCompanyName');
+        const companyName = companyNameEl ? companyNameEl.value.trim() : '';
+        const countryEl = document.getElementById('registerCompanyCountry');
+        const companyCountry = countryEl ? countryEl.value : '';
         const input = (document.getElementById('registerUser').value || '').trim().toLowerCase();
         const pass = (document.getElementById('registerPass').value || '').trim();
+        if (!companyName) { alert('Please enter your company name'); return; }
+        if (!companyCountry) { alert('Please select your company\u2019s country'); return; }
         if (users.find(u => (u.username||'').toLowerCase() === input || (u.email||'').toLowerCase() === input)) { alert('\uD83D\uDEAB User already exists'); return; }
         const isEmail = input.includes('@');
         const expiry = new Date(); expiry.setDate(expiry.getDate() + 30);
-        const user = { username: isEmail ? input.split('@')[0] : input, email: isEmail ? input : '', password: pass, role:'admin', plan: localStorage.getItem('selectedPlan') || 'Free', price: price, billing: localStorage.getItem('selectedBilling') || 'monthly', companyId: 'company_' + Date.now(), registered: new Date().toISOString(), expiry: expiry.toISOString(), status:'pending', provider:'local' };
+        const companyId = 'company_' + Date.now();
+        const user = { username: isEmail ? input.split('@')[0] : input, email: isEmail ? input : '', companyName, companyCountry, password: pass, role:'admin', plan: localStorage.getItem('selectedPlan') || 'Free', price: price, billing: localStorage.getItem('selectedBilling') || 'monthly', companyId, registered: new Date().toISOString(), expiry: expiry.toISOString(), status:'pending', provider:'local' };
         users.push(user); S('users', users);
         S('loggedInUser', user);
+
+        const companies = J('companies', []);
+        if (!companies.find(c => c.companyId === companyId)) {
+          companies.push({ companyId, companyName, ownerName: user.username, email: user.email, plan: user.plan, price: user.price, status: user.status, registered: user.registered, expiry: user.expiry });
+          S('companies', companies);
+        }
+        const orgInfo = { name: companyName, email: user.email, location: companyCountry, companyId, updatedAt: new Date().toISOString() };
+        S('orgInfo', orgInfo);
+        S('orgInfo_' + companyId, orgInfo);
+
         logAudit('account created', 'auth', user.username + ' on ' + user.plan + ' (payment pending)');
-        if (typeof closeLogin === 'function') closeLogin();
-        const form = document.getElementById('registration-form');
-        if (form) {
-          form.classList.remove('hidden');
-          const sp = document.getElementById('selected-plan');
+
+        // Stay right here in the modal for payment instead of sending the
+        // person off to the pricing page.
+        const accStep = document.getElementById('registerAccountStep');
+        const payStep = document.getElementById('regPaymentStep');
+        if (accStep && payStep) {
+          accStep.classList.add('hidden');
+          payStep.classList.remove('hidden');
           const yearly = (localStorage.getItem('selectedBilling') || 'monthly') === 'yearly';
           const total = yearly ? Math.round(price * 12 * 0.9) : price;
+          const sp = document.getElementById('regPaymentSummary');
           if (sp) sp.innerText = 'You selected the ' + user.plan + ' plan \u2014 KES ' + total.toLocaleString() + (yearly ? ' per year' : ' per month') + '. Complete payment to activate your account.';
-          const ps = document.getElementById('payment-section'); if (ps) ps.classList.remove('hidden');
-          const pi = document.getElementById('plan-input'); if (pi) pi.value = user.plan;
-          const pr = document.getElementById('price-input'); if (pr) pr.value = total;
-          const em = document.getElementById('email'); if (em && user.email) em.value = user.email;
-          form.scrollIntoView({ behavior:'smooth' });
         }
         return;
       }
