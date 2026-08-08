@@ -631,12 +631,40 @@ body {
 .focus\:ring-purple-600:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(147 51 234/var(--tw-ring-opacity,1))}
 .focus\:border-purple-600:focus{--tw-border-opacity:1;border-color:rgb(147 51 234/var(--tw-border-opacity,1))}
 </style>
-<style id="cambriaFont">body, body *, button, input, select, textarea { font-family: Cambria, Georgia, "Times New Roman", serif !important; }</style></head><body id="appBody"><!-- 🌱 HOME  --><div id="homeTab" class="bg-white text-gray-900"><nav class="flex justify-between items-center px-2 py-1 shadow-md bg-blue-900 sticky top-0 z-50"><h1 class="text-2xl font-bold text-white">Acacia Books</h1><ul class="flex gap-6 text-white font-medium"><li><a href="#hero" class="px-2 py-1 rounded hover:bg-blue-800">Home</a></li><li><a href="#features" class="px-2 py-1 rounded hover:bg-blue-800">Features</a></li><li><a href="#pricing" class="px-2 py-1 rounded hover:bg-blue-800">Pricing</a></li><li><a href="#customers" class="px-2 py-1 rounded hover:bg-blue-800">Customers</a></li><li><a href="#resources" class="px-2 py-1 rounded hover:bg-blue-800">Resources</a></li><li><a href="#about" class="px-2 py-1 rounded hover:bg-blue-800">About</a></li><li><a href="#blog" class="px-2 py-1 rounded hover:bg-blue-800">Blog</a></li><li><a href="#contact" class="px-2 py-1 rounded hover:bg-blue-800">Contact</a></li><li><a href="#apps" class="px-2 py-1 rounded hover:bg-blue-800">Apps</a></li><li><a href="#support" class="px-2 py-1 rounded hover:bg-blue-800">Support</a></li></ul><div class="flex gap-6"><button onclick="openLogin()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
+<style id="cambriaFont">body, body *, button, input, select, textarea { font-family: Cambria, Georgia, "Times New Roman", serif !important; }</style></head><body id="appBody"><!-- 🌱 HOME  --><div id="homeTab" class="bg-white text-gray-900"><style id="mktPageStyle">
+.mkt-page{display:none}
+.mkt-page.active{display:block;min-height:calc(100vh - 56px)}
+.mkt-page.active[class*="grid"]{display:grid}
+.mkt-nav-link.active{background-color:#1e3a8a}
+</style>
+<script>
+function showMarketingPage(pageId, evt){
+  if (evt && evt.preventDefault) evt.preventDefault();
+  document.querySelectorAll('.mkt-page').forEach(function(el){ el.classList.remove('active'); });
+  var target = document.getElementById(pageId);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.mkt-nav-link').forEach(function(a){
+    if (a.getAttribute('data-page') === pageId) a.classList.add('active');
+    else a.classList.remove('active');
+  });
+  try { history.replaceState(null, '', '#' + pageId); } catch(e) {}
+  window.scrollTo({top:0, behavior:'smooth'});
+  return false;
+}
+function __mktInitPage(){
+  var h = (location.hash || '').replace('#','');
+  var valid = ['hero','features','pricing','customers','resources','apps','support','about','blog','contact'];
+  var page = valid.indexOf(h) !== -1 ? h : 'hero';
+  showMarketingPage(page);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', __mktInitPage);
+else __mktInitPage();
+</script><nav class="flex justify-between items-center px-2 py-1 shadow-md bg-blue-900 sticky top-0 z-50"><h1 class="text-2xl font-bold text-white">Acacia Books</h1><ul class="flex gap-6 text-white font-medium" id="mktNavLinks"><li><a href="#hero" data-page="hero" onclick="return showMarketingPage('hero', event)" class="mkt-nav-link px-2 py-1 rounded hover:bg-blue-800">Home</a></li><li><a href="#features" data-page="features" onclick="return showMarketingPage('features', event)" class="mkt-nav-link px-2 py-1 rounded hover:bg-blue-800">Features</a></li><li><a href="#pricing" data-page="pricing" onclick="return showMarketingPage('pricing', event)" class="mkt-nav-link px-2 py-1 rounded hover:bg-blue-800">Pricing</a></li><li><a href="#customers" data-page="customers" onclick="return showMarketingPage('customers', event)" class="mkt-nav-link px-2 py-1 rounded hover:bg-blue-800">Customers</a></li><li><a href="#resources" data-page="resources" onclick="return showMarketingPage('resources', event)" class="mkt-nav-link px-2 py-1 rounded hover:bg-blue-800">Resources</a></li><li><a href="#about" data-page="about" onclick="return showMarketingPage('about', event)" class="mkt-nav-link px-2 py-1 rounded hover:bg-blue-800">About</a></li><li><a href="#blog" data-page="blog" onclick="return showMarketingPage('blog', event)" class="mkt-nav-link px-2 py-1 rounded hover:bg-blue-800">Blog</a></li><li><a href="#contact" data-page="contact" onclick="return showMarketingPage('contact', event)" class="mkt-nav-link px-2 py-1 rounded hover:bg-blue-800">Contact</a></li><li><a href="#apps" data-page="apps" onclick="return showMarketingPage('apps', event)" class="mkt-nav-link px-2 py-1 rounded hover:bg-blue-800">Apps</a></li><li><a href="#support" data-page="support" onclick="return showMarketingPage('support', event)" class="mkt-nav-link px-2 py-1 rounded hover:bg-blue-800">Support</a></li></ul><div class="flex gap-6"><button onclick="openLogin()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
       Sign In
     </button><button id="openDemoBtn" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
       Request Demo
-    </button></div></nav><!-- Request Demo  --><div id="demoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-8 relative transform scale-95 transition-transform duration-300" id="demoContent"><button id="closeDemoBtn" class="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-3xl font-bold">&times;</button><h2 class="text-3xl font-bold mb-3 text-gray-800">📋 Request a Demo</h2><p class="text-gray-600 mb-6">Choose the modules you’d like to see in action, and we’ll arrange a personalized demo for you.</p><form id="demoForm" class="space-y-5"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input type="text" id="name" placeholder="Your Name *" required class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-yellow-500"><input type="email" id="email" placeholder="Your Email *" required class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-yellow-500"><input type="tel" id="phone" placeholder="Phone Number" class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-yellow-500 md:col-span-2"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input type="date" id="demoDate" required class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-yellow-500"><input type="time" id="demoTime" required class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-yellow-500"></div><div><h3 class="text-lg font-semibold mb-2">📦 Select Modules</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-3"><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>🛒 <b>POS</b> – Manage sales & receipts</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>📦 <b>Inventory</b> – Track stock levels</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>📊 <b>Accounting</b> – Reports & ledger</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>👥 <b>HR/Payroll</b> – Employee management</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>🏦 <b>Funds</b> – Cash flow & reconciliation</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>🤝 <b>CRM</b> – Customers & suppliers</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>📊 <b>Dashboard</b> – Real-time business overview</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>🚚 <b>Suppliers</b> – Bills, payments, GRNs</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>🧮 <b>Accountant</b> – Journals, ledger, budgets</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>📈 <b>Reports</b> – Financial, inventory & payroll</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>🗂️ <b>Plans</b> – Subscription & plan tracking</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>⚙️ <b>Settings</b> – Organization & preferences</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>📁 <b>Files</b> – File manager & recycle bin</span></label></div></div>
-      <textarea placeholder="Your Message (optional)" class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-900"></textarea>
+    </button></div></nav><!-- Request Demo  --><div id="demoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 transition-opacity duration-300"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-8 relative transform scale-95 transition-transform duration-300" id="demoContent"><button type="button" id="closeDemoBtn" onclick="if(window.closeDemoModalNow)window.closeDemoModalNow();" class="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-3xl font-bold" style="z-index:60;position:absolute;">&times;</button><h2 class="text-3xl font-bold mb-3 text-gray-800">📋 Request a Demo</h2><p class="text-gray-600 mb-6">Choose the modules you’d like to see in action, and we’ll arrange a personalized demo for you.</p><form id="demoForm" class="space-y-5"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input type="text" id="demoName" placeholder="Your Name *" required class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-yellow-500"><input type="email" id="demoEmail" placeholder="Your Email *" required class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-yellow-500"><input type="tel" id="demoPhone" placeholder="Phone Number" class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-yellow-500 md:col-span-2"></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input type="date" id="demoDate" required class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-yellow-500"><input type="time" id="demoTime" required class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-yellow-500"></div><div><h3 class="text-lg font-semibold mb-2">📦 Select Modules</h3><div id="demoModulesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>🛒 <b>POS</b> – Manage sales & receipts</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>📦 <b>Inventory</b> – Track stock levels</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>📊 <b>Accounting</b> – Reports & ledger</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>👥 <b>HR/Payroll</b> – Employee management</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>🏦 <b>Funds</b> – Cash flow & reconciliation</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>🤝 <b>CRM</b> – Customers & suppliers</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>📊 <b>Dashboard</b> – Real-time business overview</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>🚚 <b>Suppliers</b> – Bills, payments, GRNs</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>🧮 <b>Accountant</b> – Journals, ledger, budgets</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>📈 <b>Reports</b> – Financial, inventory & payroll</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>🗂️ <b>Plans</b> – Subscription & plan tracking</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>⚙️ <b>Settings</b> – Organization & preferences</span></label><label class="flex items-start space-x-2 border p-3 rounded-lg hover:bg-gray-50 cursor-pointer"><input type="checkbox" class="mt-1"><span>📁 <b>Files</b> – File manager & recycle bin</span></label></div></div>
+      <textarea id="demoMessage" placeholder="Your Message (optional)" class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-900"></textarea>
       <button type="submit" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-semibold shadow-lg flex items-center justify-center space-x-2"><span>📩 Submit Request</span></button></form></div></div><div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-1 py-1 rounded-lg shadow-lg hidden">
   ✅ Your demo request has been submitted!
 </div>
@@ -654,24 +682,32 @@ body {
 
   function closeModal() {
     demoContent.classList.replace('scale-100', 'scale-95');
-    setTimeout(() => demoModal.classList.add('hidden'), 200);
+    setTimeout(() => {
+      demoModal.classList.add('hidden');
+      demoModal.style.display = 'none'; // backstop: force-hide even if a later .hidden rule or class collision interferes
+    }, 200);
   }
+  window.closeDemoModalNow = closeModal; // exposed globally so the button's inline onclick fallback always works, even if this listener never attaches
   closeDemoBtn.addEventListener('click', closeModal);
+
+  openDemoBtn.addEventListener('click', () => {
+    demoModal.style.display = ''; // clear any inline display:none left over from a previous close
+  });
 
   window.addEventListener('click', (e) => {
     if (e.target === demoModal) closeModal();
   });
 
-document.getElementById('demoForm')?.addEventListener('submit', async function(e) {
+document.getElementById('demoForm')?.addEventListener('submit', function(e) {
   e.preventDefault();
 
   const ticket = {
-    name: document.getElementById('name').value.trim(),
-    email: document.getElementById('email').value.trim(),
-    phone: document.getElementById('phone').value.trim(),
+    name: document.getElementById('demoName').value.trim(),
+    email: document.getElementById('demoEmail').value.trim(),
+    phone: document.getElementById('demoPhone').value.trim(),
     date: document.getElementById('demoDate').value,
     time: document.getElementById('demoTime').value,
-    message: document.querySelector('textarea').value.trim()
+    message: document.getElementById('demoMessage').value.trim()
   };
 
   if (!ticket.name || !ticket.email) {
@@ -679,26 +715,36 @@ document.getElementById('demoForm')?.addEventListener('submit', async function(e
     return;
   }
 
-  let res = await fetch("api/add_ticket.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(ticket)
-  });
+  const modules = Array.from(document.querySelectorAll('#demoModulesGrid input[type="checkbox"]:checked'))
+    .map(cb => (cb.closest('label')?.querySelector('span')?.textContent || '').trim())
+    .filter(Boolean);
 
-  let data = await res.json();
+  const subject = encodeURIComponent("Demo Request - " + ticket.name);
+  const bodyLines = [
+    "Name: " + ticket.name,
+    "Email: " + ticket.email,
+    "Phone: " + (ticket.phone || "(not provided)"),
+    "Preferred Date: " + (ticket.date || "(not specified)"),
+    "Preferred Time: " + (ticket.time || "(not specified)"),
+    "",
+    "Modules of interest:",
+    modules.length ? modules.map(m => "- " + m).join("\n") : "(none selected)",
+    "",
+    "Message:",
+    ticket.message || "(none)"
+  ];
+  const body = encodeURIComponent(bodyLines.join("\n"));
 
-  if (data.success) {
-    closeModal();
-    toast.textContent = "✅ Demo request submitted! Ticket ID: " + data.id;
-    toast.classList.remove("hidden");
-    setTimeout(() => toast.classList.add("hidden"), 4000);
-    this.reset();
-  } else {
-    alert("❌ Error: " + (data.error || "Something went wrong"));
-  }
+  window.location.href = "mailto:adminacaciabooks@gmail.com,developeracaciabooks@gmail.com?subject=" + subject + "&body=" + body;
+
+  closeModal();
+  toast.textContent = "✅ Demo request ready to send from your email app!";
+  toast.classList.remove("hidden");
+  setTimeout(() => toast.classList.add("hidden"), 4000);
+  this.reset();
 });
 </script>
-<!-- 🎯 HERO SLIDESHOW --><section id="hero" class="relative w-full h-[3000px] overflow-hidden"><section class="relative h-[1000px] overflow-hidden"><div id="slider"
+<!-- 🎯 HERO SLIDESHOW --><section id="hero" class="mkt-page active relative w-full overflow-hidden"><section class="relative h-[1000px] overflow-hidden"><div id="slider"
        class="absolute inset-0 bg-cover bg-center transition-all duration-1000"><div class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-white"><h2 id="slideTitle" class="text-3xl font-bold mb-4"></h2><p id="slideDesc" class="text-lg max-w-2xl text-center"></p></div></div><button onclick="prevSlide()"
           class="absolute left-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full">
     ❮
@@ -713,61 +759,61 @@ const slideData = [
 {
 title: "Dashboard",
 desc: "Real-time overview of your entire business in one place.",
-image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200"
 },
 
 {
 title: "Inventory",
 desc: "Smart stock management with warehouses, pricing & adjustments.",
-image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+image: "https://images.unsplash.com/photo-1749244768351-2726dc23d26c?q=80&w=1200"
 },
 
 {
 title: "Funds",
 desc: "Track and control business funds seamlessly.",
-image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+image: "https://images.unsplash.com/photo-1771736007983-8150418175b0?q=80&w=1200"
 },
 
 {
 title: "Customers",
 desc: "Manage clients, invoices, quotes & receipts in one hub.",
-image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+image: "https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=1200"
 },
 
 {
 title: "Suppliers",
 desc: "Handle supplier bills, orders, payments & returns efficiently.",
-image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+image: "https://images.unsplash.com/photo-1750593481405-876be1140853?q=80&w=1200"
 },
 
 {
 title: "Accountant",
 desc: "Powerful accounting tools, journals & chart of accounts.",
-image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+image: "https://images.unsplash.com/photo-1762427355235-dd22e5cb010c?q=80&w=1200"
 },
 
 {
 title: "Payroll",
 desc: "Automate payslips, deductions, benefits & reports.",
-image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+image: "https://images.unsplash.com/photo-1654773437554-52f091764d4c?q=80&w=1200"
 },
 
 {
 title: "Plans",
 desc: "Manage subscription plans and track usage efficiently.",
-image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=1200"
 },
 
 {
 title: "Files",
 desc: "Organize documents, backups and file recovery.",
-image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+image: "https://images.unsplash.com/photo-1762427354605-ac241af2b102?q=80&w=1200"
 },
 
 {
 title: "Reports",
 desc: "Gain insights with real-time financial and operational reports.",
-image: "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+image: "https://images.unsplash.com/photo-1543286386-713bdd548da4?q=80&w=1200"
 }
 
 ];
@@ -803,7 +849,7 @@ showSlide(0);
 setInterval(nextSlide, 9000);
 
 </script>
-  <!-- 🚀 FEATURES SECTION --><section id="features" class="py-20 max-w-8xl mx-auto grid md:grid-cols-3 lg:grid-cols-4 gap-8 px-4"><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="font-bold text-1xl text-blue-700 mb-2">📊 Dashboard</h3><p class="text-gray-600">
+</section><!-- 🚀 FEATURES SECTION --><section id="features" class="mkt-page py-20 max-w-8xl mx-auto grid md:grid-cols-3 lg:grid-cols-4 gap-8 px-4"><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="font-bold text-1xl text-blue-700 mb-2">📊 Dashboard</h3><p class="text-gray-600">
     Get a complete real-time overview of your business performance from a single dashboard. Monitor stock levels, sales activity, supplier bills, customer balances, expenses, taxes, payroll, cash flow, profits, and other important indicators. Interactive summaries and quick insights help management make faster and more informed business decisions every day.
   </p></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="font-bold text-1xl text-blue-700 mb-2">📦 Inventory</h3><p class="text-gray-600">
     Manage inventory efficiently with advanced stock tracking, warehouse management, stock transfers, product categories, serial numbers, and pricing controls. Monitor stock movements in real time, prevent shortages, track adjustments, and maintain accurate inventory records that improve purchasing decisions and overall operational efficiency.
@@ -829,25 +875,170 @@ setInterval(nextSlide, 9000);
     Send, receive, organize, and manage business communications directly from the platform. Improve communication efficiency, maintain conversation histories, coordinate with customers and suppliers, and streamline workflows by keeping email activities integrated with your daily business operations.
   </p></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="font-bold text-1xl text-blue-700 mb-2">⚙️ Settings</h3><p class="text-gray-600">
     Customize company profiles, warehouses, taxes, currencies, user permissions, costing methods, notification preferences, and system configurations. Adapt the platform to your specific business requirements, improve operational control, and create a working environment that matches your organizational processes.
-  </p></div></section><!-- 💰 PRICING SECTION --><section id="pricing" class="py-40 bg-gray-300 text-center"><h2 class="text-2xl font-bold text-blue-800 mb-8">Affordable Pricing Plans</h2><div class="flex justify-center items-center mb-6"><label class="flex items-center cursor-pointer"><span class="mr-2 font-medium text-gray-700">Monthly</span><input type="checkbox" id="billingToggle" class="hidden" onchange="toggleBilling()"><span class="w-12 h-6 flex items-center bg-blue-900 rounded-full p-1 duration-300 ease-in-out"><span class="bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out"></span></span><span class="ml-2 font-medium text-gray-700">Yearly <span class="text-blue-900 text-sm">(10% off)</span></span></label></div><div id="pricingCards" class="grid sm:grid-cols-6 lg:grid-cols-6 xl:grid-cols-6 gap-6 text-sm max-w-8xl mx-auto"><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Free</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="0" data-year="0">KES 0/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li><li>💰 Funds (Basic)</li><li>📈 Reports (Basic)</li><li>📦 Inventory: (Basic)</li><li>👥 Customers:(Basic)</li><li>🚚 Suppliers: (Basic)</li><li>🧮 Accountant: (Basic)</li><li>⚙️ Settings: (Basic)/li><li>💵 Payroll: None</li></ul><button onclick="choosePlan('Free', 0)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-700">
-      Get Started
-    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Starter</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="2000" data-year="21600">KES 2,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li><li>💰 Funds</li><li>📈 Reports</li><li>📦 Inventory</li><li>👥 Customers</li><li>🚚 suppliers</li><li>🧮 Accountant</li><li>💵 Payroll</li><li>⚙️ Settings</li></ul><button onclick="choosePlan('Starter', 2000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-900">
-      Choose
-    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Pro</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="5000" data-year="54000">KES 5,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li><li>💰 Funds</li><li>📈 Reports</li><li>📦 Inventory</li><li>👥 Customers</li><li>🚚 Suppliers</li><li>🧮 Accountant</li><li>💵 Payroll</li><li>⚙️ Settings</li></ul><button onclick="choosePlan('Pro', 5000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-900">
-      Choose
-    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Business</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="8000" data-year="86400">KES 8,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li><li>💰 Funds</li><li>📈 Reports</li><li>📦 Inventory</li><li>👥 Customers</li><li>🚚 Suppliers</li><li>🧮 Accountant</li><li>💵 Payroll</li><li>⚙️ Settings</li></ul><button onclick="choosePlan('Business', 8000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-700">
-      Choose
-    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">Enterprise</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="12000" data-year="129600">KES 12,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard</li><li>💰 Funds</li><li>📈 Reports</li><li>📦 Inventory: </li><li>👥 Customers:</li><li>🚚 Suppliers: </li><li>🧮 Accountant: </li><li>💵 Payroll: </li><li>⚙️ Settings: </li><li>🔗 Integrations & APIs</li><li>💻 On-premise deployment support</li></ul><button onclick="choosePlan('Enterprise', 12000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-700">
-      Choose
-    </button></div><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-1">All Access</h3><p class="font-bold text-xl text-blue-900 mb-2" data-month="20000" data-year="240000">KES 20,000/mo</p><ul class="list-disc ml-4 mb-4 text-sm"><li>📊 Dashboard:</li><li>💰 Funds </li><li>📈 Reports</li><li>📦 Inventory </li><li>👥 Customers </li><li>🚚 Suppliers </li><li>🧮 Accountant</li><li>💵 payroll</li><li>⚙️ Settings</li><li>🔗 Integrations & APIs</li><li>💻 On-premise deployment & priority support</li><li>📁 Files</li></ul><button onclick="choosePlan('All Access', 20000)" class="bg-blue-900 text-white px-4 py-2 rounded w-full hover:bg-blue-700">
-    Choose
-  </button></div></div></section><div id="registration-form" class="max-w-xl mx-auto mt-8 bg-white p-6 rounded shadow hidden"><h2 class="text-2xl font-bold mb-4">Register & Subscribe</h2><p id="selected-plan" class="mb-4 text-blue-900 font-semibold"></p><form action="" method="POST" class="space-y-4"><div id="google-signup" class="mb-4"><button onclick="signUpWithGoogle()" type="button"
+  </p></div></section><!-- 💰 PRICING SECTION --><section id="pricing" class="mkt-page py-40 bg-gray-300 text-center"><h2 class="text-2xl font-bold text-blue-800 mb-8">Affordable Pricing Plans</h2><div class="flex justify-center items-center mb-6"><label class="flex items-center cursor-pointer"><span class="mr-2 font-medium text-gray-700">Monthly</span><input type="checkbox" id="billingToggle" class="hidden" onchange="toggleBilling()"><span class="w-12 h-6 flex items-center bg-blue-900 rounded-full p-1 duration-300 ease-in-out"><span class="bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out"></span></span><span class="ml-2 font-medium text-gray-700">Yearly <span class="text-blue-900 text-sm">(10% off)</span></span></label></div><style>
+#pricingCards{display:grid;grid-template-columns:repeat(1,1fr);gap:1.5rem;max-width:1400px;margin:0 auto;align-items:stretch;}
+@media (min-width:768px){#pricingCards{grid-template-columns:repeat(2,1fr);}}
+@media (min-width:1024px){#pricingCards{grid-template-columns:repeat(3,1fr);}}
+@media (min-width:1280px){#pricingCards{grid-template-columns:repeat(6,1fr);}}
+.pc-card{position:relative;display:flex;flex-direction:column;background:#fff;border-radius:1rem;border:1px solid #e5e7eb;padding:1.5rem 1.25rem 1.25rem;text-align:left;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;}
+.pc-card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(30,58,138,.14);border-color:#c7d2fe;}
+.pc-card.pc-popular{border:2px solid #1e3a8a;box-shadow:0 8px 24px rgba(30,58,138,.18);}
+.pc-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:#1e3a8a;color:#fff;font-size:11px;font-weight:700;letter-spacing:.03em;padding:4px 12px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.15);}
+.pc-name{font-size:1.05rem;font-weight:700;color:#1e3a8a;margin-bottom:.15rem;}
+.pc-tagline{font-size:.75rem;color:#6b7280;margin-bottom:.75rem;min-height:1.5em;}
+.pc-price{display:flex;align-items:baseline;gap:.25rem;margin-bottom:1rem;}
+.pc-price .amt{font-size:1.5rem;font-weight:800;color:#1e3a8a;}
+.pc-price .per{font-size:.75rem;color:#6b7280;font-weight:600;}
+.pc-features{list-style:none;margin:0 0 .5rem;padding:0;flex:1;}
+.pc-features li{display:flex;align-items:flex-start;gap:.4rem;font-size:.8rem;color:#374151;padding:.28rem 0;border-top:1px solid #f3f4f6;}
+.pc-features li:first-child{border-top:none;}
+.pc-features li.pc-extra{display:none;}
+.pc-card.pc-expanded .pc-features li.pc-extra{display:flex;}
+.pc-toggle{background:none;border:none;color:#1e3a8a;font-size:.75rem;font-weight:700;cursor:pointer;padding:.4rem 0 .9rem;text-align:left;}
+.pc-toggle:hover{text-decoration:underline;}
+.pc-cta{display:block;width:100%;text-align:center;background:#1e3a8a;color:#fff;font-weight:600;padding:.6rem 1rem;border-radius:.5rem;border:none;cursor:pointer;transition:background .15s ease;font-size:.85rem;}
+.pc-cta:hover{background:#1d4ed8;}
+.pc-card.pc-popular .pc-cta{background:#1d4ed8;}
+.pc-card.pc-popular .pc-cta:hover{background:#1e40af;}
+</style>
+<div id="pricingCards">
+
+<div class="pc-card">
+  <div class="pc-name">Free</div>
+  <div class="pc-tagline">Try the basics, no card required</div>
+  <div class="pc-price"><span class="amt" data-month="0" data-year="0">KES 0</span><span class="per">/mo</span></div>
+  <ul class="pc-features">
+    <li>📊 Dashboard</li>
+    <li>💰 Funds (Basic)</li>
+    <li>📈 Reports (Basic)</li>
+    <li>📦 Inventory (Basic)</li>
+    <li>👥 Customers (Basic)</li>
+    <li class="pc-extra">🚚 Suppliers (Basic)</li>
+    <li class="pc-extra">🧮 Accountant (Basic)</li>
+    <li class="pc-extra">⚙️ Settings (Basic)</li>
+    <li class="pc-extra">💵 Payroll: None</li>
+  </ul>
+  <button type="button" class="pc-toggle" onclick="togglePricingCard(this)">Show 4 more features ▾</button>
+  <button onclick="choosePlan('Free', 0)" class="pc-cta">Get Started</button>
+</div>
+
+<div class="pc-card">
+  <div class="pc-name">Starter</div>
+  <div class="pc-tagline">For small teams getting organized</div>
+  <div class="pc-price"><span class="amt" data-month="2000" data-year="21600">KES 2,000</span><span class="per">/mo</span></div>
+  <ul class="pc-features">
+    <li>📊 Dashboard</li>
+    <li>💰 Funds</li>
+    <li>📈 Reports</li>
+    <li>📦 Inventory</li>
+    <li>👥 Customers</li>
+    <li class="pc-extra">🚚 Suppliers</li>
+    <li class="pc-extra">🧮 Accountant</li>
+    <li class="pc-extra">💵 Payroll</li>
+    <li class="pc-extra">⚙️ Settings</li>
+  </ul>
+  <button type="button" class="pc-toggle" onclick="togglePricingCard(this)">Show 4 more features ▾</button>
+  <button onclick="choosePlan('Starter', 2000)" class="pc-cta">Choose</button>
+</div>
+
+<div class="pc-card pc-popular">
+  <span class="pc-badge">★ Most Popular</span>
+  <div class="pc-name">Pro</div>
+  <div class="pc-tagline">Best value for growing businesses</div>
+  <div class="pc-price"><span class="amt" data-month="5000" data-year="54000">KES 5,000</span><span class="per">/mo</span></div>
+  <ul class="pc-features">
+    <li>📊 Dashboard</li>
+    <li>💰 Funds</li>
+    <li>📈 Reports</li>
+    <li>📦 Inventory</li>
+    <li>👥 Customers</li>
+    <li class="pc-extra">🚚 Suppliers</li>
+    <li class="pc-extra">🧮 Accountant</li>
+    <li class="pc-extra">💵 Payroll</li>
+    <li class="pc-extra">⚙️ Settings</li>
+  </ul>
+  <button type="button" class="pc-toggle" onclick="togglePricingCard(this)">Show 4 more features ▾</button>
+  <button onclick="choosePlan('Pro', 5000)" class="pc-cta">Choose</button>
+</div>
+
+<div class="pc-card">
+  <div class="pc-name">Business</div>
+  <div class="pc-tagline">More power across every module</div>
+  <div class="pc-price"><span class="amt" data-month="8000" data-year="86400">KES 8,000</span><span class="per">/mo</span></div>
+  <ul class="pc-features">
+    <li>📊 Dashboard</li>
+    <li>💰 Funds</li>
+    <li>📈 Reports</li>
+    <li>📦 Inventory</li>
+    <li>👥 Customers</li>
+    <li class="pc-extra">🚚 Suppliers</li>
+    <li class="pc-extra">🧮 Accountant</li>
+    <li class="pc-extra">💵 Payroll</li>
+    <li class="pc-extra">⚙️ Settings</li>
+  </ul>
+  <button type="button" class="pc-toggle" onclick="togglePricingCard(this)">Show 4 more features ▾</button>
+  <button onclick="choosePlan('Business', 8000)" class="pc-cta">Choose</button>
+</div>
+
+<div class="pc-card">
+  <div class="pc-name">Enterprise</div>
+  <div class="pc-tagline">Full control, built to scale</div>
+  <div class="pc-price"><span class="amt" data-month="12000" data-year="129600">KES 12,000</span><span class="per">/mo</span></div>
+  <ul class="pc-features">
+    <li>📊 Dashboard</li>
+    <li>💰 Funds</li>
+    <li>📈 Reports</li>
+    <li>📦 Inventory</li>
+    <li>👥 Customers</li>
+    <li class="pc-extra">🚚 Suppliers</li>
+    <li class="pc-extra">🧮 Accountant</li>
+    <li class="pc-extra">💵 Payroll</li>
+    <li class="pc-extra">⚙️ Settings</li>
+    <li class="pc-extra">🔗 Integrations & APIs</li>
+    <li class="pc-extra">💻 On-premise deployment support</li>
+  </ul>
+  <button type="button" class="pc-toggle" onclick="togglePricingCard(this)">Show 6 more features ▾</button>
+  <button onclick="choosePlan('Enterprise', 12000)" class="pc-cta">Choose</button>
+</div>
+
+<div class="pc-card">
+  <div class="pc-name">All Access</div>
+  <div class="pc-tagline">Everything, priority support</div>
+  <div class="pc-price"><span class="amt" data-month="20000" data-year="240000">KES 20,000</span><span class="per">/mo</span></div>
+  <ul class="pc-features">
+    <li>📊 Dashboard</li>
+    <li>💰 Funds</li>
+    <li>📈 Reports</li>
+    <li>📦 Inventory</li>
+    <li>👥 Customers</li>
+    <li class="pc-extra">🚚 Suppliers</li>
+    <li class="pc-extra">🧮 Accountant</li>
+    <li class="pc-extra">💵 Payroll</li>
+    <li class="pc-extra">⚙️ Settings</li>
+    <li class="pc-extra">🔗 Integrations & APIs</li>
+    <li class="pc-extra">💻 On-premise deployment & priority support</li>
+    <li class="pc-extra">📁 Files</li>
+  </ul>
+  <button type="button" class="pc-toggle" onclick="togglePricingCard(this)">Show 7 more features ▾</button>
+  <button onclick="choosePlan('All Access', 20000)" class="pc-cta">Choose</button>
+</div>
+
+</div>
+<script>
+function togglePricingCard(btn){
+  const card = btn.closest('.pc-card');
+  const expanded = card.classList.toggle('pc-expanded');
+  const extraCount = card.querySelectorAll('.pc-extra').length;
+  btn.textContent = expanded ? 'Show less ▲' : ('Show ' + extraCount + ' more features ▾');
+}
+</script>
+<div id="registration-form" class="max-w-xl mx-auto mt-8 bg-white p-6 rounded shadow hidden"><h2 class="text-2xl font-bold mb-4">Register & Subscribe</h2><p id="selected-plan" class="mb-4 text-blue-900 font-semibold"></p><form action="" method="POST" class="space-y-4"><div id="google-signup" class="mb-4"><button onclick="signUpWithGoogle()" type="button"
             class="bg-white border border-gray-300 text-gray-800 py-2 px-4 rounded w-full flex items-center justify-center hover:bg-gray-100"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 mr-2" alt="Google Logo" />
             Sign up with Google
           </button><div class="text-center my-2 text-gray-500 text-sm">or</div></div><div id="payment-section"><input type="hidden" name="plan" id="plan-input"><input type="hidden" name="price" id="price-input"><input type="text" name="companyName" id="company-name" placeholder="Company Name" required class="w-full border p-2 rounded"><input type="text" name="fullName" id="fullName" placeholder="Full Name" required class="w-full border p-2 rounded"><input type="email" name="email" id="email" placeholder="Email" required class="w-full border p-2 rounded"><input type="password" name="password" id="password" placeholder="Password" required class="w-full border p-2 rounded"><input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm Password" required class="w-full border p-2 rounded"><div class="flex flex-col sm:flex-row sm:items-end gap-3"><div class="flex-1"><label class="block font-medium mb-1 text-blue-900">Choose Payment Method:</label><select name="paymentMethod" id="payment-method" required onchange="togglePaymentFields()"
-               class="w-full border border-blue-900 text-blue-900 bg-blue-50 p-2 rounded"><option value="">-- Select --</option><option value="mpesa">MPESA</option><option value="bank">Bank Transfer</option><option value="card">Credit Card</option><option value="airtel">Airtel Money</option><option value="paypal">PayPal</option><option value="cheque">Cheque / Manual Deposit</option></select></div><button type="submit" class="bg-blue-900 text-white px-4 py-2 rounded sm:w-52 w-full">Pay & Register</button></div><div id="mpesa-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Pay to MPESA Till/Paybill: <strong>0717346231</strong></p><input type="text" name="mpesaNumber" placeholder="Your MPESA Phone Number" class="w-full border p-2 rounded"></div><div id="bank-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Deposit to Bank Account: <strong>1177731215</strong></p><input type="text" name="bankRef" placeholder="Bank Transfer Reference" class="w-full border p-2 rounded"></div><div id="card-fields" class="hidden space-y-2"><input type="text" name="cardNumber" placeholder="Card Number" class="w-full border p-2 rounded"><input type="text" name="expiry" placeholder="MM/YY" class="w-full border p-2 rounded"><input type="text" name="cvv" placeholder="CVV" class="w-full border p-2 rounded"></div><div id="airtel-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Pay to Airtel Money Number: <strong>0731858997</strong></p><input type="text" name="airtelNumber" placeholder="Your Airtel Money Phone Number" class="w-full border p-2 rounded"></div><div id="paypal-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Pay via PayPal to: <strong>billing@acaciabooks.com</strong></p><input type="email" name="paypalEmail" placeholder="Your PayPal Email" class="w-full border p-2 rounded"></div><div id="cheque-fields" class="hidden space-y-2"><p class="text-sm text-blue-900 mb-2">Make cheque payable to: <strong>Acacia Books Ltd</strong></p><input type="text" name="chequeNumber" placeholder="Cheque Number" class="w-full border p-2 rounded"><input type="text" name="chequeBank" placeholder="Issuing Bank" class="w-full border p-2 rounded"></div></div></form></div></section></section><!-- ⭐ TESTIMONIALS --><section id="customers" class="py-20 bg-gray-300 text-center"><h2 class="text-2xl font-bold text-blue-800 mb-8">
+               class="w-full border border-blue-900 text-blue-900 bg-blue-50 p-2 rounded"><option value="">-- Select --</option><option value="mpesa">MPESA</option><option value="bank">Bank Transfer</option><option value="card">Credit Card</option><option value="airtel">Airtel Money</option><option value="paypal">PayPal</option><option value="cheque">Cheque / Manual Deposit</option></select></div><button type="submit" class="bg-blue-900 text-white px-4 py-2 rounded sm:w-52 w-full">Pay & Register</button></div><div id="mpesa-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Pay to MPESA Till/Paybill: <strong>0717346231</strong></p><input type="text" name="mpesaNumber" placeholder="Your MPESA Phone Number" class="w-full border p-2 rounded"></div><div id="bank-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Deposit to Bank Account: <strong>1177731215</strong></p><input type="text" name="bankRef" placeholder="Bank Transfer Reference" class="w-full border p-2 rounded"></div><div id="card-fields" class="hidden space-y-2"><input type="text" name="cardNumber" placeholder="Card Number" class="w-full border p-2 rounded"><input type="text" name="expiry" placeholder="MM/YY" class="w-full border p-2 rounded"><input type="text" name="cvv" placeholder="CVV" class="w-full border p-2 rounded"></div><div id="airtel-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Pay to Airtel Money Number: <strong>0731858997</strong></p><input type="text" name="airtelNumber" placeholder="Your Airtel Money Phone Number" class="w-full border p-2 rounded"></div><div id="paypal-fields" class="hidden"><p class="text-sm text-blue-900 mb-2">Pay via PayPal to: <strong>billing@acaciabooks.com</strong></p><input type="email" name="paypalEmail" placeholder="Your PayPal Email" class="w-full border p-2 rounded"></div><div id="cheque-fields" class="hidden space-y-2"><p class="text-sm text-blue-900 mb-2">Make cheque payable to: <strong>Acacia Books Ltd</strong></p><input type="text" name="chequeNumber" placeholder="Cheque Number" class="w-full border p-2 rounded"><input type="text" name="chequeBank" placeholder="Issuing Bank" class="w-full border p-2 rounded"></div></div></form></div><div class="max-w-4xl mx-auto mt-16 px-4 text-left"><h3 class="text-lg font-bold text-blue-900 mb-4 text-center">Pricing Questions</h3><div class="grid md:grid-cols-2 gap-4"><div class="bg-white p-4 rounded-lg shadow"><h4 class="font-semibold text-blue-900 text-sm mb-1">Can I switch plans later?</h4><p class="text-gray-600 text-sm">Yes — upgrade or downgrade anytime as your business grows, with no need to re-enter your data.</p></div><div class="bg-white p-4 rounded-lg shadow"><h4 class="font-semibold text-blue-900 text-sm mb-1">Is there a free plan?</h4><p class="text-gray-600 text-sm">Yes, the Free plan covers Dashboard, Funds, Reports, Inventory, Customers, Suppliers and Accountant at a basic level.</p></div><div class="bg-white p-4 rounded-lg shadow"><h4 class="font-semibold text-blue-900 text-sm mb-1">What payment methods are supported?</h4><p class="text-gray-600 text-sm">M-PESA, Airtel Money, bank transfer, credit card, PayPal, and cheque/manual deposit.</p></div><div class="bg-white p-4 rounded-lg shadow"><h4 class="font-semibold text-blue-900 text-sm mb-1">Do yearly plans save money?</h4><p class="text-gray-600 text-sm">Yes — switch the toggle above to Yearly for a 10% discount on every plan.</p></div></div></div></section><!-- ⭐ TESTIMONIALS --><section id="customers" class="mkt-page py-20 bg-gray-300 text-center"><h2 class="text-2xl font-bold text-blue-800 mb-4">
     What Our Customers Say
-  </h2><div id="testimonial-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-8xl mx-auto px-4"><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><img
+  </h2><p class="text-gray-700 max-w-2xl mx-auto mb-8 text-sm">Real businesses running inventory, sales, payroll and accounting on Acacia Books every day.</p><div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 px-4"><div class="p-4 bg-white rounded-lg shadow"><h4 class="text-xl font-bold text-blue-900">12K+</h4><p class="text-gray-600 text-xs">Customers managed on the platform</p></div><div class="p-4 bg-white rounded-lg shadow"><h4 class="text-xl font-bold text-blue-900">16K+</h4><p class="text-gray-600 text-xs">Invoices processed successfully</p></div><div class="p-4 bg-white rounded-lg shadow"><h4 class="text-xl font-bold text-blue-900">4.8/5</h4><p class="text-gray-600 text-xs">Average customer rating</p></div><div class="p-4 bg-white rounded-lg shadow"><h4 class="text-xl font-bold text-blue-900">20K+</h4><p class="text-gray-600 text-xs">Hours saved through automation</p></div></div><div id="testimonial-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-8xl mx-auto px-4"><div class="p-4 bg-white shadow-md rounded-xl border border-gray-200"><img
         src="https://randomuser.me/api/portraits/women/68.jpg"
         loading="lazy"
         class="w-16 h-16 mx-auto rounded-full mb-4 object-cover"
@@ -1021,7 +1212,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-<section id="resources" class="py-20 bg-gray-50 text-center"><div class="max-w-7xl mx-auto mb-16"><h2 class="text-1xl md:text-2xl font-bold text-blue-900 mb-4">
+<section id="resources" class="mkt-page py-20 bg-gray-50 text-center"><div class="max-w-7xl mx-auto mb-16"><h2 class="text-1xl md:text-2xl font-bold text-blue-900 mb-4">
       Powering Smarter Business Operations
     </h2><p class="text-lg md:text-1xl text-gray-600 leading-relaxed">
       Acacia Books is a comprehensive cloud-based ERP platform designed to help businesses simplify operations, improve efficiency, and strengthen financial control. By combining accounting, inventory management, payroll processing, customer relationship management, supplier management, reporting, and workflow automation into one powerful system, organizations gain greater visibility, productivity, and confidence while supporting sustainable growth and long-term business success.
@@ -1049,7 +1240,7 @@ document.addEventListener("DOMContentLoaded", () => {
           Products Managed Efficiently Using Inventory Control, Tracking, And Reporting Tools.
         </p></div><div class="p-4 bg-yellow-50 rounded-lg shadow"><h4 class="text-1xl font-bold text-yellow-900">20K+</h4><p class="text-gray-700 text-sm">
           Hours Saved Through Automation, Streamlined Workflows, And Improved Operational Efficiency.
-        </p></div></section><section id="apps" class="py-10 bg-gray-50 text-center px-10"><h2 class="text-1xl font-bold text-blue-900 mb-4">Our Apps</h2><p class="text-xl text-gray-600 leading-relaxed max-w-4xl mx-auto mb-10">
+        </p></div></section><section id="apps" class="mkt-page py-10 bg-gray-50 text-center px-10"><h2 class="text-1xl font-bold text-blue-900 mb-4">Our Apps</h2><p class="text-xl text-gray-600 leading-relaxed max-w-4xl mx-auto mb-10">
     Access all your business applications in one unified platform designed for speed, automation, and real-time control. Manage operations from anywhere, reduce manual work, improve productivity, and stay connected to your business activities through smart digital tools built to support growth, accuracy, and efficient decision-making across all departments.
   </p><div class="max-w-7xl mx-auto grid md:grid-cols-5 gap-6"><a href="inventory.html"
        class="group relative bg-white p-5 rounded-xl shadow-md hover:shadow-2xl transition transform hover:-translate-y-2 block overflow-hidden"><div class="absolute inset-0 opacity-20 blur-sm group-hover:opacity-30 transition"><div class="w-full h-full bg-cover"
@@ -1071,7 +1262,7 @@ document.addEventListener("DOMContentLoaded", () => {
        class="group relative bg-white p-5 rounded-xl shadow-md hover:shadow-2xl transition transform hover:-translate-y-2 block overflow-hidden"><div class="absolute inset-0 opacity-20 blur-sm group-hover:opacity-30 transition"><div class="w-full h-full bg-cover"
              style="background-image:url('https://source.unsplash.com/400x300/?billing');"></div></div><div class="relative z-10"><i class="fa-solid fa-file-invoice-dollar text-3xl text-orange-600 mb-3"></i><h3 class="text-xl font-bold text-blue-900">Billing</h3><p class="text-gray-500 text-base mt-2 leading-relaxed">
           Billing tools allow businesses to generate supplier bills, manage payments, and track financial obligations efficiently. They improve financial accuracy, reduce manual errors, enhance payment tracking, and provide clear visibility into outstanding liabilities and overall financial health.
-        </p></div></a></div></section><section id="resources" class="py-16 bg-gray-50 text-center px-4"><h2 class="text-xl font-bold text-blue-800 mb-6">Helpful Resources & Support</h2><div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-6"><!-- USER GUIDE --><div class="bg-white p-5 rounded-lg shadow"><h3 class="font-bold text-blue-900 mb-2">📖 User Guide</h3><p class="text-gray-600 text-sm mb-3">
+        </p></div></a></div></section><section id="support" class="mkt-page py-16 bg-gray-50 text-center px-4"><h2 class="text-xl font-bold text-blue-800 mb-6">Helpful Resources & Support</h2><div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-6"><!-- USER GUIDE --><div class="bg-white p-5 rounded-lg shadow"><h3 class="font-bold text-blue-900 mb-2">📖 User Guide</h3><p class="text-gray-600 text-sm mb-3">
       Master every area of Acacia ERP through a comprehensive guide covering Dashboard Hub, Inventory Hub, Funds Hub, Sales Hub, Purchase Hub, Accountant Hub, Payroll Hub, Reports Hub, Plans Hub, Settings Hub, Files Hub, Acacia Mail, and CRM Portal. Learn how to manage stock, finances, customers, suppliers, payroll, projects, reports, compliance, and business operations from one centralized platform designed to improve productivity, accuracy, and organizational growth.
       </p><p class="text-gray-600 text-sm mb-3">
         Access step-by-step video tutorials that demonstrate inventory control, customer invoicing, supplier management, accounting processes, payroll automation, reporting, project tracking, file management, CRM workflows, and system configuration. Each tutorial is designed to help users quickly understand daily tasks, automate repetitive processes, reduce errors, and maximize the benefits of every module within the Acacia ERP ecosystem regardless of business size or industry.
@@ -1079,7 +1270,66 @@ document.addEventListener("DOMContentLoaded", () => {
         Open Guide
       </button><div id="guide" class="hidden mt-3 text-left text-sm text-gray-600 space-y-2"><p>📊 Dashboard Hub – Business overview, KPIs, performance metrics and activity monitoring.</p><p>📦 Inventory Hub – Stock control, movements, pricing, bundles, packages, adjustments and shipments.</p><p>👥 Sales Hub – Customers, invoices, quotes, orders, receipts, returns, deliveries and statements.</p><p>🛒 Purchase Hub – Suppliers, bills, payments, purchase orders, quotations, GRNs and returns.</p><p>🧮 Accountant Hub – Journals, budgets, chart of accounts, assets, liabilities and tax adjustments.</p><p>💵 Payroll Hub – Employees, attendance, earnings, deductions, payslips, statutory compliance and reports.</p><p>📈 Reports & Planning – Analytics, business reports, project management and plan tracking.</p><p>⚙️ Settings & Administration – User management, warehouses, compliance, costing, customization and system configuration.</p><p>📁 Files, Mail & CRM – Document management, business communication and customer relationship management.</p></div></div><div class="bg-white p-5 rounded-lg shadow"><h3 class="font-bold text-blue-900 mb-2">🎓 Tutorials</h3><p class="text-gray-600 text-sm mb-3"></p><button onclick="toggleBox('videos')" class="bg-blue-900 text-white px-3 py-2 rounded text-sm">
         Watch Videos
-      </button><div id="videos" class="hidden mt-3 space-y-2"><p class="text-sm">📊 Dashboard navigation and KPI monitoring tutorial</p><p class="text-sm">📦 Inventory management, stock movements and shipments guide</p><p class="text-sm">👥 Sales workflow covering customers, invoices, quotes and orders</p><p class="text-sm">🛒 Purchase management including suppliers, bills and purchase orders</p><p class="text-sm">🧮 Accounting setup, journals, budgets and chart of accounts</p><p class="text-sm">💵 Payroll processing, payslips, attendance and statutory deductions</p><p class="text-sm">📈 Reports generation, analytics and business insights</p><p class="text-sm">🗂️ Project planning, tracking and performance monitoring</p><p class="text-sm">⚙️ System configuration, user management and compliance settings</p><p class="text-sm">📁 File management, CRM integration and Acacia Mail tutorials</p></div></div><div class="bg-white p-5 rounded-lg shadow"><h3 class="font-bold text-blue-900 mb-2">🛠 FAQ & Support</h3><p class="text-gray-600 text-sm mb-3">
+      </button><div id="videos" class="hidden mt-3">
+  <style>
+  .vt-grid{display:grid;grid-template-columns:repeat(1,1fr);gap:.75rem;text-align:left;}
+  @media (min-width:640px){.vt-grid{grid-template-columns:repeat(2,1fr);}}
+  .vt-card{display:flex;align-items:center;gap:.6rem;background:#f9fafb;border:1px solid #e5e7eb;border-radius:.6rem;padding:.6rem .7rem;cursor:pointer;transition:border-color .15s ease,background .15s ease;}
+  .vt-card:hover{border-color:#1e3a8a;background:#eef2ff;}
+  .vt-thumb{flex:0 0 auto;width:2.4rem;height:2.4rem;border-radius:50%;background:#1e3a8a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.9rem;}
+  .vt-title{font-size:.8rem;color:#374151;line-height:1.3;}
+  #vtLightbox{display:none;position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:9999;align-items:center;justify-content:center;padding:20px;}
+  #vtLightbox.vt-open{display:flex;}
+  #vtLightboxInner{background:#000;border-radius:.75rem;overflow:hidden;max-width:900px;width:100%;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+  #vtLightboxInner video{width:100%;display:block;max-height:70vh;background:#000;}
+  #vtLightboxCaption{background:#111827;color:#fff;padding:.7rem 1rem;font-size:.85rem;}
+  #vtLightboxClose{position:absolute;top:8px;right:10px;background:rgba(0,0,0,.5);color:#fff;border:none;border-radius:999px;width:32px;height:32px;font-size:1.1rem;cursor:pointer;z-index:2;}
+  #vtLightboxClose:hover{background:rgba(0,0,0,.8);}
+  </style>
+  <p class="text-xs text-gray-500 mb-2">Sample tutorial player shown below — swap in your own recorded walkthroughs when ready.</p>
+  <div class="vt-grid">
+    <div class="vt-card" onclick="openTutorialVideo('Dashboard navigation and KPI monitoring tutorial')"><span class="vt-thumb">▶</span><span class="vt-title">📊 Dashboard navigation and KPI monitoring tutorial</span></div>
+    <div class="vt-card" onclick="openTutorialVideo('Inventory management, stock movements and shipments guide')"><span class="vt-thumb">▶</span><span class="vt-title">📦 Inventory management, stock movements and shipments guide</span></div>
+    <div class="vt-card" onclick="openTutorialVideo('Sales workflow covering customers, invoices, quotes and orders')"><span class="vt-thumb">▶</span><span class="vt-title">👥 Sales workflow covering customers, invoices, quotes and orders</span></div>
+    <div class="vt-card" onclick="openTutorialVideo('Purchase management including suppliers, bills and purchase orders')"><span class="vt-thumb">▶</span><span class="vt-title">🛒 Purchase management including suppliers, bills and purchase orders</span></div>
+    <div class="vt-card" onclick="openTutorialVideo('Accounting setup, journals, budgets and chart of accounts')"><span class="vt-thumb">▶</span><span class="vt-title">🧮 Accounting setup, journals, budgets and chart of accounts</span></div>
+    <div class="vt-card" onclick="openTutorialVideo('Payroll processing, payslips, attendance and statutory deductions')"><span class="vt-thumb">▶</span><span class="vt-title">💵 Payroll processing, payslips, attendance and statutory deductions</span></div>
+    <div class="vt-card" onclick="openTutorialVideo('Reports generation, analytics and business insights')"><span class="vt-thumb">▶</span><span class="vt-title">📈 Reports generation, analytics and business insights</span></div>
+    <div class="vt-card" onclick="openTutorialVideo('Project planning, tracking and performance monitoring')"><span class="vt-thumb">▶</span><span class="vt-title">🗂️ Project planning, tracking and performance monitoring</span></div>
+    <div class="vt-card" onclick="openTutorialVideo('System configuration, user management and compliance settings')"><span class="vt-thumb">▶</span><span class="vt-title">⚙️ System configuration, user management and compliance settings</span></div>
+    <div class="vt-card" onclick="openTutorialVideo('File management, CRM integration and Acacia Mail tutorials')"><span class="vt-thumb">▶</span><span class="vt-title">📁 File management, CRM integration and Acacia Mail tutorials</span></div>
+  </div>
+</div>
+<div id="vtLightbox" onclick="if(event.target===this)closeTutorialVideo()">
+  <div id="vtLightboxInner">
+    <button type="button" id="vtLightboxClose" onclick="closeTutorialVideo()">&times;</button>
+    <video id="vtLightboxVideo" controls preload="none" poster="">
+      <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+      Your browser doesn't support embedded video.
+    </video>
+    <div id="vtLightboxCaption"></div>
+  </div>
+</div>
+<script>
+function openTutorialVideo(title){
+  const lb = document.getElementById('vtLightbox');
+  const vid = document.getElementById('vtLightboxVideo');
+  document.getElementById('vtLightboxCaption').textContent = title;
+  lb.classList.add('vt-open');
+  vid.currentTime = 0;
+  vid.play().catch(()=>{});
+}
+function closeTutorialVideo(){
+  const lb = document.getElementById('vtLightbox');
+  const vid = document.getElementById('vtLightboxVideo');
+  vid.pause();
+  lb.classList.remove('vt-open');
+}
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') closeTutorialVideo();
+});
+</script>
+<h3 class="font-bold text-blue-900 mb-2">🛠 FAQ & Support</h3><p class="text-gray-600 text-sm mb-3">
        Find answers to common questions about inventory management, sales transactions, supplier operations, accounting entries, payroll processing, reporting tools, project tracking, user permissions, integrations, and system settings. Our support resources help users troubleshoot issues, understand platform features, maintain compliance, and optimize workflows. When additional assistance is needed, our dedicated support team is available to provide guidance and ensure uninterrupted business operations.
       </p><button onclick="toggleBox('faq')" class="bg-blue-900 text-white px-3 py-2 rounded text-sm">
         View FAQ
@@ -1097,7 +1347,70 @@ function toggleBox(id) {
   el.classList.toggle("hidden");
 }
 </script>
-<footer class="footer"><div class="footer-container"><div class="footer-section"><h3>🛒 Acacia Books</h3><p style="color:#ccc; font-size:12px; line-height:1.6;">
+<section id="about" class="mkt-page py-20 bg-white text-center px-4"><div class="max-w-5xl mx-auto"><h2 class="text-2xl font-bold text-blue-900 mb-6">About Acacia Books</h2><p class="text-lg text-gray-600 leading-relaxed mb-6">
+    Acacia Books is a comprehensive cloud-based ERP platform designed to unify business operations under a single intelligent system. It integrates core business functions including inventory management, sales, procurement, accounting, payroll, reporting, and project tracking into one seamless ecosystem, built to automate repetitive workflows, reduce manual errors, and enhance operational efficiency across every department.
+  </p><p class="text-gray-600 leading-relaxed mb-10 text-left max-w-4xl mx-auto">
+    We built Acacia Books because growing businesses were stuck stitching together spreadsheets, standalone invoicing apps, and separate payroll tools that never talked to each other. Every disconnected system meant double entry, delayed numbers, and decisions made on stale data. Acacia Books puts inventory, sales, purchasing, accounting, payroll, and reporting on one shared source of truth — so a sale made this morning is already reflected in stock levels, revenue reports, and customer records by the time you check the dashboard.
+  </p></div><div class="max-w-6xl mx-auto grid md:grid-cols-4 gap-4 px-6 mb-12"><div class="p-4 bg-blue-50 rounded-lg shadow"><h4 class="text-xl font-bold text-blue-900">2026</h4><p class="text-gray-700 text-sm">Platform launched to serve growing businesses across Kenya and East Africa</p></div><div class="p-4 bg-green-50 rounded-lg shadow"><h4 class="text-xl font-bold text-green-900">9</h4><p class="text-gray-700 text-sm">Core modules — Dashboard, Inventory, Sales, Purchases, Accounting, Payroll, Reports, CRM, Files</p></div><div class="p-4 bg-purple-50 rounded-lg shadow"><h4 class="text-xl font-bold text-purple-900">6</h4><p class="text-gray-700 text-sm">Subscription tiers, from a free plan to full Enterprise deployment support</p></div><div class="p-4 bg-yellow-50 rounded-lg shadow"><h4 class="text-xl font-bold text-yellow-900">24/7</h4><p class="text-gray-700 text-sm">Cloud availability with secure, encrypted data sync</p></div></div><div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 px-4"><div class="p-6 bg-gray-50 rounded-xl shadow border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-2">🎯 Our Mission</h3><p class="text-gray-600 text-sm">Give businesses of every size a single, reliable platform to run finance, inventory, payroll and customer operations with confidence — without needing a team of specialists to hold it together.</p></div><div class="p-6 bg-gray-50 rounded-xl shadow border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-2">🌍 Where We Work</h3><p class="text-gray-600 text-sm">Headquartered in Nairobi, Kenya, and built for businesses across East Africa and beyond, with multi-currency and multi-country support baked in from day one.</p></div><div class="p-6 bg-gray-50 rounded-xl shadow border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-2">🤝 Why Teams Trust Us</h3><p class="text-gray-600 text-sm">Real-time data sync, secure cloud infrastructure, and a modular design that scales as your business grows from one branch to many.</p></div></div><div class="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 px-4 mt-6"><div class="bg-white p-6 rounded-xl border border-gray-200 text-left"><h3 class="text-lg font-bold text-blue-900 mb-2">🔒 Security First</h3><p class="text-gray-600 text-sm">Encrypted cloud storage, role-based access, and per-company data isolation so every business's records stay private and protected.</p></div><div class="bg-white p-6 rounded-xl border border-gray-200 text-left"><h3 class="text-lg font-bold text-blue-900 mb-2">⚙️ Built to Scale</h3><p class="text-gray-600 text-sm">Start on the Free plan and grow into Business or Enterprise without switching systems or re-entering your data.</p></div><div class="bg-white p-6 rounded-xl border border-gray-200 text-left"><h3 class="text-lg font-bold text-blue-900 mb-2">💬 People-Backed Support</h3><p class="text-gray-600 text-sm">A dedicated support team, guided setup, and an in-depth user guide so your team is never stuck figuring things out alone.</p></div></div><div class="mt-10"><button onclick="return showMarketingPage('contact', event)" class="bg-blue-900 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition">Get in Touch</button></div></section><section id="blog" class="mkt-page py-20 bg-gray-50 text-center px-4"><div class="max-w-5xl mx-auto mb-12"><h2 class="text-2xl font-bold text-blue-900 mb-4">From the Blog</h2><p class="text-lg text-gray-600 leading-relaxed">Tips, product updates and stories on running a business smarter with Acacia Books.</p></div><div class="max-w-5xl mx-auto space-y-8 px-4 text-left">
+
+<article class="p-6 bg-white rounded-xl shadow border border-gray-200"><span class="text-xs font-semibold text-blue-900 uppercase">Inventory</span><h3 class="text-xl font-bold text-blue-900 my-2">5 Ways to Simplify Inventory Management</h3><p class="text-gray-600 text-sm leading-relaxed mb-3">
+Stock problems rarely show up as one big failure — they show up as small gaps that add up: a shelf that says "10 units" when there are actually 3, a reorder that gets placed a week too late, a product that quietly stops selling while more of it keeps getting bought. Here are five habits that close those gaps.
+</p><p class="text-gray-600 text-sm leading-relaxed mb-3">
+<b>1. Count little and often, not once a year.</b> A full annual stock take finds problems months after they started. Rolling counts on your fastest-moving items every week catch discrepancies while you can still trace what caused them.
+</p><p class="text-gray-600 text-sm leading-relaxed mb-3">
+<b>2. Set reorder points per item, not per gut feeling.</b> Inventory in Acacia Books lets you flag minimum stock levels so slow and fast movers are treated differently instead of everything being reordered on the same schedule.
+</p><p class="text-gray-600 text-sm leading-relaxed mb-3">
+<b>3. Track stock by warehouse, not just in total.</b> "50 units in stock" is not the same as "50 units, all in the wrong branch." Warehouse-level visibility is what actually prevents a stockout at one location while another is overstocked.
+</p><p class="text-gray-600 text-sm leading-relaxed mb-3">
+<b>4. Tie inventory to sales data.</b> A product's stock level only means something next to how fast it's selling. Reviewing movement alongside sales reports each month is how slow-moving stock gets caught before it ties up cash.
+</p><p class="text-gray-600 text-sm leading-relaxed">
+<b>5. Make adjustments visible, not silent.</b> Damages, returns and shrinkage should be logged as adjustments with a reason, not quietly edited away — that history is what makes your numbers trustworthy at audit time.
+</p></article>
+
+<article class="p-6 bg-white rounded-xl shadow border border-gray-200"><span class="text-xs font-semibold text-blue-900 uppercase">Payroll</span><h3 class="text-xl font-bold text-blue-900 my-2">Getting Payroll Right, Every Month</h3><p class="text-gray-600 text-sm leading-relaxed mb-3">
+Payroll is one of the few business processes with a hard deadline every single month, and no tolerance for "close enough." Here's what keeps it predictable instead of a monthly scramble.
+</p><p class="text-gray-600 text-sm leading-relaxed mb-3">
+<b>Keep employee records current, not just accurate at hiring.</b> Salary changes, new deductions and benefit updates only cause payroll errors when they're not entered until run day. Update records the moment something changes, not the week payroll is due.
+</p><p class="text-gray-600 text-sm leading-relaxed mb-3">
+<b>Let the system calculate statutory deductions.</b> Manually recalculating tax and statutory contributions every month is where rounding errors and outdated rates creep in. Acacia Books' Payroll Hub applies current deduction rules automatically so the same mistake doesn't repeat every pay cycle.
+</p><p class="text-gray-600 text-sm leading-relaxed mb-3">
+<b>Reconcile attendance before you run payslips, not after.</b> Payroll built on unconfirmed attendance means reissuing payslips later. A short reconciliation step before generating payslips saves a much longer correction process afterward.
+</p><p class="text-gray-600 text-sm leading-relaxed">
+<b>Keep payslips and reports archived automatically.</b> When compliance checks or employee queries come up months later, having every payslip and statutory report already stored means you're answering the question in minutes, not digging through email threads.
+</p></article>
+
+<article class="p-6 bg-white rounded-xl shadow border border-gray-200"><span class="text-xs font-semibold text-blue-900 uppercase">Reporting</span><h3 class="text-xl font-bold text-blue-900 my-2">Reading Your Business Reports Like a Pro</h3><p class="text-gray-600 text-sm leading-relaxed mb-3">
+A dashboard full of numbers isn't the same as understanding your business. The difference is knowing which few numbers to check first, and what a change in them is actually telling you.
+</p><p class="text-gray-600 text-sm leading-relaxed mb-3">
+<b>Start with cash flow, not revenue.</b> Revenue tells you what you've sold; cash flow tells you what you can actually spend. A business can be "profitable" on paper and still run out of cash if receivables are slow — check the cash flow report before celebrating a good sales month.
+</p><p class="text-gray-600 text-sm leading-relaxed mb-3">
+<b>Compare periods, not just totals.</b> A single month's number means little on its own. Looking at this month against last month, and against the same month last year, is what separates a real trend from normal day-to-day noise.
+</p><p class="text-gray-600 text-sm leading-relaxed mb-3">
+<b>Watch gross margin by product, not just overall.</b> An overall margin can look healthy while a few products are quietly losing money and being propped up by the rest. Product-level reporting is where that gets caught.
+</p><p class="text-gray-600 text-sm leading-relaxed">
+<b>Turn the report into one decision, every time you open it.</b> A report you look at but don't act on is just a habit. Each time you review reports, aim to leave with one concrete decision — restock this, chase that invoice, cut this expense — rather than just "noting" the numbers.
+</p></article>
+
+</div></section><section id="contact" class="mkt-page py-20 bg-white text-center px-4"><div class="max-w-3xl mx-auto mb-10"><h2 class="text-2xl font-bold text-blue-900 mb-4">Get In Touch</h2><p class="text-lg text-gray-600 leading-relaxed">Questions about a plan, a demo, or how Acacia Books fits your business? Reach us any of these ways.</p></div><div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-6 px-4"><div class="p-6 bg-gray-50 rounded-xl shadow border border-gray-200"><h3 class="font-bold text-blue-900 mb-2">📞 Phone</h3><p class="text-gray-600 text-sm">+254 731 858 997</p><p class="text-gray-600 text-sm">+254 717 346 231</p></div><div class="p-6 bg-gray-50 rounded-xl shadow border border-gray-200"><h3 class="font-bold text-blue-900 mb-2">💬 WhatsApp</h3><p class="text-gray-600 text-sm mb-2">Chat with our team directly.</p><a href="https://wa.me/254731858997" target="_blank" class="text-green-600 font-semibold hover:underline">Start a Chat</a></div><div class="p-6 bg-gray-50 rounded-xl shadow border border-gray-200"><h3 class="font-bold text-blue-900 mb-2">📍 Location</h3><p class="text-gray-600 text-sm">Nairobi, Kenya</p><p class="text-gray-600 text-sm">support@acaciabooks.com</p></div></div><div class="max-w-3xl mx-auto mt-12 px-4 text-left"><div class="bg-gray-50 p-6 rounded-xl shadow border border-gray-200"><h3 class="text-lg font-bold text-blue-900 mb-2 text-center">📦 Share Your Website Catalog</h3><p class="text-gray-600 text-sm mb-4 text-center">Send us your business/website catalog and we'll get back to you about listing it or setting it up on Acacia Books.</p><div class="space-y-3"><input id="catalogName" type="text" placeholder="Your Name" class="w-full border p-2 rounded"><input id="catalogBusiness" type="text" placeholder="Business Name" class="w-full border p-2 rounded"><input id="catalogUrl" type="text" placeholder="Website / Catalog Link" class="w-full border p-2 rounded"><textarea id="catalogNotes" placeholder="Anything else we should know" rows="3" class="w-full border p-2 rounded"></textarea><button onclick="shareWebsiteCatalog()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800">Send Catalog</button></div></div></div><div class="mt-10"><button onclick="openQuoteModal()" class="bg-blue-900 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition">Request a Quote</button></div></section>
+<script>
+function shareWebsiteCatalog() {
+  var name = (document.getElementById('catalogName').value || '').trim();
+  var business = (document.getElementById('catalogBusiness').value || '').trim();
+  var url = (document.getElementById('catalogUrl').value || '').trim();
+  var notes = (document.getElementById('catalogNotes').value || '').trim();
+  var subject = encodeURIComponent('Website Catalog Submission' + (business ? ' - ' + business : ''));
+  var bodyLines = [
+    'Name: ' + (name || '(not provided)'),
+    'Business: ' + (business || '(not provided)'),
+    'Website / Catalog Link: ' + (url || '(not provided)'),
+    '',
+    'Notes:',
+    notes || '(none)'
+  ];
+  var body = encodeURIComponent(bodyLines.join('\n'));
+  window.location.href = 'mailto:adminacaciabooks@gmail.com,developeracaciabooks@gmail.com?subject=' + subject + '&body=' + body;
+}
+</script><footer class="footer"><div class="footer-container"><div class="footer-section"><h3>🛒 Acacia Books</h3><p style="color:#ccc; font-size:12px; line-height:1.6;">
     Acacia Books is a comprehensive cloud-based ERP platform designed to unify business operations
     under a single intelligent system. It integrates core business functions including inventory
     management, sales, procurement, accounting, payroll, reporting, and project tracking into one
@@ -1432,11 +1745,13 @@ function confirmReset() {
 <script>
 function toggleBilling() {
   const yearly = document.getElementById('billingToggle').checked;
-  document.querySelectorAll('#pricingCards p[data-month]').forEach(p => {
-    const month = +p.dataset.month;
-    const year = +p.dataset.year;
+  document.querySelectorAll('#pricingCards [data-month]').forEach(el => {
+    const month = +el.dataset.month;
+    const year = +el.dataset.year;
     const price = yearly ? year : month;
-    p.textContent = `KES ${price.toLocaleString()}/${yearly ? 'yr' : 'mo'}`;
+    el.textContent = `KES ${price.toLocaleString()}`;
+    const per = el.parentElement.querySelector('.per');
+    if (per) per.textContent = yearly ? '/yr' : '/mo';
   });
 }
 </script>
@@ -5438,11 +5753,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function toggleBilling() {
   const yearly = document.getElementById('billingToggle')?.checked;
-  document.querySelectorAll('#pricingCards p[data-month]').forEach(p => {
-    const month = +p.dataset.month;
-    const year = +p.dataset.year;
+  document.querySelectorAll('#pricingCards [data-month]').forEach(el => {
+    const month = +el.dataset.month;
+    const year = +el.dataset.year;
     const price = yearly ? year : month;
-    p.textContent = `KES ${price.toLocaleString()}/${yearly ? 'yr' : 'mo'}`;
+    el.textContent = `KES ${price.toLocaleString()}`;
+    const per = el.parentElement.querySelector('.per');
+    if (per) per.textContent = yearly ? '/yr' : '/mo';
   });
 }
 
