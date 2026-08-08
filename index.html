@@ -1206,7 +1206,7 @@ function closeQuoteModal() {
   document.getElementById("quoteModal").style.display = "none";
 }
 </script>
-<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 relative"><button onclick="closeLogin()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button><h2 class="text-2xl font-bold text-blue-900 mb-4 text-center">Login</h2><div id="loginForm"><input id="loginUser" type="text" placeholder="Email or Username" class="w-full border p-2 mb-3 rounded" /><input id="loginCompanyId" type="text" placeholder="Company ID (optional)" class="w-full border p-2 mb-3 rounded" /><input id="loginPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><select id="userRole" class="w-full border p-2 rounded mb-3"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="human resource">Human Resource</option></select><button onclick="handleLogin()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-900 mb-2">
+<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 relative"><button onclick="closeLogin()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button><h2 class="text-2xl font-bold text-blue-900 mb-4 text-center">Login</h2><div id="loginForm"><input id="loginUsername" type="text" placeholder="Username" autocomplete="username" class="w-full border p-2 mb-3 rounded" /><input id="loginEmail" type="email" placeholder="Email" autocomplete="email" class="w-full border p-2 mb-3 rounded" /><p class="text-xs text-gray-500 mb-3">Enter your username or your email &mdash; you don't need both.</p><input id="loginCompanyId" type="text" placeholder="Company ID (optional)" class="w-full border p-2 mb-3 rounded" /><input id="loginPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><select id="userRole" class="w-full border p-2 rounded mb-3"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="human resource">Human Resource</option></select><button onclick="handleLogin()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-900 mb-2">
         Login
       </button><p class="text-sm flex justify-between"><a href="#" class="text-blue-600 hover:underline" onclick="showRegisterForm();return false;">Create account</a><a href="#" class="text-blue-600 hover:underline" onclick="showResetForm()">Forgot Password?</a></p></div><div id="resetForm" class="hidden mt-4"><p class="mb-2 text-sm text-gray-700">Enter your username or email to reset your password.</p><input id="resetEmail" type="text" placeholder="Username or Email" class="w-full border p-2 mb-3 rounded" /><button onclick="resetPassword()" class="w-full bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 mb-2">
         Send Reset Code
@@ -5086,9 +5086,15 @@ if (loggedInUser) {
 }
 async function handleLogin() {
 
-  const u = document.getElementById('loginUser').value.trim().toLowerCase();
+  const unameInput = (document.getElementById('loginUsername')?.value || '').trim().toLowerCase();
+  const emailInput = (document.getElementById('loginEmail')?.value || '').trim().toLowerCase();
   const p = document.getElementById('loginPass').value.trim();
   const companyIdInput = (document.getElementById('loginCompanyId')?.value || '').trim().toLowerCase();
+
+  if (!unameInput && !emailInput) {
+    alert("❌ Enter your username or your email");
+    return;
+  }
 
   const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
 
@@ -5099,7 +5105,7 @@ async function handleLogin() {
     const company = (x.companyId || "").toLowerCase();
 
     const loginMatch =
-      email === u || username === u;
+      (unameInput && username === unameInput) || (emailInput && email === emailInput);
 
     const companyMatch =
       companyIdInput ? company === companyIdInput : true;
@@ -5112,7 +5118,7 @@ async function handleLogin() {
     user = storedUsers.find(x => {
       const email = (x.email || "").toLowerCase();
       const username = (x.username || "").toLowerCase();
-      return (email === u || username === u) && x.password === p;
+      return ((unameInput && username === unameInput) || (emailInput && email === emailInput)) && x.password === p;
     });
   }
 
@@ -26959,6 +26965,214 @@ function applyCreditToInvoice(noteId) {
     if (typeof showToast === "function") showToast(msg); else alert(msg);
   };
 }
+// Apply an existing Credit Note to a specific invoice (the invoice-side entry point,
+// mirroring applyCreditToInvoice above which is the credit-note-side entry point).
+// Used directly by the Invoices tab, and reused by applyCreditBulkInvoice /
+// applyCreditToRecurringInvoice below so all three flows stay consistent.
+function applyCredit(invoiceId) {
+  const invoicesAll = JSON.parse(localStorage.getItem("invoices") || "[]");
+  const invIndex = invoicesAll.findIndex(i => i.id === invoiceId);
+  if (invIndex === -1) return alert("Invoice not found");
+  const invoice = invoicesAll[invIndex];
+
+  const total = parseFloat(invoice.totalKES || invoice.total) || 0;
+  const receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
+  const creditApps = JSON.parse(localStorage.getItem("creditNoteApplications") || "[]");
+  const paidFromReceipts = receipts.filter(r => r.invoiceId === invoice.id).reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+  const paidFromCredit = creditApps.filter(a => a.invoiceId === invoice.id).reduce((s, a) => s + (parseFloat(a.amount) || 0), 0);
+  const balance = Math.max(total - paidFromReceipts - paidFromCredit, 0);
+  if (balance <= 0) return alert(`Invoice ${invoice.invoiceNumber} is already fully paid.`);
+
+  const notes = JSON.parse(localStorage.getItem("creditNotes") || "[]");
+  const candidateNotes = notes.map((n, idx) => {
+    const subtotal = n.items?.reduce((s, i) => s + (i.subtotal || 0), 0) || 0;
+    const vat = n.items?.reduce((s, i) => s + (i.vatAmount || 0), 0) || 0;
+    const noteTotal = subtotal + vat || n.total || 0;
+    const applied = parseFloat(n.appliedAmount) || 0;
+    const remaining = Math.max(noteTotal - applied, 0);
+    return { idx, note: n, noteTotal, remaining };
+  }).filter(x => x.note.customer === invoice.customer && x.remaining > 0);
+
+  if (candidateNotes.length === 0) {
+    return alert(`No available credit notes found for ${invoice.customer}.`);
+  }
+
+  const noteOptions = candidateNotes
+    .map(x => `<option value="${x.idx}">${x.note.number} — Available ${window.__fmtBase(x.remaining)} KES</option>`)
+    .join("");
+
+  const modal = document.createElement("div");
+  modal.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000;";
+  const content = document.createElement("div");
+  content.style = "background:#fff;padding:20px;border-radius:8px;width:400px;";
+  content.innerHTML = `
+    <h3>Apply Credit to Invoice ${invoice.invoiceNumber}</h3>
+    <p style="margin:6px 0;font-size:13px;color:#444">
+      Outstanding Balance: <b>${window.__fmtBase(balance)} KES</b>
+    </p>
+    <label>Credit Note:</label>
+    <select id="applyCreditNoteSelect" class="border p-1 w-full mb-2">${noteOptions}</select>
+    <label>Amount to Apply (KES):</label>
+    <input type="number" id="applyCreditAmount" class="border p-1 w-full mb-2" step="0.01" min="0.01" />
+    <div class="flex justify-end gap-2 mt-2">
+      <button id="cancelApplyCredit" class="bg-gray-400 text-white px-3 py-1 rounded">Cancel</button>
+      <button id="saveApplyCredit" class="bg-blue-900 text-white px-3 py-1 rounded">Apply</button>
+    </div>
+  `;
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+
+  const select = document.getElementById("applyCreditNoteSelect");
+  const amountInput = document.getElementById("applyCreditAmount");
+
+  function suggestAmount() {
+    const chosen = candidateNotes.find(x => String(x.idx) === select.value);
+    if (!chosen) return;
+    const cap = Math.min(balance, chosen.remaining);
+    amountInput.value = window.__fmtBase(cap);
+    amountInput.max = window.__fmtBase(cap);
+  }
+  select.addEventListener("change", suggestAmount);
+  suggestAmount();
+
+  document.getElementById("cancelApplyCredit").onclick = () => {
+    document.body.removeChild(modal);
+  };
+
+  document.getElementById("saveApplyCredit").onclick = () => {
+    const chosen = candidateNotes.find(x => String(x.idx) === select.value);
+    if (!chosen) return alert("Please select a credit note");
+    const amount = parseFloat(amountInput.value);
+    const cap = Math.min(balance, chosen.remaining);
+    if (isNaN(amount) || amount <= 0 || amount > cap + 0.0001) {
+      return alert(`Invalid amount. Must be between 0.01 and ${window.__fmtBase(cap)} KES.`);
+    }
+
+    const notesAll = JSON.parse(localStorage.getItem("creditNotes") || "[]");
+    const note = notesAll[chosen.idx];
+
+    // Record the credit application (kept separate from bank receipts).
+    const application = {
+      id: Date.now(),
+      creditNoteId: note.id,
+      creditNoteNumber: note.number,
+      invoiceId: invoice.id,
+      invoiceNumber: invoice.invoiceNumber,
+      customer: invoice.customer,
+      amount,
+      date: new Date().toISOString().split("T")[0]
+    };
+    const creditAppsAll = JSON.parse(localStorage.getItem("creditNoteApplications") || "[]");
+    creditAppsAll.push(application);
+    localStorage.setItem("creditNoteApplications", JSON.stringify(creditAppsAll));
+
+    // Update the invoice's paid/balance/status, combining receipts + credit applications.
+    const invoicesNow = JSON.parse(localStorage.getItem("invoices") || "[]");
+    const idx2 = invoicesNow.findIndex(i => i.id === invoice.id);
+    if (idx2 !== -1) {
+      const inv2 = invoicesNow[idx2];
+      const total2 = parseFloat(inv2.totalKES || inv2.total) || 0;
+      const paidReceipts2 = JSON.parse(localStorage.getItem("receipts") || "[]")
+        .filter(r => r.invoiceId === inv2.id).reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+      const paidCredit2 = creditAppsAll.filter(a => a.invoiceId === inv2.id).reduce((s, a) => s + (parseFloat(a.amount) || 0), 0);
+      const totalPaid2 = paidReceipts2 + paidCredit2;
+      inv2.amountPaid = totalPaid2;
+      inv2.balance = Math.max(total2 - totalPaid2, 0);
+      if (totalPaid2 >= total2) { inv2.status = "Paid"; inv2.paid = true; inv2.balance = 0; }
+      else if (totalPaid2 > 0) { inv2.status = "Partial"; inv2.paid = false; }
+      else { inv2.status = "Unpaid"; inv2.paid = false; }
+      invoicesNow[idx2] = inv2;
+      localStorage.setItem("invoices", JSON.stringify(invoicesNow));
+
+      // Keep a matching Bulk Invoice entry (if the invoice came from Bulk Invoicing) in sync.
+      const bulkInvoices = JSON.parse(localStorage.getItem("bulkInvoices") || "[]");
+      const bIdx = bulkInvoices.findIndex(b => b.invoiceNo === inv2.invoiceNumber);
+      if (bIdx !== -1) {
+        bulkInvoices[bIdx].paidAmount = totalPaid2;
+        bulkInvoices[bIdx].balance = inv2.balance;
+        bulkInvoices[bIdx].status = inv2.status;
+        localStorage.setItem("bulkInvoices", JSON.stringify(bulkInvoices));
+      }
+    }
+
+    // Update the credit note's applied amount / status and remember the invoice it hit.
+    const newApplied = (parseFloat(note.appliedAmount) || 0) + amount;
+    note.appliedAmount = newApplied;
+    note.invoiceId = invoice.id;
+    note.invoiceNumber = invoice.invoiceNumber;
+    note.status = newApplied >= chosen.noteTotal ? "Applied" : "Partially Applied";
+    notesAll[chosen.idx] = note;
+    localStorage.setItem("creditNotes", JSON.stringify(notesAll));
+
+    // Reduce Customer Receivables, same as a cash payment would.
+    const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+    const custAcc = accounts.find(a => a.name === "Customer Receivables");
+    if (custAcc) {
+      custAcc.amount = (parseFloat(custAcc.amount) || 0) - amount;
+      localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+    }
+    if (typeof updateCustomerReceivables === "function") {
+      updateCustomerReceivables(invoice.customer, -amount);
+    }
+
+    let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+    let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
+    const tx = {
+      type: "Credit Note Applied",
+      account: "Customer Receivables",
+      amount,
+      date: application.date,
+      ref: `${note.number} → ${invoice.invoiceNumber}`,
+      source: "creditNoteApplication"
+    };
+    manualTransactions.push(tx);
+    allTx.push(tx);
+    localStorage.setItem("manualTransactions", JSON.stringify(manualTransactions));
+    localStorage.setItem("transactions", JSON.stringify(allTx));
+
+    if (typeof renderInvoices === "function") renderInvoices();
+    if (typeof renderBulkInvoices === "function") renderBulkInvoices();
+    if (typeof renderRecurringInvoices === "function") renderRecurringInvoices();
+    if (typeof renderCreditNotes === "function") renderCreditNotes();
+    if (typeof renderAccountsReceivable === "function") renderAccountsReceivable();
+    if (typeof renderManualTransactions === "function") renderManualTransactions();
+
+    document.body.removeChild(modal);
+    const msg = `✅ ${window.__fmtBase(amount)} KES from Credit Note ${note.number} applied to Invoice ${invoice.invoiceNumber}.`;
+    if (typeof showToast === "function") showToast(msg); else alert(msg);
+  };
+}
+
+// Bulk Invoicing tab entry point — a bulk invoice mirrors a real record in "invoices"
+// (matched by invoiceNumber), so resolve to it and reuse the same apply-credit flow.
+function applyCreditBulkInvoice(invoiceNo) {
+  const bulkInvoices = JSON.parse(localStorage.getItem("bulkInvoices") || "[]");
+  const bulkInvoice = bulkInvoices.find(i => i.invoiceNo === invoiceNo);
+  if (!bulkInvoice) return alert("Bulk invoice not found");
+  const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  const invoice = invoices.find(i => i.invoiceNumber === invoiceNo);
+  if (!invoice) return alert("Matching invoice not found in the Invoices ledger.");
+  applyCredit(invoice.id);
+}
+
+// Recurring Invoices tab entry point — applies against the latest unpaid occurrence
+// that this recurring invoice has generated in "invoices" (linked via recurringId).
+function applyCreditToRecurringInvoice(index) {
+  const rec = recurringInvoices[index];
+  if (!rec) return alert("Recurring invoice not found");
+  const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  const linked = invoices.filter(i => String(i.recurringId) === String(rec.id));
+  if (!linked.length) {
+    return alert("No invoice has been generated yet from this recurring invoice.");
+  }
+  const target = linked.slice().reverse().find(i => {
+    const total = parseFloat(i.totalKES || i.total) || 0;
+    const paid = parseFloat(i.amountPaid) || 0;
+    return (total - paid) > 0.01;
+  }) || linked[linked.length - 1];
+  applyCredit(target.id);
+}
+
 function openAttachInvoiceModal(noteId) {
   let notes = JSON.parse(localStorage.getItem("creditNotes") || "[]");
   let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
@@ -29971,6 +30185,7 @@ function renderRecurringInvoices() {
         <button onclick="editRecurring(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>
         <button onclick="recordRecurringPayment(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Record Payment</button>
         <button onclick="reverseRecurringPayment(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Reverse Payment</button>
+        <button onclick="applyCreditToRecurringInvoice(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Apply Credit</button>
         <button onclick="pushRecurringToETIMS(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Push to ETIMS</button>
         <button onclick="shareRecurringEmail(${index})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Share Email</button>
       </td>
@@ -37232,27 +37447,268 @@ function toggleSelectAllDebitNotes(source) {
   document.querySelectorAll(".debit-note-checkbox")
     .forEach(cb => cb.checked = source.checked);
 }
-function applyDebitToBill(index){
+// Shared core: posts `amount` from a Debit Note (index into supplierDebitNotes) onto
+// a specific Bill (index into "bills", the same key the Supplier Bills tab uses).
+// Called by both applyDebitToBill (note-first) and applyDebit/applyBulkDebit (bill-first)
+// so all three entry points stay consistent and track applications the same way.
+function performDebitNoteApplication(noteIndex, billIndex, amount) {
   const notes = JSON.parse(localStorage.getItem("supplierDebitNotes") || "[]");
-  const bills = JSON.parse(localStorage.getItem("supplierBills") || "[]");
-  const note = notes[index];
-  if(!note) return;
-  const debitTotal = note.items.reduce(
-    (sum,i)=> sum + i.subtotal + i.vat ,0
-  );
-  bills.forEach(bill => {
-    if(bill.supplier === note.supplier){
-      if(!bill.balance){
-        bill.balance = bill.total;
-      }
-      bill.balance -= debitTotal;
-      if(bill.balance < 0){
-        bill.balance = 0;
-      }
-    }
+  const note = notes[noteIndex];
+  if (!note) { alert("Debit note not found"); return false; }
+
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  const bill = bills[billIndex];
+  if (!bill) { alert("Bill not found"); return false; }
+
+  const billTotal = parseFloat(bill.total) || 0;
+  const alreadyPaid = parseFloat(bill.paidAmount) || 0;
+  const balance = Math.max(billTotal - alreadyPaid, 0);
+  if (amount > balance + 0.0001) {
+    alert(`Amount exceeds the bill's outstanding balance of ${window.__fmtBase(balance)} KES.`);
+    return false;
+  }
+
+  const newPaid = alreadyPaid + amount;
+  bill.paidAmount = newPaid;
+  bill.amountPaid = newPaid;
+  bill.balance = Math.max(billTotal - newPaid, 0);
+  bill.status = newPaid >= billTotal ? "Full Paid" : (newPaid > 0 ? "Partial Paid" : "Unpaid");
+  bills[billIndex] = bill;
+  localStorage.setItem("bills", JSON.stringify(bills));
+
+  // Keep a matching Bulk Bill entry (if this bill came from Bulk Billing) in sync.
+  const bulkBills = JSON.parse(localStorage.getItem("bulkBills") || "[]");
+  const bbIdx = bulkBills.findIndex(b => b.billNumber === bill.billNumber && b.supplier === bill.supplier);
+  if (bbIdx !== -1) {
+    bulkBills[bbIdx].paidAmount = newPaid;
+    bulkBills[bbIdx].amountPaid = newPaid;
+    bulkBills[bbIdx].balance = bill.balance;
+    bulkBills[bbIdx].status = bill.status;
+    localStorage.setItem("bulkBills", JSON.stringify(bulkBills));
+  }
+
+  // Update the debit note's applied amount / status and remember the bill it hit.
+  const noteTotal = (note.items || []).reduce((s, i) => s + (i.subtotal || 0) + (i.vat || 0), 0);
+  const noteApplied = (parseFloat(note.appliedAmount) || 0) + amount;
+  note.appliedAmount = noteApplied;
+  note.billNumber = bill.billNumber;
+  note.status = noteApplied >= noteTotal ? "Applied" : "Partially Applied";
+  notes[noteIndex] = note;
+  localStorage.setItem("supplierDebitNotes", JSON.stringify(notes));
+
+  // Record the application for audit trail (kept separate from bank bill payments).
+  const debitApps = JSON.parse(localStorage.getItem("debitNoteApplications") || "[]");
+  debitApps.push({
+    id: Date.now(),
+    debitNoteIndex: noteIndex,
+    supplier: note.supplier,
+    billNumber: bill.billNumber,
+    amount,
+    date: new Date().toISOString().split("T")[0]
   });
-  localStorage.setItem("supplierBills", JSON.stringify(bills));
-  alert("Debit note applied to supplier bill.");
+  localStorage.setItem("debitNoteApplications", JSON.stringify(debitApps));
+
+  // Reduce Accounts Payable / supplier balance, same as a cash bill payment would.
+  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+  let supplierAcc = accounts.find(a => a.name === "Supplier Payments");
+  if (!supplierAcc) {
+    supplierAcc = { name: "Supplier Payments", code: "SUPPAY", type: "Liability", amount: 0 };
+    accounts.push(supplierAcc);
+  }
+  supplierAcc.amount = (parseFloat(supplierAcc.amount) || 0) - amount;
+  localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+  if (typeof updateSupplierBalance === "function") {
+    updateSupplierBalance(note.supplier, -amount);
+  }
+
+  let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
+  let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
+  const tx = {
+    type: "Debit Note Applied",
+    account: "Supplier Payments",
+    amount,
+    date: new Date().toISOString().split("T")[0],
+    ref: `${note.reference || "Debit Note"} → ${bill.billNumber}`,
+    source: "debitNoteApplication"
+  };
+  manualTransactions.push(tx);
+  allTx.push(tx);
+  localStorage.setItem("manualTransactions", JSON.stringify(manualTransactions));
+  localStorage.setItem("transactions", JSON.stringify(allTx));
+
+  if (typeof loadSupplierBills === "function") loadSupplierBills();
+  if (typeof loadBulkBills === "function") loadBulkBills();
+  if (typeof renderDebitNotes === "function") renderDebitNotes();
+  if (typeof renderDebitNotesReport === "function") renderDebitNotesReport();
+  if (typeof renderManualTransactions === "function") renderManualTransactions();
+
+  const msg = `✅ ${window.__fmtBase(amount)} KES applied from Debit Note to Bill ${bill.billNumber}.`;
+  if (typeof showToast === "function") showToast(msg); else alert(msg);
+  return true;
+}
+
+// Debit Notes tab entry point — pick which of the supplier's outstanding bills
+// this debit note should be applied to.
+function applyDebitToBill(index) {
+  const notes = JSON.parse(localStorage.getItem("supplierDebitNotes") || "[]");
+  const note = notes[index];
+  if (!note) return alert("Debit note not found");
+
+  const noteTotal = (note.items || []).reduce((s, i) => s + (i.subtotal || 0) + (i.vat || 0), 0);
+  const applied = parseFloat(note.appliedAmount) || 0;
+  const remaining = Math.max(noteTotal - applied, 0);
+  if (remaining <= 0) return alert("This debit note has already been fully applied.");
+
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  const candidates = bills.map((b, idx) => {
+    const total = parseFloat(b.total) || 0;
+    const paid = parseFloat(b.paidAmount) || 0;
+    const balance = Math.max(total - paid, 0);
+    return { idx, bill: b, balance };
+  }).filter(x => x.bill.supplier === note.supplier && x.balance > 0);
+
+  if (candidates.length === 0) {
+    return alert(`No outstanding bills found for ${note.supplier} to apply this debit note against.`);
+  }
+
+  const billOptions = candidates
+    .map(x => `<option value="${x.idx}">${x.bill.billNumber} — Balance ${window.__fmtBase(x.balance)} KES</option>`)
+    .join("");
+
+  const modal = document.createElement("div");
+  modal.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000;";
+  const content = document.createElement("div");
+  content.style = "background:#fff;padding:20px;border-radius:8px;width:400px;";
+  content.innerHTML = `
+    <h3>Apply Debit Note to Bill</h3>
+    <p style="margin:6px 0;font-size:13px;color:#444">Available Debit: <b>${window.__fmtBase(remaining)} KES</b></p>
+    <label>Apply to Bill:</label>
+    <select id="debitApplyBillSelect" class="border p-1 w-full mb-2">${billOptions}</select>
+    <label>Amount to Apply (KES):</label>
+    <input type="number" id="debitApplyAmount" class="border p-1 w-full mb-2" step="0.01" min="0.01" />
+    <div class="flex justify-end gap-2 mt-2">
+      <button id="cancelDebitApply" class="bg-gray-400 text-white px-3 py-1 rounded">Cancel</button>
+      <button id="saveDebitApply" class="bg-blue-900 text-white px-3 py-1 rounded">Apply</button>
+    </div>
+  `;
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+
+  const select = document.getElementById("debitApplyBillSelect");
+  const amountInput = document.getElementById("debitApplyAmount");
+  function suggestAmount() {
+    const chosen = candidates.find(x => String(x.idx) === select.value);
+    if (!chosen) return;
+    const cap = Math.min(remaining, chosen.balance);
+    amountInput.value = window.__fmtBase(cap);
+    amountInput.max = window.__fmtBase(cap);
+  }
+  select.addEventListener("change", suggestAmount);
+  suggestAmount();
+
+  document.getElementById("cancelDebitApply").onclick = () => {
+    document.body.removeChild(modal);
+  };
+  document.getElementById("saveDebitApply").onclick = () => {
+    const chosen = candidates.find(x => String(x.idx) === select.value);
+    if (!chosen) return alert("Please select a bill");
+    const amount = parseFloat(amountInput.value);
+    const cap = Math.min(remaining, chosen.balance);
+    if (isNaN(amount) || amount <= 0 || amount > cap + 0.0001) {
+      return alert(`Invalid amount. Must be between 0.01 and ${window.__fmtBase(cap)} KES.`);
+    }
+    if (performDebitNoteApplication(index, chosen.idx, amount)) {
+      document.body.removeChild(modal);
+    }
+  };
+}
+
+// Supplier Bills tab entry point (button: "Apply Debit" in the bill row's More menu) —
+// pick which of the supplier's debit notes to apply against this specific bill.
+function applyDebit(billIndex) {
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  const bill = bills[billIndex];
+  if (!bill) return alert("Bill not found");
+
+  const total = parseFloat(bill.total) || 0;
+  const paid = parseFloat(bill.paidAmount) || 0;
+  const balance = Math.max(total - paid, 0);
+  if (balance <= 0) return alert(`Bill ${bill.billNumber} is already fully paid.`);
+
+  const notes = JSON.parse(localStorage.getItem("supplierDebitNotes") || "[]");
+  const candidates = notes.map((n, idx) => {
+    const noteTotal = (n.items || []).reduce((s, i) => s + (i.subtotal || 0) + (i.vat || 0), 0);
+    const applied = parseFloat(n.appliedAmount) || 0;
+    const remaining = Math.max(noteTotal - applied, 0);
+    return { idx, note: n, remaining };
+  }).filter(x => x.note.supplier === bill.supplier && x.remaining > 0);
+
+  if (candidates.length === 0) {
+    return alert(`No available debit notes found for ${bill.supplier}.`);
+  }
+
+  const noteOptions = candidates
+    .map(x => `<option value="${x.idx}">${x.note.reference || ("Debit Note #" + (x.idx + 1))} — Available ${window.__fmtBase(x.remaining)} KES</option>`)
+    .join("");
+
+  const modal = document.createElement("div");
+  modal.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000;";
+  const content = document.createElement("div");
+  content.style = "background:#fff;padding:20px;border-radius:8px;width:400px;";
+  content.innerHTML = `
+    <h3>Apply Debit Note to Bill ${bill.billNumber}</h3>
+    <p style="margin:6px 0;font-size:13px;color:#444">Outstanding Balance: <b>${window.__fmtBase(balance)} KES</b></p>
+    <label>Debit Note:</label>
+    <select id="billApplyDebitSelect" class="border p-1 w-full mb-2">${noteOptions}</select>
+    <label>Amount to Apply (KES):</label>
+    <input type="number" id="billApplyDebitAmount" class="border p-1 w-full mb-2" step="0.01" min="0.01" />
+    <div class="flex justify-end gap-2 mt-2">
+      <button id="cancelBillApplyDebit" class="bg-gray-400 text-white px-3 py-1 rounded">Cancel</button>
+      <button id="saveBillApplyDebit" class="bg-blue-900 text-white px-3 py-1 rounded">Apply</button>
+    </div>
+  `;
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+
+  const select = document.getElementById("billApplyDebitSelect");
+  const amountInput = document.getElementById("billApplyDebitAmount");
+  function suggestAmount() {
+    const chosen = candidates.find(x => String(x.idx) === select.value);
+    if (!chosen) return;
+    const cap = Math.min(balance, chosen.remaining);
+    amountInput.value = window.__fmtBase(cap);
+    amountInput.max = window.__fmtBase(cap);
+  }
+  select.addEventListener("change", suggestAmount);
+  suggestAmount();
+
+  document.getElementById("cancelBillApplyDebit").onclick = () => {
+    document.body.removeChild(modal);
+  };
+  document.getElementById("saveBillApplyDebit").onclick = () => {
+    const chosen = candidates.find(x => String(x.idx) === select.value);
+    if (!chosen) return alert("Please select a debit note");
+    const amount = parseFloat(amountInput.value);
+    const cap = Math.min(balance, chosen.remaining);
+    if (isNaN(amount) || amount <= 0 || amount > cap + 0.0001) {
+      return alert(`Invalid amount. Must be between 0.01 and ${window.__fmtBase(cap)} KES.`);
+    }
+    if (performDebitNoteApplication(chosen.idx, billIndex, amount)) {
+      document.body.removeChild(modal);
+    }
+  };
+}
+
+// Bulk Billing tab entry point — a bulk bill mirrors a real record in "bills"
+// (matched by billNumber + supplier), so resolve to it and reuse the bill-first flow.
+function applyBulkDebit(index) {
+  const bulkBills = JSON.parse(localStorage.getItem("bulkBills") || "[]");
+  const bulkBill = bulkBills[index];
+  if (!bulkBill) return alert("Bulk bill not found");
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  const billIndex = bills.findIndex(b => b.billNumber === bulkBill.billNumber && b.supplier === bulkBill.supplier);
+  if (billIndex === -1) return alert("Matching bill not found in the Bills ledger. Save/record the bulk bill first.");
+  applyDebit(billIndex);
 }
 document.addEventListener("DOMContentLoaded", () => {
   const suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
@@ -97964,13 +98420,16 @@ function toggleSubmenu(id) {
   var origHandleLogin = window.handleLogin;
   window.handleLogin = async function(){
     try {
-      var idEl = document.getElementById('loginUser');
-      var id = idEl ? idEl.value.trim().toLowerCase() : '';
+      var unameEl = document.getElementById('loginUsername');
+      var emailEl = document.getElementById('loginEmail');
+      var uname = unameEl ? unameEl.value.trim().toLowerCase() : '';
+      var uemail = emailEl ? emailEl.value.trim().toLowerCase() : '';
+      var id = uemail || uname;
       if (id){
         window.__loginBusy(true);
         var users = JSON.parse(NS.nGet.call(NS.real, 'users') || '[]');
         var local = users.find(function(x){
-          return String(x.email || '').toLowerCase() === id || String(x.username || '').toLowerCase() === id;
+          return (uemail && String(x.email || '').toLowerCase() === uemail) || (uname && String(x.username || '').toLowerCase() === uname);
         });
         if (!local){
           var remote = await window.__netGuard(fetchAccount(id), 6000);
@@ -98426,7 +98885,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     var modal = document.getElementById('loginModal');
     if (!modal || modal.classList.contains('hidden')) return;
     var t = e.target;
-    if (t && (t.id === 'loginUser' || t.id === 'loginPass' || t.id === 'loginCompanyId')){
+    if (t && (t.id === 'loginUsername' || t.id === 'loginEmail' || t.id === 'loginPass' || t.id === 'loginCompanyId')){
       e.preventDefault();
       if (typeof window.handleLogin === 'function') window.handleLogin();
     }
@@ -99647,15 +100106,21 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
         const companyName = companyNameEl ? companyNameEl.value.trim() : '';
         const countryEl = document.getElementById('registerCompanyCountry');
         const companyCountry = countryEl ? countryEl.value : '';
-        const input = (document.getElementById('registerUser').value || '').trim().toLowerCase();
+        const unameEl = document.getElementById('registerUserName') || document.getElementById('registerUser');
+        const emailEl = document.getElementById('registerEmail');
+        const rawName = (unameEl ? unameEl.value : '').trim();
+        const rawEmail = (emailEl ? emailEl.value : '').trim();
+        const cleanEmail = rawEmail.toLowerCase();
+        const cleanName = (rawName || cleanEmail.split('@')[0]).toLowerCase();
         const pass = (document.getElementById('registerPass').value || '').trim();
         if (!companyName) { alert('Please enter your company name'); return; }
         if (!companyCountry) { alert('Please select your company\u2019s country'); return; }
-        if (users.find(u => (u.username||'').toLowerCase() === input || (u.email||'').toLowerCase() === input)) { alert('\uD83D\uDEAB User already exists'); return; }
-        const isEmail = input.includes('@');
+        if (!cleanName) { alert('Please enter a user name'); return; }
+        if (!cleanEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cleanEmail)) { alert('Please enter a valid email address'); return; }
+        if (users.find(u => (u.companyName||'').trim().toLowerCase() === companyName.toLowerCase() && ((u.username||'').toLowerCase() === cleanName || (cleanEmail && (u.email||'').toLowerCase() === cleanEmail)))) { alert('\uD83D\uDEAB This user already exists for ' + companyName + '. Sign in instead, or use the company switcher to add another company.'); return; }
         const expiry = new Date(); expiry.setDate(expiry.getDate() + 30);
         const companyId = 'company_' + Date.now();
-        const user = { username: isEmail ? input.split('@')[0] : input, email: isEmail ? input : '', companyName, companyCountry, password: pass, role:'admin', plan: localStorage.getItem('selectedPlan') || 'Free', price: price, billing: localStorage.getItem('selectedBilling') || 'monthly', companyId, registered: new Date().toISOString(), expiry: expiry.toISOString(), status:'pending', provider:'local' };
+        const user = { username: cleanName, email: cleanEmail, companyName, companyCountry, password: pass, role:'admin', plan: localStorage.getItem('selectedPlan') || 'Free', price: price, billing: localStorage.getItem('selectedBilling') || 'monthly', companyId, registered: new Date().toISOString(), expiry: expiry.toISOString(), status:'pending', provider:'local' };
         users.push(user); S('users', users);
         S('loggedInUser', user);
 
