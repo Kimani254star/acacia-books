@@ -20778,30 +20778,31 @@ function importCustomers(event) {
   let reader = new FileReader();
 
   reader.onload = function (e) {
-    const parser = window.__exportFormatTools && window.__exportFormatTools.parseCSV;
-    let rows = parser ? parser(String(e.target.result)) : e.target.result.split("\n").map(r => r.split(","));
+    let rows = e.target.result.split("\n");
     rows.shift();
 
     let customers = JSON.parse(localStorage.getItem("customers") || "[]");
     let added = 0;
     let skipped = 0;
 
-    rows.forEach(cols => {
-      if (!cols || cols.length < 2 || !cols.some(c => String(c || "").trim())) return;
+    rows.forEach(row => {
+      if (!row.trim()) return;
+      let cols = row.split(",");
+      if (cols.length < 2) return;
 
       const customerRow = {
-    salutation: (cols[0] || "").toString().trim(),
-    name: (cols[1] || "").toString().trim(),
-    primaryEmail: (cols[2] || "").toString().trim(),
-    secondaryEmail: (cols[3] || "").toString().trim(),
-    phone: (cols[4] || "").toString().trim(),
-    billingAddress: (cols[5] || "").toString().trim(),
-    shippingAddress: (cols[6] || "").toString().trim(),
-    krapin: (cols[7] || "").toString().trim(),
-    currency: (cols[8] || "").toString().trim() || "KES",
+    salutation: cols[0]?.trim() || "",
+    name: cols[1]?.trim() || "",
+    primaryEmail: cols[2]?.trim() || "",
+    secondaryEmail: cols[3]?.trim() || "",
+    phone: cols[4]?.trim() || "",
+    billingAddress: cols[5]?.trim() || "",
+    shippingAddress: cols[6]?.trim() || "",
+    krapin: cols[7]?.trim() || "",
+    currency: cols[8]?.trim() || "KES",
     receivables: parseFloat(cols[9]) || 0,
     creditLimit: parseFloat(cols[10]) || 0,
-    statementDate: (cols[11] || "").toString().replace(/\r/g, "").trim()
+    statementDate: cols[11]?.replace(/\r/g, "").trim() || ""
     };
     if (window.__isDuplicateRecord(customers, customerRow)) { skipped++; return; }
     customers.push(customerRow);
@@ -32205,30 +32206,32 @@ function importSuppliers(event) {
 
   reader.onload = function (e) {
 
-    const parser = window.__exportFormatTools && window.__exportFormatTools.parseCSV;
-    let rows = parser ? parser(String(e.target.result)) : e.target.result.split("\n").map(r => r.split(","));
-    rows.shift();
+    let rows = e.target.result.split("\n");
+    rows.shift(); 
 
     let suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
     let added = 0;
     let skipped = 0;
 
-    rows.forEach(cols => {
+    rows.forEach(row => {
 
-      if (!cols || cols.length < 2 || !cols.some(c => String(c || "").trim())) return;
+      if (!row.trim()) return;
+      let cols = row.split(",");
+
+      if (cols.length < 2) return;
 
       const supplierRow = {
-        salutation: (cols[0] || "").toString().trim(),
-        name: (cols[1] || "").toString().trim(),
-        primaryEmail: (cols[2] || "").toString().trim(),
-        secondaryEmail: (cols[3] || "").toString().trim(),
-        phone: (cols[4] || "").toString().trim(),
-        krapin: (cols[5] || "").toString().trim(),
-        billingAddress: (cols[6] || "").toString().trim(),
-        shippingAddress: (cols[7] || "").toString().trim(),
-        currency: (cols[8] || "").toString().trim() || "KES",
+        salutation: cols[0]?.trim() || "",
+        name: cols[1]?.trim() || "",
+        primaryEmail: cols[2]?.trim() || "",
+        secondaryEmail: cols[3]?.trim() || "",
+        phone: cols[4]?.trim() || "",
+        krapin: cols[5]?.trim() || "",
+        billingAddress: cols[6]?.trim() || "",
+        shippingAddress: cols[7]?.trim() || "",
+        currency: cols[8]?.trim() || "KES",
         debitLimit: parseFloat(cols[9]) || 0,
-        statementDate: (cols[10] || "").toString().trim(),
+        statementDate: cols[10]?.trim() || "",
         balance: parseFloat(cols[11]) || 0
       };
       if (window.__isDuplicateRecord(suppliers, supplierRow)) { skipped++; return; }
@@ -65171,53 +65174,6 @@ function closeBsDropdowns() {
   document.getElementById("bsCompareDropdown").classList.add("hidden");
   document.getElementById("bsColumnCustomizer").classList.add("hidden");
   document.getElementById("bsSettingsDropdown").classList.add("hidden");
-}
-
-function renderBalanceSheet() {
-
-  const filtered = applyReportFilter(bsData, {
-    dateField: "date",
-    monthId: "bsSummaryMonth",
-    startDateId: "bsStartDate",
-    endDateId: "bsEndDate"
-  });
-
-  let finalData = filtered;
-
-  const accountFilter = bsState.accountFilter;
-
-  if (accountFilter === "withBalance") {
-    finalData = finalData.filter(row =>
-      (row.amount || 0) !== 0 || (row.total || 0) !== 0
-    );
-  }
-
-  if (accountFilter === "zeroBalance") {
-    finalData = finalData.filter(row =>
-      (row.amount || 0) === 0 && (row.total || 0) === 0
-    );
-  }
-
-  const tbody = document.getElementById("balanceSheetTable").querySelector("tbody");
-  tbody.innerHTML = "";
-
-  finalData.forEach(row => {
-
-    const tr = document.createElement("tr");
-
-    const amount = bsState.columns[1] ? (row.amount || 0).toFixed(2) : "";
-    const total = bsState.columns[2] ? (row.total || 0).toFixed(2) : "";
-    const closing = bsState.columns[3] ? (row.total || 0).toFixed(2) : "";
-
-    tr.innerHTML = `
-      <td class="border px-2 py-1">${row.item}</td>
-      <td class="border px-2 py-1 text-right">${amount}</td>
-      <td class="border px-2 py-1 text-right">${total}</td>
-      <td class="border px-2 py-1 text-right">${closing}</td>
-    `;
-
-    tbody.appendChild(tr);
-  });
 }
 
 function toggleBsCompareDropdown() {
@@ -103356,8 +103312,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     downloadCSV: downloadCSV,
     downloadExcel: downloadExcel,
     downloadPDF: downloadPDF,
-    csvEscape: csvEscape,
-    parseCSV: parseCSV
+    csvEscape: csvEscape
   };
 
   /* Public: export a table by tbody id, prompting for CSV vs Excel vs PDF */
