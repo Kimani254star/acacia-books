@@ -20225,9 +20225,9 @@ button:hover {
     console.log("Opening delivery custom files manager...");
   }
 </script>
-  <div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-4">Add Delivery</h3><div class="mb-4"><label for="deliveryCustomer" class="block text-sm font-medium mb-1">Customer</label><select id="deliveryCustomer" onchange="showCustomerInvoices()" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Customer --</option></select></div><div class="mb-4"><label for="deliveryDate" class="block text-sm font-medium mb-1">Delivery Date</label><input type="date" id="deliveryDate" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="customerInvoiceSelect" class="block text-sm font-medium mb-1">Invoice</label><select id="customerInvoiceSelect" onchange="populateDeliveryItems()" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Invoice --</option></select></div><div class="mb-4"><label for="deliveryNote" class="block text-sm font-medium mb-1">Delivery Note No.</label><input type="text" id="deliveryNote" class="border bg-gray-100 p-2 rounded" style="width: 700px;" readonly></div><div class="mb-4"><label for="deliveryDescription" class="block text-sm font-medium mb-1">Description</label><input type="text" id="deliveryDescription" placeholder="Delivery Note / Description" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="deliveryLocation" class="block text-sm font-medium mb-1">Delivery Location</label><input type="text" id="deliveryLocation" placeholder="Delivery Address / Location" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="deliveryTruckNumber" class="block text-sm font-medium mb-1">Delivery Truck Number</label><input type="text" id="deliveryTruckNumber" placeholder="e.g. KDA 123A" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="deliveryDriver" class="block text-sm font-medium mb-1">Driver / Delivery Person</label><input type="text" id="deliveryDriver" placeholder="Driver Name" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="deliveryTrackNumber" class="block text-sm font-medium mb-1">Delivery Track Number</label><input type="text" id="deliveryTrackNumber" placeholder="Tracking Number / Reference" class="border p-2 rounded" style="width: 700px;"></div><div class="text-right"><button id="draftBtn" onclick="saveDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button><button onclick="addDelivery()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
+  <div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-4">Add Delivery</h3><div class="mb-4"><label for="deliveryCustomer" class="block text-sm font-medium mb-1">Customer</label><select id="deliveryCustomer" onchange="showCustomerInvoices()" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Customer --</option></select></div><div class="mb-4"><label for="deliveryDate" class="block text-sm font-medium mb-1">Delivery Date</label><input type="date" id="deliveryDate" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="customerInvoiceSelect" class="block text-sm font-medium mb-1">Invoice</label><select id="customerInvoiceSelect" onchange="populateDeliveryItems()" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Invoice --</option></select></div><div class="mb-4"><label for="deliveryNote" class="block text-sm font-medium mb-1">Delivery Note No.</label><input type="text" id="deliveryNote" class="border bg-gray-100 p-2 rounded" style="width: 700px;" readonly></div><div class="mb-4"><label for="deliveryReferenceNumber" class="block text-sm font-medium mb-1">Reference Number</label><input type="text" id="deliveryReferenceNumber" placeholder="Invoice / Reference No." class="border bg-gray-100 p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="deliveryDescription" class="block text-sm font-medium mb-1">Description</label><input type="text" id="deliveryDescription" placeholder="Delivery Note / Description" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="deliveryOption" class="block text-sm font-medium mb-1">Delivery Option</label><select id="deliveryOption" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Delivery Option --</option><option value="Own Transport">Own Transport / Company Vehicle</option><option value="Customer Pickup">Customer Pickup / Collection</option><option value="G4S Collections">G4S Collections</option><option value="Rider / Motorbike">Rider / Motorbike</option><option value="Third-Party Courier">Third-Party Courier</option><option value="Postal Service">Postal Service</option><option value="Other">Other</option></select></div><div class="mb-4"><label for="deliveryLocation" class="block text-sm font-medium mb-1">Delivery Location</label><input type="text" id="deliveryLocation" placeholder="Delivery Address / Location" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="deliveryTruckNumber" class="block text-sm font-medium mb-1">Delivery Truck Number</label><input type="text" id="deliveryTruckNumber" placeholder="e.g. KDA 123A" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="deliveryDriver" class="block text-sm font-medium mb-1">Driver / Delivery Person</label><input type="text" id="deliveryDriver" placeholder="Driver Name" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="deliveryTrackNumber" class="block text-sm font-medium mb-1">Delivery Track Number</label><input type="text" id="deliveryTrackNumber" placeholder="Tracking Number / Reference" class="border p-2 rounded" style="width: 700px;"></div><div class="text-right"><button id="draftBtn" onclick="saveDraft()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Save as Draft</button><button onclick="addDelivery()" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">
     ➕ Add Delivery
-  </button></div></div><div class="bg-white p-4 rounded shadow"><h3 class="text-lg font-semibold mb-2">Delivery History</h3><button onclick="bulkDeleteDeliveries()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Bulk Delete</button><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="p-2 text-left"><input type="checkbox" id="selectAllDeliveries" onclick="toggleSelectAllDeliveries()" /></th><th class="p-2 text-left">Delivery No.</th><th class="p-2 text-left">Customer</th><th class="p-2 text-left">Item</th><th class="p-2 text-left">Date</th><th class="p-2 text-left">Description</th><th class="p-2 text-left">Location</th><th class="p-2 text-left">Truck No.</th><th class="p-2 text-left">Driver</th><th class="p-2 text-left">Track No.</th><th class="p-2 text-left">Actions</th></tr></thead><tbody id="deliveryTableBody"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
+  </button></div></div><div class="bg-white p-4 rounded shadow"><h3 class="text-lg font-semibold mb-2">Delivery History</h3><button onclick="bulkDeleteDeliveries()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Bulk Delete</button><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="p-2 text-left"><input type="checkbox" id="selectAllDeliveries" onclick="toggleSelectAllDeliveries()" /></th><th class="p-2 text-left">Delivery No.</th><th class="p-2 text-left">Customer</th><th class="p-2 text-left">Item</th><th class="p-2 text-left">Date</th><th class="p-2 text-left">Description</th><th class="p-2 text-left">Reference No.</th><th class="p-2 text-left">Delivery Option</th><th class="p-2 text-left">Location</th><th class="p-2 text-left">Truck No.</th><th class="p-2 text-left">Driver</th><th class="p-2 text-left">Track No.</th><th class="p-2 text-left">Actions</th></tr></thead><tbody id="deliveryTableBody"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
     Total Count: <span id="totalCount">0</span></div><div>
     Show
     <select id="itemsPerPageSelect" class="border rounded px-1"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select>
@@ -29617,7 +29617,7 @@ function updateDeliveryPlaceholder() {
     if (!tbody.querySelector('.placeholder')) {
       const placeholder = document.createElement('tr');
       placeholder.classList.add('placeholder');
-      placeholder.innerHTML = `<td colspan="10" class="text-center text-gray-500 p-2">No deliveries found</td>`;
+      placeholder.innerHTML = `<td colspan="12" class="text-center text-gray-500 p-2">No deliveries found</td>`;
       tbody.appendChild(placeholder);
     }
   } else {
@@ -29667,6 +29667,32 @@ function showCustomerInvoices() {
     invoiceSelect.appendChild(option);
   });
 }
+function populateDeliveryItems() {
+  const invoiceSelect = document.getElementById("customerInvoiceSelect");
+  if (!invoiceSelect) return;
+  const selectedOption = invoiceSelect.options[invoiceSelect.selectedIndex];
+
+  const refField = document.getElementById("deliveryReferenceNumber");
+  if (!selectedOption || !selectedOption.value) {
+    if (refField) refField.value = "";
+    return;
+  }
+
+  const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+  const invoice = invoices.find(inv => String(inv.id) === String(selectedOption.value)) || invoices[parseInt(selectedOption.value, 10)];
+
+  if (refField) refField.value = (invoice && (invoice.number || invoice.id)) || selectedOption.value;
+
+  const descField = document.getElementById("deliveryDescription");
+  const items = JSON.parse(selectedOption.dataset.items || "[]");
+  if (descField && !descField.value && items.length) {
+    descField.value = items.map(i => {
+      const nm = i.desc || i.name || i.item || "";
+      const qty = i.qty || i.quantity || 0;
+      return nm ? (qty ? `${nm} (x${qty})` : nm) : "";
+    }).filter(Boolean).join(", ");
+  }
+}
 function generateNextTrackNumber() {
   const deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
   let nextTrack;
@@ -29710,6 +29736,8 @@ function addDelivery() {
   const location = document.getElementById("deliveryLocation").value.trim();
   const truckNumber = document.getElementById("deliveryTruckNumber").value.trim();
   const driver = document.getElementById("deliveryDriver").value.trim();
+  const reference = document.getElementById("deliveryReferenceNumber").value.trim();
+  const deliveryOption = document.getElementById("deliveryOption").value;
 
   const newDelivery = {
     id: crypto.randomUUID(),
@@ -29719,6 +29747,8 @@ function addDelivery() {
     date,
     description,
     invoiceId: selectedInvoice.value,
+    reference,
+    deliveryOption,
     trackNumber,
     location,
     truckNumber,
@@ -29749,6 +29779,8 @@ function addDelivery() {
   document.getElementById("deliveryDate").value = "";
   document.getElementById("deliveryDescription").value = "";
   document.getElementById("customerInvoiceSelect").value = "";
+  document.getElementById("deliveryReferenceNumber").value = "";
+  document.getElementById("deliveryOption").value = "";
   document.getElementById("deliveryLocation").value = "";
   document.getElementById("deliveryTruckNumber").value = "";
   document.getElementById("deliveryDriver").value = "";
@@ -29844,6 +29876,14 @@ function renderDeliveryTable() {
 
       <td class="p-2 border-t">
         ${delivery.description || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${delivery.reference || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${delivery.deliveryOption || "-"}
       </td>
 
       <td class="p-2 border-t">
@@ -29974,6 +30014,8 @@ function editDelivery(index) {
   document.getElementById("deliveryCustomer").value = d.customer || "";
   document.getElementById("deliveryDate").value = d.date || "";
   document.getElementById("deliveryDescription").value = d.description || "";
+  document.getElementById("deliveryReferenceNumber").value = d.reference || "";
+  document.getElementById("deliveryOption").value = d.deliveryOption || "";
   document.getElementById("deliveryLocation").value = d.location || "";
   document.getElementById("deliveryTruckNumber").value = d.truckNumber || "";
   document.getElementById("deliveryDriver").value = d.driver || "";
@@ -29982,6 +30024,8 @@ function editDelivery(index) {
     d.customer = document.getElementById("deliveryCustomer").value;
     d.date = document.getElementById("deliveryDate").value;
     d.description = document.getElementById("deliveryDescription").value.trim();
+    d.reference = document.getElementById("deliveryReferenceNumber").value.trim();
+    d.deliveryOption = document.getElementById("deliveryOption").value;
     d.location = document.getElementById("deliveryLocation").value.trim();
     d.truckNumber = document.getElementById("deliveryTruckNumber").value.trim();
     d.driver = document.getElementById("deliveryDriver").value.trim();
@@ -32219,7 +32263,7 @@ document.addEventListener("DOMContentLoaded", () => {
         Sort by Quantity
       </button><button onclick="resetGRNColumnWidth()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 6h12M6 12h12M6 18h12"/></svg>
         Reset Column Width
-      </button></div></div></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-4">Add GRN</h3><div class="mb-4"><label for="grnSupplier" class="block text-sm font-medium mb-1">Supplier</label><select id="grnSupplier" onchange="showSupplierBills()" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Supplier --</option></select></div><div class="mb-4"><label for="grnDate" class="block text-sm font-medium mb-1">GRN Date</label><input type="date" id="grnDate" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnBillSelect" class="block text-sm font-medium mb-1">Bill</label><select id="grnBillSelect" onchange="populateGRNItems()" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Bill --</option></select></div><div class="mb-4"><label for="grnNumber" class="block text-sm font-medium mb-1">GRN No.</label><input type="text" id="grnNumber" class="border bg-gray-100 p-2 rounded" style="width: 700px;" readonly></div><div class="mb-4"><label for="grnDescription" class="block text-sm font-medium mb-1">Description</label><input type="text" id="grnDescription" placeholder="Item Description" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnLocation" class="block text-sm font-medium mb-1">Receiving Location</label><input type="text" id="grnLocation" placeholder="Warehouse / Location" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnReferenceNumber" class="block text-sm font-medium mb-1">Reference Number</label><input type="text" id="grnReferenceNumber" placeholder="Bill / Reference No." class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnReceiver" class="block text-sm font-medium mb-1">Received By</label><input type="text" id="grnReceiver" placeholder="Receiver Name" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnTrackNumber" class="block text-sm font-medium mb-1">GRN Track Number</label><input type="text" id="grnTrackNumber" placeholder="Tracking Number / Reference" class="border p-2 rounded" style="width: 700px;"></div><div class="bg-white p-4 rounded shadow mb-6"><div class="text-left"><button type="button"  onclick="saveDraft()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Save as Draft </button><button type="button" onclick="addGRN()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Add GRN </button></div></form></div></div><div class="bg-white p-4 rounded shadow"><h3 class="text-lg font-semibold mb-2">GRN History</h3><button onclick="deleteSelectedGRN()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="p-2"><input type="checkbox" onclick="toggleSelectAllGRN(this)"></th><th class="p-2 text-left">GRN No.</th><th class="p-2 text-left">Supplier</th><th class="p-2 text-left">Item</th><th class="p-2 text-left">Date</th><th class="p-2 text-left">Description</th><th class="p-2 text-left">Location</th><th class="p-2 text-left">Reference No.</th><th class="p-2 text-left">Received By</th><th class="p-2 text-left">Track No.</th><th class="p-2 text-left">Status</th><th class="p-2 text-left">Actions</th></tr></thead><tbody id="grnTableBody"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
+      </button></div></div></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-4">Add GRN</h3><div class="mb-4"><label for="grnSupplier" class="block text-sm font-medium mb-1">Supplier</label><select id="grnSupplier" onchange="showSupplierBills()" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Supplier --</option></select></div><div class="mb-4"><label for="grnDate" class="block text-sm font-medium mb-1">GRN Date</label><input type="date" id="grnDate" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnBillSelect" class="block text-sm font-medium mb-1">Bill</label><select id="grnBillSelect" onchange="populateGRNItems()" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Bill --</option></select></div><div class="mb-4"><label for="grnNumber" class="block text-sm font-medium mb-1">GRN No.</label><input type="text" id="grnNumber" class="border bg-gray-100 p-2 rounded" style="width: 700px;" readonly></div><div class="mb-4"><label for="grnDescription" class="block text-sm font-medium mb-1">Description</label><input type="text" id="grnDescription" placeholder="Item Description" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnCollectionOption" class="block text-sm font-medium mb-1">Collection Option</label><select id="grnCollectionOption" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Collection Option --</option><option value="Own Transport">Own Transport / Company Vehicle</option><option value="Supplier Delivery">Supplier Delivery</option><option value="G4S Collections">G4S Collections</option><option value="Rider / Motorbike">Rider / Motorbike</option><option value="Third-Party Courier">Third-Party Courier</option><option value="Postal Service">Postal Service</option><option value="Other">Other</option></select></div><div class="mb-4"><label for="grnLocation" class="block text-sm font-medium mb-1">Receiving Location</label><input type="text" id="grnLocation" placeholder="Warehouse / Location" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnReferenceNumber" class="block text-sm font-medium mb-1">Reference Number</label><input type="text" id="grnReferenceNumber" placeholder="Bill / Reference No." class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnReceiver" class="block text-sm font-medium mb-1">Received By</label><input type="text" id="grnReceiver" placeholder="Receiver Name" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnTrackNumber" class="block text-sm font-medium mb-1">GRN Track Number</label><input type="text" id="grnTrackNumber" placeholder="Tracking Number / Reference" class="border p-2 rounded" style="width: 700px;"></div><div class="bg-white p-4 rounded shadow mb-6"><div class="text-left"><button type="button"  onclick="saveDraft()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Save as Draft </button><button type="button" onclick="addGRN()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Add GRN </button></div></form></div></div><div class="bg-white p-4 rounded shadow"><h3 class="text-lg font-semibold mb-2">GRN History</h3><button onclick="deleteSelectedGRN()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="p-2"><input type="checkbox" onclick="toggleSelectAllGRN(this)"></th><th class="p-2 text-left">GRN No.</th><th class="p-2 text-left">Supplier</th><th class="p-2 text-left">Item</th><th class="p-2 text-left">Date</th><th class="p-2 text-left">Description</th><th class="p-2 text-left">Location</th><th class="p-2 text-left">Reference No.</th><th class="p-2 text-left">Collection Option</th><th class="p-2 text-left">Received By</th><th class="p-2 text-left">Track No.</th><th class="p-2 text-left">Status</th><th class="p-2 text-left">Actions</th></tr></thead><tbody id="grnTableBody"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
     Total Count: <span id="totalCount">0</span></div><div>
     Show
     <select id="itemsPerPageSelect" class="border rounded px-1"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select>
@@ -41962,7 +42006,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const items = JSON.parse(selectedOption.dataset.items);
 
       if (items.length > 0) {
-        document.getElementById("grnDescription").value = items.map(i => i.name).join(", ");
+        document.getElementById("grnDescription").value = items.map(i => {
+          const nm = i.name || i.item || i.description || i.desc || "Item";
+          const qty = i.qty || i.quantity || 0;
+          return qty ? `${nm} (x${qty})` : nm;
+        }).join(", ");
 
         document.getElementById("grnForm").dataset.items = JSON.stringify(items);
       }
@@ -42077,6 +42125,7 @@ function addGRN() {
 
   const location = document.getElementById("grnLocation").value.trim();
   const reference = document.getElementById("grnReferenceNumber").value.trim();
+  const collectionOption = document.getElementById("grnCollectionOption").value;
   const receiver = document.getElementById("grnReceiver").value.trim();
   const trackNo = document.getElementById("grnTrackNumber").value.trim();
 
@@ -42121,6 +42170,7 @@ function addGRN() {
   description,
   location,
   reference,
+  collectionOption,
   receiver,
   trackNo,
   items,
@@ -42150,6 +42200,7 @@ function addGRN() {
   document.getElementById("grnDescription").value = "";
   document.getElementById("grnLocation").value = "";
   document.getElementById("grnReferenceNumber").value = "";
+  document.getElementById("grnCollectionOption").value = "";
   document.getElementById("grnReceiver").value = "";
   document.getElementById("grnTrackNumber").value = "";
 
@@ -42189,7 +42240,7 @@ function renderGRNTable() {
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="11" class="p-2 text-center text-gray-500">
+        <td colspan="12" class="p-2 text-center text-gray-500">
           No GRNs recorded
         </td>
       </tr>
@@ -42237,6 +42288,10 @@ function renderGRNTable() {
 
       <td class="p-2 border-t">
         ${grn.reference || "-"}
+      </td>
+
+      <td class="p-2 border-t">
+        ${grn.collectionOption || "-"}
       </td>
 
       <td class="p-2 border-t">
@@ -42497,7 +42552,11 @@ function editGRN(index) {
 
   document.getElementById("grnDescription").value =
     grn.description ||
-    grn.items?.map(i => i.name).join(", ") ||
+    grn.items?.map(i => {
+      const nm = i.name || i.item || i.description || "Item";
+      const qty = i.qty || i.quantity || 0;
+      return qty ? `${nm} (x${qty})` : nm;
+    }).join(", ") ||
     "";
 
   document.getElementById("grnLocation").value =
@@ -42505,6 +42564,9 @@ function editGRN(index) {
 
   document.getElementById("grnReferenceNumber").value =
     grn.reference || "";
+
+  document.getElementById("grnCollectionOption").value =
+    grn.collectionOption || "";
 
   document.getElementById("grnReceiver").value =
     grn.receiver || "";
@@ -100843,13 +100905,17 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     const sel = document.getElementById('grnBillSelect');
     const form = document.getElementById('grnForm');
     if (!sel) return;
-    const bills = J('supplierBills', []);
+    const bills = J('bills', []);
     const val = sel.value;
     const bill = bills.find(b => String(b.billNumber || b.number || b.id) === String(val)) || bills[parseInt(val, 10)];
     const items = (bill && (bill.items || bill.lineItems)) || [];
     if (form) form.dataset.items = JSON.stringify(items);
     const desc = document.getElementById('grnDescription');
-    if (desc && items.length) desc.value = items.map(i => (i.name || i.item || i.description || '')).filter(Boolean).join(', ');
+    if (desc && items.length) desc.value = items.map(i => {
+      const nm = i.name || i.item || i.description || '';
+      const qty = i.qty || i.quantity || 0;
+      return nm ? (qty ? nm + ' (x' + qty + ')' : nm) : '';
+    }).filter(Boolean).join(', ');
     const refEl = document.getElementById('grnReferenceNumber');
     if (refEl && bill) refEl.value = bill.billNumber || bill.number || refEl.value;
     let box = document.getElementById('grnItemsPreview');
