@@ -8672,7 +8672,7 @@ function downloadMovementPDF(index) {
     Date: ${move.date}
   `;
 
-  const blob = new Blob([content], { type: "application/pdf" });
+  const blob = new Blob([content], { type: "application/octet-stream" }); // avoid Safari/iOS PDF-viewer hijack of the download
 
   const link = document.createElement("a");
 
@@ -10327,7 +10327,7 @@ Selling Price: ${money(b.sellPrice)}
   `;
 
   const blob = new Blob([content], {
-    type: "application/pdf"
+    type: "application/octet-stream" // avoid Safari/iOS PDF-viewer hijack of the download
   });
 
   const link = document.createElement("a");
@@ -14192,7 +14192,7 @@ Reference: ${tx.ref}
   `;
 
   const blob = new Blob([content], {
-    type: "application/pdf"
+    type: "application/octet-stream" // avoid Safari/iOS PDF-viewer hijack of the download
   });
 
   const link = document.createElement("a");
@@ -22709,36 +22709,42 @@ async function emailInvoice() {
     jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
     pagebreak: { mode: ["css", "legacy"] }
   };
-  const pdfDataUri = await html2pdf()
-    .set(opt)
-    .from(container)
-    .outputPdf("datauristring");
-  document.body.removeChild(container);
-  const base64PDF = pdfDataUri.split(",")[1];
+  // NOTE: mailto: links cannot carry file attachments, and the previous
+  // EmailJS integration below was wired to placeholder credentials
+  // ("YOUR_SERVICE_ID" / "YOUR_TEMPLATE_ID" / "YOUR_PUBLIC_KEY") that were
+  // never configured with a real account, so emailjs.send() always threw
+  // and every "Email Invoice" click failed silently/with an error. Instead,
+  // generate + download the invoice PDF (via the same hijack-proof
+  // window.__downloadPdfBlob used by the Download button) and open the
+  // user's own mail client pre-filled, exactly like every other document
+  // type in this app (credit notes, receipts, bills, quotes, statements,
+  // etc.) already does.
+  opt.filename = `Invoice-${(selectedCustomerName || "customer").replace(/\s+/g, "_")}.pdf`;
   try {
-    await emailjs.send(
-      "YOUR_SERVICE_ID",
-      "YOUR_TEMPLATE_ID",
-      {
-        to_email: email,
-        to_name: selectedCustomerName,
-        message: `Hello ${selectedCustomerName},\nPlease find your invoice attached.`,
-        attachment: base64PDF
-      }
-    );
-    logExternalEmail({
-      to: email,
-      subject: "Invoice from Acacia Books",
-      message: `Hello ${selectedCustomerName},
-Please find your invoice attached.
+    await window.__downloadPdfBlob(container, opt);
+    const subject = "Invoice from Acacia Books";
+    const body =
+`Hello ${selectedCustomerName || ""},
+Please find your invoice attached (it was just downloaded to your device - attach it to this email before sending).
 Regards,
-Acacia Books`,
-      attachments: ["Invoice.pdf"]
-    });
-    alert(`✅ Invoice emailed to ${email}`);
+Acacia Books`;
+    if (typeof logExternalEmail === "function") {
+      logExternalEmail({
+        to: email,
+        subject,
+        message: body,
+        attachments: [opt.filename]
+      });
+    }
+    const mailtoLink = (typeof __logMail === "function")
+      ? __logMail(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`)
+      : `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
   } catch (err) {
-    console.error("EmailJS FULL ERROR:", err);
-    alert(err?.text || err?.message || "❌ Failed to send invoice.");
+    console.error("Email invoice failed:", err);
+    alert("❌ Could not prepare the invoice email. Please try again.");
+  } finally {
+    document.body.removeChild(container);
   }
 }
 /* Forces a real "save to disk" download instead of html2pdf's default
@@ -22748,16 +22754,36 @@ window.__downloadPdfBlob = async function (element, options) {
   try {
     const worker = html2pdf().set(options).from(element);
     const pdf = await worker.toPdf().get("pdf");
-    const blob = pdf.output("blob");
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = options.filename || "document.pdf";
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    const pdfBlob = pdf.output("blob");
+    const filename = options.filename || "document.pdf";
+
+    // Safari, iOS Safari, and many in-app/WebView browsers hijack any blob
+    // with an application/pdf MIME type into their built-in PDF viewer,
+    // opening it in a new/background tab instead of honoring <a download>.
+    // Re-wrapping the bytes with a generic binary MIME type stops that
+    // interception so the download attribute is respected everywhere.
+    const forcedBlob = new Blob([pdfBlob], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(forcedBlob);
+
+    const ua = navigator.userAgent || "";
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+    if (isIOS && window.top !== window.self) {
+      // Some iOS in-app WebViews still ignore the download attribute even
+      // with the MIME workaround; fall back to opening in a new tab so the
+      // user can at least access/share the file via the native share sheet.
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } else {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
   } catch (err) {
     console.error("PDF download failed:", err);
     alert("Could not generate the PDF. Please try again.");
@@ -45715,7 +45741,7 @@ Credit: ${(e.credit || 0).toFixed(2)}
 `;
   });
 
-  const blob = new Blob([content], { type: "application/pdf" });
+  const blob = new Blob([content], { type: "application/octet-stream" }); // avoid Safari/iOS PDF-viewer hijack of the download
 
   const link = document.createElement("a");
 
@@ -47360,7 +47386,7 @@ Credit: ${window.__fmtBase(j.credit)}
 `;
   });
 
-  const blob = new Blob([content], { type: "application/pdf" });
+  const blob = new Blob([content], { type: "application/octet-stream" }); // avoid Safari/iOS PDF-viewer hijack of the download
 
   const link = document.createElement("a");
 
@@ -47972,7 +47998,7 @@ ${adj.note || "-"}
 `;
 
   const blob = new Blob([content], {
-    type: "application/pdf"
+    type: "application/octet-stream" // avoid Safari/iOS PDF-viewer hijack of the download
   });
 
   const link = document.createElement("a");
@@ -48720,7 +48746,7 @@ function downloadAccountPDF(index) {
   `;
 
   const blob = new Blob([content], {
-    type: "application/pdf"
+    type: "application/octet-stream" // avoid Safari/iOS PDF-viewer hijack of the download
   });
 
   const link = document.createElement("a");
@@ -51718,7 +51744,7 @@ Amount: ${window.__fmtBase(acc.amount)}
 `;
 
   const blob = new Blob([content], {
-    type: "application/pdf"
+    type: "application/octet-stream" // avoid Safari/iOS PDF-viewer hijack of the download
   });
 
   const link = document.createElement("a");
@@ -52384,7 +52410,7 @@ Balance: ${(trans.balance || 0).toFixed(2)}
 `;
 
   const blob = new Blob([content], {
-    type: "application/pdf"
+    type: "application/octet-stream" // avoid Safari/iOS PDF-viewer hijack of the download
   });
 
   const link = document.createElement("a");
@@ -54458,7 +54484,7 @@ ${b.months.map(m =>
 `;
 
   const blob = new Blob([content], {
-    type: "application/pdf"
+    type: "application/octet-stream" // avoid Safari/iOS PDF-viewer hijack of the download
   });
 
   const link = document.createElement("a");
@@ -59483,7 +59509,7 @@ function exportPayrollReportToPDF() {
     content += `${r.empID} | ${r.month} | ${r.gross} | ${r.paye} | ${r.shif} | ${r.nssf} | ${r.housing} | ${r.nita} | ${r.deductions} | 0.00 | ${r.net}\n`;
   });
 
-  const blob = new Blob([content], { type: "application/pdf" });
+  const blob = new Blob([content], { type: "application/octet-stream" }); // avoid Safari/iOS PDF-viewer hijack of the download
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = `Payroll_Report_${new Date().toISOString().slice(0,7)}.pdf`;
@@ -111856,6 +111882,129 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wireAll);
   else wireAll();
   setTimeout(wireAll, 1500);
+})();
+</script>
+<!-- =============== FIX: Movement / Price List / Amendments / Bulk Adjustments
+     "disappear on refresh" =============== -->
+<script>
+/*
+  Two real bugs, not data loss:
+
+  1) Movement: the sidebar calls the generic showTab('movementTab'), but no
+     hook anywhere calls renderMovementTable() for that id (only the unused
+     showMovementTab() does). So the table looked empty after refresh even
+     though localStorage['movements'] was untouched. Fixed by wiring the
+     render/populate calls into showTab itself.
+
+  2) Price List / Amendments / Bulk Adjustments: all three filter their
+     table by a warehouse <select>, which resets to blank on every page
+     reload (normal browser behavior - nothing persisted the selection).
+     With no warehouse picked, their render functions correctly show
+     "Select a warehouse..." - which reads as "my data is gone" even
+     though it's sitil in localStorage. Fixed by remembering the last
+     warehouse picked per tab and restoring + re-rendering automatically.
+*/
+(function () {
+  "use strict";
+  if (window.__acxPersistWarehouseFix) return;
+  window.__acxPersistWarehouseFix = true;
+
+  var LAST_WH_KEY = "acx_lastWarehouseByTab";
+
+  function readMap() {
+    try { return JSON.parse(localStorage.getItem(LAST_WH_KEY) || "{}") || {}; }
+    catch (e) { return {}; }
+  }
+  function saveWarehouseFor(tag, value) {
+    if (!value) return;
+    var map = readMap();
+    map[tag] = value;
+    try { localStorage.setItem(LAST_WH_KEY, JSON.stringify(map)); } catch (e) {}
+  }
+  function lastWarehouseFor(tag) {
+    return readMap()[tag] || "";
+  }
+
+  // Remember the warehouse every time the user actually changes one of
+  // these selects, so we can restore it after a refresh.
+  var WATCHED = [
+    { tag: "priceList", selectId: "priceListWarehouseSelect" },
+    { tag: "amendments", selectId: "amendmentsWarehouseSelect" },
+    { tag: "bulkAdjustment", selectId: "baWarehouseSelect" }
+  ];
+  function wireChangeListeners() {
+    WATCHED.forEach(function (w) {
+      var sel = document.getElementById(w.selectId);
+      if (!sel || sel.dataset.acxWhWired) return;
+      sel.dataset.acxWhWired = "1";
+      sel.addEventListener("change", function () { saveWarehouseFor(w.tag, sel.value); });
+    });
+  }
+  document.addEventListener("DOMContentLoaded", wireChangeListeners);
+  setTimeout(wireChangeListeners, 800);
+  setTimeout(wireChangeListeners, 2000);
+
+  // On showing each tab: restore the last-used warehouse (if the select is
+  // currently blank) and re-run that tab's own render/populate logic.
+  function restoreAndRender(tag, selectId, afterSelectSet) {
+    var sel = document.getElementById(selectId);
+    if (sel && !sel.value) {
+      var last = lastWarehouseFor(tag);
+      if (last && Array.prototype.some.call(sel.options, function (o) { return o.value === last; })) {
+        sel.value = last;
+      }
+    }
+    try { if (typeof afterSelectSet === "function") afterSelectSet(); } catch (e) { console.warn("[warehouse-restore]", tag, e); }
+  }
+
+  function hookShowTab() {
+    if (typeof window.showTab !== "function" || window.showTab.__acxWhFixWrapped) { setTimeout(hookShowTab, 300); return; }
+    var orig = window.showTab;
+    var wrapped = function (id) {
+      var r = orig.apply(this, arguments);
+      try {
+        wireChangeListeners();
+
+        // Bug 1: Movement never re-renders on generic showTab().
+        if (id === "movementTab") {
+          if (typeof populateMovementWarehouses === "function") populateMovementWarehouses();
+          if (typeof populateMovementItems === "function") populateMovementItems();
+          if (typeof renderMovementTable === "function") renderMovementTable();
+        }
+
+        // Bug 2: restore last-picked warehouse then re-render each tab.
+        if (id === "priceListTab") {
+          restoreAndRender("priceList", "priceListWarehouseSelect", function () {
+            if (typeof populatePriceListItemDropdown === "function") {
+              var v = document.getElementById("priceListWarehouseSelect").value;
+              if (v) populatePriceListItemDropdown(v);
+            }
+            if (typeof renderPriceListTable === "function") renderPriceListTable();
+          });
+        }
+        if (id === "Amenend") {
+          restoreAndRender("amendments", "amendmentsWarehouseSelect", function () {
+            var v = document.getElementById("amendmentsWarehouseSelect").value;
+            if (v && typeof populateAmendmentsItemDropdown === "function") populateAmendmentsItemDropdown(v);
+            if (typeof renderAmendmentsTable === "function") renderAmendmentsTable();
+          });
+        }
+        if (id === "BulkAdjustment") {
+          restoreAndRender("bulkAdjustment", "baWarehouseSelect", function () {
+            if (typeof renderBAProducts === "function") renderBAProducts();
+            if (typeof window.renderBulkAdjustmentLog === "function") window.renderBulkAdjustmentLog();
+          });
+        }
+      } catch (e) { console.warn("[warehouse-restore] showTab hook:", e); }
+      return r;
+    };
+    wrapped.__acxWhFixWrapped = true;
+    window.showTab = wrapped;
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", hookShowTab);
+  else hookShowTab();
+  setTimeout(hookShowTab, 1500);
 })();
 </script>
 </body>
