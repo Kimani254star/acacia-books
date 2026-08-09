@@ -4331,16 +4331,31 @@ window.addEventListener("DOMContentLoaded", () => {
 <main id="contentArea" class="ml-40 p-1"><h2 class="text-xl font-italic mb-1 text-left flex items-center gap-2"><img id="userAvatar" src="https://via.placeholder.com/32" alt="User Avatar" class="w-8 h-8 rounded-full" onclick="triggerFileInput()">
   Welcome, <span id="currentUser">User</span></h2><input type="file" id="fileInput" class="hidden" accept="image/*" onchange="previewImage(event)">
 <script>
+  function getAvatarUserId() {
+    try {
+      const u = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+      if (!u) return null;
+      // Stable per-user identifier (not the whole object, which can vary in
+      // shape/order between logins and would silently change the storage key).
+      return u.username || u.email || u.id || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
-    const currentUser = localStorage.getItem("loggedInUser");
-    if (currentUser) {
-      const userAvatarKey = `userAvatar_${currentUser}`;
+    const userId = getAvatarUserId();
+    if (userId) {
+      // "__" prefix keeps this key global (not company-namespaced), so the
+      // avatar is truly per-user and survives refresh regardless of which
+      // company/session context is active.
+      const userAvatarKey = `__userAvatar_${userId}`;
       const savedAvatar = localStorage.getItem(userAvatarKey);
 
       if (savedAvatar) {
         document.getElementById("userAvatar").src = savedAvatar;
       }
-      document.getElementById("currentUser").textContent = currentUser;
+      document.getElementById("currentUser").textContent = userId;
     }
   });
   function triggerFileInput() {
@@ -4351,8 +4366,8 @@ window.addEventListener("DOMContentLoaded", () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    const currentUser = localStorage.getItem("loggedInUser");
-    if (!currentUser) {
+    const userId = getAvatarUserId();
+    if (!userId) {
       alert("User not logged in — cannot save avatar.");
       return;
     }
@@ -4362,7 +4377,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const imageUrl = e.target.result;
       document.getElementById("userAvatar").src = imageUrl;
 
-      const userAvatarKey = `userAvatar_${currentUser}`;
+      const userAvatarKey = `__userAvatar_${userId}`;
       localStorage.setItem(userAvatarKey, imageUrl);
     };
     reader.readAsDataURL(file);
@@ -5811,7 +5826,62 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
-<!-- 📦 INVENTORY MODULE --><div id="inventoryTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-2xl font-bold">Inventory</h2><div class="relative"><input
+<!-- 📦 INVENTORY MODULE --><div id="inventoryTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-2xl font-bold">Inventory</h2>
+<div id="acxReorderSuggestCard" class="bg-white border border-gray-300 rounded-lg shadow-sm p-4 mb-4 hidden">
+  <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+    <h3 class="font-semibold text-blue-900">🤖 AI Reorder Suggestions</h3>
+    <button type="button" onclick="acxGenerateReorderSuggestions()" class="bg-blue-900 text-white text-sm font-bold px-3 py-1 rounded hover:bg-blue-800">✨ Generate</button>
+  </div>
+  <div id="acxReorderSuggestOutput" class="text-sm text-gray-700 whitespace-pre-wrap"></div>
+</div>
+<script>
+  (function () {
+    function refreshReorderCard() {
+      var card = document.getElementById("acxReorderSuggestCard");
+      if (!card) return;
+      var on = typeof window.acxAiFeatureEnabled === "function" && window.acxAiFeatureEnabled("Reorder suggestions", "Inventory");
+      card.classList.toggle("hidden", !on);
+    }
+    document.addEventListener("click", function (e) {
+      if (e.target.closest && (e.target.closest('[onclick*="inventoryTab"]') || e.target.closest('[onclick*="aiIntegration"]'))) {
+        setTimeout(refreshReorderCard, 50);
+      }
+    });
+    refreshReorderCard();
+    window.__acxRefreshReorderCard = refreshReorderCard;
+  })();
+
+  async function acxGenerateReorderSuggestions() {
+    var out = document.getElementById("acxReorderSuggestOutput");
+    if (!out) return;
+    out.textContent = "Thinking…";
+
+    var inventory = [];
+    try { inventory = JSON.parse(localStorage.getItem("inventory") || "[]"); } catch (e) {}
+
+    var reorderLevel = 10; // matches the existing Low Stock report threshold
+    var low = inventory.filter(function (i) {
+      var qty = parseFloat(i.qty) || 0;
+      return qty <= reorderLevel && qty >= 0;
+    }).map(function (i) {
+      return { name: i.name || "Unnamed item", warehouse: i.warehouse || "Main Warehouse", qty: parseFloat(i.qty) || 0, sellPrice: parseFloat(i.sellPrice) || 0 };
+    });
+
+    if (!low.length) {
+      out.textContent = "No items are at or below the reorder level (" + reorderLevel + ") right now.";
+      return;
+    }
+
+    var prompt = "You are an inventory planning assistant. Here is a list of low-stock items (JSON): " +
+      JSON.stringify(low) +
+      ". For each item, suggest a practical reorder quantity and a priority (High/Medium/Low) based on how close to zero it is, in a short bullet list. " +
+      "Then add one short overall recommendation. Keep it under 180 words total. Do not use markdown headers.";
+
+    var result = await window.acxAiCall(prompt);
+    out.textContent = result.ok ? result.text : ("⚠️ " + result.error);
+  }
+</script>
+<div class="relative"><input
       type="text"
       id="inventorySearch"
       placeholder="Search in Inventory (/)"
@@ -13259,19 +13329,33 @@ function viewBank(index) {
   const section = document.getElementById("bankDetailsSection");
 
   const isHidden = section.classList.contains("hidden");
-  if (isHidden) {
-    section.classList.remove("hidden");
-  } else {
+  const currentlyOpenIndex = localStorage.getItem("selectedBankIndex");
+
+  // Only treat this as a "close" click when the panel is already open
+  // AND the same bank's row was clicked again. Previously, clicking
+  // "View" on a *different* bank while another bank's panel was open
+  // would hit this branch too — closing the panel, wiping the filter
+  // (localStorage.removeItem("selectedBankIndex")), and re-rendering
+  // the transactions table unfiltered (all banks). That unfiltered
+  // render is what showed "all banks" instead of the one just clicked.
+  if (!isHidden && String(currentlyOpenIndex) === String(index)) {
     section.classList.add("hidden");
     // Clear the per-bank filter so the rest of the app is unaffected
     localStorage.removeItem("selectedBankIndex");
+    localStorage.removeItem("selectedBankName");
     if (typeof renderManualTransactions === "function") renderManualTransactions();
     if (typeof updateBankSummary === "function") updateBankSummary();
-    return; 
+    return;
   }
+
+  // Open (or switch) to the clicked bank.
+  section.classList.remove("hidden");
   updateBankDropdowns();
   const bank = banks[index];
   localStorage.setItem("selectedBankIndex", index);
+  // Store the bank name too — more robust than the index, which can go
+  // stale if the banks list is reordered/edited while the panel is open.
+  localStorage.setItem("selectedBankName", bank.name);
 
   // Only pre-select the manual-transaction bank (this section's own form).
   // Do NOT touch expenseBank / reconcileBank / payrollBank — those belong to
@@ -13660,6 +13744,67 @@ function loadManualAccounts() {
     select.appendChild(option);
   });
 }
+// Keep the Operational Costs report in sync with bank-side "Expense" /
+// "Expense Refund" manual transactions. Operational Costs are stored
+// separately (localStorage "operationalCosts") from the bank ledger
+// ("manualTransactions"/"transactions"), so without this, an Expense (or
+// Expense Refund) entered from the Funds/bank module never shows up in
+// that report — only costs added directly from the Operational Costs tab
+// did before.
+function syncOperationalCostFromManualTx(newTx, oldTx) {
+  const EXPENSE_TYPES = ["Expense", "Expense Refund"];
+  const costs = JSON.parse(localStorage.getItem("operationalCosts") || "[]");
+
+  // manualTransaction() always mints a fresh id for newTx, even when
+  // editing — so the previously-linked cost row (if any) was linked to
+  // oldTx.id, not newTx.id. Look up by whichever id it was actually
+  // linked under, then re-link it to the new id.
+  const lookupId = (oldTx && oldTx.id) || newTx.id;
+  const existingIdx = costs.findIndex(c => c.linkedManualTxId === lookupId);
+  const shouldHaveCost = EXPENSE_TYPES.includes(newTx.type);
+
+  if (!shouldHaveCost) {
+    // Type changed away from Expense/Expense Refund (or was never one) —
+    // remove any previously-mirrored cost row so totals don't double count.
+    if (existingIdx !== -1) {
+      costs.splice(existingIdx, 1);
+      localStorage.setItem("operationalCosts", JSON.stringify(costs));
+      if (typeof renderOperationalCosts === "function") { try { renderOperationalCosts(); } catch (e) {} }
+    }
+    return;
+  }
+
+  const isRefund = newTx.type === "Expense Refund";
+
+  const entry = {
+    id: existingIdx !== -1 ? costs[existingIdx].id : Date.now(),
+    date: newTx.date,
+    description: newTx.type + (newTx.ref ? " - " + newTx.ref : ""),
+    vendor: "",
+    category: newTx.account,
+    method: document.getElementById("paymentMode")?.value || "",
+    bank: newTx.bank,
+    // Refunds reduce total operational costs, so they're recorded as a
+    // negative amount rather than as a separate income line.
+    amount: isRefund ? -Math.abs(newTx.amount) : Math.abs(newTx.amount),
+    source: "fundsTransaction",
+    linkedManualTxId: newTx.id,
+    notes: ""
+  };
+
+  if (existingIdx !== -1) {
+    costs[existingIdx] = entry;
+  } else {
+    costs.push(entry);
+  }
+
+  localStorage.setItem("operationalCosts", JSON.stringify(costs));
+
+  if (typeof renderOperationalCosts === "function") {
+    try { renderOperationalCosts(); } catch (e) {}
+  }
+}
+
 function manualTransaction() {
   const bankName = document.getElementById("manualBank").value;
   const type = document.getElementById("manualType").value;
@@ -13722,8 +13867,11 @@ function manualTransaction() {
     direction: moneyInTypes.includes(type) ? "Deposit" : "Withdraw"
   };
 
+  let oldTxForSync = null;
+
   if (manualTxEditingIndex !== null) {
     const oldTx = manualTransactions[manualTxEditingIndex];
+    oldTxForSync = oldTx;
     const oldBank = banks.find(b => b.name === oldTx.bank);
     const oldAcc = accounts.find(a => a.code === oldTx.code);
 
@@ -13771,6 +13919,10 @@ function manualTransaction() {
   localStorage.setItem("transactions", JSON.stringify(allTx));
   localStorage.setItem("banks", JSON.stringify(banks));
   localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+
+  // Mirror Expense / Expense Refund manual transactions into Operational
+  // Costs so they show up in that report too.
+  syncOperationalCostFromManualTx(newTx, oldTxForSync);
 
   // Post the allocated portion of this transaction onto the selected invoices/bills
   if (invoiceAllocations.length || billAllocations.length) {
@@ -13844,13 +13996,35 @@ function saveTransactionDraft() {
 
   alert("Draft saved successfully");
 }
-function renderManualTransactions(filterBank = "") {
+function renderManualTransactions(filterBank) {
 
   let transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
 
   const table = document.getElementById("manualTransactionLogTable");
 
   table.innerHTML = "";
+
+  // If the caller didn't explicitly pass a bank to filter by, fall back to
+  // whichever bank is currently open in the Bank Details view (if any).
+  // Without this, any add/edit/delete/attach action performed while a
+  // single bank's transactions are showing calls renderManualTransactions()
+  // with no argument and silently resets the table back to showing every
+  // bank's transactions.
+  if (filterBank === undefined) {
+    const section = document.getElementById("bankDetailsSection");
+    const storedName = localStorage.getItem("selectedBankName");
+    const idx = localStorage.getItem("selectedBankIndex");
+    if (section && !section.classList.contains("hidden") && storedName) {
+      // Prefer the stored bank NAME — it stays correct even if the banks
+      // array is reordered/edited while the panel is open, unlike the
+      // index which can silently point at the wrong bank afterward.
+      filterBank = storedName;
+    } else if (section && !section.classList.contains("hidden") && idx !== null && banks[idx]) {
+      filterBank = banks[idx].name;
+    } else {
+      filterBank = "";
+    }
+  }
 
   if (filterBank) {
     transactions = transactions.filter(tx => tx.bank === filterBank);
@@ -14094,9 +14268,15 @@ function printManualTransactionPDF(id) {
 }
 function editManualTransaction(id) {
   const transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
-  const tx = transactions.find(t => t.id === id);
+  // Use a loose/string-normalized match — some transactions (e.g. ones
+  // mirrored in from Operational Costs) carry a numeric id while the id
+  // coming from the onclick attribute is always a string, so a strict ===
+  // here silently fails to find the row.
+  const idx = transactions.findIndex(t => String(t.id) === String(id));
 
-  if (!tx) return;
+  if (idx === -1) return;
+
+  const tx = transactions[idx];
 
   document.getElementById("manualBank").value = tx.bank;
   document.getElementById("manualType").value = tx.type;
@@ -14105,7 +14285,10 @@ function editManualTransaction(id) {
   document.getElementById("manualDate").value = tx.date;
   document.getElementById("manualRef").value = tx.ref;
 
-  manualTxEditingIndex = id; 
+  // manualTransaction() (the Submit handler) reads
+  // manualTransactions[manualTxEditingIndex] as an ARRAY INDEX, so this
+  // must store the index — not the id — or saving the edit throws.
+  manualTxEditingIndex = idx;
 }
 
 function deleteManualTransaction(id) {
@@ -14113,7 +14296,10 @@ function deleteManualTransaction(id) {
   let banks = JSON.parse(localStorage.getItem("banks") || "[]");
   let accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
 
-  const txIndex = transactions.findIndex(t => t.id === id);
+  // Loose/string-normalized match — see editManualTransaction() for why a
+  // strict === breaks on numeric ids (e.g. transactions mirrored in from
+  // Operational Costs), which was making Delete appear to do nothing.
+  const txIndex = transactions.findIndex(t => String(t.id) === String(id));
   const tx = transactions[txIndex];
 
   if (!tx) return;
@@ -14150,16 +14336,26 @@ function deleteManualTransaction(id) {
   localStorage.setItem("banks", JSON.stringify(banks));
   localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
+  // If this manual transaction was mirrored into Operational Costs
+  // (Expense / Expense Refund), remove the linked cost row too.
+  let opCosts = JSON.parse(localStorage.getItem("operationalCosts") || "[]");
+  const opCostsBefore = opCosts.length;
+  opCosts = opCosts.filter(c => c.linkedManualTxId !== tx.id);
+  if (opCosts.length !== opCostsBefore) {
+    localStorage.setItem("operationalCosts", JSON.stringify(opCosts));
+  }
+
   updateBalanceSheetFromChart();
   renderManualTransactions();
   renderBankTable?.();
   if (typeof syncBankBalancesToCOA === "function") { try { syncBankBalancesToCOA(); } catch (e) {} }
+  if (typeof renderOperationalCosts === "function") { try { renderOperationalCosts(); } catch (e) {} }
 
   alert("♻️ Transaction moved to Recycle Bin.");
 }
 function previewManualTransaction(id) {
   const transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
-  const tx = transactions.find(t => t.id === id);
+  const tx = transactions.find(t => String(t.id) === String(id));
   if (!tx) return;
 
   const { jsPDF } = window.jspdf;
@@ -14246,7 +14442,7 @@ function attachFile(id) {
       let attachments = JSON.parse(localStorage.getItem("manualAttachments") || "{}");
       let transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
 
-      const tx = transactions.find(t => t.id === id);
+      const tx = transactions.find(t => String(t.id) === String(id));
       if (!tx) return;
 
       const key = `${tx.id}`;
@@ -15488,6 +15684,20 @@ function getAllTransactions() {
   ];
 }
 
+// getAllTransactions() above builds throwaway copies (via spread) so the UI
+// can tag each row with isTransfer without mutating the source arrays.
+// Any code that needs to PERSIST a change (reconcile / undo / etc.) must
+// mutate the real reconciliationTx / transfers objects directly — mutating
+// a copy and calling saveData() silently writes back the untouched
+// originals, so nothing actually saves. This helper finds the real object.
+function findOriginalTransaction(txId) {
+  let tx = reconciliationTx.find(t => t.id === txId);
+  if (tx) return { tx, isTransfer: false };
+  tx = transfers.find(t => t.id === txId);
+  if (tx) return { tx, isTransfer: true };
+  return null;
+}
+
 function getTransactionEffect(tx, bankName) {
 
   let debit = 0;
@@ -15752,21 +15962,24 @@ function reconcileBankAccount() {
     return;
   }
 
-  const allTx = getAllTransactions();
+  const bankName = document.getElementById("reconcileBank").value;
 
   document.querySelectorAll(".reconcile-check")
     .forEach(cb => {
 
       if (!cb.checked) return;
 
-      const tx =
-        allTx.find(t => t.id === cb.dataset.id);
+      const found = findOriginalTransaction(cb.dataset.id);
 
-      if (!tx) return;
+      if (!found) return;
 
-      tx.reconciled = true;
-      tx.reconcileDate = reconcileDate;
-      tx.status = "reconciled";
+      // Mutate the REAL object (from reconciliationTx / transfers), not a
+      // throwaway copy — otherwise saveData() below writes back the
+      // original, unreconciled arrays and nothing sticks.
+      found.tx.reconciled = true;
+      found.tx.reconcileDate = reconcileDate;
+      found.tx.status = "reconciled";
+      found.tx.reconciledBank = bankName;
     });
 
   saveData();
@@ -15786,20 +15999,17 @@ function saveReconcileLater() {
     return;
   }
 
-  const allTx = getAllTransactions();
-
   document.querySelectorAll(".reconcile-check")
     .forEach(cb => {
 
       if (!cb.checked) return;
 
-      const tx =
-        allTx.find(t => t.id === cb.dataset.id);
+      const found = findOriginalTransaction(cb.dataset.id);
 
-      if (!tx) return;
+      if (!found) return;
 
-      tx.status = "matched";
-      tx.reconcileDate = reconcileDate;
+      found.tx.status = "matched";
+      found.tx.reconcileDate = reconcileDate;
     });
 
   saveData();
@@ -15818,8 +16028,14 @@ function renderReconciledTransactions() {
 
   tbody.innerHTML = "";
 
+  const bankName = document.getElementById("reconcileBank")?.value || "";
+
   const txs = getAllTransactions()
     .filter(tx => tx.reconciled)
+    // Only show reconciled transactions that belong to the bank currently
+    // selected above — otherwise every bank's reconciled history shows up
+    // mixed together no matter which bank you're looking at.
+    .filter(tx => !bankName || tx.bank === bankName || tx.toBank === bankName || tx.reconciledBank === bankName)
     .sort((a,b) =>
       new Date(b.reconcileDate) -
       new Date(a.reconcileDate)
@@ -15916,15 +16132,14 @@ Status: ${tx.status}
 
 function undoReconciliation(txId) {
 
-  const tx =
-    getAllTransactions()
-    .find(t => t.id === txId);
+  const found = findOriginalTransaction(txId);
 
-  if (!tx) return;
+  if (!found) return;
 
-  tx.reconciled = false;
-  tx.reconcileDate = null;
-  tx.status = "unreconciled";
+  found.tx.reconciled = false;
+  found.tx.reconcileDate = null;
+  found.tx.status = "unreconciled";
+  found.tx.reconciledBank = null;
 
   saveData();
 
@@ -20158,16 +20373,23 @@ function addCustomer() {
     creditLimit,
     currency,
     statementDate,
-    receivables: 0
+    receivables: 0,
+    createdAt: new Date().toISOString()
   };
 
 if (editingCustomerIndex !== null) {
    
     const oldReceivables = customers[editingCustomerIndex].receivables || 0;
+    // Keep the original signup date on edit — New Customers / Customer
+    // Growth reports bucket by this, and it should never move just
+    // because the record was edited. Backfill it here for any older
+    // customer that was created before this field existed.
+    const oldCreatedAt = customers[editingCustomerIndex].createdAt || new Date().toISOString();
 
     customers[editingCustomerIndex] = {
         ...customerData,
-        receivables: oldReceivables 
+        receivables: oldReceivables,
+        createdAt: oldCreatedAt
     };
 
     editingCustomerIndex = null;
@@ -40917,7 +41139,15 @@ function deleteOperationalCost(index) {
 
   moveToRecycle(removed, "File", "OperationalCosts");
 
-  if (removed.paidVia === "current") {
+  if (removed.source === "fundsTransaction") {
+    // This row was mirrored in from a Funds/bank manual transaction
+    // (Expense / Expense Refund) — the bank balance was already adjusted
+    // by that transaction directly, not by this cost row, so reversing
+    // it here would double-count. Just drop the mirror and clear the
+    // link; if you also want the underlying transaction gone, delete it
+    // from the Funds module's Manual Transactions list instead.
+    if (typeof updateBankSummary === "function") { try { updateBankSummary(); } catch (e) {} }
+  } else if (removed.paidVia === "current") {
     opCostRemoveCurrentAccEntry(removed.id);
   } else {
     let banks = JSON.parse(localStorage.getItem("banks") || "[]");
@@ -40929,12 +41159,20 @@ function deleteOperationalCost(index) {
   }
 
   let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
-  manualTransactions = manualTransactions.filter(tx => tx.operationalCostId !== removed.id);
-  localStorage.setItem("manualTransactions", JSON.stringify(manualTransactions));
+  if (removed.source !== "fundsTransaction") {
+    // Only rows created via addOperationalCost() link back through
+    // operationalCostId — fundsTransaction rows are the reverse link
+    // (manual transaction -> cost) and their source transaction is left
+    // alone here; delete it from the Funds module if that's what's wanted.
+    manualTransactions = manualTransactions.filter(tx => tx.operationalCostId !== removed.id);
+    localStorage.setItem("manualTransactions", JSON.stringify(manualTransactions));
+  }
 
   let allTransactions = JSON.parse(localStorage.getItem("transactions") || "[]");
-  allTransactions = allTransactions.filter(tx => tx.operationalCostId !== removed.id);
-  localStorage.setItem("transactions", JSON.stringify(allTransactions));
+  if (removed.source !== "fundsTransaction") {
+    allTransactions = allTransactions.filter(tx => tx.operationalCostId !== removed.id);
+    localStorage.setItem("transactions", JSON.stringify(allTransactions));
+  }
 
   costs.splice(index, 1);
   localStorage.setItem("operationalCosts", JSON.stringify(costs));
@@ -60224,7 +60462,61 @@ document.addEventListener("DOMContentLoaded", () => {
   renderBankAccountsTable();
 });
 </script>
-<div id="reportsPanel" class="ml-84 mr-8 p-2"><h2 class="text-2xl font-bold mb-3">Reports</h2><div class="flex justify-center mb-3"><div class="bg-white border border-gray-300 rounded-lg shadow-sm px-1 py-1 min-w-[220px] text-center"><div class="text-1x1 uppercase tracking-wide text-gray-500">
+<div id="reportsPanel" class="ml-84 mr-8 p-2"><h2 class="text-2xl font-bold mb-3">Reports</h2>
+<div id="acxCashflowNarrativeCard" class="bg-white border border-gray-300 rounded-lg shadow-sm p-4 mb-4 hidden">
+  <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+    <h3 class="font-semibold text-blue-900">🤖 AI Cash-flow Narrative</h3>
+    <button type="button" onclick="acxGenerateCashflowNarrative()" class="bg-blue-900 text-white text-sm font-bold px-3 py-1 rounded hover:bg-blue-800">✨ Generate</button>
+  </div>
+  <div id="acxCashflowNarrativeOutput" class="text-sm text-gray-700 whitespace-pre-wrap"></div>
+</div>
+<script>
+  (function () {
+    function refreshCashflowCard() {
+      var card = document.getElementById("acxCashflowNarrativeCard");
+      if (!card) return;
+      var on = typeof window.acxAiFeatureEnabled === "function" && window.acxAiFeatureEnabled("Cash-flow narrative", "Reports");
+      card.classList.toggle("hidden", !on);
+    }
+    document.addEventListener("click", function (e) {
+      // Cheap re-check whenever the Reports tab (or Settings) is opened.
+      if (e.target.closest && (e.target.closest('[onclick*="reportsPanel"]') || e.target.closest('[onclick*="aiIntegration"]'))) {
+        setTimeout(refreshCashflowCard, 50);
+      }
+    });
+    refreshCashflowCard();
+    window.__acxRefreshCashflowCard = refreshCashflowCard;
+  })();
+
+  async function acxGenerateCashflowNarrative() {
+    var out = document.getElementById("acxCashflowNarrativeOutput");
+    if (!out) return;
+    out.textContent = "Thinking…";
+
+    var banks = [];
+    try { banks = JSON.parse(localStorage.getItem("banks") || "[]"); } catch (e) {}
+    var totalBalance = banks.reduce(function (s, b) { return s + (parseFloat(b.balance) || 0); }, 0);
+
+    var manualTx = [];
+    try { manualTx = JSON.parse(localStorage.getItem("manualTransactions") || "[]"); } catch (e) {}
+    var since = new Date(); since.setDate(since.getDate() - 30);
+    var recent = manualTx.filter(function (t) { return new Date(t.date) >= since; });
+    var moneyIn = recent.filter(function (t) { return (window.moneyInTypes || []).includes(t.type); })
+      .reduce(function (s, t) { return s + (parseFloat(t.amount) || 0); }, 0);
+    var moneyOut = recent.filter(function (t) { return (window.moneyOutTypes || []).includes(t.type); })
+      .reduce(function (s, t) { return s + (parseFloat(t.amount) || 0); }, 0);
+
+    var prompt = "You are a finance assistant for a small/medium business. Write a short (120-180 word) plain-English cash-flow narrative for the business owner, based on this data: " +
+      "Total bank balance across all accounts: " + totalBalance.toFixed(2) + ". " +
+      "Over the last 30 days: money in = " + moneyIn.toFixed(2) + ", money out = " + moneyOut.toFixed(2) + ", net = " + (moneyIn - moneyOut).toFixed(2) + ". " +
+      "Number of banks: " + banks.length + ". " +
+      "Comment on the trend, any concerns, and one practical suggestion. Do not use markdown headers.";
+
+    var result = await window.acxAiCall(prompt);
+    out.textContent = result.ok ? result.text : ("⚠️ " + result.error);
+  }
+</script>
+<div class="flex justify-center mb-3"><div class="bg-white border border-gray-300 rounded-lg shadow-sm px-1 py-1 min-w-[220px] text-center"><div class="text-1x1 uppercase tracking-wide text-gray-500">
       Reports
     </div><div id="reportCount" class="text-1xl font-bold text-blue-600">
       0
@@ -75155,14 +75447,17 @@ function toggleOvertimeSummaryDarkMode(el) {
 </script>
 <script>
   function applyBudgetVarianceFilters() {
-  renderBudgetVariance();
+  renderBudgetVarianceReport();
 }
 
 function clearBudgetVarianceFilters() {
-  document.getElementById("budgetVarianceProject").value = "";
-  document.getElementById("budgetVarianceStart").value = "";
-  document.getElementById("budgetVarianceEnd").value = "";
-  renderBudgetVariance();
+  var dept = document.getElementById("budgetVarianceDept");
+  var start = document.getElementById("budgetVarianceStart");
+  var end = document.getElementById("budgetVarianceEnd");
+  if (dept) dept.value = "";
+  if (start) start.value = "";
+  if (end) end.value = "";
+  renderBudgetVarianceReport();
 }
 
 function renderBudgetVariance() {
@@ -93919,8 +94214,20 @@ function toggleSubmenu(id) {
     sales_dailySales: function(rows){return _bucket(rows,function(r){var d=_date(r);return d?d.toISOString().slice(0,10):'';},'date');},
     sales_monthlySales: function(rows){return _bucket(rows,function(r){var d=_date(r);return d?(d.getFullYear()+'-'+MON[d.getMonth()]):'';},'month');},
     sales_annualSales: function(rows){return _bucket(rows,function(r){var d=_date(r);return d?String(d.getFullYear()):'';},'year');},
-    sales_salesByBranch: function(rows){return _grp(rows,function(r){return r.branch||r.branchName||r.location||r.store;},'branch');},
-    sales_salesByCategory: function(rows){return _grp(rows,function(r){return r.category||r.productCategory||r.type;},'category');},
+    sales_salesByBranch: function(rows){
+      // Invoices have no top-level branch field — warehouse lives on each
+      // line item, so grouping by r.branch always fell through to
+      // "(unspecified)". Flatten to item level first.
+      var items=[]; rows.forEach(function(r){ (r.items||[]).forEach(function(it){ items.push({ warehouse: it.warehouse, amount: it.totalWithVat!=null?it.totalWithVat:it.subtotal }); }); });
+      return _grp(items,function(it){return it.warehouse;},'branch');
+    },
+    sales_salesByCategory: function(rows){
+      // Same issue as above — invoices have no top-level category; each
+      // line item carries a VAT category (General/Other/Zero/Exempt),
+      // which is the only category-like dimension this data model has.
+      var items=[]; rows.forEach(function(r){ (r.items||[]).forEach(function(it){ items.push({ category: it.category, amount: it.totalWithVat!=null?it.totalWithVat:it.subtotal }); }); });
+      return _grp(items,function(it){return it.category;},'category');
+    },
     sales_salesByDayOfWeek: function(rows){return _bucket(rows,function(r){var d=_date(r);return d?DOW[d.getDay()]:'';},'day');},
     sales_salesByHour: function(rows){return _bucket(rows,function(r){var d=_date(r);return d?(d.getHours()+':00'):'';},'hour');},
     sales_salesSummary: function(rows){return _bucket(rows,function(r){var d=_date(r);return d?(d.getFullYear()+'-'+MON[d.getMonth()]):'';},'month');},
@@ -93929,11 +94236,53 @@ function toggleSubmenu(id) {
     sales_priceVarianceAnalysis: function(rows){return rows.map(function(r){return {reference:r.invoiceNumber||r.number||r.id,item:r.item||r.product||r.description||'',listPrice:_num(r.listPrice||r.standardPrice),sold:_num(r.unitPrice||r.price),variance:_num(r.unitPrice||r.price)-_num(r.listPrice||r.standardPrice)};});},
 
     profitability_profitByCustomer: function(rows){return _grp(rows,function(r){return r.customer||r.customerName;},'customer');},
-    profitability_profitByBranch: function(rows){return _grp(rows,function(r){return r.branch||r.branchName;},'branch');},
-    profitability_profitByCategory: function(rows){return _grp(rows,function(r){return r.category;},'category');},
-    profitability_profitByInvoice: function(rows){return rows.map(function(r){return {date:_date(r)?_date(r).toLocaleDateString():'',invoice:r.invoiceNumber||r.number||r.id,customer:r.customer||r.customerName||'',revenue:_amt(r),cost:_num(r.cost||r.cogs),profit:_amt(r)-_num(r.cost||r.cogs)};});},
+    profitability_profitByBranch: function(rows){
+      // Revenue-only grouping told you nothing about margin per warehouse.
+      // Cost is computed per line item (qty x buying price) the same way
+      // Profit by Invoice does it, via window.__pnlCogs on a one-item
+      // invoice, then rolled up per warehouse so this is a real P&L by
+      // branch: revenue, cost, profit and margin%.
+      var m = {};
+      rows.forEach(function(r){
+        (r.items||[]).forEach(function(it){
+          var wh = it.warehouse || '(unspecified)';
+          var revenue = _num(it.totalWithVat!=null ? it.totalWithVat : it.subtotal);
+          var cost = (typeof window.__pnlCogs === 'function') ? window.__pnlCogs([{items:[it]}]) : 0;
+          if(!m[wh]) m[wh] = {branch:wh, items:0, revenue:0, cost:0, profit:0};
+          m[wh].items += 1;
+          m[wh].revenue += revenue;
+          m[wh].cost += cost;
+          m[wh].profit += (revenue - cost);
+        });
+      });
+      return Object.keys(m).map(function(k){
+        var g = m[k];
+        g.margin = g.revenue ? ((g.profit/g.revenue*100).toFixed(1)+'%') : '';
+        return g;
+      }).sort(function(a,b){ return (b.profit||0)-(a.profit||0); });
+    },
+    profitability_profitByCategory: function(rows){
+      var items=[]; rows.forEach(function(r){ (r.items||[]).forEach(function(it){ items.push({ category: it.category, amount: it.totalWithVat!=null?it.totalWithVat:it.subtotal }); }); });
+      return _grp(items,function(it){return it.category;},'category');
+    },
+    profitability_profitByInvoice: function(rows){return rows.map(function(r){
+      var revenue = _amt(r);
+      // Cost is computed per invoice from its own line items (qty x buying
+      // price per item), the same way the P&L's COGS figure is computed —
+      // r.cost/r.cogs never exist on an invoice record, so relying on them
+      // always produced profit === revenue (0 cost) before this fix.
+      var cost = (typeof window.__pnlCogs === 'function') ? window.__pnlCogs([r]) : _num(r.cost||r.cogs);
+      var profit = revenue - cost;
+      var margin = revenue ? ((profit/revenue*100).toFixed(1)+'%') : '';
+      return {date:_date(r)?_date(r).toLocaleDateString():'',invoice:r.invoiceNumber||r.number||r.id,customer:r.customer||r.customerName||'',revenue:revenue,cost:cost,profit:profit,margin:margin};
+    });},
     profitability_lossMakingProducts: function(rows){return _grp(rows,function(r){return r.item||r.product;},'product').filter(function(r){return r.total<0;});},
-    profitability_bookMarginAnalysis: function(rows){return _grp(rows,function(r){return r.item||r.product||r.title;},'item');},
+    profitability_bookMarginAnalysis: function(rows){
+      // Product name and price only exist per line item (r.desc), not on
+      // the invoice itself — this always produced "(unspecified)" before.
+      var items=[]; rows.forEach(function(r){ (r.items||[]).forEach(function(it){ items.push({ item: it.desc, amount: it.totalWithVat!=null?it.totalWithVat:it.subtotal }); }); });
+      return _grp(items,function(it){return it.item;},'item');
+    },
 
     customer_newCustomers: function(rows){return _bucket(rows,function(r){var d=_date(r)||(r.createdAt?new Date(r.createdAt):null);return d?(d.getFullYear()+'-'+MON[d.getMonth()]):'';},'month');},
     customer_customerGrowth: function(rows){return _bucket(rows,function(r){var d=r.createdAt?new Date(r.createdAt):_date(r);return d?(d.getFullYear()+'-'+MON[d.getMonth()]):'';},'month');},
@@ -103432,7 +103781,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
      ===================================================================== */
   var PANEL_RENDERERS = {
     budgetPanel: function () { if (typeof window.renderBudgetReport === "function") window.renderBudgetReport(); },
-    budgetVariancePanel: function () { window.renderBudgetVariance(); },
+    budgetVariancePanel: function () { window.renderBudgetVarianceReport(); },
     departmentalPnlPanel: function () { window.renderDepartmentPnLReport(); },
     projectRevenuePanel: function () { window.renderProjectRevenue(); },
     projectExpensesPanel: function () { window.renderProjectExpenses(); },
@@ -110021,12 +110370,13 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
       ai.innerHTML = panelTitle("🤖", "AI Integration", "Connect AI assistants for insights, drafting and automation");
       ai.appendChild(formSection({
         id: "acxAiConfig", key: "aiIntegration", title: "AI provider",
-        def: { enabled: false, provider: "OpenAI", model: "gpt-4o-mini", apiKey: "", temperature: "0.3", monthlyCap: "50" },
+        def: { enabled: false, provider: "OpenAI", model: "gpt-4o-mini", apiKey: "", endpoint: "", temperature: "0.3", monthlyCap: "50" },
         fields: [
           { k: "enabled", l: "AI features", type: "checkbox", hint: "Enable AI across the app" },
           { k: "provider", l: "Provider", type: "select", options: ["OpenAI", "Google Gemini", "Anthropic Claude", "Azure OpenAI", "Local model"] },
           { k: "model", l: "Model", ph: "gpt-4o-mini" },
           { k: "apiKey", l: "API key", type: "password", ph: "sk-..." },
+          { k: "endpoint", l: "Endpoint (Azure / Local model only)", ph: "https://your-resource.openai.azure.com/...", wide: true },
           { k: "temperature", l: "Creativity (0-1)", type: "number" },
           { k: "monthlyCap", l: "Monthly spend cap (USD)", type: "number" }
         ]
@@ -110046,6 +110396,155 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
       }));
     }
     addMenuAfter("settingsSubmenu2", "orgProfileTab", "aiIntegrationTab", "AI Integration");
+
+    /* ---- 2b. AI engine — makes the settings above actually DO something ----
+       Reads acx_aiIntegration (provider/model/apiKey/temperature/monthlyCap)
+       and acx_aiFeatures (per-feature on/off), calls the selected provider's
+       API directly from the browser using the pasted key, and tracks an
+       approximate monthly spend so the cap in Settings is enforced. */
+    (function () {
+      var SPEND_KEY = "acx_aiSpendLog"; // { "2026-08": 1.23, ... }
+
+      // Very rough $/1K-token estimates so the "Monthly spend cap" field
+      // means something — not exact billing, just a sane guardrail.
+      var RATE_PER_1K = {
+        "gpt-4o-mini": 0.0006, "gpt-4o": 0.008, "gpt-4-turbo": 0.02,
+        "gemini-1.5-flash": 0.0004, "gemini-1.5-pro": 0.005,
+        "claude-3-5-sonnet": 0.009, "claude-3-5-haiku": 0.003,
+        "claude-sonnet-5": 0.009, "default": 0.005
+      };
+
+      function monthKey() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); }
+      function getSpendLog() { try { return JSON.parse(localStorage.getItem(SPEND_KEY) || "{}"); } catch (e) { return {}; } }
+      function addSpend(estUsd) {
+        var log = getSpendLog(), k = monthKey();
+        log[k] = (log[k] || 0) + estUsd;
+        localStorage.setItem(SPEND_KEY, JSON.stringify(log));
+      }
+      function spentThisMonth() { return getSpendLog()[monthKey()] || 0; }
+
+      function aiSettings() {
+        try { return JSON.parse(localStorage.getItem("acx_aiIntegration") || "{}"); } catch (e) { return {}; }
+      }
+      function featureList() {
+        try { return JSON.parse(localStorage.getItem("acx_aiFeatures") || "[]"); } catch (e) { return []; }
+      }
+
+      // scope must match one of the "Applies to" values used when seeding
+      // acx_aiFeatures (Invoices / Bills / Reports / Inventory / Payroll / CRM / Mail).
+      window.acxAiFeatureEnabled = function (featureName, scope) {
+        var s = aiSettings();
+        if (!s.enabled) return false;
+        var list = featureList();
+        var row = list.find(function (r) {
+          return (!featureName || r.feature === featureName) && (!scope || r.scope === scope);
+        });
+        return row ? !!row.on : false;
+      };
+
+      function estimateCost(model, promptLen, replyLen) {
+        var rate = RATE_PER_1K[model] || RATE_PER_1K.default;
+        var tokens = (promptLen + replyLen) / 4; // ~4 chars/token
+        return (tokens / 1000) * rate;
+      }
+
+      async function callOpenAiCompatible(baseUrl, headers, model, prompt, temperature) {
+        const res = await fetch(baseUrl, {
+          method: "POST",
+          headers: Object.assign({ "Content-Type": "application/json" }, headers),
+          body: JSON.stringify({
+            model: model,
+            messages: [{ role: "user", content: prompt }],
+            temperature: parseFloat(temperature) || 0.3,
+            max_tokens: 700
+          })
+        });
+        if (!res.ok) throw new Error("AI provider error (" + res.status + "): " + (await res.text()).slice(0, 300));
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content || "";
+      }
+
+      async function callAnthropic(apiKey, model, prompt, temperature) {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true"
+          },
+          body: JSON.stringify({
+            model: model, max_tokens: 700,
+            temperature: parseFloat(temperature) || 0.3,
+            messages: [{ role: "user", content: prompt }]
+          })
+        });
+        if (!res.ok) throw new Error("AI provider error (" + res.status + "): " + (await res.text()).slice(0, 300));
+        const data = await res.json();
+        return (data.content || []).map(function (b) { return b.text || ""; }).join("\n");
+      }
+
+      async function callGemini(apiKey, model, prompt, temperature) {
+        const url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(apiKey);
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: parseFloat(temperature) || 0.3, maxOutputTokens: 700 }
+          })
+        });
+        if (!res.ok) throw new Error("AI provider error (" + res.status + "): " + (await res.text()).slice(0, 300));
+        const data = await res.json();
+        return data.candidates?.[0]?.content?.parts?.map(function (p) { return p.text || ""; }).join("\n") || "";
+      }
+
+      // Core entry point. Returns { ok, text, error }.
+      window.acxAiCall = async function (prompt) {
+        var s = aiSettings();
+
+        if (!s.enabled) return { ok: false, error: "AI features are turned off. Enable them under Settings → AI Integration." };
+        if (!s.apiKey) return { ok: false, error: "No API key set. Add one under Settings → AI Integration." };
+
+        var cap = parseFloat(s.monthlyCap);
+        if (cap && spentThisMonth() >= cap) {
+          return { ok: false, error: "Monthly AI spend cap ($" + cap.toFixed(2) + ") reached for this month. Raise it in Settings → AI Integration if needed." };
+        }
+
+        var model = s.model || "gpt-4o-mini";
+
+        try {
+          var text = "";
+          switch (s.provider) {
+            case "OpenAI":
+              text = await callOpenAiCompatible("https://api.openai.com/v1/chat/completions", { "Authorization": "Bearer " + s.apiKey }, model, prompt, s.temperature);
+              break;
+            case "Anthropic Claude":
+              text = await callAnthropic(s.apiKey, model, prompt, s.temperature);
+              break;
+            case "Google Gemini":
+              text = await callGemini(s.apiKey, model, prompt, s.temperature);
+              break;
+            case "Azure OpenAI":
+              if (!s.endpoint) return { ok: false, error: "Azure OpenAI needs a resource endpoint. Add one under Settings → AI Integration (e.g. https://your-resource.openai.azure.com/openai/deployments/your-deployment/chat/completions?api-version=2024-06-01)." };
+              text = await callOpenAiCompatible(s.endpoint, { "api-key": s.apiKey }, model, prompt, s.temperature);
+              break;
+            case "Local model":
+              if (!s.endpoint) return { ok: false, error: "Local model needs an endpoint (e.g. http://localhost:11434/v1/chat/completions). Add one under Settings → AI Integration." };
+              text = await callOpenAiCompatible(s.endpoint, {}, model, prompt, s.temperature);
+              break;
+            default:
+              return { ok: false, error: "Unknown AI provider selected." };
+          }
+          addSpend(estimateCost(model, prompt.length, text.length));
+          return { ok: true, text: text };
+        } catch (e) {
+          return { ok: false, error: e.message || "AI request failed." };
+        }
+      };
+
+      window.acxAiSpendThisMonth = spentThisMonth;
+    })();
 
     /* ---- 3. User Management: Roles + User Preferences ---- */
     var umTab = document.getElementById("userManagementTab");
@@ -111277,6 +111776,86 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
+})();
+</script>
+<script>
+// One-time migration: backfill createdAt on customers saved before that
+// field existed, so New Customers / Customer Growth reports stop showing
+// them all as "(unspecified)" forever. Best effort — we don't know their
+// real signup date, so this stamps "now" once, which is still better than
+// an unbucketable record.
+(function () {
+  try {
+    if (localStorage.getItem("acx_customersCreatedAtBackfilled")) return;
+    var customers = JSON.parse(localStorage.getItem("customers") || "[]");
+    var changed = false;
+    customers.forEach(function (c) {
+      if (!c.createdAt) { c.createdAt = new Date().toISOString(); changed = true; }
+    });
+    if (changed) localStorage.setItem("customers", JSON.stringify(customers));
+    localStorage.setItem("acx_customersCreatedAtBackfilled", "1");
+  } catch (e) {}
+})();
+</script>
+<script>
+// AI Inventory Forecast + Product Affinity Analysis — same acxAiCall
+// engine used by the Reports/Inventory AI cards. These two report panels
+// existed only as empty "No data yet" stubs; this replaces their body
+// with a working AI-generated report on demand.
+(function () {
+  function injectPanel(panelId, buttonLabel, generateFn) {
+    var panel = document.getElementById(panelId);
+    if (!panel || panel.dataset.acxAiWired) return;
+    panel.dataset.acxAiWired = "1";
+    var body = panel.querySelector(".rep-body");
+    if (!body) return;
+    var box = document.createElement("div");
+    box.innerHTML =
+      '<div style="display:flex;justify-content:flex-end;margin-bottom:8px">' +
+      '<button type="button" class="acx-ai-gen-btn" style="background:#1e3a8a;color:#fff;padding:4px 10px;border-radius:4px;font-size:12px">' + buttonLabel + '</button>' +
+      '</div><div class="acx-ai-gen-output" style="font-size:13px;color:#374151;white-space:pre-wrap"></div>';
+    body.parentElement.insertBefore(box, body);
+    var out = box.querySelector(".acx-ai-gen-output");
+    box.querySelector(".acx-ai-gen-btn").onclick = async function () {
+      out.textContent = "Thinking…";
+      var result = await generateFn();
+      out.textContent = result.ok ? result.text : ("⚠️ " + result.error);
+    };
+  }
+
+  async function generateInventoryForecast() {
+    var inventory = [];
+    try { inventory = JSON.parse(localStorage.getItem("inventory") || "[]"); } catch (e) {}
+    var summary = inventory.slice(0, 40).map(function (i) {
+      return { name: i.name || "Unnamed item", warehouse: i.warehouse || "Main Warehouse", qty: parseFloat(i.qty) || 0, sellPrice: parseFloat(i.sellPrice) || 0 };
+    });
+    if (!summary.length) return { ok: false, error: "No inventory items found to forecast from." };
+    var prompt = "You are an inventory planning assistant. Given this current stock snapshot (JSON, no historical sales data available): " +
+      JSON.stringify(summary) +
+      ". Since only a snapshot is available (not a sales history), give a short forecast-style read: which items look most at risk of stockout soon based on low quantity, roughly how many weeks of buffer common items like these usually need, and 2-3 general stocking recommendations. Keep it under 180 words. Do not use markdown headers. Note briefly that this is a snapshot-based estimate, not a trend forecast.";
+    return await window.acxAiCall(prompt);
+  }
+
+  async function generateProductAffinity() {
+    var invoices = [];
+    try { invoices = JSON.parse(localStorage.getItem("invoices") || "[]"); } catch (e) {}
+    var baskets = invoices.slice(-60).map(function (inv) {
+      return (inv.items || []).map(function (it) { return it.desc; }).filter(Boolean);
+    }).filter(function (b) { return b.length > 1; });
+    if (!baskets.length) return { ok: false, error: "Need invoices with 2+ items on the same invoice to find product affinities." };
+    var prompt = "You are a retail analytics assistant. Here are recent invoice baskets (each array is the products bought together in one invoice, JSON): " +
+      JSON.stringify(baskets.slice(0, 50)) +
+      ". Identify the 3-5 strongest product pairings (items frequently bought together) and suggest one cross-sell or bundling idea per pairing. Keep it under 180 words, plain bullet list, no markdown headers.";
+    return await window.acxAiCall(prompt);
+  }
+
+  function wireAll() {
+    injectPanel("forecasting_aiInventoryForecast", "✨ Generate Forecast", generateInventoryForecast);
+    injectPanel("forecasting_productAffinityAnalysis", "✨ Generate Analysis", generateProductAffinity);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wireAll);
+  else wireAll();
+  setTimeout(wireAll, 1500);
 })();
 </script>
 </body>
