@@ -2737,7 +2737,7 @@ document.addEventListener("click", function(e) {
     </div>
 
 </div><div id="quickCreatePanel" class="hidden fixed top-14 right-20 w-64 bg-white border border-gray-200 rounded shadow-lg p-3 text-gray-800 space-y-2 z-50"><h3 class="font-semibold text-gray-700">⚙️ Quick Create</h3><button onclick="openCreate('customersTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100"> Customer</button><button onclick="openCreate('invoicesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Invoice</button><button onclick="openCreate('supplierTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Supplier</button><button onclick="openCreate('employeesTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Employee</button><button onclick="openCreate('inventoryTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Inventory</button><button onclick="openCreate('manualJournalsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Journal</button><button onclick="openCreate('fundsTab')" class="w-full text-left px-2 py-1 rounded hover:bg-blue-100">Fund</button></div><div class="h-3"></div><div id="sidebar" class="hidden fixed top-0 left-0 h-full w-40 bg-black text-white p-1 overflow-y-auto" style="top:0 !important;left:0 !important;height:100vh !important;z-index:40;"><img src="acaciabooks-logo.png" alt="Logo" class="w-24 mb-4 mx-auto" /><h2 class="text-xl font-bold  mb-6">AkBook</h2><ul class="space-y-5 text-sm"
-<li><button onclick="showTab('dashboard')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📊 Dashboard Hub</button></li><li><button onclick="toggleSubmenu('inventorySubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📦 Inventory Hub</button></li><ul id="inventorySubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('inventoryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Stock</button></li><li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li><li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li><li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li><li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li><li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li><li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li><li><button   onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li></ul><li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li><li><button onclick="toggleSubmenu('customerSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Sales Hub</button></li><ul id="customerSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li><li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li><li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li><li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li><li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li><li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li><li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li><li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li><li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li><li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li><li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li><ul id="supplierSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li><li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li><li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li><li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li><li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li><li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li><li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li><li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li><li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li><li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li><li><button onclick="showTab('supplierStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('accountantSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🧮 Accountant Hub</button></li><ul id="accountantSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('manualJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Manual Journals</button></li><li><button onclick="showTab('recurringJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Recurring Journals</button></li><li><button onclick="showTab('currencyAdjustmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Currency Adjustments</button></li><li><button onclick="showTab('nonCurrentAssetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Assets</button></li><li><button onclick="showTab('nonCurrentLiabilitiesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Liabilities</button></li><li><button onclick="showTab('equityTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Equity</button></li><li><button onclick="showTab('taxAdjustmentsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Adjustments</button></li><li><button onclick="showTab('chartOfAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Chart of Accounts</button></li><li><button onclick="showTab('currentAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Current Accounts</button></li><li><button onclick="showTab('budgetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Budgets</button></li><li><button onclick="showTab('transactionLockingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Transaction Locking</button></li></ul><li><button onclick="toggleSubmenu('payrollSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💵 Payroll Hub </button></li><ul id="payrollSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('employeesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Employees</button></li><li><button onclick="showTab('earningsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Allowances</button></li><li><button onclick="showTab('grossPayTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Deductions</button></li><li><button onclick="showTab('attendanceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Attendance & Leave</button></li><li><button onclick="showTab('payslipTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payslip Generation</button></li><li><button onclick="showTab('statutoryDeductionsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Statutories</button></li><li><button onclick="showTab('payrollReportsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payroll Reports</button></li><li><button onclick="showTab('integrationsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Integrations</button></li></ul><li><button onclick="showTab('reportsPanel')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📈 Reports Hub </button></li><li><button onclick="toggleSubmenu('plansSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🗂️Plans Hub </button></li><ul id="plansSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('plansTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plans Hub </button></li><li><button onclick="showTab('projectTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Project Hub</button></li><li><button onclick="showTab('plansTab'); if(window.phGoStep) phGoStep(5);" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plan Revenue</button></li><li><button onclick="showTab('projectRevenueTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">  Project Revenue</button </li> </ul><li><button onclick="toggleSubmenu('settingsSubmenu2')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">⚙️ Settings Hub </button></li><ul id="settingsSubmenu2" class="ml-4 hidden space-y-1"><li><button onclick="showTab('orgProfileTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Org Profile </button></li><li><button onclick="showTab('warehousesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Warehouses</button></li><li><button onclick="showTab('DatacenterTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Data center</button></li><li><button onclick="showTab('systemConfigurationTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">System configuration</button></li><li><button onclick="showTab('userActivityTab')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Activity </button></li><li><button onclick="showTab('taxComplianceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Compliance</button></li><li><button onclick="showTab('userManagementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Management</button></li><li><button onclick="showTab('vatTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">VAT</button></li><li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li><li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li><li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li><li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li><li><button onclick="toggleSupportPopup()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🆘 Help & Support</button></li></ul><li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li><ul id="filesSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li><li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li></ul><li id="mailLink" class="hidden"><a href="https://kimani254star.github.io/acacia-mail/" target="_blank"
+<li><button onclick="showTab('dashboard')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📊 Dashboard Hub</button></li><li><button onclick="toggleSubmenu('inventorySubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📦 Inventory Hub</button></li><ul id="inventorySubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('inventoryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Stock</button></li><li><button onclick="showTab('movementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">movement</button></li><li><button onclick="showTab('priceListTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">price list</button></li><li><button onclick="showTab('Amenend')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Amendments </button></li><li><button onclick="showTab('BundleItems')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bundle Items</button></li><li><button onclick="showTab('BulkAdjustment')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Adjustments </button></li><li><button onclick="showTab('packagesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Packages</button></li><li><button   onclick="showTab('shipmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Shipments </button></li></ul><li><button onclick="showTab('fundsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💰Funds Hub</button></li><li><button onclick="toggleSubmenu('customerSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Sales Hub</button></li><ul id="customerSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('customersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customer</button></li><li><button onclick="showTab('invoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Invoices</button></li><li><button onclick="showTab('quotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Quotes</button></li><li><button onclick="showTab('ordersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Orders</button></li><li><button onclick="showTab('bulkInvoicesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Invoicing</button></li><li><button onclick="showTab('creditNoteTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Credit Notes</button></li><li><button onclick="showTab('salesReturnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Sales Returns</button></li><li><button onclick="showTab('receiptsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Receipts</button></li><li><button onclick="showTab('recurringInvoicesTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Recurring Invoices</button></li><li><button onclick="showTab('deliveryTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Delivery</button></li><li><button onclick="showTab('customerStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('supplierSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">👥 Purchase Hub</button></li><ul id="supplierSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('supplierTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Supplier</button></li><li><button onclick="showTab('supplierPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payments</button></li><li><button onclick="showTab('supplierBillsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bills</button></li><li><button onclick="showTab('bulkBillingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Billing</button></li><li><button onclick="showTab('taxPaymentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Payments</button></li><li><button onclick="showTab('OperationalCostsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Operational Costs</button></li><li><button onclick="showTab('supplierPurchaseOrdersTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Purchase Orders</button></li><li><button onclick="showTab('supplierDebitNotesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Debit Notes</button></li><li><button onclick="showTab('purchaseReturnsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Returns</button></li><li><button onclick="showTab('grnTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Goods Received</button></li><li><button onclick="showTab('supplierStatementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Statement</button></li></ul><li><button onclick="toggleSubmenu('accountantSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🧮 Accountant Hub</button></li><ul id="accountantSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('manualJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Manual Journals</button></li><li><button onclick="showTab('recurringJournalsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Recurring Journals</button></li><li><button onclick="showTab('currencyAdjustmentsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Currency Adjustments</button></li><li><button onclick="showTab('nonCurrentAssetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Assets</button></li><li><button onclick="showTab('nonCurrentLiabilitiesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Non-Current Liabilities</button></li><li><button onclick="showTab('equityTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Equity</button></li><li><button onclick="showTab('taxAdjustmentsTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Adjustments</button></li><li><button onclick="showTab('chartOfAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Chart of Accounts</button></li><li><button onclick="showTab('currentAccountsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Current Accounts</button></li><li><button onclick="showTab('budgetsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Budgets</button></li><li><button onclick="showTab('transactionLockingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Transaction Locking</button></li></ul><li><button onclick="toggleSubmenu('payrollSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">💵 Payroll Hub </button></li><ul id="payrollSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('employeesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Employees</button></li><li><button onclick="showTab('earningsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Allowances</button></li><li><button onclick="showTab('grossPayTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Earnings & Deductions</button></li><li><button onclick="showTab('attendanceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Attendance & Leave</button></li><li><button onclick="showTab('payslipTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payslip Generation</button></li><li><button onclick="showTab('statutoryDeductionsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Statutories</button></li><li><button onclick="showTab('payrollReportsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Payroll Reports</button></li><li><button onclick="showTab('integrationsTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Integrations</button></li></ul><li><button onclick="showTab('reportsPanel')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">📈 Reports Hub </button></li><li><button onclick="toggleSubmenu('plansSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">🗂️Plans Hub </button></li><ul id="plansSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('plansTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plans Hub </button></li><li><button onclick="showTab('projectTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Project Hub</button></li><li><button onclick="showTab('plansTab'); if(window.phGoStep) phGoStep(5);" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Plan Revenue</button></li><li><button onclick="showTab('projectRevenueTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">  Project Revenue</button </li> </ul><li><button onclick="toggleSubmenu('settingsSubmenu2')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">⚙️ Settings Hub </button></li><ul id="settingsSubmenu2" class="ml-4 hidden space-y-1"><li><button onclick="showTab('orgProfileTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Org Profile </button></li><li><button onclick="showTab('warehousesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg"> Warehouses</button></li><li><button onclick="showTab('DatacenterTab')"class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Data center</button></li><li><button onclick="showTab('systemConfigurationTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">System configuration</button></li><li><button onclick="showTab('userActivityTab')"  class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Activity </button></li><li><button onclick="showTab('taxComplianceTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Tax Compliance</button></li><li><button onclick="showTab('userManagementTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">User Management</button></li><li><button onclick="showTab('vatTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">VAT</button></li><li><button onclick="showTab('preferencesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Preferences</button></li><li><button onclick="showTab('settingstemplateTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Customization</button></li><li><button onclick="showTab('costingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Costing</button></li><li><button onclick="showTab('bulkCostingTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Bulk Costing</button></li><li><button onclick="toggleSupportPopup()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Support</button></li></ul><li><button onclick="toggleSubmenu('filesSubmenu')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">📁 Files Hub </button></li><ul id="filesSubmenu" class="ml-4 hidden space-y-1"><li><button onclick="showTab('filesTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">File Manager</button></li><li><button onclick="showTab('recycleBinTab')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-blue-400 hover:text-black hover:shadow-lg">Recycle Bin</button></li></ul><li id="mailLink" class="hidden"><a href="https://kimani254star.github.io/acacia-mail/" target="_blank"
     class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">
     💬 Mail Hub
   </a></li><li id="crmLink"><a href="https://kimani254star.github.io/acacia-crm/?from=books" target="_blank"
@@ -5404,8 +5404,17 @@ function getPlanAllowedModules(plan) {
 function getAllowedTabs(user) {
   if (!user) return [];
   const role = (user.role || '').toLowerCase();
-  // Only module names that match real tab ids count as custom access
-  const custom = Array.isArray(user.modules) ? user.modules.filter(m => APP_ALL_MODULES.includes(m)) : [];
+  // Only module names that match real tab ids count as custom access.
+  // Custom Modules (Preferences -> Custom Modules) aren't in the static
+  // APP_ALL_MODULES list, so they're allowed in separately here too.
+  let customModuleIds = [];
+  try {
+    customModuleIds = (JSON.parse(localStorage.getItem('customModules') || '[]') || [])
+      .map(m => m && m.tabId).filter(Boolean);
+  } catch (e) {}
+  const custom = Array.isArray(user.modules)
+    ? user.modules.filter(m => APP_ALL_MODULES.includes(m) || customModuleIds.includes(m))
+    : [];
   if (role === 'admin') {
     if (!user.registered) return APP_ALL_MODULES.slice();      // demo / legacy admins: full access
     if (custom.length) return custom;
@@ -78088,7 +78097,7 @@ window.addEventListener(
         <textarea id="projectDescription" rows="3" class="border p-2 rounded w-full"></textarea>
       </div></div><button onclick="addProject()" class="bg-blue-900 text-white px-3 py-2 rounded hover:bg-blue-600 mt-4">
       Add Project
-    </button></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">All Projects</h3><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Title</th><th class="border p-2">Department</th><th class="border p-2">Type</th><th class="border p-2">Priority</th><th class="border p-2">Budget</th><th class="border p-2">Start</th><th class="border p-2">End</th><th class="border p-2">Status</th><th class="border p-2">Actions</th></tr></thead><tbody id="projectsTableBody"></tbody></table></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Project Progress</h3><div class="flex flex-col gap-4 mb-4"><select id="progressProjectTitle" class="border p-2 rounded w-full"><option value="">-- Select Project --</option></select><input id="projectProgressValue" type="number" placeholder="Progress %" class="border p-2 rounded w-full"><select id="projectStatus" class="border p-2 rounded w-full"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>On Hold</option><option>Delayed</option></select><input id="projectProgressComment" placeholder="Comment / Update" class="border p-2 rounded w-full"><div id="projectExpensesContainer" class="flex flex-col gap-2"><div class="flex gap-2 flex-wrap"><input type="text" placeholder="Expense Description" class="border p-2 rounded w-full sm:w-1/3 expense-desc"><input type="number" placeholder="Amount" class="border p-2 rounded w-full sm:w-1/6 expense-amt"><select class="border p-2 rounded w-full sm:w-1/4 expense-bank"><option value="">-- Select Bank --</option></select><select class="border p-2 rounded w-full sm:w-1/4 expense-coa"><option value="">-- Select Account --</option></select></div></div><button type="button" id="addExpenseBtn" class="bg-gray-300 text-black px-3 py-1 rounded hover:bg-gray-400 w-1/2">
+    </button></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">All Projects</h3><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Title</th><th class="border p-2">Department</th><th class="border p-2">Type</th><th class="border p-2">Priority</th><th class="border p-2">Budget</th><th class="border p-2">Start</th><th class="border p-2">End</th><th class="border p-2">Status</th><th class="border p-2">Actions</th></tr></thead><tbody id="projectsTableBody"></tbody></table></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-3">Project Progress</h3><div class="flex flex-col gap-4 mb-4"><select id="progressProjectTitle" class="border p-2 rounded w-full"><option value="">-- Select Project --</option></select><input id="projectProgressValue" type="number" placeholder="Progress %" class="border p-2 rounded w-full"><select id="projectStatus" class="border p-2 rounded w-full"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>On Hold</option><option>Delayed</option></select><input id="projectProgressComment" placeholder="Comment / Update" class="border p-2 rounded w-full"><div id="projectExpensesContainer" class="flex flex-col gap-2"><div class="expense-row border rounded p-3 bg-gray-50 flex flex-col gap-2"><div class="flex gap-2 flex-wrap"><div class="flex flex-col w-full sm:w-1/6"><label class="text-xs font-medium text-gray-600">Date</label><input type="date" class="border p-2 rounded expense-date"></div><div class="flex flex-col w-full sm:w-1/4"><label class="text-xs font-medium text-gray-600">Description</label><input type="text" placeholder="Expense Description" class="border p-2 rounded expense-desc"></div><div class="flex flex-col w-full sm:w-1/6"><label class="text-xs font-medium text-gray-600">Vendor / Payee</label><input type="text" placeholder="Vendor" class="border p-2 rounded expense-vendor"></div><div class="flex flex-col w-full sm:w-1/6"><label class="text-xs font-medium text-gray-600">Category</label><select class="border p-2 rounded expense-category"><option value="">Select Category</option></select></div><div class="flex flex-col w-full sm:w-1/6"><label class="text-xs font-medium text-gray-600">Payment Mode</label><select class="border p-2 rounded expense-paymode"><option value="">Select Method</option><option value="Cash">Cash</option><option value="Bank Transfer">Bank Transfer</option><option value="Cheque">Cheque</option><option value="M-Pesa">M-Pesa</option><option value="Airtel Money">Airtel Money</option><option value="Credit Card">Credit Card</option><option value="Debit Card">Debit Card</option><option value="Online Payment / Payment Gateway">Online Payment / Payment Gateway</option><option value="Mobile Banking">Mobile Banking</option><option value="RTGS / SWIFT Transfer">RTGS / SWIFT Transfer</option></select></div></div><div class="flex gap-2 flex-wrap items-end"><div class="flex flex-col w-full sm:w-1/6"><label class="text-xs font-medium text-gray-600">Paid From</label><select class="border p-2 rounded expense-paidvia"><option value="bank">Bank</option><option value="current">Current Account</option></select></div><div class="flex flex-col w-full sm:w-1/4 expense-bank-wrap"><label class="text-xs font-medium text-gray-600">Bank</label><select class="border p-2 rounded expense-bank"><option value="">-- Select Bank --</option></select></div><div class="flex flex-col w-full sm:w-1/4 expense-ca-wrap hidden"><label class="text-xs font-medium text-gray-600">Current Account</label><select class="border p-2 rounded expense-currentaccount"><option value="">-- Select Current Account --</option></select></div><div class="flex flex-col w-full sm:w-1/6"><label class="text-xs font-medium text-gray-600">Amount</label><input type="number" step="0.01" placeholder="Amount" class="border p-2 rounded expense-amt"></div><div class="flex flex-col w-full sm:w-1/6"><label class="text-xs font-medium text-gray-600">VAT / Tax Rate</label><select class="border p-2 rounded expense-vatrate"><option value="">No VAT</option><option value="16">VAT 16%</option><option value="8">Other Rates 8%</option><option value="0">Zero Rated</option><option value="exempt">Exempt</option></select></div></div><div class="flex gap-2 flex-wrap items-center"><label class="flex items-center gap-1 text-xs"><input type="checkbox" class="expense-vatinclusive cursor-pointer"> Amount is VAT Inclusive</label><div class="flex flex-col w-full sm:w-1/6"><label class="text-xs font-medium text-gray-600">VAT Amount</label><input type="number" step="0.01" class="border p-2 rounded bg-gray-100 expense-vat" readonly></div><div class="flex flex-col w-full sm:w-1/6"><label class="text-xs font-medium text-gray-600">Total Payable</label><input type="number" step="0.01" class="border p-2 rounded bg-gray-100 expense-total" readonly></div><div class="flex flex-col w-full sm:w-1/3"><label class="text-xs font-medium text-gray-600">Notes</label><input type="text" placeholder="Notes / Comments" class="border p-2 rounded expense-notes"></div></div><div class="flex gap-2 flex-wrap items-center"><div class="flex flex-col w-full sm:w-1/2"><label class="text-xs font-medium text-gray-600">Attachment (Receipt/Invoice)</label><input type="file" accept=".pdf,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.gif,.doc,.docx" class="border p-2 rounded expense-attachment"></div><button type="button" class="removeExpenseRowBtn text-red-600 text-xs font-semibold hover:underline ml-auto">✕ Remove this expense</button></div></div></div><button type="button" id="addExpenseBtn" class="bg-gray-300 text-black px-3 py-1 rounded hover:bg-gray-400 w-1/2">
       + Add Another Expense
     </button></div><button onclick="updateProjectProgress()" class="bg-blue-900 text-white px-3 py-2 rounded hover:bg-blue-600">
     Update Progress
@@ -82403,17 +82412,19 @@ function deleteProject(index) {
   renderProjectsChart();
 }
 document.getElementById("addExpenseBtn")?.addEventListener("click", function() {
+  if (typeof window.addBlankProjectExpenseRow === "function") {
+    window.addBlankProjectExpenseRow();
+    return;
+  }
+  // Fallback if the row-template script hasn't loaded yet.
   const container = document.getElementById("projectExpensesContainer");
+  const first = container.querySelector(".expense-row");
+  if (!container || !first) return;
   const div = document.createElement("div");
-  div.className = "flex gap-2";
-  div.className = "flex gap-2 flex-wrap";
-  div.innerHTML = `
-    <input type="text" placeholder="Expense Description" class="border p-2 rounded w-full sm:w-1/3 expense-desc">
-    <input type="number" placeholder="Amount" class="border p-2 rounded w-full sm:w-1/6 expense-amt">
-    <select class="border p-2 rounded w-full sm:w-1/4 expense-bank"><option value="">-- Select Bank --</option></select>
-    <select class="border p-2 rounded w-full sm:w-1/4 expense-coa"><option value="">-- Select Account --</option></select>
-  `;
-  if (typeof populateProjectExpenseDropdowns === "function") populateProjectExpenseDropdowns(div);
+  div.className = "expense-row border rounded p-3 bg-gray-50 flex flex-col gap-2";
+  div.innerHTML = first.innerHTML;
+  div.querySelectorAll("input").forEach(i => { if (i.type === "checkbox") i.checked = false; else i.value = ""; });
+  div.querySelectorAll("select").forEach(s => { s.selectedIndex = 0; });
   container.appendChild(div);
 });
 
@@ -82464,9 +82475,36 @@ function renderProjectProgressTable() {
 
   tbody.innerHTML = projectProgress.map((p, index) => {
 
-    const expenseText = p.expenses
-      ? p.expenses.map(e => `${e.description}: ${e.amount}`).join(", ")
-      : "";
+    const expenseText = (p.expenses && p.expenses.length)
+      ? `
+        <table class="w-full border text-xs">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="border p-1 text-left">Date</th>
+              <th class="border p-1 text-left">Description</th>
+              <th class="border p-1 text-left">Category</th>
+              <th class="border p-1 text-left">Paid From</th>
+              <th class="border p-1 text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${p.expenses.map(e => `
+              <tr>
+                <td class="border p-1">${e.date || "-"}</td>
+                <td class="border p-1">${e.description || "-"}</td>
+                <td class="border p-1">${e.category || "-"}</td>
+                <td class="border p-1">${e.paidVia === "current" ? (e.currentAccount || "Current Acc.") : (e.bank || "-")}</td>
+                <td class="border p-1 text-right">${parseFloat(e.amount || 0).toFixed(2)}</td>
+              </tr>
+            `).join("")}
+            <tr class="font-semibold bg-gray-50">
+              <td class="border p-1" colspan="4">Total</td>
+              <td class="border p-1 text-right">${p.expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0).toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+      `
+      : `<span class="text-gray-400 text-xs">No expenses</span>`;
 
     return `
 
@@ -82787,13 +82825,28 @@ function editProjectProgress(index) {
   if (p.expenses && p.expenses.length > 0) {
     p.expenses.forEach(e => {
       const div = document.createElement("div");
-      div.className = "flex gap-2 mb-2";
-      div.innerHTML = `
-        <input type="text" class="border p-2 rounded w-2/3 expense-desc" value="${e.description}">
-        <input type="number" class="border p-2 rounded w-1/3 expense-amt" value="${e.amount}">
-      `;
+      div.className = "expense-row border rounded p-3 bg-gray-50 flex flex-col gap-2";
+      div.innerHTML = window.__projectExpenseRowHTML || "";
+      if (typeof populateProjectExpenseDropdowns === "function") populateProjectExpenseDropdowns(div);
+      const set = (sel, val) => { const el = div.querySelector(sel); if (el && val !== undefined && val !== null) el.value = val; };
+      set(".expense-desc", e.description);
+      set(".expense-amt", e.amount);
+      set(".expense-date", e.date);
+      set(".expense-vendor", e.vendor);
+      set(".expense-category", e.category);
+      set(".expense-paymode", e.method);
+      set(".expense-notes", e.notes);
+      if (e.paidVia === "current") {
+        set(".expense-paidvia", "current");
+        set(".expense-currentaccount", e.currentAccount);
+      } else {
+        set(".expense-bank", e.bank);
+      }
+      if (typeof wireProjectExpenseRow === "function") wireProjectExpenseRow(div);
       container.appendChild(div);
     });
+  } else if (typeof addBlankProjectExpenseRow === "function") {
+    addBlankProjectExpenseRow();
   }
 }
 
@@ -88281,6 +88334,30 @@ document
 
 let editingUserIndex = null;
 
+// Fix: #moduleAccessList in the Create/Edit User modal was a static, hand-written
+// checkbox list, so modules created via Preferences -> Custom Modules never showed
+// up there (they only got auto-added to the Sidebar Menu Visibility list). This
+// pulls the same customModules definitions from localStorage and appends any
+// missing ones as real checkboxes, keeping existing ones untouched.
+function syncCustomModuleCheckboxes() {
+  const list = document.getElementById('moduleAccessList');
+  if (!list) return;
+  let defs = [];
+  try { defs = JSON.parse(localStorage.getItem('customModules') || '[]') || []; } catch (e) { defs = []; }
+  defs.forEach(m => {
+    if (!m || !m.tabId) return;
+    if (list.querySelector(`input[value="${m.tabId}"]`)) return; // already present
+    const label = document.createElement('label');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = m.tabId;
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(' ' + (m.icon || '🧩') + ' ' + m.name + ' (custom)'));
+    list.appendChild(label);
+  });
+}
+document.addEventListener('acxModulesChanged', function () { try { syncCustomModuleCheckboxes(); } catch (e) {} });
+
 function openCreateUserModal(index = null) {
   document.getElementById('createUserModal').classList.remove('hidden');
   document.getElementById('userCreateMsg').classList.add('hidden');
@@ -88292,6 +88369,7 @@ function openCreateUserModal(index = null) {
   document.getElementById('customRoleInput').value = '';
   document.getElementById('modalTitle').textContent = index !== null ? '✏️ Edit User' : '👤 Create New User';
 
+  syncCustomModuleCheckboxes();
   document.querySelectorAll('#moduleAccessList input[type="checkbox"]').forEach(cb => cb.checked = false);
 
   editingUserIndex = index;
@@ -96493,9 +96571,81 @@ function refreshDashboardCards() {
   function lsGet(k, def){ try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(def)); } catch(e){ return def; } }
   function lsSet(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
 
+  // Capture the master row markup (built server-side into the first
+  // .expense-row in the container) so it can be cloned for "Add Another
+  // Expense" and when re-opening a saved progress entry for edit.
+  function captureRowTemplate(){
+    if (window.__projectExpenseRowHTML) return;
+    const first = document.querySelector('#projectExpensesContainer .expense-row');
+    if (first) window.__projectExpenseRowHTML = first.innerHTML;
+  }
+
+  window.addBlankProjectExpenseRow = function(){
+    const container = document.getElementById('projectExpensesContainer');
+    if (!container || !window.__projectExpenseRowHTML) return;
+    const div = document.createElement('div');
+    div.className = 'expense-row border rounded p-3 bg-gray-50 flex flex-col gap-2';
+    div.innerHTML = window.__projectExpenseRowHTML;
+    populateProjectExpenseDropdowns(div);
+    wireProjectExpenseRow(div);
+    container.appendChild(div);
+  };
+
+  // Live VAT / total calculation for one expense row, reusing the same
+  // maths as the Operational Costs form (calcOperationalCostVat).
+  window.updateProjectExpenseRowVat = function(row){
+    if (!row || typeof calcOperationalCostVat !== 'function') return;
+    const amtEl = row.querySelector('.expense-amt');
+    const rateEl = row.querySelector('.expense-vatrate');
+    const incEl = row.querySelector('.expense-vatinclusive');
+    const vatEl = row.querySelector('.expense-vat');
+    const totalEl = row.querySelector('.expense-total');
+    if (!amtEl || !rateEl || !incEl || !vatEl || !totalEl) return;
+    const { vat, gross } = calcOperationalCostVat(amtEl.value, rateEl.value, incEl.checked);
+    vatEl.value = vat.toFixed(2);
+    totalEl.value = gross.toFixed(2);
+  };
+
+  window.toggleProjectExpensePaidVia = function(row){
+    if (!row) return;
+    const via = row.querySelector('.expense-paidvia')?.value || 'bank';
+    const bankWrap = row.querySelector('.expense-bank-wrap');
+    const caWrap = row.querySelector('.expense-ca-wrap');
+    if (bankWrap) bankWrap.classList.toggle('hidden', via === 'current');
+    if (caWrap) caWrap.classList.toggle('hidden', via !== 'current');
+  };
+
+  // Attach live-calc / toggle / remove listeners to one expense row.
+  window.wireProjectExpenseRow = function(row){
+    if (!row || row.dataset.wired === '1') return;
+    row.dataset.wired = '1';
+    const amtEl = row.querySelector('.expense-amt');
+    const rateEl = row.querySelector('.expense-vatrate');
+    const incEl = row.querySelector('.expense-vatinclusive');
+    const paidViaEl = row.querySelector('.expense-paidvia');
+    const removeBtn = row.querySelector('.removeExpenseRowBtn');
+    if (amtEl) amtEl.addEventListener('input', () => updateProjectExpenseRowVat(row));
+    if (rateEl) rateEl.addEventListener('change', () => updateProjectExpenseRowVat(row));
+    if (incEl) incEl.addEventListener('change', () => updateProjectExpenseRowVat(row));
+    if (paidViaEl) paidViaEl.addEventListener('change', () => toggleProjectExpensePaidVia(row));
+    if (removeBtn) removeBtn.addEventListener('click', () => {
+      const container = document.getElementById('projectExpensesContainer');
+      if (container && container.querySelectorAll('.expense-row').length > 1) row.remove();
+      else {
+        row.querySelectorAll('input').forEach(i => { if (i.type === 'checkbox') i.checked = false; else i.value = ''; });
+        row.querySelectorAll('select').forEach(s => { s.selectedIndex = 0; });
+        updateProjectExpenseRowVat(row);
+      }
+    });
+    toggleProjectExpensePaidVia(row);
+  };
+
   window.populateProjectExpenseDropdowns = function(scope){
     const banks = lsGet('banks', []);
     const coa = lsGet('chartOfAccounts', []);
+    const currentAccounts = lsGet('currentAccounts', []);
+    const allowedTypes = ["Expense", "Cost of Goods Sold", "Other Expense", "Depreciation",
+      "Personnel Costs", "Marketing Expense", "Finance Costs", "Repairs & Maintenance", "Insurance Costs"];
     const root = scope || document;
     root.querySelectorAll('.expense-bank').forEach(sel => {
       const cur = sel.value;
@@ -96503,6 +96653,24 @@ function refreshDashboardCards() {
         banks.map(b => `<option value="${b.name}">${b.name} (KES ${Number(b.balance||0).toLocaleString()})</option>`).join('');
       if (cur) sel.value = cur;
     });
+    root.querySelectorAll('.expense-currentaccount').forEach(sel => {
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">-- Select Current Account --</option>' +
+        currentAccounts.map(a => {
+          const bal = parseFloat(a.amount != null ? a.amount : a.givenAmount) || 0;
+          const label = `${a.name || a.description || a.account} (${a.account}) — Bal: ${bal.toFixed(2)}`;
+          return `<option value="${a.account}">${label}</option>`;
+        }).join('');
+      if (cur) sel.value = cur;
+    });
+    root.querySelectorAll('.expense-category').forEach(sel => {
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">Select Category</option>' +
+        coa.filter(a => allowedTypes.includes(a.type))
+           .map(a => `<option value="${a.name}">${a.name} (${a.code||''})</option>`).join('');
+      if (cur) sel.value = cur;
+    });
+    // Legacy support: older saved rows may still use the plain .expense-coa select.
     root.querySelectorAll('.expense-coa').forEach(sel => {
       const cur = sel.value;
       sel.innerHTML = '<option value="">-- Select Account --</option>' +
@@ -96513,59 +96681,220 @@ function refreshDashboardCards() {
 
   const _orig = window.updateProjectProgress;
   window.updateProjectProgress = function(){
-    const descs = document.querySelectorAll('.expense-desc');
-    const amts  = document.querySelectorAll('.expense-amt');
-    const bks   = document.querySelectorAll('.expense-bank');
-    const cas   = document.querySelectorAll('.expense-coa');
+    const container = document.getElementById('projectExpensesContainer');
+    const rows = container ? Array.from(container.querySelectorAll('.expense-row')) : [];
     const title = document.getElementById('progressProjectTitle')?.value || '';
     const today = new Date().toISOString().slice(0,10);
 
     let banks = lsGet('banks', []);
-    let coa   = lsGet('chartOfAccounts', []);
     let mtx   = lsGet('manualTransactions', []);
     let allTx = lsGet('transactions', []);
     let projExp = lsGet('projectExpensesLedger', []);
+    let opCosts = lsGet('operationalCosts', []);
 
-    for (let i=0; i<descs.length; i++){
-      const desc = (descs[i].value||'').trim();
-      const amt  = parseFloat(amts[i].value);
-      const bn   = bks[i] ? bks[i].value : '';
-      const cc   = cas[i] ? cas[i].value : '';
-      if (!desc || isNaN(amt) || amt<=0) continue;
-      if (bn && cc){
-        const bank = banks.find(b => b.name === bn);
-        const acc  = coa.find(a => a.code === cc);
-        if (bank) bank.balance = (parseFloat(bank.balance)||0) - amt;
-        if (acc)  acc.amount   = (parseFloat(acc.amount)||0) + amt;
-        const tx = {
-          bank: bn, type: 'Project Expense', account: acc ? acc.name : '', code: cc,
-          amount: amt, date: today, ref: 'PROJ-'+title+'-'+Date.now()+'-'+i,
-          source: 'project', direction: 'Withdraw',
-          project: title, description: desc
-        };
-        mtx.push(tx); allTx.push(tx);
-        projExp.push({ project: title, description: desc, amount: amt, bank: bn, code: cc, account: acc?acc.name:'', date: today });
+    const richExpenses = [];
+
+    rows.forEach((row, i) => {
+      const descEl = row.querySelector('.expense-desc');
+      const amtEl  = row.querySelector('.expense-amt');
+      const desc = descEl ? (descEl.value || '').trim() : '';
+      const enteredAmount = amtEl ? parseFloat(amtEl.value) : NaN;
+      if (!desc || isNaN(enteredAmount) || enteredAmount <= 0) return;
+
+      const dateEl = row.querySelector('.expense-date');
+      const vendorEl = row.querySelector('.expense-vendor');
+      const catEl = row.querySelector('.expense-category');
+      const payModeEl = row.querySelector('.expense-paymode');
+      const paidViaEl = row.querySelector('.expense-paidvia');
+      const bankEl = row.querySelector('.expense-bank');
+      const caEl = row.querySelector('.expense-currentaccount');
+      const vatRateEl = row.querySelector('.expense-vatrate');
+      const vatIncEl = row.querySelector('.expense-vatinclusive');
+      const notesEl = row.querySelector('.expense-notes');
+
+      const date = (dateEl && dateEl.value) || today;
+      const vendor = vendorEl ? vendorEl.value.trim() : '';
+      const category = catEl ? catEl.value : '';
+      const method = payModeEl ? payModeEl.value : '';
+      const paidVia = (paidViaEl && paidViaEl.value) || 'bank';
+      const payViaCurrent = paidVia === 'current';
+      const bn = bankEl ? bankEl.value : '';
+      const caCode = caEl ? caEl.value : '';
+      const vatRate = vatRateEl ? vatRateEl.value : '';
+      const vatInclusive = vatIncEl ? vatIncEl.checked : false;
+      const notes = notesEl ? notesEl.value.trim() : '';
+
+      if (payViaCurrent && !caCode) return;
+      if (!payViaCurrent && !bn) return;
+
+      const calc = (typeof calcOperationalCostVat === 'function')
+        ? calcOperationalCostVat(enteredAmount, vatRate, vatInclusive)
+        : { net: enteredAmount, vat: 0, gross: enteredAmount };
+      const netAmount = calc.net, vat = calc.vat, amount = calc.gross;
+      const costId = Date.now() + '-' + i + '-' + Math.floor(Math.random() * 1000);
+      const currentAccName = payViaCurrent && typeof opCostCurrentAccountLabel === 'function'
+        ? opCostCurrentAccountLabel(caCode) : '';
+      const categoryLabel = category || 'Project Expense';
+      const methodLabel = method || 'Bank Transfer';
+
+      // Same shape as an Operational Costs row, so it renders/edits/deletes
+      // through the Operational Costs table exactly like a directly-logged cost.
+      opCosts.push({
+        id: costId, date, description: desc, vendor,
+        category: categoryLabel, method: methodLabel,
+        bank: payViaCurrent ? '' : bn, paidVia,
+        currentAccount: payViaCurrent ? caCode : '',
+        currentAccountName: payViaCurrent ? currentAccName : '',
+        amount, netAmount, vat, vatRate, vatInclusive, enteredAmount, notes,
+        attachmentUrl: null, attachmentName: null,
+        project: title, source: 'project'
+      });
+
+      if (typeof postToCOA === 'function') { try { postToCOA(categoryLabel, amount, { date, ref: `Project Expense via ${methodLabel}`, source: 'Project Expense' }); } catch(e){} }
+      if (typeof postJournal === 'function') {
+        try {
+          postJournal({
+            date, description: `Project Expense - ${desc} (${title})`, source: 'Project Expense',
+            entries: [
+              { account: categoryLabel, debit: amount, credit: 0 },
+              { account: payViaCurrent ? caCode : bn, debit: 0, credit: amount }
+            ]
+          });
+        } catch(e){}
       }
-    }
-    lsSet('banks', banks); lsSet('chartOfAccounts', coa);
+
+      if (payViaCurrent) {
+        if (typeof opCostAddCurrentAccEntry === 'function') {
+          opCostAddCurrentAccEntry({ id: costId, date, description: desc, category: categoryLabel, method: methodLabel, accountCode: caCode, amount });
+        }
+      } else {
+        const bank = banks.find(b => b.name === bn);
+        if (bank) bank.balance = (parseFloat(bank.balance) || 0) - amount;
+        mtx.push({
+          id: costId, date, bank: bn, type: desc, account: categoryLabel, amount,
+          ref: `Project Expense via ${methodLabel}`, source: 'operationalCost', direction: 'Withdraw',
+          operationalCostId: costId, project: title
+        });
+        allTx.push({
+          id: `TXN-${Date.now()}-${i}`, date, bank: bn, type: 'Withdraw', amount,
+          ref: `Project Expense (${categoryLabel}) via ${methodLabel}`, operationalCostId: costId
+        });
+      }
+
+      projExp.push({ project: title, description: desc, amount, bank: payViaCurrent ? '' : bn, code: caCode, account: categoryLabel, date, opCostId: costId });
+
+      richExpenses.push({
+        description: desc, amount, opCostId: costId, date, vendor, category: categoryLabel,
+        method: methodLabel, paidVia, bank: payViaCurrent ? '' : bn, currentAccount: payViaCurrent ? caCode : '',
+        vat, vatRate, vatInclusive, notes
+      });
+    });
+
+    lsSet('banks', banks);
     lsSet('manualTransactions', mtx); lsSet('transactions', allTx);
     lsSet('projectExpensesLedger', projExp);
+    lsSet('operationalCosts', opCosts);
 
     if (typeof _orig === 'function') _orig.apply(this, arguments);
+
+    // The plain _orig() above only records {description, amount} for each
+    // expense; replace that with our richer, linked records so a later
+    // delete can find and reverse the exact Operational Cost / Bank entries.
+    if (richExpenses.length) {
+      try {
+        const pp = lsGet('projectProgress', []);
+        if (pp.length) {
+          pp[pp.length - 1].expenses = richExpenses;
+          lsSet('projectProgress', pp);
+          if (typeof window.projectProgress !== 'undefined' && Array.isArray(window.projectProgress)) {
+            window.projectProgress.length = 0;
+            pp.forEach(x => window.projectProgress.push(x));
+          }
+        }
+      } catch(e){}
+    }
+
     if (typeof renderProfitAndLoss === 'function') try { renderProfitAndLoss(); } catch(e){}
     if (typeof renderManualTransactions === 'function') try { renderManualTransactions(); } catch(e){}
+    if (typeof renderOperationalCosts === 'function') try { renderOperationalCosts(); } catch(e){}
+    if (typeof renderCurrentAccounts === 'function') try { renderCurrentAccounts(); } catch(e){}
+    if (typeof updateExpensesCard === 'function') try { updateExpensesCard(); } catch(e){}
+    if (typeof renderReports === 'function') try { renderReports(); } catch(e){}
     populateProjectExpenseDropdowns();
+  };
+
+  // Reverse a project-progress entry's expenses: remove the linked
+  // Operational Cost rows and restore whichever Bank / Current Account
+  // they were paid from, then refresh the P&L, Bank and Operational
+  // Cost views so all three stay in sync with the delete.
+  const _origDeleteProjectProgress = window.deleteProjectProgress;
+  window.deleteProjectProgress = function(index){
+    const pp = lsGet('projectProgress', []);
+    const entry = pp[index];
+    if (!entry) { if (typeof _origDeleteProjectProgress === 'function') return _origDeleteProjectProgress.apply(this, arguments); return; }
+    if (!confirm('Delete this progress update? Linked expenses will be removed from Operational Costs and reversed on the Bank / Current Account.')) return;
+
+    const opIds = (entry.expenses || []).map(e => e.opCostId).filter(Boolean);
+    if (opIds.length) {
+      let opCosts = lsGet('operationalCosts', []);
+      let banks = lsGet('banks', []);
+      let mtx = lsGet('manualTransactions', []);
+      let allTx = lsGet('transactions', []);
+      let projExp = lsGet('projectExpensesLedger', []);
+
+      opIds.forEach(id => {
+        const idx = opCosts.findIndex(c => c.id === id);
+        if (idx === -1) return;
+        const removed = opCosts[idx];
+        if (removed.paidVia === 'current') {
+          if (typeof opCostRemoveCurrentAccEntry === 'function') opCostRemoveCurrentAccEntry(removed.id);
+        } else {
+          const bi = banks.findIndex(b => b.name === removed.bank);
+          if (bi !== -1) banks[bi].balance = (parseFloat(banks[bi].balance) || 0) + parseFloat(removed.amount || 0);
+        }
+        opCosts.splice(idx, 1);
+      });
+
+      mtx = mtx.filter(tx => !opIds.includes(tx.operationalCostId));
+      allTx = allTx.filter(tx => !opIds.includes(tx.operationalCostId));
+      projExp = projExp.filter(e => !opIds.includes(e.opCostId));
+
+      lsSet('operationalCosts', opCosts);
+      lsSet('banks', banks);
+      lsSet('manualTransactions', mtx);
+      lsSet('transactions', allTx);
+      lsSet('projectExpensesLedger', projExp);
+    }
+
+    pp.splice(index, 1);
+    lsSet('projectProgress', pp);
+    if (typeof window.projectProgress !== 'undefined' && Array.isArray(window.projectProgress)) {
+      window.projectProgress.length = 0;
+      pp.forEach(x => window.projectProgress.push(x));
+    }
+
+    if (typeof renderProjectProgressTable === 'function') try { renderProjectProgressTable(); } catch(e){}
+    if (typeof renderOperationalCosts === 'function') try { renderOperationalCosts(); } catch(e){}
+    if (typeof renderProfitAndLoss === 'function') try { renderProfitAndLoss(); } catch(e){}
+    if (typeof renderManualTransactions === 'function') try { renderManualTransactions(); } catch(e){}
+    if (typeof renderCurrentAccounts === 'function') try { renderCurrentAccounts(); } catch(e){}
+    if (typeof updateExpensesCard === 'function') try { updateExpensesCard(); } catch(e){}
+    if (typeof renderReports === 'function') try { renderReports(); } catch(e){}
   };
 
   const _showTab = window.showTab;
   if (typeof _showTab === 'function'){
     window.showTab = function(id){
       const r = _showTab.apply(this, arguments);
-      if (id === 'projectTab') setTimeout(populateProjectExpenseDropdowns, 50);
+      if (id === 'projectTab') setTimeout(() => { captureRowTemplate(); populateProjectExpenseDropdowns(); document.querySelectorAll('#projectExpensesContainer .expense-row').forEach(wireProjectExpenseRow); }, 50);
       return r;
     };
   }
-  document.addEventListener('DOMContentLoaded', populateProjectExpenseDropdowns);
+  document.addEventListener('DOMContentLoaded', () => {
+    captureRowTemplate();
+    populateProjectExpenseDropdowns();
+    document.querySelectorAll('#projectExpensesContainer .expense-row').forEach(wireProjectExpenseRow);
+  });
 
   function injectStrategyExpenseRows(){
     const anchor = document.getElementById('pnlCurrentAccounts');
@@ -112667,18 +112996,44 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   /* ---------- Sidebar entries (only for modules the current user can see
      AND that haven't been hidden via the sidebar visibility picker) ---------- */
   function renderSidebarEntries() {
-    var nav = document.querySelector(".sidebar ul, #sidebarMenu, nav ul");
-    // Fall back: find the <ul> that already contains the Preferences button.
+    // Custom modules belong under Settings Hub (right after "Customization")
+    // so they're visible where users actually go looking for them, instead
+    // of being tacked onto the very bottom of the whole sidebar.
+    var nav = document.getElementById("settingsSubmenu2");
+    var underSettingsHub = !!nav;
     if (!nav) {
-      var prefBtn = document.querySelector('button[onclick*="preferencesTab"]');
-      nav = prefBtn ? prefBtn.closest("ul") : null;
+      nav = document.querySelector(".sidebar ul, #sidebarMenu, nav ul");
+      // Fall back: find the <ul> that already contains the Preferences button.
+      if (!nav) {
+        var prefBtn = document.querySelector('button[onclick*="preferencesTab"]');
+        nav = prefBtn ? prefBtn.closest("ul") : null;
+      }
     }
     var host = document.getElementById("acxCustomModulesNav");
     if (!host) {
       if (!nav) return;
       host = document.createElement("li");
       host.id = "acxCustomModulesNav";
-      nav.appendChild(host);
+      if (underSettingsHub) {
+        var custBtn = nav.querySelector('button[onclick*="settingstemplateTab"]');
+        var custLi = custBtn ? custBtn.closest("li") : null;
+        if (custLi && custLi.nextSibling) nav.insertBefore(host, custLi.nextSibling);
+        else nav.appendChild(host);
+      } else {
+        nav.appendChild(host);
+      }
+    } else if (nav && host.parentNode !== nav) {
+      // Settings Hub submenu may render after this script first ran (or vice
+      // versa) — move the host there now instead of leaving it stranded in
+      // whatever fallback list it first landed in.
+      if (underSettingsHub) {
+        var custBtn2 = nav.querySelector('button[onclick*="settingstemplateTab"]');
+        var custLi2 = custBtn2 ? custBtn2.closest("li") : null;
+        if (custLi2 && custLi2.nextSibling) nav.insertBefore(host, custLi2.nextSibling);
+        else nav.appendChild(host);
+      } else {
+        nav.appendChild(host);
+      }
     }
     var defs = loadDefs().filter(userCanSee).filter(function (m) { return menuVisible(m.tabId); });
     if (!defs.length) { host.innerHTML = ""; return; }
@@ -115415,5 +115770,1105 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   }
   setTimeout(wrapRecurring, 3000);
   setTimeout(wrapRecurring, 6000);
+})();
+</script>
+
+<!-- =============== ACX PATCH 9: (1) Custom Modules moved to Settings Hub as its own page
+     (2) Custom Reports category + builder under Document Reports =============== -->
+<script>
+/* ---------------------------------------------------------------------------
+   1) CUSTOM MODULES -> own page under Settings Hub (no longer in Preferences)
+   ------------------------------------------------------------------------ */
+(function () {
+  "use strict";
+  if (window.__acxCustomModulesPage) return;
+  window.__acxCustomModulesPage = true;
+
+  /* This app can set window.blockRender, which neutralises setTimeout/setInterval.
+     Use an rAF-based timer so the patch keeps working either way. */
+  function later(ms, fn) {
+    var t0 = Date.now();
+    (function tick() {
+      if (Date.now() - t0 >= ms) { try { fn(); } catch (e) { console.warn(e); } return; }
+      if (window.requestAnimationFrame) window.requestAnimationFrame(tick);
+      else window.setTimeout(tick, 40);
+    })();
+  }
+  function every(ms, fn) { later(ms, function () { try { fn(); } catch (e) {} every(ms, fn); }); }
+
+  var DEFS_KEY = "customModules";
+  var TAB_ID = "customModulesTab";
+  var ROLES = ["admin", "sales", "account", "procure", "store", "audit", "hr", "custom"];
+  var FIELD_TYPES = [["text", "Text"], ["number", "Number"], ["date", "Date"], ["dropdown", "Dropdown"], ["checkbox", "Checkbox"], ["textarea", "Long text"]];
+
+  function loadDefs() { try { return JSON.parse(localStorage.getItem(DEFS_KEY) || "[]") || []; } catch (e) { return []; } }
+  function saveDefs(d) { localStorage.setItem(DEFS_KEY, JSON.stringify(d)); }
+  function dataKey(id) { return "customModuleData_" + id; }
+  function itemCount(id) { try { return (JSON.parse(localStorage.getItem(dataKey(id)) || "[]") || []).length; } catch (e) { return 0; } }
+  function esc(s) {
+    return String(s === undefined || s === null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+    });
+  }
+  function slugify(s) {
+    return String(s || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || ("mod_" + Date.now());
+  }
+  function fkey(label, i) { return "f" + i + "_" + String(label || "field").toLowerCase().replace(/[^a-z0-9]+/g, "_"); }
+
+  /* ---- Remove the legacy "Custom Modules" tab that used to live inside Preferences ---- */
+  function stripPreferencesVersion() {
+    try {
+      var tabs = document.getElementById("prefSectionTabs");
+      if (tabs) {
+        var btn = tabs.querySelector('[data-sec="secCustomModules"]');
+        if (btn) btn.parentNode.removeChild(btn);
+      }
+      ["acxCustomModulesBox", "secCustomModules", "acxFieldBuilder"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el && !el.closest("#" + TAB_ID)) el.parentNode.removeChild(el);
+      });
+      var prefs = document.getElementById("preferencesTab");
+      if (prefs) {
+        prefs.querySelectorAll("#acxCustomModulesBox, #acxFieldBuilder").forEach(function (el) {
+          el.parentNode.removeChild(el);
+        });
+      }
+    } catch (e) {}
+  }
+
+  /* ---- Sidebar entry: Settings Hub -> right after Preferences ---- */
+  function ensureSidebarEntry() {
+    var ul = document.getElementById("settingsSubmenu2");
+    if (!ul) {
+      var pb = document.querySelector('button[onclick*="preferencesTab"]');
+      ul = pb ? pb.closest("ul") : null;
+    }
+    if (!ul) return;
+    if (document.getElementById("acxCustomModulesMenuItem")) return;
+    var li = document.createElement("li");
+    li.id = "acxCustomModulesMenuItem";
+    li.innerHTML = '<button onclick="showTab(\'' + TAB_ID + '\')" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Custom Modules</button>';
+    var prefBtn = ul.querySelector('button[onclick*="preferencesTab"]');
+    var prefLi = prefBtn ? prefBtn.closest("li") : null;
+    if (prefLi && prefLi.parentNode === ul) ul.insertBefore(li, prefLi.nextSibling);
+    else ul.appendChild(li);
+  }
+
+  /* ---- The page itself ---- */
+  var draft = [];
+
+  function ensurePanel() {
+    var area = document.getElementById("contentArea");
+    if (!area) return null;
+    var panel = document.getElementById(TAB_ID);
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = TAB_ID;
+      panel.className = "hidden p-4";
+      area.appendChild(panel);
+    }
+    return panel;
+  }
+
+  function draftHtml() {
+    if (!draft.length) return '<p class="text-xs text-gray-500">No fields added yet. Add at least one field, e.g. "Item" (Text) and "Qty" (Number).</p>';
+    return '<div class="flex flex-wrap gap-2">' + draft.map(function (f, i) {
+      return '<span class="inline-flex items-center gap-2 bg-white border rounded px-2 py-1 text-xs">' +
+        '<b>' + esc(f.label) + '</b> <em class="text-gray-500">' + esc(f.type) +
+        (f.type === "dropdown" ? " (" + esc((f.options || []).join(" / ")) + ")" : "") + "</em>" +
+        (f.required ? '<span class="text-red-600 font-bold">*required</span>' : "") +
+        '<button type="button" data-dfmove="' + i + '" data-dir="-1" class="text-gray-500">\u2190</button>' +
+        '<button type="button" data-dfmove="' + i + '" data-dir="1" class="text-gray-500">\u2192</button>' +
+        '<button type="button" data-dfdel="' + i + '" class="text-red-600">\u2715</button></span>';
+    }).join("") + "</div>";
+  }
+
+  function render() {
+    var panel = ensurePanel();
+    if (!panel) return;
+    var defs = loadDefs();
+
+    var rows = defs.length ? defs.map(function (m) {
+      var fl = (m.fields && m.fields.length) ? m.fields : [{ label: "Item", type: "text" }, { label: "Qty", type: "number" }];
+      return '<tr class="hover:bg-blue-50">' +
+        '<td class="border px-2 py-1">' + esc(m.icon || "\uD83E\uDDE9") + " " + esc(m.name) + "</td>" +
+        '<td class="border px-2 py-1 text-xs text-gray-600">' + fl.map(function (f) {
+          return esc(f.label) + " (" + esc(f.type) + (f.required ? "*" : "") + ")";
+        }).join(", ") + "</td>" +
+        '<td class="border px-2 py-1 text-center">' + itemCount(m.id) + "</td>" +
+        '<td class="border px-2 py-1 text-xs">' + esc(m.access && m.access.length ? m.access.join(", ") : "everyone") + "</td>" +
+        '<td class="border px-2 py-1 text-center whitespace-nowrap">' +
+        '<button type="button" data-open="' + esc(m.id) + '" class="bg-blue-900 text-white px-2 py-1 rounded text-xs mr-1">Open</button>' +
+        '<button type="button" data-ren="' + esc(m.id) + '" class="border px-2 py-1 rounded text-xs mr-1">Rename</button>' +
+        '<button type="button" data-del="' + esc(m.id) + '" class="bg-red-600 text-white px-2 py-1 rounded text-xs">Delete</button>' +
+        "</td></tr>";
+    }).join("") : '<tr><td colspan="5" class="border px-2 py-4 text-center text-gray-500">No custom modules yet \u2014 build your first one below.</td></tr>';
+
+    panel.innerHTML =
+      '<h2 class="text-2xl font-bold text-blue-900 mb-1">\uD83E\uDDE9 Custom Modules</h2>' +
+      '<p class="text-sm text-gray-600 mb-4">Build your own module with as many fields as you need. Every module gets a full data grid ' +
+      '(search, sort, paging, add / edit / copy / delete, CSV import &amp; export and print) generated from the fields you define.</p>' +
+
+      '<div class="bg-white border rounded overflow-x-auto mb-6"><table class="w-full text-sm">' +
+      '<thead class="bg-gray-100"><tr>' +
+      '<th class="border px-2 py-2 text-left">Module</th><th class="border px-2 py-2 text-left">Fields</th>' +
+      '<th class="border px-2 py-2 text-center">Records</th><th class="border px-2 py-2 text-left">Access</th>' +
+      '<th class="border px-2 py-2 text-center w-56">Actions</th></tr></thead><tbody>' + rows + "</tbody></table></div>" +
+
+      '<div class="bg-gray-50 border rounded p-4">' +
+      '<h3 class="font-bold text-blue-900 mb-3">\u2795 Create a new module</h3>' +
+      '<div class="flex flex-wrap items-center gap-2 mb-3">' +
+      '<input id="acxCMName" placeholder="Module name (e.g. Wishlist)" class="border p-2 rounded text-sm">' +
+      '<input id="acxCMIcon" placeholder="Icon (optional, e.g. \uD83C\uDF81)" class="border p-2 rounded text-sm w-44">' +
+      "</div>" +
+      '<div class="mb-3 text-sm">Limit access to: ' +
+      ROLES.map(function (r) { return '<label class="mr-3"><input type="checkbox" class="acxCMAccess" value="' + r + '"> ' + r + "</label>"; }).join("") +
+      '<span class="text-xs text-gray-500">(leave all unchecked = everyone)</span></div>' +
+
+      '<div class="p-3 border rounded bg-white mb-3">' +
+      '<h4 class="font-semibold text-sm mb-2">Fields for this module</h4>' +
+      '<div class="flex flex-wrap items-end gap-2 mb-3">' +
+      '<div><label class="block text-xs text-gray-600">Field name</label>' +
+      '<input id="acxCMFldLabel" placeholder="e.g. Priority" class="border p-2 rounded text-sm"></div>' +
+      '<div><label class="block text-xs text-gray-600">Type</label>' +
+      '<select id="acxCMFldType" class="border p-2 rounded text-sm">' +
+      FIELD_TYPES.map(function (t) { return '<option value="' + t[0] + '">' + t[1] + "</option>"; }).join("") + "</select></div>" +
+      '<div id="acxCMFldOptWrap" class="hidden"><label class="block text-xs text-gray-600">Dropdown options (comma separated)</label>' +
+      '<input id="acxCMFldOptions" placeholder="Low, Medium, High" class="border p-2 rounded text-sm"></div>' +
+      '<label class="text-sm flex items-center gap-1 pb-2"><input type="checkbox" id="acxCMFldReq"> Required</label>' +
+      '<button type="button" id="acxCMFldAdd" class="bg-blue-600 text-white text-sm px-3 py-2 rounded">+ Add Field</button>' +
+      "</div>" +
+      '<div id="acxCMDraft">' + draftHtml() + "</div></div>" +
+
+      '<button type="button" id="acxCMCreate" class="bg-blue-900 text-white font-bold px-4 py-2 rounded hover:bg-blue-800">\uD83D\uDCBE Create Module</button>' +
+      "</div>";
+
+    wire(panel);
+  }
+
+  function wire(panel) {
+    var typeSel = panel.querySelector("#acxCMFldType");
+    var optWrap = panel.querySelector("#acxCMFldOptWrap");
+    if (typeSel) typeSel.onchange = function () { optWrap.classList.toggle("hidden", typeSel.value !== "dropdown"); };
+
+    var addBtn = panel.querySelector("#acxCMFldAdd");
+    if (addBtn) addBtn.onclick = function () {
+      var labelEl = panel.querySelector("#acxCMFldLabel");
+      var label = (labelEl.value || "").trim();
+      if (!label) { alert("Enter a field name."); return; }
+      var f = { key: fkey(label, draft.length), label: label, type: typeSel.value, required: !!panel.querySelector("#acxCMFldReq").checked };
+      if (f.type === "dropdown") {
+        f.options = (panel.querySelector("#acxCMFldOptions").value || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+        if (!f.options.length) { alert("Add at least one dropdown option."); return; }
+      }
+      draft.push(f);
+      labelEl.value = "";
+      panel.querySelector("#acxCMFldOptions").value = "";
+      panel.querySelector("#acxCMFldReq").checked = false;
+      var host = panel.querySelector("#acxCMDraft");
+      host.innerHTML = draftHtml();
+      wireDraft(panel);
+    };
+    wireDraft(panel);
+
+    var create = panel.querySelector("#acxCMCreate");
+    if (create) create.onclick = function () {
+      var name = (panel.querySelector("#acxCMName").value || "").trim();
+      if (!name) { alert("Enter a module name."); return; }
+      if (!draft.length) { alert("Add at least one field to the module."); return; }
+      var access = Array.prototype.slice.call(panel.querySelectorAll(".acxCMAccess:checked")).map(function (c) { return c.value; });
+      var id = slugify(name) + "_" + Date.now().toString(36);
+      var defs = loadDefs();
+      defs.push({
+        id: id, tabId: "custom_" + id, name: name,
+        icon: (panel.querySelector("#acxCMIcon").value || "").trim(),
+        access: access, fields: draft.slice()
+      });
+      saveDefs(defs);
+      draft = [];
+      document.dispatchEvent(new CustomEvent("acxModulesChanged"));
+      render();
+      if (typeof window.__acxOpenCustomModule === "function") window.__acxOpenCustomModule(id);
+    };
+
+    panel.querySelectorAll("[data-open]").forEach(function (b) {
+      b.onclick = function () {
+        if (typeof window.__acxOpenCustomModule === "function") window.__acxOpenCustomModule(b.dataset.open);
+      };
+    });
+    panel.querySelectorAll("[data-ren]").forEach(function (b) {
+      b.onclick = function () {
+        var defs = loadDefs();
+        for (var i = 0; i < defs.length; i++) {
+          if (defs[i].id === b.dataset.ren) {
+            var n = prompt("New module name", defs[i].name);
+            if (!n || !n.trim()) return;
+            defs[i].name = n.trim();
+            saveDefs(defs);
+            document.dispatchEvent(new CustomEvent("acxModulesChanged"));
+            render();
+            return;
+          }
+        }
+      };
+    });
+    panel.querySelectorAll("[data-del]").forEach(function (b) {
+      b.onclick = function () {
+        if (!confirm("Delete this module and all its records?")) return;
+        var id = b.dataset.del;
+        saveDefs(loadDefs().filter(function (m) { return m.id !== id; }));
+        localStorage.removeItem(dataKey(id));
+        document.dispatchEvent(new CustomEvent("acxModulesChanged"));
+        render();
+      };
+    });
+  }
+
+  function wireDraft(panel) {
+    var host = panel.querySelector("#acxCMDraft");
+    if (!host) return;
+    host.querySelectorAll("[data-dfdel]").forEach(function (b) {
+      b.onclick = function () { draft.splice(parseInt(b.dataset.dfdel, 10), 1); host.innerHTML = draftHtml(); wireDraft(panel); };
+    });
+    host.querySelectorAll("[data-dfmove]").forEach(function (b) {
+      b.onclick = function () {
+        var i = parseInt(b.dataset.dfmove, 10), j = i + parseInt(b.dataset.dir, 10);
+        if (j < 0 || j >= draft.length) return;
+        var t = draft[i]; draft[i] = draft[j]; draft[j] = t;
+        host.innerHTML = draftHtml(); wireDraft(panel);
+      };
+    });
+  }
+
+  window.__acxRenderCustomModulesPage = render;
+
+  /* ---- open the page through the normal showTab flow ---- */
+  function hookShowTab() {
+    if (typeof window.showTab !== "function") return later(400, hookShowTab);
+    if (window.showTab.__acxCMPage) return;
+    var orig = window.showTab;
+    var wrapped = function (id) {
+      if (id === TAB_ID) ensurePanel();
+      var r = orig.apply(this, arguments);
+      if (id === TAB_ID) {
+        try {
+          render();
+          var p = document.getElementById(TAB_ID);
+          document.querySelectorAll("#contentArea > div").forEach(function (el) { el.classList.add("hidden"); });
+          if (p) p.classList.remove("hidden");
+        } catch (e) { console.warn("[acx-custom-modules]", e); }
+      }
+      return r;
+    };
+    wrapped.__acxCMPage = true;
+    window.showTab = wrapped;
+  }
+
+  function init() {
+    stripPreferencesVersion();
+    ensureSidebarEntry();
+    ensurePanel();
+    hookShowTab();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+  window.addEventListener("load", init);
+  every(900, function () { stripPreferencesVersion(); ensureSidebarEntry(); });
+  document.addEventListener("acxModulesChanged", function () {
+    if (document.getElementById(TAB_ID) && !document.getElementById(TAB_ID).classList.contains("hidden")) render();
+  });
+})();
+</script>
+
+<script>
+/* ---------------------------------------------------------------------------
+   2) CUSTOM REPORTS - new category right under "Document Reports"
+   ------------------------------------------------------------------------ */
+(function () {
+  "use strict";
+  if (window.__acxCustomReports) return;
+  window.__acxCustomReports = true;
+
+  /* This app can set window.blockRender, which neutralises setTimeout/setInterval.
+     Use an rAF-based timer so the patch keeps working either way. */
+  function later(ms, fn) {
+    var t0 = Date.now();
+    (function tick() {
+      if (Date.now() - t0 >= ms) { try { fn(); } catch (e) { console.warn(e); } return; }
+      if (window.requestAnimationFrame) window.requestAnimationFrame(tick);
+      else window.setTimeout(tick, 40);
+    })();
+  }
+  function every(ms, fn) { later(ms, function () { try { fn(); } catch (e) {} every(ms, fn); }); }
+
+  var KEY = "acxCustomReports"; // [{id,name,base,baseLabel,cols:[i],labels:[]}]
+  var BUILDER_ID = "acxCustomReportBuilder";
+
+  function load() { try { return JSON.parse(localStorage.getItem(KEY) || "[]") || []; } catch (e) { return []; } }
+  function save(d) { localStorage.setItem(KEY, JSON.stringify(d)); }
+  function esc(s) {
+    return String(s === undefined || s === null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+    });
+  }
+  function csvCell(v) { return '"' + String(v === undefined || v === null ? "" : v).replace(/"/g, '""') + '"'; }
+
+  /* ---------- read the real, live table of any built-in report ---------- */
+  function mainTable(panel) {
+    var tables = Array.prototype.slice.call(panel.querySelectorAll("table"))
+      .filter(function (t) { return t.tHead || t.rows.length > 1; });
+    if (!tables.length) return null;
+    return tables.sort(function (a, b) { return b.rows.length - a.rows.length; })[0];
+  }
+  function headerCells(table) {
+    var row = (table.tHead && table.tHead.rows[table.tHead.rows.length - 1]) || table.rows[0];
+    return row ? Array.prototype.slice.call(row.cells) : [];
+  }
+  function snapshot(table) {
+    var heads = headerCells(table).map(function (c, i) { return c.textContent.trim() || "Column " + (i + 1); });
+    var body = table.tBodies && table.tBodies[0] ? table.tBodies[0].rows : [];
+    var rows = Array.prototype.slice.call(body).map(function (r) {
+      return Array.prototype.slice.call(r.cells).map(function (c) { return c.textContent.trim(); });
+    });
+    return { heads: heads, rows: rows };
+  }
+  function visibleReportId() {
+    var vis = Array.prototype.slice.call(document.querySelectorAll(".report-view"))
+      .filter(function (p) { return !p.classList.contains("hidden"); });
+    return vis.length ? vis[vis.length - 1].id : "";
+  }
+  /* Opens the base report (which runs its own renderer against live data),
+     harvests its table, then puts the previous panel back. */
+  function harvest(baseId, cb) {
+    var base = document.getElementById(baseId);
+    if (!base) { cb(null); return; }
+    var back = visibleReportId();
+    try { if (typeof window.showReport === "function") window.showReport(baseId); } catch (e) {}
+    later(500, function () {
+      var t = mainTable(base);
+      var data = t ? snapshot(t) : null;
+      document.querySelectorAll(".report-view").forEach(function (p) { p.classList.add("hidden"); });
+      var b = back && document.getElementById(back);
+      if (b) b.classList.remove("hidden");
+      cb(data);
+    });
+  }
+
+  /* ---------- list every existing report from the sidebar ---------- */
+  function baseReports() {
+    var out = [], seen = {};
+    document.querySelectorAll(".reports-sidebar-list li[onclick]").forEach(function (li) {
+      var m = /showReport\(\s*['"]([^'"]+)['"]/.exec(li.getAttribute("onclick") || "");
+      if (!m) return;
+      var id = m[1];
+      if (id === "reportsHome" || id === BUILDER_ID || /^acxcr_/.test(id) || seen[id]) return;
+      seen[id] = 1;
+      out.push({ id: id, label: (li.textContent || id).replace(/^[^\w(]+/, "").trim() });
+    });
+    return out;
+  }
+
+  /* ---------- panels ---------- */
+  function reportHost() {
+    var any = document.querySelector(".report-view");
+    return any ? any.parentNode : null;
+  }
+  function ensurePanel(id) {
+    var host = reportHost();
+    if (!host) return null;
+    var p = document.getElementById(id);
+    if (!p) {
+      p = document.createElement("div");
+      p.id = id;
+      p.className = "report-view hidden p-4";
+      host.appendChild(p);
+    }
+    return p;
+  }
+
+  /* ---------- sidebar category ---------- */
+  function ensureSidebar() {
+    var list = document.querySelector(".reports-sidebar-list");
+    if (!list) return;
+    var docChildren = list.querySelector('ul.rep-cat-children[data-cat="cat_documentReports"]');
+    var header = list.querySelector('li.rep-cat-header[data-cat="cat_customReports"]');
+    var children = list.querySelector('ul.rep-cat-children[data-cat="cat_customReports"]');
+    var defs = load();
+
+    if (!header) {
+      header = document.createElement("li");
+      header.className = "rep-cat-header";
+      header.setAttribute("data-cat", "cat_customReports");
+      header.setAttribute("onclick", "toggleReportCat(this)");
+      header.innerHTML = '<span class="rep-cat-caret">\u25B6</span> <span class="rep-cat-title">Custom Reports</span> <span class="rep-cat-count">(0)</span>';
+    }
+    if (!children) {
+      children = document.createElement("ul");
+      children.className = "rep-cat-children";
+      children.setAttribute("data-cat", "cat_customReports");
+      children.style.display = "none";
+    }
+    if (docChildren) {
+      if (docChildren.nextSibling !== header) list.insertBefore(header, docChildren.nextSibling);
+      if (header.nextSibling !== children) list.insertBefore(children, header.nextSibling);
+    } else {
+      if (header.parentNode !== list) list.appendChild(header);
+      if (children.parentNode !== list) list.appendChild(children);
+    }
+
+    var cnt = header.querySelector(".rep-cat-count");
+    if (cnt) cnt.textContent = "(" + defs.length + ")";
+
+    children.innerHTML = defs.map(function (d) {
+      return '<li onclick="showReport(\'' + esc(d.id) + '\', this)">\uD83D\uDCC1 ' + esc(d.name) + "</li>";
+    }).join("") +
+      '<li onclick="showReport(\'' + BUILDER_ID + '\', this)" class="font-semibold">\u2795 Build a Custom Report</li>';
+
+    defs.forEach(function (d) { ensurePanel(d.id); });
+    ensureBuilderPanel();
+  }
+
+  /* ---------- builder ---------- */
+  var pending = null; // {base, baseLabel, data}
+
+  function ensureBuilderPanel() {
+    var p = ensurePanel(BUILDER_ID);
+    if (p && !p.dataset.acxBuilt) { p.dataset.acxBuilt = "1"; renderBuilder(); }
+    return p;
+  }
+
+  function renderBuilder() {
+    var p = ensurePanel(BUILDER_ID);
+    if (!p) return;
+    var list = baseReports();
+    var defs = load();
+    p.innerHTML =
+      '<h2 class="text-2xl font-bold text-blue-900 mb-1">\u2795 Build a Custom Report</h2>' +
+      '<p class="text-sm text-gray-600 mb-4">Pick any existing report as the base, choose the columns you want, and save it as a ' +
+      "permanent report with its own sidebar entry, Refresh, Print and CSV export.</p>" +
+      '<div class="bg-gray-50 border rounded p-4 mb-4">' +
+      '<div class="flex flex-wrap items-end gap-2 mb-3">' +
+      '<div><label class="block text-xs text-gray-600">Base report</label>' +
+      '<select id="acxCRBase" class="border p-2 rounded text-sm min-w-64">' +
+      list.map(function (r) { return '<option value="' + esc(r.id) + '">' + esc(r.label) + "</option>"; }).join("") +
+      "</select></div>" +
+      '<div><label class="block text-xs text-gray-600">Report name</label>' +
+      '<input id="acxCRName" placeholder="e.g. Invoices \u2013 my columns" class="border p-2 rounded text-sm"></div>' +
+      '<button type="button" id="acxCRLoad" class="bg-blue-900 text-white px-3 py-2 rounded text-sm">\uD83D\uDD0E Load columns</button>' +
+      "</div>" +
+      '<div id="acxCRCols" class="text-sm text-gray-500">Choose a base report and click \u201cLoad columns\u201d.</div>' +
+      '<div id="acxCRSaveWrap" class="mt-3 hidden">' +
+      '<button type="button" id="acxCRSave" class="bg-green-700 text-white font-bold px-4 py-2 rounded">\uD83D\uDCBE Save Custom Report</button></div>' +
+      "</div>" +
+      (defs.length
+        ? '<div class="bg-white border rounded overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-100"><tr>' +
+        '<th class="border px-2 py-2 text-left">Custom report</th><th class="border px-2 py-2 text-left">Based on</th>' +
+        '<th class="border px-2 py-2 text-left">Columns</th><th class="border px-2 py-2 text-center w-40">Actions</th></tr></thead><tbody>' +
+        defs.map(function (d) {
+          return "<tr><td class=\"border px-2 py-1\">" + esc(d.name) + "</td><td class=\"border px-2 py-1\">" + esc(d.baseLabel || d.base) + "</td>" +
+            '<td class="border px-2 py-1 text-xs text-gray-600">' + esc((d.labels || []).join(", ")) + "</td>" +
+            '<td class="border px-2 py-1 text-center whitespace-nowrap">' +
+            '<button type="button" data-open="' + esc(d.id) + '" class="bg-blue-900 text-white px-2 py-1 rounded text-xs mr-1">Open</button>' +
+            '<button type="button" data-del="' + esc(d.id) + '" class="bg-red-600 text-white px-2 py-1 rounded text-xs">Delete</button></td></tr>';
+        }).join("") + "</tbody></table></div>"
+        : "");
+
+    p.querySelector("#acxCRLoad").onclick = function () {
+      var sel = p.querySelector("#acxCRBase");
+      var base = sel.value;
+      var baseLabel = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : base;
+      var host = p.querySelector("#acxCRCols");
+      host.innerHTML = '<span class="text-gray-500">Reading \u201c' + esc(baseLabel) + "\u201d data\u2026</span>";
+      harvest(base, function (data) {
+        document.querySelectorAll(".report-view").forEach(function (x) { x.classList.add("hidden"); });
+        p.classList.remove("hidden");
+        if (!data || !data.heads.length) {
+          host.innerHTML = '<span class="text-red-600">That report has no data table to build from. Open it once, then try again.</span>';
+          return;
+        }
+        pending = { base: base, baseLabel: baseLabel, data: data };
+        host.innerHTML =
+          '<p class="mb-2 text-gray-700">Columns available in <b>' + esc(baseLabel) + "</b> (" + data.rows.length + " data row(s)):</p>" +
+          '<div class="flex flex-wrap gap-3">' + data.heads.map(function (h, i) {
+            return '<label class="flex items-center gap-1 border rounded px-2 py-1 bg-white"><input type="checkbox" class="acxCRCol" value="' + i + '" checked> ' + esc(h) + "</label>";
+          }).join("") + "</div>";
+        p.querySelector("#acxCRSaveWrap").classList.remove("hidden");
+      });
+    };
+
+    p.querySelector("#acxCRSave").onclick = function () {
+      if (!pending) { alert("Load the base report columns first."); return; }
+      var name = (p.querySelector("#acxCRName").value || "").trim();
+      if (!name) { alert("Give the report a name."); return; }
+      var cols = Array.prototype.slice.call(p.querySelectorAll(".acxCRCol:checked")).map(function (c) { return parseInt(c.value, 10); });
+      if (!cols.length) { alert("Select at least one column."); return; }
+      var def = {
+        id: "acxcr_" + Date.now().toString(36),
+        name: name, base: pending.base, baseLabel: pending.baseLabel,
+        cols: cols, labels: cols.map(function (i) { return pending.data.heads[i]; })
+      };
+      var defs = load(); defs.push(def); save(defs);
+      pending = null;
+      ensureSidebar();
+      renderBuilder();
+      openCustom(def.id);
+    };
+
+    p.querySelectorAll("[data-open]").forEach(function (b) { b.onclick = function () { openCustom(b.dataset.open); }; });
+    p.querySelectorAll("[data-del]").forEach(function (b) {
+      b.onclick = function () {
+        if (!confirm("Delete this custom report?")) return;
+        save(load().filter(function (d) { return d.id !== b.dataset.del; }));
+        var el = document.getElementById(b.dataset.del);
+        if (el) el.parentNode.removeChild(el);
+        ensureSidebar();
+        renderBuilder();
+      };
+    });
+  }
+
+  /* ---------- custom report page ---------- */
+  function defOf(id) { return load().filter(function (d) { return d.id === id; })[0]; }
+
+  function renderCustom(id) {
+    var def = defOf(id);
+    var p = ensurePanel(id);
+    if (!def || !p) return;
+    p.innerHTML =
+      '<div class="flex flex-wrap items-center justify-between gap-2 mb-3">' +
+      '<div><h2 class="text-2xl font-bold text-blue-900">\uD83D\uDCC1 ' + esc(def.name) + "</h2>" +
+      '<p class="text-xs text-gray-500">Live data from <b>' + esc(def.baseLabel || def.base) + "</b></p></div>" +
+      '<div class="flex gap-2">' +
+      '<button type="button" data-role="refresh" class="bg-blue-900 text-white px-3 py-2 rounded text-sm">\uD83D\uDD04 Refresh</button>' +
+      '<button type="button" data-role="print" class="border px-3 py-2 rounded text-sm bg-white hover:bg-gray-100">\uD83D\uDDA8 Print</button>' +
+      '<button type="button" data-role="csv" class="border px-3 py-2 rounded text-sm bg-white hover:bg-gray-100">\u2B07\uFE0F Export CSV</button>' +
+      "</div></div>" +
+      '<div data-role="body" class="text-sm text-gray-500">Loading live data\u2026</div>';
+
+    p.querySelector('[data-role="refresh"]').onclick = function () { renderCustom(id); };
+    p.querySelector('[data-role="print"]').onclick = function () { printCustom(def, p); };
+    p.querySelector('[data-role="csv"]').onclick = function () { csvCustom(def, p); };
+
+    harvest(def.base, function (data) {
+      document.querySelectorAll(".report-view").forEach(function (x) { x.classList.add("hidden"); });
+      p.classList.remove("hidden");
+      var body = p.querySelector('[data-role="body"]');
+      if (!body) return;
+      if (!data) { body.innerHTML = '<span class="text-red-600">The base report returned no data table.</span>'; return; }
+      var cols = def.cols.filter(function (i) { return i < data.heads.length; });
+      var heads = cols.map(function (i) { return data.heads[i]; });
+      body.innerHTML =
+        '<div class="overflow-x-auto bg-white border rounded"><table class="w-full text-sm" data-role="table">' +
+        '<thead class="bg-gray-100"><tr>' + heads.map(function (h) { return '<th class="border px-2 py-2 text-left">' + esc(h) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+        (data.rows.length ? data.rows.map(function (r) {
+          return "<tr>" + cols.map(function (i) { return '<td class="border px-2 py-1">' + esc(r[i] === undefined ? "" : r[i]) + "</td>"; }).join("") + "</tr>";
+        }).join("") : '<tr><td class="border px-2 py-4 text-center text-gray-500" colspan="' + heads.length + '">No data</td></tr>') +
+        "</tbody></table></div>" +
+        '<p class="text-xs text-gray-500 mt-2">' + data.rows.length + " row(s) \u00b7 generated " + new Date().toLocaleString() + "</p>";
+    });
+  }
+
+  function tableOf(panel) { return panel.querySelector('table[data-role="table"]'); }
+
+  function csvCustom(def, panel) {
+    var t = tableOf(panel);
+    if (!t) { alert("Refresh the report first."); return; }
+    var lines = Array.prototype.slice.call(t.rows).map(function (r) {
+      return Array.prototype.slice.call(r.cells).map(function (c) { return csvCell(c.textContent.trim()); }).join(",");
+    });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+    a.download = def.name.replace(/\s+/g, "_") + ".csv";
+    a.click();
+  }
+
+  function printCustom(def, panel) {
+    var t = tableOf(panel);
+    if (!t) { alert("Refresh the report first."); return; }
+    var w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write('<html><head><title>' + esc(def.name) + "</title><style>body{font-family:Arial;padding:20px}" +
+      "table{width:100%;border-collapse:collapse}td,th{border:1px solid #999;padding:6px;font-size:12px;text-align:left}</style></head><body>" +
+      "<h2>" + esc(def.name) + "</h2><p>" + esc(def.baseLabel || def.base) + " \u00b7 " + new Date().toLocaleString() + "</p>" +
+      t.outerHTML + "</body></html>");
+    w.document.close(); w.focus(); w.print();
+  }
+
+  function openCustom(id) {
+    var p = ensurePanel(id);
+    if (!p) return;
+    document.querySelectorAll(".report-view").forEach(function (x) { x.classList.add("hidden"); });
+    p.classList.remove("hidden");
+    renderCustom(id);
+  }
+  window.__acxOpenCustomReport = openCustom;
+
+  /* ---------- route sidebar clicks through showReport ---------- */
+  function hookShowReport() {
+    if (typeof window.showReport !== "function") return later(400, hookShowReport);
+    if (window.showReport.__acxCR) return;
+    var orig = window.showReport;
+    var wrapped = function (id, el) {
+      if (id === BUILDER_ID) {
+        ensureBuilderPanel();
+        document.querySelectorAll(".report-view").forEach(function (x) { x.classList.add("hidden"); });
+        document.querySelectorAll(".reports-sidebar li").forEach(function (li) { li.classList.remove("active"); });
+        if (el) el.classList.add("active");
+        renderBuilder();
+        document.getElementById(BUILDER_ID).classList.remove("hidden");
+        return;
+      }
+      if (defOf(id)) {
+        document.querySelectorAll(".reports-sidebar li").forEach(function (li) { li.classList.remove("active"); });
+        if (el) el.classList.add("active");
+        openCustom(id);
+        return;
+      }
+      return orig.apply(this, arguments);
+    };
+    wrapped.__acxCR = true;
+    wrapped.__stdWrapped = true;      // keep the standard filter bar from re-wrapping us
+    wrapped.__acxToolsWrapped = true; // custom reports ship their own toolbar
+    window.showReport = wrapped;
+  }
+
+  function init() { ensureSidebar(); hookShowReport(); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+  window.addEventListener("load", init);
+  var n = 0;
+  (function sweep() { later(1500, function () { init(); if (++n <= 10) sweep(); }); })();
+})();
+</script>
+
+<!-- =============== ACX PATCH 10: make "Custom Modules" visible in Settings Hub ===============
+     Cause: filterSidebarByRole() hides every sidebar button whose showTab() id is not in the
+     role/plan allow-lists. "customModulesTab" was never registered there, so the menu item was
+     created by Patch 9 and then immediately hidden again.
+     Fix: register the tab in submoduleAccess / APP_ALL_MODULES / ALL_MODULES / rolePermissions,
+     and keep the sidebar item unhidden.                                                       -->
+<script>
+(function () {
+  "use strict";
+  if (window.__acxCustomModulesVisible) return;
+  window.__acxCustomModulesVisible = true;
+
+  var TAB_ID = "customModulesTab";
+
+  function register() {
+    try {
+      if (typeof submoduleAccess === "object" && submoduleAccess && !submoduleAccess[TAB_ID]) {
+        submoduleAccess[TAB_ID] = [true, true, true, true, true, true]; // every plan
+      }
+    } catch (e) {}
+    try {
+      if (typeof APP_ALL_MODULES !== "undefined" && Array.isArray(APP_ALL_MODULES) &&
+          APP_ALL_MODULES.indexOf(TAB_ID) === -1) APP_ALL_MODULES.push(TAB_ID);
+    } catch (e) {}
+    try {
+      if (typeof ALL_MODULES !== "undefined" && Array.isArray(ALL_MODULES) &&
+          ALL_MODULES.indexOf(TAB_ID) === -1) ALL_MODULES.push(TAB_ID);
+    } catch (e) {}
+    try {
+      if (typeof rolePermissions === "object" && rolePermissions) {
+        Object.keys(rolePermissions).forEach(function (r) {
+          var list = rolePermissions[r];
+          if (Array.isArray(list) && list.indexOf(TAB_ID) === -1) list.push(TAB_ID);
+        });
+      }
+    } catch (e) {}
+    // Users saved with an explicit custom module list also need it.
+    try {
+      var lu = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+      if (lu && Array.isArray(lu.modules) && lu.modules.length &&
+          lu.modules.indexOf(TAB_ID) === -1) {
+        lu.modules.push(TAB_ID);
+        localStorage.setItem("loggedInUser", JSON.stringify(lu));
+      }
+    } catch (e) {}
+  }
+
+  function unhide() {
+    try {
+      var btn = document.querySelector('button[onclick*="' + TAB_ID + '"]');
+      if (btn) {
+        btn.classList.remove("hidden");
+        btn.style.removeProperty("display");
+        var li = btn.closest("li");
+        if (li) li.classList.remove("hidden");
+        var ul = btn.closest("ul");
+        if (ul && ul.id === "settingsSubmenu2") {
+          var parentBtn = ul.previousElementSibling;
+          if (parentBtn) parentBtn.classList.remove("hidden");
+        }
+      }
+      var panel = document.getElementById(TAB_ID);
+      if (panel) panel.style.removeProperty("display");
+    } catch (e) {}
+  }
+
+  register();
+  unhide();
+  document.addEventListener("DOMContentLoaded", function () { register(); unhide(); });
+  window.addEventListener("load", function () { register(); unhide(); });
+  setInterval(function () { register(); unhide(); }, 1000);
+})();
+</script>
+
+<!-- ===== PATCH 10: Costing ⇄ Bulk Costing ⇄ Price List linkage + Full Help ===== -->
+<script>
+(function () {
+  "use strict";
+  var PL = "priceList";
+
+  function readPL() { try { return JSON.parse(localStorage.getItem(PL) || "[]"); } catch (e) { return []; } }
+  function writePL(d) { localStorage.setItem(PL, JSON.stringify(d)); }
+  function num(v) { var n = parseFloat(String(v).replace(/[^0-9.\-]/g, "")); return isNaN(n) ? 0 : n; }
+  function today() { return new Date().toISOString().slice(0, 10); }
+
+  function warehouses() {
+    try { return JSON.parse(localStorage.getItem("warehouses") || "[]"); } catch (e) { return []; }
+  }
+
+  // Find every warehouse/inventory location holding this product
+  function findLocations(productName) {
+    var out = [];
+    if (!productName) return out;
+    warehouses().forEach(function (w) {
+      var inv = [];
+      try { inv = JSON.parse(localStorage.getItem("inventory_" + w.name) || "[]"); } catch (e) { inv = []; }
+      inv.forEach(function (it) {
+        if (it.name === productName || it.sku === productName) {
+          out.push({ warehouse: w.name, key: it.sku || it.name, name: it.name });
+        }
+      });
+    });
+    return out;
+  }
+
+  // Create / refresh a DRAFT price-list entry from a costing record
+  window.pushCostingDraftPrice = function (productName, costPrice, sellingPrice, source, ref) {
+    var locs = findLocations(productName);
+    if (!locs.length) return 0;
+    var list = readPL(), n = 0;
+
+    locs.forEach(function (loc) {
+      var existing = list.find(function (e) { return e.item === loc.key && e.warehouse === loc.warehouse; });
+      var history = (existing && existing.history) || [];
+      list = list.filter(function (e) { return !(e.item === loc.key && e.warehouse === loc.warehouse); });
+      list.push({
+        warehouse: loc.warehouse,
+        item: loc.key,
+        sellingPrice: num(sellingPrice),
+        costPrice: num(costPrice),
+        effectiveDate: today(),
+        status: "draft",
+        source: source || "Costing",
+        sourceRef: ref || "",
+        history: history
+      });
+      n++;
+    });
+
+    writePL(list);
+    try { if (typeof renderPriceListTable === "function") renderPriceListTable(); } catch (e) {}
+    return n;
+  };
+
+  /* ---------- 1. Single Costing → Price List draft ---------- */
+  function hookSaveCosting() {
+    if (typeof window.saveCosting !== "function" || window.saveCosting.__linked) return;
+    var orig = window.saveCosting;
+    var wrapped = function (editIndex) {
+      var r = orig.apply(this, arguments);
+      try {
+        var data = JSON.parse(localStorage.getItem("costingData") || "[]");
+        var e = editIndex !== null && editIndex !== undefined ? data[editIndex] : data[data.length - 1];
+        if (e && e.product) {
+          var unitCost = num(window.lastCostPerItem) || num(e.total);
+          var sell = num(e.discountedPrice) || num(e.sellingAdvanced) || num(e.sellingStandard);
+          var n = window.pushCostingDraftPrice(e.product, unitCost, sell, "Costing", e.date || "");
+          if (n) {
+            alert("✅ Costing saved.\n📝 Draft price created on the Price List for \"" + e.product + "\" in " +
+                  n + " warehouse(s).\nOpen Inventory → Price List, click Edit then Update Price to apply it to stock.");
+          } else {
+            alert("✅ Costing saved. ⚠️ \"" + e.product + "\" was not found in any warehouse, so no price draft was created.");
+          }
+        }
+      } catch (err) { console.warn("costing→price link", err); }
+      return r;
+    };
+    wrapped.__linked = true;
+    window.saveCosting = wrapped;
+  }
+
+  /* ---------- 2. Bulk Consignment → Price List drafts ---------- */
+  function bulkMargin() {
+    var el = document.getElementById("bulkDefaultMargin");
+    var m = el ? parseFloat(el.value) : NaN;
+    return isNaN(m) ? 30 : m;
+  }
+
+  function hookSaveBulk() {
+    if (typeof window.saveBulkConsignment !== "function" || window.saveBulkConsignment.__linked) return;
+    var orig = window.saveBulkConsignment;
+    var wrapped = function () {
+      var r = orig.apply(this, arguments);
+      try {
+        var rate = num(document.getElementById("exchangeRate") && document.getElementById("exchangeRate").value) || 1;
+        var currency = (document.getElementById("bulkCurrency") || {}).value || "KES";
+        var rows = [].slice.call(document.querySelectorAll("#bulkProductBody tr")).map(function (tr) {
+          return {
+            product: (tr.querySelector(".productSelect") || {}).value || "",
+            qty: num((tr.querySelector(".qty") || {}).value),
+            price: num((tr.querySelector(".price") || {}).value)
+          };
+        }).filter(function (x) { return x.product && x.qty > 0; });
+
+        if (!rows.length) return r;
+
+        var overheads = 0;
+        document.querySelectorAll("#bulkCostBody input[type=number]").forEach(function (i) { overheads += num(i.value); });
+        var totalQty = rows.reduce(function (s, x) { return s + x.qty; }, 0);
+        var overheadPerUnit = totalQty > 0 ? overheads / totalQty : 0;
+        var margin = bulkMargin();
+        var ref = (document.getElementById("consignmentName") || {}).value || "Bulk consignment";
+        var made = 0, missing = [];
+
+        rows.forEach(function (x) {
+          var buyKES = currency === "KES" ? x.price : x.price * rate;
+          var landed = buyKES + overheadPerUnit;
+          var sell = landed * (1 + margin / 100);
+          var n = window.pushCostingDraftPrice(x.product, landed, sell, "Bulk Costing", ref);
+          if (n) made += n; else missing.push(x.product);
+        });
+
+        alert("🚢 Bulk consignment linked to the Price List.\n📝 " + made + " draft price row(s) created at " +
+              margin + "% margin (landed cost = buying price + KSh " + overheadPerUnit.toFixed(2) + " overheads/unit)." +
+              (missing.length ? "\n⚠️ Not found in stock: " + missing.join(", ") : "") +
+              "\nOpen Inventory → Price List, Edit then Update Price to push them onto stock.");
+      } catch (err) { console.warn("bulk→price link", err); }
+      return r;
+    };
+    wrapped.__linked = true;
+    window.saveBulkConsignment = wrapped;
+  }
+
+  /* ---------- 3. Price List: approve draft on save + update stock ---------- */
+  function hookUpdatePrice() {
+    if (typeof window.updatePrice !== "function" || window.updatePrice.__linked) return;
+    var orig = window.updatePrice;
+    var wrapped = function () {
+      var whEl = document.getElementById("priceListWarehouseSelect");
+      var itEl = document.getElementById("priceItem");
+      var wh = whEl ? whEl.value : "";
+      var key = itEl ? itEl.value : "";
+      var before = readPL().find(function (e) { return e.item === key && e.warehouse === wh; });
+      var prevHistory = (before && before.history) || [];
+      var prevSnapshot = before ? { date: new Date().toISOString(), sellingPrice: num(before.sellingPrice), costPrice: num(before.costPrice) } : null;
+      var wasDraft = before && before.status === "draft";
+      var src = before && before.source;
+
+      var r = orig.apply(this, arguments);
+
+      try {
+        var list = readPL();
+        var e = list.find(function (x) { return x.item === key && x.warehouse === wh; });
+        if (e) {
+          e.status = "approved";
+          e.source = src || e.source || "Price List";
+          e.approvedOn = new Date().toISOString();
+          e.history = prevHistory.slice();
+          if (prevSnapshot) e.history.push(prevSnapshot);
+          writePL(list);
+
+          // make sure stock carries the approved price
+          var invKey = "inventory_" + wh;
+          var inv = JSON.parse(localStorage.getItem(invKey) || "[]");
+          var idx = inv.findIndex(function (i) { return i.sku === key || i.name === key; });
+          if (idx !== -1) {
+            inv[idx].sellPrice = num(e.sellingPrice);
+            inv[idx].buyPrice = num(e.costPrice);
+            inv[idx].price = num(e.sellingPrice);
+            localStorage.setItem(invKey, JSON.stringify(inv));
+            if (wasDraft) {
+              setTimeout(function () {
+                alert("✅ Draft from " + (src || "Costing") + " approved — stock price for \"" + key +
+                      "\" in " + wh + " updated to KSh " + num(e.sellingPrice).toFixed(2) + ".");
+              }, 50);
+            }
+          }
+          if (typeof renderPriceListTable === "function") renderPriceListTable();
+          if (typeof renderInventoryTable === "function") renderInventoryTable();
+        }
+      } catch (err) { console.warn("price approve", err); }
+      return r;
+    };
+    wrapped.__linked = true;
+    window.updatePrice = wrapped;
+  }
+
+  /* ---------- 4. Draft badges on the Price List table ---------- */
+  function decoratePriceRows() {
+    var tbody = document.getElementById("priceListTableBody");
+    if (!tbody) return;
+    var list = readPL();
+    [].slice.call(tbody.querySelectorAll("tr")).forEach(function (tr) {
+      if (tr.dataset.cstDone === "1") return;
+      var btn = tr.querySelector('button[onclick^="editPriceMerged"]');
+      if (!btn) return;
+      var m = /editPriceMerged\('([^']*)',\s*'([^']*)'\)/.exec(btn.getAttribute("onclick") || "");
+      if (!m) return;
+      var e = list.find(function (x) { return x.item === m[1] && x.warehouse === m[2]; });
+      if (!e) return;
+      var nameCell = tr.cells[1];
+      if (!nameCell) return;
+      var badge = document.createElement("span");
+      if (e.status === "draft") {
+        badge.className = "ml-2 px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 border border-amber-300";
+        badge.textContent = "Draft · " + (e.source || "Costing");
+        badge.title = (e.sourceRef || "") + " — Edit and Update Price to apply to stock";
+      } else if (e.status === "approved") {
+        badge.className = "ml-2 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 border border-green-300";
+        badge.textContent = "Applied to stock";
+      } else { return; }
+      nameCell.appendChild(badge);
+      tr.dataset.cstDone = "1";
+    });
+  }
+
+  function hookRenderPriceList() {
+    if (typeof window.renderPriceListTable !== "function" || window.renderPriceListTable.__linked) return;
+    var orig = window.renderPriceListTable;
+    var wrapped = function () {
+      var r = orig.apply(this, arguments);
+      setTimeout(decoratePriceRows, 0);
+      return r;
+    };
+    wrapped.__linked = true;
+    window.renderPriceListTable = wrapped;
+  }
+
+  /* ---------- 5. Full help panels on both costing tabs ---------- */
+  var HELP_SINGLE = [
+    "<h4 class='font-bold mb-1'>What this screen does</h4>",
+    "<p>Costing turns a purchase price plus every extra expense into a true unit cost, then prices it for sale.</p>",
+    "<h4 class='font-bold mt-3 mb-1'>Step by step</h4>",
+    "<ol class='list-decimal ml-5 space-y-1'>",
+    "<li><b>Choose Product</b> – pulled from stock; the buying price auto-fills from the item's last cost.</li>",
+    "<li><b>Quantity</b> – how many units the costs are spread over. Extra costs ÷ quantity = cost per item.</li>",
+    "<li><b>Add every extra cost</b> – freight, duty, clearing, labour, packaging, storage. Anything typed in a number box other than margin/markup/discount/quantity is treated as an extra cost.</li>",
+    "<li><b>Profit Margin %</b> – standard selling price = cost per item × (1 + margin ÷ 100).</li>",
+    "<li><b>Markup %</b> – advanced price = cost × (1 + markup ÷ 100). Use it when you price up from cost.</li>",
+    "<li><b>Target Margin %</b> – advanced price = cost ÷ (1 − target ÷ 100). Use it when the margin must be guaranteed after the sale.</li>",
+    "<li><b>Discount %</b> – trims the advanced price; the Effective Margin shows what you really keep.</li>",
+    "<li><b>Calculate</b>, review the grey summary box, then <b>Save</b>.</li>",
+    "</ol>",
+    "<h4 class='font-bold mt-3 mb-1'>The formulas</h4>",
+    "<ul class='list-disc ml-5 space-y-1'>",
+    "<li>Final cost = buying price + all extra costs</li>",
+    "<li>Cost per item = final cost ÷ quantity</li>",
+    "<li>Selling (standard) = cost per item × (1 + margin%)</li>",
+    "<li>Selling (advanced) = markup or target-margin price</li>",
+    "<li>After discount = advanced × (1 − discount%)</li>",
+    "<li>Effective margin = (after discount − cost per item) ÷ after discount × 100</li>",
+    "</ul>",
+    "<h4 class='font-bold mt-3 mb-1'>What happens after you save</h4>",
+    "<p>A <span class='px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 border border-amber-300'>Draft</span> row is created on <b>Inventory → Price List</b> for every warehouse holding that product, using the cost per item and the after-discount selling price. Nothing on stock changes yet. In Price List click <b>Edit</b>, adjust if needed, then <b>Update Price</b> – that approves the draft and writes the new buying and selling price straight onto the stock item.</p>",
+    "<h4 class='font-bold mt-3 mb-1'>Tips</h4>",
+    "<ul class='list-disc ml-5 space-y-1'>",
+    "<li>Margin and markup are not the same: 50% markup on cost 100 = 150 (33% margin).</li>",
+    "<li>Re-cost whenever duty, freight or the exchange rate moves – old prices quietly eat profit.</li>",
+    "<li>Every approval is stored in the price History on the Price List row.</li>",
+    "</ul>"
+  ].join("");
+
+  var HELP_BULK = [
+    "<h4 class='font-bold mb-1'>What this screen does</h4>",
+    "<p>Bulk costing spreads the cost of a whole consignment – freight, duty, IDF, RDL, excise, labour, packaging – across every unit in it, giving a true landed cost per product.</p>",
+    "<h4 class='font-bold mt-3 mb-1'>Step by step</h4>",
+    "<ol class='list-decimal ml-5 space-y-1'>",
+    "<li><b>Consignment reference</b> – the invoice or shipment number, so the price drafts can be traced back.</li>",
+    "<li><b>Currency and exchange rate</b> – enter the supplier's currency, then Update Exchange to convert buying prices to KES.</li>",
+    "<li><b>Add each product</b> with quantity and buying price. Totals and average cost per unit update live.</li>",
+    "<li><b>Fill the cost breakdown</b> – every category is divided by the total consignment quantity to give a cost per unit.</li>",
+    "<li>Set the <b>Default Margin %</b> below, then <b>Save</b>.</li>",
+    "</ol>",
+    "<h4 class='font-bold mt-3 mb-1'>The formulas</h4>",
+    "<ul class='list-disc ml-5 space-y-1'>",
+    "<li>Buying price (KES) = price × exchange rate (skipped when currency is KES)</li>",
+    "<li>Overhead per unit = total of all breakdown categories ÷ total consignment quantity</li>",
+    "<li><b>Landed cost per unit = buying price (KES) + overhead per unit</b></li>",
+    "<li>Suggested selling price = landed cost × (1 + default margin ÷ 100)</li>",
+    "</ul>",
+    "<h4 class='font-bold mt-3 mb-1'>What happens after you save</h4>",
+    "<p>Each product in the consignment gets a <span class='px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 border border-amber-300'>Draft</span> row on <b>Inventory → Price List</b> with its landed cost and suggested price, tagged with the consignment reference. Stock is untouched until you open Price List, hit <b>Edit</b> and <b>Update Price</b> – that approves the draft and updates the product's buying and selling price on stock.</p>",
+    "<h4 class='font-bold mt-3 mb-1'>Tips</h4>",
+    "<ul class='list-disc ml-5 space-y-1'>",
+    "<li>Overheads are shared per unit, so heavy low-value items absorb the same charge as light ones – split large mixed shipments into separate consignments where accuracy matters.</li>",
+    "<li>Always record duty, IDF and RDL here rather than as an expense only, or your landed cost will be understated.</li>",
+    "<li>Compare the landed cost against the market/competitor prices on the Costing screen before approving drafts.</li>",
+    "</ul>"
+  ].join("");
+
+  function helpBlock(id, title, html, extra) {
+    var wrap = document.createElement("div");
+    wrap.id = id;
+    wrap.className = "bg-white border border-blue-200 rounded-lg shadow-sm mb-4";
+    wrap.innerHTML =
+      "<button type='button' class='w-full text-left px-4 py-2 font-semibold text-blue-900 flex justify-between items-center'>" +
+      "<span>📘 " + title + "</span><span class='text-sm'>▼</span></button>" +
+      "<div class='hidden px-4 pb-4 text-sm text-gray-700 space-y-1 leading-relaxed'>" + html + (extra || "") + "</div>";
+    var btn = wrap.querySelector("button");
+    var body = wrap.querySelector("div");
+    btn.addEventListener("click", function () {
+      body.classList.toggle("hidden");
+      btn.lastElementChild.textContent = body.classList.contains("hidden") ? "▼" : "▲";
+    });
+    return wrap;
+  }
+
+  function injectHelp() {
+    var c = document.getElementById("costingTab");
+    if (c && !document.getElementById("costingHelpPanel")) {
+      var h = c.querySelector("h2");
+      var blk = helpBlock("costingHelpPanel", "Full help on Costing", HELP_SINGLE);
+      if (h && h.nextSibling) c.insertBefore(blk, h.nextSibling); else c.appendChild(blk);
+    }
+
+    var b = document.getElementById("bulkCostingTab");
+    if (b && !document.getElementById("bulkCostingHelpPanel")) {
+      var hb = b.querySelector("h2");
+      var blk2 = helpBlock("bulkCostingHelpPanel", "Full help on Bulk Consignment Costing", HELP_BULK);
+      if (hb && hb.nextSibling) b.insertBefore(blk2, hb.nextSibling); else b.appendChild(blk2);
+    }
+
+    // Default margin control for bulk pricing
+    if (b && !document.getElementById("bulkDefaultMargin")) {
+      var name = document.getElementById("consignmentName");
+      var host = name ? name.parentElement : null;
+      if (host) {
+        var d = document.createElement("div");
+        d.className = "mt-3";
+        d.innerHTML = "<label class='block font-semibold mb-1'>Default Margin % (used for the Price List drafts):</label>" +
+          "<input type='number' id='bulkDefaultMargin' value='30' class='w-full border rounded p-2' />";
+        host.appendChild(d);
+      }
+    }
+  }
+
+  function boot() {
+    hookSaveCosting();
+    hookSaveBulk();
+    hookUpdatePrice();
+    hookRenderPriceList();
+    injectHelp();
+    decoratePriceRows();
+  }
+
+  boot();
+  document.addEventListener("DOMContentLoaded", boot);
+  window.addEventListener("load", boot);
+  setInterval(boot, 1500);
 })();
 </script>
