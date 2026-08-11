@@ -86348,7 +86348,7 @@ Save
     🗑️ Bulk Delete Selected
   </button><div id="userTableContainer"><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-center w-10"><input type="checkbox" onclick="toggleSelectAllUsers(this)"></th><th class="border p-2 text-left">Username</th><th class="border p-2 text-left">Role</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="userTableBody" class="bg-white"></tbody></table></div></div>
  <div id="createUserModal"
-class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-opacity-50"><div class="bg-white p-6 rounded shadow w-[400px] max-w-full"><h2 class="text-xl font-bold mb-4" id="modalTitle">👤 Create New User</h2><input id="newUsername" class="w-full mb-2 p-2 border rounded" placeholder="Username" /><input id="newPassword" type="password" class="w-full mb-2 p-2 border rounded" placeholder="Password" /><select id="newRole" class="w-full mb-2 p-2 border rounded"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="audit">Audit</option><option value="hr">Human Resource</option><option value="custom">Custom</option></select><input id="customRoleInput" class="w-full mb-2 p-2 border rounded hidden" placeholder="Enter custom role name" /><div class="mb-4" id="moduleAccessList"><label class="block font-semibold mb-1">Module Access</label><label><input type="checkbox" value="dashboard"> 📊 Dashboard Hub</label><label><input type="checkbox" value="inventoryTab"> 📦 Stock</label><label><input type="checkbox" value="movementTab"> Movement</label><label><input type="checkbox" value="priceListTab"> Price List</label><label><input type="checkbox" value="Amenend"> Amendments</label><label><input type="checkbox" value="BundleItems"> Bundle Items</label><label><input type="checkbox" value="BulkAdjustment"> Bulk Adjustments</label><label><input type="checkbox" value="packagesTab"> Packages</label><label><input type="checkbox" value="shipmentsTab"> Shipments</label><label><input type="checkbox" value="fundsTab"> 💰 Funds Hub</label><label><input type="checkbox" value="customersTab"> Customer</label><label><input type="checkbox" value="invoicesTab"> Invoices</label><label><input type="checkbox" value="quotesTab"> Quotes</label><label><input type="checkbox" value="ordersTab"> Orders</label><label><input type="checkbox" value="bulkInvoicesTab"> Bulk Invoicing</label><label><input type="checkbox" value="creditNoteTab"> Credit Notes</label><label><input type="checkbox" value="salesReturnTab"> Sales Returns</label><label><input type="checkbox" value="receiptsTab"> Receipts</label><label><input type="checkbox" value="recurringInvoicesTab"> Recurring Invoices</label><label><input type="checkbox" value="deliveryTab"> Delivery</label><label><input type="checkbox" value="customerStatementTab"> Statements</label><label><input type="checkbox" value="supplierTab"> Supplier</label><label><input type="checkbox" value="supplierPaymentsTab"> Supplier Payments</label><label><input type="checkbox" value="supplierBillsTab"> Bills</label><label><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label><label><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label><label><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label><label><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label><label><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label><label><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label><label><input type="checkbox" value="grnTab"> Goods Received</label><label><input type="checkbox" value="supplierStatementTab"> Supplier Statement</label><label><input type="checkbox" value="manualJournalsTab"> Manual Journals</label><label><input type="checkbox" value="recurringJournalsTab"> Recurring Journals</label><label><input type="checkbox" value="currencyAdjustmentsTab"> Currency Adjustments</label><label><input type="checkbox" value="nonCurrentAssetsTab"> Non-Current Assets</label><label><input type="checkbox" value="nonCurrentLiabilitiesTab"> Non-Current Liabilities</label><label><input type="checkbox" value="equityTab"> Equity</label><label><input type="checkbox" value="taxAdjustmentsTab"> Tax Adjustments</label><label><input type="checkbox" value="chartOfAccountsTab"> Chart of Accounts</label><label><input type="checkbox" value="currentAccountsTab"> Current Accounts</label><label><input type="checkbox" value="budgetsTab"> Budgets</label><label><input type="checkbox" value="transactionLockingTab"> Transaction Locking</label><label><input type="checkbox" value="employeesTab"> Employees</label><label><input type="checkbox" value="earningsTab"> Earnings & Allowances</label><label><input type="checkbox" value="grossPayTab"> Earnings & Deductions</label><label><input type="checkbox" value="attendanceTab"> Attendance & Leave</label><label><input type="checkbox" value="payslipTab"> Payslip Generation</label><label><input type="checkbox" value="statutoryDeductionsTab"> Statutories</label><label><input type="checkbox" value="payrollReportsTab"> Payroll Reports</label><label><input type="checkbox" value="integrationsTab"> Integrations</label><label><input type="checkbox" value="reportsPanel"> 📈 Reports Hub</label><label><input type="checkbox" value="plansTab"> Plans Hub</label><label><input type="checkbox" value="projectTab"> Project Hub</label><label><input type="checkbox" value="planTrackingTab"> Plan Tracking</label><label><input type="checkbox" value="orgProfileTab"> Org Profile</label><label><input type="checkbox" value="warehousesTab"> Warehouses</label><label><input type="checkbox" value="DatacenterTab"> Data Center</label><label><input type="checkbox" value="systemConfigurationTab"> System Configuration</label><label><input type="checkbox" value="userActivityTab"> User Activity</label><label><input type="checkbox" value="taxComplianceTab"> Tax Compliance</label><label><input type="checkbox" value="userManagementTab"> User Management</label><label><input type="checkbox" value="vatTab"> VAT</label><label><input type="checkbox" value="preferencesTab"> Preferences</label><label><input type="checkbox" value="settingstemplateTab"> Customization</label><label><input type="checkbox" value="costingTab"> Costing</label><label><input type="checkbox" value="bulkCostingTab"> Bulk Costing</label><label><input type="checkbox" value="filesTab"> File Manager</label><label><input type="checkbox" value="recycleBinTab"> Recycle Bin</label><label><input type="checkbox" value="mailHub"> 💬 Acacia Mail Hub</label><label><input type="checkbox" value="crmHub"> 🏢 CRM Portal Hub</label></div><div class="flex justify-end space-x-2"><button onclick="saveUser()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button><button onclick="closeCreateUserModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button></div><p id="userCreateMsg" class="text-green-600 text-sm mt-2 hidden">✅ User saved successfully.</p></div></div>
+class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-opacity-50"><div class="bg-white p-6 rounded shadow w-[400px] max-w-full"><h2 class="text-xl font-bold mb-4" id="modalTitle">👤 Create New User</h2><input id="newUsername" class="w-full mb-2 p-2 border rounded" placeholder="Username" /><input id="newPassword" type="password" class="w-full mb-2 p-2 border rounded" placeholder="Password" /><input id="newUserEmail" type="email" class="w-full mb-2 p-2 border rounded" placeholder="Email (optional, used for Email action)" /><select id="newRole" class="w-full mb-2 p-2 border rounded"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="audit">Audit</option><option value="hr">Human Resource</option><option value="custom">Custom</option></select><input id="customRoleInput" class="w-full mb-2 p-2 border rounded hidden" placeholder="Enter custom role name" /><div class="mb-4" id="moduleAccessList"><label class="block font-semibold mb-1">Module Access</label><div class="max-h-64 overflow-y-auto border rounded p-2"><div class="module-group-header font-bold text-blue-900 text-xs uppercase tracking-wide mt-2 mb-1 pb-1 border-b border-blue-100">📊 Dashboard Hub</div><label class="block pl-2"><input type="checkbox" value="dashboard"> 📊 Dashboard Hub</label><div class="module-group-header font-bold text-blue-900 text-xs uppercase tracking-wide mt-2 mb-1 pb-1 border-b border-blue-100">📦 Inventory Hub</div><label class="block pl-2"><input type="checkbox" value="inventoryTab"> Stock</label><label class="block pl-2"><input type="checkbox" value="movementTab"> Movement</label><label class="block pl-2"><input type="checkbox" value="priceListTab"> Price List</label><label class="block pl-2"><input type="checkbox" value="Amenend"> Amendments</label><label class="block pl-2"><input type="checkbox" value="BundleItems"> Bundle Items</label><label class="block pl-2"><input type="checkbox" value="BulkAdjustment"> Bulk Adjustments</label><label class="block pl-2"><input type="checkbox" value="packagesTab"> Packages</label><label class="block pl-2"><input type="checkbox" value="shipmentsTab"> Shipments</label><div class="module-group-header font-bold text-blue-900 text-xs uppercase tracking-wide mt-2 mb-1 pb-1 border-b border-blue-100">💰 Funds Hub</div><label class="block pl-2"><input type="checkbox" value="fundsTab"> 💰 Funds Hub</label><div class="module-group-header font-bold text-blue-900 text-xs uppercase tracking-wide mt-2 mb-1 pb-1 border-b border-blue-100">👥 Sales Hub</div><label class="block pl-2"><input type="checkbox" value="customersTab"> Customer</label><label class="block pl-2"><input type="checkbox" value="invoicesTab"> Invoices</label><label class="block pl-2"><input type="checkbox" value="quotesTab"> Quotes</label><label class="block pl-2"><input type="checkbox" value="ordersTab"> Orders</label><label class="block pl-2"><input type="checkbox" value="bulkInvoicesTab"> Bulk Invoicing</label><label class="block pl-2"><input type="checkbox" value="creditNoteTab"> Credit Notes</label><label class="block pl-2"><input type="checkbox" value="salesReturnTab"> Sales Returns</label><label class="block pl-2"><input type="checkbox" value="receiptsTab"> Receipts</label><label class="block pl-2"><input type="checkbox" value="recurringInvoicesTab"> Recurring Invoices</label><label class="block pl-2"><input type="checkbox" value="deliveryTab"> Delivery</label><label class="block pl-2"><input type="checkbox" value="customerStatementTab"> Statements</label><div class="module-group-header font-bold text-blue-900 text-xs uppercase tracking-wide mt-2 mb-1 pb-1 border-b border-blue-100">👥 Purchase Hub</div><label class="block pl-2"><input type="checkbox" value="supplierTab"> Supplier</label><label class="block pl-2"><input type="checkbox" value="supplierPaymentsTab"> Supplier Payments</label><label class="block pl-2"><input type="checkbox" value="supplierBillsTab"> Bills</label><label class="block pl-2"><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label><label class="block pl-2"><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label><label class="block pl-2"><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label><label class="block pl-2"><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label><label class="block pl-2"><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label><label class="block pl-2"><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label><label class="block pl-2"><input type="checkbox" value="grnTab"> Goods Received</label><label class="block pl-2"><input type="checkbox" value="supplierStatementTab"> Supplier Statement</label><div class="module-group-header font-bold text-blue-900 text-xs uppercase tracking-wide mt-2 mb-1 pb-1 border-b border-blue-100">🧮 Accountant Hub</div><label class="block pl-2"><input type="checkbox" value="manualJournalsTab"> Manual Journals</label><label class="block pl-2"><input type="checkbox" value="recurringJournalsTab"> Recurring Journals</label><label class="block pl-2"><input type="checkbox" value="currencyAdjustmentsTab"> Currency Adjustments</label><label class="block pl-2"><input type="checkbox" value="nonCurrentAssetsTab"> Non-Current Assets</label><label class="block pl-2"><input type="checkbox" value="nonCurrentLiabilitiesTab"> Non-Current Liabilities</label><label class="block pl-2"><input type="checkbox" value="equityTab"> Equity</label><label class="block pl-2"><input type="checkbox" value="taxAdjustmentsTab"> Tax Adjustments</label><label class="block pl-2"><input type="checkbox" value="chartOfAccountsTab"> Chart of Accounts</label><label class="block pl-2"><input type="checkbox" value="currentAccountsTab"> Current Accounts</label><label class="block pl-2"><input type="checkbox" value="budgetsTab"> Budgets</label><label class="block pl-2"><input type="checkbox" value="transactionLockingTab"> Transaction Locking</label><div class="module-group-header font-bold text-blue-900 text-xs uppercase tracking-wide mt-2 mb-1 pb-1 border-b border-blue-100">💵 Payroll Hub</div><label class="block pl-2"><input type="checkbox" value="employeesTab"> Employees</label><label class="block pl-2"><input type="checkbox" value="earningsTab"> Earnings & Allowances</label><label class="block pl-2"><input type="checkbox" value="grossPayTab"> Earnings & Deductions</label><label class="block pl-2"><input type="checkbox" value="attendanceTab"> Attendance & Leave</label><label class="block pl-2"><input type="checkbox" value="payslipTab"> Payslip Generation</label><label class="block pl-2"><input type="checkbox" value="statutoryDeductionsTab"> Statutories</label><label class="block pl-2"><input type="checkbox" value="payrollReportsTab"> Payroll Reports</label><label class="block pl-2"><input type="checkbox" value="integrationsTab"> Integrations</label><div class="module-group-header font-bold text-blue-900 text-xs uppercase tracking-wide mt-2 mb-1 pb-1 border-b border-blue-100">📈 Reports Hub</div><label class="block pl-2"><input type="checkbox" value="reportsPanel"> 📈 Reports Hub</label><div class="module-group-header font-bold text-blue-900 text-xs uppercase tracking-wide mt-2 mb-1 pb-1 border-b border-blue-100">🗂️ Plans Hub</div><label class="block pl-2"><input type="checkbox" value="plansTab"> Plans Hub</label><label class="block pl-2"><input type="checkbox" value="projectTab"> Project Hub</label><label class="block pl-2"><input type="checkbox" value="planTrackingTab"> Plan Tracking</label><div class="module-group-header font-bold text-blue-900 text-xs uppercase tracking-wide mt-2 mb-1 pb-1 border-b border-blue-100">⚙️ Settings Hub</div><label class="block pl-2"><input type="checkbox" value="orgProfileTab"> Org Profile</label><label class="block pl-2"><input type="checkbox" value="warehousesTab"> Warehouses</label><label class="block pl-2"><input type="checkbox" value="DatacenterTab"> Data Center</label><label class="block pl-2"><input type="checkbox" value="systemConfigurationTab"> System Configuration</label><label class="block pl-2"><input type="checkbox" value="userActivityTab"> User Activity</label><label class="block pl-2"><input type="checkbox" value="taxComplianceTab"> Tax Compliance</label><label class="block pl-2"><input type="checkbox" value="userManagementTab"> User Management</label><label class="block pl-2"><input type="checkbox" value="vatTab"> VAT</label><label class="block pl-2"><input type="checkbox" value="preferencesTab"> Preferences</label><label class="block pl-2"><input type="checkbox" value="settingstemplateTab"> Customization</label><label class="block pl-2"><input type="checkbox" value="costingTab"> Costing</label><label class="block pl-2"><input type="checkbox" value="bulkCostingTab"> Bulk Costing</label><div class="module-group-header font-bold text-blue-900 text-xs uppercase tracking-wide mt-2 mb-1 pb-1 border-b border-blue-100">📁 Files Hub</div><label class="block pl-2"><input type="checkbox" value="filesTab"> File Manager</label><label class="block pl-2"><input type="checkbox" value="recycleBinTab"> Recycle Bin</label><div class="module-group-header font-bold text-blue-900 text-xs uppercase tracking-wide mt-2 mb-1 pb-1 border-b border-blue-100">💬 Communication</div><label class="block pl-2"><input type="checkbox" value="mailHub"> 💬 Acacia Mail Hub</label><label class="block pl-2"><input type="checkbox" value="crmHub"> 🏢 CRM Portal Hub</label></div></div></div><div class="flex justify-end space-x-2"><button onclick="saveUser()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button><button onclick="closeCreateUserModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button></div><p id="userCreateMsg" class="text-green-600 text-sm mt-2 hidden">✅ User saved successfully.</p></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <style>
@@ -88365,6 +88365,7 @@ function openCreateUserModal(index = null) {
 
   document.getElementById('newUsername').value = '';
   document.getElementById('newPassword').value = '';
+  document.getElementById('newUserEmail').value = '';
   document.getElementById('newRole').value = 'admin';
   document.getElementById('customRoleInput').value = '';
   document.getElementById('modalTitle').textContent = index !== null ? '✏️ Edit User' : '👤 Create New User';
@@ -88379,6 +88380,7 @@ function openCreateUserModal(index = null) {
     const user = users[index];
     document.getElementById('newUsername').value = user.username;
     document.getElementById('newPassword').value = user.password;
+    document.getElementById('newUserEmail').value = user.email || '';
     document.getElementById('newRole').value = user.role;
     if (user.role === 'custom') {
       document.getElementById('customRoleInput').classList.remove('hidden');
@@ -88403,6 +88405,7 @@ function closeCreateUserModal() {
 function saveUser() {
   const username = document.getElementById('newUsername').value.trim();
   const password = document.getElementById('newPassword').value.trim();
+  const email = document.getElementById('newUserEmail').value.trim();
   const role = document.getElementById('newRole').value;
   const customRoleName = document.getElementById('customRoleInput').value.trim();
 
@@ -88428,6 +88431,7 @@ function saveUser() {
   const user = {
     username,
     password,
+    email,
     role,
     customRole: role === 'custom' ? customRoleName : null,
     modules,
@@ -88442,6 +88446,7 @@ function saveUser() {
  
   if (password) users[editingUserIndex].password = password;
   users[editingUserIndex].username = username;
+  users[editingUserIndex].email = email;
   users[editingUserIndex].role = role;
   users[editingUserIndex].customRole = role === 'custom' ? customRoleName : null;
   users[editingUserIndex].modules = modules;
@@ -88515,6 +88520,11 @@ function renderUserTable() {
             <button onclick="cloneUser(${index})"
               class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
               Clone
+            </button>
+
+            <button onclick="emailUser(${index})"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-blue-900 hover:text-white">
+              Email
             </button>
 
             <button onclick="downloadUser(${index})"
@@ -88592,11 +88602,17 @@ function downloadUser(index) {
 
   const user = users[index];
 
+  const moduleList = (user.modules || []).length
+    ? (user.modules || []).map(m => (MODULE_LABELS[m] || m)).join(', ')
+    : 'No modules assigned';
+
   const data = `
 USER DETAILS
 
 Username: ${user.username}
+Email: ${user.email || 'N/A'}
 Role: ${user.role === 'custom' ? user.customRole : user.role}
+Modules: ${moduleList}
 `;
 
   const blob = new Blob([data], { type: "text/plain" });
@@ -88615,6 +88631,39 @@ Role: ${user.role === 'custom' ? user.customRole : user.role}
 
 }
 
+function emailUser(index) {
+
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+
+  const user = users[index];
+  if (!user) return;
+
+  let email = user.email;
+  if (!email) {
+    email = prompt(`No email saved for "${user.username}". Enter an email address to send to:`, '');
+    if (!email) return;
+  }
+
+  const subject = encodeURIComponent(`User Account Details - ${user.username}`);
+
+  const moduleList = (user.modules || []).length
+    ? (user.modules || []).map(m => (MODULE_LABELS[m] || m)).join(', ')
+    : 'No modules assigned';
+
+  const body = encodeURIComponent(
+`USER DETAILS
+
+Username: ${user.username}
+Role: ${user.role === 'custom' ? user.customRole : user.role}
+Modules: ${moduleList}
+`
+  );
+
+  window.location.href = (typeof __logMail === 'function')
+    ? __logMail(`mailto:${email}?subject=${subject}&body=${body}`)
+    : `mailto:${email}?subject=${subject}&body=${body}`;
+}
+
 function printUser(index) {
 
   let users = JSON.parse(localStorage.getItem("users") || "[]");
@@ -88631,6 +88680,7 @@ function printUser(index) {
     <body>
       <h2>User Details</h2>
       <p>Username: ${user.username}</p>
+      <p>Email: ${user.email || 'N/A'}</p>
       <p>Role: ${user.role === 'custom' ? user.customRole : user.role}</p>
     </body>
     </html>
@@ -88723,6 +88773,107 @@ const ALL_MODULES = [
   "recycleBinTab"
 ];
 
+// Modules grouped per hub/submodule, used to render the permissions preview
+// and to build friendly labels for other views (Email, Download, Print).
+const MODULE_GROUPS = [
+  { label: "📊 Dashboard Hub", modules: [
+    ["dashboard", "Dashboard"]
+  ]},
+  { label: "📦 Inventory Hub", modules: [
+    ["inventoryTab", "Stock"],
+    ["movementTab", "Movement"],
+    ["priceListTab", "Price List"],
+    ["Amenend", "Amendments"],
+    ["BundleItems", "Bundle Items"],
+    ["BulkAdjustment", "Bulk Adjustments"],
+    ["packagesTab", "Packages"],
+    ["shipmentsTab", "Shipments"]
+  ]},
+  { label: "💰 Funds Hub", modules: [
+    ["fundsTab", "Funds Hub"]
+  ]},
+  { label: "👥 Sales Hub", modules: [
+    ["customersTab", "Customer"],
+    ["invoicesTab", "Invoices"],
+    ["quotesTab", "Quotes"],
+    ["ordersTab", "Orders"],
+    ["bulkInvoicesTab", "Bulk Invoicing"],
+    ["creditNoteTab", "Credit Notes"],
+    ["salesReturnTab", "Sales Returns"],
+    ["receiptsTab", "Receipts"],
+    ["recurringInvoicesTab", "Recurring Invoices"],
+    ["deliveryTab", "Delivery"],
+    ["customerStatementTab", "Statements"]
+  ]},
+  { label: "👥 Purchase Hub", modules: [
+    ["supplierTab", "Supplier"],
+    ["supplierPaymentsTab", "Supplier Payments"],
+    ["supplierBillsTab", "Bills"],
+    ["bulkBillingTab", "Bulk Billing"],
+    ["taxPaymentsTab", "Tax Payments"],
+    ["OperationalCostsTab", "Operational Costs"],
+    ["supplierPurchaseOrdersTab", "Purchase Orders"],
+    ["supplierDebitNotesTab", "Debit Notes"],
+    ["purchaseReturnsTab", "Purchase Returns"],
+    ["grnTab", "Goods Received"],
+    ["supplierStatementTab", "Supplier Statement"]
+  ]},
+  { label: "🧮 Accountant Hub", modules: [
+    ["manualJournalsTab", "Manual Journals"],
+    ["recurringJournalsTab", "Recurring Journals"],
+    ["currencyAdjustmentsTab", "Currency Adjustments"],
+    ["nonCurrentAssetsTab", "Non-Current Assets"],
+    ["nonCurrentLiabilitiesTab", "Non-Current Liabilities"],
+    ["equityTab", "Equity"],
+    ["taxAdjustmentsTab", "Tax Adjustments"],
+    ["chartOfAccountsTab", "Chart of Accounts"],
+    ["currentAccountsTab", "Current Accounts"],
+    ["budgetsTab", "Budgets"],
+    ["transactionLockingTab", "Transaction Locking"]
+  ]},
+  { label: "💵 Payroll Hub", modules: [
+    ["employeesTab", "Employees"],
+    ["earningsTab", "Earnings & Allowances"],
+    ["grossPayTab", "Earnings & Deductions"],
+    ["attendanceTab", "Attendance & Leave"],
+    ["payslipTab", "Payslip Generation"],
+    ["statutoryDeductionsTab", "Statutories"],
+    ["payrollReportsTab", "Payroll Reports"],
+    ["integrationsTab", "Integrations"]
+  ]},
+  { label: "📈 Reports Hub", modules: [
+    ["reportsPanel", "Reports Hub"]
+  ]},
+  { label: "🗂️ Plans Hub", modules: [
+    ["plansTab", "Plans Hub"],
+    ["projectTab", "Project Hub"],
+    ["planTrackingTab", "Plan Tracking"]
+  ]},
+  { label: "⚙️ Settings Hub", modules: [
+    ["orgProfileTab", "Org Profile"],
+    ["warehousesTab", "Warehouses"],
+    ["DatacenterTab", "Data Center"],
+    ["systemConfigurationTab", "System Configuration"],
+    ["userActivityTab", "User Activity"],
+    ["taxComplianceTab", "Tax Compliance"],
+    ["userManagementTab", "User Management"],
+    ["vatTab", "VAT"],
+    ["preferencesTab", "Preferences"],
+    ["settingstemplateTab", "Customization"],
+    ["costingTab", "Costing"],
+    ["bulkCostingTab", "Bulk Costing"]
+  ]},
+  { label: "📁 Files Hub", modules: [
+    ["filesTab", "File Manager"],
+    ["recycleBinTab", "Recycle Bin"]
+  ]}
+];
+
+const MODULE_LABELS = {};
+MODULE_GROUPS.forEach(g => g.modules.forEach(([id, label]) => { MODULE_LABELS[id] = label; }));
+MODULE_LABELS.mailHub = "Acacia Mail Hub";
+MODULE_LABELS.crmHub = "CRM Portal Hub";
+
 function previewUserPermissions(index, btn) {
 
   const existing = document.querySelector(".permission-preview-row");
@@ -88746,14 +88897,20 @@ function previewUserPermissions(index, btn) {
   previewRow.innerHTML = `
     <td colspan="4" class="border bg-gray-50 p-4">
 
-      <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
         <h3 class="font-bold text-lg">
           👁 Permissions for ${user.username}
         </h3>
-        <button type="button" onclick="this.closest('tr').remove()"
-          class="bg-gray-300 text-gray-800 font-bold px-3 py-1 rounded hover:bg-gray-400">
-          ✖ Close
-        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="savePermissionsPreview(${index})"
+            class="bg-green-600 text-white font-bold px-3 py-1 rounded hover:bg-green-700">
+            💾 Save
+          </button>
+          <button type="button" onclick="this.closest('tr').remove()"
+            class="bg-gray-300 text-gray-800 font-bold px-3 py-1 rounded hover:bg-gray-400">
+            ✖ Close
+          </button>
+        </div>
       </div>
 
       <table class="w-full border text-sm">
@@ -88766,18 +88923,11 @@ function previewUserPermissions(index, btn) {
                 <span>Module</span>
               </label>
             </th>
-            <th class="border p-2 text-center">
-              <input type="checkbox" title="Select/clear View for all modules"
-                onclick="toggleAllPermissions(${index}, 'view', this.checked)"><br>View
-            </th>
-            <th class="border p-2 text-center">
-              <input type="checkbox" title="Select/clear Edit for all modules"
-                onclick="toggleAllPermissions(${index}, 'edit', this.checked)"><br>Edit
-            </th>
-            <th class="border p-2 text-center">
-              <input type="checkbox" title="Select/clear Delete for all modules"
-                onclick="toggleAllPermissions(${index}, 'delete', this.checked)"><br>Delete
-            </th>
+            ${PERM_ACTIONS.map(a => `
+            <th class="border p-2 text-center whitespace-nowrap">
+              <input type="checkbox" title="Select/clear ${a.label} for all modules"
+                onclick="toggleAllPermissions(${index}, '${a.key}', this.checked)"><br>${a.label}
+            </th>`).join("")}
           </tr>
         </thead>
 
@@ -88800,47 +88950,114 @@ function previewUserPermissions(index, btn) {
   tr.insertAdjacentElement("afterend", previewRow);
 }
 
+const PERM_ACTIONS = [
+  { key: "view",     label: "View" },
+  { key: "add",      label: "➕ Add/New" },
+  { key: "edit",     label: "✏️ Edit" },
+  { key: "delete",   label: "🗑️ Delete" },
+  { key: "clone",    label: "📄 Clone" },
+  { key: "print",    label: "🖨️ Print" },
+  { key: "email",    label: "✉️ Email" },
+  { key: "download", label: "⬇️ Download" },
+  { key: "export",   label: "📤 Export" },
+  { key: "import",   label: "📥 Import" },
+  { key: "approve",  label: "✔️ Approve" },
+  { key: "post",     label: "📝 Post/Convert" }
+];
+window.PERM_ACTIONS = PERM_ACTIONS;
+
+function emptyPerm() {
+  var o = {};
+  PERM_ACTIONS.forEach(function (a) { o[a.key] = false; });
+  return o;
+}
+window.emptyPerm = emptyPerm;
+
 function buildPermissionRows(user, userIndex) {
 
   const perms = user.permissions || {};
 
-  return ALL_MODULES.map(module => {
-
-    const p = perms[module] || {
-      view: false,
-      edit: false,
-      delete: false
-    };
-
+  function permCell(module, action, checked) {
     return `
-      <tr>
-
-        <td class="border p-2">
-          ${module}
-        </td>
-
         <td class="border text-center">
-          <input type="checkbox" class="perm-chk perm-view" data-module="${module}"
-            ${p.view ? "checked" : ""}
-            onchange="updatePermission(${userIndex}, '${module}', 'view', this.checked)">
-        </td>
+          <input type="checkbox" class="perm-chk perm-${action}" data-module="${module}"
+            ${checked ? "checked" : ""}
+            onchange="updatePermission(${userIndex}, '${module}', '${action}', this.checked)">
+        </td>`;
+  }
 
+  return MODULE_GROUPS.map(group => {
+
+    const groupModuleIds = group.modules.map(([id]) => id);
+
+    const headerCells = PERM_ACTIONS.map(a => `
         <td class="border text-center">
-          <input type="checkbox" class="perm-chk perm-edit" data-module="${module}"
-            ${p.edit ? "checked" : ""}
-            onchange="updatePermission(${userIndex}, '${module}', 'edit', this.checked)">
-        </td>
+          <input type="checkbox" title="Select/clear ${a.label} for ${group.label}"
+            onclick="toggleGroupPermissions(${userIndex}, ${JSON.stringify(groupModuleIds)}, '${a.key}', this.checked)">
+        </td>`).join("");
 
-        <td class="border text-center">
-          <input type="checkbox" class="perm-chk perm-delete" data-module="${module}"
-            ${p.delete ? "checked" : ""}
-            onchange="updatePermission(${userIndex}, '${module}', 'delete', this.checked)">
+    const headerRow = `
+      <tr class="bg-blue-50">
+        <td class="border p-2 font-bold text-blue-900">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" title="Select/clear all in ${group.label}"
+              onclick="toggleGroupPermissions(${userIndex}, ${JSON.stringify(groupModuleIds)}, 'all', this.checked)">
+            <span>${group.label}</span>
+          </label>
         </td>
-
+        ${headerCells}
       </tr>
     `;
+
+    const moduleRows = group.modules.map(([module, label]) => {
+
+      const p = perms[module] || emptyPerm();
+
+      const cells = PERM_ACTIONS.map(a => permCell(module, a.key, p[a.key])).join("");
+
+      return `
+      <tr>
+        <td class="border p-2 pl-6 text-gray-700">
+          ${label}
+        </td>
+        ${cells}
+      </tr>
+    `;
+    }).join("");
+
+    return headerRow + moduleRows;
   }).join("");
 }
+
+function toggleGroupPermissions(userIndex, moduleIds, action, checked) {
+
+  const previewRow = document.querySelector(".permission-preview-row");
+  if (!previewRow) return;
+
+  const actions = action === "all" ? PERM_ACTIONS.map(a => a.key) : [action];
+
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+  const user = users[userIndex];
+  if (!user) return;
+
+  if (!user.permissions) user.permissions = {};
+
+  moduleIds.forEach(module => {
+    if (!user.permissions[module]) {
+      user.permissions[module] = emptyPerm();
+    }
+    actions.forEach(act => {
+      user.permissions[module][act] = checked;
+
+      previewRow.querySelectorAll(`.perm-${act}[data-module="${module}"]`).forEach(cb => {
+        cb.checked = checked;
+      });
+    });
+  });
+
+  localStorage.setItem("users", JSON.stringify(users));
+}
+
 
 function updatePermission(userIndex, module, action, value) {
 
@@ -88853,11 +89070,7 @@ function updatePermission(userIndex, module, action, value) {
   }
 
   if (!users[userIndex].permissions[module]) {
-    users[userIndex].permissions[module] = {
-      view: false,
-      edit: false,
-      delete: false
-    };
+    users[userIndex].permissions[module] = emptyPerm();
   }
 
   users[userIndex].permissions[module][action] = value;
@@ -88865,12 +89078,26 @@ function updatePermission(userIndex, module, action, value) {
   localStorage.setItem("users", JSON.stringify(users));
 }
 
+function savePermissionsPreview(userIndex) {
+
+  // Permission ticks are already persisted live as they're checked, so this
+  // just confirms the save to the user and closes the preview panel.
+  const users = JSON.parse(localStorage.getItem("users")) || [];
+  const user = users[userIndex];
+
+  try { window.logAudit && window.logAudit('update', 'User Management', (user && (user.username || user.email)) || ''); } catch (e) {}
+
+  alert("✅ Permissions saved successfully.");
+
+  document.querySelectorAll(".permission-preview-row").forEach(el => el.remove());
+}
+
 function toggleAllPermissions(userIndex, action, checked) {
 
   const previewRow = document.querySelector(".permission-preview-row");
   if (!previewRow) return;
 
-  const actions = action === "all" ? ["view", "edit", "delete"] : [action];
+  const actions = action === "all" ? PERM_ACTIONS.map(a => a.key) : [action];
 
   // Reflect the change in the checkboxes currently on screen.
   actions.forEach(act => {
@@ -88888,7 +89115,7 @@ function toggleAllPermissions(userIndex, action, checked) {
 
   ALL_MODULES.forEach(module => {
     if (!user.permissions[module]) {
-      user.permissions[module] = { view: false, edit: false, delete: false };
+      user.permissions[module] = emptyPerm();
     }
     actions.forEach(act => {
       user.permissions[module][act] = checked;
@@ -116870,5 +117097,434 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   document.addEventListener("DOMContentLoaded", boot);
   window.addEventListener("load", boot);
   setInterval(boot, 1500);
+})();
+</script>
+<script>
+/* ============================================================
+   ACACIA – Action Permission Enforcement (global)
+   Ticks made in User Management ▸ Preview are enforced here:
+   any action button inside a module the user is not allowed to
+   use is disabled AND its click is blocked.
+   ============================================================ */
+(function () {
+  if (window.__acxPermGuard) return;
+  window.__acxPermGuard = true;
+
+  var ACTIONS = ['view', 'add', 'edit', 'delete', 'clone', 'print', 'email', 'download', 'export', 'import', 'approve', 'post'];
+
+  var ACTION_LABEL = {
+    view: 'view', add: 'add or create', edit: 'edit', delete: 'delete', clone: 'clone',
+    print: 'print', email: 'email', download: 'download', export: 'export',
+    import: 'import', approve: 'approve', post: 'post or convert'
+  };
+
+  function me() {
+    try { return JSON.parse(localStorage.getItem('loggedInUser') || 'null') || {}; } catch (e) { return {}; }
+  }
+  function isAdmin() {
+    return String(me().role || '').toLowerCase() === 'admin';
+  }
+
+  function permsFor() {
+    var u = me();
+    if (!u || !u.username) return null;
+    var users = [];
+    try { users = JSON.parse(localStorage.getItem('users') || '[]') || []; } catch (e) { users = []; }
+    var rec = users.find(function (x) {
+      return x && x.username === u.username &&
+        String(x.companyId || '') === String(u.companyId || '');
+    }) || users.find(function (x) { return x && x.username === u.username; });
+    return (rec && rec.permissions) || {};
+  }
+
+  // Central check used everywhere.
+  window.hasActionPermission = function (moduleId, action) {
+    if (isAdmin()) return true;
+    if (!moduleId || !action) return true;
+    var perms = permsFor();
+    if (!perms) return true;               // not logged in through user records – don't block
+    var p = perms[moduleId];
+    if (!p) return false;                  // module never granted anything
+    if (typeof p[action] === 'undefined') {
+      // Older records saved before new columns existed: fall back to the closest legacy grant.
+      var legacy = { add: 'edit', print: 'view', export: 'download', import: 'edit', approve: 'edit', post: 'edit' };
+      var lk = legacy[action];
+      return lk ? !!p[lk] : false;
+    }
+    return !!p[action];
+  };
+
+  // Which module tab is currently on screen?
+  function activeModule() {
+    var ids = (window.ALL_MODULES || window.APP_ALL_MODULES || []);
+    for (var i = 0; i < ids.length; i++) {
+      var el = document.getElementById(ids[i]);
+      if (el && !el.classList.contains('hidden') && el.offsetParent !== null) return ids[i];
+    }
+    return localStorage.getItem('lastTab') || '';
+  }
+
+  function moduleOf(el) {
+    var ids = (window.ALL_MODULES || window.APP_ALL_MODULES || []);
+    var n = el;
+    while (n && n !== document.body) {
+      if (n.id && ids.indexOf(n.id) !== -1) return n.id;
+      n = n.parentElement;
+    }
+    return activeModule();
+  }
+
+  // Work out which action a button performs.
+  function actionOf(btn) {
+    var explicit = btn.getAttribute('data-perm-action');
+    if (explicit) return explicit;
+
+    var txt = ((btn.getAttribute('onclick') || '') + ' ' + (btn.textContent || '') + ' ' + (btn.title || '') + ' ' + (btn.className || '')).toLowerCase();
+
+    if (/delete|remove|trash|🗑|void/.test(txt)) return 'delete';
+    if (/clone|duplicate/.test(txt)) return 'clone';
+    if (/print|🖨/.test(txt)) return 'print';
+    if (/email|mail|✉/.test(txt)) return 'email';
+    if (/download|pdf|⬇/.test(txt)) return 'download';
+    if (/export|csv|excel/.test(txt)) return 'export';
+    if (/import|upload/.test(txt)) return 'import';
+    if (/approve|authoris|authoriz|verify|confirm/.test(txt)) return 'approve';
+    if (/\bpost\b|convert|journalize|reconcile/.test(txt)) return 'post';
+    if (/edit|update|modify|amend|✏/.test(txt)) return 'edit';
+    if (/\badd\b|\bnew\b|create|\bsave\b|record|generate|➕|\+ /.test(txt)) return 'add';
+    if (/view|preview|open|details|👁/.test(txt)) return 'view';
+    return null;
+  }
+
+  function skip(btn) {
+    if (btn.hasAttribute('data-no-perm')) return true;
+    // never police login / navigation / permission preview UI itself
+    if (btn.closest('#loginModal, #signupModal, nav, aside, .sidebar, #sidebar, .permission-preview-row')) return true;
+    if (/showTab\(|toggleSubmenu\(|logout|toggleBox\(/i.test(btn.getAttribute('onclick') || '')) return true;
+    return false;
+  }
+
+  function lock(btn, allowed) {
+    if (allowed) {
+      if (btn.dataset.permLocked === '1') {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btn.style.opacity = '';
+        btn.style.cursor = '';
+        btn.title = btn.dataset.permOldTitle || '';
+        delete btn.dataset.permLocked;
+      }
+      return;
+    }
+    if (btn.dataset.permLocked === '1') return;
+    btn.dataset.permLocked = '1';
+    btn.dataset.permOldTitle = btn.title || '';
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+    btn.style.opacity = '0.45';
+    btn.style.cursor = 'not-allowed';
+    btn.title = '🚫 Not permitted — contact your administrator';
+  }
+
+  function sweep() {
+    if (isAdmin()) return;
+    var mod = activeModule();
+    if (!mod) return;
+    var host = document.getElementById(mod);
+    if (!host) return;
+    host.querySelectorAll('button, a[role="button"], input[type="button"], input[type="submit"]').forEach(function (btn) {
+      if (skip(btn)) return;
+      var act = actionOf(btn);
+      if (!act || act === 'view') return;   // never disable plain viewing controls
+      lock(btn, window.hasActionPermission(moduleOf(btn), act));
+    });
+  }
+
+  // Hard block: even a programmatic / re-enabled button cannot fire.
+  document.addEventListener('click', function (e) {
+    if (isAdmin()) return;
+    var btn = e.target && e.target.closest ? e.target.closest('button, a[role="button"], input[type="button"], input[type="submit"]') : null;
+    if (!btn || skip(btn)) return;
+    var act = actionOf(btn);
+    if (!act || act === 'view') return;
+    var mod = moduleOf(btn);
+    if (window.hasActionPermission(mod, act)) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    alert('🚫 You don\'t have permission to ' + (ACTION_LABEL[act] || act) + ' in this module.\n\nPlease contact your administrator.');
+  }, true);
+
+  // Keep it applied as tables re-render.
+  var pending = null;
+  function schedule() {
+    if (pending) return;
+    pending = setTimeout(function () { pending = null; try { sweep(); } catch (e) {} }, 150);
+  }
+  try {
+    new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
+  } catch (e) {}
+  document.addEventListener('DOMContentLoaded', schedule);
+  window.addEventListener('load', schedule);
+  setInterval(schedule, 2000);
+  schedule();
+
+  // Re-apply immediately after an admin saves new ticks.
+  var origSave = window.savePermissionsPreview;
+  window.addEventListener('storage', schedule);
+  var _si = setInterval(function () {
+    if (typeof window.savePermissionsPreview === 'function' && !window.savePermissionsPreview.__permHooked) {
+      var f = window.savePermissionsPreview;
+      var wrapped = function () { var r = f.apply(this, arguments); schedule(); return r; };
+      wrapped.__permHooked = true;
+      window.savePermissionsPreview = wrapped;
+      clearInterval(_si);
+    }
+  }, 500);
+})();
+
+</script>
+
+<script>
+/* ============================================================
+   ACACIA – Submit for Approval (maker–checker second check)
+   Modules: Invoices, Quotes, Orders, Bulk Invoicing, Credit Notes,
+   Sales Returns, Recurring Invoices, Purchase Orders, Debit Notes,
+   Bills, Bulk Billing.
+   Users WITHOUT the "Approve" right can only Submit for Approval.
+   Users WITH the right (or Admin) approve / reject from the inbox.
+   ============================================================ */
+(function () {
+  if (window.__acxApproval) return;
+  window.__acxApproval = true;
+
+  var MODULES = {
+    invoicesTab: "Invoices",
+    quotesTab: "Quotes",
+    ordersTab: "Orders",
+    bulkInvoicesTab: "Bulk Invoicing",
+    creditNoteTab: "Credit Notes",
+    salesReturnTab: "Sales Returns",
+    recurringInvoicesTab: "Recurring Invoices",
+    supplierPurchaseOrdersTab: "Purchase Orders",
+    supplierDebitNotesTab: "Debit Notes",
+    supplierBillsTab: "Bills",
+    bulkBillingTab: "Bulk Billing"
+  };
+  var KEY = "acx_approvals";
+
+  function me() {
+    try { return JSON.parse(localStorage.getItem("loggedInUser") || "null") || {}; } catch (e) { return {}; }
+  }
+  function who() { var u = me(); return u.username || u.name || u.email || "Unknown user"; }
+  function isAdmin() { return String(me().role || "").toLowerCase() === "admin"; }
+  function canApprove(mod) {
+    if (isAdmin()) return true;
+    if (typeof window.hasActionPermission === "function") return !!window.hasActionPermission(mod, "approve");
+    return false;
+  }
+  function load() { try { return JSON.parse(localStorage.getItem(KEY) || "[]") || []; } catch (e) { return []; } }
+  function save(list) { localStorage.setItem(KEY, JSON.stringify(list)); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
+  function money(n) { n = parseFloat(n); return isNaN(n) ? "-" : n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function pending(mod) { return load().filter(function (r) { return r.status === "Pending" && (!mod || r.module === mod); }); }
+
+  window.acxApprovalRequests = load;
+
+  /* ---------- submit dialog ---------- */
+  function submitDialog(mod, prefill) {
+    prefill = prefill || {};
+    var label = MODULES[mod] || mod;
+    var wrap = document.createElement("div");
+    wrap.className = "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50";
+    wrap.innerHTML =
+      '<div class="bg-white rounded-lg shadow-xl w-full max-w-md p-5">' +
+        '<h3 class="text-lg font-bold text-blue-900 mb-1">&#128228; Submit ' + esc(label) + ' for Approval</h3>' +
+        '<p class="text-xs text-gray-500 mb-4">Your entry will be held for a second check before it takes effect.</p>' +
+        '<label class="block text-xs font-semibold mb-1">Document / Reference No.</label>' +
+        '<input id="acxApRef" class="border rounded w-full px-2 py-1 mb-3 text-sm" value="' + esc(prefill.ref || "") + '" placeholder="e.g. INV-0231">' +
+        '<label class="block text-xs font-semibold mb-1">Party (Customer / Supplier)</label>' +
+        '<input id="acxApParty" class="border rounded w-full px-2 py-1 mb-3 text-sm" value="' + esc(prefill.party || "") + '">' +
+        '<label class="block text-xs font-semibold mb-1">Amount</label>' +
+        '<input id="acxApAmt" type="number" step="0.01" class="border rounded w-full px-2 py-1 mb-3 text-sm" value="' + esc(prefill.amount || "") + '">' +
+        '<label class="block text-xs font-semibold mb-1">Notes for the approver</label>' +
+        '<textarea id="acxApNote" rows="3" class="border rounded w-full px-2 py-1 mb-4 text-sm"></textarea>' +
+        '<div class="flex justify-end gap-2">' +
+          '<button data-no-perm="1" id="acxApCancel" class="px-4 py-2 rounded border text-sm">Cancel</button>' +
+          '<button data-no-perm="1" id="acxApOk" class="px-4 py-2 rounded bg-blue-900 text-white text-sm font-bold">Submit for Approval</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(wrap);
+    wrap.querySelector("#acxApCancel").onclick = function () { wrap.remove(); };
+    wrap.querySelector("#acxApOk").onclick = function () {
+      var list = load();
+      list.push({
+        id: "AP-" + Date.now(),
+        module: mod,
+        moduleLabel: label,
+        ref: wrap.querySelector("#acxApRef").value.trim() || "(no ref)",
+        party: wrap.querySelector("#acxApParty").value.trim(),
+        amount: wrap.querySelector("#acxApAmt").value,
+        note: wrap.querySelector("#acxApNote").value.trim(),
+        action: prefill.action || "",
+        submittedBy: who(),
+        submittedAt: new Date().toISOString(),
+        status: "Pending"
+      });
+      save(list);
+      wrap.remove();
+      renderBar(mod);
+      alert("\uD83D\uDCE4 Submitted for approval. An authorised user must approve it before it is final.");
+    };
+  }
+  window.acxSubmitForApproval = submitDialog;
+
+  /* ---------- inbox ---------- */
+  function inbox(mod) {
+    var all = load().slice().reverse();
+    var rows = all.map(function (r) {
+      var badge = r.status === "Pending" ? "bg-yellow-100 text-yellow-800"
+        : r.status === "Approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+      var act = (r.status === "Pending" && canApprove(r.module))
+        ? '<button data-no-perm="1" class="acx-ap-yes bg-green-600 text-white px-2 py-1 rounded text-xs mr-1" data-id="' + r.id + '">&#9989; Approve</button>' +
+          '<button data-no-perm="1" class="acx-ap-no bg-red-600 text-white px-2 py-1 rounded text-xs" data-id="' + r.id + '">&#10006; Reject</button>'
+        : (r.status === "Pending" ? '<span class="text-xs text-gray-400">Awaiting approver</span>'
+          : '<span class="text-xs text-gray-500">' + esc(r.decidedBy || "") + '</span>');
+      return '<tr>' +
+        '<td class="border px-2 py-1">' + esc(r.moduleLabel) + '</td>' +
+        '<td class="border px-2 py-1">' + esc(r.ref) + '</td>' +
+        '<td class="border px-2 py-1">' + esc(r.party || "-") + '</td>' +
+        '<td class="border px-2 py-1 text-right">' + money(r.amount) + '</td>' +
+        '<td class="border px-2 py-1">' + esc(r.submittedBy) + '</td>' +
+        '<td class="border px-2 py-1">' + esc((r.submittedAt || "").slice(0, 16).replace("T", " ")) + '</td>' +
+        '<td class="border px-2 py-1"><span class="px-2 py-0.5 rounded text-xs ' + badge + '">' + esc(r.status) + '</span></td>' +
+        '<td class="border px-2 py-1 whitespace-nowrap">' + act + '</td>' +
+      '</tr>';
+    }).join("") || '<tr><td colspan="8" class="border px-2 py-4 text-center text-gray-500">No approval requests yet.</td></tr>';
+
+    var wrap = document.createElement("div");
+    wrap.className = "fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-6 overflow-auto";
+    wrap.innerHTML =
+      '<div class="bg-white rounded-lg shadow-xl w-full max-w-5xl p-5">' +
+        '<div class="flex justify-between items-center mb-3">' +
+          '<h3 class="text-lg font-bold text-blue-900">&#128451; Approvals Inbox</h3>' +
+          '<button data-no-perm="1" id="acxIbClose" class="text-gray-500 text-xl leading-none">&times;</button>' +
+        '</div>' +
+        '<table class="w-full text-sm border"><thead class="bg-gray-100"><tr>' +
+          '<th class="border px-2 py-1 text-left">Module</th><th class="border px-2 py-1 text-left">Reference</th>' +
+          '<th class="border px-2 py-1 text-left">Party</th><th class="border px-2 py-1 text-right">Amount</th>' +
+          '<th class="border px-2 py-1 text-left">Submitted by</th><th class="border px-2 py-1 text-left">Date</th>' +
+          '<th class="border px-2 py-1 text-left">Status</th><th class="border px-2 py-1 text-left">Action</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>' +
+      '</div>';
+    document.body.appendChild(wrap);
+    wrap.querySelector("#acxIbClose").onclick = function () { wrap.remove(); };
+    wrap.addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest(".acx-ap-yes, .acx-ap-no") : null;
+      if (!b) return;
+      var approve = b.classList.contains("acx-ap-yes");
+      var list = load();
+      var rec = list.filter(function (x) { return x.id === b.getAttribute("data-id"); })[0];
+      if (!rec) return;
+      if (!canApprove(rec.module)) { alert("\uD83D\uDEAB You are not authorised to approve this."); return; }
+      var note = prompt((approve ? "Approve" : "Reject") + " " + rec.moduleLabel + " " + rec.ref + ".\nComment (optional):", "");
+      if (note === null) return;
+      rec.status = approve ? "Approved" : "Rejected";
+      rec.decidedBy = who();
+      rec.decidedAt = new Date().toISOString();
+      rec.decisionNote = note;
+      save(list);
+      wrap.remove();
+      inbox(mod);
+      renderBar(currentModule());
+    });
+  }
+  window.acxApprovalsInbox = inbox;
+
+  /* ---------- module bar ---------- */
+  function currentModule() {
+    for (var id in MODULES) {
+      var el = document.getElementById(id);
+      if (el && !el.classList.contains("hidden") && el.offsetParent !== null) return id;
+    }
+    return "";
+  }
+
+  function renderBar(mod) {
+    if (!mod || !MODULES[mod]) return;
+    var host = document.getElementById(mod);
+    if (!host) return;
+    var bar = null, kids = host.children;
+    for (var i = 0; i < kids.length; i++) {
+      if (kids[i].classList && kids[i].classList.contains("acx-approval-bar")) { bar = kids[i]; break; }
+    }
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.className = "acx-approval-bar";
+      host.insertBefore(bar, host.firstChild);
+    }
+    var approver = canApprove(mod);
+    var n = pending(mod).length;
+    var nAll = pending().length;
+    var sig = mod + "|" + approver + "|" + n + "|" + nAll;
+    if (bar.getAttribute("data-sig") === sig) return;
+    bar.setAttribute("data-sig", sig);
+    bar.innerHTML =
+      '<div class="flex flex-wrap items-center justify-between gap-2 mb-3 p-3 rounded border ' +
+        (approver ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200") + '">' +
+        '<div class="text-sm">' +
+          (approver
+            ? '<b class="text-green-800">&#9989; Approver</b> <span class="text-gray-600">&mdash; you can approve ' + esc(MODULES[mod]) + '.</span>'
+            : '<b class="text-amber-800">&#128274; Second check required</b> <span class="text-gray-600">&mdash; you can prepare ' + esc(MODULES[mod]) + ' and send them for approval.</span>') +
+          (n ? ' <span class="ml-2 px-2 py-0.5 rounded-full bg-yellow-200 text-yellow-900 text-xs font-bold">' + n + ' pending here</span>' : "") +
+        '</div>' +
+        '<div class="flex gap-2">' +
+          (approver
+            ? '<button data-no-perm="1" data-acx="inbox" class="bg-blue-900 text-white px-3 py-1.5 rounded text-sm font-bold">&#128451; Approvals Inbox' + (nAll ? " (" + nAll + ")" : "") + '</button>'
+            : '<button data-no-perm="1" data-acx="submit" class="bg-amber-600 text-white px-3 py-1.5 rounded text-sm font-bold">&#128228; Submit for Approval</button>' +
+              '<button data-no-perm="1" data-acx="inbox" class="border border-blue-900 text-blue-900 px-3 py-1.5 rounded text-sm">&#128196; My Submissions</button>') +
+        '</div>' +
+      '</div>';
+    var btns = bar.querySelectorAll("[data-acx]");
+    for (var j = 0; j < btns.length; j++) {
+      (function (b) {
+        b.onclick = function () { if (b.getAttribute("data-acx") === "inbox") { inbox(mod); } else { submitDialog(mod); } };
+      })(btns[j]);
+    }
+  }
+
+  window.acxRenderApprovalBar = function(){ renderBar(currentModule()); };
+  window.acxCurrentApprovalModule = currentModule;
+
+  /* ---------- intercept approve/post attempts by non-approvers ---------- */
+  document.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest("button, a[role='button'], input[type='button'], input[type='submit']") : null;
+    if (!btn || btn.hasAttribute("data-no-perm")) return;
+    var mod = currentModule();
+    if (!mod) return;
+    var host = document.getElementById(mod);
+    if (!host || !host.contains(btn)) return;
+    var txt = ((btn.getAttribute("onclick") || "") + " " + (btn.textContent || "") + " " + (btn.title || "")).toLowerCase();
+    if (!/approve|authoris|authoriz|\bpost\b|convert|finalis|finaliz/.test(txt)) return;
+    if (canApprove(mod)) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (confirm("\uD83D\uDEAB You don't have rights to approve " + MODULES[mod] + ".\n\nSubmit this for approval instead?")) {
+      submitDialog(mod, { action: (btn.textContent || "").trim().slice(0, 40) });
+    }
+  }, true);
+
+  /* ---------- keep the bar in sync ---------- */
+  (function tick() { try { renderBar(currentModule()); } catch (e) {} setTimeout(tick, 800); })();
+  document.addEventListener("click", function () { try { renderBar(currentModule()); } catch (e) {} setTimeout(function () { try { renderBar(currentModule()); } catch (e) {} }, 60); }, true);
+  (function hook() {
+    if (typeof window.showTab === "function" && !window.showTab.__acxHooked) {
+      var f = window.showTab;
+      var w = function () { var r = f.apply(this, arguments); setTimeout(function () { renderBar(currentModule()); }, 30); return r; };
+      w.__acxHooked = true; window.showTab = w; return;
+    }
+    setTimeout(hook, 400);
+  })();
+  if (document.readyState !== "loading") { renderBar(currentModule()); }
+  else { document.addEventListener("DOMContentLoaded", function () { renderBar(currentModule()); }); }
 })();
 </script>
