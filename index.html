@@ -85779,31 +85779,299 @@ RevenueModule.refresh();
 });
 </script>
 
-<!-- ORGPROFILE --><div id="orgProfileTab" class="hidden ml-84 mr-7 p-2"><div id="orgNameHeader" class="text-2xl font-bold mb-6 text-center">Organization Profile</div><div id="orgSummaryCard" class="bg-white rounded-xl shadow p-5 mb-6 flex flex-wrap items-center gap-5"><div class="relative"><img id="orgSummaryLogo" class="hidden w-20 h-20 rounded-lg object-cover border" alt="Organization Logo" /><div id="orgSummaryLogoPlaceholder" class="w-20 h-20 rounded-lg bg-blue-100 text-blue-900 flex items-center justify-center text-3xl font-bold">🏢</div></div><div class="flex-1 min-w-[200px]"><div id="orgSummaryName" class="text-xl font-bold text-blue-900">Your Organization</div><div id="orgSummaryMeta" class="text-sm text-gray-500">Complete your profile below</div><div class="mt-2 flex flex-wrap gap-2 text-xs"><span class="bg-gray-100 px-2 py-1 rounded">ID: <b id="orgSummaryCompanyId">—</b></span><span class="bg-blue-100 text-blue-900 px-2 py-1 rounded">Plan: <b id="orgSummaryPlan">—</b></span><span class="bg-gray-100 px-2 py-1 rounded">Last saved: <b id="orgSummaryUpdated">Never</b></span></div></div><div class="w-full sm:w-56"><div class="flex justify-between text-xs text-gray-500 mb-1"><span>Profile completeness</span><span id="orgCompletenessPct">0%</span></div><div class="w-full bg-gray-200 rounded-full h-2"><div id="orgCompletenessBar" class="h-2 rounded-full bg-red-500" style="width:0%"></div></div></div></div><form id="orgProfileForm" class="bg-white p-6 rounded shadow space-y-10"><div class="space-y-2"><h3 class="text-lg font-semibold">Basic Information</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="col-span-3"><label for="orgLogo" class="block text-sm font-medium">Organization Logo</label><div class="flex items-center gap-3"><input type="file" id="orgLogo" accept=".jpg,.jpeg,.png,.gif,.bmp" class="border p-2 rounded w-full" onchange="previewOrgLogo(event)" /><img id="orgLogoPreview" class="hidden w-14 h-14 rounded object-cover border" alt="Logo preview" /></div><p class="text-xs text-gray-500 mt-1">
-            Preferred: 240x240px @ 72 DPI • Max 1MB • JPG, PNG, GIF, BMP
-          </p></div><input id="orgName" type="text" placeholder="e.g., Acacia Books" class="border p-2 rounded" /><input id="orgPIN" type="text" placeholder="e.g., P000000000K" class="border p-2 rounded" /><input id="orgCurrency" type="text" placeholder="e.g., KES" class="border p-2 rounded" /><input id="orgPhone" type="text" placeholder="Phone" class="border p-2 rounded" /><input id="orgEmail" type="email" placeholder="Email" class="border p-2 rounded" /><input id="orgAddress" type="text" placeholder="Address" class="border p-2 rounded col-span-3" /><input id="orgWebsite" type="text" placeholder="Website (e.g., www.acacia.co.ke)" class="border p-2 rounded" /><input id="orgRegNumber" type="text" placeholder="Business Registration No." class="border p-2 rounded" /><select id="orgBusinessType" class="border p-2 rounded"><option value="">Business Type</option><option>Sole Proprietorship</option><option>Partnership</option><option>Limited Company (LTD)</option><option>Public Limited Company (PLC)</option><option>NGO / Non-Profit</option><option>Cooperative / SACCO</option><option>Other</option></select><input id="orgVATNumber" type="text" placeholder="VAT / Tax Number" class="border p-2 rounded" /></div></div><div class="space-y-2"><h3 class="text-lg font-semibold">Contacts & Industry</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><input id="orgIndustry" type="text" placeholder="e.g., Agriculture" class="border p-2 rounded" /><input id="orgLocation" type="text" placeholder="Organization Location" class="border p-2 rounded" /><div class="flex items-center gap-2 col-span-3"><input type="checkbox" id="diffPaymentAddress" class="h-4 w-4" /><label for="diffPaymentAddress" class="text-sm">Add a different address for payment stubs?</label></div><input id="primaryContact" type="text" placeholder="Primary Contact Name" class="border p-2 rounded" /><input id="primaryContactEmail" type="email" placeholder="e.g., account.com" class="border p-2 rounded" /></div></div><div class="space-y-2"><h3 class="text-lg font-semibold">Settings</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="sm:col-span-1"><label for="baseCurrency" class="block text-sm font-medium text-blue-900 mb-1">Base Currency</label><select id="baseCurrency" class="border p-2 rounded w-full"><option value="USD">🇺🇸 USD – US Dollar</option><option value="EUR">🇪🇺 EUR – Euro</option><option value="GBP">🇬🇧 GBP – British Pound</option><option value="JPY">🇯🇵 JPY – Japanese Yen</option><option value="AUD">🇦🇺 AUD – Australian Dollar</option><option value="CAD">🇨🇦 CAD – Canadian Dollar</option><option value="CHF">🇨🇭 CHF – Swiss Franc</option><option value="CNY">🇨🇳 CNY – Chinese Yuan</option><option value="INR">🇮🇳 INR – Indian Rupee</option><option value="KES">🇰🇪 KES – Kenyan Shilling</option><option value="NZD">🇳🇿 NZD – New Zealand Dollar</option><option value="SGD">🇸🇬 SGD – Singapore Dollar</option><option value="ZAR">🇿🇦 ZAR – South African Rand</option><option value="KRW">🇰🇷 KRW – South Korean Won</option><option value="MXN">🇲🇽 MXN – Mexican Peso</option><option value="BRL">🇧🇷 BRL – Brazilian Real</option><option value="RUB">🇷🇺 RUB – Russian Ruble</option><option value="TRY">🇹🇷 TRY – Turkish Lira</option><option value="NOK">🇳🇴 NOK – Norwegian Krone</option><option value="SEK">🇸🇪 SEK – Swedish Krona</option><option value="DKK">🇩🇰 DKK – Danish Krone</option><option value="SAR">🇸🇦 SAR – Saudi Riyal</option><option value="AED">🇦🇪 AED – UAE Dirham</option><option value="HKD">🇭🇰 HKD – Hong Kong Dollar</option></select></div><div class="sm:col-span-1"><label for="fiscalYear" class="block text-sm font-medium text-blue-900 mb-1">Fiscal Year</label><select id="fiscalYear" class="border p-2 rounded w-full"><option value="">Select Fiscal Year</option><option value="January - December">January – December</option><option value="April - March">April – March</option><option value="July - June">July – June</option><option value="October - September">October – September</option></select></div><div class="sm:col-span-1"><label for="reportBasis" class="block text-sm font-medium text-blue-900 mb-1">Report Basis</label><select id="reportBasis" class="border p-2 rounded w-full"><option value="">Select Report Basis</option><option value="Accrual">Accrual</option><option value="Cash">Cash</option></select></div><div class="sm:col-span-1"><label for="language" class="block text-sm font-medium text-blue-900 mb-1">Language</label><select id="language" class="border p-2 rounded w-full"><option value="">Select Language</option><option value="en">English 🇬🇧</option><option value="fr">French 🇫🇷</option><option value="sw">Swahili 🇰🇪</option><option value="es">Spanish 🇪🇸</option><option value="de">German 🇩🇪</option><option value="pt">Portuguese 🇵🇹</option><option value="ar">Arabic 🇸🇦</option><option value="hi">Hindi 🇮🇳</option><option value="zh">Chinese 🇨🇳</option><option value="ru">Russian 🇷🇺</option><option value="ja">Japanese 🇯🇵</option><option value="ko">Korean 🇰🇷</option><option value="it">Italian 🇮🇹</option><option value="nl">Dutch 🇳🇱</option><option value="tr">Turkish 🇹🇷</option><option value="vi">Vietnamese 🇻🇳</option><option value="th">Thai 🇹🇭</option><option value="fa">Persian 🇮🇷</option><option value="id">Indonesian 🇮🇩</option><option value="he">Hebrew 🇮🇱</option></select></div><div class="sm:col-span-1"><label for="timeZone" class="block text-sm font-medium text-blue-900 mb-1">Time Zone</label><select id="timeZone" class="border p-2 rounded w-full"><option value="">Select Time Zone</option><option value="Africa/Nairobi">(GMT+03:00) Africa/Nairobi</option><option value="Europe/London">(GMT+00:00) Europe/London</option><option value="America/New_York">(GMT-05:00) America/New_York</option><option value="America/Chicago">(GMT-06:00) America/Chicago</option><option value="America/Denver">(GMT-07:00) America/Denver</option><option value="America/Los_Angeles">(GMT-08:00) America/Los_Angeles</option><option value="Asia/Dubai">(GMT+04:00) Asia/Dubai</option><option value="Asia/Kolkata">(GMT+05:30) Asia/Kolkata</option><option value="Asia/Tokyo">(GMT+09:00) Asia/Tokyo</option><option value="Asia/Shanghai">(GMT+08:00) Asia/Shanghai</option><option value="Europe/Paris">(GMT+01:00) Europe/Paris</option><option value="Europe/Berlin">(GMT+01:00) Europe/Berlin</option><option value="Europe/Moscow">(GMT+03:00) Europe/Moscow</option><option value="Australia/Sydney">(GMT+10:00) Australia/Sydney</option><option value="Australia/Perth">(GMT+08:00) Australia/Perth</option><option value="America/Sao_Paulo">(GMT-03:00) America/Sao_Paulo</option><option value="America/Toronto">(GMT-05:00) America/Toronto</option><option value="America/Mexico_City">(GMT-06:00) America/Mexico_City</option><option value="Asia/Jakarta">(GMT+07:00) Asia/Jakarta</option><option value="Africa/Johannesburg">(GMT+02:00) Africa/Johannesburg</option></select></div><div class="sm:col-span-1"><label for="dateFormat" class="block text-sm font-medium text-blue-900 mb-1">Date Format</label><select id="dateFormat" class="border p-2 rounded w-full"><option value="">Select Date Format</option><option value="DD/MM/YYYY">DD/MM/YYYY</option><option value="MM/DD/YYYY">MM/DD/YYYY</option><option value="YYYY-MM-DD">YYYY-MM-DD</option><option value="DD.MM.YYYY">DD.MM.YYYY</option><option value="YYYY/MM/DD">YYYY/MM/DD</option><option value="DD-MM-YYYY">DD-MM-YYYY</option><option value="MM-DD-YYYY">MM-DD-YYYY</option><option value="YYYY.MM.DD">YYYY.MM.DD</option><option value="D MMM, YYYY">D MMM, YYYY</option><option value="MMM D, YYYY">MMM D, YYYY</option></select></div><div class="sm:col-span-1"><label for="companyId" class="block text-sm font-medium text-blue-900 mb-1">Company ID</label><input id="companyId" type="text" readonly class="border p-2 rounded bg-gray-100 text-gray-700 w-full" /><button type="button"
-          onclick="generateCompanyId()"
-          class="mt-2 px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
-    Generate New ID
-  </button></div></div></div><div class="space-y-2 mt-4"><h3 class="text-lg font-semibold text-blue-900">Additional Custom Fields</h3><p class="text-xs text-gray-500">Add extra details like slogan, branch code, or bank details for your documents.</p><div id="additionalFields" class="space-y-2"></div><button type="button" onclick="addAdditionalField()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">+ Add Custom Field</button></div><div class="space-y-2 mt-4"><h3 class="text-lg font-semibold text-blue-900">Subsidiary Companies</h3><div id="subsidiaryFields" class="space-y-3"><div class="grid grid-cols-2 sm:grid-cols-3 gap-3 subsidiary-field border rounded-lg p-3 bg-gray-50"><input type="text" class="subName border p-2 rounded" placeholder="Subsidiary Name" /><input type="text" class="subLocation border p-2 rounded" placeholder="Location" /><input type="text" class="subType border p-2 rounded" placeholder="Type of Company" /><input type="text" class="subWorth border p-2 rounded" placeholder="Worth (e.g., $500,000)" /><input type="email" class="subEmail border p-2 rounded" placeholder="Email" /><input type="text" class="subPhone border p-2 rounded" placeholder="Phone Number" /></div></div><button type="button"
-          onclick="addSubsidiaryField()"
-          class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
-    + Add Another Subsidiary
-  </button></div><div class="text-center"><button type="button" onclick="saveOrgInfo()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-        Save Organization Info
-      </button></div></form></div><div id="warehousesTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-1xl font-bold mb-4 text-left">Warehouses</h2><!-- 🔎 Warehouse Search --><div class="relative mb-4 mt-2"><input
-    type="text"
-    id="warehouseSearch"
-    placeholder="Search Warehouses (/)"
-    class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-    oninput="searchWarehouses()"
-  /><!-- Search Icon --><svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-lg font-bold mb-2">Manage Branches</h3><div class="flex space-x-2 mb-4"><input id="warehouseBranchName" type="text" placeholder="Branch Name" class="border p-2 rounded w-full" /><button type="button" onclick="addBranch()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-        Add
-      </button></div><ul id="branchList" class="list-disc pl-6"></ul></div><div class="bg-white p-6 rounded shadow space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input id="warehouseName" type="text" placeholder="Warehouse Name" class="border p-2 rounded w-full" required /><select id="warehouseBranch" class="border p-2 rounded w-full" required></select><p class="md:col-span-2 text-sm text-yellow-600">
-        Note: Only users in the selected branch can be provided permission to access this warehouse.
-      </p><input id="street1" type="text" placeholder="Street 1" class="border p-2 rounded w-full" /><input id="street2" type="text" placeholder="Street 2" class="border p-2 rounded w-full" /><input id="city" type="text" placeholder="City" class="border p-2 rounded w-full" /><select id="country" class="border p-2 rounded w-full" onchange="populateStates()" required></select><select id="state" class="border p-2 rounded w-full" required></select><input id="zip" type="text" placeholder="ZIP Code" class="border p-2 rounded w-full" /><input id="warehousePhone" type="text" placeholder="Phone" class="border p-2 rounded w-full" required /><input id="warehouseEmail" type="email" placeholder="Email" class="border p-2 rounded w-full" required /></div><div class="text-right"><button id="addWarehouseBtn" onclick="addWarehouse()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
-        Add Warehouse
-      </button></div><table class="w-full border mt-4"><thead class="bg-gray-100"><tr><th class="p-2 border">Name</th><th class="p-2 border">Branch</th><th class="p-2 border">Street 1</th><th class="p-2 border">Street 2</th><th class="p-2 border">City</th><th class="p-2 border">State</th><th class="p-2 border">Country</th><th class="p-2 border">ZIP</th><th class="p-2 border">Phone</th><th class="p-2 border">Email</th><th class="p-2 border">Stock Value</th><th class="p-2 border">Actions</th></tr></thead><tbody id="warehouseList"></tbody></table></div></div><div id="DatacenterTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-2xl font-bold mb-6 text-center">Data center</h2><div class="border rounded-xl p-4 mt-6 bg-gray-50"><h3 class="font-semibold mb-2">Data</h3><div class="flex flex-wrap gap-2"><button class="px-3 py-1.5 rounded bg-blue-900 text-white" onclick="backupZIP()">
+<!-- ORGPROFILE --><div id="orgProfileTab" class="hidden ml-84 mr-7 p-2"><style id="orgProfileStyles">
+#orgProfileTab{--op-navy:#0f2557;--op-navy2:#1e3a8a;--op-blue:#2563eb;--op-gold:#facc15;}
+#orgProfileTab .op-hero{background:linear-gradient(135deg,var(--op-navy) 0%,var(--op-navy2) 55%,#1d4ed8 100%);border-radius:1rem;padding:1.5rem;color:#fff;box-shadow:0 10px 25px -8px rgba(15,37,87,.45);position:relative;overflow:hidden}
+#orgProfileTab .op-hero:before{content:"";position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:9999px;background:rgba(255,255,255,.06)}
+#orgProfileTab .op-hero:after{content:"";position:absolute;bottom:-80px;left:30%;width:260px;height:260px;border-radius:9999px;background:rgba(255,255,255,.04)}
+#orgProfileTab .op-hero-inner{position:relative;z-index:1}
+#orgProfileTab .op-avatar{width:5.5rem;height:5.5rem;border-radius:1rem;object-fit:cover;border:3px solid rgba(255,255,255,.85);background:#fff}
+#orgProfileTab .op-avatar-ph{width:5.5rem;height:5.5rem;border-radius:1rem;display:flex;align-items:center;justify-content:center;font-size:2.25rem;background:rgba(255,255,255,.15);border:3px solid rgba(255,255,255,.5)}
+#orgProfileTab .op-chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:9999px;padding:.2rem .65rem;font-size:.72rem;color:#eef2ff}
+#orgProfileTab .op-chip b{color:#fff}
+#orgProfileTab .op-track{background:rgba(255,255,255,.22);border-radius:9999px;height:.5rem;overflow:hidden}
+#orgProfileTab .op-nav{position:sticky;top:0;z-index:20;background:#f8fafc;border:1px solid #e5e7eb;border-radius:.75rem;padding:.5rem;display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0}
+#orgProfileTab .op-nav a{font-size:.78rem;font-weight:600;color:#1e3a8a;background:#fff;border:1px solid #dbe3f5;border-radius:9999px;padding:.35rem .75rem;text-decoration:none;white-space:nowrap;transition:all .15s;cursor:pointer}
+#orgProfileTab .op-nav a:hover{background:#eff6ff;border-color:#93c5fd}
+#orgProfileTab .op-nav a.op-nav-active{background:#1e3a8a;color:#fff;border-color:#1e3a8a}
+#orgProfileTab .op-card{background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:1.25rem;margin-bottom:1.25rem;scroll-margin-top:5rem}
+#orgProfileTab .op-card-head{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid #f1f5f9}
+#orgProfileTab .op-card-icon{width:2.25rem;height:2.25rem;border-radius:.6rem;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+#orgProfileTab .op-card-title{font-weight:700;color:#0f2557;font-size:1.02rem;line-height:1.2}
+#orgProfileTab .op-card-sub{font-size:.75rem;color:#6b7280;margin-top:1px}
+#orgProfileTab label.op-label{display:block;font-size:.75rem;font-weight:600;color:#374151;margin-bottom:.25rem}
+#orgProfileTab .op-hint{font-size:.7rem;color:#9ca3af;margin-top:.2rem}
+#orgProfileTab .op-input,#orgProfileTab select,#orgProfileTab input[type=text],#orgProfileTab input[type=email],#orgProfileTab input[type=file]{transition:box-shadow .15s,border-color .15s}
+#orgProfileTab input:focus,#orgProfileTab select:focus,#orgProfileTab textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+#orgProfileTab .op-dropzone{border:1.5px dashed #c7d2fe;border-radius:.75rem;background:#f8faff;padding:.6rem;display:flex;align-items:center;gap:.75rem}
+#orgProfileTab .op-dropzone:hover{background:#f0f4ff;border-color:#93c5fd}
+#orgProfileTab .additional-field,#orgProfileTab .subsidiary-field{background:#f9fafb;border:1px solid #e5e7eb !important;border-radius:.6rem !important;padding:.65rem !important;transition:box-shadow .15s}
+#orgProfileTab .additional-field:hover,#orgProfileTab .subsidiary-field:hover{box-shadow:0 2px 8px rgba(15,23,42,.06)}
+#orgProfileTab .op-savebar{position:sticky;bottom:.5rem;z-index:10;background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;box-shadow:0 8px 22px -6px rgba(0,0,0,.15);padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1rem}
+#orgProfileTab .op-savebtn{background:var(--op-navy2);color:#fff;font-weight:700;padding:.55rem 1.4rem;border-radius:.5rem;transition:background .15s}
+#orgProfileTab .op-savebtn:hover{background:#1d3577}
+#orgProfileTab .op-addbtn{border:1px dashed #1e3a8a;color:#1e3a8a;background:#fff;font-weight:600;padding:.4rem .9rem;border-radius:.5rem;font-size:.82rem}
+#orgProfileTab .op-addbtn:hover{background:#eff6ff}
+@media(max-width:640px){#orgProfileTab .op-nav{position:static}}
+</style>
+
+<div id="orgHeroCard" class="op-hero mb-2"><div class="op-hero-inner flex flex-wrap items-center gap-5">
+<div class="relative"><img id="orgSummaryLogo" class="hidden op-avatar" alt="Organization Logo" /><div id="orgSummaryLogoPlaceholder" class="op-avatar-ph">🏢</div></div>
+<div class="flex-1 min-w-[220px]">
+<div id="orgNameHeader" class="text-2xl font-bold text-white">Organization Profile</div>
+<div id="orgSummaryMeta" class="text-sm text-blue-100 mt-0.5">Complete your profile below</div>
+<div class="mt-3 flex flex-wrap gap-2"><span class="op-chip">ID: <b id="orgSummaryCompanyId">—</b></span><span class="op-chip">Plan: <b id="orgSummaryPlan">—</b></span><span class="op-chip">Last saved: <b id="orgSummaryUpdated">Never</b></span></div>
+</div>
+<div class="w-full sm:w-60">
+<div class="flex justify-between text-xs text-blue-100 mb-1"><span>Profile completeness</span><span id="orgCompletenessPct" class="font-semibold text-white">0%</span></div>
+<div class="op-track"><div id="orgCompletenessBar" class="h-2 rounded-full bg-red-500" style="width:0%"></div></div>
+</div>
+</div></div>
+
+<nav class="op-nav"><a href="#" data-op-target="opBasicInfo" onclick="return opShowSection('opBasicInfo')">🏢 Basic Info</a><a href="#" data-op-target="opContacts" onclick="return opShowSection('opContacts')">📇 Contacts &amp; Industry</a><a href="#" data-op-target="opSettings" onclick="return opShowSection('opSettings')">🌍 Regional &amp; Financial</a><a href="#" data-op-target="opCustomFields" onclick="return opShowSection('opCustomFields')">🧩 Custom Fields</a><a href="#" data-op-target="opSubsidiaries" onclick="return opShowSection('opSubsidiaries')">🏬 Subsidiaries</a><a href="#" data-op-target="acxBrandingSection" onclick="return opShowSection('acxBrandingSection')">🎨 Branding</a><a href="#" data-op-target="acxDomainSection" onclick="return opShowSection('acxDomainSection')">🌐 Domain</a><a href="#" data-op-target="acxSubscriptionSection" onclick="return opShowSection('acxSubscriptionSection')">💳 Subscription</a></nav>
+
+<form id="orgProfileForm">
+
+<div id="opBasicInfo" class="op-card"><div class="op-card-head"><div class="op-card-icon">🏢</div><div><div class="op-card-title">Basic Information</div><div class="op-card-sub">Your organization's core identity and registration details</div></div></div>
+
+<div class="mb-4"><label class="op-label" for="orgLogo">Organization Logo</label><div class="op-dropzone"><input type="file" id="orgLogo" accept=".jpg,.jpeg,.png,.gif,.bmp" class="border p-2 rounded w-full bg-white text-sm" onchange="previewOrgLogo(event)" /><img id="orgLogoPreview" class="hidden w-14 h-14 rounded object-cover border flex-shrink-0" alt="Logo preview" /></div><p class="op-hint">Preferred: 240x240px @ 72 DPI • Max 1MB • JPG, PNG, GIF, BMP</p></div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<div><label class="op-label" for="orgName">Organization Name</label><input id="orgName" type="text" placeholder="e.g., Acacia Books" class="border p-2 rounded w-full" /></div>
+<div><label class="op-label" for="orgPIN">PIN</label><input id="orgPIN" type="text" placeholder="e.g., P000000000K" class="border p-2 rounded w-full" /></div>
+<div><label class="op-label" for="orgCurrency">Currency</label><input id="orgCurrency" type="text" placeholder="e.g., KES" class="border p-2 rounded w-full" /></div>
+<div><label class="op-label" for="orgPhone">Phone</label><input id="orgPhone" type="text" placeholder="Phone" class="border p-2 rounded w-full" /></div>
+<div><label class="op-label" for="orgEmail">Email</label><input id="orgEmail" type="email" placeholder="Email" class="border p-2 rounded w-full" /></div>
+<div><label class="op-label" for="orgWebsite">Website</label><input id="orgWebsite" type="text" placeholder="e.g., www.acacia.co.ke" class="border p-2 rounded w-full" /></div>
+<div class="sm:col-span-2 lg:col-span-3"><label class="op-label" for="orgAddress">Address</label><input id="orgAddress" type="text" placeholder="Address" class="border p-2 rounded w-full" /></div>
+<div><label class="op-label" for="orgRegNumber">Business Registration No.</label><input id="orgRegNumber" type="text" placeholder="Business Registration No." class="border p-2 rounded w-full" /></div>
+<div><label class="op-label" for="orgBusinessType">Business Type</label><select id="orgBusinessType" class="border p-2 rounded w-full"><option value="">Business Type</option><option>Sole Proprietorship</option><option>Partnership</option><option>Limited Company (LTD)</option><option>Public Limited Company (PLC)</option><option>NGO / Non-Profit</option><option>Cooperative / SACCO</option><option>Other</option></select></div>
+<div><label class="op-label" for="orgVATNumber">VAT / Tax Number</label><input id="orgVATNumber" type="text" placeholder="VAT / Tax Number" class="border p-2 rounded w-full" /></div>
+</div>
+</div>
+
+<div id="opContacts" class="op-card" style="display:none"><div class="op-card-head"><div class="op-card-icon">📇</div><div><div class="op-card-title">Contacts &amp; Industry</div><div class="op-card-sub">Who to reach, and where the business operates</div></div></div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<div><label class="op-label" for="orgIndustry">Industry</label><input id="orgIndustry" type="text" placeholder="e.g., Agriculture" class="border p-2 rounded w-full" /></div>
+<div><label class="op-label" for="orgLocation">Organization Location</label><input id="orgLocation" type="text" placeholder="Organization Location" class="border p-2 rounded w-full" /></div>
+<div class="flex items-end"><label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" id="diffPaymentAddress" class="h-4 w-4" /> Different address for payment stubs?</label></div>
+<div><label class="op-label" for="primaryContact">Primary Contact Name</label><input id="primaryContact" type="text" placeholder="Primary Contact Name" class="border p-2 rounded w-full" /></div>
+<div><label class="op-label" for="primaryContactEmail">Primary Contact Email</label><input id="primaryContactEmail" type="email" placeholder="e.g., name@company.com" class="border p-2 rounded w-full" /></div>
+</div>
+</div>
+
+<div id="opSettings" class="op-card" style="display:none"><div class="op-card-head"><div class="op-card-icon">🌍</div><div><div class="op-card-title">Regional &amp; Financial Settings</div><div class="op-card-sub">Currency, calendar and localization defaults used across the app</div></div></div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<div><label class="op-label" for="baseCurrency">Base Currency</label><select id="baseCurrency" class="border p-2 rounded w-full"><option value="USD">🇺🇸 USD – US Dollar</option><option value="EUR">🇪🇺 EUR – Euro</option><option value="GBP">🇬🇧 GBP – British Pound</option><option value="JPY">🇯🇵 JPY – Japanese Yen</option><option value="AUD">🇦🇺 AUD – Australian Dollar</option><option value="CAD">🇨🇦 CAD – Canadian Dollar</option><option value="CHF">🇨🇭 CHF – Swiss Franc</option><option value="CNY">🇨🇳 CNY – Chinese Yuan</option><option value="INR">🇮🇳 INR – Indian Rupee</option><option value="KES">🇰🇪 KES – Kenyan Shilling</option><option value="NZD">🇳🇿 NZD – New Zealand Dollar</option><option value="SGD">🇸🇬 SGD – Singapore Dollar</option><option value="ZAR">🇿🇦 ZAR – South African Rand</option><option value="KRW">🇰🇷 KRW – South Korean Won</option><option value="MXN">🇲🇽 MXN – Mexican Peso</option><option value="BRL">🇧🇷 BRL – Brazilian Real</option><option value="RUB">🇷🇺 RUB – Russian Ruble</option><option value="TRY">🇹🇷 TRY – Turkish Lira</option><option value="NOK">🇳🇴 NOK – Norwegian Krone</option><option value="SEK">🇸🇪 SEK – Swedish Krona</option><option value="DKK">🇩🇰 DKK – Danish Krone</option><option value="SAR">🇸🇦 SAR – Saudi Riyal</option><option value="AED">🇦🇪 AED – UAE Dirham</option><option value="HKD">🇭🇰 HKD – Hong Kong Dollar</option></select></div>
+<div><label class="op-label" for="fiscalYear">Fiscal Year</label><select id="fiscalYear" class="border p-2 rounded w-full"><option value="">Select Fiscal Year</option><option value="January - December">January – December</option><option value="April - March">April – March</option><option value="July - June">July – June</option><option value="October - September">October – September</option></select></div>
+<div><label class="op-label" for="reportBasis">Report Basis</label><select id="reportBasis" class="border p-2 rounded w-full"><option value="">Select Report Basis</option><option value="Accrual">Accrual</option><option value="Cash">Cash</option></select></div>
+<div><label class="op-label" for="language">Language</label><select id="language" class="border p-2 rounded w-full"><option value="">Select Language</option><option value="en">English 🇬🇧</option><option value="fr">French 🇫🇷</option><option value="sw">Swahili 🇰🇪</option><option value="es">Spanish 🇪🇸</option><option value="de">German 🇩🇪</option><option value="pt">Portuguese 🇵🇹</option><option value="ar">Arabic 🇸🇦</option><option value="hi">Hindi 🇮🇳</option><option value="zh">Chinese 🇨🇳</option><option value="ru">Russian 🇷🇺</option><option value="ja">Japanese 🇯🇵</option><option value="ko">Korean 🇰🇷</option><option value="it">Italian 🇮🇹</option><option value="nl">Dutch 🇳🇱</option><option value="tr">Turkish 🇹🇷</option><option value="vi">Vietnamese 🇻🇳</option><option value="th">Thai 🇹🇭</option><option value="fa">Persian 🇮🇷</option><option value="id">Indonesian 🇮🇩</option><option value="he">Hebrew 🇮🇱</option></select></div>
+<div><label class="op-label" for="timeZone">Time Zone</label><select id="timeZone" class="border p-2 rounded w-full"><option value="">Select Time Zone</option><option value="Africa/Nairobi">(GMT+03:00) Africa/Nairobi</option><option value="Europe/London">(GMT+00:00) Europe/London</option><option value="America/New_York">(GMT-05:00) America/New_York</option><option value="America/Chicago">(GMT-06:00) America/Chicago</option><option value="America/Denver">(GMT-07:00) America/Denver</option><option value="America/Los_Angeles">(GMT-08:00) America/Los_Angeles</option><option value="Asia/Dubai">(GMT+04:00) Asia/Dubai</option><option value="Asia/Kolkata">(GMT+05:30) Asia/Kolkata</option><option value="Asia/Tokyo">(GMT+09:00) Asia/Tokyo</option><option value="Asia/Shanghai">(GMT+08:00) Asia/Shanghai</option><option value="Europe/Paris">(GMT+01:00) Europe/Paris</option><option value="Europe/Berlin">(GMT+01:00) Europe/Berlin</option><option value="Europe/Moscow">(GMT+03:00) Europe/Moscow</option><option value="Australia/Sydney">(GMT+10:00) Australia/Sydney</option><option value="Australia/Perth">(GMT+08:00) Australia/Perth</option><option value="America/Sao_Paulo">(GMT-03:00) America/Sao_Paulo</option><option value="America/Toronto">(GMT-05:00) America/Toronto</option><option value="America/Mexico_City">(GMT-06:00) America/Mexico_City</option><option value="Asia/Jakarta">(GMT+07:00) Asia/Jakarta</option><option value="Africa/Johannesburg">(GMT+02:00) Africa/Johannesburg</option></select></div>
+<div><label class="op-label" for="dateFormat">Date Format</label><select id="dateFormat" class="border p-2 rounded w-full"><option value="">Select Date Format</option><option value="DD/MM/YYYY">DD/MM/YYYY</option><option value="MM/DD/YYYY">MM/DD/YYYY</option><option value="YYYY-MM-DD">YYYY-MM-DD</option><option value="DD.MM.YYYY">DD.MM.YYYY</option><option value="YYYY/MM/DD">YYYY/MM/DD</option><option value="DD-MM-YYYY">DD-MM-YYYY</option><option value="MM-DD-YYYY">MM-DD-YYYY</option><option value="YYYY.MM.DD">YYYY.MM.DD</option><option value="D MMM, YYYY">D MMM, YYYY</option><option value="MMM D, YYYY">MMM D, YYYY</option></select></div>
+<div><label class="op-label" for="companyId">Company ID</label><input id="companyId" type="text" readonly class="border p-2 rounded bg-gray-100 text-gray-700 w-full" /><button type="button" onclick="generateCompanyId()" class="mt-2 px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800 text-sm">Generate New ID</button></div>
+</div>
+</div>
+
+<div id="opCustomFields" class="op-card" style="display:none"><div class="op-card-head"><div class="op-card-icon">🧩</div><div><div class="op-card-title">Additional Custom Fields</div><div class="op-card-sub">Add extra details like slogan, branch code, or bank details for your documents</div></div></div>
+<div id="additionalFields" class="space-y-2 mb-3"></div>
+<button type="button" onclick="addAdditionalField()" class="op-addbtn">+ Add Custom Field</button>
+</div>
+
+<div id="opSubsidiaries" class="op-card" style="display:none"><div class="op-card-head"><div class="op-card-icon">🏬</div><div><div class="op-card-title">Subsidiary Companies</div><div class="op-card-sub">Track related or subsidiary businesses under this organization</div></div></div>
+<div id="subsidiaryFields" class="space-y-3 mb-3">
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 subsidiary-field border rounded-lg p-3 bg-gray-50">
+<input type="text" class="subName border p-2 rounded" placeholder="Subsidiary Name" />
+<input type="text" class="subLocation border p-2 rounded" placeholder="Location" />
+<input type="text" class="subType border p-2 rounded" placeholder="Type of Company" />
+<input type="text" class="subWorth border p-2 rounded" placeholder="Worth (e.g., $500,000)" />
+<input type="email" class="subEmail border p-2 rounded" placeholder="Email" />
+<input type="text" class="subPhone border p-2 rounded" placeholder="Phone Number" />
+</div>
+</div>
+<button type="button" onclick="addSubsidiaryField()" class="op-addbtn">+ Add Another Subsidiary</button>
+</div>
+
+<div class="op-savebar"><div class="text-xs text-gray-500">Changes are saved locally to this organization's profile.</div><button type="button" onclick="saveOrgInfo()" class="op-savebtn">💾 Save Organization Info</button></div>
+
+</form>
+<script>
+(function(){
+  var OP_PAGES = ['opBasicInfo','opContacts','opSettings','opCustomFields','opSubsidiaries','acxBrandingSection','acxDomainSection','acxSubscriptionSection'];
+  var opActive = 'opBasicInfo';
+  function opApply(){
+    OP_PAGES.forEach(function(id){
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.style.display = (id === opActive) ? '' : 'none';
+    });
+    var tab = document.getElementById('orgProfileTab');
+    if (tab) {
+      tab.querySelectorAll('.op-nav a').forEach(function(a){
+        a.classList.toggle('op-nav-active', a.getAttribute('data-op-target') === opActive);
+      });
+    }
+  }
+  window.opShowSection = function(id){
+    opActive = id;
+    opApply();
+    var el = document.getElementById(id);
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return false;
+  };
+  function opInit(){
+    opApply();
+    var tab = document.getElementById('orgProfileTab');
+    if (tab && window.MutationObserver) {
+      var mo = new MutationObserver(function(){ opApply(); });
+      mo.observe(tab, { childList: true });
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', opInit);
+  else opInit();
+})();
+</script>
+</div><div id="warehousesTab" class="hidden ml-84 mr-7 p-2"><style id="warehousesStyles">
+#warehousesTab{--wh-navy:#0f2557;--wh-navy2:#1e3a8a;}
+#warehousesTab .wh-hero{background:linear-gradient(135deg,var(--wh-navy) 0%,var(--wh-navy2) 55%,#1d4ed8 100%);border-radius:1rem;padding:1.5rem;color:#fff;box-shadow:0 10px 25px -8px rgba(15,37,87,.45);position:relative;overflow:hidden}
+#warehousesTab .wh-hero:before{content:"";position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:9999px;background:rgba(255,255,255,.06)}
+#warehousesTab .wh-hero:after{content:"";position:absolute;bottom:-80px;left:30%;width:260px;height:260px;border-radius:9999px;background:rgba(255,255,255,.04)}
+#warehousesTab .wh-hero-inner{position:relative;z-index:1}
+#warehousesTab .wh-icon{width:3.5rem;height:3.5rem;border-radius:1rem;display:flex;align-items:center;justify-content:center;font-size:1.8rem;background:rgba(255,255,255,.15);border:3px solid rgba(255,255,255,.5);flex-shrink:0}
+#warehousesTab .wh-stat{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:.6rem;padding:.5rem .9rem;min-width:8rem}
+#warehousesTab .wh-stat b{display:block;font-size:1.3rem;line-height:1.2}
+#warehousesTab .wh-stat span{font-size:.68rem;color:#dbe4ff;text-transform:uppercase;letter-spacing:.03em}
+#warehousesTab .wh-nav{position:sticky;top:0;z-index:20;background:#f8fafc;border:1px solid #e5e7eb;border-radius:.75rem;padding:.5rem;display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0}
+#warehousesTab .wh-nav a{font-size:.8rem;font-weight:600;color:#1e3a8a;background:#fff;border:1px solid #dbe3f5;border-radius:9999px;padding:.4rem .85rem;text-decoration:none;white-space:nowrap;transition:all .15s;cursor:pointer}
+#warehousesTab .wh-nav a:hover{background:#eff6ff;border-color:#93c5fd}
+#warehousesTab .wh-nav a.wh-nav-active{background:#1e3a8a;color:#fff;border-color:#1e3a8a}
+#warehousesTab .wh-card{background:#fff;border:1px solid #e5e7eb;border-radius:.75rem;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:1.25rem;margin-bottom:1.25rem}
+#warehousesTab .wh-card-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid #f1f5f9;flex-wrap:wrap}
+#warehousesTab .wh-card-title{font-weight:700;color:#0f2557;font-size:1.02rem;line-height:1.2}
+#warehousesTab .wh-card-sub{font-size:.75rem;color:#6b7280;margin-top:1px}
+#warehousesTab label.wh-label{display:block;font-size:.75rem;font-weight:600;color:#374151;margin-bottom:.25rem}
+#warehousesTab input:focus,#warehousesTab select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+#warehousesTab .wh-primary-btn{background:var(--wh-navy2);color:#fff;font-weight:700;padding:.5rem 1.1rem;border-radius:.5rem;transition:background .15s;font-size:.85rem}
+#warehousesTab .wh-primary-btn:hover{background:#1d3577}
+#warehousesTab .wh-ghost-btn{border:1px solid #dbe3f5;color:#1e3a8a;background:#fff;font-weight:600;padding:.45rem 1rem;border-radius:.5rem;font-size:.85rem}
+#warehousesTab .wh-ghost-btn:hover{background:#eff6ff}
+#warehousesTab .wh-table-wrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:.6rem}
+#warehousesTab table{width:100%;border-collapse:collapse;font-size:.85rem}
+#warehousesTab table thead th{position:sticky;top:0;background:#f1f5f9;color:#334155;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.02em;padding:.6rem;border-bottom:2px solid #e2e8f0;white-space:nowrap}
+#warehousesTab table tbody tr{transition:background .1s}
+#warehousesTab table tbody tr:nth-child(even){background:#f9fafb}
+#warehousesTab table tbody tr:hover{background:#eff6ff}
+#warehousesTab .wh-branch-item{display:flex;align-items:center;justify-content:space-between;gap:.5rem;background:#f9fafb;border:1px solid #e5e7eb;border-radius:.5rem;padding:.5rem .75rem;margin-bottom:.4rem}
+#warehousesTab .wh-search-wrap{position:relative;max-width:22rem}
+#warehousesTab .wh-search-wrap input{width:100%;padding-left:2.1rem}
+#warehousesTab .wh-search-wrap svg{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);width:1rem;height:1rem;color:#9ca3af}
+</style>
+
+<div class="wh-hero mb-2"><div class="wh-hero-inner flex flex-wrap items-center gap-5">
+<div class="wh-icon">🏬</div>
+<div class="flex-1 min-w-[220px]">
+<div class="text-2xl font-bold text-white">Warehouses</div>
+<div class="text-sm text-blue-100 mt-0.5">Manage storage locations, branches and stock value</div>
+</div>
+<div class="flex flex-wrap gap-2">
+<div class="wh-stat"><b id="whStatCount">0</b><span>Warehouses</span></div>
+<div class="wh-stat"><b id="whStatBranches">0</b><span>Branches</span></div>
+<div class="wh-stat"><b id="whStatValue">0</b><span>Total Stock Value</span></div>
+</div>
+</div></div>
+
+<nav class="wh-nav"><a href="#" data-wh-target="whList" onclick="return whShowSection('whList')">📋 All Warehouses</a><a href="#" data-wh-target="whForm" onclick="return whShowSection('whForm')">➕ Add / Edit Warehouse</a><a href="#" data-wh-target="whBranches" onclick="return whShowSection('whBranches')">🏷️ Branches</a></nav>
+
+<div id="whList" class="wh-card">
+<div class="wh-card-head">
+<div><div class="wh-card-title">All Warehouses</div><div class="wh-card-sub">Search, review and manage every warehouse location</div></div>
+<div class="flex items-center gap-3">
+<div class="wh-search-wrap"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><input type="text" id="warehouseSearch" placeholder="Search Warehouses (/)" class="border rounded-md py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" oninput="searchWarehouses()" /></div>
+<button type="button" onclick="clearForm(); return whShowSection('whForm')" class="wh-primary-btn whitespace-nowrap">+ Add New Warehouse</button>
+</div>
+</div>
+<div class="wh-table-wrap"><table><thead><tr><th>Name</th><th>Branch</th><th>Street 1</th><th>Street 2</th><th>City</th><th>State</th><th>Country</th><th>ZIP</th><th>Phone</th><th>Email</th><th>Stock Value</th><th>Actions</th></tr></thead><tbody id="warehouseList"></tbody></table></div>
+</div>
+
+<div id="whForm" class="wh-card" style="display:none">
+<div class="wh-card-head"><div><div class="wh-card-title">Add / Edit Warehouse</div><div class="wh-card-sub">Assign a warehouse to a branch and record its address details</div></div></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div><label class="wh-label" for="warehouseName">Warehouse Name</label><input id="warehouseName" type="text" placeholder="Warehouse Name" class="border p-2 rounded w-full" required /></div>
+<div><label class="wh-label" for="warehouseBranch">Branch</label><select id="warehouseBranch" class="border p-2 rounded w-full" required></select></div>
+<p class="md:col-span-2 text-sm text-yellow-600">Note: Only users in the selected branch can be provided permission to access this warehouse.</p>
+<div><label class="wh-label" for="street1">Street 1</label><input id="street1" type="text" placeholder="Street 1" class="border p-2 rounded w-full" /></div>
+<div><label class="wh-label" for="street2">Street 2</label><input id="street2" type="text" placeholder="Street 2" class="border p-2 rounded w-full" /></div>
+<div><label class="wh-label" for="city">City</label><input id="city" type="text" placeholder="City" class="border p-2 rounded w-full" /></div>
+<div><label class="wh-label" for="country">Country</label><select id="country" class="border p-2 rounded w-full" onchange="populateStates()" required></select></div>
+<div><label class="wh-label" for="state">State</label><select id="state" class="border p-2 rounded w-full" required></select></div>
+<div><label class="wh-label" for="zip">ZIP Code</label><input id="zip" type="text" placeholder="ZIP Code" class="border p-2 rounded w-full" /></div>
+<div><label class="wh-label" for="warehousePhone">Phone</label><input id="warehousePhone" type="text" placeholder="Phone" class="border p-2 rounded w-full" required /></div>
+<div><label class="wh-label" for="warehouseEmail">Email</label><input id="warehouseEmail" type="email" placeholder="Email" class="border p-2 rounded w-full" required /></div>
+</div>
+<div class="text-right mt-4 flex justify-end gap-2"><button type="button" onclick="clearForm(); return whShowSection('whList')" class="wh-ghost-btn">Cancel</button><button id="addWarehouseBtn" onclick="addWarehouse()" class="wh-primary-btn">Add Warehouse</button></div>
+</div>
+
+<div id="whBranches" class="wh-card" style="display:none">
+<div class="wh-card-head"><div><div class="wh-card-title">Manage Branches</div><div class="wh-card-sub">Branches group warehouses and control which users can access them</div></div></div>
+<div class="flex gap-2 mb-4"><input id="warehouseBranchName" type="text" placeholder="Branch Name" class="border p-2 rounded w-full" /><button type="button" onclick="addBranch()" class="wh-primary-btn whitespace-nowrap">Add</button></div>
+<ul id="branchList" class="space-y-1"></ul>
+</div>
+
+<script>
+(function(){
+  var WH_PAGES = ['whList','whForm','whBranches'];
+  var whActive = 'whList';
+  function whApply(){
+    WH_PAGES.forEach(function(id){
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.style.display = (id === whActive) ? '' : 'none';
+    });
+    var tab = document.getElementById('warehousesTab');
+    if (tab) {
+      tab.querySelectorAll('.wh-nav a').forEach(function(a){
+        a.classList.toggle('wh-nav-active', a.getAttribute('data-wh-target') === whActive);
+      });
+    }
+  }
+  window.whShowSection = function(id){
+    whActive = id;
+    whApply();
+    var el = document.getElementById(id);
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return false;
+  };
+  function fmtStockValue(v){
+    try { return window.__fmtBase ? window.__fmtBase(v) : String(Math.round(v)); }
+    catch (e) { return String(Math.round(v)); }
+  }
+  function whRefreshStats(){
+    try {
+      var warehouses = JSON.parse(localStorage.getItem('warehouses')) || [];
+      var branchList = JSON.parse(localStorage.getItem('branches')) || [];
+      var total = 0;
+      warehouses.forEach(function(w){
+        if (typeof getWarehouseStockValue === 'function') total += getWarehouseStockValue(w.name) || 0;
+      });
+      var elC = document.getElementById('whStatCount'); if (elC) elC.textContent = warehouses.length;
+      var elB = document.getElementById('whStatBranches'); if (elB) elB.textContent = branchList.length;
+      var elV = document.getElementById('whStatValue'); if (elV) elV.textContent = fmtStockValue(total);
+    } catch (e) {}
+  }
+  function whInit(){
+    whApply();
+    whRefreshStats();
+    var list = document.getElementById('warehouseList');
+    var branches = document.getElementById('branchList');
+    if (window.MutationObserver) {
+      if (list) new MutationObserver(whRefreshStats).observe(list, { childList: true });
+      if (branches) new MutationObserver(whRefreshStats).observe(branches, { childList: true });
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', whInit);
+  else whInit();
+})();
+</script>
+</div><div id="DatacenterTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-2xl font-bold mb-6 text-center">Data center</h2><div class="border rounded-xl p-4 mt-6 bg-gray-50"><h3 class="font-semibold mb-2">Data</h3><div class="flex flex-wrap gap-2"><button class="px-3 py-1.5 rounded bg-blue-900 text-white" onclick="backupZIP()">
 Download ZIP Backup
 </button><button class="px-3 py-1.5 rounded bg-green-700 text-white" onclick="backupExcel()">
 Download Excel Backup
@@ -91263,7 +91531,7 @@ function renderWarehouses() {
 
       <td class="border px-2 py-1">
 
-        <button onclick="editWarehouse(${index})"
+        <button onclick="editWarehouse(${index}); if(window.whShowSection) whShowSection('whForm');"
           class="mr-1 px-1 py-1 bg-blue-900 text-white rounded">
           Edit
         </button>
