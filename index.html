@@ -619,9 +619,12 @@ body {
 </style><style>
 /* v5: make the Create User modal + module access list fully scrollable */
 #createUserModal > div { max-height: 90vh; overflow-y: auto; }
-#moduleAccessList { max-height: 15rem; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 0.5rem; }
+#moduleAccessList { max-height: 20rem; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 0.5rem; }
 #moduleAccessList label { display: block; padding: 2px 0; cursor: pointer; }
 #moduleAccessList label:hover { background: #f3f4f6; }
+#moduleAccessList [data-group] { border-radius: 0.25rem; }
+#moduleAccessList [data-group] > div:first-child { background: #f9fafb; border-radius: 0.25rem; padding-left: 4px; }
+#moduleAccessList [data-group] > div:first-child:hover { background: #f3f4f6; }
 </style>
 <style id="axThemeStyles">
   /* ===================================================================
@@ -2631,6 +2634,19 @@ setTimeout(() => {
       }
     }
   });
+
+  // Gate the external "📁 Project Hub" sidebar link the same way as the
+  // internal tabs above — only show it if the user's module access
+  // (set from the grouped checklist in the Create/Edit User modal) includes
+  // 'projectHubExternal'.
+  const projectHubLink = document.getElementById("projectHubLink");
+  if (projectHubLink) {
+    if (allowedModules.includes("projectHubExternal")) {
+      projectHubLink.classList.remove("hidden");
+    } else {
+      projectHubLink.classList.add("hidden");
+    }
+  }
 }, 300);
 
 </script>
@@ -2724,7 +2740,7 @@ document.addEventListener("click", function(e) {
     class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">
     🏢CRM  Hub
   </a></li>
-  <li id="projectHubLink">
+  <li id="projectHubLink" class="hidden">
   <a href="https://kimani254star.github.io/project-hub/" target="_blank"
      class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">
     📁 Project Hub
@@ -2732,39 +2748,51 @@ document.addEventListener("click", function(e) {
 </li>
 </li><li><button onclick="logout()" class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg">Logout</button></li>
 <div id="rightSidebar" class="hidden fixed top-4 right-0 h-half w-10 bg-black  text-white flex flex-col items-center py-1 space-y-6 shadow-lg z-10">
-  <!-- 📔 Acacia Notebook --><button id="acaciaToggle" onclick="toggleAcaciaNotebook()"
+  <script>
+  /* The old tooltip relied purely on CSS :hover (group-hover:opacity-100),
+     which touch devices don't reliably trigger — on mobile that's why the
+     label either never appeared or appeared to be stuck rendering in the
+     wrong spot after a tap. This shows the label explicitly on click/tap,
+     positioned from the button's real on-screen position (via
+     getBoundingClientRect), so it always lands next to the button that was
+     pressed instead of drifting or clipping. */
+  window.acxDockTip = function(btn, label){
+    var tip = document.getElementById('acxDockTipEl');
+    if (!tip){
+      tip = document.createElement('span');
+      tip.id = 'acxDockTipEl';
+      tip.className = 'fixed z-[99999] bg-black text-white text-xs rounded py-1 px-2 shadow-lg pointer-events-none whitespace-nowrap transition-opacity duration-150';
+      tip.style.opacity = '0';
+      document.body.appendChild(tip);
+    }
+    var r = btn.getBoundingClientRect();
+    tip.textContent = label;
+    tip.style.top = Math.round(r.top + r.height / 2) + 'px';
+    tip.style.transform = 'translateY(-50%)';
+    tip.style.left = 'auto';
+    tip.style.right = Math.max(4, Math.round(window.innerWidth - r.left + 8)) + 'px';
+    tip.style.opacity = '1';
+    clearTimeout(window.__acxDockTipTimer);
+    window.__acxDockTipTimer = setTimeout(function(){ if (tip) tip.style.opacity = '0'; }, 1400);
+  };
+  </script>
+  <!-- 📔 Acacia Notebook --><button id="acaciaToggle" onclick="acxDockTip(this,'Acacia Notebook');toggleAcaciaNotebook()"
   class="group flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full relative text-xl">📔
-  <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
-    Acacia Notebook
-  </span></button><!-- 🎥 Webinar --><button id="webinarToggle" onclick="toggleWebinarPanel()"
+  </button><!-- 🎥 Webinar --><button id="webinarToggle" onclick="acxDockTip(this,'Webinar');toggleWebinarPanel()"
     class="group flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full relative">🎥
-    <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
-      Webinar
-    </span></button><!-- 🌳 Communication --><button id="commToggle" onclick="toggleCommPanel()"
+    </button><!-- 🌳 Communication --><button id="commToggle" onclick="acxDockTip(this,'Team Status');toggleCommPanel()"
     class="group flex items-center justify-center w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full relative">🌳
-    <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
-      Team Status
-    </span></button><!-- 📝 Google Docs --><button id="gdocsToggle" onclick="toggleGDocs()"
+    </button><!-- 📝 Google Docs --><button id="gdocsToggle" onclick="acxDockTip(this,'Google Docs');toggleGDocs()"
   class="group flex items-center justify-center w-8 h-8  bg-gray-800 hover:bg-gray-700 rounded-full relative">📝
-  <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
-    Google Docs
-  </span></button><!-- 📊 Google Sheets --><button id="gsheetsToggle" onclick="toggleGSheets()"
+  </button><!-- 📊 Google Sheets --><button id="gsheetsToggle" onclick="acxDockTip(this,'Google Sheets');toggleGSheets()"
   class="group flex items-center justify-center w-8 h-8  bg-gray-800 hover:bg-gray-700 rounded-full relative">📊
-  <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
-    Google Sheets
-  </span></button><!-- 📸 Google Photos --><button id="gphotosToggle" onclick="openGPhotos()"
+  </button><!-- 📸 Google Photos --><button id="gphotosToggle" onclick="acxDockTip(this,'Google Photos');openGPhotos()"
   class="group flex items-center justify-center w-8 h-8  bg-gray-800 hover:bg-gray-700 rounded-full relative">📸
-  <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
-    Google Photos
-  </span></button><!-- 📅 Google Calendar --><button id="gcalendarToggle" onclick="openGCalendar()"
+  </button><!-- 📅 Google Calendar --><button id="gcalendarToggle" onclick="acxDockTip(this,'Google Calendar');openGCalendar()"
   class="group flex items-center justify-center w-8 h-8  bg-gray-800 hover:bg-gray-700 rounded-full relative">📅
-  <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
-    Google Calendar
-  </span></button><!-- 🏢 Organization Details --><button id="orgDetailsToggle" onclick="toggleOrgDetails()"
+  </button><!-- 🏢 Organization Details --><button id="orgDetailsToggle" onclick="acxDockTip(this,'Organization Details');toggleOrgDetails()"
     class="group flex items-center justify-center w-8 h-10 bg-gray-800 hover:bg-gray-700 rounded-full relative">🏢
-    <span class="absolute left-[-140%] top-1/2 -translate-y-1/2 bg-black text-white text-xs rounded py-1 px-1 opacity-0 group-hover:opacity-100 transition">
-      Organization Details
-    </span></button>
+    </button>
     <!-- 💬 Communication Panel --><div id="commPanel" class="hidden fixed bottom-20 right-4 w-[430px] max-w-[95vw] h-[80vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
 
     <div class="bg-white text-black border-b border-gray-200 px-1 py-1 flex justify-between items-center shrink-0">
@@ -5369,7 +5397,7 @@ const rolePermissions = {
 
 
 /* ===== v5: full module list + plan-based access ===== */
-const APP_ALL_MODULES = ['dashboard','inventoryTab','movementTab','priceListTab','Amenend','BundleItems','BulkAdjustment','packagesTab','shipmentsTab','fundsTab','customersTab','invoicesTab','quotesTab','ordersTab','bulkInvoicesTab','creditNoteTab','salesReturnTab','receiptsTab','recurringInvoicesTab','deliveryTab','customerStatementTab','supplierTab','supplierPaymentsTab','supplierBillsTab','bulkBillingTab','taxPaymentsTab','OperationalCostsTab','supplierPurchaseOrdersTab','supplierDebitNotesTab','purchaseReturnsTab','grnTab','supplierStatementTab','manualJournalsTab','recurringJournalsTab','currencyAdjustmentsTab','nonCurrentAssetsTab','nonCurrentLiabilitiesTab','equityTab','taxAdjustmentsTab','chartOfAccountsTab','currentAccountsTab','budgetsTab','transactionLockingTab','employeesTab','earningsTab','grossPayTab','attendanceTab','payslipTab','statutoryDeductionsTab','payrollReportsTab','integrationsTab','reportsPanel','plansTab','projectTab','orgProfileTab','warehousesTab','DatacenterTab','systemConfigurationTab','userActivityTab','taxComplianceTab','userManagementTab','vatTab','preferencesTab','settingstemplateTab','costingTab','bulkCostingTab','filesTab','recycleBinTab','mailHub','crmHub'];
+const APP_ALL_MODULES = ['dashboard','inventoryTab','movementTab','priceListTab','Amenend','BundleItems','BulkAdjustment','packagesTab','shipmentsTab','fundsTab','customersTab','invoicesTab','quotesTab','ordersTab','bulkInvoicesTab','creditNoteTab','salesReturnTab','receiptsTab','recurringInvoicesTab','deliveryTab','customerStatementTab','supplierTab','supplierPaymentsTab','supplierBillsTab','bulkBillingTab','taxPaymentsTab','OperationalCostsTab','supplierPurchaseOrdersTab','supplierDebitNotesTab','purchaseReturnsTab','grnTab','supplierStatementTab','manualJournalsTab','recurringJournalsTab','currencyAdjustmentsTab','nonCurrentAssetsTab','nonCurrentLiabilitiesTab','equityTab','taxAdjustmentsTab','chartOfAccountsTab','currentAccountsTab','budgetsTab','transactionLockingTab','employeesTab','earningsTab','grossPayTab','attendanceTab','payslipTab','statutoryDeductionsTab','payrollReportsTab','integrationsTab','reportsPanel','plansTab','projectTab','orgProfileTab','warehousesTab','DatacenterTab','systemConfigurationTab','userActivityTab','taxComplianceTab','userManagementTab','vatTab','preferencesTab','settingstemplateTab','costingTab','bulkCostingTab','filesTab','recycleBinTab','mailHub','crmHub','projectHubExternal'];
 
 const PAYROLL_MODULES = ['employeesTab','earningsTab','grossPayTab','attendanceTab','payslipTab','statutoryDeductionsTab','payrollReportsTab'];
 
@@ -5813,6 +5841,17 @@ function showApp() {
     document.getElementById("crmLink").classList.remove("hidden");
   } else {
     document.getElementById("crmLink").classList.add("hidden");
+  }
+
+  // "📁 Project Hub" (external) is gated by module access, same as the
+  // internal tabs — admins always see it; other roles need the
+  // 'projectHubExternal' checkbox ticked in the Create/Edit User modal.
+  const projectHubLinkEl = document.getElementById("projectHubLink");
+  if (projectHubLinkEl) {
+    const hasProjectHubAccess =
+      role === "admin" ||
+      (Array.isArray(loggedInUser.modules) && loggedInUser.modules.includes("projectHubExternal"));
+    projectHubLinkEl.classList.toggle("hidden", !hasProjectHubAccess);
   }
 }
 
@@ -87597,7 +87636,7 @@ Save
     🗑️ Bulk Delete Selected
   </button><div id="userTableContainer"><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-center w-10"><input type="checkbox" onclick="toggleSelectAllUsers(this)"></th><th class="border p-2 text-left">Username</th><th class="border p-2 text-left">Role</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="userTableBody" class="bg-white"></tbody></table></div></div>
  <div id="createUserModal"
-class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-opacity-50"><div class="bg-white p-6 rounded shadow w-[400px] max-w-full"><h2 class="text-xl font-bold mb-4" id="modalTitle">👤 Create New User</h2><input id="newUsername" class="w-full mb-2 p-2 border rounded" placeholder="Username" /><input id="newPassword" type="password" class="w-full mb-2 p-2 border rounded" placeholder="Password" /><select id="newRole" class="w-full mb-2 p-2 border rounded"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="audit">Audit</option><option value="hr">Human Resource</option><option value="custom">Custom</option></select><input id="customRoleInput" class="w-full mb-2 p-2 border rounded hidden" placeholder="Enter custom role name" /><div class="mb-4" id="moduleAccessList"><label class="block font-semibold mb-1">Module Access</label><label><input type="checkbox" value="dashboard"> 📊 Dashboard Hub</label><label><input type="checkbox" value="inventoryTab"> 📦 Stock</label><label><input type="checkbox" value="movementTab"> Movement</label><label><input type="checkbox" value="priceListTab"> Price List</label><label><input type="checkbox" value="Amenend"> Amendments</label><label><input type="checkbox" value="BundleItems"> Bundle Items</label><label><input type="checkbox" value="BulkAdjustment"> Bulk Adjustments</label><label><input type="checkbox" value="packagesTab"> Packages</label><label><input type="checkbox" value="shipmentsTab"> Shipments</label><label><input type="checkbox" value="fundsTab"> 💰 Funds Hub</label><label><input type="checkbox" value="customersTab"> Customer</label><label><input type="checkbox" value="invoicesTab"> Invoices</label><label><input type="checkbox" value="quotesTab"> Quotes</label><label><input type="checkbox" value="ordersTab"> Orders</label><label><input type="checkbox" value="bulkInvoicesTab"> Bulk Invoicing</label><label><input type="checkbox" value="creditNoteTab"> Credit Notes</label><label><input type="checkbox" value="salesReturnTab"> Sales Returns</label><label><input type="checkbox" value="receiptsTab"> Receipts</label><label><input type="checkbox" value="recurringInvoicesTab"> Recurring Invoices</label><label><input type="checkbox" value="deliveryTab"> Delivery</label><label><input type="checkbox" value="customerStatementTab"> Statements</label><label><input type="checkbox" value="supplierTab"> Supplier</label><label><input type="checkbox" value="supplierPaymentsTab"> Supplier Payments</label><label><input type="checkbox" value="supplierBillsTab"> Bills</label><label><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label><label><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label><label><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label><label><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label><label><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label><label><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label><label><input type="checkbox" value="grnTab"> Goods Received</label><label><input type="checkbox" value="supplierStatementTab"> Supplier Statement</label><label><input type="checkbox" value="manualJournalsTab"> Manual Journals</label><label><input type="checkbox" value="recurringJournalsTab"> Recurring Journals</label><label><input type="checkbox" value="currencyAdjustmentsTab"> Currency Adjustments</label><label><input type="checkbox" value="nonCurrentAssetsTab"> Non-Current Assets</label><label><input type="checkbox" value="nonCurrentLiabilitiesTab"> Non-Current Liabilities</label><label><input type="checkbox" value="equityTab"> Equity</label><label><input type="checkbox" value="taxAdjustmentsTab"> Tax Adjustments</label><label><input type="checkbox" value="chartOfAccountsTab"> Chart of Accounts</label><label><input type="checkbox" value="currentAccountsTab"> Current Accounts</label><label><input type="checkbox" value="budgetsTab"> Budgets</label><label><input type="checkbox" value="transactionLockingTab"> Transaction Locking</label><label><input type="checkbox" value="employeesTab"> Employees</label><label><input type="checkbox" value="earningsTab"> Earnings & Allowances</label><label><input type="checkbox" value="grossPayTab"> Earnings & Deductions</label><label><input type="checkbox" value="attendanceTab"> Attendance & Leave</label><label><input type="checkbox" value="payslipTab"> Payslip Generation</label><label><input type="checkbox" value="statutoryDeductionsTab"> Statutories</label><label><input type="checkbox" value="payrollReportsTab"> Payroll Reports</label><label><input type="checkbox" value="integrationsTab"> Integrations</label><label><input type="checkbox" value="reportsPanel"> 📈 Reports Hub</label><label><input type="checkbox" value="plansTab"> Plans Hub</label><label><input type="checkbox" value="projectTab"> Project Hub</label><label><input type="checkbox" value="planTrackingTab"> Plan Tracking</label><label><input type="checkbox" value="orgProfileTab"> Org Profile</label><label><input type="checkbox" value="warehousesTab"> Warehouses</label><label><input type="checkbox" value="DatacenterTab"> Data Center</label><label><input type="checkbox" value="systemConfigurationTab"> System Configuration</label><label><input type="checkbox" value="userActivityTab"> User Activity</label><label><input type="checkbox" value="taxComplianceTab"> Tax Compliance</label><label><input type="checkbox" value="userManagementTab"> User Management</label><label><input type="checkbox" value="vatTab"> VAT</label><label><input type="checkbox" value="preferencesTab"> Preferences</label><label><input type="checkbox" value="settingstemplateTab"> Customization</label><label><input type="checkbox" value="costingTab"> Costing</label><label><input type="checkbox" value="bulkCostingTab"> Bulk Costing</label><label><input type="checkbox" value="filesTab"> File Manager</label><label><input type="checkbox" value="recycleBinTab"> Recycle Bin</label><label><input type="checkbox" value="mailHub"> 💬 Acacia Mail Hub</label><label><input type="checkbox" value="crmHub"> 🏢 CRM Portal Hub</label></div><div class="flex justify-end space-x-2"><button onclick="saveUser()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button><button onclick="closeCreateUserModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button></div><p id="userCreateMsg" class="text-green-600 text-sm mt-2 hidden">✅ User saved successfully.</p></div></div>
+class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-opacity-50"><div class="bg-white p-6 rounded shadow w-[400px] max-w-full"><h2 class="text-xl font-bold mb-4" id="modalTitle">👤 Create New User</h2><input id="newUsername" class="w-full mb-2 p-2 border rounded" placeholder="Username" /><input id="newPassword" type="password" class="w-full mb-2 p-2 border rounded" placeholder="Password" /><select id="newRole" class="w-full mb-2 p-2 border rounded"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="audit">Audit</option><option value="hr">Human Resource</option><option value="custom">Custom</option></select><input id="customRoleInput" class="w-full mb-2 p-2 border rounded hidden" placeholder="Enter custom role name" /><div class="mb-4" id="moduleAccessList"><label class="block font-semibold mb-1">Module Access</label><div class="flex items-center gap-2 mb-2 pb-2 border-b border-gray-300"><input type="checkbox" id="moduleAccessSelectAll"><label for="moduleAccessSelectAll" class="font-semibold text-sm cursor-pointer">Select All Modules</label></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="dashboard"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="dashboard"><span class="font-semibold text-sm">📊 Dashboard Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="dashboard"><label><input type="checkbox" value="dashboard"> 📊 Dashboard Hub</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="inventory"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="inventory"><span class="font-semibold text-sm">📦 Inventory / Stock</span></div><div class="pl-6 space-y-0.5" data-group-body="inventory"><label><input type="checkbox" value="inventoryTab"> Stock</label><label><input type="checkbox" value="movementTab"> Movement</label><label><input type="checkbox" value="priceListTab"> Price List</label><label><input type="checkbox" value="Amenend"> Amendments</label><label><input type="checkbox" value="BundleItems"> Bundle Items</label><label><input type="checkbox" value="BulkAdjustment"> Bulk Adjustments</label><label><input type="checkbox" value="packagesTab"> Packages</label><label><input type="checkbox" value="shipmentsTab"> Shipments</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="funds"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="funds"><span class="font-semibold text-sm">💰 Funds Hub (Sales)</span></div><div class="pl-6 space-y-0.5" data-group-body="funds"><label><input type="checkbox" value="fundsTab"> Funds Hub</label><label><input type="checkbox" value="customersTab"> Customer</label><label><input type="checkbox" value="invoicesTab"> Invoices</label><label><input type="checkbox" value="quotesTab"> Quotes</label><label><input type="checkbox" value="ordersTab"> Orders</label><label><input type="checkbox" value="bulkInvoicesTab"> Bulk Invoicing</label><label><input type="checkbox" value="creditNoteTab"> Credit Notes</label><label><input type="checkbox" value="salesReturnTab"> Sales Returns</label><label><input type="checkbox" value="receiptsTab"> Receipts</label><label><input type="checkbox" value="recurringInvoicesTab"> Recurring Invoices</label><label><input type="checkbox" value="deliveryTab"> Delivery</label><label><input type="checkbox" value="customerStatementTab"> Statements</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="suppliers"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="suppliers"><span class="font-semibold text-sm">🚚 Suppliers / Purchases</span></div><div class="pl-6 space-y-0.5" data-group-body="suppliers"><label><input type="checkbox" value="supplierTab"> Supplier</label><label><input type="checkbox" value="supplierPaymentsTab"> Supplier Payments</label><label><input type="checkbox" value="supplierBillsTab"> Bills</label><label><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label><label><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label><label><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label><label><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label><label><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label><label><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label><label><input type="checkbox" value="grnTab"> Goods Received</label><label><input type="checkbox" value="supplierStatementTab"> Supplier Statement</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="accountant"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="accountant"><span class="font-semibold text-sm">🧮 Accountant Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="accountant"><label><input type="checkbox" value="manualJournalsTab"> Manual Journals</label><label><input type="checkbox" value="recurringJournalsTab"> Recurring Journals</label><label><input type="checkbox" value="currencyAdjustmentsTab"> Currency Adjustments</label><label><input type="checkbox" value="nonCurrentAssetsTab"> Non-Current Assets</label><label><input type="checkbox" value="nonCurrentLiabilitiesTab"> Non-Current Liabilities</label><label><input type="checkbox" value="equityTab"> Equity</label><label><input type="checkbox" value="taxAdjustmentsTab"> Tax Adjustments</label><label><input type="checkbox" value="chartOfAccountsTab"> Chart of Accounts</label><label><input type="checkbox" value="currentAccountsTab"> Current Accounts</label><label><input type="checkbox" value="budgetsTab"> Budgets</label><label><input type="checkbox" value="transactionLockingTab"> Transaction Locking</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="payroll"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="payroll"><span class="font-semibold text-sm">👥 Payroll Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="payroll"><label><input type="checkbox" value="employeesTab"> Employees</label><label><input type="checkbox" value="earningsTab"> Earnings & Allowances</label><label><input type="checkbox" value="grossPayTab"> Earnings & Deductions</label><label><input type="checkbox" value="attendanceTab"> Attendance & Leave</label><label><input type="checkbox" value="payslipTab"> Payslip Generation</label><label><input type="checkbox" value="statutoryDeductionsTab"> Statutories</label><label><input type="checkbox" value="payrollReportsTab"> Payroll Reports</label><label><input type="checkbox" value="integrationsTab"> Integrations</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="reports"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="reports"><span class="font-semibold text-sm">📈 Reports Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="reports"><label><input type="checkbox" value="reportsPanel"> 📈 Reports Hub</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="plans"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="plans"><span class="font-semibold text-sm">🗂️ Plans & Projects</span></div><div class="pl-6 space-y-0.5" data-group-body="plans"><label><input type="checkbox" value="plansTab"> Plans Hub</label><label><input type="checkbox" value="projectTab"> Project Hub</label><label><input type="checkbox" value="planTrackingTab"> Plan Tracking</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="settings"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="settings"><span class="font-semibold text-sm">⚙️ Settings Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="settings"><label><input type="checkbox" value="orgProfileTab"> Org Profile</label><label><input type="checkbox" value="warehousesTab"> Warehouses</label><label><input type="checkbox" value="DatacenterTab"> Data Center</label><label><input type="checkbox" value="systemConfigurationTab"> System Configuration</label><label><input type="checkbox" value="userActivityTab"> User Activity</label><label><input type="checkbox" value="taxComplianceTab"> Tax Compliance</label><label><input type="checkbox" value="userManagementTab"> User Management</label><label><input type="checkbox" value="vatTab"> VAT</label><label><input type="checkbox" value="preferencesTab"> Preferences</label><label><input type="checkbox" value="settingstemplateTab"> Customization</label><label><input type="checkbox" value="costingTab"> Costing</label><label><input type="checkbox" value="bulkCostingTab"> Bulk Costing</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="files"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="files"><span class="font-semibold text-sm">📁 Files Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="files"><label><input type="checkbox" value="filesTab"> File Manager</label><label><input type="checkbox" value="recycleBinTab"> Recycle Bin</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="mail"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="mail"><span class="font-semibold text-sm">💬 Acacia Mail Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="mail"><label><input type="checkbox" value="mailHub"> 💬 Acacia Mail Hub</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="crm"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="crm"><span class="font-semibold text-sm">🏢 CRM Portal Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="crm"><label><input type="checkbox" value="crmHub"> 🏢 CRM Portal Hub</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="projecthub"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="projecthub"><span class="font-semibold text-sm">📁 Project Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="projecthub"><label><input type="checkbox" value="projectHubExternal"> 📁 Project Hub</label></div></div><div id="moduleAccessCustomGroup" class="mb-2 pb-1" data-group="custom"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="custom"><span class="font-semibold text-sm">🧩 Custom Modules</span></div><div class="pl-6 space-y-0.5" data-group-body="custom"></div></div></div><div class="flex justify-end space-x-2"><button onclick="saveUser()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button><button onclick="closeCreateUserModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button></div><p id="userCreateMsg" class="text-green-600 text-sm mt-2 hidden">✅ User saved successfully.</p></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <style>
@@ -87634,7 +87673,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     outline: none;
   }
 
-  #templateEditor {
+  #custTemplateEditor {
     background-color: #0f172a;
     color: #e5e7eb;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -87643,10 +87682,10 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     border-radius: 12px;
   }
 
-  #templateEditor::-webkit-scrollbar {
+  #custTemplateEditor::-webkit-scrollbar {
     width: 8px;
   }
-  #templateEditor::-webkit-scrollbar-thumb {
+  #custTemplateEditor::-webkit-scrollbar-thumb {
     background: #475569;
     border-radius: 8px;
   }
@@ -87683,30 +87722,190 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
   }
 </style>
 <!-- Customization Tab Content --><div id="settingstemplateTab" class="grid grid-cols-1 gap-6 mt-4"><!-- ============ ADVANCED CUSTOMIZATION (added) ============ -->
+<style id="advCustomizationSkin">
+/* ===== Advanced Customization — visual overhaul (scoped, no logic changes) ===== */
+#advCustomization{
+  --ac-ink:#1f2937; --ac-muted:#6b7280; --ac-line:#e8e5df; --ac-soft:#faf9f7;
+  --ac-brand:#ea7317; --ac-brand-dark:#c25c0b; --ac-brand-soft:#fff4e8;
+  border:1px solid var(--ac-line)!important;
+  border-radius:20px!important;
+  background:#fff!important;
+  padding:0!important;
+  box-shadow:0 1px 2px rgba(16,24,40,.04),0 12px 32px -18px rgba(16,24,40,.28)!important;
+  color:var(--ac-ink);
+  overflow:hidden;
+}
+#advCustomization .ac-head{
+  padding:20px 24px 16px;
+  background:linear-gradient(135deg,#fff8f1 0%,#ffffff 60%);
+  border-bottom:1px solid var(--ac-line);
+}
+#advCustomization .ac-title{display:flex;align-items:center;gap:12px;}
+#advCustomization .ac-badge{
+  width:42px;height:42px;flex:none;display:grid;place-items:center;font-size:20px;
+  border-radius:13px;background:var(--ac-brand-soft);border:1px solid #f6dcc0;
+}
+#advCustomization h2{font-size:1.15rem!important;font-weight:700!important;letter-spacing:-.01em;margin:0;color:var(--ac-ink);}
+#advCustomization .ac-sub{font-size:.78rem;color:var(--ac-muted);margin-top:2px;}
+#advCustomization .ac-body{padding:18px 24px 8px;}
+
+/* toolbar */
+#advCustomization #custSearch{
+  width:230px!important;border:1px solid var(--ac-line)!important;background:var(--ac-soft)!important;
+  border-radius:10px!important;padding:8px 12px!important;font-size:.8rem!important;
+}
+#advCustomization #custSearch:focus{outline:none;border-color:var(--ac-brand)!important;background:#fff!important;box-shadow:0 0 0 3px rgba(234,115,23,.12)!important;}
+#advCustomization .ac-tool{
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--ac-line)!important;background:#fff!important;color:#475467!important;
+  border-radius:10px!important;padding:8px 12px!important;font-size:.78rem!important;font-weight:600!important;
+  transition:all .15s ease;
+}
+#advCustomization .ac-tool:hover{background:var(--ac-soft)!important;border-color:#d9d4cc!important;transform:translateY(-1px);}
+#advCustomization .ac-tool.ac-danger{color:#b42318!important;}
+#advCustomization .ac-tool.ac-danger:hover{background:#fef3f2!important;border-color:#fecdca!important;}
+
+/* tabs */
+#advCustomization #custTabs{
+  display:flex;gap:8px;margin:16px 0 0!important;padding:0!important;
+}
+#advCustomization #custTabs::-webkit-scrollbar{display:none;}
+#advCustomization .cust-tab{
+  white-space:nowrap;border-radius:10px!important;
+  padding:8px 14px!important;font-size:.78rem!important;font-weight:600!important;
+  transition:all .16s ease;
+}
+#advCustomization .cust-tab.bg-orange-500{
+  background:linear-gradient(135deg,var(--ac-brand),#f59e0b)!important;
+  box-shadow:0 4px 12px -4px rgba(234,115,23,.55);
+}
+
+/* sections */
+#advCustomization .cust-section{padding:22px 0 4px;animation:acFade .22s ease;}
+#advCustomization .cust-section.hidden{display:none!important;}
+#advCustomization .cust-section:not(.hidden){display:block!important;}
+@keyframes acFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+#advCustomization .cust-section > p{color:var(--ac-muted)!important;}
+#advCustomization .cust-section h3{font-size:.82rem!important;font-weight:700!important;letter-spacing:.02em;text-transform:uppercase;color:#475467!important;}
+
+/* form controls */
+#advCustomization label{font-size:.76rem!important;font-weight:600!important;color:#475467!important;letter-spacing:.01em;}
+#advCustomization input[type=text],#advCustomization input[type=number],#advCustomization input:not([type]),
+#advCustomization select,#advCustomization textarea,#advCustomization input[type=search]{
+  border:1px solid var(--ac-line)!important;border-radius:10px!important;background:#fff!important;
+  padding:9px 11px!important;font-size:.82rem!important;color:var(--ac-ink)!important;transition:border-color .15s,box-shadow .15s;
+}
+#advCustomization input[type=text]:focus,#advCustomization input[type=number]:focus,#advCustomization select:focus,
+#advCustomization textarea:focus,#advCustomization input:not([type]):focus{
+  outline:none;border-color:var(--ac-brand)!important;box-shadow:0 0 0 3px rgba(234,115,23,.12)!important;
+}
+#advCustomization input[type=color]{border:1px solid var(--ac-line)!important;border-radius:10px!important;padding:3px!important;height:42px!important;cursor:pointer;background:#fff!important;}
+#advCustomization input[type=file]{
+  font-size:.75rem!important;width:100%;border:1px dashed #ddd7ce!important;border-radius:10px!important;
+  padding:9px!important;background:var(--ac-soft)!important;cursor:pointer;
+}
+#advCustomization input[type=file]::file-selector-button{
+  border:0;border-radius:8px;padding:6px 11px;margin-right:10px;cursor:pointer;
+  background:var(--ac-brand-soft);color:var(--ac-brand-dark);font-weight:600;font-size:.72rem;
+}
+#advCustomization input[type=range]{accent-color:var(--ac-brand);height:22px;}
+#advCustomization input[type=checkbox],#advCustomization input[type=radio]{accent-color:var(--ac-brand);width:15px;height:15px;}
+
+/* tables */
+#advCustomization table{border:0!important;border-collapse:separate!important;border-spacing:0;width:100%;
+  border-radius:12px;overflow:hidden;box-shadow:0 0 0 1px var(--ac-line);}
+#advCustomization thead tr{background:var(--ac-soft)!important;}
+#advCustomization th{
+  border:0!important;border-bottom:1px solid var(--ac-line)!important;
+  font-size:.7rem!important;font-weight:700!important;letter-spacing:.05em;text-transform:uppercase;color:#667085!important;padding:11px 12px!important;
+}
+#advCustomization td{border:0!important;border-bottom:1px solid #f1efeb!important;padding:10px 12px!important;font-size:.82rem!important;vertical-align:middle;}
+#advCustomization tbody tr:last-child td{border-bottom:0!important;}
+#advCustomization tbody tr:hover{background:#fffaf4;}
+#advCustomization td input,#advCustomization td select{padding:6px 9px!important;font-size:.78rem!important;}
+
+/* preview panels */
+#advCustomization #brandPreviewCard,#advCustomization #wmPreview + *,
+#advCustomization .cust-section > .border{border-color:var(--ac-line)!important;}
+#advCustomization #brandPreviewCard{border-radius:16px!important;background:
+  radial-gradient(circle at 12% 0%,#fff6ec 0%,transparent 55%),#fff!important;}
+#advCustomization #brandPreviewInner{border:1px solid var(--ac-line);border-radius:12px;}
+#advCustomization #brandPreviewBtn,#advCustomization #brandPreviewBtn2{border-radius:10px;}
+
+/* lists */
+#advCustomization #menuVisibilityList,#advCustomization #widgetsList{
+  background:var(--ac-soft)!important;border:1px solid var(--ac-line)!important;border-radius:12px!important;padding:10px!important;
+}
+#advCustomization #menuVisibilityList label,#advCustomization #widgetsList label,
+#advCustomization #menuVisibilityList > div,#advCustomization #widgetsList > div{
+  border-radius:8px;padding:6px 8px;
+}
+#advCustomization #menuVisibilityList > div:hover,#advCustomization #widgetsList > div:hover{background:#fff;}
+#advCustomization #termsList > div,#advCustomization #labelsGrid > div{
+  border:1px solid var(--ac-line)!important;border-radius:12px!important;background:#fff!important;
+  transition:box-shadow .15s,transform .15s;
+}
+#advCustomization #termsList > div:hover{box-shadow:0 8px 20px -14px rgba(16,24,40,.4);transform:translateY(-1px);}
+
+/* action buttons rendered by JS (orange / red utility classes) */
+#advCustomization button.bg-orange-500{
+  background:linear-gradient(135deg,var(--ac-brand),#f59e0b)!important;border:0!important;color:#fff!important;
+  border-radius:10px!important;font-weight:600!important;box-shadow:0 4px 12px -5px rgba(234,115,23,.7);
+}
+#advCustomization button.bg-orange-500:hover{filter:brightness(1.05);}
+
+/* footer save bar */
+#advCustomization .ac-foot{
+  position:sticky;bottom:0;margin-top:18px;padding:14px 24px;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+  border-top:1px solid var(--ac-line);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+#advCustomization #custSaveBtn{
+  border:0!important;border-radius:12px!important;padding:11px 22px!important;font-size:.85rem!important;
+  background:linear-gradient(135deg,var(--ac-brand),#f59e0b)!important;color:#fff!important;
+  box-shadow:0 8px 20px -8px rgba(234,115,23,.8)!important;transition:transform .15s,filter .15s;
+}
+#advCustomization #custSaveBtn:hover{transform:translateY(-1px);filter:brightness(1.06);}
+#advCustomization #custMsg{padding:0 24px 16px;}
+@media (max-width:640px){
+  #advCustomization .ac-head,#advCustomization .ac-body,#advCustomization .ac-foot{padding-left:14px;padding-right:14px;}
+  #advCustomization #custSearch{width:100%!important;}
+}
+</style>
+
 <div id="advCustomization" class="rounded-2xl border border-gray-300 bg-white p-4 shadow">
-  <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-    <h2 class="text-lg font-semibold">🎨 Advanced Customization</h2>
-    <div class="flex items-center gap-2">
-      <input id="custSearch" type="search" placeholder="🔍 Search..." class="border p-2 rounded text-sm w-56">
-      <button id="custExportBtn" class="px-3 py-2 rounded bg-gray-200 text-gray-700 text-sm hover:bg-gray-300">⬇️ Export</button>
-      <button id="custImportBtn" class="px-3 py-2 rounded bg-gray-200 text-gray-700 text-sm hover:bg-gray-300">⬆️ Import</button>
-      <input id="custImportFile" type="file" accept="application/json" class="hidden">
-      <button id="custResetBtn" class="px-3 py-2 rounded bg-red-100 text-red-700 text-sm hover:bg-red-200">↺ Reset</button>
+  <div class="ac-head">
+    <div class="flex items-start justify-between gap-4 flex-wrap">
+      <div class="ac-title">
+        <div class="ac-badge">🎨</div>
+        <div>
+          <h2>Advanced Customization</h2>
+          <div class="ac-sub">Brand, documents, templates and app vocabulary — all in one place.</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <input id="custSearch" type="search" placeholder="Search settings…">
+        <button id="custExportBtn" class="ac-tool">⬇️ Export</button>
+        <button id="custImportBtn" class="ac-tool">⬆️ Import</button>
+        <input id="custImportFile" type="file" accept="application/json" class="hidden">
+        <button id="custResetBtn" class="ac-tool ac-danger">↺ Reset</button>
+      </div>
     </div>
+
+  <div class="flex flex-wrap gap-2 mb-4" id="custTabs">
+    <button data-sec="cBrand"   class="cust-tab px-3 py-2 text-sm font-semibold rounded-lg border bg-orange-500 text-white border-orange-500">🎨 Brand Kit</button>
+    <button data-sec="cFields"  class="cust-tab px-3 py-2 text-sm font-semibold rounded-lg border bg-gray-100 text-gray-600 border-gray-300 hover:bg-orange-100">🧩 Custom Fields</button>
+    <button data-sec="cNumber"  class="cust-tab px-3 py-2 text-sm font-semibold rounded-lg border bg-gray-100 text-gray-600 border-gray-300 hover:bg-orange-100">🔢 Numbering</button>
+    <button data-sec="cTerms"   class="cust-tab px-3 py-2 text-sm font-semibold rounded-lg border bg-gray-100 text-gray-600 border-gray-300 hover:bg-orange-100">📑 Terms Library</button>
+    <button data-sec="cEmail"   class="cust-tab px-3 py-2 text-sm font-semibold rounded-lg border bg-gray-100 text-gray-600 border-gray-300 hover:bg-orange-100">✉️ Email Templates</button>
+    <button data-sec="cPrint"   class="cust-tab px-3 py-2 text-sm font-semibold rounded-lg border bg-gray-100 text-gray-600 border-gray-300 hover:bg-orange-100">🖨️ Print Layout</button>
+    <button data-sec="cWater"   class="cust-tab px-3 py-2 text-sm font-semibold rounded-lg border bg-gray-100 text-gray-600 border-gray-300 hover:bg-orange-100">💧 Watermark</button>
+    <button data-sec="cMenu"    class="cust-tab px-3 py-2 text-sm font-semibold rounded-lg border bg-gray-100 text-gray-600 border-gray-300 hover:bg-orange-100">📋 Menu / Widgets</button>
+    <button data-sec="cLabels"  class="cust-tab px-3 py-2 text-sm font-semibold rounded-lg border bg-gray-100 text-gray-600 border-gray-300 hover:bg-orange-100">🏷️ Labels</button>
+  </div>
   </div>
 
-  <div class="flex flex-wrap gap-1 border-b mb-4" id="custTabs">
-    <button data-sec="cBrand"   class="cust-tab px-3 py-2 text-sm font-semibold border-b-2 border-orange-500 text-orange-600">🎨 Brand Kit</button>
-    <button data-sec="cFields"  class="cust-tab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-orange-600">🧩 Custom Fields</button>
-    <button data-sec="cNumber"  class="cust-tab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-orange-600">🔢 Numbering</button>
-    <button data-sec="cTerms"   class="cust-tab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-orange-600">📑 Terms Library</button>
-    <button data-sec="cEmail"   class="cust-tab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-orange-600">✉️ Email Templates</button>
-    <button data-sec="cPrint"   class="cust-tab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-orange-600">🖨️ Print Layout</button>
-    <button data-sec="cWater"   class="cust-tab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-orange-600">💧 Watermark</button>
-    <button data-sec="cMenu"    class="cust-tab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-orange-600">📋 Menu / Widgets</button>
-    <button data-sec="cLabels"  class="cust-tab px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-orange-600">🏷️ Labels</button>
-  </div>
-
+  <div class="ac-body">
   <!-- BRAND KIT -->
   <div id="cBrand" class="cust-section">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -87954,7 +88153,9 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="labelsGrid"></div>
   </div>
 
-  <div class="mt-4 flex justify-between items-center border-t pt-3">
+  </div>
+
+  <div class="ac-foot">
     <div id="custDirty" class="text-sm text-gray-500">✔ All changes saved</div>
     <button id="custSaveBtn" class="border border-orange-500 text-white bg-orange-500 font-bold px-4 py-2 rounded hover:bg-orange-600">💾 Save Customization</button>
   </div>
@@ -88010,7 +88211,27 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     widgets:JSON.parse(JSON.stringify(DEFAULT_WIDGETS)),
     labels:JSON.parse(JSON.stringify(DEFAULT_LABELS))
   };
-  function load(){ try{ return Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),JSON.parse(localStorage.getItem(KEY)||'{}')); }catch(e){ return JSON.parse(JSON.stringify(DEFAULTS)); } }
+  // Deep merge so saved/imported settings that are missing newer nested
+  // keys (e.g. an old "brand" object without "radius") fall back to the
+  // default for just that key, instead of wiping out the whole object.
+  function deepMerge(base, override){
+    if (Array.isArray(base)) return Array.isArray(override) ? override : base;
+    if (base && typeof base === 'object') {
+      const out = Object.assign({}, base);
+      if (override && typeof override === 'object') {
+        Object.keys(override).forEach(k=>{
+          out[k] = (k in base) ? deepMerge(base[k], override[k]) : override[k];
+        });
+      }
+      return out;
+    }
+    return override===undefined ? base : override;
+  }
+  // Escapes values before they're dropped into innerHTML/attribute strings,
+  // so a label/title/body containing " < > & doesn't corrupt the row or
+  // get interpreted as markup.
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function load(){ try{ return deepMerge(JSON.parse(JSON.stringify(DEFAULTS)),JSON.parse(localStorage.getItem(KEY)||'{}')); }catch(e){ return JSON.parse(JSON.stringify(DEFAULTS)); } }
   function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
   let state = load(), dirty=false;
 
@@ -88067,18 +88288,32 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     el.textContent=v?'● Unsaved changes':'✔ All changes saved';
     el.className='text-sm '+(v?'text-orange-600 font-semibold':'text-gray-500'); }
 
-  // Tabs
-  document.querySelectorAll('#custTabs .cust-tab').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('#custTabs .cust-tab').forEach(b=>{b.classList.remove('border-orange-500','text-orange-600');b.classList.add('border-transparent','text-gray-500');});
-      btn.classList.add('border-orange-500','text-orange-600'); btn.classList.remove('border-transparent','text-gray-500');
-      document.querySelectorAll('#advCustomization .cust-section').forEach(s=>s.classList.add('hidden'));
-      document.getElementById(btn.dataset.sec).classList.remove('hidden');
-      // Custom Modules can be created/deleted at any time from the Custom
-      // Modules tab, so refresh the Sidebar Menu Visibility list (which
-      // now includes them) every time this tab is opened.
-      if (btn.dataset.sec === 'cMenu') { try { renderMenu(); } catch (e) {} }
+  // Tabs — only one cust-section is ever shown at a time (one "page" per tab).
+  function showCustSection(sec){
+    document.querySelectorAll('#custTabs .cust-tab').forEach(b=>{
+      const active = b.dataset.sec === sec;
+      b.classList.toggle('bg-orange-500', active);
+      b.classList.toggle('text-white', active);
+      b.classList.toggle('border-orange-500', active);
+      b.classList.toggle('bg-gray-100', !active);
+      b.classList.toggle('text-gray-600', !active);
+      b.classList.toggle('border-gray-300', !active);
     });
+    document.querySelectorAll('#advCustomization .cust-section').forEach(s=>{
+      s.classList.toggle('hidden', s.id !== sec);
+    });
+    // Custom Modules can be created/deleted at any time from the Custom
+    // Modules tab, so refresh the Sidebar Menu Visibility list (which
+    // now includes them) every time this tab is opened.
+    if (sec === 'cMenu') { try { renderMenu(); } catch (e) {} }
+    const panel = document.getElementById('advCustomization');
+    if (panel && panel.scrollIntoView) panel.scrollIntoView({ block:'nearest' });
+  }
+  // Enforce a single visible section right away, regardless of whatever
+  // state the static markup happens to be in.
+  showCustSection('cBrand');
+  document.querySelectorAll('#custTabs .cust-tab').forEach(btn=>{
+    btn.addEventListener('click',()=>showCustSection(btn.dataset.sec));
   });
 
   // Search
@@ -88133,13 +88368,13 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     if(!rows.length){ tb.innerHTML='<tr><td colspan="6" class="p-3 text-center text-gray-400 italic">No custom fields yet</td></tr>'; return; }
     tb.innerHTML=rows.map((r,i)=>`
       <tr>
-        <td class="border p-1"><input class="w-full border-0 text-sm" value="${r.label||''}" data-i="${i}" data-k="label"></td>
+        <td class="border p-1"><input class="w-full border-0 text-sm" value="${esc(r.label||'')}" data-i="${i}" data-k="label"></td>
         <td class="border p-1">
           <select class="w-full border-0 text-sm" data-i="${i}" data-k="type">
             ${['text','number','date','checkbox','dropdown','textarea','email','phone','url'].map(t=>`<option ${r.type===t?'selected':''}>${t}</option>`).join('')}
           </select>
         </td>
-        <td class="border p-1"><input class="w-full border-0 text-sm" value="${r.options||''}" data-i="${i}" data-k="options" placeholder="${r.type==='dropdown'?'a,b,c':'default value'}"></td>
+        <td class="border p-1"><input class="w-full border-0 text-sm" value="${esc(r.options||'')}" data-i="${i}" data-k="options" placeholder="${r.type==='dropdown'?'a,b,c':'default value'}"></td>
         <td class="border p-1 text-center"><input type="checkbox" ${r.required?'checked':''} data-i="${i}" data-k="required"></td>
         <td class="border p-1 text-center"><input type="checkbox" ${r.onDoc?'checked':''} data-i="${i}" data-k="onDoc"></td>
         <td class="border p-1 text-center"><button class="text-red-600 text-sm" data-i="${i}" data-del="1">🗑️</button></td>
@@ -88167,22 +88402,29 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     tb.innerHTML=state.numbering.map((n,i)=>`
       <tr>
         <td class="border p-1 text-sm">${n.doc}</td>
-        <td class="border p-1"><input class="w-24 border-0 text-sm" value="${n.prefix}" data-i="${i}" data-k="prefix"></td>
+        <td class="border p-1"><input class="w-24 border-0 text-sm" value="${esc(n.prefix)}" data-i="${i}" data-k="prefix"></td>
         <td class="border p-1"><input type="number" min="0" max="10" class="w-16 border-0 text-sm" value="${n.pad}" data-i="${i}" data-k="pad"></td>
         <td class="border p-1"><input type="number" class="w-24 border-0 text-sm" value="${n.next}" data-i="${i}" data-k="next"></td>
-        <td class="border p-1"><input class="w-20 border-0 text-sm" value="${n.suffix}" data-i="${i}" data-k="suffix"></td>
+        <td class="border p-1"><input class="w-20 border-0 text-sm" value="${esc(n.suffix)}" data-i="${i}" data-k="suffix"></td>
         <td class="border p-1">
           <select class="border-0 text-sm" data-i="${i}" data-k="reset">
             ${['never','yearly','monthly','daily'].map(r=>`<option ${n.reset===r?'selected':''}>${r}</option>`).join('')}
           </select>
         </td>
-        <td class="border p-1 font-mono text-sm text-blue-700">${preview(n)}</td>
+        <td class="border p-1 font-mono text-sm text-blue-700 num-preview">${preview(n)}</td>
       </tr>`).join('');
     tb.querySelectorAll('[data-k]').forEach(inp=>{
       inp.addEventListener('input',e=>{
         const i=+inp.dataset.i, k=inp.dataset.k;
         state.numbering[i][k]= (k==='pad'||k==='next')?+inp.value:inp.value;
-        renderNum(); md();
+        // Update just this row's preview cell instead of rebuilding the
+        // whole table on every keystroke -- rebuilding replaced the input
+        // elements themselves, which kicked focus out of the field and
+        // made it impossible to type more than one character at a time.
+        const row = inp.closest('tr');
+        const previewCell = row && row.querySelector('.num-preview');
+        if (previewCell) previewCell.textContent = preview(state.numbering[i]);
+        md();
       });
     });
   }
@@ -88193,13 +88435,13 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     list.innerHTML = state.terms.length ? state.terms.map((t,i)=>`
       <div class="p-3 border rounded bg-gray-50">
         <div class="flex items-center justify-between mb-1">
-          <div class="font-semibold text-sm">${t.title}</div>
+          <div class="font-semibold text-sm">${esc(t.title)}</div>
           <div class="flex gap-2">
             <span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700">${t.docType}</span>
             <button class="text-red-600 text-xs" data-del="${i}">🗑️</button>
           </div>
         </div>
-        <div class="text-xs text-gray-700 whitespace-pre-wrap">${t.body}</div>
+        <div class="text-xs text-gray-700 whitespace-pre-wrap">${esc(t.body)}</div>
       </div>`).join('') : '<div class="text-sm italic text-gray-400 col-span-2">No snippets yet.</div>';
     list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{ state.terms.splice(+b.dataset.del,1); renderTerms(); md(); }));
   }
@@ -88260,7 +88502,25 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
   // ===== WATERMARK =====
   function updateWM(){
     const w=state.watermark, p=document.getElementById('wmPreview');
-    p.textContent = w.enabled==='off' ? '' : (w.text||'');
+    // "Image" mode previously fell through to the text branch and never
+    // displayed the uploaded image at all -- selecting Image did nothing
+    // visible. Now it actually renders the uploaded image as a background,
+    // and shows a hint if no image has been uploaded yet.
+    if (w.enabled==='image') {
+      if (w.image) {
+        p.textContent='';
+        p.style.backgroundImage=`url(${w.image})`;
+        p.style.backgroundSize='contain';
+        p.style.backgroundRepeat='no-repeat';
+        p.style.backgroundPosition='center';
+      } else {
+        p.style.backgroundImage='none';
+        p.textContent='(upload an image below)';
+      }
+    } else {
+      p.style.backgroundImage='none';
+      p.textContent = w.enabled==='off' ? '' : (w.text||'');
+    }
     p.style.opacity=(w.opacity/100);
     p.style.transform=`rotate(${w.rotate}deg)`;
     p.style.color=w.color;
@@ -88280,7 +88540,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
   });
   document.getElementById('wmOpacity')?.addEventListener('input',e=>{ state.watermark.opacity=+e.target.value; document.getElementById('wmOpacityVal').textContent=e.target.value; updateWM(); md(); });
   document.getElementById('wmRotate')?.addEventListener('input',e=>{ state.watermark.rotate=+e.target.value; document.getElementById('wmRotateVal').textContent=e.target.value; updateWM(); md(); });
-  document.getElementById('wmImage')?.addEventListener('change',e=>readFile(e.target,d=>{ state.watermark.image=d; md(); }));
+  document.getElementById('wmImage')?.addEventListener('change',e=>readFile(e.target,d=>{ state.watermark.image=d; updateWM(); md(); }));
 
   // ===== MENU / WIDGETS =====
   const MENU_LABELS = {dashboard:'📊 Dashboard',inventoryTab:'📦 Inventory',fundsTab:'💰 Funds',customersTab:'👥 Customers',invoicesTab:'🧾 Invoices',supplierTab:'🏭 Suppliers',manualJournalsTab:'📔 Journals',employeesTab:'💵 Payroll',reportsPanel:'📈 Reports',plansTab:'🗂️ Plans',orgProfileTab:'🏢 Org Profile',preferencesTab:'⚙️ Preferences',settingstemplateTab:'🎨 Customization',filesTab:'📁 Files'};
@@ -88339,7 +88599,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
     g.innerHTML=Object.keys(state.labels).map(k=>`
       <div>
         <label class="block mb-1 text-sm text-gray-600">${k}</label>
-        <input class="border p-2 rounded w-full text-sm" data-lk="${k}" value="${state.labels[k]}">
+        <input class="border p-2 rounded w-full text-sm" data-lk="${k}" value="${esc(state.labels[k])}">
       </div>`).join('');
     g.querySelectorAll('[data-lk]').forEach(inp=>inp.addEventListener('input',e=>{ state.labels[inp.dataset.lk]=inp.value; md(); }));
   }
@@ -88370,7 +88630,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
   document.getElementById('custImportBtn')?.addEventListener('click',()=>document.getElementById('custImportFile').click());
   document.getElementById('custImportFile')?.addEventListener('change',e=>{
     const f=e.target.files[0]; if(!f) return;
-    const r=new FileReader(); r.onload=ev=>{ try{ state=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)),JSON.parse(ev.target.result)); renderAll(); md(); flash('Imported.'); }catch(err){ alert('Invalid file'); } };
+    const r=new FileReader(); r.onload=ev=>{ try{ state=deepMerge(JSON.parse(JSON.stringify(DEFAULTS)),JSON.parse(ev.target.result)); renderAll(); md(); flash('Imported.'); }catch(err){ alert('Invalid file'); } };
     r.readAsText(f);
   });
 
@@ -88395,7 +88655,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js" defer></script>
 <div><label class="mb-1 block text-sm text-gray-800">
     Edit Template (Word-style)
-  </label><div id="editorToolbar" class="rounded-t-xl border border-gray-300 bg-gray-50"><span class="ql-formats"><select class="ql-font"></select><select class="ql-size"></select></span><span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span><span class="ql-formats"><button class="ql-align" value=""></button><button class="ql-align" value="center"></button><button class="ql-align" value="right"></button></span><span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span><span class="ql-formats"><button class="ql-image"></button><button class="ql-table"></button></span><span class="ql-formats"><button class="ql-clean"></button></span></div><div id="templateEditor"
+  </label><div id="editorToolbar" class="rounded-t-xl border border-gray-300 bg-gray-50"><span class="ql-formats"><select class="ql-font"></select><select class="ql-size"></select></span><span class="ql-formats"><button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button></span><span class="ql-formats"><button class="ql-align" value=""></button><button class="ql-align" value="center"></button><button class="ql-align" value="right"></button></span><span class="ql-formats"><button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button></span><span class="ql-formats"><button class="ql-image"></button><button class="ql-table"></button></span><span class="ql-formats"><button class="ql-clean"></button></span></div><div id="custTemplateEditor"
        class="h-72 bg-white rounded-b-xl border border-t-0 border-gray-300"></div></div><div class="grid grid-cols-1 gap-3 sm:grid-cols-3"><div class="sm:col-span-2"><label class="mb-1 block text-sm text-gray-800">Watermark Text (optional)</label><input id="wmText" type="text" placeholder="CONFIDENTIAL"
           class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none" /></div><div class="flex items-end"><label class="inline-flex items-center gap-2 text-sm text-gray-800"><input id="wmToggle" type="checkbox" class="h-4 w-4 rounded border-gray-300 bg-white" />
           Enable Watermark
@@ -88407,21 +88667,7 @@ class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-o
         onclick="saveBankDetails()"
        class="border border-blue-900 text-white bg-blue-900 px-1 py-1 rounded hover:bg-blue-800">
         💾 Save Banks
-      </button></div></div><div class="overflow-x-auto"><table class="w-full text-sm border border-gray-300" id="bankTable"><thead class="bg-gray-100 text-gray-700"><tr><th class="border px-2 py-1">BANK NAME</th><th class="border px-2 py-1">BRANCH</th><th class="border px-2 py-1">SWIFT CODE</th><th class="border px-2 py-1">KSH ACC</th><th class="border px-2 py-1">USD ACC</th><th class="border px-2 py-1">EURO ACC</th><th class="border px-2 py-1">ACTION</th></tr></thead><tbody id="bankTableBody"></tbody></table></div></div><section class="rounded-2xl border border-gray-300 bg-white p-4 shadow"><header class="mb-4"><h2 class="text-lg font-medium">🧩 Workflow & Approval Rules</h2><p class="text-sm text-gray-600">
-      Define conditional rules that run when generating documents or saving settings.
-    </p></header><div class="space-y-4"><div class="grid grid-cols-1 gap-3 md:grid-cols-5"><div><label class="mb-1 block text-sm text-gray-800">Priority</label><input id="rulePriority" type="number" min="1" value="1"
-          class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none" /></div><div><label class="mb-1 block text-sm text-gray-800">When</label><select id="ruleWhen"
-          class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none"><option value="onGenerate">On Generate</option><option value="onSave">On Save</option><option value="onApprove">On Approve</option></select></div><div><label class="mb-1 block text-sm text-gray-800">If</label><input id="ruleIf" type="text" placeholder="total > 100000"
-          class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none" /></div><div><label class="mb-1 block text-sm text-gray-800">Then</label><select id="ruleThen"
-          class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none"></select></div><div class="flex items-end"><button class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800"
-          onclick="addRule()">
-          + Add Rule
-        </button></div></div><div class="grid grid-cols-1 gap-3 md:grid-cols-3"><div class="md:col-span-2"><label class="mb-1 block text-sm text-gray-800">Message / Value</label><input id="ruleValue" type="text" placeholder="e.g., Needs Finance approval"
-          class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none" /></div><div><label class="mb-1 block text-sm text-gray-800">Approver Role (optional)</label><input id="ruleApprover" type="text" placeholder="Finance Manager"
-          class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none" /></div></div><div class="flex items-center gap-3"><label class="inline-flex items-center gap-2 text-sm text-gray-800"><input id="ruleEnabled" type="checkbox" checked
-          class="h-4 w-4 rounded border-gray-300 bg-white" />
-        Enabled
-      </label></div><div><h3 class="text-md font-medium mt-4 mb-2">Existing Rules</h3><div id="rulesList" class="space-y-1 text-sm text-gray-700"></div><div><div class="mb-2 flex items-center justify-between"><h3 class="text-sm font-medium text-gray-800">Active Rules</h3><button class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"onclick="clearRules()">Clear all</button></div><table class="w-full text-sm border border-gray-300 rounded-xl overflow-hidden"><thead class="bg-gray-100 text-gray-700"><tr><th class="px-2 py-1 border">#</th><th class="px-2 py-1 border">When</th><th class="px-2 py-1 border">If</th><th class="px-2 py-1 border">Then</th><th class="px-2 py-1 border">Value</th><th class="px-2 py-1 border">Approver</th><th class="px-2 py-1 border">Status</th><th class="px-2 py-1 border">Actions</th></tr></thead><tbody id="rulesList" class="divide-y divide-gray-200"></tbody></table></div></div></section></div><!-- 💰 Costing Tab --><div id="costingTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-2xl font-bold mb-6 text-center">💰 Costing</h2><div class="bg-white p-4 rounded shadow space-y-6"><p class="text-gray-700">
+      </button></div></div><div class="overflow-x-auto"><table class="w-full text-sm border border-gray-300" id="bankTable"><thead class="bg-gray-100 text-gray-700"><tr><th class="border px-2 py-1">BANK NAME</th><th class="border px-2 py-1">BRANCH</th><th class="border px-2 py-1">SWIFT CODE</th><th class="border px-2 py-1">KSH ACC</th><th class="border px-2 py-1">USD ACC</th><th class="border px-2 py-1">EURO ACC</th><th class="border px-2 py-1">ACTION</th></tr></thead><tbody id="bankTableBody"></tbody></table></div></div></div><!-- 💰 Costing Tab --><div id="costingTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-2xl font-bold mb-6 text-center">💰 Costing</h2><div class="bg-white p-4 rounded shadow space-y-6"><p class="text-gray-700">
       Select a product, enter buying price and cost components, and the system will calculate the total cost and suggested selling price.
     </p><div><label class="block font-medium mb-1">Select Product</label><select id="productSelect" class="border p-2 rounded w-full"><option value="">-- Choose Product --</option></select></div><div><label class="block font-medium mb-1">Buying Price</label><input id="buyingPrice" type="number" class="border p-2 rounded w-full" placeholder="e.g., 500" /></div><div><label class="block font-medium mb-1">Quantity</label><input id="quantity" type="number" class="border p-2 rounded w-full" placeholder="e.g., 100" value="1" min="1" /></div><section id="costingTable" class="mt-8"><h2 class="text-xl font-bold mb-4">Costing Breakdown (KES)</h2><table class="min-w-full border border-gray-300 rounded-lg text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Cost Category</th><th class="border p-2 text-right">Total Cost (KES)</th><th class="border p-2 text-right">Quantity (PCS)</th><th class="border p-2 text-right">Cost per Unit (KES)</th></tr></thead><tbody id="costTableBody"><tr><td class="border p-2">Direct Materials</td><td><input id="directMaterials" type="number" class="w-full text-right border-none" /></td><td id="qtyDM" class="border p-2 text-right">0</td><td id="unitDM" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Direct Labor</td><td><input id="directLabor" type="number" class="w-full text-right border-none" /></td><td id="qtyDL" class="border p-2 text-right">0</td><td id="unitDL" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Insuarance</td><td><input id="rent" type="number" class="w-full text-right border-none" /></td><td id="qtyRent" class="border p-2 text-right">0</td><td id="unitRent" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">licenses</td><td><input id="utilities" type="number" class="w-full text-right border-none" /></td><td id="qtyUtil" class="border p-2 text-right">0</td><td id="unitUtil" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Fixed Salaries</td><td><input id="fixedSalaries" type="number" class="w-full text-right border-none" /></td><td id="qtyFS" class="border p-2 text-right">0</td><td id="unitFS" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Packaging</td><td><input id="packaging" type="number" class="w-full text-right border-none" /></td><td id="qtyPack" class="border p-2 text-right">0</td><td id="unitPack" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Transportation</td><td><input id="transportation" type="number" class="w-full text-right border-none" /></td><td id="qtyTrans" class="border p-2 text-right">0</td><td id="unitTrans" class="border p-2 text-right">0</td></tr><tr class="bg-gray-100 font-semibold"><td colspan="4" class="border p-2">Import Taxes & Charges</td></tr><tr><td class="border p-2">Import Duty</td><td><input id="importDuty" type="number" class="w-full text-right border-none" /></td><td id="qtyDuty" class="border p-2 text-right">0</td><td id="unitDuty" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Import Declaration Fee (IDF)</td><td><input id="idfFee" type="number" class="w-full text-right border-none" /></td><td id="qtyIDF" class="border p-2 text-right">0</td><td id="unitIDF" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Railway Development Levy (RDL)</td><td><input id="rdlFee" type="number" class="w-full text-right border-none" /></td><td id="qtyRDL" class="border p-2 text-right">0</td><td id="unitRDL" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Excise Duty</td><td><input id="exciseDuty" type="number" class="w-full text-right border-none" /></td><td id="qtyExcise" class="border p-2 text-right">0</td><td id="unitExcise" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Other Charges</td><td><input id="otherCharges" type="number" class="w-full text-right border-none" /></td><td id="qtyOther" class="border p-2 text-right">0</td><td id="unitOther" class="border p-2 text-right">0</td></tr><tr class="bg-gray-200 font-bold"><td class="border p-2 text-right">TOTAL</td><td id="totalCostKES" class="border p-2 text-right">0</td><td id="totalQty" class="border p-2 text-right">0</td><td id="totalCostPerUnit" class="border p-2 text-right">0</td></tr></tbody></table></section>
 <script>
@@ -89591,6 +89837,7 @@ let editingUserIndex = null;
 function syncCustomModuleCheckboxes() {
   const list = document.getElementById('moduleAccessList');
   if (!list) return;
+  const body = list.querySelector('[data-group-body="custom"]') || list;
   let defs = [];
   try { defs = JSON.parse(localStorage.getItem('customModules') || '[]') || []; } catch (e) { defs = []; }
   defs.forEach(m => {
@@ -89602,10 +89849,67 @@ function syncCustomModuleCheckboxes() {
     cb.value = m.tabId;
     label.appendChild(cb);
     label.appendChild(document.createTextNode(' ' + (m.icon || '🧩') + ' ' + m.name + ' (custom)'));
-    list.appendChild(label);
+    body.appendChild(label);
   });
+  if (typeof refreshModuleAccessGroupStates === 'function') refreshModuleAccessGroupStates();
 }
 document.addEventListener('acxModulesChanged', function () { try { syncCustomModuleCheckboxes(); } catch (e) {} });
+
+// Wires up the "Select All Modules" checkbox and each per-group "select all"
+// checkbox added to #moduleAccessList. Checking a group's box ticks every
+// checkbox in that module's group; checking the master box ticks everything.
+// Boxes reflect indeterminate state when only some items in a group are checked.
+let __moduleAccessControlsWired = false;
+function wireModuleAccessGroupControls() {
+  const list = document.getElementById('moduleAccessList');
+  if (!list || __moduleAccessControlsWired) return;
+  __moduleAccessControlsWired = true;
+
+  list.addEventListener('change', function (e) {
+    const t = e.target;
+    if (!(t instanceof HTMLInputElement) || t.type !== 'checkbox') return;
+
+    if (t.classList.contains('moduleGroupAll')) {
+      const body = list.querySelector(`[data-group-body="${t.getAttribute('data-group')}"]`);
+      if (body) body.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = t.checked; });
+      refreshModuleAccessGroupStates();
+      return;
+    }
+
+    if (t.id === 'moduleAccessSelectAll') {
+      list.querySelectorAll('input[type="checkbox"]:not(#moduleAccessSelectAll):not(.moduleGroupAll)')
+        .forEach(cb => { cb.checked = t.checked; });
+      refreshModuleAccessGroupStates();
+      return;
+    }
+
+    refreshModuleAccessGroupStates();
+  });
+}
+
+function refreshModuleAccessGroupStates() {
+  const list = document.getElementById('moduleAccessList');
+  if (!list) return;
+
+  list.querySelectorAll('.moduleGroupAll').forEach(groupCb => {
+    const body = list.querySelector(`[data-group-body="${groupCb.getAttribute('data-group')}"]`);
+    if (!body) return;
+    const boxes = Array.from(body.querySelectorAll('input[type="checkbox"]'));
+    const checkedCount = boxes.filter(cb => cb.checked).length;
+    groupCb.checked = boxes.length > 0 && checkedCount === boxes.length;
+    groupCb.indeterminate = checkedCount > 0 && checkedCount < boxes.length;
+  });
+
+  const selectAll = document.getElementById('moduleAccessSelectAll');
+  if (selectAll) {
+    const boxes = Array.from(
+      list.querySelectorAll('input[type="checkbox"]:not(#moduleAccessSelectAll):not(.moduleGroupAll)')
+    );
+    const checkedCount = boxes.filter(cb => cb.checked).length;
+    selectAll.checked = boxes.length > 0 && checkedCount === boxes.length;
+    selectAll.indeterminate = checkedCount > 0 && checkedCount < boxes.length;
+  }
+}
 
 function openCreateUserModal(index = null) {
   document.getElementById('createUserModal').classList.remove('hidden');
@@ -89618,6 +89922,7 @@ function openCreateUserModal(index = null) {
   document.getElementById('customRoleInput').value = '';
   document.getElementById('modalTitle').textContent = index !== null ? '✏️ Edit User' : '👤 Create New User';
 
+  wireModuleAccessGroupControls();
   syncCustomModuleCheckboxes();
   document.querySelectorAll('#moduleAccessList input[type="checkbox"]').forEach(cb => cb.checked = false);
 
@@ -89641,7 +89946,14 @@ function openCreateUserModal(index = null) {
     }
   }
 
-  applyRoleDefaults(); 
+  // Don't let role-default application wipe out a custom-role user's saved
+  // module selection when editing them — "custom" has no default module set,
+  // so applyRoleDefaults() would otherwise just clear every checkbox we just set above.
+  const editingCustomRoleUser = index !== null && document.getElementById('newRole').value === 'custom';
+  if (!editingCustomRoleUser) {
+    applyRoleDefaults();
+  }
+  refreshModuleAccessGroupStates();
 }
 
 function closeCreateUserModal() {
@@ -89660,7 +89972,7 @@ function saveUser() {
     return;
   }
 
-  const modules = Array.from(document.querySelectorAll('#moduleAccessList input:checked'))
+  const modules = Array.from(document.querySelectorAll('#moduleAccessList input[type="checkbox"]:checked:not(#moduleAccessSelectAll):not(.moduleGroupAll)'))
     .map(cb => cb.value);
 
   const loggedIn = JSON.parse(localStorage.getItem('loggedInUser') || 'null') || {};
@@ -90482,7 +90794,8 @@ const roleModules = {
     'filesTab','recycleBinTab',
 
     'mailHub',
-    'crmHub'
+    'crmHub',
+    'projectHubExternal'
   ],
 
   sales: [
@@ -90565,6 +90878,7 @@ const roleModules = {
       if (checkbox) checkbox.checked = true;
     });
   }
+  if (typeof refreshModuleAccessGroupStates === 'function') refreshModuleAccessGroupStates();
 }
 
 window.addEventListener('DOMContentLoaded', renderUserTable);
@@ -92883,10 +93197,10 @@ let quill = null;
 function initQuillEditor() {
   if (quill) return quill;
   if (typeof Quill === 'undefined') return null;
-  const host = document.getElementById('templateEditor');
+  const host = document.getElementById('custTemplateEditor');
   if (!host) return null;
   try {
-    quill = new Quill('#templateEditor', { theme: 'snow', modules: { toolbar: '#editorToolbar' } });
+    quill = new Quill('#custTemplateEditor', { theme: 'snow', modules: { toolbar: '#editorToolbar' } });
     quill.on('text-change', function () { try { updatePreview(); } catch (e) {} });
   } catch (e) { return null; }
   return quill;
@@ -92895,7 +93209,7 @@ window.initQuillEditor = initQuillEditor;
 function quillHTML(v) {
   const q = initQuillEditor();
   if (!q) {
-    const host = document.getElementById('templateEditor');
+    const host = document.getElementById('custTemplateEditor');
     if (!host) return '';
     if (typeof v === 'string') { host.innerHTML = v; return v; }
     return host.innerHTML;
@@ -92955,6 +93269,81 @@ function updatePreview() {
 wmToggle.addEventListener('change', updatePreview);
 wmText.addEventListener('input', updatePreview);
 
+/* "New Template" button (id was called but never defined, so it silently
+   did nothing). Clears the editor so the user can build a template from
+   scratch, without touching any already-saved template. */
+function createNewTemplate() {
+  savedTemplatesDropdown.value = '';
+  const nameField = document.getElementById('newTemplateName');
+  if (nameField) nameField.value = '';
+  quillHTML('');
+  if (wmToggle) wmToggle.checked = false;
+  if (wmText) wmText.value = '';
+  updatePreview();
+  if (nameField) nameField.focus();
+}
+
+/* "Edit Template" button (also called but never defined). Loads whichever
+   template is selected in the Saved Templates dropdown into the editor -
+   same as picking it from the dropdown, but also usable after
+   createNewTemplate() cleared the selection. */
+function editTemplate() {
+  const selected = savedTemplatesDropdown.value;
+  if (!selected) {
+    alert('Select a saved template first, or use "New Template" to start one from scratch.');
+    return;
+  }
+  loadTemplateEditor();
+}
+
+/* Populates the "All Templates" gallery grid, which previously always
+   showed the static "Templates will appear here" placeholder because
+   nothing ever rendered into #templateGrid. Every card here links back
+   to the same `template_*` localStorage entries that Sales/Purchase
+   "Choose Template" pickers read via customTemplates(), so anything
+   created/edited/deleted here shows up there automatically. */
+function renderTemplateGrid() {
+  const grid = document.getElementById('templateGrid');
+  if (!grid) return;
+  const names = Object.keys(localStorage)
+    .filter(k => k.startsWith('template_'))
+    .map(k => k.replace('template_', ''))
+    .sort();
+  if (!names.length) {
+    grid.innerHTML = '<div class="text-sm text-gray-500 italic">Templates will appear here</div>';
+    return;
+  }
+  const def = localStorage.getItem('defaultTemplate');
+  const escHtml = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  grid.innerHTML = names.map(name => `
+    <div class="border rounded-xl p-3 bg-gray-50 flex flex-col gap-2" data-tpl-card="${escHtml(name)}">
+      <div class="font-semibold text-sm truncate" title="${escHtml(name)}">${escHtml(name)}${def === name ? ' <span class="text-xs text-green-700">(Default)</span>' : ''}</div>
+      <div class="flex flex-wrap gap-1">
+        <button type="button" data-tpl-action="edit" class="text-xs border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">Edit</button>
+        <button type="button" data-tpl-action="delete" class="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">Delete</button>
+      </div>
+    </div>`).join('');
+}
+/* Delegated click handling avoids ever interpolating a template name into
+   an inline onclick string (names can contain quotes/HTML). */
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest ? e.target.closest('[data-tpl-action]') : null;
+  if (!btn) return;
+  const card = btn.closest('[data-tpl-card]');
+  if (!card) return;
+  const name = card.getAttribute('data-tpl-card');
+  if (btn.getAttribute('data-tpl-action') === 'edit') selectTemplateForEdit(name);
+  else if (btn.getAttribute('data-tpl-action') === 'delete') deleteTemplateByName(name);
+});
+function selectTemplateForEdit(name) {
+  savedTemplatesDropdown.value = name;
+  loadTemplateEditor();
+}
+function deleteTemplateByName(name) {
+  savedTemplatesDropdown.value = name;
+  deleteTemplate();
+}
+
 function loadTemplateList() {
   const keys = Object.keys(localStorage).filter(k => k.startsWith('template_'));
   savedTemplatesDropdown.innerHTML = '<option value="">-- Select Template --</option>';
@@ -92974,6 +93363,7 @@ function loadTemplateList() {
   } else {
     defaultIndicator.classList.add('hidden');
   }
+  renderTemplateGrid();
 }
 
 function loadTemplateEditor() {
@@ -93045,6 +93435,7 @@ function setAsDefault() {
   localStorage.setItem('defaultTemplate', name);
   defaultIndicator.textContent = `Default: ${name}`;
   defaultIndicator.classList.remove('hidden');
+  renderTemplateGrid();
 }
 
 function cloneTemplate() {
@@ -93104,16 +93495,17 @@ document.addEventListener('DOMContentLoaded', () => {
   updatePreview();
 });
 
-  window.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem('workflowRules');
+let approvalRules = [];
+window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('acacia_approval_rules');
     if (saved) {
-      rules = JSON.parse(saved);
+      approvalRules = JSON.parse(saved);
       renderRules();
     }
   });
 
   function saveRules() {
-    localStorage.setItem('workflowRules', JSON.stringify(rules));
+    localStorage.setItem('acacia_approval_rules', JSON.stringify(approvalRules));
   }
 
   function addRule() {
@@ -93141,7 +93533,7 @@ document.addEventListener('DOMContentLoaded', () => {
       enabled: ruleEnabled
     };
 
-    rules.push(rule);
+    approvalRules.push(rule);
     saveRules();
     renderRules();
     clearForm();
@@ -93153,7 +93545,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   tbody.innerHTML = '';
 
-  rules
+  approvalRules
     .sort((a, b) => a.priority - b.priority)
     .forEach((rule, index) => {
 
@@ -93256,7 +93648,7 @@ document.addEventListener("click", function(e) {
 
 function cloneRule(id) {
 
-  const rule = rules.find(r => r.id === id);
+  const rule = approvalRules.find(r => r.id === id);
 
   if (!rule) return;
 
@@ -93265,9 +93657,9 @@ function cloneRule(id) {
     id: Date.now()
   };
 
-  rules.push(cloned);
+  approvalRules.push(cloned);
 
-  localStorage.setItem("approvalRules", JSON.stringify(rules));
+  localStorage.setItem("acacia_approval_rules", JSON.stringify(approvalRules));
 
   renderRules();
 
@@ -93277,7 +93669,7 @@ function cloneRule(id) {
 
 function downloadRule(id) {
 
-  const rule = rules.find(r => r.id === id);
+  const rule = approvalRules.find(r => r.id === id);
 
   if (!rule) return;
 
@@ -93311,7 +93703,7 @@ Status: ${rule.enabled ? "Enabled" : "Disabled"}
 
 function printRule(id) {
 
-  const rule = rules.find(r => r.id === id);
+  const rule = approvalRules.find(r => r.id === id);
 
   if (!rule) return;
 
@@ -93344,7 +93736,7 @@ function printRule(id) {
 function deleteRule(id) {
   if (!confirm('Delete this rule?')) return;
 
-  const ruleToDelete = rules.find(r => r.id === id);
+  const ruleToDelete = approvalRules.find(r => r.id === id);
   if (!ruleToDelete) return;
 
   const recycleBin = JSON.parse(localStorage.getItem("recycleBin") || "[]");
@@ -93357,7 +93749,7 @@ function deleteRule(id) {
   });
   localStorage.setItem("recycleBin", JSON.stringify(recycleBin));
 
-  rules = rules.filter(r => r.id !== id);
+  approvalRules = approvalRules.filter(r => r.id !== id);
   saveRules();
   renderRules();
 
@@ -93365,7 +93757,7 @@ function deleteRule(id) {
 }
 
   function editRule(id) {
-    const rule = rules.find(r => r.id === id);
+    const rule = approvalRules.find(r => r.id === id);
     if (!rule) return;
 
     document.getElementById('rulePriority').value = rule.priority;
@@ -93376,14 +93768,14 @@ function deleteRule(id) {
     document.getElementById('ruleApprover').value = rule.approver;
     document.getElementById('ruleEnabled').checked = rule.enabled;
 
-    rules = rules.filter(r => r.id !== id);
+    approvalRules = approvalRules.filter(r => r.id !== id);
     saveRules();
     renderRules();
   }
 
   function clearRules() {
-    if (confirm('Clear all rules?')) {
-      rules = [];
+    if (confirm('Clear all approvalRules?')) {
+      approvalRules = [];
       saveRules();
       renderRules();
     }
@@ -101044,6 +101436,7 @@ function toggleSubmenu(id) {
     } catch(e){}
   }
   window.addEventListener('pagehide', flushNow);
+  document.addEventListener('visibilitychange', function(){ if (document.hidden) flushNow(); });
 
   function pushAllCompanyKeys(){
     var keys = NS.companyKeys(), i;
@@ -101100,15 +101493,73 @@ function toggleSubmenu(id) {
 
   /* ---------- realtime (other browsers) ---------- */
   var refreshTimer = null;
+  /* Every module whose data can arrive via a cloud push/pull (another device,
+     or the initial pull-on-login) needs its own render call here, or a saved
+     change on Device A simply won't appear on screen on Device B until a full
+     page reload. This list previously covered ~13 views; it now covers every
+     module-level render/update function in the app so "Save/Edit/Delete →
+     cloud sync → visible everywhere" holds app-wide, not just for a few
+     screens. Each call is independently try/caught, so a function that
+     doesn't exist yet on a given page (not all modules are loaded on every
+     screen) or that isn't relevant right now is simply skipped — safe to
+     over-include. */
+  var __CLOUD_REFRESH_FNS__ = [
+    'renderDashboard','renderReports','applyBaseCurrencyAndLanguage','updateDashboardTotals',
+    /* Sales */
+    'renderInvoices','renderInvoiceSummary','renderQuotes','renderReceipts','renderCreditNotes',
+    'renderCreditNotesReport','renderDebitNotes','renderDebitNotesReport','renderRecurringInvoices',
+    'renderRecurringInvoiceReport','renderBulkInvoices','renderSalesReturnList','renderSalesReturnReport',
+    'renderDeliveryTable','renderDeliveryReport','renderPackages','renderSalesByCustomerReport',
+    'renderSalesByPersonReport','renderSalesTaxSummary','renderCustomerStatement','renderCustomerStatementReport',
+    'updateCustomerReceivables',
+    /* Purchases */
+    'renderBills','renderFilteredBills','renderPurchaseOrders','renderPurchaseOrdersReport',
+    'renderPurchaseReturns','renderPurchaseReturnReport','renderSupplierQuotes','renderSupplierStatementReport',
+    'renderSupplierPayments','renderPaymentsMade','renderGRNTable','renderGRNReport','updateAccountsPayable',
+    /* Inventory */
+    'renderInventory','renderInventoryTable','renderFilteredInventoryTable','renderPriceListTable',
+    'renderFilteredPriceList','renderWarehouses','renderStockTransfer','renderMovementTable',
+    'renderFilteredMovementTable','renderBatchTracking','renderStockAging','renderStockReports',
+    'renderDamagedStock','renderDeadStock','renderExpiredItems','renderOverstock','renderSlowMoving',
+    'renderFastMoving','renderShrinkage','renderBundles',
+    /* Accounting / banking */
+    'renderAccounts','renderAccountsPayable','renderAccountsReceivable','renderBankAccountsTable',
+    'renderBankTable','renderBankReconciliationReport','renderCurrentAccount','renderCurrentAccounts',
+    'renderCurrentAccountReport','renderManualJournals','renderManualTransactions','renderRecurringJournalList',
+    'renderGeneralLedger','renderTrialBalance','renderProfitLoss','updateProfitAndLoss','renderCashFlow',
+    'renderCashflow','renderEquity','renderEquityStatement','renderRetainedEarnings','renderNonCurrentAssets',
+    'renderNonCurrentLiabilities','renderFAR','renderDepreciationSchedule','renderDepreciationTable',
+    'renderOperationalCosts','renderOperationalCostsReport','renderJournalReport','updateBankSummary',
+    'updateTotals',
+    /* Tax */
+    'renderTaxes','renderTaxAdjustments','renderTaxPayments','renderTaxCompliance','renderVatSummary',
+    'renderVatRules','renderVatPaymentsList','updateVATReport',
+    /* Payroll / HR */
+    'calculateTotalPayroll','renderGrossPayroll','renderPayrollReports','renderPayrollSummary',
+    'renderPayrollReconciliation','renderStatutoryDeductions','renderEmployees','renderAttendanceTable',
+    'renderAttendanceSummary','renderLeaveSummary','renderOvertimeSummary',
+    /* CRM / customers / suppliers */
+    'renderCustomers','renderSuppliers','renderCustomerCRM','renderCustomerOrdersReport',
+    'renderCustomerQuotesReport','renderCommLog','renderActivity','renderNotifications',
+    /* Orders */
+    'renderOrders',
+    /* Budgets / projects / plans */
+    'renderBudgets','renderBudgetCenter','renderBudgetReport','renderBudgetVariance',
+    'renderBudgetVarianceReport','renderProjectsTable','renderProjectExpenses','renderProjectRevenue',
+    'renderPlans','renderPlansReport','renderPlansStatusOverview',
+    /* Admin / misc */
+    'renderBranches','renderUserTable','renderUserActivity','renderUserActivityReport','renderAudit',
+    'renderAuditTrailReport','renderApprovals','renderFileList','renderExpenseAnalysis',
+    'renderGrossProfitAnalysis','renderProfitMargin','renderProfitPerCustomer','renderKpiDashboard',
+    'renderLoanSchedule'
+  ];
   function refreshUI(){
     clearTimeout(refreshTimer);
     refreshTimer = setTimeout(function(){
-      ['renderDashboard','renderReports','renderInvoices','renderBills','renderBanks',
-       'renderCustomers','renderSuppliers','calculateTotalPayroll','renderGrossPayroll',
-       'renderPayrollReports','updateProfitAndLoss','renderInventory','renderOrders',
-       'applyBaseCurrencyAndLanguage'].forEach(function(fn){
+      __CLOUD_REFRESH_FNS__.forEach(function(fn){
         try { if (typeof window[fn] === 'function') window[fn](); } catch(e){}
       });
+      if (typeof window.renderRecycleBin === 'function') { try { window.renderRecycleBin(); } catch(e){} }
     }, 300);
   }
   function subscribeCompanyChanges(){
@@ -102427,6 +102878,21 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
         <button id="wfLogClearBtn" class="border border-red-600 text-red-600 px-2 py-1 rounded text-sm">Clear log</button>
       </div>
       <div class="overflow-x-auto max-h-64 overflow-y-auto"><table class="min-w-full text-xs border"><thead class="bg-gray-100"><tr><th class="p-2 border">When</th><th class="p-2 border">Rule</th><th class="p-2 border">Event</th><th class="p-2 border">Action</th><th class="p-2 border">Status</th><th class="p-2 border">Detail</th><th class="p-2 border">Retry</th></tr></thead><tbody id="wfLogRows"></tbody></table></div>
+      <div class="border-t pt-6 mt-6"><div class="mb-4"><h3 class="text-lg font-medium">🧩 Document Approval Rules</h3><p class="text-sm text-gray-600">
+      Define conditional rules that run when generating documents or saving settings.
+    </p></div><div class="space-y-4"><div class="grid grid-cols-1 gap-3 md:grid-cols-5"><div><label class="mb-1 block text-sm text-gray-800">Priority</label><input id="rulePriority" type="number" min="1" value="1"
+          class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none" /></div><div><label class="mb-1 block text-sm text-gray-800">When</label><select id="ruleWhen"
+          class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none"><option value="onGenerate">On Generate</option><option value="onSave">On Save</option><option value="onApprove">On Approve</option></select></div><div><label class="mb-1 block text-sm text-gray-800">If</label><input id="ruleIf" type="text" placeholder="total > 100000"
+          class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none" /></div><div><label class="mb-1 block text-sm text-gray-800">Then</label><select id="ruleThen"
+          class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none"><option value="requireApproval">Require Approval</option><option value="blockSave">Block Save</option><option value="showWarning">Show Warning</option><option value="sendNotification">Send Notification</option></select></div><div class="flex items-end"><button class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800"
+          onclick="addRule()">
+          + Add Rule
+        </button></div></div><div class="grid grid-cols-1 gap-3 md:grid-cols-3"><div class="md:col-span-2"><label class="mb-1 block text-sm text-gray-800">Message / Value</label><input id="ruleValue" type="text" placeholder="e.g., Needs Finance approval"
+          class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none" /></div><div><label class="mb-1 block text-sm text-gray-800">Approver Role (optional)</label><input id="ruleApprover" type="text" placeholder="Finance Manager"
+          class="w-full rounded-xl border border-gray-300 bg-white p-3 text-sm focus:outline-none" /></div></div><div class="flex items-center gap-3"><label class="inline-flex items-center gap-2 text-sm text-gray-800"><input id="ruleEnabled" type="checkbox" checked
+          class="h-4 w-4 rounded border-gray-300 bg-white" />
+        Enabled
+      </label></div><div><div class="mb-2 flex items-center justify-between"><h3 class="text-sm font-medium text-gray-800">Active Rules</h3><button class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"onclick="clearRules()">Clear all</button></div><table class="w-full text-sm border border-gray-300 rounded-xl overflow-hidden"><thead class="bg-gray-100 text-gray-700"><tr><th class="px-2 py-1 border">#</th><th class="px-2 py-1 border">When</th><th class="px-2 py-1 border">If</th><th class="px-2 py-1 border">Then</th><th class="px-2 py-1 border">Value</th><th class="px-2 py-1 border">Approver</th><th class="px-2 py-1 border">Status</th><th class="px-2 py-1 border">Actions</th></tr></thead><tbody id="rulesList" class="divide-y divide-gray-200"></tbody></table></div></div></div>
     </div>`;
 
     const emailHtml = `
@@ -107034,7 +107500,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
   function setSettings(k, s) { try { localStorage.setItem(storeKey(k), JSON.stringify(s)); } catch (e) {} }
   window.getDocTemplateSettings = getSettings;
 
-  function customTemplates() {
+  function customTemplates(docKey) {
     var out = [];
     try {
       for (var i = 0; i < localStorage.length; i++) {
@@ -107042,7 +107508,39 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
         if (k && k.indexOf('template_') === 0) out.push(k.replace('template_', '').split('::')[0]);
       }
     } catch (e) {}
-    return out.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort();
+    out = out.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort();
+    if (docKey && window.acxTemplateModuleOf) {
+      out = out.filter(function (n) {
+        var m = window.acxTemplateModuleOf(n);
+        return !m || m === 'all' || m === docKey;
+      });
+    }
+    return out;
+  }
+  function orgProfile() {
+    try { return JSON.parse(localStorage.getItem('orgInfo') || '{}') || {}; } catch (e) { return {}; }
+  }
+  window.acxOrgProfile = orgProfile;
+  function applyOrgProfile(root) {
+    var o = orgProfile();
+    if (!o || !o.name || !root || !root.querySelectorAll) return;
+    var pairs = [
+      [/company ?name$/i, o.name],
+      [/company ?(pin|kra)/i, o.pin || o.vatNumber || ''],
+      [/company ?address$/i, o.address || ''],
+      [/company ?(phone|tel)/i, o.phone || ''],
+      [/company ?email/i, o.email || '']
+    ];
+    root.querySelectorAll('[id]').forEach(function (n) {
+      var id = n.id || '';
+      if (!/company/i.test(id)) return;
+      for (var i = 0; i < pairs.length; i++) {
+        if (pairs[i][0].test(id) && pairs[i][1]) { n.textContent = pairs[i][1]; return; }
+      }
+    });
+    if (o.logo) {
+      root.querySelectorAll('img[id*="ogo"], img[alt*="ogo"]').forEach(function (img) { img.src = o.logo; });
+    }
   }
   function customTemplateHtml(name) {
     try { return localStorage.getItem('template_' + name) || ''; } catch (e) { return ''; }
@@ -107058,7 +107556,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     var opts = styles.map(function (v) {
       return '<option value="' + v + '"' + (s.baseStyle === v ? ' selected' : '') + '>' + v.replace('template-', '').replace(/^./, function (c) { return c.toUpperCase(); }) + '</option>';
     }).join('');
-    var custom = customTemplates().map(function (n) {
+    var custom = customTemplates(doc.key).map(function (n) {
       return '<option value="' + n + '"' + (s.customTemplate === n ? ' selected' : '') + '>' + n + '</option>';
     }).join('');
     bar.innerHTML =
@@ -107137,6 +107635,40 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
       sel + ' .uts-totals{text-align:' + s.totalsAlign + '}';
     if (!scoped.parentNode) document.head.appendChild(scoped);
 
+    /* Company block always reflects Settings -> Organization Profile */
+    applyOrgProfile(el);
+
+    /* A selected created-template REPLACES the document body instead of being
+       appended underneath the existing preview. */
+    var customHtml = s.customTemplate ? customTemplateHtml(s.customTemplate) : '';
+    var body = el.querySelector(':scope > .utsOriginalBody');
+    if (!body) {
+      body = document.createElement('div');
+      body.className = 'utsOriginalBody';
+      var moved = [];
+      Array.prototype.forEach.call(el.children, function (c) {
+        if (!/utsHeaderBlock|utsFooterBlock|utsWatermark|utsCustomBody/.test(c.className || '')) moved.push(c);
+      });
+      moved.forEach(function (c) { body.appendChild(c); });
+      el.appendChild(body);
+    }
+    var slot = el.querySelector(':scope > .utsCustomBody');
+    if (customHtml) {
+      if (!slot) {
+        slot = document.createElement('div');
+        slot.className = 'utsCustomBody uts-custom-template';
+        el.insertBefore(slot, body);
+      }
+      slot.innerHTML = window.acxFillTemplateTokens
+        ? window.acxFillTemplateTokens(customHtml, body)
+        : customHtml;
+      slot.style.display = '';
+      body.style.display = 'none';
+    } else {
+      if (slot && slot.parentNode) slot.parentNode.removeChild(slot);
+      body.style.display = '';
+    }
+
     // header / footer / watermark / extras
     ['utsHeaderBlock', 'utsFooterBlock', 'utsWatermark'].forEach(function (c) {
       var old = el.querySelector('.' + c); if (old) old.remove();
@@ -107160,8 +107692,6 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     if (s.showQr) footBits.push('<div style="margin-top:.5rem;width:70px;height:70px;border:1px dashed ' + s.borderColor + ';display:flex;align-items:center;justify-content:center;font-size:10px">QR</div>');
     if (s.showFooter && s.footerText) footBits.push('<div style="text-align:center;color:' + s.primaryColor + '">' + s.footerText + '</div>');
     if (s.showPageNumbers) footBits.push('<div style="text-align:center;font-size:10px;color:#64748b">Page 1</div>');
-    var customHtml = s.customTemplate ? customTemplateHtml(s.customTemplate) : '';
-    if (customHtml) footBits.unshift('<div class="uts-custom-template">' + customHtml + '</div>');
     if (footBits.length) {
       var f = document.createElement('div');
       f.className = 'utsFooterBlock';
@@ -107248,7 +107778,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     var s = getSettings(key);
     document.getElementById('utsDocLabel').textContent = doc.label;
     var sel = document.getElementById('utsCustomTemplateSelect');
-    sel.innerHTML = '<option value="">— None —</option>' + customTemplates().map(function (n) {
+    sel.innerHTML = '<option value="">— None —</option>' + customTemplates(key).map(function (n) {
       return '<option value="' + n + '">' + n + '</option>';
     }).join('');
     editorFields().forEach(function (f) {
@@ -115059,12 +115589,14 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   function renderModuleAccessCheckboxes() {
     var list = document.getElementById("moduleAccessList");
     if (!list) return;
+    var body = list.querySelector('[data-group-body="custom"]') || list;
     loadDefs().forEach(function (m) {
       if (list.querySelector('input[value="' + m.tabId + '"]')) return;
       var label = document.createElement("label");
       label.innerHTML = '<input type="checkbox" value="' + m.tabId + '"> ' + (m.icon || "🧩") + " " + esc(m.name) + " (custom)";
-      list.appendChild(label);
+      body.appendChild(label);
     });
+    if (typeof refreshModuleAccessGroupStates === "function") refreshModuleAccessGroupStates();
   }
 
   /* =====================================================================
@@ -118975,5 +119507,676 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   };
 
   if (document.getElementById("recycleList")) window.renderRecycleBin();
+})();
+</script>
+
+<script>
+/* ============================================================
+   Template modules: scope every created template to a submodule,
+   group the Customization gallery by submodule, and preview it.
+   ============================================================ */
+(function () {
+  var MODULES = [
+    { group: 'Sales',    key: 'invoice',        label: 'Invoices' },
+    { group: 'Sales',    key: 'quote',          label: 'Quotes' },
+    { group: 'Sales',    key: 'order',          label: 'Orders' },
+    { group: 'Sales',    key: 'bulkinvoice',    label: 'Bulk Invoicing' },
+    { group: 'Sales',    key: 'creditnote',     label: 'Credit Notes' },
+    { group: 'Sales',    key: 'salesreturn',    label: 'Sales Returns' },
+    { group: 'Sales',    key: 'receipt',        label: 'Receipts' },
+    { group: 'Sales',    key: 'recurring',      label: 'Recurring Invoices' },
+    { group: 'Sales',    key: 'delivery',       label: 'Delivery Notes' },
+    { group: 'Purchase', key: 'payment',        label: 'Supplier Payments' },
+    { group: 'Purchase', key: 'bill',           label: 'Bills' },
+    { group: 'Purchase', key: 'bulkbilling',    label: 'Bulk Billing' },
+    { group: 'Purchase', key: 'taxpayment',     label: 'Tax Payments' },
+    { group: 'Purchase', key: 'opcost',         label: 'Operational Costs' },
+    { group: 'Purchase', key: 'purchaseorder',  label: 'Purchase Orders' },
+    { group: 'Purchase', key: 'debitnote',      label: 'Debit Notes' },
+    { group: 'Purchase', key: 'purchasereturn', label: 'Purchase Returns' },
+    { group: 'Purchase', key: 'grn',            label: 'Goods Received' }
+  ];
+  var LABEL = { all: 'All documents' };
+  MODULES.forEach(function (m) { LABEL[m.key] = m.label; });
+  window.acxTemplateModules = MODULES;
+
+  function metaMap() {
+    try { return JSON.parse(localStorage.getItem('templateModules') || '{}') || {}; } catch (e) { return {}; }
+  }
+  function saveMetaMap(m) {
+    try { localStorage.setItem('templateModules', JSON.stringify(m)); } catch (e) {}
+  }
+  window.acxTemplateModuleOf = function (name) { return metaMap()[name] || 'all'; };
+  window.acxSetTemplateModule = function (name, key) {
+    var m = metaMap(); m[name] = key || 'all'; saveMetaMap(m);
+  };
+
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  /* ---- token filling so a created template can show real data ---- */
+  window.acxFillTemplateTokens = function (html, sourceEl) {
+    var o = window.acxOrgProfile ? window.acxOrgProfile() : {};
+    var tok = {
+      company_name: o.name, company_pin: o.pin || o.vatNumber, company_address: o.address,
+      company_phone: o.phone, company_email: o.email, company_website: o.website,
+      company_logo: o.logo, currency: o.baseCurrency || o.currency,
+      date: new Date().toLocaleDateString()
+    };
+    if (sourceEl) {
+      sourceEl.querySelectorAll('[id^="preview"]').forEach(function (n) {
+        tok[n.id] = (n.textContent || '').trim();
+      });
+    }
+    return String(html).replace(/\{\{\s*([\w.]+)\s*\}\}/g, function (m, k) {
+      var v = tok[k];
+      return (v === undefined || v === null || v === '') ? '' : String(v);
+    });
+  };
+
+  /* ---- "Applies to" selector in the template editor ---- */
+  function moduleOptions(selected) {
+    var html = '<option value="all"' + (selected === 'all' ? ' selected' : '') + '>All documents</option>';
+    ['Sales', 'Purchase'].forEach(function (g) {
+      html += '<optgroup label="' + g + '">';
+      MODULES.filter(function (m) { return m.group === g; }).forEach(function (m) {
+        html += '<option value="' + m.key + '"' + (selected === m.key ? ' selected' : '') + '>' + esc(m.label) + '</option>';
+      });
+      html += '</optgroup>';
+    });
+    return html;
+  }
+  function ensureModuleField() {
+    var nameField = document.getElementById('newTemplateName');
+    if (!nameField || document.getElementById('templateModuleSelect')) return document.getElementById('templateModuleSelect');
+    var wrap = document.createElement('div');
+    wrap.className = 'mt-2';
+    wrap.innerHTML =
+      '<label class="block text-sm font-semibold mb-1" for="templateModuleSelect">Applies to (submodule)</label>' +
+      '<select id="templateModuleSelect" class="border p-1 rounded w-full text-sm">' + moduleOptions('all') + '</select>' +
+      '<p class="text-xs text-gray-500 mt-1">The template only appears in this document\u2019s preview picker.</p>';
+    (nameField.parentElement || nameField).appendChild(wrap);
+    return wrap.querySelector('select');
+  }
+
+  /* ---- preview modal ---- */
+  function previewTemplate(name) {
+    var html = '';
+    try { html = localStorage.getItem('template_' + name) || ''; } catch (e) {}
+    var filled = window.acxFillTemplateTokens(html, null);
+    var back = document.getElementById('acxTplPreview');
+    if (!back) {
+      back = document.createElement('div');
+      back.id = 'acxTplPreview';
+      back.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
+      back.innerHTML =
+        '<div style="background:#fff;border-radius:.75rem;max-width:900px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-bottom:1px solid #e5e7eb">' +
+        '<b id="acxTplPreviewTitle"></b>' +
+        '<button type="button" id="acxTplPreviewClose" class="px-2 py-1 rounded bg-blue-900 text-white text-sm">Close</button></div>' +
+        '<iframe id="acxTplPreviewFrame" style="flex:1;width:100%;min-height:60vh;border:0;background:#fff"></iframe></div>';
+      document.body.appendChild(back);
+      back.addEventListener('click', function (e) {
+        if (e.target === back || e.target.id === 'acxTplPreviewClose') back.style.display = 'none';
+      });
+    }
+    back.style.display = 'flex';
+    document.getElementById('acxTplPreviewTitle').textContent =
+      name + '  \u2014  ' + (LABEL[window.acxTemplateModuleOf(name)] || 'All documents');
+    document.getElementById('acxTplPreviewFrame').srcdoc =
+      '<style>body{font-family:Arial,sans-serif;font-size:13px;color:#111827;padding:16px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #e2e8f0;padding:4px 8px}</style>' +
+      (filled || '<p style="color:#6b7280;font-style:italic">This template is empty.</p>');
+  }
+  window.acxPreviewTemplate = previewTemplate;
+
+  /* ---- grouped gallery, replacing the flat grid ---- */
+  function renderGroupedGrid() {
+    var grid = document.getElementById('templateGrid');
+    if (!grid) return;
+    var names = Object.keys(localStorage)
+      .filter(function (k) { return k.indexOf('template_') === 0; })
+      .map(function (k) { return k.replace('template_', ''); }).sort();
+    if (!names.length) {
+      grid.innerHTML = '<div class="text-sm text-gray-500 italic">Templates will appear here</div>';
+      return;
+    }
+    var def = localStorage.getItem('defaultTemplate');
+    var buckets = {};
+    names.forEach(function (n) {
+      var k = window.acxTemplateModuleOf(n);
+      (buckets[k] = buckets[k] || []).push(n);
+    });
+    var order = ['all'].concat(MODULES.map(function (m) { return m.key; }));
+    grid.className = 'space-y-4';
+    grid.innerHTML = order.filter(function (k) { return buckets[k]; }).map(function (k) {
+      return '<div><div class="text-xs font-bold uppercase tracking-wide text-blue-900 mb-2">' +
+        esc(LABEL[k] || k) + ' <span class="text-gray-400 font-normal">(' + buckets[k].length + ')</span></div>' +
+        '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">' +
+        buckets[k].map(function (name) {
+          return '<div class="border rounded-xl p-3 bg-gray-50 flex flex-col gap-2" data-tpl-card="' + esc(name) + '">' +
+            '<div class="font-semibold text-sm truncate" title="' + esc(name) + '">' + esc(name) +
+            (def === name ? ' <span class="text-xs text-green-700">(Default)</span>' : '') + '</div>' +
+            '<div class="flex flex-wrap gap-1">' +
+            '<button type="button" data-tpl-action="preview" class="text-xs border border-blue-900 text-blue-900 px-2 py-1 rounded hover:bg-blue-50">👁 Preview</button>' +
+            '<button type="button" data-tpl-action="edit" class="text-xs border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">Edit</button>' +
+            '<button type="button" data-tpl-action="delete" class="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">Delete</button>' +
+            '</div></div>';
+        }).join('') + '</div></div>';
+    }).join('');
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('[data-tpl-action="preview"]') : null;
+    if (!btn) return;
+    var card = btn.closest('[data-tpl-card]');
+    if (card) previewTemplate(card.getAttribute('data-tpl-card'));
+  });
+
+  function wire() {
+    ensureModuleField();
+    if (typeof window.renderTemplateGrid === 'function') {
+      window.renderTemplateGrid = renderGroupedGrid;
+    }
+    /* remember the submodule whenever a template is saved */
+    if (typeof window.saveTemplate === 'function' && !window.saveTemplate.__acxWrapped) {
+      var origSave = window.saveTemplate;
+      window.saveTemplate = function () {
+        var nameEl = document.getElementById('newTemplateName');
+        var name = nameEl ? nameEl.value.trim() : '';
+        var sel = document.getElementById('templateModuleSelect');
+        var r = origSave.apply(this, arguments);
+        if (name) {
+          window.acxSetTemplateModule(name, sel ? sel.value : 'all');
+          renderGroupedGrid();
+          if (window.utsRefreshTemplateBars) window.utsRefreshTemplateBars();
+        }
+        return r;
+      };
+      window.saveTemplate.__acxWrapped = true;
+    }
+    /* editing a template shows its submodule */
+    if (typeof window.loadTemplateEditor === 'function' && !window.loadTemplateEditor.__acxWrapped) {
+      var origLoad = window.loadTemplateEditor;
+      window.loadTemplateEditor = function () {
+        var r = origLoad.apply(this, arguments);
+        var dd = document.getElementById('savedTemplatesDropdown');
+        var sel = ensureModuleField();
+        if (dd && dd.value && sel) sel.value = window.acxTemplateModuleOf(dd.value);
+        return r;
+      };
+      window.loadTemplateEditor.__acxWrapped = true;
+    }
+    renderGroupedGrid();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
+  else wire();
+  window.addEventListener('load', wire);
+})();
+</script>
+
+<script>
+/* ============================================================
+   FIX 1: created templates must render REAL document data
+   (line items, totals, party details) in every Sales / Purchase
+   preview, exactly like the built-in styles do.
+   ============================================================ */
+(function () {
+  function txt(el) { return el ? String(el.textContent || '').replace(/\s+/g, ' ').trim() : ''; }
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function bankDetailsList() {
+    try { return JSON.parse(localStorage.getItem('templateBankDetails') || '[]') || []; } catch (e) { return []; }
+  }
+  function bankDetailsHtml() {
+    var rows = bankDetailsList().filter(function (b) { return b && (b.bank || b.ksh || b.usd || b.eur); });
+    if (!rows.length) return '';
+    return '<table class="acx-bank"><thead><tr><th>Bank</th><th>Branch</th><th>Swift</th><th>KSH A/C</th><th>USD A/C</th><th>EUR A/C</th></tr></thead><tbody>' +
+      rows.map(function (b) {
+        return '<tr><td>' + esc(b.bank) + '</td><td>' + esc(b.branch) + '</td><td>' + esc(b.swift) +
+          '</td><td>' + esc(b.ksh) + '</td><td>' + esc(b.usd) + '</td><td>' + esc(b.eur) + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+  window.acxBankDetailsHtml = bankDetailsHtml;
+
+  /* ---- find the line-items table inside a live preview ---- */
+  function itemsTable(sourceEl) {
+    if (!sourceEl || !sourceEl.querySelectorAll) return null;
+    var direct = sourceEl.querySelector('[id$="Items"], [id$="ItemsBody"], [id$="ItemsTable"]');
+    if (direct) {
+      var t = direct.closest ? direct.closest('table') : null;
+      if (t) return t;
+    }
+    var best = null, bestRows = -1;
+    Array.prototype.forEach.call(sourceEl.querySelectorAll('table'), function (t) {
+      var n = t.querySelectorAll('tbody tr').length;
+      if (n > bestRows) { bestRows = n; best = t; }
+    });
+    return best;
+  }
+
+  /* ---- token map built from the real preview DOM ---- */
+  function buildTokens(sourceEl) {
+    var o = window.acxOrgProfile ? window.acxOrgProfile() : {};
+    var tok = {
+      company_name: o.name, company_pin: o.pin || o.vatNumber, company_address: o.address,
+      company_phone: o.phone, company_email: o.email, company_website: o.website,
+      company_logo: o.logo, currency: o.baseCurrency || o.currency,
+      date: new Date().toLocaleDateString(),
+      bank_details: bankDetailsHtml(),
+      items: '', items_table: '', items_rows: ''
+    };
+    if (!sourceEl || !sourceEl.querySelectorAll) return tok;
+
+    /* every element that carries an id becomes a token, under its raw id and
+       under a normalised snake_case alias ("previewInvoiceCustomerName" ->
+       "customer_name", "invoice_customer_name", ...) */
+    Array.prototype.forEach.call(sourceEl.querySelectorAll('[id]'), function (n) {
+      var id = n.id;
+      var value = txt(n);
+      if (!value) return;
+      if (tok[id] === undefined) tok[id] = value;
+      var base = id.replace(/^preview/, '');
+      var snake = base.replace(/([a-z0-9])([A-Z])/g, '$1_$2').replace(/[^A-Za-z0-9]+/g, '_').toLowerCase().replace(/^_|_$/g, '');
+      if (snake && tok[snake] === undefined) tok[snake] = value;
+      /* drop the leading document word: invoice_customer_name -> customer_name */
+      var short = snake.replace(/^(invoice|bill|quote|order|credit|debit|receipt|payment|delivery|grn|return|note)_/, '');
+      if (short && tok[short] === undefined) tok[short] = value;
+    });
+
+    var t = itemsTable(sourceEl);
+    if (t) {
+      tok.items_table = t.outerHTML;
+      tok.items = t.outerHTML;
+      var body = t.querySelector('tbody');
+      tok.items_rows = body ? body.innerHTML : '';
+    }
+    /* handy aliases */
+    if (!tok.total && tok.grand_total) tok.total = tok.grand_total;
+    if (!tok.document_number) tok.document_number = tok.number || tok.id || '';
+    return tok;
+  }
+
+  function isVisuallyEmpty(html) {
+    var stripped = String(html || '')
+      .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .trim();
+    return !stripped && !/<(img|table|hr|svg)\b/i.test(String(html || ''));
+  }
+
+  window.acxFillTemplateTokens = function (html, sourceEl) {
+    var tok = buildTokens(sourceEl);
+    var src = String(html == null ? '' : html);
+
+    /* repeatable item block: {{#items}} <tr>...{{description}}...</tr> {{/items}} */
+    src = src.replace(/\{\{\s*#items\s*\}\}([\s\S]*?)\{\{\s*\/items\s*\}\}/gi, function (m, inner) {
+      return tok.items_rows || inner.replace(/\{\{[^}]*\}\}/g, '');
+    });
+
+    var usedItems = /\{\{\s*(items|items_table|items_rows|line_items)\s*\}\}/i.test(src);
+    var out = src.replace(/\{\{\s*([\w.#/]+)\s*\}\}/g, function (m, k) {
+      var key = k.toLowerCase();
+      var v = tok[k];
+      if (v === undefined) v = tok[key];
+      if (v === undefined && (key === 'line_items' || key === 'items_table')) v = tok.items_table;
+      return (v === undefined || v === null) ? '' : String(v);
+    });
+
+    /* an empty (or token-only) template must never blank out the document */
+    if (isVisuallyEmpty(out)) {
+      if (sourceEl) return sourceEl.innerHTML;
+      return out;
+    }
+
+    /* the template is a skin: if the author did not place the items table
+       themselves, append the real one plus totals so nothing is lost */
+    if (!usedItems && sourceEl && !/<table/i.test(out) && tok.items_table) {
+      out += '<div class="acx-auto-items" style="margin-top:12px">' + tok.items_table + '</div>';
+      var totals = [];
+      [['Subtotal', tok.subtotal], ['Discount', tok.discount], ['VAT', tok.vat || tok.tax],
+       ['Total', tok.total], ['Paid', tok.paid || tok.payment_made], ['Balance', tok.balance]]
+        .forEach(function (p) { if (p[1]) totals.push('<div><span style="display:inline-block;min-width:110px">' + p[0] + '</span><b>' + esc(p[1]) + '</b></div>'); });
+      if (totals.length) {
+        out += '<div class="acx-auto-totals uts-totals" style="margin-top:8px;text-align:right">' + totals.join('') + '</div>';
+      }
+    }
+    return out;
+  };
+
+  /* gallery preview: show the template with sample data so the layout reads
+     the same way it will on a real document */
+  window.acxTemplateSampleSource = function () {
+    var d = document.createElement('div');
+    d.innerHTML =
+      '<div id="previewInvoiceNumber">INV-0001</div>' +
+      '<div id="previewInvoiceDate">' + new Date().toLocaleDateString() + '</div>' +
+      '<div id="previewInvoiceCustomerName">Sample Customer Ltd</div>' +
+      '<div id="previewInvoiceCustomerAddress">P.O. Box 1234, Nairobi</div>' +
+      '<table id="previewInvoiceItemsTable"><thead><tr><th>#</th><th>Description</th><th>Qty</th><th>Unit Price</th><th>Amount</th></tr></thead>' +
+      '<tbody id="previewInvoiceItems"><tr><td>1</td><td>Sample item A</td><td>2</td><td>1,500.00</td><td>3,000.00</td></tr>' +
+      '<tr><td>2</td><td>Sample item B</td><td>1</td><td>2,000.00</td><td>2,000.00</td></tr></tbody></table>' +
+      '<div id="previewInvoiceSubtotal">5,000.00</div>' +
+      '<div id="previewInvoiceVAT">800.00</div>' +
+      '<div id="previewInvoiceTotal">5,800.00</div>' +
+      '<div id="previewInvoiceBalance">5,800.00</div>';
+    return d;
+  };
+
+  var origPreview = window.acxPreviewTemplate;
+  window.acxPreviewTemplate = function (name) {
+    if (typeof origPreview !== 'function') return;
+    origPreview(name);
+    var frame = document.getElementById('acxTplPreviewFrame');
+    if (!frame) return;
+    var html = '';
+    try { html = localStorage.getItem('template_' + name) || ''; } catch (e) {}
+    var filled = window.acxFillTemplateTokens(html, window.acxTemplateSampleSource());
+    frame.srcdoc =
+      '<style>body{font-family:Arial,sans-serif;font-size:13px;color:#111827;padding:16px}' +
+      'table{width:100%;border-collapse:collapse}td,th{border:1px solid #e2e8f0;padding:4px 8px}' +
+      'th{background:#f1f5f9;text-align:left}</style>' +
+      (filled || '<p style="color:#6b7280;font-style:italic">This template is empty.</p>');
+  };
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('[data-tpl-action="preview"]') : null;
+    if (!btn) return;
+    var card = btn.closest('[data-tpl-card]');
+    if (card) {
+      e.stopPropagation();
+      window.acxPreviewTemplate(card.getAttribute('data-tpl-card'));
+    }
+  }, true);
+})();
+</script>
+
+<script>
+/* ============================================================
+   FIX 2: Settings -> Customization -> Bank Details
+   "Add Row", inline editing, delete and "Save Banks" now work,
+   persist, and feed the {{bank_details}} token in templates.
+   ============================================================ */
+(function () {
+  var KEY = 'templateBankDetails';
+  var FIELDS = ['bank', 'branch', 'swift', 'ksh', 'usd', 'eur'];
+
+  function load() {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem(KEY) || '[]') || []; } catch (e) { list = []; }
+    if (!Array.isArray(list)) list = [];
+    return list.map(function (r) {
+      r = r || {};
+      return {
+        bank: r.bank || r.bankName || r.name || '',
+        branch: r.branch || r.branchName || '',
+        swift: r.swift || r.swiftCode || '',
+        ksh: r.ksh || r.kes || r.kshAccount || '',
+        usd: r.usd || r.usdAccount || '',
+        eur: r.eur || r.euro || r.eurAccount || ''
+      };
+    });
+  }
+  function save(list) {
+    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function readTable() {
+    var body = document.getElementById('bankTableBody');
+    if (!body) return load();
+    return Array.prototype.map.call(body.querySelectorAll('tr[data-bank-row]'), function (tr) {
+      var row = {};
+      FIELDS.forEach(function (f) {
+        var input = tr.querySelector('[data-bank-field="' + f + '"]');
+        row[f] = input ? input.value.trim() : '';
+      });
+      return row;
+    });
+  }
+
+  function render(list) {
+    var body = document.getElementById('bankTableBody');
+    if (!body) return;
+    var rows = list || load();
+    if (!rows.length) {
+      body.innerHTML =
+        '<tr><td colspan="7" class="border px-2 py-3 text-center text-gray-500">' +
+        'No bank details yet. Click “➕ Add Row” to add an account.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map(function (r, i) {
+      return '<tr data-bank-row="' + i + '">' +
+        FIELDS.map(function (f) {
+          return '<td class="border px-1 py-1"><input data-bank-field="' + f + '" value="' + esc(r[f]) +
+            '" class="w-full border border-gray-200 rounded px-2 py-1 text-sm" /></td>';
+        }).join('') +
+        '<td class="border px-1 py-1 text-center">' +
+        '<button type="button" data-bank-action="delete" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700">Delete</button>' +
+        '</td></tr>';
+    }).join('');
+  }
+
+  window.renderBankDetails = render;
+  window.loadBankDetails = function () { render(load()); };
+  window.getTemplateBankDetails = load;
+
+  window.addBankRow = function () {
+    var list = readTable();
+    list.push({ bank: '', branch: '', swift: '', ksh: '', usd: '', eur: '' });
+    render(list);
+    var body = document.getElementById('bankTableBody');
+    var last = body && body.querySelector('tr[data-bank-row]:last-child [data-bank-field="bank"]');
+    if (last) last.focus();
+  };
+
+  window.saveBankDetails = function () {
+    var list = readTable().filter(function (r) {
+      return FIELDS.some(function (f) { return r[f]; });
+    });
+    save(list);
+    render(list);
+    if (typeof window.utsRefreshTemplateBars === 'function') window.utsRefreshTemplateBars();
+    alert('✅ Bank details saved.');
+  };
+
+  window.deleteBankRow = function (index) {
+    var list = readTable();
+    if (index < 0 || index >= list.length) return;
+    var label = list[index].bank || 'this row';
+    if (!confirm('Delete bank details for "' + label + '"?')) return;
+    list.splice(index, 1);
+    save(list);
+    render(list);
+  };
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('[data-bank-action="delete"]') : null;
+    if (!btn) return;
+    var tr = btn.closest('tr[data-bank-row]');
+    if (tr) window.deleteBankRow(parseInt(tr.getAttribute('data-bank-row'), 10));
+  });
+
+  /* autosave on edit so a typed change is never silently lost */
+  document.addEventListener('change', function (e) {
+    if (!e.target || !e.target.getAttribute) return;
+    if (!e.target.getAttribute('data-bank-field')) return;
+    save(readTable());
+  });
+
+  function boot() { if (document.getElementById('bankTableBody')) render(load()); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  window.addEventListener('load', boot);
+
+  /* re-render whenever the Customization tab is opened */
+  if (typeof window.showTab === 'function' && !window.showTab.__acxBankWrapped) {
+    var orig = window.showTab;
+    window.showTab = function () {
+      var r = orig.apply(this, arguments);
+      setTimeout(boot, 0);
+      return r;
+    };
+    window.showTab.__acxBankWrapped = true;
+  }
+})();
+</script>
+
+<script>
+/* ============================================================
+   FIX 3: one source of truth for Bank Details + they always
+   appear on the document (preview, custom template, print/PDF).
+   ============================================================ */
+(function () {
+  var KEY = 'templateBankDetails';
+  var LEGACY = 'invoice_bank_details';
+  var FIELDS = ['bank', 'branch', 'swift', 'ksh', 'usd', 'eur'];
+
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function readStore() {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem(KEY) || '[]') || []; } catch (e) { list = []; }
+    return Array.isArray(list) ? list : [];
+  }
+  function writeStore(list) {
+    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function nonEmpty(list) {
+    return (list || []).filter(function (r) {
+      return r && FIELDS.some(function (f) { return String(r[f] || '').trim(); });
+    });
+  }
+
+  /* ---- migrate the old contenteditable HTML rows into the store ---- */
+  function fromLegacyHtml() {
+    var html = '';
+    try { html = localStorage.getItem(LEGACY) || ''; } catch (e) {}
+    if (!html) return [];
+    var t = document.createElement('table');
+    t.innerHTML = '<tbody>' + html + '</tbody>';
+    return Array.prototype.map.call(t.querySelectorAll('tr'), function (tr) {
+      var cells = tr.querySelectorAll('td');
+      var row = {};
+      FIELDS.forEach(function (f, i) {
+        row[f] = cells[i] ? String(cells[i].textContent || '').trim() : '';
+      });
+      return row;
+    });
+  }
+  function migrateOnce() {
+    if (nonEmpty(readStore()).length) return;
+    var legacy = nonEmpty(fromLegacyHtml());
+    if (legacy.length) writeStore(legacy);
+  }
+
+  /* ---- push the store back out to every document bank table ---- */
+  function legacyRowsHtml(rows) {
+    return rows.map(function (r) {
+      return '<tr>' + FIELDS.map(function (f) {
+        return '<td contenteditable="true">' + esc(r[f]) + '</td>';
+      }).join('') + '</tr>';
+    }).join('');
+  }
+  function syncDocumentTables() {
+    var rows = nonEmpty(readStore());
+    var html = rows.length ? legacyRowsHtml(rows) : '';
+    if (html) { try { localStorage.setItem(LEGACY, html); } catch (e) {} }
+    document.querySelectorAll('table.bank-details tbody').forEach(function (tb) {
+      if (html) tb.innerHTML = html;
+    });
+  }
+  window.acxSyncBankDetailsToDocuments = syncDocumentTables;
+
+  /* ---- typing directly on a document's bank table updates the store ---- */
+  document.addEventListener('input', function (e) {
+    var td = e.target && e.target.closest ? e.target.closest('table.bank-details td[contenteditable]') : null;
+    if (!td) return;
+    var tb = td.closest('tbody');
+    if (!tb) return;
+    var rows = Array.prototype.map.call(tb.querySelectorAll('tr'), function (tr) {
+      var cells = tr.querySelectorAll('td');
+      var row = {};
+      FIELDS.forEach(function (f, i) { row[f] = cells[i] ? String(cells[i].textContent || '').trim() : ''; });
+      return row;
+    });
+    writeStore(nonEmpty(rows));
+    if (typeof window.renderBankDetails === 'function' && document.getElementById('bankTableBody')) {
+      window.renderBankDetails(nonEmpty(rows));
+    }
+  });
+
+  /* ---- keep Customization saves flowing into the documents ---- */
+  var origSave = window.saveBankDetails;
+  window.saveBankDetails = function () {
+    var r = typeof origSave === 'function' ? origSave.apply(this, arguments) : undefined;
+    syncDocumentTables();
+    refreshOpenPreviews();
+    return r;
+  };
+
+  /* ---- bank block on the document, incl. selected custom templates ---- */
+  function bankBlockHtml() {
+    var html = typeof window.acxBankDetailsHtml === 'function' ? window.acxBankDetailsHtml() : '';
+    if (!html) return '';
+    return '<div class="acx-bank-block" style="margin-top:12px">' +
+      '<div style="font-weight:700;margin-bottom:4px">Bank Details</div>' + html + '</div>';
+  }
+  function ensureBankOnPreview(root) {
+    if (!root || !root.querySelector) return;
+    var existing = root.querySelector('.acx-bank-block');
+    if (existing) existing.remove();
+    /* the document already prints its own bank table -> leave it alone */
+    if (root.querySelector('table.bank-details')) return;
+    var block = bankBlockHtml();
+    if (!block) return;
+    var slot = root.querySelector('.utsCustomBody');
+    var host = slot && slot.style.display !== 'none' ? slot : root;
+    host.insertAdjacentHTML('beforeend', block);
+  }
+  function refreshOpenPreviews() {
+    document.querySelectorAll('.uts-doc').forEach(function (el) {
+      if (el.offsetParent !== null || el.closest('.uts-doc') === el) ensureBankOnPreview(el);
+    });
+  }
+  window.acxEnsureBankOnPreview = ensureBankOnPreview;
+
+  /* observe preview wrappers so a freshly opened document gets the block */
+  var mo = new MutationObserver(function (muts) {
+    var seen = [];
+    muts.forEach(function (m) {
+      var el = m.target && m.target.closest ? m.target.closest('.uts-doc') : null;
+      if (el && seen.indexOf(el) === -1 && !el.querySelector('table.bank-details')) seen.push(el);
+    });
+    seen.forEach(function (el) {
+      if (el.__acxBankPending) return;
+      el.__acxBankPending = true;
+      setTimeout(function () { el.__acxBankPending = false; ensureBankOnPreview(el); }, 60);
+    });
+  });
+
+  function boot() {
+    migrateOnce();
+    syncDocumentTables();
+    if (typeof window.renderBankDetails === 'function' && document.getElementById('bankTableBody')) {
+      window.renderBankDetails(nonEmpty(readStore()));
+    }
+    try { mo.observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+    refreshOpenPreviews();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  window.addEventListener('beforeprint', function () { syncDocumentTables(); refreshOpenPreviews(); });
 })();
 </script>
