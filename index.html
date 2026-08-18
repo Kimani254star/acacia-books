@@ -1545,11 +1545,11 @@ function closeQuoteModal() {
   document.getElementById("quoteModal").style.display = "none";
 }
 </script>
-<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 relative"><button onclick="closeLogin()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button><h2 class="text-2xl font-bold text-blue-900 mb-4 text-center">Login</h2><div id="loginForm"><input id="loginUsername" type="text" placeholder="Username" autocomplete="username" class="w-full border p-2 mb-3 rounded" /><input id="loginEmail" type="email" placeholder="Email" autocomplete="email" class="w-full border p-2 mb-3 rounded" /><p class="text-xs text-gray-500 mb-3">Enter your username or your email &mdash; you don't need both.</p><input id="loginCompanyId" type="text" placeholder="Company ID (optional)" class="w-full border p-2 mb-3 rounded" /><input id="loginPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><select id="userRole" class="w-full border p-2 rounded mb-3"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="human resource">Human Resource</option></select><button onclick="handleLogin()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-900 mb-2">
+<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 relative"><button onclick="closeLogin()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button><h2 class="text-2xl font-bold text-blue-900 mb-4 text-center">Login</h2><div id="loginForm"><input id="loginEmail" type="email" placeholder="Email" autocomplete="email" required class="w-full border p-2 mb-3 rounded" /><input id="loginCompanyId" type="text" placeholder="Company ID (optional)" class="w-full border p-2 mb-3 rounded" /><input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" class="w-full border p-2 mb-3 rounded" /><select id="userRole" class="w-full border p-2 rounded mb-3"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="human resource">Human Resource</option></select><button onclick="handleLogin()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-900 mb-2">
         Login
-      </button><p class="text-sm flex justify-between"><a href="#" class="text-blue-600 hover:underline" onclick="showRegisterForm();return false;">Create account</a><a href="#" class="text-blue-600 hover:underline" onclick="showResetForm()">Forgot Password?</a></p></div><div id="resetForm" class="hidden mt-4"><p class="mb-2 text-sm text-gray-700">Enter your username or email to reset your password.</p><input id="resetEmail" type="text" placeholder="Username or Email" class="w-full border p-2 mb-3 rounded" /><button onclick="resetPassword()" class="w-full bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 mb-2">
+      </button><p class="text-sm flex justify-between"><a href="#" class="text-blue-600 hover:underline" onclick="showRegisterForm();return false;">Create account</a><a href="#" class="text-blue-600 hover:underline" onclick="showResetForm()">Forgot Password?</a></p></div><div id="resetForm" class="hidden mt-4"><p class="mb-2 text-sm text-gray-700">Enter your email to reset your password.</p><input id="resetEmail" type="email" placeholder="Email" class="w-full border p-2 mb-3 rounded" /><button onclick="resetPassword()" class="w-full bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 mb-2">
         Send Reset Code
-      </button><div id="resetStep2" class="hidden"><p class="mb-2 text-sm text-gray-700">📧 We sent a 6-digit code to your <a href="mail.html" target="_blank" class="text-blue-600 underline font-semibold">Acacia Mail</a> inbox. Enter it below with your new password.</p><input id="resetCode" type="text" inputmode="numeric" maxlength="6" placeholder="6-digit code" class="w-full border p-2 mb-3 rounded" /><input id="resetNewPass" type="password" placeholder="New password" class="w-full border p-2 mb-3 rounded" /><button onclick="confirmReset()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 mb-2">Update Password</button></div><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideResetForm();return false;">Back to Login</a></p></div><div id="registerForm" class="hidden"><h3 class="text-lg font-bold text-blue-900 mb-3 text-center">Create Account</h3><div id="registerAccountStep"><input id="registerCompanyName" type="text" placeholder="Company Name" class="w-full border p-2 mb-3 rounded" /><select id="registerCompanyCountry" class="w-full border p-2 mb-3 rounded text-gray-700"><option value="">Select Country</option><option>Kenya</option><option>Tanzania</option><option>Uganda</option><option>Rwanda</option><option>Burundi</option><option>South Sudan</option><option>Ethiopia</option><option>Somalia</option><option>DR Congo</option><option>Zambia</option><option>Malawi</option><option>Mozambique</option><option>Lesotho</option><option>South Africa</option><option>Ghana</option><option>Nigeria</option><option>Egypt</option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>India</option><option>United Arab Emirates</option><option>Other</option></select><input id="registerUserName" type="text" placeholder="User Name" autocomplete="username" class="w-full border p-2 mb-3 rounded" /><input id="registerEmail" type="email" placeholder="Email Address" autocomplete="email" class="w-full border p-2 mb-3 rounded" /><p class="text-xs text-gray-500 mb-3">Use the same email for every company you create — that is what lets you switch between companies from one login.</p><input id="registerPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><input id="registerRole" type="hidden" value="admin" /><p class="text-xs text-gray-600 mb-3">👑 You will be the <b>Admin</b> of your company. Module access depends on the plan you choose, and you can add team members later.</p><button onclick="handleRegister()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 mb-2">Create Account</button><button onclick="createWithGoogle()" type="button" class="w-full border border-blue-900 text-blue-900 py-2 rounded hover:bg-blue-50 mb-2">Sign up with Google</button><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideRegisterForm();return false;">Back to Login</a></p></div><div id="regPaymentStep" class="hidden"><p id="regPaymentSummary" class="text-sm text-blue-900 mb-3"></p><div class="flex items-end gap-2 mb-3"><div class="flex-1"><label class="block text-sm font-medium mb-1 text-blue-900">Choose Payment Method:</label><select id="regPaymentMethod" onchange="toggleRegPaymentFields()" class="w-full border border-blue-900 text-blue-900 bg-blue-50 p-2 rounded"><option value="">-- Select --</option><option value="mpesa">MPESA</option><option value="bank">Bank Transfer</option><option value="card">Credit Card</option><option value="airtel">Airtel Money</option><option value="paypal">PayPal</option><option value="cheque">Cheque / Manual Deposit</option></select></div><button onclick="completeRegPayment()" class="bg-blue-900 text-white px-3 py-2 rounded whitespace-nowrap">Complete Payment</button></div><div id="reg-mpesa-fields" class="hidden mb-3"><label class="block text-sm font-medium mb-1 text-blue-900">Country</label><select id="regMpesaCountry" onchange="updateMpesaPaybill()" class="w-full border p-2 mb-2 rounded"><option value="Kenya" data-till="0717346231">Kenya</option><option value="Tanzania" data-till="">Tanzania</option><option value="Uganda" data-till="">Uganda</option><option value="DR Congo" data-till="">DR Congo</option><option value="Mozambique" data-till="">Mozambique</option><option value="Lesotho" data-till="">Lesotho</option><option value="Ghana" data-till="">Ghana</option></select><p id="regMpesaInstructions" class="text-sm text-blue-900 mb-2">Pay to MPESA Till/Paybill: <strong id="regMpesaTill">0717346231</strong></p><input id="regMpesaNumber" type="text" placeholder="Your MPESA Phone Number" class="w-full border p-2 rounded"></div><div id="reg-bank-fields" class="hidden mb-3"><p class="text-sm text-blue-900 mb-2">Deposit to Bank Account: <strong>1177731215</strong></p><input id="regBankRef" type="text" placeholder="Bank Transfer Reference" class="w-full border p-2 rounded"></div><div id="reg-card-fields" class="hidden mb-3 space-y-2"><input id="regCardName" type="text" placeholder="Name on Card" class="w-full border p-2 rounded"><input id="regCardNumber" type="text" placeholder="Card Number" class="w-full border p-2 rounded"><div class="flex gap-2"><input id="regCardExpiry" type="text" placeholder="MM/YY" class="w-1/2 border p-2 rounded"><input id="regCardCvv" type="text" placeholder="CVV" class="w-1/2 border p-2 rounded"></div><select id="regCardCountry" class="w-full border p-2 rounded"><option value="">Billing Country</option><option>Kenya</option><option>Tanzania</option><option>Uganda</option><option>Nigeria</option><option>Ghana</option><option>South Africa</option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>India</option><option>United Arab Emirates</option><option>Other</option></select><input id="regCardPostal" type="text" placeholder="Postal Code" class="w-full border p-2 rounded"></div><div id="reg-airtel-fields" class="hidden mb-3"><p class="text-sm text-blue-900 mb-2">Pay to Airtel Money Number: <strong>0731858997</strong></p><input id="regAirtelNumber" type="text" placeholder="Your Airtel Money Phone Number" class="w-full border p-2 rounded"></div><div id="reg-paypal-fields" class="hidden mb-3"><p class="text-sm text-blue-900 mb-2">Pay via PayPal to: <strong>billing@acaciabooks.com</strong></p><input id="regPaypalEmail" type="email" placeholder="Your PayPal Email" class="w-full border p-2 rounded"></div><div id="reg-cheque-fields" class="hidden mb-3 space-y-2"><p class="text-sm text-blue-900 mb-2">Make cheque payable to: <strong>Acacia Books Ltd</strong></p><input id="regChequeNumber" type="text" placeholder="Cheque Number" class="w-full border p-2 rounded"><input id="regChequeBank" type="text" placeholder="Issuing Bank" class="w-full border p-2 rounded"></div><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="backToRegisterAccount();return false;">Back</a></p></div></div>
+      </button><div id="resetStep2" class="hidden"><p class="mb-2 text-sm text-gray-700">📧 We sent a 6-digit code to your <a href="mail.html" target="_blank" class="text-blue-600 underline font-semibold">Acacia Mail</a> inbox. Enter it below with your new password.</p><input id="resetCode" type="text" inputmode="numeric" maxlength="6" placeholder="6-digit code" class="w-full border p-2 mb-3 rounded" /><input id="resetNewPass" type="password" placeholder="New password" class="w-full border p-2 mb-3 rounded" /><button onclick="confirmReset()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 mb-2">Update Password</button></div><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideResetForm();return false;">Back to Login</a></p></div><div id="registerForm" class="hidden"><h3 class="text-lg font-bold text-blue-900 mb-3 text-center">Create Account</h3><div id="registerAccountStep"><input id="registerCompanyName" type="text" placeholder="Company Name" class="w-full border p-2 mb-3 rounded" /><select id="registerCompanyCountry" class="w-full border p-2 mb-3 rounded text-gray-700"><option value="">Select Country</option><option>Kenya</option><option>Tanzania</option><option>Uganda</option><option>Rwanda</option><option>Burundi</option><option>South Sudan</option><option>Ethiopia</option><option>Somalia</option><option>DR Congo</option><option>Zambia</option><option>Malawi</option><option>Mozambique</option><option>Lesotho</option><option>South Africa</option><option>Ghana</option><option>Nigeria</option><option>Egypt</option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>India</option><option>United Arab Emirates</option><option>Other</option></select><input id="registerUserName" type="text" placeholder="User Name" autocomplete="username" class="w-full border p-2 mb-3 rounded" /><input id="registerEmail" type="email" placeholder="Email Address" autocomplete="email" required class="w-full border p-2 mb-3 rounded" /><p class="text-xs text-gray-500 mb-3">Use the same email for every company you create — that is what lets you switch between companies from one login.</p><input id="registerPass" type="password" placeholder="Password" class="w-full border p-2 mb-3 rounded" /><input id="registerRole" type="hidden" value="admin" /><p class="text-xs text-gray-600 mb-3">👑 You will be the <b>Admin</b> of your company. Module access depends on the plan you choose, and you can add team members later.</p><button onclick="handleRegister()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 mb-2">Create Account</button><button onclick="createWithGoogle()" type="button" class="w-full border border-blue-900 text-blue-900 py-2 rounded hover:bg-blue-50 mb-2">Sign up with Google</button><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="hideRegisterForm();return false;">Back to Login</a></p></div><div id="regPaymentStep" class="hidden"><p id="regPaymentSummary" class="text-sm text-blue-900 mb-3"></p><div class="flex items-end gap-2 mb-3"><div class="flex-1"><label class="block text-sm font-medium mb-1 text-blue-900">Choose Payment Method:</label><select id="regPaymentMethod" onchange="toggleRegPaymentFields()" class="w-full border border-blue-900 text-blue-900 bg-blue-50 p-2 rounded"><option value="">-- Select --</option><option value="mpesa">MPESA</option><option value="bank">Bank Transfer</option><option value="card">Credit Card</option><option value="airtel">Airtel Money</option><option value="paypal">PayPal</option><option value="cheque">Cheque / Manual Deposit</option></select></div><button onclick="completeRegPayment()" class="bg-blue-900 text-white px-3 py-2 rounded whitespace-nowrap">Complete Payment</button></div><div id="reg-mpesa-fields" class="hidden mb-3"><label class="block text-sm font-medium mb-1 text-blue-900">Country</label><select id="regMpesaCountry" onchange="updateMpesaPaybill()" class="w-full border p-2 mb-2 rounded"><option value="Kenya" data-till="0717346231">Kenya</option><option value="Tanzania" data-till="">Tanzania</option><option value="Uganda" data-till="">Uganda</option><option value="DR Congo" data-till="">DR Congo</option><option value="Mozambique" data-till="">Mozambique</option><option value="Lesotho" data-till="">Lesotho</option><option value="Ghana" data-till="">Ghana</option></select><p id="regMpesaInstructions" class="text-sm text-blue-900 mb-2">Pay to MPESA Till/Paybill: <strong id="regMpesaTill">0717346231</strong></p><input id="regMpesaNumber" type="text" placeholder="Your MPESA Phone Number" class="w-full border p-2 rounded"></div><div id="reg-bank-fields" class="hidden mb-3"><p class="text-sm text-blue-900 mb-2">Deposit to Bank Account: <strong>1177731215</strong></p><input id="regBankRef" type="text" placeholder="Bank Transfer Reference" class="w-full border p-2 rounded"></div><div id="reg-card-fields" class="hidden mb-3 space-y-2"><input id="regCardName" type="text" placeholder="Name on Card" class="w-full border p-2 rounded"><input id="regCardNumber" type="text" placeholder="Card Number" class="w-full border p-2 rounded"><div class="flex gap-2"><input id="regCardExpiry" type="text" placeholder="MM/YY" class="w-1/2 border p-2 rounded"><input id="regCardCvv" type="text" placeholder="CVV" class="w-1/2 border p-2 rounded"></div><select id="regCardCountry" class="w-full border p-2 rounded"><option value="">Billing Country</option><option>Kenya</option><option>Tanzania</option><option>Uganda</option><option>Nigeria</option><option>Ghana</option><option>South Africa</option><option>United Kingdom</option><option>United States</option><option>Canada</option><option>India</option><option>United Arab Emirates</option><option>Other</option></select><input id="regCardPostal" type="text" placeholder="Postal Code" class="w-full border p-2 rounded"></div><div id="reg-airtel-fields" class="hidden mb-3"><p class="text-sm text-blue-900 mb-2">Pay to Airtel Money Number: <strong>0731858997</strong></p><input id="regAirtelNumber" type="text" placeholder="Your Airtel Money Phone Number" class="w-full border p-2 rounded"></div><div id="reg-paypal-fields" class="hidden mb-3"><p class="text-sm text-blue-900 mb-2">Pay via PayPal to: <strong>billing@acaciabooks.com</strong></p><input id="regPaypalEmail" type="email" placeholder="Your PayPal Email" class="w-full border p-2 rounded"></div><div id="reg-cheque-fields" class="hidden mb-3 space-y-2"><p class="text-sm text-blue-900 mb-2">Make cheque payable to: <strong>Acacia Books Ltd</strong></p><input id="regChequeNumber" type="text" placeholder="Cheque Number" class="w-full border p-2 rounded"><input id="regChequeBank" type="text" placeholder="Issuing Bank" class="w-full border p-2 rounded"></div><p class="text-sm text-right"><a href="#" class="text-blue-600 hover:underline" onclick="backToRegisterAccount();return false;">Back</a></p></div></div>
 <script>
 function showRegisterForm() {
   document.getElementById('loginForm').classList.add('hidden');
@@ -1701,7 +1701,7 @@ function hideResetForm() {
 }
 function resetPassword() {
   var id = (document.getElementById('resetEmail').value || '').trim().toLowerCase();
-  if (!id) { alert('Please enter your username or email.'); return; }
+  if (!id) { alert('Please enter your email.'); return; }
   var users = JSON.parse(localStorage.getItem('users') || '[]');
   var user = users.find(function(u){
     return String(u.email || '').toLowerCase() === id || String(u.username || '').toLowerCase() === id;
@@ -4635,6 +4635,15 @@ function loadDashboard() {
   }, 0);
 
    const invoiceTotal = invoices.reduce((sum, i) => sum + (parseFloat(i.totalKES || i.total) || 0), 0);
+  // Fiscal-year-scoped totals for the "Total Invoices" / "Total Bills" cards
+  // only — the all-time invoiceTotal/billTotal above must stay untouched
+  // since Customer/Supplier Balance need every outstanding record regardless
+  // of which fiscal year it fell in.
+  const __fyDash = (typeof window.getFiscalYear === "function") ? window.getFiscalYear() : null;
+  const __fyFilterDash = (arr, field) => (__fyDash && typeof window.filterByFiscalYear === "function")
+    ? window.filterByFiscalYear(arr, field || 'date', __fyDash)
+    : arr;
+  const invoiceTotalFY = __fyFilterDash(invoices).reduce((sum, i) => sum + (parseFloat(i.totalKES || i.total) || 0), 0);
   const customerPaymentsDash = JSON.parse(localStorage.getItem('customerPayments') || '[]');
   const recurringInvoicesDash = JSON.parse(localStorage.getItem('recurringInvoices') || '[]');
   const paymentReceiptIdsDash = new Set(customerPaymentsDash.map(p => String(p.receiptId || "")).filter(Boolean));
@@ -4646,6 +4655,7 @@ function loadDashboard() {
     .reduce((sum, rec) => sum + Math.max(0, (parseFloat(rec.balance != null ? rec.balance : ((parseFloat(rec.totalKES || rec.total) || 0) - (parseFloat(rec.amountPaid || rec.paid) || 0))) || 0)), 0);
   const customerBalance = Math.max(0, invoiceTotal + recurringOutstandingDash - receiptTotal);
   const billTotal = bills.reduce((sum, b) => sum + (parseFloat(b.total) || 0), 0);
+  const billTotalFY = __fyFilterDash(bills).reduce((sum, b) => sum + (parseFloat(b.total) || 0), 0);
   const billPaymentTotal = billPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
   const supplierBalance = billTotal - billPaymentTotal;
   const payrollRecords = JSON.parse(localStorage.getItem('payrollRecords') || '[]');
@@ -4676,11 +4686,11 @@ function loadDashboard() {
    document.getElementById('dashStock').textContent =
     `KES ${inventoryTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   document.getElementById('dashInvoices').textContent =
-    `KES ${invoiceTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `KES ${invoiceTotalFY.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   document.getElementById('customerOutstandingBalanceDisplay').textContent =
     `KES ${customerBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   document.getElementById('dashBills').textContent =
-    `KES ${billTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `KES ${billTotalFY.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   document.getElementById('supplierOutstandingBalanceDisplay').textContent =
     `KES ${supplierBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   document.getElementById('dashPayroll').textContent =
@@ -4740,16 +4750,25 @@ let receivablesChartInstance;
 let supplierChartInstance;
 
 function renderCharts() {
-  const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
-  const bills = JSON.parse(localStorage.getItem('bills') || '[]');
-  const billPayments = JSON.parse(localStorage.getItem('billPayments') || '[]');
+  // Default these dashboard cards (Customer Receivables Aging, Supplier
+  // Payment Aging, Monthly Profit, Cash Flow) to the organization's current
+  // fiscal year (Org Profile > Fiscal Year) rather than merging every year
+  // of history into the same 12 month buckets.
+  const __fy = (typeof window.getFiscalYear === "function") ? window.getFiscalYear() : null;
+  const __fyFilter = (arr, field) => (__fy && typeof window.filterByFiscalYear === "function")
+    ? window.filterByFiscalYear(arr, field || 'date', __fy)
+    : arr;
+
+  const invoices = __fyFilter(JSON.parse(localStorage.getItem('invoices') || '[]'));
+  const bills = __fyFilter(JSON.parse(localStorage.getItem('bills') || '[]'));
+  const billPayments = __fyFilter(JSON.parse(localStorage.getItem('billPayments') || '[]'));
   const inventoryItems = getAllInventories ? getAllInventories() : [];
   const banks = JSON.parse(localStorage.getItem('banks') || '[]');
   const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
-  const manualTx = JSON.parse(localStorage.getItem('manualTransactions') || '[]');
-  const taxPayments = JSON.parse(localStorage.getItem('taxPayments') || '[]');
-  const payrollPayments = JSON.parse(localStorage.getItem('payrollPayments') || '[]');
-  const operations = JSON.parse(localStorage.getItem('operationalCosts') || '[]');
+  const manualTx = __fyFilter(JSON.parse(localStorage.getItem('manualTransactions') || '[]'));
+  const taxPayments = __fyFilter(JSON.parse(localStorage.getItem('taxPayments') || '[]'));
+  const payrollPayments = __fyFilter(JSON.parse(localStorage.getItem('payrollPayments') || '[]'));
+  const operations = __fyFilter(JSON.parse(localStorage.getItem('operationalCosts') || '[]'));
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   // --- Dashboard month-window filters ---
@@ -4850,7 +4869,7 @@ const invoiceBuckets = Array(12).fill(0);
 const receiptBuckets = Array(12).fill(0);  
 
 
-const receipts = JSON.parse(localStorage.getItem('receipts') || '[]');
+const receipts = __fyFilter(JSON.parse(localStorage.getItem('receipts') || '[]'));
 
 invoices.forEach(inv => {
   const invoiceTotal = parseFloat(inv.total) || 0;
@@ -5005,14 +5024,20 @@ window.profitChartInstance = new Chart(ctxProfit, {
 });
 
 function renderProfitBreakdownChart() {
-  
-  const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
-  const bills = JSON.parse(localStorage.getItem('bills') || '[]');
-  const operationalCosts = JSON.parse(localStorage.getItem('operationalCosts') || '[]');
-  const payrollRecords = JSON.parse(localStorage.getItem('payrollRecords') || '[]');
-  const taxes = JSON.parse(localStorage.getItem('taxPayments') || '[]');
-  const otherIncomes = JSON.parse(localStorage.getItem('otherIncomes') || '[]');
-  const manualTx = JSON.parse(localStorage.getItem('manualTransactions') || '[]');
+  // Default to the organization's current fiscal year (Org Profile > Fiscal
+  // Year) instead of an all-time total across every record ever entered.
+  const __fy = (typeof window.getFiscalYear === "function") ? window.getFiscalYear() : null;
+  const __fyFilter = (arr, field) => (__fy && typeof window.filterByFiscalYear === "function")
+    ? window.filterByFiscalYear(arr, field || 'date', __fy)
+    : arr;
+
+  const invoices = __fyFilter(JSON.parse(localStorage.getItem('invoices') || '[]'));
+  const bills = __fyFilter(JSON.parse(localStorage.getItem('bills') || '[]'));
+  const operationalCosts = __fyFilter(JSON.parse(localStorage.getItem('operationalCosts') || '[]'));
+  const payrollRecords = __fyFilter(JSON.parse(localStorage.getItem('payrollRecords') || '[]'));
+  const taxes = __fyFilter(JSON.parse(localStorage.getItem('taxPayments') || '[]'));
+  const otherIncomes = __fyFilter(JSON.parse(localStorage.getItem('otherIncomes') || '[]'));
+  const manualTx = __fyFilter(JSON.parse(localStorage.getItem('manualTransactions') || '[]'));
   const balanceSheet = JSON.parse(localStorage.getItem('balanceSheet') || '{}');
   const nonCurrentAssets = balanceSheet.nonCurrentAssets || [];
 
@@ -5050,7 +5075,7 @@ function renderProfitBreakdownChart() {
     sum + parseFloatSafe(a.value || a.amount || 0) * 0.10, 0);
 
   
-  const interestPayments = JSON.parse(localStorage.getItem('interestPayments') || '[]');
+  const interestPayments = __fyFilter(JSON.parse(localStorage.getItem('interestPayments') || '[]'));
   const interestPaid = interestPayments.reduce((sum, p) => sum + parseFloatSafe(p.amount || 0), 0);
 
   const currencyAdjustment = parseFloatSafe(localStorage.getItem('currencyAdjustment') || '0');
@@ -5323,10 +5348,14 @@ function showTab(id) {
   }
 }
 
-window.addEventListener("DOMContentLoaded", () => {
-  const lastTab = localStorage.getItem("lastOpenedTab") || "dashboard";
-  showTab(lastTab);
-});
+// NOTE: the old "restore last tab on DOMContentLoaded" listener that used
+// to live here was removed — it always read an unused "lastOpenedTab" key
+// (nothing ever wrote to it, so it fell back to "dashboard" on every single
+// page load) and fired after the real restore logic further down the page,
+// so it was silently overriding the correct tab back to Dashboard on every
+// refresh. Tab restore is now handled in one place — see the
+// "Acacia fixes: internal refresh" block near the end of the file, which
+// reads sessionStorage's acxLastTab (kept in sync by showTab() itself).
 </script>
 <script>
 let users = JSON.parse(localStorage.getItem("users") || "[]");
@@ -5553,13 +5582,12 @@ if (loggedInUser) {
 }
 async function handleLogin() {
 
-  const unameInput = (document.getElementById('loginUsername')?.value || '').trim().toLowerCase();
   const emailInput = (document.getElementById('loginEmail')?.value || '').trim().toLowerCase();
   const p = document.getElementById('loginPass').value.trim();
   const companyIdInput = (document.getElementById('loginCompanyId')?.value || '').trim().toLowerCase();
 
-  if (!unameInput && !emailInput) {
-    alert("❌ Enter your username or your email");
+  if (!emailInput) {
+    alert("❌ Enter your email");
     return;
   }
 
@@ -5568,11 +5596,9 @@ async function handleLogin() {
   let user = storedUsers.find(x => {
 
     const email = (x.email || "").toLowerCase();
-    const username = (x.username || "").toLowerCase();
     const company = (x.companyId || "").toLowerCase();
 
-    const loginMatch =
-      (unameInput && username === unameInput) || (emailInput && email === emailInput);
+    const loginMatch = email === emailInput;
 
     const companyMatch =
       companyIdInput ? company === companyIdInput : true;
@@ -5584,13 +5610,12 @@ async function handleLogin() {
     // Fallback: ignore the company ID filter if credentials alone match one account
     user = storedUsers.find(x => {
       const email = (x.email || "").toLowerCase();
-      const username = (x.username || "").toLowerCase();
-      return ((unameInput && username === unameInput) || (emailInput && email === emailInput)) && x.password === p;
+      return email === emailInput && x.password === p;
     });
   }
 
   if (!user) {
-    alert("❌ Invalid username/email, company ID or password");
+    alert("❌ Invalid email, company ID or password");
     return;
   }
 
@@ -5630,6 +5655,11 @@ function registerUser() {
   const rawEmail = emailEl ? emailEl.value.trim() : '';
   const password = document.getElementById('registerPass').value.trim();
   const role = 'admin'; // every new account owner is the company Admin
+
+  if (!rawEmail) {
+    alert("❌ Enter your email — it's required and is what lets you switch between companies from one login.");
+    return;
+  }
 
   const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
 
@@ -5909,10 +5939,11 @@ function showTab(id) {
   if (id === 'reportsPanel') renderReports();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const lastTab = localStorage.getItem("lastTab") || "dashboard";
-  showTab(lastTab);
-});
+// (Removed the duplicate "restore last tab" listener that used to be here —
+// it read a "lastTab" localStorage key nothing kept up to date, so it also
+// forced the view back to Dashboard on every refresh. See the note above
+// showTab's first definition, and the acxFixes block near the end of the
+// file, for the single restore mechanism now in use.)
 
 function toggleBilling() {
   const yearly = document.getElementById('billingToggle')?.checked;
@@ -22176,9 +22207,14 @@ function clearItemInputs() {
     return;
   }
 
-  // Block selling product items with zero or insufficient stock
+  // Block selling product items with zero or insufficient stock.
+  // Only enforce this when "Product" is explicitly chosen in Item Type —
+  // leaving Item Type unpicked (service/consultation/etc. use case) must
+  // NOT be silently treated as "product", or a stocked-item stock check
+  // blocks the line from being added, which in turn stops the whole
+  // invoice from saving and the customer balance from ever updating.
   const itemTypeSel = document.getElementById("invoiceItemType");
-  const itemType = (itemTypeSel?.value || "product").toLowerCase();
+  const itemType = (itemTypeSel?.value || "").toLowerCase();
   const availableQty = parseFloat(selectedOption.dataset.qty) || 0;
   if (itemType === "product") {
     if (availableQty <= 0) {
@@ -26302,6 +26338,14 @@ function saveBulkInvoice() {
   if (typeof renderInventorySummary === "function") renderInventorySummary();
   if (typeof renderInventoryTable === "function") renderInventoryTable();
   if (typeof updateDashboardTotals === "function") updateDashboardTotals();
+
+  // Full sync so the Customer Balance card (and dashboard totals) reflect
+  // every bulk-invoiced customer immediately, same as single Invoices and
+  // Recurring Invoices.
+  try { if (typeof recalculateCustomerReceivables === "function") recalculateCustomerReceivables(); } catch(e){}
+  try { if (typeof refreshDashboardCards === "function") refreshDashboardCards(); } catch(e){}
+  try { if (typeof loadDashboard === "function") loadDashboard(); } catch(e){}
+  try { if (typeof renderCustomers === "function") renderCustomers(); } catch(e){}
 }
 function renderBulkInvoices() {
   const invoices = JSON.parse(localStorage.getItem("bulkInvoices") || "[]");
@@ -55288,6 +55332,25 @@ function toggleBudgetMenu(index) {
     ?.classList.toggle("hidden");
 }
 
+function emailBudget(index) {
+  const b = budgets[index];
+  if (!b) return;
+
+  const subject = `Budget Plan - ${b.account}`;
+  const body = `
+BUDGET PLAN
+
+Account: ${b.account}
+Department: ${b.department}
+Period: ${b.period}
+
+${b.months.map(m => `${m.month}: KES ${m.amount.toLocaleString()}`).join("\n")}
+`;
+
+  window.location.href =
+    __logMail(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+}
+
 function cloneBudget(index) {
 
   const cloned = JSON.parse(
@@ -55298,12 +55361,10 @@ function cloneBudget(index) {
 
   budgets.push(cloned);
 
-  localStorage.setItem(
-    "budgets",
-    JSON.stringify(budgets)
-  );
+  saveData();
 
   renderBudgets();
+  renderComparison();
 
   alert("Budget cloned successfully");
 }
@@ -55737,8 +55798,21 @@ function toggleRevisionPeriodInputs() {
   }
 }
 
+/* Finds (or creates) the {month, amount} entry for periodLabel inside a
+   record's months[] array and sets its amount. Records store amounts keyed
+   by month label regardless of the record's own "period" cycle, so this is
+   the single place both Budget and Actual revisions should write through. */
+function __setMonthAmount(record, periodLabel, newValue) {
+  if (!record.months) record.months = [];
+  const entry = record.months.find(m => m.month === periodLabel);
+  if (entry) {
+    entry.amount = newValue;
+  } else {
+    record.months.push({ month: periodLabel, amount: newValue });
+  }
+}
+
 function reviseBudget() {
-  const budgets = JSON.parse(localStorage.getItem("budgets") || "[]");
   const index = document.getElementById("revisionAccount").value;
   const newValue = parseFloat(document.getElementById("revisedValue").value);
   const note = document.getElementById("revisionNote").value.trim();
@@ -55759,15 +55833,31 @@ function reviseBudget() {
     return;
   }
 
-  if (type === "Budget") {
-    budgets[index].amount = newValue;
-    localStorage.setItem("budgets", JSON.stringify(budgets));
+  const budgetRecord = budgets[index];
+  if (!budgetRecord) {
+    alert("That budget account no longer exists — refresh and try again.");
+    return;
   }
+
+  if (type === "Budget") {
+    __setMonthAmount(budgetRecord, periodLabel, newValue);
+  } else {
+    // Actual Spend revision: find (or create) the matching actuals record
+    // for the same account + department, then update its month value.
+    let actualRecord = actuals.find(a => a.account === budgetRecord.account && a.department === budgetRecord.department);
+    if (!actualRecord) {
+      actualRecord = { account: budgetRecord.account, department: budgetRecord.department, period, months: [] };
+      actuals.push(actualRecord);
+    }
+    __setMonthAmount(actualRecord, periodLabel, newValue);
+  }
+
+  saveData();
 
   const revision = {
     id: Date.now(),
-    account: budgets[index].account,
-    department: budgets[index].department,
+    account: budgetRecord.account,
+    department: budgetRecord.department,
     budgetIndex: index,
     type,              
     period,            
@@ -55782,7 +55872,9 @@ function reviseBudget() {
 
   renderRevisionHistory();
   loadRevisionAccounts();
-  renderBudgetComparison?.(); 
+  renderBudgets();
+  renderActuals();
+  renderComparison();
   alert("Revision saved successfully!");
 }
 
@@ -55799,15 +55891,26 @@ function editRevision(id) {
   revision.note = newNote;
   revision.date = new Date().toLocaleString();
 
-  let budgets = JSON.parse(localStorage.getItem("budgets") || "[]");
-  if (budgets[revision.budgetIndex]) {
-    budgets[revision.budgetIndex].amount = revision.newValue;
-    localStorage.setItem("budgets", JSON.stringify(budgets));
+  const budgetRecord = budgets[revision.budgetIndex];
+  if (budgetRecord) {
+    if (revision.type === "Actual") {
+      let actualRecord = actuals.find(a => a.account === budgetRecord.account && a.department === budgetRecord.department);
+      if (!actualRecord) {
+        actualRecord = { account: budgetRecord.account, department: budgetRecord.department, period: revision.period, months: [] };
+        actuals.push(actualRecord);
+      }
+      __setMonthAmount(actualRecord, revision.periodLabel, revision.newValue);
+    } else {
+      __setMonthAmount(budgetRecord, revision.periodLabel, revision.newValue);
+    }
+    saveData();
   }
 
   localStorage.setItem("revisionHistoryData", JSON.stringify(revisionHistoryData));
   renderRevisionHistory();
-  renderBudgetComparison?.();
+  renderBudgets();
+  renderActuals();
+  renderComparison();
 }
 function deleteRevision(id) {
   const revision = revisionHistoryData.find(r => r.id === id);
@@ -55822,7 +55925,7 @@ function deleteRevision(id) {
   localStorage.setItem("revisionHistoryData", JSON.stringify(revisionHistoryData));
 
   renderRevisionHistory();
-  renderBudgetComparison?.();
+  renderComparison();
 
   alert("♻️ Revision moved to Recycle Bin.");
 }
@@ -55980,42 +56083,13 @@ window.addEventListener("DOMContentLoaded", () => {
   renderRevisionHistory();
 });
 
-function loadBudgetControls() {
-  const controls = JSON.parse(localStorage.getItem("budgetControls") || "{}");
-
-  document.getElementById("enforceLimits").checked = controls.enforceLimits || false;
-  document.getElementById("enableAlerts").checked = controls.enableAlerts || false;
-  document.getElementById("allowOverrides").checked = controls.allowOverrides || false;
-  document.getElementById("lockPeriod").checked = controls.lockPeriod || false;
-}
-
-function saveBudgetControls() {
-  const controls = {
-    enforceLimits: document.getElementById("enforceLimits").checked,
-    enableAlerts: document.getElementById("enableAlerts").checked,
-    allowOverrides: document.getElementById("allowOverrides").checked,
-    lockPeriod: document.getElementById("lockPeriod").checked
-  };
-
-  localStorage.setItem("budgetControls", JSON.stringify(controls));
-  alert("✅ Budget controls saved successfully!");
-}
-
-function resetBudgetControls() {
-  localStorage.removeItem("budgetControls");
-  document.getElementById("enforceLimits").checked = false;
-  document.getElementById("enableAlerts").checked = false;
-  document.getElementById("allowOverrides").checked = false;
-  document.getElementById("lockPeriod").checked = false;
-  alert("🔄 Controls reset to defaults.");
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  loadBudgetControls();
-
-  document.getElementById("saveControls")?.addEventListener("click", saveBudgetControls);
-  document.getElementById("resetControls")?.addEventListener("click", resetBudgetControls);
-});
+/* NOTE: governance checkbox persistence (enforceLimits/enableAlerts/allowOverrides/
+   lockPeriod) and the Save/Reset buttons are handled by the Settings/History system
+   below (getCurrentSettings/saveSettings/resetSettings). A second, conflicting system
+   used to live here — it wrote a separate "budgetControls" JSON blob and attached its
+   own click handlers to the same #saveControls/#resetControls buttons, so every click
+   fired BOTH systems (two alerts/toasts, two different storage formats fighting over
+   the same checkboxes). Removed in favor of the single system below. */
 
 let forecastChart = null;
 
@@ -56450,8 +56524,13 @@ function toggleBudgetDropdown() {
 }
 
 function resetBudgets(){
-  budgets=[]
-  renderBudgets()
+  if (!confirm("⚠️ This will permanently clear ALL planned budgets and actual spend records. Continue?")) return;
+  budgets = [];
+  actuals = [];
+  saveData();
+  renderBudgets();
+  renderActuals();
+  renderComparison();
 }
 
 </script>
@@ -62993,7 +63072,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         </button><button onclick="clearCurrentAccountSettings()"
           class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
           Reset
-        </button></div></div></div></div><div class="overflow-x-auto"><table class="w-full border border-gray-300 text-sm border-collapse"><thead class="bg-gray-100"><tr><th class="border px-2 py-1 text-left">Employee</th><th class="border px-2 py-1 text-left">Date</th><th class="border px-2 py-1 text-left">Reference</th><th class="border px-2 py-1 text-left">Description</th><th class="border px-2 py-1 text-left">Account</th><th class="border px-2 py-1 text-left">Bank</th><th class="border px-2 py-1 text-right">Amount (KES)</th></tr></thead><tbody id="currentAccountReportBody"></tbody><tfoot><tr class="font-bold bg-gray-100"><td class="border px-2 py-1 text-right" colspan="6">TOTAL</td><td id="caTotal" class="border px-2 py-1 text-right">KES 0</td></tr></tfoot></table></div></div><div id="budgetPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t"><h2 class="text-xl font-bold mb-4">📦 Budget Report</h2><div class="flex items-center gap-2 mb-2"><label for="budgetMonth" class="font-medium">Select Month:</label><input type="month" id="budgetMonth" class="border px-2 py-1 rounded" onchange="renderBudgetReport()"></div><div class="flex items-center gap-2 mb-2"><label class="font-medium">Or Date Range:</label><input type="date" id="budgetStartDate" class="border px-2 py-1 rounded" onchange="renderBudgetReport()"><input type="date" id="budgetEndDate" class="border px-2 py-1 rounded" onchange="renderBudgetReport()"></div><div class="flex items-center gap-2 mb-4"><label for="budgetDepartment" class="font-medium">Department:</label><select id="budgetDepartment" class="border px-2 py-1 rounded" onchange="renderBudgetReport()"><option value="">All Departments</option><option value="Sales">Sales</option><option value="Marketing">Marketing</option><option value="Finance">Finance</option><option value="HR">HR</option><option value="Operations">Operations</option></select></div><div class="flex gap-2 mb-4"><button onclick="applyFilterBudget()"
+        </button></div></div></div></div><div class="overflow-x-auto"><table class="w-full border border-gray-300 text-sm border-collapse"><thead class="bg-gray-100"><tr><th class="border px-2 py-1 text-left">Employee</th><th class="border px-2 py-1 text-left">Date</th><th class="border px-2 py-1 text-left">Reference</th><th class="border px-2 py-1 text-left">Description</th><th class="border px-2 py-1 text-left">Account</th><th class="border px-2 py-1 text-left">Bank</th><th class="border px-2 py-1 text-right">Amount (KES)</th></tr></thead><tbody id="currentAccountReportBody"></tbody><tfoot><tr class="font-bold bg-gray-100"><td class="border px-2 py-1 text-right" colspan="6">TOTAL</td><td id="caTotal" class="border px-2 py-1 text-right">KES 0</td></tr></tfoot></table></div></div><div id="budgetPanel" class="report-view hidden bg-white rounded shadow mb-4 p-4 border-t"><h2 class="text-xl font-bold mb-4">📦 Budget Report</h2><div class="flex items-center gap-2 mb-2"><label for="rptBudgetMonth" class="font-medium">Select Month:</label><input type="month" id="rptBudgetMonth" class="border px-2 py-1 rounded" onchange="renderBudgetReport()"></div><div class="flex items-center gap-2 mb-2"><label class="font-medium">Or Date Range:</label><input type="date" id="budgetStartDate" class="border px-2 py-1 rounded" onchange="renderBudgetReport()"><input type="date" id="budgetEndDate" class="border px-2 py-1 rounded" onchange="renderBudgetReport()"></div><div class="flex items-center gap-2 mb-4"><label for="rptBudgetDepartment" class="font-medium">Department:</label><select id="rptBudgetDepartment" class="border px-2 py-1 rounded" onchange="renderBudgetReport()"><option value="">All Departments</option><option value="Sales">Sales</option><option value="Marketing">Marketing</option><option value="Finance">Finance</option><option value="HR">HR</option><option value="Operations">Operations</option></select></div><div class="flex gap-2 mb-4"><button onclick="applyFilterBudget()"
             class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
       🧹 Apply Filter
     </button><button onclick="clearFilterBudget()"
@@ -65681,7 +65760,7 @@ function toggleOvertimeCustomizeColumns() {
     class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
     + More Filters
   </button><div id="budgetVarianceMoreFiltersDropdown"
-    class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50"><div class="mb-3"><label class="text-xs font-semibold">Department</label><select class="border px-2 py-1 rounded text-sm w-full" id="budgetVarianceFilterDept"><option value="">All</option><option>Finance</option><option>Operations</option><option>Sales</option><option>HR</option><option>IT</option></select></div><div class="mb-3"><label class="text-xs font-semibold">Budget Status</label><select class="border px-2 py-1 rounded text-sm w-full" id="budgetVarianceStatus"><option value="">All</option><option>Over Budget</option><option>Under Budget</option><option>On Target</option></select></div><div class="mb-3"><label class="text-xs font-semibold">Variance Type</label><select class="border px-2 py-1 rounded text-sm w-full" id="budgetVarianceType"><option value="">All</option><option>Positive</option><option>Negative</option></select></div><div class="flex items-center gap-2 mb-3"><input type="checkbox" id="budgetVarianceApprovedOnly"><label class="text-sm">Approved only</label></div><div class="flex gap-2"><button onclick="applyBudgetVarianceMoreFilters()"
+    class="hidden absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg p-4 z-50"><div class="mb-3"><label class="text-xs font-semibold">Department</label><select class="border px-2 py-1 rounded text-sm w-full" id="budgetVarianceFilterDept"><option value="">All</option><option>Finance</option><option>Operations</option><option>Sales</option><option>HR</option><option>IT</option></select></div><div class="mb-3"><label class="text-xs font-semibold">Budget Status</label><select class="border px-2 py-1 rounded text-sm w-full" id="budgetVarianceStatus"><option value="">All</option><option>Over Budget</option><option>Under Budget</option><option>On Target</option></select></div><div class="mb-3"><label class="text-xs font-semibold">Variance Type</label><select class="border px-2 py-1 rounded text-sm w-full" id="budgetVarianceTypeExtra"><option value="">All</option><option>Positive</option><option>Negative</option></select></div><div class="flex items-center gap-2 mb-3"><input type="checkbox" id="budgetVarianceApprovedOnly"><label class="text-sm">Approved only</label></div><div class="flex gap-2"><button onclick="applyBudgetVarianceMoreFilters()"
         class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
         Apply
       </button><button onclick="resetBudgetVarianceMoreFilters()"
@@ -71532,10 +71611,10 @@ function applyFilterBudget() {
 }
 
 function clearFilterBudget() {
-  document.getElementById("budgetMonth").value = "";
+  document.getElementById("rptBudgetMonth").value = "";
   document.getElementById("budgetStartDate").value = "";
   document.getElementById("budgetEndDate").value = "";
-  document.getElementById("budgetDepartment").value = "";
+  document.getElementById("rptBudgetDepartment").value = "";
   renderBudgetReport();
 }
 
@@ -71543,20 +71622,37 @@ function renderBudgetReport() {
   const tbody = document.getElementById("budgetSummary");
   if (!tbody) return;
 
-  const selectedMonth = document.getElementById("budgetMonth").value;
+  const selectedMonth = document.getElementById("rptBudgetMonth").value;
   const startDate = document.getElementById("budgetStartDate").value;
   const endDate = document.getElementById("budgetEndDate").value;
-  const selectedDept = document.getElementById("budgetDepartment").value;
+  const selectedDept = document.getElementById("rptBudgetDepartment").value;
 
   const budgets = JSON.parse(localStorage.getItem("budgets") || "[]");
   const actuals = JSON.parse(localStorage.getItem("actuals") || "[]");
 
   let summary = {};
 
+  const summaryMonthAbbr = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  // Budget/actual entries store bare month names ("Jan") with no year attached,
+  // so filtering has to compare by calendar-month position rather than by the
+  // full "YYYY-MM"/"YYYY-MM-DD" strings the <input type="month"/"date"> controls
+  // produce — those never equal a bare month name.
   function monthMatches(month) {
-    if (selectedMonth && month !== selectedMonth) return false;
-    if (startDate && month < startDate) return false;
-    if (endDate && month > endDate) return false;
+    const monthIdx = summaryMonthAbbr.indexOf(month);
+    if (selectedMonth) {
+      const selIdx = parseInt(selectedMonth.split("-")[1], 10) - 1;
+      if (monthIdx !== selIdx) return false;
+    }
+    if (monthIdx === -1) return true;
+    if (startDate) {
+      const startIdx = parseInt(startDate.split("-")[1], 10) - 1;
+      if (monthIdx < startIdx) return false;
+    }
+    if (endDate) {
+      const endIdx = parseInt(endDate.split("-")[1], 10) - 1;
+      if (monthIdx > endIdx) return false;
+    }
     return true;
   }
 
@@ -77794,13 +77890,25 @@ function renderBudgetVarianceReport() {
 
   let summary = {};
 
+  const varianceMonthAbbr = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  // Same limitation as the Budget vs Actual report: entries store a bare month
+  // name with no year, so date-range filtering has to compare calendar-month
+  // position rather than the full "YYYY-MM-DD" strings the date inputs produce.
   function dateMatches(month) {
 
-    if (startDate && month < startDate)
-      return false;
+    const monthIdx = varianceMonthAbbr.indexOf(month);
+    if (monthIdx === -1) return true;
 
-    if (endDate && month > endDate)
-      return false;
+    if (startDate) {
+      const startIdx = parseInt(startDate.split("-")[1], 10) - 1;
+      if (monthIdx < startIdx) return false;
+    }
+
+    if (endDate) {
+      const endIdx = parseInt(endDate.split("-")[1], 10) - 1;
+      if (monthIdx > endIdx) return false;
+    }
 
     return true;
   }
@@ -91099,13 +91207,26 @@ async function restoreZIP(event) {
 
       if (key.indexOf(NS.SEP) !== -1) key = key.split(NS.SEP)[0];
 
-      if (NS.isGlobal(key)) continue;
+      // exchangeRates is marked "global" so normal app writes aren't
+      // company-suffixed, but it holds real financial data (the KES
+      // conversion rates used for multi-currency bank totals and the
+      // Balance Sheet). Skipping it here silently left whatever rates
+      // happened to already be in this browser in place, so a restore
+      // on a fresh browser/profile had no rates at all (defaulting to
+      // 1:1) even though the numbers were sitting right there in the
+      // backup file. Restore it like any other key; still skip the
+      // other global/account-level keys (users, loggedInUser, etc.).
+      if (NS.isGlobal(key) && key !== "exchangeRates") continue;
 
       // A single oversized key (e.g. inventory with embedded images)
       // shouldn't abort the entire restore — skip it, keep going, and
       // report it at the end so the user knows what didn't come back.
       try {
-        NS.nSet.call(NS.real, key + NS.SEP + cid, raw);
+        if (key === "exchangeRates") {
+          NS.nSet.call(NS.real, key, raw); // global key: write as-is, no company suffix
+        } else {
+          NS.nSet.call(NS.real, key + NS.SEP + cid, raw);
+        }
       } catch (eWrite) {
         failedKeys.push(key);
       }
@@ -97886,6 +98007,15 @@ function refreshDashboardCards() {
         return sum + num(inv.totalKES || inv.total);
     }, 0);
 
+    // "Total Invoices" card: default to the current fiscal year (Org
+    // Profile > Fiscal Year). Customer Balance below still uses the
+    // all-time invoiceTotal above, since outstanding receivables aren't
+    // limited to the current fiscal year.
+    const __fy2 = (typeof window.getFiscalYear === "function") ? window.getFiscalYear() : null;
+    const invoiceTotalFY = (__fy2 && typeof window.filterByFiscalYear === "function")
+        ? window.filterByFiscalYear(invoices, "date", __fy2).reduce((sum, inv) => sum + num(inv.totalKES || inv.total), 0)
+        : invoiceTotal;
+
     const mirroredRecurringIds = new Set(
         invoices
             .map(inv => String(inv.recurringId || ""))
@@ -97935,7 +98065,7 @@ function refreshDashboardCards() {
         }, 0);
     }
 
-    setText("dashInvoices", invoiceTotal);
+    setText("dashInvoices", invoiceTotalFY);
     setText("customerOutstandingBalanceDisplay", customerOutstanding);
     setText("dashBankTotal", bankTotal);
     setText("dashPayroll", payrollTotal);
@@ -101599,16 +101729,14 @@ function toggleSubmenu(id) {
   var origHandleLogin = window.handleLogin;
   window.handleLogin = async function(){
     try {
-      var unameEl = document.getElementById('loginUsername');
       var emailEl = document.getElementById('loginEmail');
-      var uname = unameEl ? unameEl.value.trim().toLowerCase() : '';
       var uemail = emailEl ? emailEl.value.trim().toLowerCase() : '';
-      var id = uemail || uname;
+      var id = uemail;
       if (id){
         window.__loginBusy(true);
         var users = JSON.parse(NS.nGet.call(NS.real, 'users') || '[]');
         var local = users.find(function(x){
-          return (uemail && String(x.email || '').toLowerCase() === uemail) || (uname && String(x.username || '').toLowerCase() === uname);
+          return uemail && String(x.email || '').toLowerCase() === uemail;
         });
         if (!local){
           var remote = await window.__netGuard(fetchAccount(id), 6000);
@@ -102064,7 +102192,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     var modal = document.getElementById('loginModal');
     if (!modal || modal.classList.contains('hidden')) return;
     var t = e.target;
-    if (t && (t.id === 'loginUsername' || t.id === 'loginEmail' || t.id === 'loginPass' || t.id === 'loginCompanyId')){
+    if (t && (t.id === 'loginEmail' || t.id === 'loginPass' || t.id === 'loginCompanyId')){
       e.preventDefault();
       if (typeof window.handleLogin === 'function') window.handleLogin();
     }
@@ -102132,6 +102260,15 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     try { return JSON.parse(localStorage.getItem('orgInfo') || '{}') || {}; } catch(e){ return {}; }
   }
   window.getFiscalYearStartMonth = function(){
+    // Prefer the "Fiscal Year" field on the Organization Profile (e.g.
+    // "July - June"), since that's the one people actually set there.
+    var MONTHS_LC = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+    var fyField = String(org().fiscalYear || '').toLowerCase();
+    if (fyField) {
+      var startName = fyField.split('-')[0].trim();
+      var idx = MONTHS_LC.indexOf(startName);
+      if (idx >= 0) return idx + 1;
+    }
     var m = parseInt(org().fiscalYearStartMonth, 10);
     return (m >= 1 && m <= 12) ? m : 1;
   };
@@ -109757,12 +109894,20 @@ try{
   })();
 
   /* ================= 2. dashboard chart filters ================= */
+  function fiscalYearWindow() {
+    // Default view for these cards: the organization's current fiscal year
+    // (Org Profile > Fiscal Year), not literally every record ever entered.
+    if (typeof window.getFiscalYear !== "function") return null;
+    var fy = window.getFiscalYear();
+    if (!fy) return null;
+    return { from: new Date(fy.start), to: new Date(fy.end) };
+  }
   function monthsWindow(selectId) {
     var sel = el(selectId);
     var v = sel ? sel.value : "all";
-    if (!v || v === "all") return null;
+    if (!v || v === "all") return fiscalYearWindow();
     var n = parseInt(v, 10);
-    if (!n) return null;
+    if (!n) return fiscalYearWindow();
     var to = new Date();
     var from = new Date();
     from.setMonth(from.getMonth() - n);
@@ -114670,12 +114815,25 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   function me() { return J('loggedInUser', null); }
   function users() { var u = J('users', []); return Array.isArray(u) ? u : []; }
   function companies() { var c = J('companies', []); return Array.isArray(c) ? c : []; }
-  function identity(u) { return String((u && (u.email || u.username)) || '').trim().toLowerCase(); }
+  /* Strict: company switching is keyed ONLY by the email used to create the
+     account / log in - never fall back to username. Two accounts that
+     happen to share a username but have different emails (or no email)
+     must NEVER be treated as the same identity for switching purposes. */
+  function identity(u) { return String((u && u.email) || '').trim().toLowerCase(); }
 
   /* Every company the signed-in identity belongs to. */
   function myCompanies() {
     var u = me(); if (!u) return [];
     var id = identity(u), seen = {}, out = [];
+    /* No email on the logged-in account: can't safely determine which
+       other accounts belong to the same person, so only show the
+       company that's currently active rather than matching blank-email
+       accounts against each other. */
+    if (!id) {
+      var curOnly = String(u.companyId || '');
+      var cc = companies().filter(function (c) { return c.companyId === curOnly; })[0];
+      return curOnly ? [{ companyId: curOnly, companyName: (cc && cc.companyName) || u.companyName || curOnly, role: u.role || 'admin' }] : [];
+    }
     var byId = {};
     companies().forEach(function (c) { if (c && c.companyId) byId[c.companyId] = c; });
     users().forEach(function (x) {
@@ -114692,6 +114850,9 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   function switchTo(cid) {
     var u = me(); if (!u || !cid || String(u.companyId) === String(cid)) return;
     var id = identity(u), list = users();
+    /* No email on the logged-in account: never match it against other
+       blank-email accounts by identity (see myCompanies()). */
+    if (!id) return;
     var target = null;
     for (var i = 0; i < list.length; i++) {
       if (identity(list[i]) === id && String(list[i].companyId) === String(cid)) { target = list[i]; break; }
@@ -120178,5 +120339,52 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
   window.addEventListener('beforeprint', function () { syncDocumentTables(); refreshOpenPreviews(); });
+})();
+</script>
+<script>
+/* ===== Acacia fix: guarantee tab restore survives refresh ===== */
+(function () {
+  if (window.__acxTabRestoreFinal) return;
+  window.__acxTabRestoreFinal = true;
+
+  // Several older init routines earlier in this file try to restore the
+  // tab you were on before a refresh, but a couple of them run async
+  // (waiting on cloud sync) or can be raced/overridden by other startup
+  // code, so the view sometimes still lands back on Dashboard. This runs
+  // last, after everything else on the page has had a chance to finish,
+  // and simply re-asserts whatever tab sessionStorage says you were on -
+  // it's the final word, so it can't be silently overridden.
+  function restoreTabFinal() {
+    var id;
+    try { id = sessionStorage.getItem('acxLastTab'); } catch (e) { id = null; }
+    if (!id) return;
+    var el = document.getElementById(id);
+    if (!el) return;
+    // Don't fight the login screen - only act once the app is actually visible.
+    var layout = document.getElementById('layout');
+    if (!layout || layout.classList.contains('hidden')) return;
+    if (typeof window.showTab === 'function') {
+      window.showTab(id);
+    } else {
+      document.querySelectorAll('#contentArea > div').forEach(function (d) { d.classList.add('hidden'); });
+      el.classList.remove('hidden');
+    }
+  }
+
+  function run() {
+    // Fire a few times on a delay: once almost immediately (catches the
+    // common case), and again after the async cloud-sync/bootSync flow
+    // elsewhere in the file would have finished, in case that flow (or
+    // anything re-rendering the page) reset the visible tab in between.
+    setTimeout(restoreTabFinal, 50);
+    setTimeout(restoreTabFinal, 600);
+    setTimeout(restoreTabFinal, 1500);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
 })();
 </script>
