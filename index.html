@@ -22958,6 +22958,7 @@ function writeOffInvoice(id) {
     localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
     localStorage.setItem("transactions", JSON.stringify(transactions));
     localStorage.setItem("writeOffs", JSON.stringify(writeOffs));
+    if (typeof updateCustomerReceivables === "function") updateCustomerReceivables(invoice.customer, -amount);
     renderInvoices();
     renderAccountsReceivable?.();
     renderWriteOffReport?.();
@@ -23009,6 +23010,7 @@ function undoWriteOff(id) {
   localStorage.setItem("transactions", JSON.stringify(filteredTx));
   localStorage.setItem("invoices", JSON.stringify(invoices));
   localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+  if (typeof updateCustomerReceivables === "function") updateCustomerReceivables(invoice.customer, totalUndo);
   renderInvoices();
   renderAccountsReceivable?.();
   renderWriteOffReport?.();
@@ -26226,6 +26228,7 @@ function loadBulkCustomers() {
     opt.textContent = c.name;
     dropdown.appendChild(opt);
   });
+  if (typeof window.axRefreshMultiSelect === "function") window.axRefreshMultiSelect("bulkInvoiceCustomers");
 }
 function generateBulkInvoiceNumber() {
   const invoices = JSON.parse(localStorage.getItem("bulkInvoices") || "[]");
@@ -27104,6 +27107,7 @@ function editBulkInvoice(invoiceNo) {
   Array.from(customersSelect.options).forEach(opt => {
     opt.selected = invoice.customers.includes(opt.value);
   });
+  if (typeof window.axRefreshMultiSelect === "function") window.axRefreshMultiSelect("bulkInvoiceCustomers");
 
   bulkInvoiceItems = invoice.items || [];
   renderBulkInvoiceItems();
@@ -35756,6 +35760,181 @@ function reverseBillPayment(index) {
 
   alert(`Reversed ${window.__fmtBase(reverseAmount)} KES on Bill ${bill.billNumber}. New paid: ${window.__fmtBase(newPaid)} KES.`);
 }
+// ---------------------- WRITE OFF (BILL) ----------------------
+function writeOffBill(index) {
+  const bills = JSON.parse(localStorage.getItem('bills') || '[]');
+  const bill = bills[index];
+  if (!bill) return alert("Bill not found.");
+
+  const total = parseFloat(bill.total) || 0;
+  const paid = parseFloat(bill.paidAmount) || 0;
+  const writtenOff = parseFloat(bill.writeOffAmount) || 0;
+  const balance = total - paid - writtenOff;
+
+  if (balance <= 0) return alert("Nothing to write off");
+
+  const modal = document.createElement("div");
+  modal.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000;";
+  modal.innerHTML = `
+    <div style="background:#fff;padding:20px;border-radius:8px;width:400px;">
+      <h3>Write Off ${bill.billNumber}</h3>
+      <label>Amount</label>
+      <input type="number" id="woBillAmount" value="${balance.toFixed(2)}" max="${balance.toFixed(2)}" class="border p-1 w-full mb-2"/>
+      <label>Reason</label>
+      <textarea id="woBillReason" class="border p-1 w-full mb-2"></textarea>
+      <div class="flex justify-end gap-2"><button id="cancelWOBill" class="bg-gray-400 text-white px-3 py-1 rounded">Cancel</button><button id="confirmWOBill" class="bg-red-600 text-white px-3 py-1 rounded">Write Off</button></div></div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector("#cancelWOBill").onclick = () => modal.remove();
+  modal.querySelector("#confirmWOBill").onclick = () => {
+    const amount = parseFloat(document.getElementById("woBillAmount").value);
+    const reason = document.getElementById("woBillReason").value.trim();
+    if (isNaN(amount) || amount <= 0 || amount > balance) return alert("Invalid amount");
+    if (!reason) return alert("Reason required");
+
+    const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+    let payable = accounts.find(a => a.name === "Accounts Payable");
+    if (!payable) {
+      payable = { name: "Accounts Payable", code: "ACCTPAY", type: "Liability", amount: 0 };
+      accounts.push(payable);
+    }
+    let writeOffIncome = accounts.find(a => a.name === "Bills Written Off");
+    if (!writeOffIncome) {
+      writeOffIncome = { name: "Bills Written Off", code: "BILLWO", type: "Other Income", amount: 0 };
+      accounts.push(writeOffIncome);
+    }
+    payable.amount = (payable.amount || 0) - amount;
+    writeOffIncome.amount = (writeOffIncome.amount || 0) + amount;
+
+    const billWriteOffs = JSON.parse(localStorage.getItem("billWriteOffs") || "[]");
+    billWriteOffs.push({
+      id: Date.now(),
+      billId: bill.id || index,
+      billIndex: index,
+      billNumber: bill.billNumber,
+      supplier: bill.supplier,
+      amount,
+      reason,
+      date: new Date().toISOString().split("T")[0]
+    });
+
+    bill.writeOffAmount = writtenOff + amount;
+    bill.balance = Math.max(total - paid - bill.writeOffAmount, 0);
+    if (bill.balance <= 0) {
+      bill.balance = 0;
+      bill.status = "Written Off";
+    } else {
+      bill.status = "Partial Write Off";
+    }
+    bills[index] = bill;
+
+    const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+    transactions.push({
+      id: Date.now(),
+      type: "Bill Write Off",
+      amount,
+      reason,
+      billId: bill.id || index,
+      ref: bill.billNumber,
+      date: new Date().toISOString().split("T")[0]
+    });
+
+    localStorage.setItem("bills", JSON.stringify(bills));
+    localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+    localStorage.setItem("transactions", JSON.stringify(transactions));
+    localStorage.setItem("billWriteOffs", JSON.stringify(billWriteOffs));
+    if (typeof updateSupplierBalance === "function") updateSupplierBalance(bill.supplier, -amount);
+
+    // Keep the matching entry in the Bulk Bills ledger in sync, if any.
+    const bulkBills = JSON.parse(localStorage.getItem("bulkBills") || "[]");
+    const bbIdx = bulkBills.findIndex(b => b.billNumber === bill.billNumber && b.supplier === bill.supplier);
+    if (bbIdx !== -1) {
+      bulkBills[bbIdx].writeOffAmount = bill.writeOffAmount;
+      bulkBills[bbIdx].balance = bill.balance;
+      bulkBills[bbIdx].status = bill.status;
+      localStorage.setItem("bulkBills", JSON.stringify(bulkBills));
+    }
+
+    if (typeof loadSupplierBills === "function") loadSupplierBills();
+    if (typeof loadBulkBills === "function") loadBulkBills();
+    if (typeof renderCreditcontrolAnalysis === "function") renderCreditcontrolAnalysis();
+    if (typeof renderWriteOffReport === "function") renderWriteOffReport();
+    modal.remove();
+    if (typeof showToast === "function") showToast("Write off recorded"); else alert("Write off recorded");
+  };
+}
+function undoWriteOffBill(index) {
+  const bills = JSON.parse(localStorage.getItem('bills') || '[]');
+  const bill = bills[index];
+  if (!bill) return alert("Bill not found.");
+
+  const billWriteOffs = JSON.parse(localStorage.getItem("billWriteOffs") || "[]");
+  const theseWriteOffs = billWriteOffs.filter(w => w.billNumber === bill.billNumber);
+  if (theseWriteOffs.length === 0) return alert("Nothing to undo");
+
+  const totalUndo = theseWriteOffs.reduce((s, w) => s + (parseFloat(w.amount) || 0), 0);
+
+  const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+  const payable = accounts.find(a => a.name === "Accounts Payable");
+  const writeOffIncome = accounts.find(a => a.name === "Bills Written Off");
+  if (payable) payable.amount = (payable.amount || 0) + totalUndo;
+  if (writeOffIncome) writeOffIncome.amount = (writeOffIncome.amount || 0) - totalUndo;
+
+  const total = parseFloat(bill.total) || 0;
+  const paid = parseFloat(bill.paidAmount) || 0;
+  bill.writeOffAmount = 0;
+  bill.balance = Math.max(total - paid, 0);
+  if (bill.balance <= 0) bill.status = "Paid";
+  else if (paid > 0) bill.status = "Partial";
+  else bill.status = "Unpaid";
+  bills[index] = bill;
+
+  const remainingWriteOffs = billWriteOffs.filter(w => w.billNumber !== bill.billNumber);
+  const transactions = JSON.parse(localStorage.getItem("transactions") || "[]");
+  const filteredTx = transactions.filter(t => !(t.type === "Bill Write Off" && t.ref === bill.billNumber));
+
+  localStorage.setItem("billWriteOffs", JSON.stringify(remainingWriteOffs));
+  localStorage.setItem("transactions", JSON.stringify(filteredTx));
+  localStorage.setItem("bills", JSON.stringify(bills));
+  localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+  if (typeof updateSupplierBalance === "function") updateSupplierBalance(bill.supplier, totalUndo);
+
+  // Keep the matching entry in the Bulk Bills ledger in sync, if any.
+  const bulkBills = JSON.parse(localStorage.getItem("bulkBills") || "[]");
+  const bbIdx = bulkBills.findIndex(b => b.billNumber === bill.billNumber && b.supplier === bill.supplier);
+  if (bbIdx !== -1) {
+    bulkBills[bbIdx].writeOffAmount = 0;
+    bulkBills[bbIdx].balance = bill.balance;
+    bulkBills[bbIdx].status = bill.status;
+    localStorage.setItem("bulkBills", JSON.stringify(bulkBills));
+  }
+
+  if (typeof loadSupplierBills === "function") loadSupplierBills();
+  if (typeof loadBulkBills === "function") loadBulkBills();
+  if (typeof renderCreditcontrolAnalysis === "function") renderCreditcontrolAnalysis();
+  if (typeof renderWriteOffReport === "function") renderWriteOffReport();
+  if (typeof showToast === "function") showToast("Write off reversed successfully"); else alert("Write off reversed successfully");
+}
+function writeOffBulkBill(index) {
+  if (typeof writeOffBill !== "function") return alert("Write off is not available.");
+  const bulkBills = JSON.parse(localStorage.getItem("bulkBills") || "[]");
+  const bulkBill = bulkBills[index];
+  if (!bulkBill) return alert("Bulk bill not found.");
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  const bIdx = bills.findIndex(b => b.billNumber === bulkBill.billNumber && b.supplier === bulkBill.supplier);
+  if (bIdx === -1) return alert("Matching bill not found in the Bills ledger.");
+  writeOffBill(bIdx);
+}
+function undoWriteOffBulkBill(index) {
+  if (typeof undoWriteOffBill !== "function") return alert("Undo write off is not available.");
+  const bulkBills = JSON.parse(localStorage.getItem("bulkBills") || "[]");
+  const bulkBill = bulkBills[index];
+  if (!bulkBill) return alert("Bulk bill not found.");
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  const bIdx = bills.findIndex(b => b.billNumber === bulkBill.billNumber && b.supplier === bulkBill.supplier);
+  if (bIdx === -1) return alert("Matching bill not found in the Bills ledger.");
+  undoWriteOffBill(bIdx);
+}
 // ---------------------- PREVIEW ----------------------
 function previewBill(index) {
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
@@ -36334,6 +36513,7 @@ function populateBulkSupplierDropdown() {
     opt.textContent = s.name;
     dropdown.appendChild(opt);
   });
+  if (typeof window.axRefreshMultiSelect === "function") window.axRefreshMultiSelect("bulkBillingSupplier");
 }
 document.getElementById('bulkBillItemDesc')?.addEventListener('change', function() {
     const selVal = this.value;
@@ -36682,6 +36862,7 @@ function saveBulkBill() {
   document.getElementById('bulkBillingSupplier').value = '';
   document.getElementById('bulkBillTermDays').value = '';
   document.getElementById('bulkBillChartOfAccount').value = '';
+  if (typeof window.axRefreshMultiSelect === "function") window.axRefreshMultiSelect("bulkBillingSupplier");
 
   loadBulkBills();
   if (typeof loadSupplierBills === 'function') loadSupplierBills();
@@ -37126,6 +37307,7 @@ function editBulkBill(index){
   document.getElementById('bulkBillNumber').value=bill.billNumber;
   document.getElementById('bulkBillDate').value=bill.date;
   [...document.getElementById('bulkBillingSupplier').options].forEach(opt=>{opt.selected=bill.suppliers.includes(opt.value)});
+  if (typeof window.axRefreshMultiSelect === "function") window.axRefreshMultiSelect("bulkBillingSupplier");
   document.getElementById('bulkBillTermDays').value=bill.termDays;
   document.getElementById('bulkBillChartOfAccount').value=bill.chartOfAccount;
   document.getElementById('bulkBillCurrency').value=bill.currency;
@@ -58297,7 +58479,7 @@ function resetEarnings() {
     placeholder="Search Attendance..."
     class="border rounded-md pl-8 pr-3 py-1 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
     oninput="searchAttendance()"
-  /><!-- Search Icon --><svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div><div class="relative inline-block mb-4"><button id="attendanceActionsBtn"  class="inline-flex items-center rounded-md border border-gray-300 shadow-sm px-6 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+  /><!-- Search Icon --><svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div><!-- 📅 Date Range Filter --><div class="flex flex-wrap items-end gap-2 mb-3"><div><label class="block text-xs font-semibold text-gray-600 mb-1">From</label><input type="date" id="attendanceFilterFrom" class="border rounded-md px-2 py-1 text-sm"></div><div><label class="block text-xs font-semibold text-gray-600 mb-1">To</label><input type="date" id="attendanceFilterTo" class="border rounded-md px-2 py-1 text-sm"></div><button onclick="applyAttendanceDateFilter()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1.5 rounded hover:bg-blue-800 text-sm">Apply Filter</button><button onclick="clearAttendanceDateFilter()" class="border border-gray-400 text-gray-700 bg-white font-semibold px-3 py-1.5 rounded hover:bg-gray-100 text-sm">Clear</button><span id="attendanceFilterStatus" class="text-xs text-gray-500 ml-1"></span></div><div class="relative inline-block mb-4"><button id="attendanceActionsBtn"  class="inline-flex items-center rounded-md border border-gray-300 shadow-sm px-6 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
       Attendance Actions
       <svg class="ml-2 h-4 w-4 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button><div id="attendanceDropdown" class="hidden absolute bg-white border rounded shadow mt-1 w-48 z-10"><button onclick="sortAttendance('empID')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Employee ID</button><button onclick="sortAttendance('date')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Date</button><button onclick="sortAttendance('type')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Type</button><button onclick="sortAttendance('days')" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Sort by Days</button><hr class="my-1 border-gray-200"><button onclick="exportAttendanceCSV()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Export CSV</button><button onclick="resetAttendance()" class="block w-full text-left px-3 py-1 hover:bg-gray-100">Reset</button></div></div>
   <script>
@@ -58342,9 +58524,11 @@ function sortAttendance(key) {
   if (dropdown) dropdown.classList.add('hidden');
 }
 
-function exportAttendanceCSV() {
-  console.log('Export attendance CSV');
-}
+// NOTE: the real exportAttendanceCSV() implementation lives further down
+// this tab's script (it builds and downloads an actual CSV file). This
+// duplicate used to be a no-op stub that only logged to the console; it was
+// harmless because the later declaration below overwrote it, but it's
+// removed here to avoid confusion for anyone reading this section.
 
 function resetAttendance() {
   const searchBox = document.getElementById('attendanceSearch');
@@ -58363,7 +58547,7 @@ function resetAttendance() {
     </button><button id="attendanceCancelEditBtn" onclick="cancelAttendanceEdit()"
             class="hidden border border-gray-500 text-gray-700 bg-white font-bold px-1 py-1 rounded hover:bg-gray-100 ml-1">
       Cancel Edit
-    </button></div><div class="bg-white p-6 rounded shadow"><h3 class="text-lg font-semibold mb-4">Attendance Records</h3><button onclick="exportAttendanceCSV()" class="mb-2 bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-500">
+    </button></div><div class="bg-white p-6 rounded shadow mb-6"><h3 class="text-lg font-semibold mb-1">Leave Balance Summary</h3><p class="text-xs text-gray-500 mb-4">Reflects the date range selected above (or all records if no range is set). Annual Leave remaining is out of a 21-day yearly entitlement.</p><div class="overflow-x-auto"><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2 border">Employee ID</th><th class="p-2 border">Name</th><th class="p-2 border">Present</th><th class="p-2 border">Sick Leave</th><th class="p-2 border">Annual Leave Used</th><th class="p-2 border">Annual Leave Remaining</th><th class="p-2 border">Unpaid Leave</th><th class="p-2 border">Absent</th></tr></thead><tbody id="leaveBalanceBody"></tbody></table></div></div><div class="bg-white p-6 rounded shadow"><h3 class="text-lg font-semibold mb-4">Attendance Records</h3><button onclick="exportAttendanceCSV()" class="mb-2 bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-500">
     Export CSV
   </button><button onclick="deleteSelectedAttendance()" class="mb-2 ml-1 border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><tr><th class="p-2 border"><input type="checkbox" onclick="toggleSelectAllAttendance(this)"></th><th class="p-2 border">Employee ID</th><th class="p-2 border">Date</th><th class="p-2 border">Type</th><th class="p-2 border">Days</th><th class="p-2 border">Note</th><th class="p-2 border">Remaining Leave</th><th class="p-2 border">Actions</th></tr></thead><tbody id="attendanceTableBody"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
     Total Count: <span id="totalCount">0</span></div><div>
@@ -58376,7 +58560,7 @@ function resetAttendance() {
     placeholder="Search ESR (/)"
     class="border rounded-md pl-8 pr-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
     oninput="searchESR()"
-  /><svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div><div class="bg-white p-6 rounded shadow mb-4"><h3 class="text-lg font-semibold mb-4">Generate Payslip</h3><div class="flex flex-col gap-4 mb-4"><select id="payslipEmpID"
+  /><svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div><div class="bg-white p-6 rounded shadow mb-4"><div class="flex justify-between items-center mb-4"><h3 class="text-lg font-semibold">Generate Payslip</h3><div class="flex gap-2"><button id="payslipModeIndividualBtn" onclick="setPayslipMode('individual')" class="border border-blue-900 bg-blue-900 text-white font-bold px-3 py-1 rounded text-sm">Individual</button><button id="payslipModeBulkBtn" onclick="setPayslipMode('bulk')" class="border border-blue-900 text-blue-900 font-bold px-3 py-1 rounded text-sm">Bulk</button></div></div><div id="payslipIndividualSection" class="flex flex-col gap-4 mb-4"><select id="payslipEmpID"
               class="border p-2 rounded"
               style="width:700px;"><option value="">Select Employee</option></select><input id="payslipMonth"
              type="month"
@@ -58385,7 +58569,7 @@ function resetAttendance() {
               class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-2 rounded hover:bg-blue-800"
               style="width:700px;">
         Generate Payslip
-      </button></div></div><div id="payslipOutput" class="mt-4 text-sm bg-white p-6 rounded shadow hidden"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-semibold">Payslip</h3><div class="flex gap-2"><button onclick="printPayslip()"
+      </button></div><div id="payslipBulkSection" class="hidden"><div class="flex flex-col gap-4 mb-4"><input id="bulkPayslipMonth" type="month" class="border p-2 rounded" style="width:700px;" /><div class="flex gap-2"><button onclick="generateBulkPayslips()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-2 rounded hover:bg-blue-800">Generate All Payslips</button><button onclick="downloadBulkPayslipPDF()" class="border border-blue-900 text-blue-900 font-bold px-3 py-2 rounded hover:bg-blue-900 hover:text-white">Download All (PDF)</button></div></div><div id="bulkPayslipWrap" class="hidden"><p class="text-sm text-gray-600 mb-2"><span id="bulkPayslipCount">0</span> payslip(s) found for the selected month</p><div class="overflow-x-auto"><table class="w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2 border">Employee ID</th><th class="p-2 border">Name</th><th class="p-2 border">Department</th><th class="p-2 border">Position</th><th class="p-2 border">Gross</th><th class="p-2 border">Deductions</th><th class="p-2 border">Net Pay</th><th class="p-2 border">Actions</th></tr></thead><tbody id="bulkPayslipTableBody"></tbody></table></div></div></div></div><div id="payslipOutput" class="mt-4 text-sm bg-white p-6 rounded shadow hidden"><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-semibold">Payslip</h3><div class="flex gap-2"><button onclick="printPayslip()"
                 class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">
           Print
         </button><button onclick="downloadPayslipPDF()"
@@ -60918,7 +61102,25 @@ function cancelAttendanceEdit() {
 
   tbody.innerHTML = "";
 
-  if (!attendance.length) {
+  // Date-range filter (From/To). Empty inputs = no bound on that side.
+  const filterFrom = document.getElementById("attendanceFilterFrom")?.value || "";
+  const filterTo = document.getElementById("attendanceFilterTo")?.value || "";
+  const filteredEntries = attendance
+    .map((record, i) => ({ record, i }))
+    .filter(({ record }) => {
+      if (filterFrom && record.date < filterFrom) return false;
+      if (filterTo && record.date > filterTo) return false;
+      return true;
+    });
+
+  const filterStatus = document.getElementById("attendanceFilterStatus");
+  if (filterStatus) {
+    filterStatus.textContent = (filterFrom || filterTo)
+      ? `Showing ${filteredEntries.length} of ${attendance.length} record(s)`
+      : "";
+  }
+
+  if (!filteredEntries.length) {
 
     tbody.innerHTML = `
       <tr>
@@ -60927,6 +61129,8 @@ function cancelAttendanceEdit() {
         </td>
       </tr>
     `;
+
+    renderLeaveBalanceDashboard(filteredEntries.map(e => e.record), employees);
 
     return;
 
@@ -60948,7 +61152,7 @@ function cancelAttendanceEdit() {
 
   });
 
-  attendance.forEach((record, index) => {
+  filteredEntries.forEach(({ record, i: index }) => {
 
     const row = document.createElement("tr");
 
@@ -61045,7 +61249,66 @@ function cancelAttendanceEdit() {
 
   });
 
+  renderLeaveBalanceDashboard(filteredEntries.map(e => e.record), employees);
+
 }
+
+function applyAttendanceDateFilter() {
+  renderAttendanceTable();
+}
+
+function clearAttendanceDateFilter() {
+  const from = document.getElementById("attendanceFilterFrom");
+  const to = document.getElementById("attendanceFilterTo");
+  if (from) from.value = "";
+  if (to) to.value = "";
+  renderAttendanceTable();
+}
+
+function renderLeaveBalanceDashboard(records, employees) {
+  const tbody = document.getElementById("leaveBalanceBody");
+  if (!tbody) return;
+
+  if (!employees || !employees.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="p-2 text-center text-gray-400">No employees found.</td></tr>`;
+    return;
+  }
+
+  const byEmp = {};
+  employees.forEach(emp => {
+    byEmp[emp.id] = { name: emp.name || "", Present: 0, "Sick Leave": 0, "Annual Leave": 0, "Unpaid Leave": 0, Absent: 0 };
+  });
+
+  (records || []).forEach(rec => {
+    if (!byEmp[rec.empID]) {
+      byEmp[rec.empID] = { name: "", Present: 0, "Sick Leave": 0, "Annual Leave": 0, "Unpaid Leave": 0, Absent: 0 };
+    }
+    const days = parseFloat(rec.days) || 0;
+    if (byEmp[rec.empID][rec.type] !== undefined) {
+      byEmp[rec.empID][rec.type] += days;
+    }
+  });
+
+  const rows = Object.keys(byEmp).map(empID => {
+    const b = byEmp[empID];
+    const annualRemaining = Math.max(0, 21 - b["Annual Leave"]);
+    return `
+      <tr>
+        <td class="p-2 border">${empID}</td>
+        <td class="p-2 border">${b.name}</td>
+        <td class="p-2 border">${b.Present.toFixed(1)}</td>
+        <td class="p-2 border">${b["Sick Leave"].toFixed(1)}</td>
+        <td class="p-2 border">${b["Annual Leave"].toFixed(1)}</td>
+        <td class="p-2 border">${annualRemaining.toFixed(1)}</td>
+        <td class="p-2 border">${b["Unpaid Leave"].toFixed(1)}</td>
+        <td class="p-2 border">${b.Absent.toFixed(1)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  tbody.innerHTML = rows || `<tr><td colspan="8" class="p-2 text-center text-gray-400">No records in this range.</td></tr>`;
+}
+
 function viewAttendanceHistory(empID) {
   const attendance = JSON.parse(localStorage.getItem("attendance") || "[]");
   const records = attendance.filter(r => r.empID === empID);
@@ -61319,16 +61582,28 @@ function deleteSelectedAttendance() {
     const attendance = JSON.parse(localStorage.getItem("attendance") || "[]");
     if (!attendance.length) return alert("No attendance records to export.");
 
+    // Respect the From/To date filter on this tab, same as the table above.
+    const filterFrom = document.getElementById("attendanceFilterFrom")?.value || "";
+    const filterTo = document.getElementById("attendanceFilterTo")?.value || "";
+    const filtered = attendance.filter(rec => {
+      if (filterFrom && rec.date < filterFrom) return false;
+      if (filterTo && rec.date > filterTo) return false;
+      return true;
+    });
+    if (!filtered.length) return alert("No attendance records in the selected date range to export.");
+
     let csv = "Employee ID,Date,Type,Days,Note\n";
-    attendance.forEach(rec => {
-      csv += `${rec.empID},${rec.date},${rec.type},${rec.days || 0},"${rec.note || ''}"\n`;
+    filtered.forEach(rec => {
+      const note = (rec.note || '').replace(/"/g, '""');
+      csv += `${rec.empID},${rec.date},${rec.type},${rec.days || 0},"${note}"\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "attendance.csv";
+    const suffix = (filterFrom || filterTo) ? `_${filterFrom || 'start'}_to_${filterTo || 'end'}` : '';
+    a.download = `attendance${suffix}.csv`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
@@ -61414,20 +61689,12 @@ function generatePayslip() {
 }
 
 function downloadPayslipPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
   const empID = document.getElementById("payslipEmpID").value;
   const month = document.getElementById("payslipMonth").value;
+  downloadSinglePayslipPDF(empID, month);
+}
 
-  const payrollRecords = JSON.parse(localStorage.getItem("payrollRecords") || "[]");
-  const employees = JSON.parse(localStorage.getItem("employees") || "[]");
-
-  const payroll = payrollRecords.find(p => p.empID === empID && p.month === month);
-  const employee = employees.find(e => e.id === empID);
-
-  if (!payroll || !employee) return;
-
+function drawPayslipPage(doc, employee, payroll, month) {
   doc.setFontSize(16);
   doc.text("Company Payslip", 105, 15, { align: "center" });
 
@@ -61454,12 +61721,116 @@ function downloadPayslipPDF() {
   doc.setFontSize(14);
   doc.text(`Net Pay: KES ${parseFloat(payroll.net).toLocaleString()}`, 20, 165);
 
-  
   doc.setFontSize(10);
   doc.text("This is a system generated payslip.", 105, 285, { align: "center" });
+}
 
+function downloadSinglePayslipPDF(empID, month) {
+  const payrollRecords = JSON.parse(localStorage.getItem("payrollRecords") || "[]");
+  const employees = JSON.parse(localStorage.getItem("employees") || "[]");
+
+  const payroll = payrollRecords.find(p => p.empID === empID && p.month === month);
+  const employee = employees.find(e => e.id == empID);
+
+  if (!payroll || !employee) return alert("Data not found for this employee and month.");
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  drawPayslipPage(doc, employee, payroll, month);
   doc.save(`Payslip_${employee.name}_${month}.pdf`);
 }
+
+// ---------------------- PAYSLIP MODE TOGGLE ----------------------
+function setPayslipMode(mode) {
+  const isIndividual = mode !== "bulk";
+  document.getElementById("payslipIndividualSection")?.classList.toggle("hidden", !isIndividual);
+  document.getElementById("payslipBulkSection")?.classList.toggle("hidden", isIndividual);
+
+  const indBtn = document.getElementById("payslipModeIndividualBtn");
+  const bulkBtn = document.getElementById("payslipModeBulkBtn");
+  if (indBtn) {
+    indBtn.classList.toggle("bg-blue-900", isIndividual);
+    indBtn.classList.toggle("text-white", isIndividual);
+    indBtn.classList.toggle("text-blue-900", !isIndividual);
+  }
+  if (bulkBtn) {
+    bulkBtn.classList.toggle("bg-blue-900", !isIndividual);
+    bulkBtn.classList.toggle("text-white", !isIndividual);
+    bulkBtn.classList.toggle("text-blue-900", isIndividual);
+  }
+}
+
+// ---------------------- BULK PAYSLIP GENERATION ----------------------
+function generateBulkPayslips() {
+  const month = document.getElementById("bulkPayslipMonth").value;
+  if (!month) {
+    alert("Please select a month.");
+    return;
+  }
+
+  const payrollRecords = JSON.parse(localStorage.getItem("payrollRecords") || "[]");
+  const employees = JSON.parse(localStorage.getItem("employees") || "[]");
+  const records = payrollRecords.filter(p => p.month === month);
+
+  const wrap = document.getElementById("bulkPayslipWrap");
+
+  if (records.length === 0) {
+    wrap.classList.add("hidden");
+    alert("No payroll records found for this month. Run payroll for this period first.");
+    return;
+  }
+
+  document.getElementById("bulkPayslipTableBody").innerHTML = records.map(payroll => {
+    const employee = employees.find(e => e.id == payroll.empID) || {};
+    return `
+      <tr>
+        <td class="p-2 border">${payroll.empID}</td>
+        <td class="p-2 border">${employee.name || "-"}</td>
+        <td class="p-2 border">${employee.department || "-"}</td>
+        <td class="p-2 border">${employee.position || "-"}</td>
+        <td class="p-2 border text-right">KES ${parseFloat(payroll.gross || 0).toLocaleString()}</td>
+        <td class="p-2 border text-right">KES ${parseFloat(payroll.deductions || 0).toLocaleString()}</td>
+        <td class="p-2 border text-right font-semibold">KES ${parseFloat(payroll.net || 0).toLocaleString()}</td>
+        <td class="p-2 border text-center whitespace-nowrap">
+          <button onclick="viewBulkPayslip('${payroll.empID}','${month}')" class="border border-blue-900 text-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-900 hover:text-white text-xs mr-1">View</button>
+          <button onclick="downloadSinglePayslipPDF('${payroll.empID}','${month}')" class="border border-blue-900 text-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-900 hover:text-white text-xs">PDF</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  document.getElementById("bulkPayslipCount").textContent = records.length;
+  wrap.classList.remove("hidden");
+}
+
+function viewBulkPayslip(empID, month) {
+  setPayslipMode("individual");
+  document.getElementById("payslipEmpID").value = empID;
+  document.getElementById("payslipMonth").value = month;
+  generatePayslip();
+  document.getElementById("payslipOutput")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function downloadBulkPayslipPDF() {
+  const month = document.getElementById("bulkPayslipMonth").value;
+  if (!month) return alert("Please select a month.");
+
+  const payrollRecords = JSON.parse(localStorage.getItem("payrollRecords") || "[]");
+  const employees = JSON.parse(localStorage.getItem("employees") || "[]");
+  const records = payrollRecords.filter(p => p.month === month);
+
+  if (records.length === 0) return alert("No payroll records found for this month. Run payroll for this period first.");
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  records.forEach((payroll, idx) => {
+    const employee = employees.find(e => e.id == payroll.empID) || { id: payroll.empID, name: "Unknown", department: "-", position: "-" };
+    if (idx > 0) doc.addPage();
+    drawPayslipPage(doc, employee, payroll, month);
+  });
+  doc.save(`Payslips_${month}.pdf`);
+}
+
 </script>
 <script>
 function renderStatutoryDeductions() {
@@ -65988,7 +66359,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         .forEach(cb => cb.checked = false);
     }
   </script>
-  <div class="bg-white p-4 rounded-xl shadow mb-6"><canvas id="attendanceSummaryChart"></canvas></div><div class="overflow-x-auto"><table class="w-full border text-sm" id="attendanceSummaryTable"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Employee</th><th class="p-2 text-left">Date</th><th class="p-2 text-left">Check In</th><th class="p-2 text-left">Check Out</th><th class="p-2 text-left">Status</th></tr></thead><tbody id="attendanceSummaryBody"><tr><td colspan="5" class="p-2 text-center text-gray-500">No data yet</td></tr></tbody></table></div></div><div id="overtimeSummaryPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border"><div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6"><div><h3 class="text-lg font-bold text-gray-800">Overtime Summary</h3></div><div class="flex flex-wrap items-end gap-3"><div><label class="text-xs font-semibold">Employee</label><input type="text" id="overtimeSummaryEmployee" class="border px-2 py-1 rounded text-sm" placeholder="Employee name"></div><div><label class="text-xs font-semibold">Start</label><input type="date" id="overtimeSummaryStart" class="border px-2 py-1 rounded text-sm"></div><div><label class="text-xs font-semibold">End</label><input type="date" id="overtimeSummaryEnd" class="border px-2 py-1 rounded text-sm"></div><div class="relative"><button onclick="toggleOvertimeMoreFilters()"
+  <div class="bg-white p-4 rounded-xl shadow mb-6"><canvas id="attendanceSummaryChart"></canvas></div><div class="overflow-x-auto"><table class="w-full border text-sm" id="attendanceSummaryTable"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Employee</th><th class="p-2 text-left">Leave Days</th><th class="p-2 text-left">Sick Days</th><th class="p-2 text-left">Absent Days</th><th class="p-2 text-center">Jan</th><th class="p-2 text-center">Feb</th><th class="p-2 text-center">Mar</th><th class="p-2 text-center">Apr</th><th class="p-2 text-center">May</th><th class="p-2 text-center">Jun</th><th class="p-2 text-center">Jul</th><th class="p-2 text-center">Aug</th><th class="p-2 text-center">Sep</th><th class="p-2 text-center">Oct</th><th class="p-2 text-center">Nov</th><th class="p-2 text-center">Dec</th></tr></thead><tbody id="attendanceSummaryBody"><tr><td colspan="16" class="p-2 text-center text-gray-500">No data yet</td></tr></tbody></table></div></div><div id="overtimeSummaryPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border"><div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6"><div><h3 class="text-lg font-bold text-gray-800">Overtime Summary</h3></div><div class="flex flex-wrap items-end gap-3"><div><label class="text-xs font-semibold">Employee</label><input type="text" id="overtimeSummaryEmployee" class="border px-2 py-1 rounded text-sm" placeholder="Employee name"></div><div><label class="text-xs font-semibold">Start</label><input type="date" id="overtimeSummaryStart" class="border px-2 py-1 rounded text-sm"></div><div><label class="text-xs font-semibold">End</label><input type="date" id="overtimeSummaryEnd" class="border px-2 py-1 rounded text-sm"></div><div class="relative"><button onclick="toggleOvertimeMoreFilters()"
           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
           + More Filters
         </button><div id="overtimeMoreFiltersDropdown"
@@ -68138,8 +68509,13 @@ function displayFiledInfo() {
   const filedInputSection = document.getElementById("filedInputSection");
   const vatStatus = document.getElementById("vatStatus");
 
-  const filedData = getFiledData();
-  const totalPaid = filedData.totalPaid || 0;
+  // Source the real totals from the payments actually recorded via
+  // "Record VAT Payment" (the same engine as Purchase Hub > Tax Payments),
+  // instead of the old disconnected vatFiledData tracker.
+  const vatPays = (JSON.parse(localStorage.getItem("taxPayments") || "[]") || [])
+    .filter(function (t) { return /vat/i.test(String(t.type || "")); });
+  const totalPaid = vatPays.reduce(function (s, t) { return s + (parseFloat(t.amount) || 0); }, 0);
+  const lastDate = vatPays.length ? vatPays.map(function (t) { return t.date; }).sort().slice(-1)[0] : null;
   const currentNetVAT = getNetVAT();
   const difference = currentNetVAT - totalPaid;
 
@@ -68148,7 +68524,7 @@ function displayFiledInfo() {
   const filedNetVATEl = document.getElementById("filedNetVAT");
   const vatDiffEl = document.getElementById("vatDifference");
 
-  if (filedDateEl) filedDateEl.textContent = filedData.date || "-";
+  if (filedDateEl) filedDateEl.textContent = lastDate || "-";
   if (amountFiledEl) amountFiledEl.textContent = totalPaid.toLocaleString();
   if (filedNetVATEl) filedNetVATEl.textContent = currentNetVAT.toLocaleString();
   if (vatDiffEl) vatDiffEl.textContent = difference.toLocaleString();
@@ -68164,6 +68540,23 @@ function displayFiledInfo() {
 }
 
 function showFiledInput() {
+  // Build/refresh the full "Record VAT Payment" box synchronously first —
+  // don't rely on the background auto-refresh (which runs on a delay and
+  // may not have populated the bank / tax-account dropdowns yet).
+  try {
+    if (typeof window.renderVatSummary === "function") window.renderVatSummary();
+    else if (typeof window.__vxRenderAll === "function") window.__vxRenderAll();
+  } catch (e) {}
+
+  var fullBox = document.getElementById("vxVatPayBox");
+  if (fullBox) {
+    fullBox.scrollIntoView({ behavior: "smooth", block: "start" });
+    var dateInput = document.getElementById("vxVatDate");
+    if (dateInput) { try { dateInput.focus(); } catch (e) {} }
+    var status = document.getElementById("vatStatus");
+    if (status) status.textContent = "Fill in the date, tax account, bank and amount below, then click Save VAT Payment.";
+    return;
+  }
   document.getElementById("filedInputSection")?.classList.remove("hidden");
   document.getElementById("vatStatus").textContent = "Enter payment amount.";
 }
@@ -74748,7 +75141,8 @@ function showReport(panelId, element) {
     projectTimelinePanel: "renderProjectTimeline",
     batchTrackingPanel: "renderBatchTracking",
     damagedStockPanel: "renderDamagedStock",
-    expiredItemsPanel: "renderExpiredItems"
+    expiredItemsPanel: "renderExpiredItems",
+    attendanceSummaryPanel: "renderAttendanceSummary"
   };
 
   var fnName = reportRenderers[panelId];
@@ -76551,45 +76945,83 @@ function clearAttendanceSummaryFilters() {
 }
 
 function renderAttendanceSummary() {
-  const employee = document.getElementById("attendanceSummaryEmployee")?.value || "";
-  const start = document.getElementById("attendanceSummaryStart")?.value || "";
-  const end = document.getElementById("attendanceSummaryEnd")?.value || "";
+  const employeeFilter = (document.getElementById("attendanceSummaryEmployee")?.value || "").trim().toLowerCase();
+  const startVal = document.getElementById("attendanceSummaryStart")?.value || "";
+  const endVal = document.getElementById("attendanceSummaryEnd")?.value || "";
 
-  const data = JSON.parse(localStorage.getItem("attendanceSummary") || "[]");
+  const employees = JSON.parse(localStorage.getItem("employees") || "[]");
+  // "attendance" holds leave/sick/absence EXCEPTIONS logged in Payroll Hub → Attendance & Leave
+  // ({empID, date, type, note, days}). Any working day with no exception on file means the
+  // employee had full attendance that day, so each month's total is built from a full working
+  // calendar per employee and only the days that actually have a logged exception are deducted.
+  const attendanceRecords = JSON.parse(localStorage.getItem("attendance") || "[]");
 
-  const filtered = data.filter(r => {
-    const date = new Date(r.date);
-    return (!employee || r.employee === employee) &&
-           (!start || date >= new Date(start)) &&
-           (!end || date <= new Date(end));
+  const now = new Date();
+  const year = startVal ? new Date(startVal + "T00:00:00").getFullYear() : now.getFullYear();
+  const periodStart = new Date(year, 0, 1);
+  const periodEnd = endVal ? new Date(endVal + "T00:00:00") : new Date(year, 11, 31);
+
+  // Map each employee's logged exceptions onto every date they cover ("days" = span length).
+  const exceptionsByEmp = {};
+  attendanceRecords.forEach(r => {
+    if (!r.empID || !r.date || r.type === "Present") return;
+    const base = new Date(r.date + "T00:00:00");
+    if (isNaN(base)) return;
+    const span = Math.max(1, parseFloat(r.days) || 1);
+    if (!exceptionsByEmp[r.empID]) exceptionsByEmp[r.empID] = {};
+    for (let i = 0; i < span; i++) {
+      const d = new Date(base); d.setDate(d.getDate() + i);
+      exceptionsByEmp[r.empID][d.toISOString().slice(0, 10)] = r.type;
+    }
   });
+
+  const targetEmployees = employees.filter(e => !employeeFilter || (e.name || "").toLowerCase().includes(employeeFilter));
+
+  const rows = targetEmployees.map(emp => {
+    const exceptions = exceptionsByEmp[emp.id] || {};
+    const presentByMonth = new Array(12).fill(0);
+    let leaveDaysTotal = 0, sickDaysTotal = 0, absentDaysTotal = 0;
+
+    for (let d = new Date(periodStart); d <= periodEnd; d.setDate(d.getDate() + 1)) {
+      const dow = d.getDay();
+      if (dow === 0 || dow === 6) continue; // Sat/Sun are non-working days
+      const dateKey = d.toISOString().slice(0, 10);
+      const type = exceptions[dateKey];
+      if (type === "Sick Leave") {
+        sickDaysTotal++;
+      } else if (type === "Absent") {
+        absentDaysTotal++;
+      } else if (type) {
+        leaveDaysTotal++; // Annual Leave / Unpaid Leave / any other logged exception type
+      } else {
+        presentByMonth[d.getMonth()]++; // no leave/sick/absent on file → full day present
+      }
+    }
+    return { employee: emp.name || emp.id, leaveDays: leaveDaysTotal, sickDays: sickDaysTotal, absentDays: absentDaysTotal, presentByMonth };
+  }).sort((a, b) => a.employee.localeCompare(b.employee));
 
   const tbody = document.getElementById("attendanceSummaryBody");
-  tbody.innerHTML = "";
+  if (!tbody) return;
 
-  let totalPresent = 0;
-  let totalAbsent = 0;
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="16" class="p-2 text-center text-gray-500">${employees.length ? "No attendance for this period" : "No employees yet — add one in Payroll Hub → Employees"}</td></tr>`;
+  } else {
+    tbody.innerHTML = rows.map(r => `<tr>
+        <td class="p-2 border">${escapeHtml(r.employee)}</td>
+        <td class="p-2 border ${r.leaveDays ? 'text-yellow-700 font-semibold' : ''}">${r.leaveDays}</td>
+        <td class="p-2 border ${r.sickDays ? 'text-orange-700 font-semibold' : ''}">${r.sickDays}</td>
+        <td class="p-2 border ${r.absentDays ? 'text-red-600 font-semibold' : ''}">${r.absentDays}</td>
+        ${r.presentByMonth.map(n => `<td class="p-2 border text-center">${n}</td>`).join("")}
+      </tr>`).join("");
+  }
 
-  filtered.forEach(r => {
-    if (r.status === "Present") totalPresent++;
-    if (r.status === "Absent") totalAbsent++;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="p-2">${r.employee || ""}</td>
-      <td class="p-2">${r.date || ""}</td>
-      <td class="p-2">${r.status || ""}</td>
-      <td class="p-2">${r.checkIn || ""}</td>
-      <td class="p-2">${r.checkOut || ""}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
+  const totalPresent = rows.reduce((s, r) => s + r.presentByMonth.reduce((a, b) => a + b, 0), 0);
+  const totalException = rows.reduce((s, r) => s + r.leaveDays + r.sickDays + r.absentDays, 0);
   const presentEl = document.getElementById("attendancePresentTotal");
   const absentEl = document.getElementById("attendanceAbsentTotal");
 
   if (presentEl) presentEl.innerText = totalPresent;
-  if (absentEl) absentEl.innerText = totalAbsent;
+  if (absentEl) absentEl.innerText = totalException;
 }
 
 function toggleAttendanceSummaryGroupBy() {}
@@ -79039,7 +79471,7 @@ window.addEventListener(
   <p class="text-xs text-gray-600 mb-3">Allocate the plan based on the employee responsible for it.</p>
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
     <div><label class="block text-sm font-medium mb-1">Owner</label><select id="phOwner" class="border p-2 rounded w-full"></select></div>
-    <div><label class="block text-sm font-medium mb-1">Team (Ctrl-click for multiple)</label><select id="phTeam" class="border p-2 rounded w-full" multiple size="4"></select></div>
+    <div><label class="block text-sm font-medium mb-1">Team</label><select id="phTeam" class="border p-2 rounded w-full" multiple size="4"></select></div>
     <div><label class="block text-sm font-medium mb-1">Status</label><select id="phOwnStatus" class="border p-2 rounded w-full"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>On Hold</option></select></div>
     <div><label class="block text-sm font-medium mb-1">Assignment Date</label><input id="phOwnDate" type="date" class="border p-2 rounded w-full"></div>
   </div>
@@ -102169,6 +102601,7 @@ window.phGoStep = function(n){
   const wrap = g("phPlanPickerWrap");
   if(wrap) wrap.classList.toggle("hidden", n===1);
   if(n>1){ phFillPlanPicker(); phOnSelPlan(); }
+  if(n===2){ phFillOwnerSelects(); }
   if(n===6){ phFillExpCategory(); phFillExpBank(); }
 };
 
@@ -102251,11 +102684,17 @@ function phUsers(){
   if(me&&me.companyId) us=us.filter(u=>u.companyId===me.companyId);
   return us.map(u=>u.username);
 }
+function phEmployees(){
+  // Pull from Payroll Hub > Employees so Owner/Team always reflect payroll records
+  let emps=[]; try{ emps=JSON.parse(localStorage.getItem("employees")||"[]"); }catch(e){}
+  return emps.map(e=>e.name).filter(Boolean);
+}
 function phFillOwnerSelects(){
-  const names=phUsers();
+  const names=phEmployees();
   const opts = '<option value="">-- Select --</option>'+names.map(n=>`<option>${phEsc(n)}</option>`).join("");
   if(g("phOwner")) g("phOwner").innerHTML=opts;
   if(g("phTeam")) g("phTeam").innerHTML=names.map(n=>`<option>${phEsc(n)}</option>`).join("");
+  if (typeof window.axRefreshMultiSelect === "function") window.axRefreshMultiSelect("phTeam");
 }
 window.phAssignOwner = function(){
   const p=phCurPlan(); if(!p) return alert("Create/select a plan first.");
@@ -102580,6 +103019,127 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
 </script>
 
 <script>
+/* ===========================================================
+   Enhanced multi-select: turns a native <select multiple> into
+   a searchable, checkbox + chip picker while keeping the
+   original <select> fully in sync (so all existing code that
+   reads .selectedOptions / .value / .options keeps working
+   unchanged). Call axRefreshMultiSelect(id) any time the
+   underlying <select>'s options or selection are changed by
+   other code (repopulated list, programmatic selection, reset).
+   =========================================================== */
+(function(){
+  function esc(s){ const d=document.createElement("div"); d.textContent = s==null?"":String(s); return d.innerHTML; }
+
+  function enhance(selectId, opts){
+    opts = opts || {};
+    const sel = document.getElementById(selectId);
+    if(!sel || sel.dataset.axEnhanced) return;
+    sel.dataset.axEnhanced = "1";
+
+    const cssWidth = sel.style.width || "100%";
+    sel.style.display = "none";
+
+    const wrap = document.createElement("div");
+    wrap.className = "ax-ms-wrap relative";
+    wrap.style.width = cssWidth;
+    wrap.style.maxWidth = "100%";
+    sel.parentNode.insertBefore(wrap, sel.nextSibling);
+
+    const box = document.createElement("div");
+    box.className = "border rounded p-1.5 bg-white flex flex-wrap items-center gap-1 cursor-text focus-within:ring-2 focus-within:ring-blue-500";
+    box.style.minHeight = "42px";
+    wrap.appendChild(box);
+
+    const chipsHolder = document.createElement("div");
+    chipsHolder.className = "flex flex-wrap gap-1";
+    box.appendChild(chipsHolder);
+
+    const search = document.createElement("input");
+    search.type = "text";
+    search.autocomplete = "off";
+    search.placeholder = opts.placeholder || "Search & select…";
+    search.className = "flex-1 min-w-[120px] outline-none text-sm py-1 px-1";
+    box.appendChild(search);
+
+    const panel = document.createElement("div");
+    panel.className = "absolute z-50 bg-white border rounded shadow-lg mt-1 hidden";
+    panel.style.width = "100%";
+    panel.style.maxHeight = "224px";
+    panel.style.overflowY = "auto";
+    wrap.appendChild(panel);
+
+    function renderChips(){
+      chipsHolder.innerHTML = "";
+      Array.from(sel.selectedOptions).forEach(opt=>{
+        const chip = document.createElement("span");
+        chip.className = "inline-flex items-center gap-1 bg-blue-100 text-blue-900 text-xs font-medium pl-2 pr-1 py-0.5 rounded-full";
+        chip.innerHTML = `${esc(opt.textContent)} <button type="button" class="ax-ms-remove font-bold leading-none px-1 hover:text-red-600">&times;</button>`;
+        chip.querySelector(".ax-ms-remove").addEventListener("click", (e)=>{
+          e.stopPropagation();
+          opt.selected = false;
+          sel.dispatchEvent(new Event("change", {bubbles:true}));
+          renderChips(); renderPanel(search.value);
+        });
+        chipsHolder.appendChild(chip);
+      });
+    }
+
+    function renderPanel(filter){
+      filter = (filter||"").trim().toLowerCase();
+      panel.innerHTML = "";
+      let count = 0;
+      Array.from(sel.options).forEach(opt=>{
+        if(filter && !opt.textContent.toLowerCase().includes(filter)) return;
+        count++;
+        const row = document.createElement("label");
+        row.className = "flex items-center gap-2 px-3 py-1.5 hover:bg-blue-50 cursor-pointer text-sm";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.className = "cursor-pointer";
+        cb.checked = opt.selected;
+        cb.addEventListener("change", ()=>{
+          opt.selected = cb.checked;
+          sel.dispatchEvent(new Event("change", {bubbles:true}));
+          renderChips();
+        });
+        const span = document.createElement("span");
+        span.textContent = opt.textContent;
+        row.appendChild(cb); row.appendChild(span);
+        panel.appendChild(row);
+      });
+      if(!count){
+        panel.innerHTML = `<div class="px-3 py-2 text-sm text-gray-400">${sel.options.length ? "No matches" : (opts.emptyText || "Nothing to select yet")}</div>`;
+      }
+    }
+
+    function openPanel(){ renderPanel(search.value); panel.classList.remove("hidden"); }
+    search.addEventListener("focus", openPanel);
+    search.addEventListener("input", openPanel);
+    box.addEventListener("click", (e)=>{ if(e.target===box||e.target===chipsHolder) search.focus(); });
+    document.addEventListener("click", (e)=>{ if(!wrap.contains(e.target)) panel.classList.add("hidden"); });
+
+    sel._axRefresh = function(){ renderChips(); if(!panel.classList.contains("hidden")) renderPanel(search.value); };
+    renderChips();
+  }
+
+  window.axRefreshMultiSelect = function(id){
+    const sel = document.getElementById(id);
+    if(sel && typeof sel._axRefresh === "function") sel._axRefresh();
+  };
+
+  function init(){
+    enhance("bulkInvoiceCustomers", {placeholder:"Search customers…", emptyText:"No customers yet — add one in Sales Hub → Customer"});
+    enhance("bulkBillingSupplier", {placeholder:"Search suppliers…", emptyText:"No suppliers yet — add one in Purchase Hub → Supplier"});
+    enhance("phTeam", {placeholder:"Search employees…", emptyText:"No employees yet — add one in Payroll Hub → Employees"});
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+</script>
+
+<script>
+
 (function(){
   window.__netGuard = function(p, ms){
     if (!p || typeof p.then !== 'function') return Promise.resolve(null);
@@ -112419,6 +112979,7 @@ try{
     w.addEventListener("click", function(e){ if (e.target === w) closeModal(); });
     document.body.appendChild(w);
   }
+  window.__vxOpenModal = openModal;
 
   /* ==============================================================
      VAT DATA ENGINE — every source document, de-duplicated
@@ -112703,7 +113264,20 @@ try{
       host.appendChild(box);
     }
     var accounts = (LS("chartOfAccounts", []) || []);
-    var taxAccounts = accounts.filter(function (a){ return /vat|tax/i.test(String(a.name || "")); });
+    function vxNorm(v){ return String(v == null ? "" : v).trim().toLowerCase(); }
+    /* Same Chart-of-Accounts filter as the Purchase Hub's Tax Payment
+       "Chart of Accounts" picker (window.populateTaxTypeFromChartOfAccounts),
+       so both dropdowns always list the same accounts. */
+    var taxAccounts = accounts.filter(function (a){
+      var parent = vxNorm(a.parentName) + " " + vxNorm(a.parentCode) + " " + vxNorm(a.parentAccount);
+      return parent.indexOf("tax") !== -1;
+    });
+    if (!taxAccounts.length){
+      taxAccounts = accounts.filter(function (a){ return vxNorm(a.type).indexOf("tax") !== -1; });
+    }
+    if (!taxAccounts.length){
+      taxAccounts = accounts.filter(function (a){ return /vat|tax/i.test(String(a.name || "")); });
+    }
     if (!taxAccounts.length) taxAccounts = accounts;
     var banks = LS("banks", []) || [];
 
@@ -112718,13 +113292,16 @@ try{
         '<input type="date" id="vxVatDate" class="border px-2 py-1 rounded text-sm">' +
         '<select id="vxVatAccount" class="border px-2 py-1 rounded text-sm">' +
           taxAccounts.map(function (a){
-            return '<option value="' + esc(a.name) + '"' + (/vat/i.test(a.name) ? " selected" : "") + ">" + esc(a.name) + "</option>";
+            return '<option value="' + esc(a.name) + '"' + (/vat/i.test(a.name) ? " selected" : "") + ">" + esc(a.name) + (a.code ? " (" + esc(a.code) + ")" : "") + "</option>";
           }).join("") + "</select>" +
         '<select id="vxVatMethod" class="border px-2 py-1 rounded text-sm">' +
-          ["Bank Transfer","Bank Remittance","M-Pesa","Cheque","Cash","Electronic Funds Transfer (EFT)","RTGS / SWIFT Transfer"]
-            .map(function (m){ return '<option value="' + m + '">' + m + "</option>"; }).join("") + "</select>" +
+          ["Bank Remittance","Bank Transfer","Cash","Cheque","Credit Card","Debit Card","M-Pesa","Airtel Money","T-Kash",
+           "Online Payment / Payment Gateway","Standing Order","Direct Debit","Withholding Tax","Withholding VAT","Write-off",
+           "Mobile Banking","Demand Draft","Electronic Funds Transfer (EFT)","RTGS / SWIFT Transfer","Cash on Delivery (COD)",
+           "PayPal","Stripe","Google Pay","Apple Pay","Venmo","Zelle","Western Union","MoneyGram","Cryptocurrency","Gift Card","UPI"]
+            .map(function (m){ return '<option value="' + esc(m) + '">' + esc(m) + "</option>"; }).join("") + "</select>" +
         '<select id="vxVatBank" class="border px-2 py-1 rounded text-sm">' +
-          banks.map(function (b, i){ return '<option value="' + i + '">' + esc(b.name) + "</option>"; }).join("") + "</select>" +
+          banks.map(function (b, i){ return '<option value="' + i + '">' + esc(b.name) + (b.currency ? " (" + esc(b.currency) + ")" : "") + "</option>"; }).join("") + "</select>" +
         '<input type="number" step="0.01" id="vxVatAmount" placeholder="Amount" class="border px-2 py-1 rounded text-sm" value="' +
           (payable - paid > 0 ? (payable - paid).toFixed(2) : "") + '">' +
         '<input type="text" id="vxVatRef" placeholder="Reference" class="border px-2 py-1 rounded text-sm">' +
@@ -112737,6 +113314,7 @@ try{
     }
     if (!el("vxVatDate").value) el("vxVatDate").value = new Date().toISOString().slice(0, 10);
     renderVatPaymentsList();
+    try { if (typeof window.displayFiledInfo === "function") window.displayFiledInfo(); } catch (e) {}
   }
 
   function renderVatPaymentsList(){
@@ -121400,5 +121978,491 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
+})();
+</script>
+
+
+<!-- ===================================================================
+     ACACIA BOOKS — VAT PAYMENT + VAT CREDIT CARRY-FORWARD + MONTHLY FILING
+     A) VAT Summary "Record VAT Payment" now posts through the same engine
+        as the Tax Payments submodule (bank, journal, transactions,
+        Tax Payment History table) without needing that tab to be open.
+     B) Month-end negative balance is treated as a VAT credit carried
+        forward to the next month (never a payment).
+     C) Monthly filing report: month picker (VAT3 style) + month-by-month
+        table, with Excel download and print.
+     =================================================================== -->
+<style id="axVatFilingStyles">
+#axVatFilingBox table{width:100%;border-collapse:collapse;font-size:13px}
+#axVatFilingBox th,#axVatFilingBox td{border:1px solid #cbd5e1;padding:5px 8px}
+#axVatFilingBox thead th{background:#1e3a8a;color:#fff;text-align:left}
+#axVatFilingBox tr.ax-tot{background:#f1f5f9;font-weight:700}
+#axVatFilingBox .ax-cr{color:#047857;font-weight:700}
+#axVatFilingBox .ax-dr{color:#b91c1c;font-weight:700}
+.ax-btn{background:#1e3a8a;color:#fff;font-weight:600;font-size:13px;padding:6px 12px;border-radius:6px;cursor:pointer}
+.ax-btn:hover{background:#facc15;color:#000}
+</style>
+<script>
+(function () {
+  "use strict";
+
+  function el(id){ return document.getElementById(id); }
+  function num(v){ var n = parseFloat(String(v == null ? 0 : v).replace(/[^0-9.\-]/g, "")); return isNaN(n) ? 0 : n; }
+  function fmt(v){ return Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function LS(k, d){ try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function (c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+  function monthKey(d){ return String(d || "").slice(0, 7); }
+  function monthLabel(mk){
+    if (!/^\d{4}-\d{2}$/.test(mk)) return mk || "—";
+    var names = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    return names[(+mk.slice(5, 7)) - 1] + " " + mk.slice(0, 4);
+  }
+  function monthEnd(mk){
+    var y = +mk.slice(0, 4), m = +mk.slice(5, 7);
+    return mk + "-" + String(new Date(y, m, 0).getDate()).padStart(2, "0");
+  }
+  function isVatType(t){ return /vat/i.test(String(t || "")); }
+
+  /* ==============================================================
+     A) Shared tax-payment engine (no dependency on the tab's DOM)
+     ============================================================== */
+  window.recordTaxPaymentDirect = function (p){
+    var date = String(p.date || "").slice(0, 10);
+    var type = String(p.type || "").trim();
+    var method = String(p.method || "").trim();
+    var amount = num(p.amount);
+    var reference = String(p.reference || "").trim();
+    var bankIndex = p.bankIndex;
+
+    if (!date || !type || !method || bankIndex === "" || bankIndex == null || !amount){
+      return { ok: false, error: "Please complete date, tax account, payment mode, bank and a non-zero amount." };
+    }
+
+    var banks = LS("banks", []) || [];
+    var bank = banks[bankIndex];
+    if (!bank) return { ok: false, error: "Bank not found. Set up a bank in the Funds Hub first." };
+
+    var accounts = LS("chartOfAccounts", []) || [];
+    var acct = accounts.filter(function (a){ return a.name === type; })[0];
+    var acctName = acct ? acct.name : type;
+
+    var taxPayments = LS("taxPayments", []) || [];
+    var manualTransactions = LS("manualTransactions", []) || [];
+    var allTransactions = LS("transactions", []) || [];
+    var journals = LS("manualJournals", []) || [];
+
+    var paymentId = Date.now();
+    var refText = reference || ("Tax Payment (" + acctName + ") via " + method);
+
+    taxPayments.push({
+      id: paymentId, date: date, type: acctName, method: method,
+      bankIndex: bankIndex, amount: amount, reference: refText,
+      source: p.source || "taxPayment",
+      taxPeriod: p.taxPeriod || monthKey(date)
+    });
+
+    bank.balance = num(bank.balance) - amount;
+
+    manualTransactions.push({
+      id: paymentId, date: date, bank: bank.name, amount: amount, type: acctName,
+      account: acctName, ref: refText, source: "taxPayment",
+      direction: "Withdraw", taxPaymentId: paymentId
+    });
+
+    allTransactions.push({
+      id: "TXN-" + paymentId, date: date, bank: bank.name, type: "Withdraw",
+      amount: amount, ref: refText, taxPaymentId: paymentId
+    });
+
+    journals.push({
+      id: "Tax Payment-" + paymentId,
+      date: date,
+      description: "Tax Payment - " + acctName,
+      postedBy: "System",
+      source: "Tax Payment",
+      entries: [
+        { account: acctName, debit: amount, credit: 0 },
+        { account: bank.name, debit: 0, credit: amount }
+      ]
+    });
+
+    save("taxPayments", taxPayments);
+    save("manualTransactions", manualTransactions);
+    save("transactions", allTransactions);
+    save("banks", banks);
+    save("manualJournals", journals);
+
+    ["renderTaxPayments","renderManualTransactions","renderReconciliationTransactions","loadBanks","loadTransactions"]
+      .forEach(function (fn){ try { if (typeof window[fn] === "function") window[fn](); } catch (e) {} });
+
+    return { ok: true, id: paymentId, payment: taxPayments[taxPayments.length - 1] };
+  };
+
+  /* --- VAT Summary save button now uses that engine --- */
+  window.__vxSaveVatPayment = function (){
+    var res = window.recordTaxPaymentDirect({
+      date: el("vxVatDate") ? el("vxVatDate").value : "",
+      type: el("vxVatAccount") ? el("vxVatAccount").value : "",
+      method: el("vxVatMethod") ? el("vxVatMethod").value : "",
+      bankIndex: el("vxVatBank") ? el("vxVatBank").value : "",
+      amount: el("vxVatAmount") ? el("vxVatAmount").value : "",
+      reference: el("vxVatRef") ? el("vxVatRef").value : "",
+      taxPeriod: el("axFilingMonth") && el("axFilingMonth").value ? el("axFilingMonth").value
+                 : monthKey(el("vxVatDate") ? el("vxVatDate").value : "")
+    });
+    if (!res.ok){ alert("⚠️ " + res.error); return; }
+    if (el("vxVatRef")) el("vxVatRef").value = "";
+    if (el("vxVatAmount")) el("vxVatAmount").value = "";
+    alert("✅ VAT payment recorded. It now appears in Tax Payments (Tax Payment History).");
+    try { window.renderVatSummary && window.renderVatSummary(); } catch (e) {}
+    try { window.__vxRenderAll && window.__vxRenderAll(); } catch (e) {}
+    try { window.displayFiledInfo && window.displayFiledInfo(); } catch (e) {}
+    renderFiling(true);
+  };
+
+  /* ==============================================================
+     B) Monthly VAT ledger with credit carried forward
+     ============================================================== */
+  function allVatLines(){
+    var ids = ["vatSummaryMonth", "vatStartDate", "vatEndDate"];
+    var stash = ids.map(function (id){ var n = el(id); return n ? n.value : null; });
+    ids.forEach(function (id){ var n = el(id); if (n) n.value = ""; });
+    var d = { salesLines: [], purchaseLines: [] };
+    try { if (typeof window.__vatEngine === "function") d = window.__vatEngine(); } catch (e) {}
+    ids.forEach(function (id, i){ var n = el(id); if (n && stash[i] != null) n.value = stash[i]; });
+    return d;
+  }
+
+  window.__vatMonthlyLedger = function (){
+    var d = allVatLines();
+    var months = {};
+    function bump(mk, field, v){
+      if (!mk) return;
+      months[mk] = months[mk] || { month: mk, output: 0, input: 0, paid: 0, salesNet: 0, purchaseNet: 0 };
+      months[mk][field] += v;
+    }
+    (d.salesLines || []).forEach(function (l){ bump(monthKey(l.date), "output", num(l.vat)); bump(monthKey(l.date), "salesNet", num(l.net)); });
+    (d.purchaseLines || []).forEach(function (l){ bump(monthKey(l.date), "input", num(l.vat)); bump(monthKey(l.date), "purchaseNet", num(l.net)); });
+    (LS("taxPayments", []) || []).forEach(function (t){
+      if (!isVatType(t.type)) return;
+      bump(t.taxPeriod && /^\d{4}-\d{2}$/.test(t.taxPeriod) ? t.taxPeriod : monthKey(t.date), "paid", num(t.amount));
+    });
+
+    var keys = Object.keys(months).sort();
+    var creditBf = 0;
+    var rows = keys.map(function (k){
+      var m = months[k];
+      var net = m.output - m.input;                 // month movement
+      var afterBf = net - creditBf;                 // apply credit brought forward
+      var payable = afterBf > 0 ? afterBf : 0;      // VAT due to KRA
+      var creditCf = afterBf < 0 ? -afterBf : 0;    // nothing payable -> carry credit forward
+      var usedBf = creditBf - creditCf;             // portion of the b/f credit absorbed this month
+      if (usedBf < 0) usedBf = 0;
+      var balance = payable - m.paid;               // still to pay after payments made
+      var row = {
+        month: k, label: monthLabel(k),
+        salesNet: m.salesNet, purchaseNet: m.purchaseNet,
+        output: m.output, input: m.input, net: net,
+        creditBf: creditBf, creditUsed: usedBf,
+        payable: payable, paid: m.paid, balance: balance,
+        creditCf: creditCf
+      };
+      creditBf = creditCf;
+      return row;
+    });
+    return { rows: rows, byMonth: months, closingCredit: creditBf };
+  };
+
+  function ledgerRow(mk){
+    var led = window.__vatMonthlyLedger();
+    var hit = led.rows.filter(function (r){ return r.month === mk; })[0];
+    if (hit) return { row: hit, ledger: led };
+    // month with no activity: credit from the latest earlier month rolls in untouched
+    var prior = led.rows.filter(function (r){ return r.month < mk; });
+    var bf = prior.length ? prior[prior.length - 1].creditCf : 0;
+    return {
+      row: { month: mk, label: monthLabel(mk), salesNet: 0, purchaseNet: 0, output: 0, input: 0, net: 0,
+             creditBf: bf, creditUsed: 0, payable: 0, paid: 0, balance: 0, creditCf: bf },
+      ledger: led
+    };
+  }
+  window.__vatFilingForMonth = function (mk){ return ledgerRow(mk).row; };
+
+  /* ==============================================================
+     C.1) Month-by-month drilldown (click a month or an amount)
+     ============================================================== */
+  function monthDrillTable(rows, kind){
+    var total = rows.reduce(function (a, r){ return a + r.net; }, 0);
+    var totalVat = rows.reduce(function (a, r){ return a + r.vat; }, 0);
+    var body = rows.length ? rows.map(function (r){
+      return "<tr>" +
+        "<td>" + esc(r.date) + "</td>" +
+        "<td>" + esc(r.source) + "</td>" +
+        "<td>" + esc(r.doc) + "</td>" +
+        "<td>" + esc(r.party) + "</td>" +
+        "<td>" + esc(r.desc) + "</td>" +
+        '<td style="text-align:right">' + r.rate + "</td>" +
+        '<td style="text-align:right">' + fmt(r.net) + "</td>" +
+        '<td style="text-align:right">' + fmt(r.vat) + "</td></tr>";
+    }).join("") : '<tr><td colspan="8" style="text-align:center;color:#64748b">No documents in this box for the month.</td></tr>';
+    return '<div style="max-height:60vh;overflow:auto"><table><thead><tr>' +
+      ["Date","Source","Document No.","Customer / Supplier","Description","Rate (%)","Amount (Excl. VAT)",
+       kind === "input" ? "Input VAT" : "Output VAT"].map(function (h){ return "<th>" + h + "</th>"; }).join("") +
+      "</tr></thead><tbody>" + body + "</tbody>" +
+      '<tfoot><tr class="ax-tot"><td colspan="6">Total</td><td style="text-align:right">' + fmt(total) +
+      '</td><td style="text-align:right">' + fmt(totalVat) + "</td></tr></tfoot></table></div>";
+  }
+
+  function monthPaymentsTable(mk){
+    var banks = LS("banks", []) || [];
+    var pays = (LS("taxPayments", []) || []).filter(function (t){
+      if (!isVatType(t.type)) return false;
+      return (t.taxPeriod && /^\d{4}-\d{2}$/.test(t.taxPeriod) ? t.taxPeriod : monthKey(t.date)) === mk;
+    });
+    var total = pays.reduce(function (a, t){ return a + num(t.amount); }, 0);
+    var body = pays.length ? pays.map(function (t){
+      var bank = banks[t.bankIndex];
+      return "<tr><td>" + esc(t.date) + "</td><td>" + esc(t.type) + "</td><td>" + esc(t.method) + "</td>" +
+        "<td>" + esc(bank ? bank.name : "") + "</td><td>" + esc(t.reference) + "</td>" +
+        '<td style="text-align:right">' + fmt(num(t.amount)) + "</td></tr>";
+    }).join("") : '<tr><td colspan="6" style="text-align:center;color:#64748b">No VAT payments recorded for this month.</td></tr>';
+    return '<div style="max-height:60vh;overflow:auto"><table><thead><tr>' +
+      ["Date","Tax Account","Method","Paid Through","Reference","Amount"].map(function (h){ return "<th>" + h + "</th>"; }).join("") +
+      "</tr></thead><tbody>" + body + '</tbody><tfoot><tr class="ax-tot"><td colspan="5">Total</td><td style="text-align:right">' +
+      fmt(total) + "</td></tr></tfoot></table></div>";
+  }
+
+  window.__axMonthDrill = function (mk, kind){
+    var d = allVatLines();
+    var label = monthLabel(mk);
+    if (kind === "output"){
+      var lines = (d.salesLines || []).filter(function (l){ return monthKey(l.date) === mk; });
+      if (typeof window.__vxOpenModal === "function") window.__vxOpenModal("Output VAT — " + esc(label), monthDrillTable(lines, "output"));
+    } else if (kind === "input"){
+      var plines = (d.purchaseLines || []).filter(function (l){ return monthKey(l.date) === mk; });
+      if (typeof window.__vxOpenModal === "function") window.__vxOpenModal("Input VAT — " + esc(label), monthDrillTable(plines, "input"));
+    } else if (kind === "paid"){
+      if (typeof window.__vxOpenModal === "function") window.__vxOpenModal("VAT Paid — " + esc(label), monthPaymentsTable(mk));
+    }
+  };
+
+  /* Jump the "VAT return" section above to a given month */
+  window.__axGoToMonth = function (mk){
+    var picker = el("axFilingMonth");
+    if (picker) picker.value = mk;
+    renderFiling(true);
+    var area = el("axFilingPrintArea");
+    if (area) area.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  /* ==============================================================
+     C) Monthly filing report UI
+     ============================================================== */
+  function host(){
+    var anchor = el("vxVatPayBox") || el("vatNet");
+    if (!anchor) return null;
+    var parent = el("vxVatPayBox") ? el("vxVatPayBox").parentNode
+               : (el("vatNet").closest(".report-view") || el("vatNet").parentNode);
+    return parent || null;
+  }
+
+  function defaultMonth(){
+    if (el("vatSummaryMonth") && el("vatSummaryMonth").value) return el("vatSummaryMonth").value;
+    var led = window.__vatMonthlyLedger();
+    if (led.rows.length) return led.rows[led.rows.length - 1].month;
+    return new Date().toISOString().slice(0, 7);
+  }
+
+  function filingRows(r){
+    return [
+      ["Total taxable sales (excl. VAT)", r.salesNet, ""],
+      ["Output VAT (VAT on sales)", r.output, ""],
+      ["Total purchases (excl. VAT)", r.purchaseNet, ""],
+      ["Input VAT (VAT on purchases)", r.input, ""],
+      ["Net VAT for the month (Output − Input)", r.net, "tot"],
+      ["Credit brought forward from previous month", r.creditBf, ""],
+      ["Credit utilised this month", r.creditUsed, ""],
+      [r.payable > 0 ? "VAT payable for the month" : "No VAT payable this month", r.payable, "tot"],
+      ["VAT already paid for this month", r.paid, ""],
+      ["Balance still to pay", r.balance > 0 ? r.balance : 0, "tot"],
+      ["Credit carried forward to next month", r.creditCf, "tot"]
+    ];
+  }
+
+  function renderFiling(force){
+    var h = host();
+    if (!h) return;
+    var box = el("axVatFilingBox");
+    if (!box){
+      box = document.createElement("div");
+      box.id = "axVatFilingBox";
+      box.className = "mt-6 border-t pt-4";
+      h.appendChild(box);
+    } else if (h !== box.parentNode){
+      h.appendChild(box);
+    }
+    var mk = (el("axFilingMonth") && el("axFilingMonth").value) || defaultMonth();
+    if (!force && box.getAttribute("data-m") === mk && box.getAttribute("data-stamp") === stamp()) return;
+    box.setAttribute("data-m", mk);
+    box.setAttribute("data-stamp", stamp());
+
+    var res = ledgerRow(mk);
+    var r = res.row, led = res.ledger;
+
+    var filing = filingRows(r).map(function (x){
+      return '<tr class="' + (x[2] === "tot" ? "ax-tot" : "") + '"><td>' + esc(x[0]) + "</td>" +
+             '<td style="text-align:right">' + fmt(x[1]) + "</td></tr>";
+    }).join("");
+
+    var verdict = r.payable > 0
+      ? '<span class="ax-dr">Pay KES ' + fmt(r.balance > 0 ? r.balance : 0) + " for " + esc(r.label) + (r.balance <= 0 ? " (already settled)" : "") + "</span>"
+      : '<span class="ax-cr">Nothing to pay for ' + esc(r.label) + " — VAT credit of KES " + fmt(r.creditCf) + " carried forward to " + esc(nextLabel(mk)) + "</span>";
+
+    var monthly = led.rows.length ? led.rows.map(function (x){
+      return "<tr" + (x.month === mk ? ' style="background:#fef9c3"' : "") + "><td><span class=\"vx-link\" onclick=\"__axGoToMonth('" + x.month + "')\">" + esc(x.label) + "</span></td>" +
+        '<td style="text-align:right">' + (x.output ? '<span class="vx-link" onclick="__axMonthDrill(\'' + x.month + '\',\'output\')">' + fmt(x.output) + '</span>' : fmt(x.output)) + "</td>" +
+        '<td style="text-align:right">' + (x.input ? '<span class="vx-link" onclick="__axMonthDrill(\'' + x.month + '\',\'input\')">' + fmt(x.input) + '</span>' : fmt(x.input)) + "</td>" +
+        '<td style="text-align:right">' + fmt(x.net) + "</td>" +
+        '<td style="text-align:right">' + fmt(x.creditBf) + "</td>" +
+        '<td style="text-align:right">' + fmt(x.payable) + "</td>" +
+        '<td style="text-align:right">' + (x.paid ? '<span class="vx-link" onclick="__axMonthDrill(\'' + x.month + '\',\'paid\')">' + fmt(x.paid) + '</span>' : fmt(x.paid)) + "</td>" +
+        '<td style="text-align:right">' + fmt(x.balance > 0 ? x.balance : 0) + "</td>" +
+        '<td style="text-align:right" class="' + (x.creditCf ? "ax-cr" : "") + '">' + fmt(x.creditCf) + "</td>" +
+        '<td>' + (x.payable > 0 ? (x.balance > 0 ? "To pay" : "Paid") : "Credit c/f") + "</td></tr>";
+    }).join("") : '<tr><td colspan="10" style="text-align:center;color:#64748b">No VAT documents captured yet.</td></tr>';
+
+    box.innerHTML =
+      '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px">' +
+        '<h3 class="text-lg font-bold">🧾 Monthly VAT Return (for filing)</h3>' +
+        '<input type="month" id="axFilingMonth" value="' + esc(mk) + '" class="border px-2 py-1 rounded text-sm">' +
+        '<button class="ax-btn" onclick="__axFilingMonthChange()">Show month</button>' +
+        '<button class="ax-btn" onclick="__axExportFilingMonth()">⬇️ Download this month (Excel)</button>' +
+        '<button class="ax-btn" onclick="__axExportFilingAll()">⬇️ Download month-by-month</button>' +
+        '<button class="ax-btn" onclick="__axPrintFiling()">🖨 Print return</button>' +
+      "</div>" +
+      '<div style="margin-bottom:10px">' + verdict + "</div>" +
+      '<div id="axFilingPrintArea">' +
+        '<h4 class="font-semibold mb-1">VAT return — ' + esc(r.label) + " (period " + esc(mk + "-01") + " to " + esc(monthEnd(mk)) + ")</h4>" +
+        '<table><thead><tr><th>Description</th><th style="text-align:right">KES</th></tr></thead><tbody>' + filing + "</tbody></table>" +
+      "</div>" +
+      '<h4 class="font-semibold mt-5 mb-1">Month-by-month VAT position (credit carried forward automatically)</h4>' +
+      "<table><thead><tr>" +
+      ["Month","Output VAT","Input VAT","Net for month","Credit b/f","VAT payable","Paid","Balance to pay","Credit c/f","Status"]
+        .map(function (x){ return "<th>" + x + "</th>"; }).join("") +
+      "</tr></thead><tbody>" + monthly + "</tbody></table>" +
+      '<p style="font-size:12px;color:#475569;margin-top:8px">A negative month (input VAT above output VAT) is never treated as a payment — ' +
+      "it is held as a VAT credit and set off against the next month's VAT payable.</p>";
+
+    syncPayBox(r);
+  }
+  window.__axRenderFiling = function (){ renderFiling(true); };
+
+  function nextLabel(mk){
+    var y = +mk.slice(0, 4), m = +mk.slice(5, 7) + 1;
+    if (m > 12){ m = 1; y += 1; }
+    return monthLabel(y + "-" + String(m).padStart(2, "0"));
+  }
+
+  /* Keep the "Record VAT Payment" box honest about credits */
+  function syncPayBox(r){
+    var amt = el("vxVatAmount");
+    if (amt && !amt.__axTouched){
+      var due = r.balance > 0 ? r.balance : 0;
+      amt.value = due ? due.toFixed(2) : "";
+      amt.addEventListener("input", function (){ amt.__axTouched = 1; }, { once: true });
+    }
+    var d = el("vxVatDate");
+    if (d && !d.value) d.value = monthEnd(r.month);
+    var btn = el("vxVatPayBox") ? el("vxVatPayBox").querySelector("button[onclick*='__vxSaveVatPayment']") : null;
+    if (btn){
+      if (r.payable <= 0){
+        btn.setAttribute("title", "No VAT payable for " + r.label + " — credit carried forward.");
+      } else {
+        btn.removeAttribute("title");
+      }
+    }
+  }
+
+  window.__axFilingMonthChange = function (){ renderFiling(true); };
+
+  window.__axExportFilingMonth = function (){
+    var mk = (el("axFilingMonth") && el("axFilingMonth").value) || defaultMonth();
+    var r = ledgerRow(mk).row;
+    var rows = filingRows(r).map(function (x){ return [x[0], num(x[1])]; });
+    if (typeof window.__vxExportExcel === "function"){
+      window.__vxExportExcel("VAT_Return_" + mk, "VAT Return — " + r.label, ["Description", "KES"], rows);
+    }
+  };
+
+  window.__axExportFilingAll = function (){
+    var led = window.__vatMonthlyLedger();
+    var rows = led.rows.map(function (x){
+      return [x.label, num(x.output), num(x.input), num(x.net), num(x.creditBf), num(x.payable),
+              num(x.paid), num(x.balance > 0 ? x.balance : 0), num(x.creditCf),
+              x.payable > 0 ? (x.balance > 0 ? "To pay" : "Paid") : "Credit c/f"];
+    });
+    if (typeof window.__vxExportExcel === "function"){
+      window.__vxExportExcel("VAT_Monthly_Position", "VAT month-by-month position",
+        ["Month","Output VAT","Input VAT","Net for month","Credit b/f","VAT payable","Paid","Balance to pay","Credit c/f","Status"], rows);
+    }
+  };
+
+  window.__axPrintFiling = function (){
+    var area = el("axFilingPrintArea");
+    if (!area) return;
+    var w = window.open("", "_blank", "width=900,height=700");
+    if (!w) return;
+    w.document.write('<html><head><title>VAT Return</title><style>' +
+      "body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse;font-size:13px}" +
+      "th,td{border:1px solid #999;padding:6px}thead th{background:#1e3a8a;color:#fff;text-align:left}" +
+      "</style></head><body>" + area.innerHTML + "</body></html>");
+    w.document.close();
+    w.focus();
+    setTimeout(function (){ try { w.print(); } catch (e) {} }, 300);
+  };
+
+  /* ---------- refresh plumbing ---------- */
+  function stamp(){
+    return [localStorage.getItem("taxPayments") || "", localStorage.getItem("invoices") || "",
+            localStorage.getItem("bills") || "", localStorage.getItem("operationalCosts") || ""]
+      .map(function (s){ return s.length; }).join("|");
+  }
+
+  function tick(){
+    if (!el("vatNet")) return;
+    if (!el("vxVatPayBox") && !el("vatNet")) return;
+    try { wrapHosts(); } catch (e) {}
+    try { renderFiling(false); } catch (e) { console.warn("[vat filing]", e); }
+  }
+
+  function wrapHosts(){
+    ["renderVatSummary", "renderTaxPayments", "addTaxPayment", "deleteTaxPayment", "editTaxPayment",
+     "showReport", "showTab", "renderReports"].forEach(function (name){
+      var orig = window[name];
+      if (typeof orig !== "function" || orig.__axWrapped) return;
+      var w = function (){
+        var res = orig.apply(this, arguments);
+        setTimeout(function (){ try { renderFiling(true); } catch (e) {} }, 60);
+        return res;
+      };
+      w.__axWrapped = 1;
+      window[name] = w;
+    });
+  }
+
+  function boot(){
+    wrapHosts();
+    setInterval(tick, 6000);
+    [0, 400, 1200, 2500, 5000].forEach(function (ms){ setTimeout(tick, ms); });
+    document.addEventListener("click", function (){ setTimeout(tick, 120); }, true);
+    tick();
+  }
+
+  var booted = false;
+  function bootOnce(){ if (booted) return; booted = true; try { boot(); } catch (e) { console.warn("[vat filing boot]", e); } }
+  [500, 1500, 2500].forEach(function (ms){ setTimeout(bootOnce, ms); });
+  document.addEventListener("readystatechange", function (){ if (document.readyState === "complete") bootOnce(); });
+  window.addEventListener("load", bootOnce);
 })();
 </script>
