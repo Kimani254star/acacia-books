@@ -2214,16 +2214,41 @@ async function login(identifier, password) {
     return;
   }
 
+  // Assign a companyId the FIRST time only, and persist it back into the
+  // "users" list. If this isn't saved back, every login on a new device
+  // would generate a brand-new companyId and the account would never
+  // reconnect to its existing cloud data.
   if (!found.companyId) {
     found.companyId = "comp_" + Date.now();
+    const updatedUsers = users.map(u => {
+      const match =
+        (u.email && found.email && u.email === found.email) ||
+        (u.username && found.username && u.username === found.username);
+      return match ? found : u;
+    });
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
   }
 
   localStorage.setItem("loggedInUser", JSON.stringify(found));
 
+  // Pull/push this account's cloud data BEFORE showing the app, so the
+  // same email on a different browser/device loads the same records
+  // instead of starting from a blank local company.
   await window.startCloudSync?.();
+
+  const companyKeys = [
+    "bills", "invoices", "customers", "suppliers",
+    "expenses", "inventory", "payroll", "taxes", "banks"
+  ];
+  companyKeys.forEach(key => {
+    if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, JSON.stringify([]));
+    }
+  });
 
   alert(`✅ Welcome ${found.fullName || found.username}`);
 
+  if (typeof checkUserAccess === "function") checkUserAccess();
   showApp();
 }
 function getLoggedInUser() {
@@ -2437,68 +2462,6 @@ function showApp() {
       `Welcome, ${loggedIn.fullName} (${loggedIn.plan} plan)`;
     renderTabsBasedOnPlan(loggedIn.plan);
   }
-}
-
-function login(identifier, password) {
-
-  const stored =
-    JSON.parse(localStorage.getItem("users") || "[]");
-
-  const id = identifier.trim().toLowerCase();
-
-  const user =
-    stored.find(u => {
-
-      const email = (u.email || "").trim().toLowerCase();
-      const username = (u.username || "").trim().toLowerCase();
-
-      return (email === id || username === id) && u.password === password.trim();
-    });
-
-  if (!user) {
-    alert("❌ Invalid username/email or password.");
-    return;
-  }
-
-  if (!user.companyId) {
-    user.companyId = "comp_" + Date.now();
-
-    const updatedUsers = stored.map(u => {
-      const match =
-        (u.email && user.email && u.email === user.email) ||
-        (u.username && user.username && u.username === user.username);
-
-      return match ? user : u;
-    });
-
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-  }
-
-  localStorage.setItem("loggedInUser", JSON.stringify(user));
-
-  const companyKeys = [
-    "bills",
-    "invoices",
-    "customers",
-    "suppliers",
-    "expenses",
-    "inventory",
-    "payroll",
-    "taxes",
-    "banks"
-  ];
-
-  companyKeys.forEach(key => {
-    if (!localStorage.getItem(key)) {
-      localStorage.setItem(key, JSON.stringify([]));
-    }
-  });
-
-
-  alert(`✅ Welcome back, ${user.fullName || user.username}`);
-
-  if (typeof checkUserAccess === "function") checkUserAccess();
-  if (typeof showApp === "function") showApp();
 }
 
 setTimeout(() => {
@@ -86734,7 +86697,7 @@ RevenueModule.refresh();
 </div>
 </div></div>
 
-<nav class="op-nav"><a href="#" data-op-target="opBasicInfo" onclick="return opShowSection('opBasicInfo')">🏢 Basic Info</a><a href="#" data-op-target="opContacts" onclick="return opShowSection('opContacts')">📇 Contacts &amp; Industry</a><a href="#" data-op-target="opSettings" onclick="return opShowSection('opSettings')">🌍 Regional &amp; Financial</a><a href="#" data-op-target="opCustomFields" onclick="return opShowSection('opCustomFields')">🧩 Custom Fields</a><a href="#" data-op-target="opSubsidiaries" onclick="return opShowSection('opSubsidiaries')">🏬 Subsidiaries</a><a href="#" data-op-target="acxBrandingSection" onclick="return opShowSection('acxBrandingSection')">🎨 Branding</a><a href="#" data-op-target="acxDomainSection" onclick="return opShowSection('acxDomainSection')">🌐 Domain</a><a href="#" data-op-target="acxSubscriptionSection" onclick="return opShowSection('acxSubscriptionSection')">💳 Subscription</a></nav>
+<nav class="op-nav"><a href="#" data-op-target="opBasicInfo" onclick="return opShowSection('opBasicInfo')">🏢 Basic Info</a><a href="#" data-op-target="opContacts" onclick="return opShowSection('opContacts')">📇 Contacts &amp; Industry</a><a href="#" data-op-target="opSettings" onclick="return opShowSection('opSettings')">🌍 Regional &amp; Financial</a><a href="#" data-op-target="opCustomFields" onclick="return opShowSection('opCustomFields')">🧩 Custom Fields</a><a href="#" data-op-target="opSubsidiaries" onclick="return opShowSection('opSubsidiaries')">🏬 Subsidiaries</a><a href="#" data-op-target="acxBrandingSection" onclick="return opShowSection('acxBrandingSection')">🎨 Branding</a><a href="#" data-op-target="acxDomainSection" onclick="return opShowSection('acxDomainSection')">🌐 Domain</a><a href="#" data-op-target="acxSubscriptionSection" onclick="return opShowSection('acxSubscriptionSection')">💳 Subscription</a><a href="#" data-op-target="acxGoogleBackupSection" onclick="return opShowSection('acxGoogleBackupSection')">🔗 Google Backup</a></nav>
 
 <form id="orgProfileForm">
 
@@ -86797,12 +86760,23 @@ RevenueModule.refresh();
 <button type="button" onclick="addSubsidiaryField()" class="op-addbtn">+ Add Another Subsidiary</button>
 </div>
 
+<div id="acxGoogleBackupSection" class="op-card" style="display:none"><div class="op-card-head"><div class="op-card-icon">🔗</div><div><div class="op-card-title">Google Backup &amp; Sync</div><div class="op-card-sub">Keep this company's data backed up to the Google account matching your login email</div></div></div>
+<div id="gsyncSettingsStatus" class="mb-3 text-sm text-gray-600">Not linked yet</div>
+<div class="flex flex-wrap gap-2">
+<button type="button" id="gsyncSettingsConnectBtn" class="op-addbtn">🔌 Connect Google Account</button>
+<button type="button" id="gsyncSettingsBackupBtn" class="op-addbtn" style="display:none">⬆️ Back up now</button>
+<button type="button" id="gsyncSettingsRestoreBtn" class="op-addbtn" style="display:none">⬇️ Restore from Drive</button>
+<button type="button" id="gsyncSettingsDisconnectBtn" class="op-addbtn" style="display:none">✖ Disconnect</button>
+</div>
+<p class="op-hint mt-2">Once connected here, saving anywhere in the app automatically backs up to Google in the background — you won't be asked to connect again on this browser unless you disconnect or clear your browser data.</p>
+</div>
+
 <div class="op-savebar"><div class="text-xs text-gray-500">Changes are saved locally to this organization's profile.</div><button type="button" onclick="saveOrgInfo()" class="op-savebtn">💾 Save Organization Info</button></div>
 
 </form>
 <script>
 (function(){
-  var OP_PAGES = ['opBasicInfo','opContacts','opSettings','opCustomFields','opSubsidiaries','acxBrandingSection','acxDomainSection','acxSubscriptionSection'];
+  var OP_PAGES = ['opBasicInfo','opContacts','opSettings','opCustomFields','opSubsidiaries','acxBrandingSection','acxDomainSection','acxSubscriptionSection','acxGoogleBackupSection'];
   var opActive = 'opBasicInfo';
   function opApply(){
     OP_PAGES.forEach(function(id){
@@ -122466,3 +122440,637 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   window.addEventListener("load", bootOnce);
 })();
 </script>
+
+
+<script>
+/* =====================================================================
+   ACACIA BOOKS — Google account backup & sync (Drive appData + Gmail)
+   ---------------------------------------------------------------------
+   SYNC ORDER:  Local storage  ->  Google account  ->  Supabase cloud
+   Google (Drive appData + a Gmail copy) is the primary remote store; the
+   Supabase cloud is mirrored afterwards. Data goes into the SAME Google
+   account whose email matches the email you log in with, so Chrome and
+   Edge both end up with one dataset.
+
+   >>> PASTE YOUR GOOGLE OAUTH CLIENT ID ON THE NEXT LINE <<<
+   ===================================================================== */
+/* Optional: hardcode your OAuth Client ID here. If you leave it empty the app
+   asks for it once (Connect button) and remembers it in this browser. */
+window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
+
+(function () {
+  "use strict";
+
+  var NS = window.__companyNS;
+  if (!NS) { console.warn("[gsync] companyNS missing - Google backup disabled"); return; }
+
+  var SCOPES = [
+    "https://www.googleapis.com/auth/drive.appdata",
+    "https://www.googleapis.com/auth/gmail.modify",
+    "https://www.googleapis.com/auth/userinfo.email"
+  ].join(" ");
+
+  var GMAIL_SUBJECT_PREFIX = "ACACIA BOOKS BACKUP";
+  var GMAIL_MIN_INTERVAL_MS = 10 * 60 * 1000;  /* don't spam the mailbox */
+  var AUTO_PUSH_DEBOUNCE_MS = 20 * 1000;
+
+  /* ---------------- config helpers ---------------- */
+  function clientId() {
+    var fromStore = "";
+    try { fromStore = NS.nGet.call(NS.real, "__googleClientId") || ""; } catch (e) {}
+    var id = String(fromStore || window.__GOOGLE_CLIENT_ID__ || "").trim();
+    return id.indexOf("PASTE-") === 0 ? "" : id;
+  }
+  /* Lets you set the client id without editing the file: run in console
+     localStorage.__googleClientId = "xxx.apps.googleusercontent.com" */
+  window.setGoogleClientId = function (id) {
+    NS.nSet.call(NS.real, "__googleClientId", String(id || "").trim());
+    location.reload();
+  };
+  /* Styled one-time setup dialog (replaces the browser prompt box).
+     Resolves with true when a usable Client ID is available. */
+  function askClientId() {
+    if (clientId()) return Promise.resolve(true);
+    return new Promise(function (resolve) {
+      var ov = document.createElement("div");
+      ov.style.cssText =
+        "position:fixed;inset:0;z-index:2147483000;background:rgba(15,23,42,.55);" +
+        "display:flex;align-items:center;justify-content:center;padding:16px;" +
+        "font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif";
+      ov.innerHTML =
+        '<div style="background:#fff;color:#1f2937;border-radius:14px;max-width:520px;width:100%;' +
+        'box-shadow:0 24px 60px rgba(0,0,0,.35);overflow:hidden">' +
+          '<div style="background:#1a73e8;color:#fff;padding:14px 18px;font-weight:600;font-size:15px">' +
+            'Set up Google backup' +
+          '</div>' +
+          '<div style="padding:18px">' +
+            '<p style="margin:0 0 10px">Paste your <b>Google OAuth Client ID</b>. You only do this once in this browser.</p>' +
+            '<ol style="margin:0 0 12px 18px;padding:0;color:#4b5563;font-size:13px">' +
+              '<li>Google Cloud Console &rsaquo; APIs &amp; Services &rsaquo; Credentials</li>' +
+              '<li>Create / open an <b>OAuth client ID</b> of type <b>Web application</b></li>' +
+              '<li>Add this site\'s address under <b>Authorized JavaScript origins</b></li>' +
+              '<li>Copy the Client ID and paste it below</li>' +
+            '</ol>' +
+            '<input id="gsyncCidInput" type="text" spellcheck="false" autocomplete="off" ' +
+              'placeholder="1234567890-abcdef.apps.googleusercontent.com" ' +
+              'style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #cbd5e1;' +
+              'border-radius:8px;font:13px/1.4 ui-monospace,Menlo,Consolas,monospace">' +
+            '<div id="gsyncCidErr" style="color:#dc2626;font-size:12px;margin-top:8px;display:none"></div>' +
+            '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">' +
+              '<button id="gsyncCidCancel" style="border:1px solid #d1d5db;background:#fff;color:#374151;' +
+                'border-radius:8px;padding:8px 14px;cursor:pointer">Cancel</button>' +
+              '<button id="gsyncCidSave" style="border:0;background:#1a73e8;color:#fff;' +
+                'border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600">Save &amp; connect</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(ov);
+      var input  = ov.querySelector("#gsyncCidInput");
+      var errBox = ov.querySelector("#gsyncCidErr");
+      setTimeout(function () { try { input.focus(); } catch (e) {} }, 30);
+
+      function close(result) { try { ov.remove(); } catch (e) {} resolve(result); }
+      function fail(msg) { errBox.textContent = msg; errBox.style.display = "block"; }
+
+      ov.querySelector("#gsyncCidCancel").onclick = function () {
+        setStatus("Google Client ID needed to enable sync", "err");
+        close(false);
+      };
+      ov.addEventListener("click", function (e) { if (e.target === ov) { close(false); } });
+      input.addEventListener("keydown", function (e) { if (e.key === "Enter") save(); });
+
+      function save() {
+        var v = String(input.value || "").trim();
+        if (!v) return fail("Please paste your Client ID.");
+        if (v.indexOf(".apps.googleusercontent.com") === -1)
+          return fail("That does not look like a Client ID - it must end with .apps.googleusercontent.com");
+        try { NS.nSet.call(NS.real, "__googleClientId", v); } catch (e) {}
+        setStatus("Client ID saved - connecting...", "busy");
+        close(true);
+      }
+      ov.querySelector("#gsyncCidSave").onclick = save;
+    });
+  }
+
+  function loginEmail() {
+    var u = NS.currentUser();
+    return u ? String(u.email || "").trim().toLowerCase() : "";
+  }
+  function companyId() { return NS.activeCompany(); }
+
+  function lget(k) { try { return NS.nGet.call(NS.real, k); } catch (e) { return null; } }
+  function lset(k, v) { try { NS.nSet.call(NS.real, k, String(v)); } catch (e) {} }
+  function lrem(k) { try { NS.nRem.call(NS.real, k); } catch (e) {} }
+
+  /* ---------------- Google Identity Services ---------------- */
+  var gisReady = null;
+  function loadGIS() {
+    if (gisReady) return gisReady;
+    gisReady = new Promise(function (resolve, reject) {
+      if (window.google && window.google.accounts && window.google.accounts.oauth2) return resolve();
+      var s = document.createElement("script");
+      s.src = "https://accounts.google.com/gsi/client";
+      s.async = true; s.defer = true;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { reject(new Error("Could not load Google sign-in library")); };
+      document.head.appendChild(s);
+    });
+    return gisReady;
+  }
+
+  var token = null;        /* { access_token, expires_at } */
+  var tokenClient = null;
+
+  function haveToken() { return !!(token && token.access_token && Date.now() < token.expires_at - 60000); }
+
+  /* interactive=false tries a silent refresh (works after the first consent) */
+  function getToken(interactive) {
+    if (haveToken()) return Promise.resolve(token.access_token);
+    var cid = clientId();
+    if (!cid) return Promise.reject(new Error("No Google Client ID configured"));
+
+    return loadGIS().then(function () {
+      return new Promise(function (resolve, reject) {
+        tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: cid,
+          scope: SCOPES,
+          hint: loginEmail() || undefined,
+          prompt: interactive ? "consent" : "",
+          callback: function (resp) {
+            if (resp && resp.access_token) {
+              token = {
+                access_token: resp.access_token,
+                expires_at: Date.now() + ((resp.expires_in || 3600) * 1000)
+              };
+              resolve(token.access_token);
+            } else {
+              reject(new Error((resp && resp.error) || "Google authorisation failed"));
+            }
+          },
+          error_callback: function (err) { reject(new Error((err && err.type) || "Google authorisation cancelled")); }
+        });
+        try { tokenClient.requestAccessToken(); }
+        catch (e) { reject(e); }
+      });
+    });
+  }
+
+  function gfetch(url, opts) {
+    return getToken(false).catch(function () { return getToken(true); }).then(function (t) {
+      opts = opts || {};
+      var h = new Headers(opts.headers || {});
+      h.set("Authorization", "Bearer " + t);
+      return fetch(url, Object.assign({}, opts, { headers: h }));
+    });
+  }
+
+  /* ---------------- account matching (auto-link by email) ---------------- */
+  var linkedEmail = null;
+  function verifyAccount() {
+    return gfetch("https://www.googleapis.com/oauth2/v3/userinfo")
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("userinfo " + r.status)); })
+      .then(function (info) {
+        var gEmail = String((info && info.email) || "").trim().toLowerCase();
+        var appEmail = loginEmail();
+        if (!gEmail) throw new Error("Google did not return an email address");
+        if (appEmail && gEmail !== appEmail) {
+          token = null;
+          throw new Error(
+            "That Google account (" + gEmail + ") does not match your login email (" +
+            appEmail + "). Sign in with the Google account you created the account with."
+          );
+        }
+        linkedEmail = gEmail;
+        lset("__gsyncEmail", gEmail);
+        return gEmail;
+      });
+  }
+
+  /* ---------------- snapshot build / apply ---------------- */
+  function stamps() {
+    var c = companyId(); if (!c) return {};
+    try { return JSON.parse(lget("__stamps_" + c) || "{}"); } catch (e) { return {}; }
+  }
+  function buildSnapshot() {
+    var c = companyId();
+    if (!c) throw new Error("No active company");
+    var keys = NS.companyKeys(), data = {};
+    keys.forEach(function (k) {
+      var v = lget(k + NS.SEP + c);
+      if (v !== null) data[k] = v;
+    });
+    return {
+      v: 1,
+      app: "acacia-books",
+      companyId: c,
+      email: loginEmail(),
+      updatedAt: new Date().toISOString(),
+      stamps: stamps(),
+      data: data
+    };
+  }
+  /* newest-wins merge, per key, using the same timestamps the cloud sync uses */
+  function applySnapshot(snap) {
+    if (!snap || !snap.data) return 0;
+    var c = companyId();
+    if (!c || (snap.companyId && snap.companyId !== c)) return 0;
+    var local = stamps(), remote = snap.stamps || {}, applied = 0;
+    NS.setApplying(true);
+    try {
+      Object.keys(snap.data).forEach(function (k) {
+        var lt = local[k] ? Date.parse(local[k]) : 0;
+        var rt = remote[k] ? Date.parse(remote[k]) : Date.parse(snap.updatedAt || 0) || 0;
+        if (lt && rt && rt <= lt) return;          /* local copy is newer - keep it */
+        lset(k + NS.SEP + c, snap.data[k]);
+        local[k] = remote[k] || snap.updatedAt;
+        applied++;
+      });
+      lset("__stamps_" + c, JSON.stringify(local));
+    } finally { NS.setApplying(false); }
+    if (window.__acxBustStore) window.__acxBustStore();
+    return applied;
+  }
+
+  function utf8ToB64(str) {
+    return btoa(String.fromCharCode.apply(null, new Uint8Array(new TextEncoder().encode(str))));
+  }
+  function b64url(str) { return utf8ToB64(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+
+  /* ---------------- Drive (appDataFolder) ---------------- */
+  function driveFileName() { return "acacia-books-" + companyId() + ".json"; }
+
+  function driveFindFile() {
+    var q = encodeURIComponent("name='" + driveFileName() + "'");
+    return gfetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name,modifiedTime)&q=" + q)
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("Drive list failed: " + r.status)); })
+      .then(function (j) { return (j.files && j.files[0]) || null; });
+  }
+
+  function drivePush(snap) {
+    var body = JSON.stringify(snap);
+    return driveFindFile().then(function (file) {
+      var boundary = "acx" + Date.now();
+      var meta = file ? { name: driveFileName() } : { name: driveFileName(), parents: ["appDataFolder"] };
+      var payload =
+        "--" + boundary + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" +
+        JSON.stringify(meta) + "\r\n" +
+        "--" + boundary + "\r\nContent-Type: application/json\r\n\r\n" +
+        body + "\r\n--" + boundary + "--";
+      var url = file
+        ? "https://www.googleapis.com/upload/drive/v3/files/" + file.id + "?uploadType=multipart"
+        : "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
+      return gfetch(url, {
+        method: file ? "PATCH" : "POST",
+        headers: { "Content-Type": "multipart/related; boundary=" + boundary },
+        body: payload
+      });
+    }).then(function (r) {
+      if (!r.ok) return r.text().then(function (t) { throw new Error("Drive save failed (" + r.status + "): " + t.slice(0, 300)); });
+      return true;
+    });
+  }
+
+  function drivePull() {
+    return driveFindFile().then(function (file) {
+      if (!file) return null;
+      return gfetch("https://www.googleapis.com/drive/v3/files/" + file.id + "?alt=media")
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("Drive read failed: " + r.status)); });
+    });
+  }
+
+  /* ---------------- Gmail copy (visible backup in the mailbox) ---------------- */
+  function gmailSubject() { return GMAIL_SUBJECT_PREFIX + " " + companyId(); }
+
+  function gmailFindDrafts() {
+    var q = encodeURIComponent('subject:"' + gmailSubject() + '"');
+    return gfetch("https://gmail.googleapis.com/gmail/v1/users/me/drafts?q=" + q)
+      .then(function (r) { return r.ok ? r.json() : { drafts: [] }; })
+      .then(function (j) { return j.drafts || []; });
+  }
+
+  function gmailPush(snap) {
+    var me = linkedEmail || loginEmail();
+    var json = JSON.stringify(snap);
+    var boundary = "acxmail" + Date.now();
+    var mime =
+      "To: " + me + "\r\n" +
+      "From: " + me + "\r\n" +
+      "Subject: " + gmailSubject() + "\r\n" +
+      "MIME-Version: 1.0\r\n" +
+      'Content-Type: multipart/mixed; boundary="' + boundary + '"\r\n\r\n' +
+      "--" + boundary + "\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n" +
+      "Automatic Acacia Books backup.\r\nCompany: " + snap.companyId +
+      "\r\nSaved: " + snap.updatedAt + "\r\nDo not delete - used to restore your data.\r\n\r\n" +
+      "--" + boundary + "\r\n" +
+      'Content-Type: application/json; name="' + driveFileName() + '"\r\n' +
+      "Content-Transfer-Encoding: base64\r\n" +
+      'Content-Disposition: attachment; filename="' + driveFileName() + '"\r\n\r\n' +
+      utf8ToB64(json).replace(/(.{76})/g, "$1\r\n") + "\r\n" +
+      "--" + boundary + "--";
+
+    return gmailFindDrafts().then(function (old) {
+      return gfetch("https://gmail.googleapis.com/gmail/v1/users/me/drafts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: { raw: b64url(mime) } })
+      }).then(function (r) {
+        if (!r.ok) return r.text().then(function (t) { throw new Error("Gmail save failed (" + r.status + "): " + t.slice(0, 300)); });
+        /* remove the previous backup drafts so only the latest one remains */
+        return Promise.all(old.map(function (d) {
+          return gfetch("https://gmail.googleapis.com/gmail/v1/users/me/drafts/" + d.id, { method: "DELETE" }).catch(function () {});
+        })).then(function () { return true; });
+      });
+    });
+  }
+
+  function gmailPull() {
+    var q = encodeURIComponent('subject:"' + gmailSubject() + '"');
+    return gfetch("https://gmail.googleapis.com/gmail/v1/users/me/messages?q=" + q + "&maxResults=5")
+      .then(function (r) { return r.ok ? r.json() : { messages: [] }; })
+      .then(function (j) {
+        var list = j.messages || [];
+        if (!list.length) return gmailFindDrafts().then(function (d) {
+          return d.length ? { id: d[0].message.id } : null;
+        });
+        return list[0];
+      })
+      .then(function (msg) {
+        if (!msg) return null;
+        return gfetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/" + msg.id + "?format=full")
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("Gmail read failed: " + r.status)); })
+          .then(function (full) {
+            var parts = (full.payload && full.payload.parts) || [];
+            var att = parts.filter(function (p) { return p.filename && p.body && p.body.attachmentId; })[0];
+            if (!att) return null;
+            return gfetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/" + msg.id +
+                          "/attachments/" + att.body.attachmentId)
+              .then(function (r) { return r.json(); })
+              .then(function (a) {
+                var b64 = String(a.data || "").replace(/-/g, "+").replace(/_/g, "/");
+                var bin = atob(b64), bytes = new Uint8Array(bin.length);
+                for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                return JSON.parse(new TextDecoder().decode(bytes));
+              });
+          });
+      });
+  }
+
+  /* ---------------- public sync API ---------------- */
+  var lastGmailPush = 0;
+  var busy = false;
+
+  function connectGoogle(interactive) {
+    return getToken(interactive !== false).then(verifyAccount);
+  }
+
+  function pushToGoogle(opts) {
+    opts = opts || {};
+    if (!companyId()) return Promise.resolve(false);
+    var snap;
+    try { snap = buildSnapshot(); } catch (e) { return Promise.reject(e); }
+    setStatus("Saving to Google…", "busy");
+    return drivePush(snap).then(function () {
+      var due = opts.gmail === true || (opts.gmail !== false && Date.now() - lastGmailPush > GMAIL_MIN_INTERVAL_MS);
+      if (!due) return true;
+      return gmailPush(snap).then(function () { lastGmailPush = Date.now(); return true; })
+        .catch(function (e) { console.warn("[gsync] gmail copy failed", e); return true; });
+    }).then(function () {
+      lset("__gsyncLastPush", new Date().toISOString());
+      setStatus("Backed up to Google", "ok");
+      return true;
+    }).catch(function (e) { setStatus(e.message, "err"); throw e; });
+  }
+
+  function pullFromGoogle(preferGmail) {
+    if (!companyId()) return Promise.resolve(0);
+    setStatus("Reading from Google…", "busy");
+    var first = preferGmail ? gmailPull() : drivePull();
+    var second = preferGmail ? drivePull : gmailPull;
+    return first.then(function (snap) {
+      if (snap) return snap;
+      return second().catch(function () { return null; });
+    }).then(function (snap) {
+      if (!snap) { setStatus("No Google backup found yet", "ok"); return 0; }
+      var n = applySnapshot(snap);
+      setStatus(n ? ("Restored " + n + " items from Google") : "Already up to date", "ok");
+      if (n) refreshApp();
+      return n;
+    }).catch(function (e) { setStatus(e.message, "err"); throw e; });
+  }
+
+  function refreshApp() {
+    try { if (window.__acxBustStore) window.__acxBustStore(); } catch (e) {}
+    setTimeout(function () { location.reload(); }, 600);
+  }
+
+  /* ---------------- tier 3: Supabase cloud ---------------- */
+  /* Google is the primary remote store; the cloud is mirrored AFTER it. */
+  function cloudPull() {
+    try {
+      if (typeof window.downloadLocalStorage === "function") {
+        return Promise.resolve(window.downloadLocalStorage()).catch(function () {});
+      }
+    } catch (e) {}
+    return Promise.resolve();
+  }
+  function cloudPush() {
+    try {
+      if (typeof window.uploadLocalStorage === "function") {
+        return Promise.resolve(window.uploadLocalStorage()).catch(function () {});
+      }
+    } catch (e) {}
+    return Promise.resolve();
+  }
+
+  /* full sync in the required order: local -> Google -> Supabase cloud */
+  function syncAll(interactive) {
+    if (busy) return Promise.resolve();
+    busy = true;
+    return connectGoogle(interactive)
+      /* 1. Google is read first and merged into local (newest wins) */
+      .then(function () { return pullFromGoogle(false); })
+      /* 2. the merged local state is written back to Google */
+      .then(function () { return pushToGoogle({ gmail: false }); })
+      /* 3. only then is the cloud topped up and mirrored */
+      .then(function () { return cloudPull(); })
+      .then(function () { return cloudPush(); })
+      .catch(function (e) { console.warn("[gsync]", e); })
+      .then(function () { busy = false; });
+  }
+
+  window.googleBackup = {
+    connect: function () { return connectGoogle(true).then(function (e) { setStatus("Linked to " + e, "ok"); return syncAll(false); }); },
+    push: function () { return pushToGoogle({ gmail: true }).then(cloudPush); },
+    pullDrive: function () { return pullFromGoogle(false); },
+    pullGmail: function () { return pullFromGoogle(true); },
+    sync: syncAll,
+    snapshot: buildSnapshot,
+    disconnect: function () { token = null; linkedEmail = null; lrem("__gsyncEmail"); setStatus("Disconnected", "ok"); }
+  };
+
+  /* ---------------- auto push on local changes: Google, then cloud ------- */
+  var pushTimer = null;
+  var origKick = window.__companySyncKick;
+  window.__companySyncKick = function () {
+    var args = arguments, self = this;
+    if (!linkedEmail || !companyId()) {
+      try { if (typeof origKick === "function") origKick.apply(self, args); } catch (e) {}
+      return;
+    }
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(function () {
+      /* Google first, cloud second - the cloud push is the existing kick */
+      pushToGoogle({ gmail: false })
+        .catch(function () {})
+        .then(function () {
+          try { if (typeof origKick === "function") origKick.apply(self, args); } catch (e) {}
+        });
+    }, AUTO_PUSH_DEBOUNCE_MS);
+  };
+  window.addEventListener("pagehide", function () {
+    if (linkedEmail && companyId()) { try { pushToGoogle({ gmail: false }); } catch (e) {} }
+  });
+
+  /* the app's own cloud entry point now runs Google first */
+  var origStartCloudSync = window.startCloudSync;
+  if (typeof origStartCloudSync === "function") {
+    window.startCloudSync = async function () {
+      if (linkedEmail || (clientId() && NS.currentUser())) {
+        try {
+          await connectGoogle(false);
+          await pullFromGoogle(false);
+          await pushToGoogle({ gmail: false });
+        } catch (e) { console.warn("[gsync] Google tier skipped:", e.message); }
+      }
+      return origStartCloudSync.apply(this, arguments);
+    };
+  }
+
+  /* ---------------- small UI widget ---------------- */
+  var bar, label;
+  function ensureUI() {
+    return; /* floating widget replaced by Settings > Org Profile > Google Backup */
+    if (bar || !document.body) return;
+    bar = document.createElement("div");
+    bar.id = "gsyncBar";
+    bar.style.cssText =
+      "position:fixed;right:14px;bottom:14px;z-index:99999;font:12px/1.4 system-ui,sans-serif;" +
+      "background:#fff;border:1px solid #d9d9d9;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.12);" +
+      "padding:8px 10px;display:flex;gap:8px;align-items:center;max-width:340px";
+    label = document.createElement("span");
+    label.textContent = "Google backup: not linked";
+    label.style.cssText = "color:#444";
+    var btn = document.createElement("button");
+    btn.textContent = "Connect";
+    btn.style.cssText = "border:0;background:#1a73e8;color:#fff;border-radius:6px;padding:5px 10px;cursor:pointer";
+    btn.onclick = function () {
+      Promise.resolve(askClientId()).then(function (ok) {
+        if (!ok) return;
+        return window.googleBackup.connect();
+      }).catch(function (e) { setStatus(e.message, "err"); });
+    };
+    var menu = document.createElement("button");
+    menu.textContent = "⋯";
+    menu.title = "Backup options";
+    menu.style.cssText = "border:1px solid #ddd;background:#f6f6f6;border-radius:6px;padding:5px 8px;cursor:pointer";
+    menu.onclick = function () {
+      var what = prompt(
+        "Google backup options:\n" +
+        "1 = Back up now (Drive + Gmail)\n" +
+        "2 = Restore from Drive\n" +
+        "3 = Restore from Gmail\n" +
+        "4 = Disconnect", "1");
+      if (what === "1") window.googleBackup.push().catch(function (e) { setStatus(e.message, "err"); });
+      else if (what === "2") window.googleBackup.pullDrive().catch(function (e) { setStatus(e.message, "err"); });
+      else if (what === "3") window.googleBackup.pullGmail().catch(function (e) { setStatus(e.message, "err"); });
+      else if (what === "4") window.googleBackup.disconnect();
+    };
+    bar.appendChild(label); bar.appendChild(btn); bar.appendChild(menu);
+    document.body.appendChild(bar);
+    bar.__btn = btn;
+  }
+  function setStatus(msg, kind) {
+    updateSettingsUI(msg, kind);
+    if (kind === "err") console.warn("[gsync]", msg);
+  }
+
+  /* ---------------- Settings > Org Profile > Google Backup UI ---------------- */
+  var settingsBound = false;
+  function updateSettingsUI(msg, kind) {
+    var statusEl = document.getElementById("gsyncSettingsStatus");
+    var connectBtn = document.getElementById("gsyncSettingsConnectBtn");
+    var backupBtn = document.getElementById("gsyncSettingsBackupBtn");
+    var restoreBtn = document.getElementById("gsyncSettingsRestoreBtn");
+    var disconnectBtn = document.getElementById("gsyncSettingsDisconnectBtn");
+    if (statusEl) {
+      var last = lget("__gsyncLastPush");
+      var base = msg || (linkedEmail ? ("Linked to " + linkedEmail) : "Not linked yet");
+      statusEl.textContent = base + (linkedEmail && last ? (" • last backup " + new Date(last).toLocaleString()) : "");
+      statusEl.style.color = kind === "err" ? "#b00020" : kind === "busy" ? "#8a6d00" : "#374151";
+    }
+    if (connectBtn) connectBtn.style.display = linkedEmail ? "none" : "";
+    if (backupBtn) backupBtn.style.display = linkedEmail ? "" : "none";
+    if (restoreBtn) restoreBtn.style.display = linkedEmail ? "" : "none";
+    if (disconnectBtn) disconnectBtn.style.display = linkedEmail ? "" : "none";
+    bindSettingsUI();
+  }
+  function bindSettingsUI() {
+    if (settingsBound) return;
+    var connectBtn = document.getElementById("gsyncSettingsConnectBtn");
+    var backupBtn = document.getElementById("gsyncSettingsBackupBtn");
+    var restoreBtn = document.getElementById("gsyncSettingsRestoreBtn");
+    var disconnectBtn = document.getElementById("gsyncSettingsDisconnectBtn");
+    if (!connectBtn && !backupBtn && !restoreBtn && !disconnectBtn) return;
+    settingsBound = true;
+    if (connectBtn) connectBtn.onclick = function () {
+      Promise.resolve(askClientId()).then(function (ok) {
+        if (!ok) return;
+        return window.googleBackup.connect();
+      }).catch(function (e) { setStatus(e.message, "err"); });
+    };
+    if (backupBtn) backupBtn.onclick = function () {
+      window.googleBackup.push().catch(function (e) { setStatus(e.message, "err"); });
+    };
+    if (restoreBtn) restoreBtn.onclick = function () {
+      window.googleBackup.pullDrive().catch(function (e) { setStatus(e.message, "err"); });
+    };
+    if (disconnectBtn) disconnectBtn.onclick = function () { window.googleBackup.disconnect(); };
+  }
+  function hideIfLoggedOut() {
+    if (!bar) return;
+    bar.style.display = NS.currentUser() ? "flex" : "none";
+  }
+
+  /* ---------------- boot / auto-link after login ---------------- */
+  function boot() {
+    bindSettingsUI();
+    updateSettingsUI();
+    if (!NS.currentUser() || !companyId()) return;
+    if (!clientId()) { setStatus("Not linked yet — open Settings › Org Profile › Google Backup to connect", "err"); return; }
+    /* silent re-link: works without a popup once you have consented on this
+       browser profile, so Edge/Chrome pick the data up on their own. */
+    getToken(false).then(verifyAccount).then(function (email) {
+      setStatus("linked to " + email, "ok");
+      return syncAll(false);
+    }).catch(function () {
+      setStatus("click Connect to link " + (loginEmail() || "your Google account"), "err");
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+
+  /* run the same routine right after an email/password login */
+  var origLogin = window.handleLogin;
+  if (typeof origLogin === "function") {
+    window.handleLogin = async function () {
+      var r = await origLogin.apply(this, arguments);
+      setTimeout(boot, 1200);
+      return r;
+    };
+  }
+
+  console.log("[gsync] Google account backup (Drive appData + Gmail) ready");
+})();
+</script>
+
+</body></html>
