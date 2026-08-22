@@ -31,7 +31,7 @@ window.__banksForTotals = function (list) {
   });
 };
 </script>
-<script>window.__SUPA_URL__='https://skatovltmnsuiolduwfr.supabase.co';window.__SUPA_KEY__='sb_publishable_AS3lfXtQELv5CTl8HX6OPQ_8HtYBfQp';</script>
+<script>window.__SUPA_URL__='https://xglsampckermarjpczdf.supabase.co';window.__SUPA_KEY__='sb_publishable_x-dPR7pzhvJgag9soW0I8w_yfKTmi6A';</script>
 <script>
 
 window.__CURRENCY_OPTIONS__ = ["KES","USD","EUR","GBP","AUD","CAD","CHF","CNY","JPY","INR","ZAR","NGN","UGX","TZS"];
@@ -1570,7 +1570,7 @@ function closeQuoteModal() {
   document.getElementById("quoteModal").style.display = "none";
 }
 </script>
-<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 relative"><button onclick="closeLogin()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button><h2 class="text-2xl font-bold text-blue-900 mb-4 text-center">Login</h2><div id="loginForm"><input id="loginEmail" type="email" placeholder="Email" autocomplete="email" required class="w-full border p-2 mb-3 rounded" /><input id="loginCompanyId" type="text" placeholder="Company ID (optional)" class="w-full border p-2 mb-3 rounded" /><input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" class="w-full border p-2 mb-3 rounded" /><select id="userRole" class="w-full border p-2 rounded mb-3"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="human resource">Human Resource</option></select><button onclick="handleLogin()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-900 mb-2">
+<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"><div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6 relative"><button onclick="closeLogin()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button><h2 class="text-2xl font-bold text-blue-900 mb-4 text-center">Login</h2><div id="loginForm"><input id="loginEmail" type="email" placeholder="Email" autocomplete="email" required class="w-full border p-2 mb-3 rounded" /><input id="loginCompanyId" type="text" placeholder="Company Name" autocomplete="organization" required class="w-full border p-2 mb-3 rounded" /><input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" class="w-full border p-2 mb-3 rounded" /><select id="userRole" class="w-full border p-2 rounded mb-3"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="human resource">Human Resource</option></select><button onclick="handleLogin()" class="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-900 mb-2">
         Login
       </button><p class="text-sm flex justify-between"><a href="#" class="text-blue-600 hover:underline" onclick="showRegisterForm();return false;">Create account</a><a href="#" class="text-blue-600 hover:underline" onclick="showResetForm()">Forgot Password?</a></p></div><div id="resetForm" class="hidden mt-4"><p class="mb-2 text-sm text-gray-700">Enter your email to reset your password.</p><input id="resetEmail" type="email" placeholder="Email" class="w-full border p-2 mb-3 rounded" /><button onclick="resetPassword()" class="w-full bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 mb-2">
         Send Reset Code
@@ -5560,10 +5560,15 @@ async function handleLogin() {
 
   const emailInput = (document.getElementById('loginEmail')?.value || '').trim().toLowerCase();
   const p = document.getElementById('loginPass').value.trim();
-  const companyIdInput = (document.getElementById('loginCompanyId')?.value || '').trim().toLowerCase();
+  const companyInput = (document.getElementById('loginCompanyId')?.value || '').trim().toLowerCase();
 
   if (!emailInput) {
     alert("❌ Enter your email");
+    return;
+  }
+
+  if (!companyInput) {
+    alert("❌ Enter your company name");
     return;
   }
 
@@ -5572,26 +5577,17 @@ async function handleLogin() {
   let user = storedUsers.find(x => {
 
     const email = (x.email || "").toLowerCase();
-    const company = (x.companyId || "").toLowerCase();
+    const name = (x.companyName || "").toLowerCase();
+    const id = (x.companyId || "").toLowerCase();
 
     const loginMatch = email === emailInput;
-
-    const companyMatch =
-      companyIdInput ? company === companyIdInput : true;
+    const companyMatch = name ? name === companyInput : id === companyInput;
 
     return loginMatch && companyMatch && x.password === p;
   });
 
-  if (!user && companyIdInput) {
-    // Fallback: ignore the company ID filter if credentials alone match one account
-    user = storedUsers.find(x => {
-      const email = (x.email || "").toLowerCase();
-      return email === emailInput && x.password === p;
-    });
-  }
-
   if (!user) {
-    alert("❌ Invalid email, company ID or password");
+    alert("❌ Invalid email, company name or password");
     return;
   }
 
