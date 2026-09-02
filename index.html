@@ -7781,6 +7781,7 @@ function toggleAddItemForm() {
     warehouseNameDisplay.textContent = warehouse;
     renderInventoryTable();
     resetForm();
+    if (typeof populateAccountDropdowns === "function") populateAccountDropdowns();
   } else {
     form.classList.add('hidden');
     warehouseNameDisplay.textContent = '';
@@ -8136,32 +8137,55 @@ function populateAccountDropdowns() {
   const sellingDropdown = document.getElementById("sellingAccountSelect");
   const buyingDropdown = document.getElementById("buyingAccountSelect");
 
+  // Selling Account = the Income/Sales-side account credited when the item
+  // sells. Matches the allowedTypes convention used by the Invoice/Quote/
+  // Credit Note Chart-of-Account pickers elsewhere in the app.
+  const sellingTypes = [
+    "Income", "Sales", "Other Income", "Interest Income", "Commission Income",
+    "Service Revenue", "Rental Income", "Product Sales Online", "Trading Income",
+    "Accounts Receivable"
+  ];
+
+  // Buying Account = the Expense/COGS-side account debited when the item is
+  // purchased/stocked. Matches the allowedTypes convention used by the
+  // Bill/Purchase Order Chart-of-Account pickers elsewhere in the app.
+  const buyingTypes = [
+    "Expense", "Cost of Goods Sold", "Other Expense", "Inventory",
+    "Shipping & Freight", "Packaging Costs", "Import Duty", "Customs Duty",
+    "Accounts Payable"
+  ];
+
   if (sellingDropdown) {
+    const prevSelling = sellingDropdown.value;
     sellingDropdown.innerHTML = '<option value="">Select Selling Account</option>';
     accounts
-      .filter(acc => acc.type === "Accounts Receivable")
+      .filter(acc => sellingTypes.includes(acc.type))
       .forEach(acc => {
         const opt = document.createElement("option");
         opt.value = acc.code;
         opt.textContent = `${acc.name} (${acc.code})`;
         sellingDropdown.appendChild(opt);
       });
+    if (prevSelling) sellingDropdown.value = prevSelling;
   }
 
   if (buyingDropdown) {
+    const prevBuying = buyingDropdown.value;
     buyingDropdown.innerHTML = '<option value="">Select Buying Account</option>';
     accounts
-      .filter(acc => acc.type === "Accounts Payable")
+      .filter(acc => buyingTypes.includes(acc.type))
       .forEach(acc => {
         const opt = document.createElement("option");
         opt.value = acc.code;
         opt.textContent = `${acc.name} (${acc.code})`;
         buyingDropdown.appendChild(opt);
       });
+    if (prevBuying) buyingDropdown.value = prevBuying;
   }
 }
 
 document.addEventListener("DOMContentLoaded", populateAccountDropdowns);
+window.populateAccountDropdowns = populateAccountDropdowns;
 
 function editItem(index) {
   guardAction('canEdit', () => {
@@ -128808,6 +128832,300 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
   window.addEventListener('load', function () { if (!window.editTemplate || !window.editTemplate.__acxProps) wire(); });
+})();
+</script>
+
+<script>
+/* ==========================================================================
+   Adjustments (Amendments) + Bulk Adjustments — Chart of Accounts wiring
+   1. Adds a "Chart of Accounts (Expense)" dropdown to both screens,
+      populated from the saved Chart of Accounts.
+   2. When an adjustment is applied, the stock value written off/added is
+      posted as a cost to that account, so it renders on the Profit & Loss
+      (via operationalCosts) and on the account's Chart of Accounts balance.
+   ========================================================================== */
+(function () {
+  if (window.__acxAdjCOA) return;
+  window.__acxAdjCOA = true;
+
+  var POSTED_KEY = 'adjustmentCostPostedRefs';
+  var DEFAULT_ACCOUNT = 'Inventory Adjustments';
+  var ALLOWED_TYPES = [
+    'Expense', 'Cost of Goods Sold', 'Other Expense', 'Depreciation',
+    'Personnel Costs', 'Marketing Expense', 'Finance Costs',
+    'Repairs & Maintenance', 'Insurance Costs'
+  ];
+
+  function LSget(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+  function LSset(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function num(v) { v = parseFloat(v); return isFinite(v) ? v : 0; }
+  function el(id) { return document.getElementById(id); }
+
+  /* ---------- Chart of Accounts helpers ---------- */
+
+  function expenseAccounts() {
+    var accounts = LSget('chartOfAccounts', []) || [];
+    return accounts.filter(function (a) {
+      if (!a || !a.name) return false;
+      if (ALLOWED_TYPES.indexOf(a.type) !== -1) return true;
+      var cat = (typeof window.getCOACategory === 'function') ? window.getCOACategory(a) : a.category;
+      return cat === 'Expense';
+    });
+  }
+
+  function ensureDefaultAccount() {
+    var accounts = LSget('chartOfAccounts', []) || [];
+    var found = accounts.find(function (a) { return a && a.name === DEFAULT_ACCOUNT; });
+    if (found) return found.name;
+    var code = (typeof window.suggestCOACode === 'function') ? window.suggestCOACode('Expense') : '5900';
+    accounts.push({
+      name: DEFAULT_ACCOUNT, code: code, type: 'Expense', category: 'Expense',
+      parentCode: '', parentName: '', amount: 0
+    });
+    LSset('chartOfAccounts', accounts);
+    if (typeof window.renderAccounts === 'function') { try { window.renderAccounts(); } catch (e) {} }
+    return DEFAULT_ACCOUNT;
+  }
+
+  function fillAccountSelect(sel) {
+    if (!sel) return;
+    var keep = sel.value;
+    var list = expenseAccounts().sort(function (a, b) {
+      return String(a.code || '').localeCompare(String(b.code || ''), undefined, { numeric: true });
+    });
+    var html = '<option value="">Select Account</option>';
+    list.forEach(function (a) {
+      var label = (a.code ? a.code + ' — ' : '') + a.name;
+      html += '<option value="' + String(a.name).replace(/"/g, '&quot;') + '">' + label + '</option>';
+    });
+    sel.innerHTML = html;
+    if (keep) sel.value = keep;
+    if (!sel.value) {
+      var pref = list.find(function (a) { return /adjust|shrink|write|loss|damage/i.test(a.name); })
+              || list.find(function (a) { return a.type === 'Cost of Goods Sold'; });
+      if (pref) sel.value = pref.name;
+    }
+  }
+
+  function accountFieldHtml(id) {
+    return ''
+      + '<label class="block text-sm font-semibold mb-1">Chart of Accounts (cost account)</label>'
+      + '<select id="' + id + '" class="border p-2 rounded w-full text-sm"><option value="">Select Account</option></select>'
+      + '<p class="text-xs text-gray-500 mt-1">The adjustment value is posted here and shows as a cost on the Profit &amp; Loss.</p>';
+  }
+
+  /* ---------- Inject the dropdowns ---------- */
+
+  function ensureAmendmentAccountField() {
+    if (el('adjustCOAAccount')) { fillAccountSelect(el('adjustCOAAccount')); return; }
+    var typeSel = el('adjustType');
+    if (!typeSel) return;
+    var cell = typeSel.parentNode;                 // the grid cell holding Adjustment Type
+    var wrap = document.createElement('div');
+    wrap.innerHTML = accountFieldHtml('adjustCOAAccount');
+    if (cell && cell.parentNode) cell.parentNode.insertBefore(wrap, cell.nextSibling);
+    fillAccountSelect(el('adjustCOAAccount'));
+  }
+
+  function ensureBulkAccountField() {
+    if (el('baCOAAccount')) { fillAccountSelect(el('baCOAAccount')); return; }
+    var whSel = el('baWarehouseSelect');
+    if (!whSel) return;
+    var bar = whSel.parentNode;
+    var wrap = document.createElement('div');
+    wrap.className = 'flex items-center gap-2';
+    wrap.innerHTML = '<label class="text-sm font-semibold text-gray-700">Chart of Accounts:</label>'
+      + '<select id="baCOAAccount" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" style="min-width:240px">'
+      + '<option value="">Select Account</option></select>';
+    bar.appendChild(wrap);
+    fillAccountSelect(el('baCOAAccount'));
+  }
+
+  function ensureFields() {
+    try { ensureAmendmentAccountField(); } catch (e) {}
+    try { ensureBulkAccountField(); } catch (e) {}
+  }
+
+  /* ---------- Costing ---------- */
+
+  function unitCostFor(warehouse, entry) {
+    var inv = LSget('inventory_' + warehouse, []) || [];
+    var sku = String(entry.sku || entry.itemId || '').toLowerCase();
+    var name = String(entry.item || entry.product || '').toLowerCase();
+    var it = inv.find(function (i) {
+      var s = String(i.sku || '').toLowerCase(), n = String(i.name || '').toLowerCase();
+      var id = String(i.id || '').toLowerCase();
+      return (sku && (s === sku || id === sku)) || (name && n === name);
+    });
+    if (!it) return 0;
+    return num(it.buyPrice || it.costPrice || it.cost || it.purchasePrice || it.unitCost);
+  }
+
+  function postedRefs() { return LSget(POSTED_KEY, []) || []; }
+  function markPosted(ref) { var r = postedRefs(); if (r.indexOf(ref) === -1) { r.push(ref); LSset(POSTED_KEY, r); } }
+
+  function postCost(opts) {
+    // opts: { ref, date, account, amount, description, module }
+    var amount = Math.round(num(opts.amount) * 100) / 100;
+    if (!amount) { markPosted(opts.ref); return false; }
+    var costs = LSget('operationalCosts', []) || [];
+    costs.push({
+      id: 'ADJ-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      date: opts.date,
+      description: opts.description,
+      vendor: '',
+      category: opts.account,
+      method: 'Journal',
+      bank: '',
+      bankIndex: null,
+      paidVia: 'Stock Adjustment',
+      currentAccount: '',
+      currentAccountName: '',
+      amount: amount,
+      netAmount: amount,
+      vat: 0,
+      vatRate: 0,
+      vatInclusive: false,
+      enteredAmount: amount,
+      notes: opts.module + ' — non-cash stock adjustment',
+      source: 'stockAdjustment',
+      adjustmentRef: opts.ref,
+      attachmentUrl: null,
+      attachmentName: null
+    });
+    LSset('operationalCosts', costs);
+
+    try {
+      if (typeof window.postToCOA === 'function') {
+        window.postToCOA(opts.account, amount, {
+          date: opts.date, ref: opts.ref, source: opts.module
+        });
+      }
+      if (typeof window.postJournal === 'function') {
+        window.postJournal({
+          date: opts.date,
+          description: opts.description,
+          source: opts.module,
+          entries: [
+            { account: opts.account, debit: amount > 0 ? amount : 0, credit: amount < 0 ? -amount : 0 },
+            { account: 'Inventory', debit: amount < 0 ? -amount : 0, credit: amount > 0 ? amount : 0 }
+          ]
+        });
+      }
+    } catch (e) {}
+
+    markPosted(opts.ref);
+    return true;
+  }
+
+  function refreshFinancials() {
+    ['renderOperationalCosts', 'renderProfitLoss', 'renderProfitAndLoss', 'renderReports',
+     'updateProfitAndLoss', 'renderAccounts', 'renderBalanceSheet', 'renderDashboard']
+      .forEach(function (fn) { if (typeof window[fn] === 'function') { try { window[fn](); } catch (e) {} } });
+  }
+
+  /* ---------- Sweeper: post any applied adjustment that isn't posted yet ---------- */
+
+  function selectedAccount(selId) {
+    var sel = el(selId);
+    var v = sel && sel.value ? sel.value : '';
+    return v || ensureDefaultAccount();
+  }
+
+  function sweep() {
+    var refs = postedRefs();
+    var posted = 0;
+
+    // --- Amendments ---
+    var amendments = LSget('amendments', []) || [];
+    var amendChanged = false;
+    amendments.forEach(function (a, i) {
+      if (!a || a.status === 'Draft') return;
+      var ref = a.costRef || ('AMD-' + (a.warehouse || '') + '-' + (a.sku || a.item || '') + '-' + (a.date || i));
+      if (!a.costRef) { a.costRef = ref; amendChanged = true; }
+      if (refs.indexOf(ref) !== -1) return;
+      var account = a.coaAccount || selectedAccount('adjustCOAAccount');
+      var cost = -num(a.quantity) * unitCostFor(a.warehouse, a);
+      a.coaAccount = account;
+      a.costValue = Math.round(cost * 100) / 100;
+      amendChanged = true;
+      posted += postCost({
+        ref: ref,
+        date: String(a.date || '').slice(0, 10) || new Date().toISOString().slice(0, 10),
+        account: account,
+        amount: cost,
+        description: 'Stock Adjustment (' + (a.adjustmentType || 'Adjustment') + ') - ' + (a.item || ''),
+        module: 'Adjustments'
+      }) ? 1 : 0;
+    });
+    if (amendChanged) LSset('amendments', amendments);
+
+    // --- Bulk Adjustments (one log per warehouse) ---
+    Object.keys(localStorage).filter(function (k) { return k.indexOf('bulkAdjustments_') === 0; })
+      .forEach(function (key) {
+        var wh = key.replace('bulkAdjustments_', '');
+        var log = LSget(key, []) || [];
+        var changed = false;
+        log.forEach(function (e) {
+          if (!e || e.status === 'Draft') return;
+          var ref = e.costRef || ('BA-' + (e.id || (wh + '-' + (e.itemId || e.product) + '-' + e.date)));
+          if (!e.costRef) { e.costRef = ref; changed = true; }
+          if (postedRefs().indexOf(ref) !== -1) return;
+          var account = e.coaAccount || selectedAccount('baCOAAccount');
+          var qty = num(e.change != null ? e.change : e.adjustment);
+          var cost = -qty * unitCostFor(wh, e);
+          e.coaAccount = account;
+          e.costValue = Math.round(cost * 100) / 100;
+          changed = true;
+          posted += postCost({
+            ref: ref,
+            date: String(e.date || '').slice(0, 10) || new Date().toISOString().slice(0, 10),
+            account: account,
+            amount: cost,
+            description: 'Bulk Stock Adjustment - ' + (e.product || e.item || e.itemId || ''),
+            module: 'Bulk Adjustments'
+          }) ? 1 : 0;
+        });
+        if (changed) LSset(key, log);
+      });
+
+    if (posted) refreshFinancials();
+    return posted;
+  }
+
+  window.syncAdjustmentCostsToPnL = sweep;
+
+  /* ---------- Hooks ---------- */
+
+  function later(fn) { setTimeout(fn, 350); setTimeout(fn, 1200); }
+
+  document.addEventListener('click', function (ev) {
+    var t = ev.target;
+    if (!t || !t.closest) return;
+    var btn = t.closest('button');
+    if (!btn) return;
+    var inAdj = btn.closest('#Amenend') || btn.closest('#BulkAdjustment');
+    if (!inAdj) return;
+    later(function () { ensureFields(); sweep(); });
+  }, true);
+
+  var _showTab = window.showTab;
+  if (typeof _showTab === 'function') {
+    window.showTab = function (id) {
+      var r = _showTab.apply(this, arguments);
+      if (id === 'Amenend' || id === 'BulkAdjustment') later(ensureFields);
+      if (id === 'chartOfAccountsTab') later(sweep);
+      return r;
+    };
+  }
+
+  function boot() {
+    ensureFields();
+    sweep();
+    setInterval(ensureFields, 2500);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
 </script>
 
