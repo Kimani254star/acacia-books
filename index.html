@@ -5003,6 +5003,12 @@ document.getElementById('dashCashFlow').textContent = `${__dashCur} ${__fmt(clos
 document.getElementById('dashBankTotal').textContent = 
   `${__dashCur} ${__fmt(bankTotal)}`;
 
+  // Bug fix: these two cards were only refreshed when the Tax Payments /
+  // Operational Costs tabs were visited, so they could show a stale
+  // KES 0.00 on a fresh dashboard load. Keep them in sync here too.
+  if (typeof updateTaxesCard === 'function') { try { updateTaxesCard(); } catch (e) {} }
+  if (typeof updateExpensesCard === 'function') { try { updateExpensesCard(); } catch (e) {} }
+
   loadDashboardBanks();
   renderCharts();
 }
@@ -5019,11 +5025,15 @@ function loadDashboardBanks() {
   const __banksDec = window.__getDecimalPlaces ? window.__getDecimalPlaces() : 2;
 
   banks.forEach(bank => {
+    // Bug fix: bank.balance could come through as a string (e.g. after an
+    // import/restore). `+=` with a string operand silently concatenates
+    // instead of adding, corrupting the per-currency subtotal below.
+    const bal = parseFloat(bank.balance) || 0;
     if (!grouped[bank.currency]) grouped[bank.currency] = 0;
-    grouped[bank.currency] += bank.balance;
+    grouped[bank.currency] += bal;
 
     const rate = rates[bank.currency] || 1;
-    baseTotal += bank.balance * rate;
+    baseTotal += bal * rate;
   });
 
   tbody.innerHTML = "";
@@ -5060,6 +5070,16 @@ function renderCharts() {
     : arr;
 
   const invoices = __fyFilter(JSON.parse(localStorage.getItem('invoices') || '[]'));
+  // Bug fix: invoices raised in a foreign currency store their converted
+  // value in totalKES (the value used everywhere else in the app, e.g. the
+  // KPI cards above). The chart code below used to read `.total` directly —
+  // the original foreign-currency face value — so any foreign-currency
+  // invoice plotted the wrong number on the Cash Flow, Monthly Profit, and
+  // Receivables Aging charts. Normalize once here.
+  invoices.forEach(inv => {
+    const kes = parseFloat(inv.totalKES);
+    if (!isNaN(kes)) inv.total = kes;
+  });
   const bills = __fyFilter(JSON.parse(localStorage.getItem('bills') || '[]'));
   const billPayments = __fyFilter(JSON.parse(localStorage.getItem('billPayments') || '[]'));
   const inventoryItems = getAllInventories ? getAllInventories() : [];
@@ -5362,6 +5382,12 @@ function renderProfitBreakdownChart() {
     : arr;
 
   const invoices = __fyFilter(JSON.parse(localStorage.getItem('invoices') || '[]'));
+  // Bug fix: same foreign-currency issue as renderCharts() above — use the
+  // KES-converted totalKES when present instead of the original-currency total.
+  invoices.forEach(inv => {
+    const kes = parseFloat(inv.totalKES);
+    if (!isNaN(kes)) inv.total = kes;
+  });
   const bills = __fyFilter(JSON.parse(localStorage.getItem('bills') || '[]'));
   const operationalCosts = __fyFilter(JSON.parse(localStorage.getItem('operationalCosts') || '[]'));
   const payrollRecords = __fyFilter(JSON.parse(localStorage.getItem('payrollRecords') || '[]'));
@@ -94843,12 +94869,25 @@ function dcUpdateStorageMeter() {
   } catch (e) {}
 
   const usedMB = usedBytes / (1024 * 1024);
-  const quotaMB = 5; // conservative floor most browsers guarantee per origin (can be higher)
-  const pct = Math.max(0, Math.min(100, (usedMB / quotaMB) * 100));
 
-  bar.style.width = pct.toFixed(1) + "%";
-  bar.className = "h-2 rounded-full transition-all " + (pct > 90 ? "bg-red-600" : pct > 70 ? "bg-yellow-500" : "bg-green-600");
-  text.textContent = `${usedMB.toFixed(2)} MB used across all companies signed into this browser \u2022 ~${pct.toFixed(0)}% of the ~${quotaMB}MB browser storage limit`;
+  function paint(quotaBytes) {
+    const quotaMB = quotaBytes / (1024 * 1024);
+    const pct = Math.max(0, Math.min(100, (usedMB / quotaMB) * 100));
+    const quotaLabel = quotaMB >= 1024 ? (quotaMB / 1024).toFixed(1) + " GB" : Math.round(quotaMB) + " MB";
+    bar.style.width = pct.toFixed(1) + "%";
+    bar.className = "h-2 rounded-full transition-all " + (pct > 90 ? "bg-red-600" : pct > 70 ? "bg-yellow-500" : "bg-green-600");
+    text.textContent = `${usedMB.toFixed(2)} MB used across all companies signed into this browser \u2022 ~${pct.toFixed(1)}% of the ~${quotaLabel} browser storage limit`;
+  }
+
+  // Ask the browser for the REAL origin quota (IndexedDB + localStorage pool),
+  // typically several GB on desktop Chrome/Edge. Fall back to 10 GB cap display.
+  if (navigator.storage && navigator.storage.estimate) {
+    navigator.storage.estimate().then(function (est) {
+      paint(est.quota || (10 * 1024 * 1024 * 1024));
+    }).catch(function () { paint(10 * 1024 * 1024 * 1024); });
+  } else {
+    paint(10 * 1024 * 1024 * 1024);
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -128961,102 +129000,35 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
     return num(it.buyPrice || it.costPrice || it.cost || it.purchasePrice || it.unitCost);
   }
 
-  function postedRefs() { return LSget(POSTED_KEY, []) || []; }
-  function markPosted(ref) { var r = postedRefs(); if (r.indexOf(ref) === -1) { r.push(ref); LSset(POSTED_KEY, r); } }
+  /* ---------- Desired cost postings derived from live adjustment records ---------- */
 
-  function postCost(opts) {
-    // opts: { ref, date, account, amount, description, module }
-    var amount = Math.round(num(opts.amount) * 100) / 100;
-    if (!amount) { markPosted(opts.ref); return false; }
-    var costs = LSget('operationalCosts', []) || [];
-    costs.push({
-      id: 'ADJ-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-      date: opts.date,
-      description: opts.description,
-      vendor: '',
-      category: opts.account,
-      method: 'Journal',
-      bank: '',
-      bankIndex: null,
-      paidVia: 'Stock Adjustment',
-      currentAccount: '',
-      currentAccountName: '',
-      amount: amount,
-      netAmount: amount,
-      vat: 0,
-      vatRate: 0,
-      vatInclusive: false,
-      enteredAmount: amount,
-      notes: opts.module + ' — non-cash stock adjustment',
-      source: 'stockAdjustment',
-      adjustmentRef: opts.ref,
-      attachmentUrl: null,
-      attachmentName: null
-    });
-    LSset('operationalCosts', costs);
+  function todayISO() { return new Date().toISOString().slice(0, 10); }
 
-    try {
-      if (typeof window.postToCOA === 'function') {
-        window.postToCOA(opts.account, amount, {
-          date: opts.date, ref: opts.ref, source: opts.module
-        });
-      }
-      if (typeof window.postJournal === 'function') {
-        window.postJournal({
-          date: opts.date,
-          description: opts.description,
-          source: opts.module,
-          entries: [
-            { account: opts.account, debit: amount > 0 ? amount : 0, credit: amount < 0 ? -amount : 0 },
-            { account: 'Inventory', debit: amount < 0 ? -amount : 0, credit: amount > 0 ? amount : 0 }
-          ]
-        });
-      }
-    } catch (e) {}
+  function desiredPostings() {
+    var out = [];
 
-    markPosted(opts.ref);
-    return true;
-  }
-
-  function refreshFinancials() {
-    ['renderOperationalCosts', 'renderProfitLoss', 'renderProfitAndLoss', 'renderReports',
-     'updateProfitAndLoss', 'renderAccounts', 'renderBalanceSheet', 'renderDashboard']
-      .forEach(function (fn) { if (typeof window[fn] === 'function') { try { window[fn](); } catch (e) {} } });
-  }
-
-  /* ---------- Sweeper: post any applied adjustment that isn't posted yet ---------- */
-
-  function selectedAccount(selId) {
-    var sel = el(selId);
-    var v = sel && sel.value ? sel.value : '';
-    return v || ensureDefaultAccount();
-  }
-
-  function sweep() {
-    var refs = postedRefs();
-    var posted = 0;
-
-    // --- Amendments ---
+    // --- Amendments / single adjustments ---
     var amendments = LSget('amendments', []) || [];
     var amendChanged = false;
     amendments.forEach(function (a, i) {
       if (!a || a.status === 'Draft') return;
       var ref = a.costRef || ('AMD-' + (a.warehouse || '') + '-' + (a.sku || a.item || '') + '-' + (a.date || i));
-      if (!a.costRef) { a.costRef = ref; amendChanged = true; }
-      if (refs.indexOf(ref) !== -1) return;
+      if (a.costRef !== ref) { a.costRef = ref; amendChanged = true; }
       var account = a.coaAccount || selectedAccount('adjustCOAAccount');
-      var cost = -num(a.quantity) * unitCostFor(a.warehouse, a);
-      a.coaAccount = account;
-      a.costValue = Math.round(cost * 100) / 100;
-      amendChanged = true;
-      posted += postCost({
+      var unit = num(a.unitCost || a.costPrice) || unitCostFor(a.warehouse, a);
+      var cost = num(a.quantity) * unit; // +qty (increase) = +cost entry, -qty (decrease) = negative entry
+      cost = Math.round(cost * 100) / 100;
+      if (a.coaAccount !== account || a.costValue !== cost) {
+        a.coaAccount = account; a.costValue = cost; amendChanged = true;
+      }
+      out.push({
         ref: ref,
-        date: String(a.date || '').slice(0, 10) || new Date().toISOString().slice(0, 10),
+        date: String(a.date || '').slice(0, 10) || todayISO(),
         account: account,
         amount: cost,
         description: 'Stock Adjustment (' + (a.adjustmentType || 'Adjustment') + ') - ' + (a.item || ''),
         module: 'Adjustments'
-      }) ? 1 : 0;
+      });
     });
     if (amendChanged) LSset('amendments', amendments);
 
@@ -129066,32 +129038,120 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
         var wh = key.replace('bulkAdjustments_', '');
         var log = LSget(key, []) || [];
         var changed = false;
-        log.forEach(function (e) {
+        log.forEach(function (e, i) {
           if (!e || e.status === 'Draft') return;
-          var ref = e.costRef || ('BA-' + (e.id || (wh + '-' + (e.itemId || e.product) + '-' + e.date)));
-          if (!e.costRef) { e.costRef = ref; changed = true; }
-          if (postedRefs().indexOf(ref) !== -1) return;
+          var ref = e.costRef || ('BA-' + (e.id || (wh + '-' + (e.itemId || e.product) + '-' + (e.date || i))));
+          if (e.costRef !== ref) { e.costRef = ref; changed = true; }
           var account = e.coaAccount || selectedAccount('baCOAAccount');
           var qty = num(e.change != null ? e.change : e.adjustment);
-          var cost = -qty * unitCostFor(wh, e);
-          e.coaAccount = account;
-          e.costValue = Math.round(cost * 100) / 100;
-          changed = true;
-          posted += postCost({
+          var unit = num(e.unitCost || e.costPrice) || unitCostFor(wh, e);
+          var cost = Math.round(qty * unit * 100) / 100; // +qty (increase) = +cost entry, -qty (decrease) = negative entry
+          if (e.coaAccount !== account || e.costValue !== cost) {
+            e.coaAccount = account; e.costValue = cost; changed = true;
+          }
+          out.push({
             ref: ref,
-            date: String(e.date || '').slice(0, 10) || new Date().toISOString().slice(0, 10),
+            date: String(e.date || '').slice(0, 10) || todayISO(),
             account: account,
             amount: cost,
             description: 'Bulk Stock Adjustment - ' + (e.product || e.item || e.itemId || ''),
             module: 'Bulk Adjustments'
-          }) ? 1 : 0;
+          });
         });
         if (changed) LSset(key, log);
       });
 
-    if (posted) refreshFinancials();
-    return posted;
+    return out;
   }
+
+  function costRowFor(p, existing) {
+    var row = existing || {
+      id: 'ADJ-' + Date.now() + '-' + Math.floor(Math.random() * 100000),
+      vendor: '', method: 'Journal', bank: '', bankIndex: null,
+      paidVia: 'Stock Adjustment', currentAccount: '', currentAccountName: '',
+      vat: 0, vatRate: 0, vatInclusive: false,
+      attachmentUrl: null, attachmentName: null
+    };
+    row.date = p.date;
+    row.description = p.description;
+    row.category = p.account;
+    row.account = p.account;
+    row.amount = p.amount;
+    row.netAmount = p.amount;
+    row.enteredAmount = p.amount;
+    row.notes = p.module + ' — non-cash stock adjustment (cost price)';
+    row.source = 'stockAdjustment';
+    row.adjustmentRef = p.ref;
+    return row;
+  }
+
+  /* ---------- Full reconciliation: create, update AND remove ---------- */
+
+  function reconcile() {
+    var wanted = desiredPostings().filter(function (p) { return Math.abs(num(p.amount)) > 0.0001; });
+    var byRef = {};
+    wanted.forEach(function (p) { byRef[p.ref] = p; });
+
+    var costs = LSget('operationalCosts', []) || [];
+    var changed = false;
+    var seen = {};
+    var next = [];
+
+    costs.forEach(function (c) {
+      if (!c || c.source !== 'stockAdjustment') { next.push(c); return; }
+      var p = byRef[c.adjustmentRef];
+      if (!p) { changed = true; return; }            // deleted adjustment -> drop the cost
+      if (seen[c.adjustmentRef]) { changed = true; return; }  // de-duplicate
+      seen[c.adjustmentRef] = true;
+      var before = JSON.stringify([c.date, c.amount, c.category, c.description]);
+      var row = costRowFor(p, c);
+      if (JSON.stringify([row.date, row.amount, row.category, row.description]) !== before) changed = true;
+      next.push(row);
+    });
+
+    wanted.forEach(function (p) {
+      if (seen[p.ref]) return;
+      next.push(costRowFor(p, null));
+      seen[p.ref] = true;
+      changed = true;
+    });
+
+    if (changed) {
+      LSset('operationalCosts', next);
+      syncJournals(wanted);
+      LSset(POSTED_KEY, Object.keys(seen));
+      refreshFinancials();
+    }
+    return changed;
+  }
+
+  /* keep journal entries in step with the reconciled postings */
+  function syncJournals(wanted) {
+    ['journalEntries', 'journals', 'generalJournal'].forEach(function (key) {
+      var raw = localStorage.getItem(key);
+      if (raw === null) return;
+      var list = LSget(key, []);
+      if (!Array.isArray(list)) return;
+      var kept = list.filter(function (j) { return !j || j.source !== 'stockAdjustment'; });
+      wanted.forEach(function (p) {
+        var amt = num(p.amount);
+        kept.push({
+          id: 'JADJ-' + p.ref,
+          date: p.date,
+          description: p.description,
+          source: 'stockAdjustment',
+          adjustmentRef: p.ref,
+          entries: [
+            { account: p.account, debit: amt > 0 ? amt : 0, credit: amt < 0 ? -amt : 0 },
+            { account: 'Inventory', debit: amt < 0 ? -amt : 0, credit: amt > 0 ? amt : 0 }
+          ]
+        });
+      });
+      LSset(key, kept);
+    });
+  }
+
+  function sweep() { return reconcile(); }
 
   window.syncAdjustmentCostsToPnL = sweep;
 
@@ -129114,7 +129174,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
     window.showTab = function (id) {
       var r = _showTab.apply(this, arguments);
       if (id === 'Amenend' || id === 'BulkAdjustment') later(ensureFields);
-      if (id === 'chartOfAccountsTab') later(sweep);
+      later(sweep);
       return r;
     };
   }
@@ -129123,6 +129183,8 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
     ensureFields();
     sweep();
     setInterval(ensureFields, 2500);
+    setInterval(sweep, 4000);
+    window.addEventListener('storage', function () { later(sweep); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
