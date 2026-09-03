@@ -58007,6 +58007,7 @@ function addPlannedBudget() {
   renderBudgets();
   renderComparison();
   saveData();
+  if (typeof loadRevisionAccounts === 'function') loadRevisionAccounts();
 
   document.getElementById("budgetAccount").value = "";
   document.getElementById("budgetDepartment").value = "";
@@ -58209,6 +58210,10 @@ function deleteBudget(index) {
   renderBudgets();
   renderComparison();
   saveData();
+  // Bug fix: the revision dropdown's option values are budget array
+  // positions. Deleting a budget shifts every later position, so the
+  // dropdown must be rebuilt or it'll point at the wrong account.
+  if (typeof loadRevisionAccounts === 'function') loadRevisionAccounts();
 }
 
 function addActualMonthValue() {
@@ -58647,7 +58652,13 @@ function editRevision(id) {
   revision.note = newNote;
   revision.date = new Date().toLocaleString();
 
-  const budgetRecord = budgets[revision.budgetIndex];
+  // Bug fix: budgetIndex is the array *position* at the time the revision
+  // was made, but deleteBudget() splices the array and sortBudgets()
+  // re-orders it — either one shifts every later position, so an old
+  // revision's stored index can silently point at the wrong account.
+  // account+department is the stable identity the revision already stores.
+  const budgetRecord = budgets.find(b => b.account === revision.account && b.department === revision.department)
+    || budgets[revision.budgetIndex];
   if (budgetRecord) {
     if (revision.type === "Actual") {
       let actualRecord = actuals.find(a => a.account === budgetRecord.account && a.department === budgetRecord.department);
@@ -59117,6 +59128,9 @@ function sortBudgets(column){
   })
 
   renderBudgets()
+  // Bug fix: sorting reorders the array, so the revision dropdown (whose
+  // option values are array positions) must be rebuilt to match.
+  if (typeof loadRevisionAccounts === 'function') loadRevisionAccounts();
 }
 function exportBudgets() {
 
