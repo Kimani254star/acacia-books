@@ -27231,7 +27231,8 @@ function addQuoteItem() {
   const qty = parseFloat(document.getElementById("quoteItemQty").value);
   const price = parseFloat(document.getElementById("quoteItemPrice").value);
   const discount = parseFloat(document.getElementById("quoteItemDiscount").value) || 0;
-  const vatRate = parseFloat(document.getElementById("quoteItemTax").value) || 0;
+  const taxOption = document.getElementById("quoteItemTax").value;
+  const vatRate = parseFloat(taxOption) || 0;
 
   if (!qty || !price) return alert("Enter quantity & price.");
 
@@ -27241,7 +27242,8 @@ function addQuoteItem() {
   const item = {
     desc: productData.name,
     warehouse: productData.warehouse,
-    qty, price, discount, subtotal, vat
+    qty, price, discount, subtotal, vat,
+    tax: taxOption
   };
 
   if (editingQuoteItemIndex !== null) {
@@ -27328,7 +27330,17 @@ function editQuoteItem(index) {
   document.getElementById("quoteItemQty").value = item.qty;
   document.getElementById("quoteItemPrice").value = item.price;
   document.getElementById("quoteItemDiscount").value = item.discount || 0;
-  document.getElementById("quoteItemTax").value = item.vat && item.subtotal ? (item.vat / item.subtotal * 100) : 0;
+
+  const taxSelect = document.getElementById("quoteItemTax");
+  if (item.tax !== undefined && item.tax !== null && item.tax !== "") {
+    // Items added after this fix store the exact dropdown value (e.g. "16", "8", "exempt") — use it directly.
+    taxSelect.value = item.tax;
+  } else {
+    // Fallback for quotes saved before this fix: approximate by rounding to the nearest whole percent
+    // so it matches one of the numeric <option> values instead of leaving the dropdown blank.
+    const approxRate = item.vat && item.subtotal ? Math.round((item.vat / item.subtotal) * 100) : 0;
+    taxSelect.value = String(approxRate);
+  }
 }
 function saveQuote() {
   const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser') || "{}");
