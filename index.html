@@ -14034,7 +14034,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderShipmentTable();
   generateNextShipmentNumber();
 });
-</script><div id="fundsTab" class="hidden ml-84 mr-7 p-2"><div id="fundsTab-tab-overview" class="funds-tab-panel active"><div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4"><div class="bg-blue-50 p-4 rounded shadow"><p class="text-sm text-gray-500">Total Balance</p><h3 id="totalBankBalance" class="text-sm font-bold">KES 0.00</h3></div><div class="bg-green-50 p-4 rounded shadow"><p class="text-sm text-gray-500">Total Inflow</p><h3 id="totalInflow" class="text-sm font-bold">KES 0.00</h3></div><div class="bg-red-50 p-4 rounded shadow"><p class="text-sm text-gray-500">Total Outflow</p><h3 id="totalOutflow" class="text-sm font-bold">KES 0.00</h3></div><div class="bg-yellow-50 p-4 rounded shadow"><p class="text-sm text-gray-500">Net Position</p><h3 id="netPosition" class="text-sm font-bold">KES 0.00</h3></div></div><div class="bg-white p-2 rounded shadow mb-4"><h3 class="text-sm font-semibold mb-2">Bank Balance Overview (Last 30 Days, KES)</h3><div style="height:360px;"><canvas id="bankChart"></canvas></div></div></div><div id="fundsTab-tab-accounts" class="funds-tab-panel"><div id="bankFormSection" class="bg-white p-2 rounded shadow mb-3 hidden"><div class="mb-4"><input id="bankName" type="text" placeholder="Bank Name" class="border p-2 rounded" style="width: 700px;" /></div><div class="mb-4"><input id="initialBalance" type="number" placeholder="Initial Balance" class="border p-2 rounded" style="width: 700px;" /></div><div class="mb-4"><input id="accountNumber" type="text" placeholder="Account Number" class="border p-2 rounded" style="width: 700px;" /></div><div class="mb-4"><select id="bankCurrency" class="border p-2 rounded" style="width: 700px;"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="KES">KES</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="NZD">NZD</option><option value="CNY">CNY</option><option value="JPY">JPY</option><option value="INR">INR</option><option value="SGD">SGD</option><option value="HKD">HKD</option><option value="CHF">CHF</option><option value="SEK">SEK</option><option value="NOK">NOK</option><option value="DKK">DKK</option><option value="AED">AED</option><option value="SAR">SAR</option><option value="QAR">QAR</option><option value="KWD">KWD</option><option value="BHD">BHD</option><option value="OMR">OMR</option><option value="TRY">TRY</option><option value="ZMW">ZMW</option><option value="UGX">UGX</option><option value="TZS">TZS</option><option value="ETB">ETB</option><option value="EGP">EGP</option><option value="NGN">NGN</option><option value="GHS">GHS</option><option value="BRL">BRL</option><option value="MXN">MXN</option></select></div><div class="mb-4"><label for="creditAccount" class="block font-semibold mb-2">Chart of Account</label><select id="creditAccount" class="border p-2 rounded" style="width: 700px;"></select></div><div class="bg-white p-2 rounded shadow mb-6 mt-4"><h3 class="text-sm font-semibold mb-4">Exchange Rates (Base: KES)</h3><div class="grid grid-cols-8 gap-2 mb-4"><select id="rateCurrency" class="border p-2 rounded w-32"><option value="">Select Currency</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="KES">KES</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="NZD">NZD</option><option value="CNY">CNY</option><option value="JPY">JPY</option><option value="INR">INR</option><option value="SGD">SGD</option><option value="HKD">HKD</option><option value="CHF">CHF</option><option value="SEK">SEK</option><option value="NOK">NOK</option><option value="DKK">DKK</option><option value="AED">AED</option><option value="SAR">SAR</option><option value="QAR">QAR</option><option value="KWD">KWD</option><option value="BHD">BHD</option><option value="OMR">OMR</option><option value="TRY">TRY</option><option value="ZMW">ZMW</option><option value="UGX">UGX</option><option value="TZS">TZS</option><option value="ETB">ETB</option><option value="EGP">EGP</option><option value="NGN">NGN</option><option value="GHS">GHS</option><option value="BRL">BRL</option><option value="MXN">MXN</option></select><input type="number" id="rateValue" step="0.01" placeholder="Rate to KES" class="border p-2 rounded w-32" /></div><button onclick="saveRates()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Save Rates</button></div><button onclick="saveBankAsDraft()" class="mt-4 bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Save as Draft</button><button onclick="addBank()" class="mt-4 bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Add Bank</button><button  onclick="cancelBank()"   class="bg-gray-500 text-white px-1 py-1 rounded hover:bg-gray-600"> Cancel</button></div><div id="bankListSection"><div class="bg-white p-1 rounded shadow mb-6 funds-banklist-box"><h3 class="text-sm font-semibold mb-4">Bank List</h3><div class="funds-listtools"><button type="button" onclick="document.getElementById('bankListSection')?.classList.add('hidden');document.getElementById('bankFormSection')?.classList.remove('hidden');document.getElementById('bankFormSection')?.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('bankName').focus();">➕ New</button><input id="fundsBankListSearch" type="text" placeholder="Search bank, account #, currency..." oninput="filterFundsBankList()"/><button type="button" onclick="exportFundsBankListCSV()">⬇ Export CSV</button></div><div id="bankTable" class="funds-banklist-cards"></div></div></div></div><div id="bankDetailsSection" class="hidden"><div class="funds-jumpnav"><a href="#funds-anchor-addtx" onclick="event.preventDefault();fundsJumpTo('funds-anchor-addtx')">📄 Transactions</a><a href="#funds-anchor-transfer" onclick="event.preventDefault();fundsJumpTo('funds-anchor-transfer')">🔁 Transfers</a><a href="#funds-anchor-reconcile" onclick="event.preventDefault();fundsJumpTo('funds-anchor-reconcile')">✅ Reconciliation</a><a href="#funds-anchor-mapping" onclick="event.preventDefault();fundsJumpTo('funds-anchor-mapping')">🗺️ Mapping</a><button type="button" class="funds-btn funds-btn-ghost" onclick="closeFundsBankDetails()">← Close</button></div>
+</script><div id="fundsTab" class="hidden ml-84 mr-7 p-2"><div id="fundsTab-tab-overview" class="funds-tab-panel active"><div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4"><div class="bg-blue-50 p-4 rounded shadow"><p class="text-sm text-gray-500">Total Balance</p><h3 id="totalBankBalance" class="text-sm font-bold">KES 0.00</h3></div><div class="bg-green-50 p-4 rounded shadow"><p class="text-sm text-gray-500">Total Inflow</p><h3 id="totalInflow" class="text-sm font-bold">KES 0.00</h3></div><div class="bg-red-50 p-4 rounded shadow"><p class="text-sm text-gray-500">Total Outflow</p><h3 id="totalOutflow" class="text-sm font-bold">KES 0.00</h3></div><div class="bg-yellow-50 p-4 rounded shadow"><p class="text-sm text-gray-500">Net Position</p><h3 id="netPosition" class="text-sm font-bold">KES 0.00</h3></div></div><div class="bg-white p-4 rounded shadow mb-4"><h3 class="text-sm font-semibold mb-2">Quick Transaction</h3><div class="flex flex-wrap items-center gap-2"><select id="overviewTxBankSelect" class="border p-2 rounded"><option value="">-- Select Bank --</option></select><button type="button" onclick="fundsOverviewPay('customer')" class="bg-blue-900 text-white px-3 py-2 rounded hover:bg-blue-800">💳 Pay Customer</button><button type="button" onclick="fundsOverviewPay('vendor')" class="bg-blue-900 text-white px-3 py-2 rounded hover:bg-blue-800">💸 Pay Vendor</button></div></div><div class="bg-white p-2 rounded shadow mb-4"><h3 class="text-sm font-semibold mb-2">Bank Balance Overview (Last 30 Days, KES)</h3><div style="height:360px;"><canvas id="bankChart"></canvas></div></div></div><div id="fundsTab-tab-accounts" class="funds-tab-panel"><div id="bankFormSection" class="bg-white p-2 rounded shadow mb-3 hidden"><div class="mb-4"><input id="bankName" type="text" placeholder="Bank Name" class="border p-2 rounded" style="width: 700px;" /></div><div class="mb-4"><input id="initialBalance" type="number" placeholder="Initial Balance" class="border p-2 rounded" style="width: 700px;" /></div><div class="mb-4"><input id="accountNumber" type="text" placeholder="Account Number" class="border p-2 rounded" style="width: 700px;" /></div><div class="mb-4"><select id="bankCurrency" class="border p-2 rounded" style="width: 700px;"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="KES">KES</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="NZD">NZD</option><option value="CNY">CNY</option><option value="JPY">JPY</option><option value="INR">INR</option><option value="SGD">SGD</option><option value="HKD">HKD</option><option value="CHF">CHF</option><option value="SEK">SEK</option><option value="NOK">NOK</option><option value="DKK">DKK</option><option value="AED">AED</option><option value="SAR">SAR</option><option value="QAR">QAR</option><option value="KWD">KWD</option><option value="BHD">BHD</option><option value="OMR">OMR</option><option value="TRY">TRY</option><option value="ZMW">ZMW</option><option value="UGX">UGX</option><option value="TZS">TZS</option><option value="ETB">ETB</option><option value="EGP">EGP</option><option value="NGN">NGN</option><option value="GHS">GHS</option><option value="BRL">BRL</option><option value="MXN">MXN</option></select></div><div class="mb-4"><label for="creditAccount" class="block font-semibold mb-2">Chart of Account</label><select id="creditAccount" class="border p-2 rounded" style="width: 700px;"></select></div><div class="bg-white p-2 rounded shadow mb-6 mt-4"><h3 class="text-sm font-semibold mb-4">Exchange Rates (Base: KES)</h3><div class="grid grid-cols-8 gap-2 mb-4"><select id="rateCurrency" class="border p-2 rounded w-32"><option value="">Select Currency</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="KES">KES</option><option value="CAD">CAD</option><option value="AUD">AUD</option><option value="NZD">NZD</option><option value="CNY">CNY</option><option value="JPY">JPY</option><option value="INR">INR</option><option value="SGD">SGD</option><option value="HKD">HKD</option><option value="CHF">CHF</option><option value="SEK">SEK</option><option value="NOK">NOK</option><option value="DKK">DKK</option><option value="AED">AED</option><option value="SAR">SAR</option><option value="QAR">QAR</option><option value="KWD">KWD</option><option value="BHD">BHD</option><option value="OMR">OMR</option><option value="TRY">TRY</option><option value="ZMW">ZMW</option><option value="UGX">UGX</option><option value="TZS">TZS</option><option value="ETB">ETB</option><option value="EGP">EGP</option><option value="NGN">NGN</option><option value="GHS">GHS</option><option value="BRL">BRL</option><option value="MXN">MXN</option></select><input type="number" id="rateValue" step="0.01" placeholder="Rate to KES" class="border p-2 rounded w-32" /></div><button onclick="saveRates()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Save Rates</button></div><button onclick="saveBankAsDraft()" class="mt-4 bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Save as Draft</button><button onclick="addBank()" class="mt-4 bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900">Add Bank</button><button  onclick="cancelBank()"   class="bg-gray-500 text-white px-1 py-1 rounded hover:bg-gray-600"> Cancel</button></div><div id="bankListSection"><div class="bg-white p-1 rounded shadow mb-6 funds-banklist-box"><h3 class="text-sm font-semibold mb-4">Bank List</h3><div class="funds-listtools"><button type="button" onclick="document.getElementById('bankListSection')?.classList.add('hidden');document.getElementById('bankFormSection')?.classList.remove('hidden');document.getElementById('bankFormSection')?.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('bankName').focus();">➕ New</button><input id="fundsBankListSearch" type="text" placeholder="Search bank, account #, currency..." oninput="filterFundsBankList()"/><button type="button" onclick="exportFundsBankListCSV()">⬇ Export CSV</button></div><div id="bankTable" class="funds-banklist-cards"></div></div></div></div><div id="bankDetailsSection" class="hidden"><div class="funds-jumpnav"><a href="#funds-anchor-addtx" onclick="event.preventDefault();fundsJumpTo('funds-anchor-addtx')">📄 Transactions</a><a href="#funds-anchor-transfer" onclick="event.preventDefault();fundsJumpTo('funds-anchor-transfer')">🔁 Transfers</a><a href="#funds-anchor-reconcile" onclick="event.preventDefault();fundsJumpTo('funds-anchor-reconcile')">✅ Reconciliation</a><a href="#funds-anchor-mapping" onclick="event.preventDefault();fundsJumpTo('funds-anchor-mapping')">🗺️ Mapping</a><button type="button" class="funds-btn funds-btn-ghost" onclick="closeFundsBankDetails()">← Close</button></div>
   <span id="funds-anchor-addtx" class="funds-anchor"></span><div id="moneyTypeFixBar" class="hidden flex items-center justify-between gap-3 bg-yellow-50 border border-yellow-500 text-yellow-900 p-3 rounded mb-4 text-sm"><span id="moneyTypeFixText"></span><button type="button" onclick="repairMoneyTypeBalances()" class="bg-blue-900 text-white px-2 py-1 rounded hover:bg-blue-800">Fix balances</button></div><div class="bg-white p-2 rounded shadow mb-6">
   <h3 class="text-sm font-semibold mb-4">Add Transaction</h3>
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -14684,6 +14684,27 @@ document.addEventListener("DOMContentLoaded", () => {
     window.fundsOverviewGoToBank('funds-anchor-addtx');
   };
 
+  // Opens the selected bank's Transactions form with Customer/Vendor Payment
+  // pre-selected, so the customer/vendor + unpaid invoice/bill picker shows right away.
+  window.fundsOverviewPay = function(kind){
+    var sel = document.getElementById('overviewTxBankSelect');
+    var idx = sel ? sel.value : '';
+    if (idx === '' || idx === null || typeof idx === 'undefined') {
+      alert('Please select a bank first.');
+      return;
+    }
+    window.showFundsTab('accounts');
+    if (typeof viewBank === 'function') viewBank(parseInt(idx, 10));
+    setTimeout(function(){
+      var typeEl = document.getElementById('manualType');
+      if (typeEl) {
+        typeEl.value = kind === 'customer' ? 'Customer Payment' : 'Vendor Payment';
+        typeEl.dispatchEvent(new Event('change'));
+      }
+      if (typeof window.fundsJumpTo === 'function') window.fundsJumpTo('funds-anchor-addtx');
+    }, 60);
+  };
+
   
   window.filterFundsBankList = function(){
     var q = (document.getElementById('fundsBankListSearch') || {}).value || '';
@@ -15327,6 +15348,8 @@ function approveDraft(index) {
   localStorage.setItem("bankDrafts", JSON.stringify(bankDrafts));
   localStorage.setItem("banks", JSON.stringify(banks));
 
+  syncFundsBankToOrgProfile({ name: draft.name, accountNumber: draft.accountNumber });
+
   syncBankBalancesToCOA();
 
   renderDraftTable();
@@ -15350,6 +15373,45 @@ function deleteDraft(index) {
 document.addEventListener("DOMContentLoaded", () => {
   renderDraftTable();
 });
+function syncFundsBankToOrgProfile(bank) {
+  try {
+    if (!bank || !bank.name || bank.system) return;
+    const scopedKey = (typeof getOrgStorageKey === "function") ? getOrgStorageKey() : null;
+    const raw = (scopedKey && localStorage.getItem(scopedKey)) || localStorage.getItem('orgInfo') || '{}';
+    const orgInfo = JSON.parse(raw) || {};
+    if (!Array.isArray(orgInfo.banks)) orgInfo.banks = [];
+
+    const exists = orgInfo.banks.some(b =>
+      String(b.bankName || "").trim().toLowerCase() === String(bank.name).trim().toLowerCase() &&
+      String(b.accountNumber || "").trim() === String(bank.accountNumber || "").trim()
+    );
+    if (exists) return;
+
+    orgInfo.banks.push({
+      bankName: bank.name,
+      accountName: "",
+      accountNumber: bank.accountNumber || "",
+      branch: "",
+      swift: ""
+    });
+
+    if (!orgInfo.bankName) {
+      orgInfo.bankName = bank.name;
+      orgInfo.bankAccountNumber = bank.accountNumber || "";
+    }
+
+    localStorage.setItem('orgInfo', JSON.stringify(orgInfo));
+    if (scopedKey) localStorage.setItem(scopedKey, JSON.stringify(orgInfo));
+
+    const container = document.getElementById('orgBanksContainer');
+    if (container && typeof addOrgBankRow === "function") {
+      container.innerHTML = "";
+      orgInfo.banks.forEach(b => addOrgBankRow(b));
+    }
+    if (typeof updateOrgSummary === "function") updateOrgSummary(orgInfo);
+  } catch (e) { console.warn("syncFundsBankToOrgProfile failed", e); }
+}
+
 function addBank() {
   if (!window.requirePermission('fundsTab', 'add', 'add funds accounts')) return;
 
@@ -15401,6 +15463,8 @@ function addBank() {
     JSON.stringify(banks)
   );
 
+  syncFundsBankToOrgProfile({ name, accountNumber });
+
   syncBankBalancesToCOA();
 
   renderBankTable();
@@ -15430,6 +15494,7 @@ function cancelBank() {
   document.getElementById("bankListSection")?.classList.remove('hidden');
 }
 function renderBankTable() {
+  try { banks = JSON.parse(localStorage.getItem("banks") || "[]"); } catch (e) {}
   const bankTable = document.getElementById("bankTable");
   bankTable.innerHTML = "";
   if (typeof window.populateOverviewTxBankSelect === "function") { try { window.populateOverviewTxBankSelect(); } catch(e){} }
@@ -15511,11 +15576,7 @@ Description: ${t.description || "-"}
   alert(message);
 }
 function updateBankDropdowns() {
-  
-  
-  
-  
-  
+  try { banks = JSON.parse(localStorage.getItem("banks") || "[]"); } catch (e) {}
   const select = document.getElementById("manualBank");
   if (select) {
     const prev = select.value;
@@ -15547,6 +15608,7 @@ function openBankWebsite(index) {
 }
 
 function viewBank(index) {
+  try { banks = JSON.parse(localStorage.getItem("banks") || "[]"); } catch (e) {}
   const section = document.getElementById("bankDetailsSection");
 
   const isHidden = section.classList.contains("hidden");
@@ -16172,6 +16234,17 @@ function manualTransaction() {
     invoiceAllocations.reduce((s, a) => s + a.amount, 0) +
     billAllocations.reduce((s, a) => s + a.amount, 0);
 
+  if (!isEditingTx && (isCustomerAlloc || isVendorAlloc)) {
+    const chosenParty = document.getElementById(isCustomerAlloc ? "manualCustomer" : "manualVendor");
+    if (!chosenParty || !chosenParty.value) {
+      alert("⚠️ Please select a " + (isCustomerAlloc ? "customer" : "vendor") +
+        " so this " + (isCustomerAlloc ? "receipt" : "payment") +
+        " can be allocated to " + (isCustomerAlloc ? "invoices" : "bills") +
+        " or recorded as available credit.");
+      return;
+    }
+  }
+
   if (allocatedTotal > amount + 0.01) {
     alert(
       "⚠️ The amount allocated to invoices/bills (" + allocatedTotal.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2) +
@@ -16319,6 +16392,20 @@ function manualTransaction() {
   if (typeof renderBankTable === "function") renderBankTable();
   clearManualTxForm();
   updateBankSummary();
+
+  if (!isEditingTx && (isCustomerAlloc || isVendorAlloc) && partyName) {
+    const unallocated = amount - allocatedTotal;
+    if (unallocated > 0.005) {
+      let nowAvail = unallocated;
+      try {
+        if (window.__acxPrepayBalance) nowAvail = window.__acxPrepayBalance(isCustomerAlloc ? "customer" : "supplier", partyName);
+      } catch (e) {}
+      const msg = "✅ " + _acxFmt(unallocated) + " recorded as a prepayment. " + partyName +
+        " now has " + _acxFmt(nowAvail) + " available credit.";
+      if (typeof window.showToast === "function") window.showToast(msg); else alert(msg);
+    }
+    if (typeof window.renderPrepaymentReport === "function") { try { window.renderPrepaymentReport(); } catch (e) {} }
+  }
 }
 function cancelTransaction() {
   document.getElementById("manualBank").value = '';
@@ -16383,8 +16470,8 @@ function renderManualTransactions(filterBank) {
       
       
       filterBank = storedName;
-    } else if (section && !section.classList.contains("hidden") && idx !== null && banks[idx]) {
-      filterBank = banks[idx].name;
+    } else if (section && !section.classList.contains("hidden") && idx !== null && JSON.parse(localStorage.getItem("banks") || "[]")[idx]) {
+      filterBank = JSON.parse(localStorage.getItem("banks") || "[]")[idx].name;
     } else {
       filterBank = "";
     }
@@ -16427,11 +16514,7 @@ function renderManualTransactions(filterBank) {
       <td class="px-2 py-1">${tx.ref}</td>
 
       <td class="px-2 py-1 text-sm">
-        ${
-          Array.isArray(tx.allocatedTo) && tx.allocatedTo.length
-            ? tx.allocatedTo.map(l => `<div class="whitespace-nowrap">${l}</div>`).join("")
-            : '<span class="text-gray-400">—</span>'
-        }
+        ${manualTxAllocCell(tx)}
       </td>
 
       <td class="px-2 py-1 relative">
@@ -16649,10 +16732,22 @@ function editManualTransaction(id) {
   document.getElementById("manualDate").value = tx.date;
   document.getElementById("manualRef").value = tx.ref;
 
-  
-  
-  
   manualTxEditingIndex = idx;
+
+  // Show the Customer/Vendor box for this type and populate its dropdown,
+  // then re-select the party that was saved on this transaction so it
+  // doesn't come back blank.
+  const typeEl = document.getElementById("manualType");
+  if (typeEl) typeEl.dispatchEvent(new Event("change"));
+  if (tx.party) {
+    if (tx.type === "Customer Payment" || tx.type === "Customer Advance") {
+      const sel = document.getElementById("manualCustomer");
+      if (sel) { sel.value = tx.party; showCustomerUnpaid(tx.party); }
+    } else if (tx.type === "Vendor Payment" || tx.type === "Vendor Advance") {
+      const sel = document.getElementById("manualVendor");
+      if (sel) { sel.value = tx.party; showVendorUnpaid(tx.party); }
+    }
+  }
 }
 
 function deleteManualTransaction(id) {
@@ -16961,7 +17056,7 @@ function loadSuppliersToManual() {
   select.innerHTML = html;
 }
 
-function showCustomerUnpaid(name) {
+function _acxShowCustomerUnpaidCore(name) {
   const box = document.getElementById("unpaidInvoicesBox");
   const list = document.getElementById("unpaidInvoicesList");
   if (!list) return;
@@ -17188,7 +17283,7 @@ function exportManualTransactionsPDF() {
 
   doc.save("manual_transactions.pdf");
 }
-function showVendorUnpaid(name) {
+function _acxShowVendorUnpaidCore(name) {
   const box = document.getElementById("unpaidBillsBox");
   const list = document.getElementById("unpaidBillsList");
   if (!list) return;
@@ -17268,6 +17363,122 @@ function showVendorUnpaid(name) {
   });
 }
 
+
+
+/* ===== Funds > Add Transaction: available credit + prepayment preview ===== */
+function _acxDp() { return (window.__getDecimalPlaces ? window.__getDecimalPlaces() : 2); }
+function _acxFmt(v) {
+  var d = _acxDp();
+  return (parseFloat(v) || 0).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+function _acxPartyKind() {
+  var t = (document.getElementById("manualType") || {}).value;
+  if (t === "Customer Payment" || t === "Customer Advance") return "customer";
+  if (t === "Vendor Payment" || t === "Vendor Advance") return "supplier";
+  return "";
+}
+function _acxPartyBits(kind) {
+  return kind === "customer"
+    ? { box: "unpaidInvoicesBox", list: "unpaidInvoicesList", sel: "manualCustomer", noun: "invoices" }
+    : { box: "unpaidBillsBox", list: "unpaidBillsList", sel: "manualVendor", noun: "bills" };
+}
+function _acxUpdateAllocSummary(kind) {
+  kind = kind || _acxPartyKind();
+  if (!kind) return;
+  var b = _acxPartyBits(kind);
+  var box = document.getElementById(b.box);
+  var sum = document.getElementById("acxAllocSummary-" + kind);
+  if (!box || !sum) return;
+  var party = (document.getElementById(b.sel) || {}).value || "";
+  var editing = (typeof manualTxEditingIndex !== "undefined" && manualTxEditingIndex !== null);
+  var amount = parseFloat((document.getElementById("manualAmount") || {}).value) || 0;
+  if (!party || editing || amount <= 0) { sum.innerHTML = ""; return; }
+  var allocs = kind === "customer" ? getCheckedInvoiceAllocations() : getCheckedBillAllocations();
+  var allocated = allocs.reduce(function (t, a) { return t + a.amount; }, 0);
+  var rest = amount - allocated;
+  var html = '<div class="text-sm border-t pt-2 mt-2">' +
+    'Payment: <b>' + _acxFmt(amount) + '</b>';
+  if (allocated > 0) html += ' &nbsp;•&nbsp; Allocated to ' + b.noun + ': <b>' + _acxFmt(allocated) + '</b>';
+  if (rest > 0.005) {
+    html += ' &nbsp;•&nbsp; <span class="text-green-700 font-semibold">To prepayment (available credit): ' + _acxFmt(rest) + '</span>';
+  } else if (rest < -0.005) {
+    html += ' &nbsp;•&nbsp; <span class="text-red-600 font-semibold">Allocated exceeds payment by ' + _acxFmt(-rest) + '</span>';
+  }
+  html += '</div>';
+  sum.innerHTML = html;
+}
+function _acxDecoratePartyBox(kind, name) {
+  var b = _acxPartyBits(kind);
+  var box = document.getElementById(b.box);
+  var list = document.getElementById(b.list);
+  if (!box || !list) return;
+  var credit = box.querySelector("#acxPartyCredit-" + kind);
+  var sum = box.querySelector("#acxAllocSummary-" + kind);
+  if (!name) {
+    if (credit) credit.innerHTML = "";
+    if (sum) sum.innerHTML = "";
+    return;
+  }
+  if (!credit) {
+    credit = document.createElement("div");
+    credit.id = "acxPartyCredit-" + kind;
+    box.insertBefore(credit, list);
+  }
+  if (!sum) {
+    sum = document.createElement("div");
+    sum.id = "acxAllocSummary-" + kind;
+    list.insertAdjacentElement("afterend", sum);
+  }
+  var avail = 0;
+  try { avail = window.__acxPrepayBalance ? window.__acxPrepayBalance(kind, name) : 0; } catch (e) {}
+  credit.innerHTML = avail > 0.005
+    ? '<div class="text-sm bg-green-50 border border-green-300 text-green-800 rounded px-2 py-1 mb-2">💰 <b>' +
+      escapeHtml(name) + '</b> has <b>' + _acxFmt(avail) + '</b> available credit on file (prepayments / unallocated payments).</div>'
+    : "";
+  // nothing to allocate to -> say where the money will go
+  if (!list.querySelector(".allocInvoiceCheck, .allocBillCheck")) {
+    var p = list.querySelector("p");
+    if (p) p.textContent += " The full payment will be recorded as a prepayment and show as available credit for this " +
+      (kind === "customer" ? "customer." : "vendor.");
+  }
+  _acxUpdateAllocSummary(kind);
+}
+function showCustomerUnpaid(name) {
+  _acxShowCustomerUnpaidCore(name);
+  _acxDecoratePartyBox("customer", name);
+}
+function showVendorUnpaid(name) {
+  _acxShowVendorUnpaidCore(name);
+  _acxDecoratePartyBox("supplier", name);
+}
+document.addEventListener("input", function (e) {
+  var t = e.target;
+  if (!t || !t.closest) return;
+  if (t.id === "manualAmount" || t.closest("#unpaidInvoicesList, #unpaidBillsList")) _acxUpdateAllocSummary();
+});
+document.addEventListener("change", function (e) {
+  var t = e.target;
+  if (!t || !t.closest) return;
+  if (t.closest("#unpaidInvoicesList, #unpaidBillsList")) _acxUpdateAllocSummary();
+});
+
+/* Allocated-To cell for the manual transactions table (shows live available credit) */
+function manualTxAllocCell(tx) {
+  var lines = Array.isArray(tx.allocatedTo)
+    ? tx.allocatedTo.map(function (l) { return '<div class="whitespace-nowrap">' + l + '</div>'; })
+    : [];
+  var isCred = tx.type === "Customer Payment" || tx.type === "Customer Advance" ||
+               tx.type === "Vendor Payment" || tx.type === "Vendor Advance";
+  if (isCred) {
+    var amt = parseFloat(String(tx.amount).replace(/[^0-9.-]+/g, "")) || 0;
+    var rem = amt - (parseFloat(tx.allocatedAmount) || 0);
+    if (rem > 0.005) {
+      lines.push('<div class="whitespace-nowrap text-green-700 font-semibold">💰 Available credit' +
+        (tx.party ? " — " + escapeHtml(tx.party) : "") + ': ' + _acxFmt(rem) + '</div>');
+    }
+  }
+  return lines.length ? lines.join("") : '<span class="text-gray-400">—</span>';
+}
 
 
 window.fetchUnpaidInvoices = showCustomerUnpaid;
@@ -34441,8 +34652,8 @@ function addReceipt() {
   resetReceiptForm();  
   renderReceipts();  
   renderAccountsReceivable();
-  loadBanks?.();
-  loadTransactions?.();
+  if (typeof window.loadBanks === "function") { try { loadBanks(); } catch(_){} }
+  if (typeof window.loadTransactions === "function") { try { loadTransactions(); } catch(_){} }
 
   alert("✅ Payment saved successfully!");
 }
@@ -34744,8 +34955,8 @@ function editReceipt(id) {
 
   renderReceipts();
   renderAccountsReceivable?.();
-  loadBanks?.();
-  loadTransactions?.();
+  if (typeof window.loadBanks === "function") { try { loadBanks(); } catch(_){} }
+  if (typeof window.loadTransactions === "function") { try { loadTransactions(); } catch(_){} }
 
   alert("✅ Receipt updated successfully");
 }
@@ -34839,8 +35050,8 @@ function deleteReceipt(id) {
 
   renderReceipts();
   renderAccountsReceivable?.();
-  loadBanks?.();
-  loadTransactions?.();
+  if (typeof window.loadBanks === "function") { try { loadBanks(); } catch(_){} }
+  if (typeof window.loadTransactions === "function") { try { loadTransactions(); } catch(_){} }
 
   alert("♻️ Receipt moved to Recycle Bin & accounts rolled back.");
 }
@@ -39501,6 +39712,31 @@ function deleteSupplierPayment(index) {
 
   payments.splice(index, 1);
 
+  // Roll back the linked bill so it reflects the payment removal
+  if (payment.billIndex !== undefined && payment.billIndex !== "" && payment.billIndex !== "opening-balance") {
+    const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+    const bill = bills[payment.billIndex];
+    if (bill) {
+      const total = parseFloat(bill.total) || 0;
+      const newPaid = Math.max((parseFloat(bill.paidAmount || 0)) - (parseFloat(payment.amount) || 0), 0);
+      bill.paidAmount = newPaid;
+      bill.amountPaid = newPaid;
+      bill.balance = Math.max(total - newPaid, 0);
+      if (newPaid <= 0) bill.status = "Unpaid";
+      else if (newPaid >= total) bill.status = "Paid";
+      else bill.status = "Partial";
+      bills[payment.billIndex] = bill;
+      localStorage.setItem("bills", JSON.stringify(bills));
+
+      const bulkBills = JSON.parse(localStorage.getItem("bulkBills") || "[]");
+      const bbIdx = bulkBills.findIndex(bb => bb.billNumber === bill.billNumber && bb.supplier === bill.supplier);
+      if (bbIdx !== -1) {
+        bulkBills[bbIdx].status = bill.status;
+        localStorage.setItem("bulkBills", JSON.stringify(bulkBills));
+      }
+    }
+  }
+
   localStorage.setItem("billPayments", JSON.stringify(payments));
   localStorage.setItem("banks", JSON.stringify(banks));
   localStorage.setItem("transactions", JSON.stringify(transactions));
@@ -39512,6 +39748,7 @@ function deleteSupplierPayment(index) {
   renderAccountsPayable?.();
   renderCreditcontrolAnalysis?.();
   loadDashboard?.();
+  loadSupplierBills?.();
 
   alert("♻️ Supplier payment moved to Recycle Bin & accounts rolled back.");
 }
@@ -39534,6 +39771,10 @@ function deleteSelectedSupplierPayments() {
   if (!confirm(`You selected ${selected.length} payment(s). Proceed?`)) return;
   if (!confirm("This action cannot be undone. Confirm delete?")) return;
 
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  const bulkBills = JSON.parse(localStorage.getItem("bulkBills") || "[]");
+  let billsChanged = false;
+
   selected.sort((a, b) => b - a).forEach(index => {
     const payment = payments[index];
     if (!payment) return;
@@ -39551,8 +39792,33 @@ function deleteSelectedSupplierPayments() {
     transactions = transactions.filter(t => t.id !== id);
     manualTx = manualTx.filter(t => t.id !== id);
 
+    // Roll back the linked bill so it reflects the payment removal
+    if (payment.billIndex !== undefined && payment.billIndex !== "" && payment.billIndex !== "opening-balance") {
+      const bill = bills[payment.billIndex];
+      if (bill) {
+        const total = parseFloat(bill.total) || 0;
+        const newPaid = Math.max((parseFloat(bill.paidAmount || 0)) - (parseFloat(payment.amount) || 0), 0);
+        bill.paidAmount = newPaid;
+        bill.amountPaid = newPaid;
+        bill.balance = Math.max(total - newPaid, 0);
+        if (newPaid <= 0) bill.status = "Unpaid";
+        else if (newPaid >= total) bill.status = "Paid";
+        else bill.status = "Partial";
+        bills[payment.billIndex] = bill;
+        billsChanged = true;
+
+        const bbIdx = bulkBills.findIndex(bb => bb.billNumber === bill.billNumber && bb.supplier === bill.supplier);
+        if (bbIdx !== -1) bulkBills[bbIdx].status = bill.status;
+      }
+    }
+
     payments.splice(index, 1);
   });
+
+  if (billsChanged) {
+    localStorage.setItem("bills", JSON.stringify(bills));
+    localStorage.setItem("bulkBills", JSON.stringify(bulkBills));
+  }
 
   localStorage.setItem("billPayments", JSON.stringify(payments));
   localStorage.setItem("banks", JSON.stringify(banks));
@@ -39565,6 +39831,7 @@ function deleteSelectedSupplierPayments() {
   renderAccountsPayable?.();
   renderCreditcontrolAnalysis?.();
   loadDashboard?.();
+  loadSupplierBills?.();
 
   alert("♻️ Selected supplier payments moved to Recycle Bin.");
 }
@@ -40572,7 +40839,7 @@ function deleteSelectedBills() {
 
   localStorage.setItem("bills", JSON.stringify(bills));
 
-  renderBills?.();
+  if (typeof window.renderBills === "function") { try { renderBills(); } catch(_){} }
   updateAccountsPayable?.();
   renderAccountsPayable?.();
   renderCreditcontrolAnalysis?.();
@@ -46694,8 +46961,8 @@ function importTaxPayments() {
             renderTaxPayments();
             updateTaxesCard?.();
             renderTaxesReport?.();
-            loadBanks?.();
-            loadTransactions?.();
+            if (typeof window.loadBanks === "function") { try { loadBanks(); } catch(_){} }
+            if (typeof window.loadTransactions === "function") { try { loadTransactions(); } catch(_){} }
 
             if (importedCount > 0) {
               showAlert(`✅ Imported ${importedCount} tax payment(s) and updated bank balances.` +
@@ -46999,8 +47266,8 @@ function addTaxPayment() {
   renderTaxPayments?.();
   renderManualTransactions?.();
   renderReconciliationTransactions?.();
-  loadBanks?.();
-  loadTransactions?.();
+  if (typeof window.loadBanks === "function") { try { loadBanks(); } catch(_){} }
+  if (typeof window.loadTransactions === "function") { try { loadTransactions(); } catch(_){} }
   resetTaxForm();
 
   alert("✅ Tax payment recorded successfully!");
@@ -47293,8 +47560,8 @@ function deleteTaxPayment(index) {
   renderTaxPayments();
   renderManualTransactions?.();
   renderReconciliationTransactions?.();
-  loadBanks?.();
-  loadTransactions?.();
+  if (typeof window.loadBanks === "function") { try { loadBanks(); } catch(_){} }
+  if (typeof window.loadTransactions === "function") { try { loadTransactions(); } catch(_){} }
 
   alert("♻️ Tax payment moved to Recycle Bin & accounts rolled back.");
 }
@@ -47612,8 +47879,8 @@ function saveBulkTaxPayments() {
   renderTaxPayments();
   renderManualTransactions?.();
   renderReconciliationTransactions?.();
-  loadBanks?.();
-  loadTransactions?.();
+  if (typeof window.loadBanks === "function") { try { loadBanks(); } catch(_){} }
+  if (typeof window.loadTransactions === "function") { try { loadTransactions(); } catch(_){} }
   updateTaxesCard();
   renderTaxesReport();
 
@@ -59120,7 +59387,7 @@ function addNonCurrentAsset() {
 
   renderNonCurrentAssets();
   renderNonCurrentAssetsSummary();
-  renderBalanceSheetAssets?.();
+  if (typeof window.renderBalanceSheetAssets === "function") { try { renderBalanceSheetAssets(); } catch(_){} }
   try { renderBankTable?.(); } catch(_){}
   try { renderManualTransactions?.(); } catch(_){}
   try { renderBalanceSheet?.(); } catch(_){}
@@ -59401,7 +59668,7 @@ function deleteNonCurrentAsset(index) {
 
   renderNonCurrentAssets();
   renderNonCurrentAssetsSummary();
-  renderBalanceSheetAssets?.();
+  if (typeof window.renderBalanceSheetAssets === "function") { try { renderBalanceSheetAssets(); } catch(_){} }
   try { renderBankTable?.(); } catch(_){}
   try { renderManualTransactions?.(); } catch(_){}
   try { renderBalanceSheet?.(); } catch(_){}
@@ -59471,7 +59738,7 @@ function depreciateNonCurrentAsset(index) {
 
   saveNonCurrentAssets();
   renderNonCurrentAssets();
-  renderBalanceSheetAssets?.();
+  if (typeof window.renderBalanceSheetAssets === "function") { try { renderBalanceSheetAssets(); } catch(_){} }
   renderReports?.();
   renderNonCurrentAssetsSummary();
   showDepreciationHistory(index);
@@ -59962,7 +60229,7 @@ function processAssetWriteOff(asset, loss) {
 
   renderNonCurrentAssets();
   renderNonCurrentAssetsSummary();
-  renderBalanceSheetAssets?.();
+  if (typeof window.renderBalanceSheetAssets === "function") { try { renderBalanceSheetAssets(); } catch(_){} }
   syncNonCurrentAssetsToOpeningBalances();
   renderReports();
 
@@ -66754,7 +67021,7 @@ function resetEarnings() {
         onchange="updateAutoDeductions()"><option value="kenya">🇰🇪 Kenya</option><option value="usa">🇺🇸 United States</option><option value="uk">🇬🇧 United Kingdom</option><option value="canada">🇨🇦 Canada</option><option value="australia">🇦🇺 Australia</option><option value="southafrica">🇿🇦 South Africa</option><option value="india">🇮🇳 India</option><option value="germany">🇩🇪 Germany</option><option value="france">🇫🇷 France</option><option value="singapore">🇸🇬 Singapore</option></select><select id="payrollEmpID"
             class="border p-2 rounded"
             style="width: 700px;"
-            onchange="autoFillGrossFromEarnings()"><option value="">Select Employee</option></select><select id="payrollAccount" class="border p-2 rounded" style="width: 700px;"><option value="">Select Chart of Account</option></select><select id="payrollBank" class="border p-2 rounded"  style="width: 700px;"><option value="">Select Bank</option></select><input id="payrollMonth" type="month" class="border p-2 rounded" style="width: 700px;" /><input id="payrollGross"   type="number"  placeholder="Gross Pay" class="border p-2 rounded" style="width: 700px;" oninput="updateAutoDeductions()" /><input id="payrollDeductions" type="number" placeholder="Total Deductions" class="border p-2 rounded bg-gray-100 cursor-not-allowed" style="width: 700px;" readonly /></div><div id="deductionBreakdown" class="text-sm text-gray-600 mb-4"></div><div class="flex gap-2"><button onclick="addGrossPay()"
+            onchange="autoFillGrossFromEarnings()"><option value="">Select Employee</option></select><select id="payrollAccount" class="border p-2 rounded" style="width: 700px;"><option value="">Select Chart of Account</option></select><select id="payrollBank" class="border p-2 rounded"  style="width: 700px;"><option value="">Select Bank</option></select><input id="payrollMonth" type="month" class="border p-2 rounded" style="width: 700px;" /><input id="payrollGross"   type="number"  placeholder="Gross Pay" class="border p-2 rounded" style="width: 700px;" oninput="updateAutoDeductions()" /><input id="payrollDeductions" type="number" placeholder="Total Deductions" class="border p-2 rounded bg-gray-100 cursor-not-allowed" style="width: 700px;" readonly /></div><div id="deductionBreakdown" class="text-sm text-gray-600 mb-4"></div><div id="payrollNetPayPreview" class="text-sm font-bold text-blue-900 mb-4"></div><div class="flex gap-2"><button onclick="addGrossPay()"
             class="bg-blue-900 text-white px-3 py-2 rounded hover:bg-blue-800">
       Save Payroll
     </button><button onclick="bulkAddGrossPay()"
@@ -67871,6 +68138,9 @@ function renderEarnings() {
       <td class="p-2 border text-blue-900">
         KES ${totalGross.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)}
       </td>
+      <td class="p-2 border text-orange-700">
+        KES ${totalLoans.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)}
+      </td>
       <td class="p-2 border"></td>
     </tr>
   `);
@@ -68382,6 +68652,11 @@ Other Loan: ${window.__fmtBase ? window.__fmtBase(loans.otherLoan) : loans.other
 
   document.getElementById("payrollDeductions").value = totalDeductions.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2);
   document.getElementById("deductionBreakdown").innerText = breakdown;
+
+  const netPayPreviewEl = document.getElementById("payrollNetPayPreview");
+  if (netPayPreviewEl) {
+    netPayPreviewEl.innerText = `Net Pay (after loan deductions): KES ${netPay.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)}`;
+  }
 }
 
 /* ---- payroll dating (fix: P&L / dashboard card ignored payroll because records had no `date`) ---- */
@@ -69428,6 +69703,11 @@ SHIF: ${p.shif}
 NSSF: ${p.nssf}
 Housing: ${p.housing}
 NITA: ${p.nita}
+Sacco Loan: ${p.saccoLoan || 0}
+Company Loan: ${p.companyLoan || 0}
+HELB: ${p.helbLoan || 0}
+Other Loan: ${p.otherLoan || 0}
+Total Loan Deductions: ${p.loanDeductions || 0}
 Deductions: ${p.deductions}
 Net: ${p.net}
 `;
@@ -69466,6 +69746,11 @@ function printPayroll(id) {
       <p>NSSF: ${p.nssf}</p>
       <p>Housing: ${p.housing}</p>
       <p>NITA: ${p.nita}</p>
+      <p>Sacco Loan: ${p.saccoLoan || 0}</p>
+      <p>Company Loan: ${p.companyLoan || 0}</p>
+      <p>HELB: ${p.helbLoan || 0}</p>
+      <p>Other Loan: ${p.otherLoan || 0}</p>
+      <p>Total Loan Deductions: ${p.loanDeductions || 0}</p>
       <p>Deductions: ${p.deductions}</p>
       <p>Net: ${p.net}</p>
     </body>
@@ -70415,12 +70700,22 @@ function generatePayslip() {
     <tr><td class="border p-2">Gross Pay</td><td class="border p-2">KES ${parseFloat(payroll.gross).toLocaleString()}</td></tr>
   `;
 
+  const __loanRows = [
+    ["Sacco Loan", payroll.saccoLoan],
+    ["Company Loan", payroll.companyLoan],
+    ["HELB Deduction", payroll.helbLoan],
+    ["Other Loan/Deduction", payroll.otherLoan]
+  ].filter(r => parseFloat(r[1]) > 0)
+   .map(r => `<tr><td class="border p-2">${r[0]}</td><td class="border p-2">KES ${r[1]}</td></tr>`)
+   .join("");
+
   document.getElementById("payslipDeductions").innerHTML = `
     <tr><td class="border p-2">NSSF</td><td class="border p-2">KES ${payroll.nssf}</td></tr>
     <tr><td class="border p-2">SHIF</td><td class="border p-2">KES ${payroll.shif}</td></tr>
     <tr><td class="border p-2">Housing Levy</td><td class="border p-2">KES ${payroll.housing}</td></tr>
     <tr><td class="border p-2">PAYE</td><td class="border p-2">KES ${payroll.paye}</td></tr>
     <tr><td class="border p-2">NITA</td><td class="border p-2">KES ${payroll.nita}</td></tr>
+    ${__loanRows}
     <tr class="font-bold"><td class="border p-2">Total Deductions</td><td class="border p-2">KES ${payroll.deductions}</td></tr>
   `;
 
@@ -95942,7 +96237,7 @@ RevenueModule.refresh();
 
 <div id="opBasicInfo" class="op-card"><div class="op-card-head"><div class="op-card-icon">🏢</div><div><div class="op-card-title">Basic Information</div><div class="op-card-sub">Your organization's core identity and registration details</div></div></div>
 
-<div class="mb-4"><label class="op-label" for="orgLogo">Organization Logo</label><div class="op-dropzone"><input type="file" id="orgLogo" accept=".jpg,.jpeg,.png,.gif,.bmp" class="border p-2 rounded w-full bg-white text-sm" onchange="previewOrgLogo(event)" /><img id="orgLogoPreview" class="hidden w-14 h-14 rounded object-cover border flex-shrink-0" alt="Logo preview" /></div><p class="op-hint">Preferred: 240x240px @ 72 DPI • Max 1MB • JPG, PNG, GIF, BMP</p></div>
+<div class="mb-4"><label class="op-label" for="orgLogo">Organization Logo</label><div class="op-dropzone"><input type="file" id="orgLogo" accept=".jpg,.jpeg,.png,.gif,.bmp" class="border p-2 rounded w-full bg-white text-sm" onchange="previewOrgLogo(event)" /><img id="orgLogoPreview" class="hidden w-14 h-14 rounded object-cover border flex-shrink-0" alt="Logo preview" /></div><p class="op-hint">Preferred: 240x240px @ 72 DPI • Max 2MB • JPG, PNG, GIF, BMP</p></div>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 <div><label class="op-label" for="orgName">Organization Name</label><input id="orgName" type="text" placeholder="e.g., Acacia Books" class="border p-2 rounded w-full" /></div>
@@ -99068,8 +99363,8 @@ function addAdditionalField(label, value) {
 function previewOrgLogo(event) {
   const file = event.target.files[0];
   if (!file) return;
-  if (file.size > 1024 * 1024) {
-    alert("⚠️ Logo must be 1MB or smaller.");
+  if (file.size > 2 * 1024 * 1024) {
+    alert("⚠️ Logo must be 2MB or smaller.");
     event.target.value = "";
     return;
   }
@@ -99225,6 +99520,7 @@ function saveOrgInfo() {
     if (orgInfo.baseCurrency) applyCurrency();
 
     updateOrgSummary(orgInfo);
+    if (typeof window.__acxRefreshBrandingIdentity === "function") window.__acxRefreshBrandingIdentity();
     alert("✅ Organization info saved successfully!");
   }
 }
@@ -122654,10 +122950,17 @@ try{
     document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && isOpen()) closeModal(); });
     form.addEventListener('submit', submit);
     scan(document);
+    var __qaScanTimer = null;
     new MutationObserver(function(m){
       var need = false;
-      m.forEach(function(r){ r.addedNodes && r.addedNodes.forEach(function(n){ if(n.nodeType === 1) need = true; }); });
-      if(need) scan(document);
+      for(var i=0;i<m.length && !need;i++){
+        var r = m[i];
+        if(r.target && r.target.dataset && r.target.dataset.qaType) continue; // ignore our own addOption() churn on already-enhanced selects
+        if(r.addedNodes) for(var j=0;j<r.addedNodes.length;j++){ if(r.addedNodes[j].nodeType === 1){ need = true; break; } }
+      }
+      if(!need) return;
+      clearTimeout(__qaScanTimer);
+      __qaScanTimer = setTimeout(function(){ scan(document); }, 200);
     }).observe(document.body, {childList:true, subtree:true});
     window.AcaciaQuickAdd = { open: openModal, rescan: scan };
   }
@@ -127334,6 +127637,19 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
         var nameEl = branding.querySelector("#acxBrandOrgName");
         if (img) img.src = org.logo || "acaciabooks-logo.png";
         if (nameEl) nameEl.textContent = org.name || "My Company Ltd";
+        var sbLogo = branding.querySelector("#acxPreviewSidebarLogo");
+        if (sbLogo) {
+          if (org.logo) {
+            sbLogo.style.backgroundImage = "url(" + org.logo + ")";
+            sbLogo.style.backgroundSize = "contain";
+            sbLogo.style.backgroundPosition = "center";
+            sbLogo.style.backgroundRepeat = "no-repeat";
+            sbLogo.style.backgroundColor = "#fff";
+          } else {
+            sbLogo.style.backgroundImage = "";
+            sbLogo.style.backgroundColor = "rgba(255,255,255,.25)";
+          }
+        }
       }
       function updatePreview() {
         var d = readBrandForm();
@@ -127407,6 +127723,7 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
 
       paintIdentityPreview();
       updatePreview();
+      window.__acxRefreshBrandingIdentity = paintIdentityPreview;
       orgTab.appendChild(branding);
 
       var domain = formSection({
