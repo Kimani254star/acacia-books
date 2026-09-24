@@ -5313,7 +5313,7 @@ function loadDashboard() {
   const billPaymentTotal = billPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
   const supplierBalance = billTotal - billPaymentTotal;
   const payrollRecords = JSON.parse(localStorage.getItem('payrollRecords') || '[]');
-  let payrollTotal = payrollRecords.reduce((sum, p) => sum + (parseFloat(p.net || p.total) || 0), 0);
+  let payrollTotal = payrollRecords.reduce((sum, p) => sum + (parseFloat(p.net != null ? p.net : (p.total != null ? p.total : p.gross)) || 0), 0);
   if (!payrollTotal) payrollTotal = payroll.reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
   const taxTotal = taxPayments.reduce((sum, tx) => sum + (parseFloat(tx.amount != null ? tx.amount : tx.total) || 0), 0);
   const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
@@ -5332,7 +5332,7 @@ function loadDashboard() {
   }
   const invoiceMonthTotal = invoices.filter(i => isCurrentMonth(i.date)).reduce((sum, i) => sum + (parseFloat(i.total) || 0), 0);
   const billMonthTotal = bills.filter(b => isCurrentMonth(b.date)).reduce((sum, b) => sum + (parseFloat(b.total) || 0), 0);
-  const payrollMonthTotal = payroll.filter(p => isCurrentMonth(p.date)).reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
+  const payrollMonthTotal = payroll.filter(p => isCurrentMonth(p.date)).reduce((sum, p) => sum + (parseFloat(p.net != null ? p.net : p.total) || 0), 0);
   const taxMonthTotal = taxPayments.filter(tx => isCurrentMonth(tx.date)).reduce((sum, tx) => sum + (parseFloat(tx.amount != null ? tx.amount : tx.total) || 0), 0);
 
   const cashFlow = invoiceMonthTotal - (billMonthTotal + payrollMonthTotal + taxMonthTotal);
@@ -5380,7 +5380,7 @@ document.getElementById('dashBankTotal').textContent =
       }
       const invoicePrevMonthTotal = invoices.filter(i => isPrevMonth(i.date)).reduce((sum, i) => sum + (parseFloat(i.totalKES || i.total) || 0), 0);
       const billPrevMonthTotal = bills.filter(b => isPrevMonth(b.date)).reduce((sum, b) => sum + (parseFloat(b.total) || 0), 0);
-      const payrollPrevMonthTotal = payroll.filter(p => isPrevMonth(p.date)).reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
+      const payrollPrevMonthTotal = payroll.filter(p => isPrevMonth(p.date)).reduce((sum, p) => sum + (parseFloat(p.net != null ? p.net : p.total) || 0), 0);
       const taxPrevMonthTotal = taxPayments.filter(tx => isPrevMonth(tx.date)).reduce((sum, tx) => sum + (parseFloat(tx.total || tx.amount) || 0), 0);
       const opCostsPrevMonthTotal = operationalCostsDash.filter(e => isPrevMonth(e.date)).reduce((sum, e) => sum + (parseFloat(e.amount || e.total) || 0), 0);
 
@@ -5418,7 +5418,7 @@ document.getElementById('dashBankTotal').textContent =
       const __pnlOpCostsTotal = __pnlOpCostsAll.reduce((sum, e) => sum + (parseFloat(e.amount || e.total || 0) || 0), 0);
       const __pnlDepEvents = (function () { try { const a = JSON.parse(localStorage.getItem('assetDepreciationEvents') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } })();
       const __pnlDepreciation = __pnlDepEvents.reduce((sum, h) => sum + (parseFloat(h && h.depreciationAmount) || 0), 0);
-      const __pnlPayrollTotal = __pnlPayrollAll.reduce((sum, p) => sum + (parseFloat(p.net || 0) || 0), 0);
+      const __pnlPayrollTotal = __pnlPayrollAll.reduce((sum, p) => sum + (parseFloat(p.net != null ? p.net : p.gross) || 0), 0);
       const __pnlInterestPayments = JSON.parse(localStorage.getItem('interestPayments') || '[]');
       const __pnlInterestPaid = __pnlInterestPayments.reduce((sum, p) => sum + (parseFloat(p.amount || 0) || 0), 0);
       const __pnlCurrencyAdjustments = (function () { try { const a = JSON.parse(localStorage.getItem('currencyAdjustments') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } })();
@@ -6407,6 +6407,28 @@ function acxApproveBillRow(index) {
 
 
 
+// One-time repair: users created via User Management before this fix were saved
+// without a companyName, which made login fail with "Invalid email, company
+// name or password" even with correct credentials. Backfill it from the
+// companies list (matched by companyId) whenever the app loads.
+(function backfillMissingCompanyNames() {
+  try {
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+    let changed = false;
+    users.forEach(u => {
+      if (!u.companyName && u.companyId) {
+        const match = companies.find(c => String(c.companyId || '') === String(u.companyId || ''));
+        if (match && match.companyName) {
+          u.companyName = match.companyName;
+          changed = true;
+        }
+      }
+    });
+    if (changed) localStorage.setItem('users', JSON.stringify(users));
+  } catch (err) { /* ignore, non-critical */ }
+})();
+
 async function handleLogin() {
 
   const emailInput = (document.getElementById('loginEmail')?.value || '').trim().toLowerCase();
@@ -6965,7 +6987,7 @@ document.getElementById('itemAttachment')?.addEventListener('change', function (
     this.files.length ? this.files[0].name : '';
 });
 </script>
-  <div class="grid grid-cols-1 gap-2 mb-6 border-t pt-4"><div class="flex items-center justify-between"><h4 class="font-semibold">📦 Batches & Expiry</h4><button type="button" onclick="addBatchRow()" class="bg-blue-900 text-white px-2 py-1 rounded text-sm hover:bg-blue-800">+ Add Batch</button></div><div class="overflow-x-auto"><table class="min-w-full text-sm border" id="batchesTable"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Batch No.</th><th class="p-2 text-left">Mfg Date</th><th class="p-2 text-left">Expiry Date</th><th class="p-2 text-left">Quantity</th><th class="p-2"></th></tr></thead><tbody id="batchesBody"></tbody></table></div><p class="text-sm text-gray-500">If batches are provided, total Quantity above is auto-set to the sum of batch quantities.</p></div><input type="hidden" id="editIndex" value=""><button onclick="saveDraft()"  class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900 mt-6">Save as Draft</button><button onclick="saveItem()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900 mt-6">Save Item</button><button onclick="cancelItem()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600"> Cancel </button></div><div id="importExportSection" class="hidden mb-4 flex justify-end"><div class="relative inline-block text-left"><button id="inventoryFileBtn" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50" aria-haspopup="true" aria-expanded="false">
+  <div data-feature="batch" class="grid grid-cols-1 gap-2 mb-6 border-t pt-4"><div class="flex items-center justify-between"><h4 class="font-semibold">📦 Batches & Expiry</h4><button type="button" onclick="addBatchRow()" class="bg-blue-900 text-white px-2 py-1 rounded text-sm hover:bg-blue-800">+ Add Batch</button></div><div class="overflow-x-auto"><table class="min-w-full text-sm border" id="batchesTable"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Batch No.</th><th class="p-2 text-left">Mfg Date</th><th class="p-2 text-left">Expiry Date</th><th class="p-2 text-left">Quantity</th><th class="p-2"></th></tr></thead><tbody id="batchesBody"></tbody></table></div><p class="text-sm text-gray-500">If batches are provided, total Quantity above is auto-set to the sum of batch quantities.</p></div><input type="hidden" id="editIndex" value=""><button onclick="saveDraft()"  class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900 mt-6">Save as Draft</button><button onclick="saveItem()" class="bg-blue-900 text-white px-1 py-1 rounded hover:bg-blue-900 mt-6">Save Item</button><button onclick="cancelItem()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600"> Cancel </button></div><div id="importExportSection" class="hidden mb-4 flex justify-end"><div class="relative inline-block text-left"><button id="inventoryFileBtn" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50" aria-haspopup="true" aria-expanded="false">
       Inventory Options
       <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></button><div id="inventoryDropdown" class="origin-top-right absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50"><div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="inventoryFileBtn"><button onclick="toggleSortSubmenu('name')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg>
           Sort by Name
@@ -68362,6 +68384,40 @@ Other Loan: ${window.__fmtBase ? window.__fmtBase(loans.otherLoan) : loans.other
   document.getElementById("deductionBreakdown").innerText = breakdown;
 }
 
+/* ---- payroll dating (fix: P&L / dashboard card ignored payroll because records had no `date`) ---- */
+function __payrollDateFor(month) {
+  const iso = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const m = /^(\d{4})-(\d{2})$/.exec(String(month || ""));
+  const now = new Date();
+  if (!m) return iso(now);
+  const y = +m[1], mo = +m[2];
+  if (y === now.getFullYear() && mo === now.getMonth() + 1) return iso(now);   // current month: processed today
+  return iso(new Date(y, mo, 0));                                               // otherwise: last day of the payroll month
+}
+function __normalizePayrollDates() {
+  try {
+    let changed = false;
+    const recs = JSON.parse(localStorage.getItem("payrollRecords") || "[]");
+    if (Array.isArray(recs)) {
+      recs.forEach(r => { if (r && !r.date) { r.date = __payrollDateFor(r.month); changed = true; } });
+      if (changed) localStorage.setItem("payrollRecords", JSON.stringify(recs));
+    }
+    let changed2 = false;
+    const pays = JSON.parse(localStorage.getItem("payrollPayments") || "[]");
+    if (Array.isArray(pays)) {
+      const claimed = new Set(pays.filter(p => p && p.month).map(p => (p.empID || p.name) + "|" + p.month));
+      pays.forEach(p => {
+        if (!p) return;
+        if (!p.month) { const r = (recs || []).find(x => x && (x.empID === p.name || x.empID === p.empID) && Math.abs((+x.net || 0) - (+p.net || 0)) < 0.01 && !claimed.has(x.empID + "|" + x.month)); if (r) { p.month = r.month; if (!p.empID) p.empID = r.empID; claimed.add(r.empID + "|" + r.month); changed2 = true; } }
+        if (!p.date) { p.date = __payrollDateFor(p.month); changed2 = true; }
+        const want = (p.net != null) ? +p.net : (+p.total || +p.gross || 0);
+        if (p.total == null || +p.total !== want) { p.total = want; changed2 = true; }
+      });
+      if (changed2) localStorage.setItem("payrollPayments", JSON.stringify(pays));
+    }
+  } catch (e) { console.warn("payroll date backfill skipped:", e); }
+}
+__normalizePayrollDates();
 function addGrossPay() {
   if (!window.requirePermission('grossPayTab', 'add', 'add gross pay records')) return;
   const empID = document.getElementById("payrollEmpID").value.trim();
@@ -68441,6 +68497,7 @@ function addGrossPay() {
     id: Date.now(),
     empID,
     month,
+    date: __payrollDateFor(month),
     country,
     bank: bankName,
     account: accountCode,
@@ -68467,6 +68524,10 @@ function addGrossPay() {
   const payroll = JSON.parse(localStorage.getItem("payrollPayments") || "[]");
   payroll.push({
     name: empID,
+    empID,
+    month,
+    date: __payrollDateFor(month),
+    total: +netPay.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2),
     country,
     gross: +gross.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2),
     deductions: +totalDeductions.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2),
@@ -68583,6 +68644,7 @@ function bulkAddGrossPay() {
       empID,
       country,
       month,
+      date: __payrollDateFor(month),
       bank: bankName,        
       account: accountCode,  
       gross: +gross.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2),
@@ -68606,6 +68668,10 @@ function bulkAddGrossPay() {
     const payrollPayments = JSON.parse(localStorage.getItem("payrollPayments") || "[]");
     payrollPayments.push({
       name: emp.name || emp.fullName || empID,
+      empID,
+      month,
+      date: __payrollDateFor(month),
+      total: +netPay.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2),
       country,
       gross: +gross.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2),
       deductions: +totalDeductions.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2),
@@ -68830,7 +68896,7 @@ function deletePayrollRecord(id) {
   localStorage.setItem("payrollRecords", JSON.stringify(payrollRecords));
 
   let payrollPayments = JSON.parse(localStorage.getItem("payrollPayments") || "[]");
-  payrollPayments = payrollPayments.filter(p => !(p.name === recordToDelete.empID && p.month === recordToDelete.month));
+  payrollPayments = payrollPayments.filter(p => !((p.empID === recordToDelete.empID || p.name === recordToDelete.empID) && p.month === recordToDelete.month));
   localStorage.setItem("payrollPayments", JSON.stringify(payrollPayments));
 
   updateProfitAndLoss();
@@ -100245,6 +100311,12 @@ async function saveUser() {
   const loggedIn = JSON.parse(localStorage.getItem('loggedInUser') || 'null') || {};
   const companyId = String(loggedIn.companyId || '');
 
+  // Resolve the human-readable company name so new users can log in with it
+  // (login matches on companyName, falling back to companyId only if companyName is blank).
+  const __companiesList = JSON.parse(localStorage.getItem('companies') || '[]');
+  const __companyObj = __companiesList.find(c => String(c.companyId || '') === companyId);
+  const companyName = (__companyObj && __companyObj.companyName) || loggedIn.companyName || '';
+
   if (editingUserIndex === null) {
     if (!canAddUser(companyId, loggedIn.plan, role)) {
       const limit = planUserLimit(loggedIn.plan);
@@ -100260,6 +100332,7 @@ async function saveUser() {
     customRole: role === 'custom' ? customRoleName : null,
     modules,
     companyId: String((JSON.parse(localStorage.getItem('loggedInUser') || 'null') || {}).companyId || ''),
+    companyName: companyName,
     registered: new Date().toISOString(),
     provider: 'local'
   };
@@ -100275,6 +100348,7 @@ async function saveUser() {
   users[editingUserIndex].role = role;
   users[editingUserIndex].customRole = role === 'custom' ? customRoleName : null;
   users[editingUserIndex].modules = modules;
+  if (!users[editingUserIndex].companyName) users[editingUserIndex].companyName = companyName;
 } else {
   users.push(user);
 }
@@ -109577,8 +109651,137 @@ function toggleSubmenu(id) {
     customer_lossMakingCustomers: function(rows){return _grp(rows,function(r){return r.customer||r.customerName;},'customer').filter(function(r){return r.total<0;});},
 
     purchasing_purchaseTrends: function(rows){return _bucket(rows,function(r){var d=_date(r);return d?(d.getFullYear()+'-'+MON[d.getMonth()]):'';},'month');},
-    purchasing_supplierRanking: function(rows){return _grp(rows,function(r){return r.name||r.supplierName||r.supplier;},'supplier');},
+    purchasing_supplierRanking: function(rows){
+      var bills = loadSource('bills');
+      var ranked = rows.map(function(s){
+        var supplierBills = bills.filter(function(b){ return (b.supplier||'')===(s.name||''); });
+        var totalPurchases = supplierBills.reduce(function(sum,b){ return sum+_num(b.total); },0);
+        return { supplier: s.name||'(unnamed)', billCount: supplierBills.length, totalPurchases: totalPurchases };
+      }).sort(function(a,b){ return b.totalPurchases-a.totalPurchases; });
+      ranked.forEach(function(r,i){ r.rank = i+1; });
+      return ranked.map(function(r){ return { rank:r.rank, supplier:r.supplier, billCount:r.billCount, totalPurchases:r.totalPurchases }; });
+    },
+    purchasing_supplierPerformance: function(rows){
+      var bills = loadSource('bills');
+      return rows.map(function(s){
+        var supplierBills = bills.filter(function(b){ return (b.supplier||'')===(s.name||''); });
+        var totalPurchases = supplierBills.reduce(function(sum,b){ return sum+_num(b.total); },0);
+        var billCount = supplierBills.length;
+        var avgOrderValue = billCount ? (totalPurchases/billCount) : 0;
+        var lastDate = null;
+        supplierBills.forEach(function(b){ var d=_date(b); if(d && (!lastDate || d>lastDate)) lastDate=d; });
+        return {
+          supplier: s.name||'(unnamed)',
+          billCount: billCount,
+          totalPurchases: totalPurchases,
+          avgOrderValue: avgOrderValue,
+          lastPurchase: lastDate ? lastDate.toISOString().slice(0,10) : '—'
+        };
+      }).sort(function(a,b){ return b.totalPurchases-a.totalPurchases; });
+    },
+    purchasing_supplierCreditUtilization: function(rows){
+      return rows.map(function(s){
+        var creditLimit = _num(s.debitLimit);
+        var balance = _num(s.balance);
+        var utilization = creditLimit ? ((balance/creditLimit)*100) : 0;
+        return {
+          supplier: s.name||'(unnamed)',
+          creditLimit: creditLimit,
+          balanceOwed: balance,
+          utilizationPct: creditLimit ? (utilization.toFixed(1)+'%') : 'n/a'
+        };
+      }).sort(function(a,b){ return b.balanceOwed-a.balanceOwed; });
+    },
     purchasing_upcomingPayments: function(rows){return rows.filter(function(r){var d=r.dueDate?new Date(r.dueDate):null;return d&&d>=new Date();}).map(function(r){return {supplier:r.supplier||r.supplierName,due:r.dueDate,reference:r.billNumber||r.number,amount:_amt(r)};});},
+    purchasing_supplierLeadTime: function(rows){
+      var bills = loadSource('bills');
+      var grns = loadSource('grns');
+      return rows.map(function(s){
+        var name = s.name || '(unnamed)';
+        var billDates = bills.filter(function(b){ return (b.supplier||'')===(s.name||''); }).map(_date).filter(Boolean).sort(function(a,b){ return a-b; });
+        var grnDates = grns.filter(function(g){ return (g.supplier||'')===(s.name||''); }).map(_date).filter(Boolean).sort(function(a,b){ return a-b; });
+        var diffs = [];
+        billDates.forEach(function(bd){
+          var matched = grnDates.find(function(gd){ return gd>=bd; });
+          if(matched){ diffs.push(Math.round((matched-bd)/86400000)); }
+        });
+        var avg = diffs.length ? (diffs.reduce(function(a,b){ return a+b; },0)/diffs.length) : null;
+        return {
+          supplier: name,
+          ordersReceived: diffs.length,
+          avgLeadTimeDays: avg!=null ? Number(avg.toFixed(1)) : 'n/a',
+          fastestDays: diffs.length ? Math.min.apply(null,diffs) : 'n/a',
+          slowestDays: diffs.length ? Math.max.apply(null,diffs) : 'n/a'
+        };
+      }).sort(function(a,b){ return (b.ordersReceived||0)-(a.ordersReceived||0); });
+    },
+    purchasing_purchasePriceVariance: function(rows){
+      var inventory = loadSource('inventory');
+      var standard = {};
+      inventory.forEach(function(it){
+        var key = (it.name||it.item||it.sku||'').toLowerCase();
+        if(key) standard[key] = _num(it.costPrice||it.purchasePrice||it.standardPrice||it.cost);
+      });
+      var out = [];
+      rows.forEach(function(b){
+        (b.items||[]).forEach(function(it){
+          var key = (it.name||it.item||it.description||'').toLowerCase();
+          var std = standard[key] || 0;
+          var paid = _num(it.unitPrice||it.price||it.rate);
+          if(!std && !paid) return;
+          out.push({
+            date: _date(b) ? _date(b).toLocaleDateString() : '',
+            reference: b.number||b.billNumber||b.id||'',
+            supplier: b.supplier||b.supplierName||'',
+            item: it.name||it.item||it.description||'',
+            standardPrice: std,
+            paidPrice: paid,
+            variance: paid-std
+          });
+        });
+      });
+      return out.sort(function(a,b){ return Math.abs(b.variance)-Math.abs(a.variance); });
+    },
+    purchasing_costSavingsReport: function(rows){
+      var inventory = loadSource('inventory');
+      var standard = {};
+      inventory.forEach(function(it){
+        var key = (it.name||it.item||it.sku||'').toLowerCase();
+        if(key) standard[key] = _num(it.costPrice||it.purchasePrice||it.standardPrice||it.cost);
+      });
+      var out = [];
+      rows.forEach(function(b){
+        (b.items||[]).forEach(function(it){
+          var key = (it.name||it.item||it.description||'').toLowerCase();
+          var std = standard[key] || 0;
+          if(!std) return;
+          var qty = _num(it.qty||it.quantity||1) || 1;
+          var paid = _num(it.unitPrice||it.price||it.rate);
+          out.push({
+            date: _date(b) ? _date(b).toLocaleDateString() : '',
+            supplier: b.supplier||b.supplierName||'',
+            item: it.name||it.item||it.description||'',
+            qty: qty,
+            standardCost: std*qty,
+            actualCost: paid*qty,
+            savings: (std-paid)*qty
+          });
+        });
+      });
+      return out.sort(function(a,b){ return b.savings-a.savings; });
+    },
+    purchasing_paymentForecast: function(rows){
+      return rows.filter(function(r){ return (r.status||'').toLowerCase()!=='paid' && (r.dueDate||_date(r)); })
+        .map(function(r){
+          return {
+            dueDate: r.dueDate || (_date(r)?_date(r).toISOString().slice(0,10):''),
+            supplier: r.supplier||r.supplierName||'',
+            reference: r.billNumber||r.number||r.id||'',
+            amount: _amt(r),
+            status: r.status || 'Unpaid'
+          };
+        }).sort(function(a,b){ return new Date(a.dueDate)-new Date(b.dueDate); });
+    },
 
     banking_dailyBankMovements: function(rows){return _bucket(rows,function(r){var d=_date(r);return d?d.toISOString().slice(0,10):'';},'date');},
     banking_depositAnalysis: function(rows){return rows.filter(function(r){return (r.type||'').toLowerCase().indexOf('depos')>=0||_num(r.amount)>0;});},
@@ -109879,7 +110082,8 @@ function toggleSubmenu(id) {
 
   function refreshBatches(bs, item) {
     bs.innerHTML = '<option value="">No batch</option>';
-    const batches = ((item && item.batches) || []).slice();
+    const planAllowsBatch = !window.AcaciaPlans || window.AcaciaPlans.hasFeatureAccess('batch');
+    const batches = planAllowsBatch ? ((item && item.batches) || []).slice() : [];
     const wrap = document.getElementById(bs.id.replace('_batchSel', '_batchWrap'));
     const productSel = document.getElementById(bs.id.replace('_batchSel', ''));
     const selOpt = productSel ? productSel.options[productSel.selectedIndex] : null;
@@ -124406,7 +124610,7 @@ try{
     });
     LS("payrollRecords").forEach(function (p) {
       if (!/payroll|salar|wage|personnel/.test(name)) return;
-      push(p.date || p.payDate, p.reference || p.id, "Payroll - " + (p.employee || p.name || ""), p.gross || p.net || p.amount || p.total, 0, "Payroll");
+      push(p.date || p.payDate, p.reference || p.id, "Payroll - " + (p.employee || p.name || ""), p.net || p.gross || p.amount || p.total, 0, "Payroll");
     });
     LS("taxPayments").forEach(function (t) {
       if (!hit(t.type) && !hit(t.accountName) && !hit(t.account) && !/tax/.test(name)) return;
@@ -128317,18 +128521,43 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
       (font ? "--acx-font:" + font + ";" : "") +
       (head ? "--acx-heading-font:" + head + ";" : "") + "}";
 
-    if (font) css += "body,body input,body select,body textarea,body button,body table{font-family:var(--acx-font)!important}";
-    if (head) css += "h1,h2,h3,h4,h5,h6,.text-2xl,.text-xl{font-family:var(--acx-heading-font)!important}";
+    // Printable document previews (invoice/quote/credit note/etc.) each have
+    // their own dedicated "Font Family" picker in their own template editor,
+    // so the site-wide Body/Heading font deliberately skips those wrappers
+    // (and everything inside them) instead of fighting with that control.
+    var DOC_TEMPLATE_WRAPPER_IDS = [
+      "invoiceTemplateWrapper", "quoteTemplateWrapper", "bulkInvoiceTemplateWrapper",
+      "creditNoteTemplateWrapper", "orderTemplateWrapper", "purchaseReturnTemplateWrapper",
+      "recurringInvoiceTemplateWrapper", "supplierBillTemplateWrapper",
+      "bundleitemTemplateWrapper", "movementTemplateWrapper", "packageTemplateWrapper",
+      "pricelistTemplateWrapper", "valueadjustmentTemplateWrapper"
+    ];
+    var DOC_TEMPLATE_EXCLUDE = DOC_TEMPLATE_WRAPPER_IDS.map(function (id) {
+      return ":not(#" + id + "):not(#" + id + " *)";
+    }).join("");
+    if (font) {
+      css += "body" + DOC_TEMPLATE_EXCLUDE + ",body *" + DOC_TEMPLATE_EXCLUDE +
+        "{font-family:var(--acx-font)!important}";
+    }
+    if (head) {
+      css += "h1" + DOC_TEMPLATE_EXCLUDE + ",h2" + DOC_TEMPLATE_EXCLUDE + ",h3" + DOC_TEMPLATE_EXCLUDE +
+        ",h4" + DOC_TEMPLATE_EXCLUDE + ",h5" + DOC_TEMPLATE_EXCLUDE + ",h6" + DOC_TEMPLATE_EXCLUDE +
+        ",.text-2xl" + DOC_TEMPLATE_EXCLUDE + ",.text-xl" + DOC_TEMPLATE_EXCLUDE +
+        "{font-family:var(--acx-heading-font)!important}";
+    }
     if (text) css += "body{color:var(--acx-text)}";
     if (background) css += "body,.bg-white{background-color:var(--acx-bg)!important}";
-    if (headingColor) css += "h1,h2,h3,h4,h5,h6{color:var(--acx-heading-color)!important}";
     if (linkColor) css += "a:not(.op-savebtn):not([class*='bg-']){color:var(--acx-link)!important}";
     if (primary) {
       css += ".bg-blue-900,.bg-blue-800,.bg-blue-700,.hover\\:bg-blue-800:hover,.hover\\:bg-blue-900:hover{background-color:var(--acx-primary)!important}" +
         ".text-blue-900,.text-blue-800,.text-blue-700{color:var(--acx-primary)!important}" +
         ".border-blue-900,.border-blue-800{border-color:var(--acx-primary)!important}" +
-        "#sidebar,aside#sidebar,nav#sidebar,#rightSidebar{background-color:var(--acx-primary)!important}";
+        "#sidebar,aside#sidebar,nav#sidebar,#rightSidebar,#rightSidebar.bg-black{background-color:var(--acx-primary)!important}";
     }
+    // Heading text color is applied AFTER the primary-color rules above so it
+    // wins ties on headings that also carry a .text-blue-900-style class
+    // (previously Primary silently overrode Heading text color on those).
+    if (headingColor) css += "h1,h2,h3,h4,h5,h6{color:var(--acx-heading-color)!important}";
     if (accent) {
       css += ".bg-yellow-400,.bg-yellow-500,.hover\\:bg-yellow-400:hover{background-color:var(--acx-accent)!important}" +
         ".text-yellow-400,.text-yellow-500{color:var(--acx-accent)!important}";
@@ -128361,6 +128590,17 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
         "transform:translate(-50%,-50%) rotate(-30deg);font-size:90px;color:rgba(0,0,0,.08);z-index:9999;pointer-events:none}}";
     }
     st.textContent = css;
+
+    // Belt-and-suspenders: also paint the left and right sidebar directly via
+    // inline style, since the right sidebar previously kept its hardcoded
+    // .bg-black background in some cases instead of picking up the primary
+    // color from the stylesheet rule above.
+    if (primary) {
+      ["sidebar", "rightSidebar"].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.style.setProperty("background-color", primary, "important");
+      });
+    }
 
     document.querySelectorAll("[data-acx-tagline]").forEach(function (el) { el.textContent = b.tagline || ""; });
 
@@ -138124,6 +138364,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
     payrollStatutory:"business", payrollReports:"business",
     
     plans:"starter", projects:"pro", projectRevenue:"business",
+    batch:"pro",
     
     orgProfile:"free", preferences:"free", taxCompliance:"free", userManagement:"free",
     integrations:"starter", settingsTemplates:"starter",
@@ -139292,7 +139533,11 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   }
 
   /* ---- filters ---- */
-  function narrowing(st) { return !!(st.customer || st.supplier || st.salesPerson || st.warehouse || st.account || st.currency || st.status); }
+  function narrowing(st) {
+    // A currency filter equal to the base currency (KES) does not narrow company-wide items such as payroll.
+    var foreignCur = !!st.currency && String(st.currency).toUpperCase() !== "KES" && String(st.currency).toUpperCase() !== "KSH";
+    return !!(st.customer || st.supplier || st.salesPerson || st.warehouse || st.account || foreignCur || st.status);
+  }
   FR.isNarrow = function (st) { return narrowing(st || FR.state()); };
   function statusPass(filter, s) {
     if (!filter) return true;
@@ -139570,11 +139815,10 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
       // payroll
       ds.payroll.forEach(function (p) {
         var d = recDate(p); if (!d) return;
-        var gross = num(p.gross) || num(p.net), net = num(p.net) || gross;
+        var net = (p.net != null && p.net !== "") ? num(p.net) : num(p.gross);
         var ref = "Payroll " + (p.month || d), o = { party: p.name || p.empID || p.employee || "", docId: p.id };
-        P(d, ref, "payroll", "Salaries & Wages", "expense", "payroll", gross, 0, o);
+        P(d, ref, "payroll", "Salaries & Wages", "expense", "payroll", net, 0, o);
         P(d, ref, "payroll", CASH, "asset", "cash", 0, net, Object.assign({ cat: "payroll" }, o));
-        if (gross - net > 0.004) P(d, ref, "payroll", STAT, "liability", "statutory", 0, gross - net, o);
       });
       // tax payments: settle liabilities (VAT / statutory / income tax); anything else is an expense
       ds.taxPayments.forEach(function (t) {
@@ -140372,7 +140616,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
     rows.push('<tr class="fr-hide"><td>Other Expenses</td><td></td><td></td><td id="pnlCurrentAccounts">' + fmt(0) + '</td><td id="closingCurrentAccounts">' + fmt(0) + "</td></tr>");
     plain("Depreciation", "Depreciation", p.depreciation, pc && pc.depreciation);
     plain("Interest Paid", "Interest", p.interest, pc && pc.interest);
-    plain("Payroll <small style='font-weight:400;color:#64748b'>(gross pay)</small>", "Payroll", p.payroll, pc && pc.payroll);
+    plain("Payroll <small style='font-weight:400;color:#64748b'>(net pay)</small>", "Payroll", p.payroll, pc && pc.payroll);
     plain("Currency Adjustment", "CurrencyAdjustment", p.fx, pc && pc.fx);
     sec("Taxes paid (memo — VAT / PAYE etc. settle liabilities; not part of profit)");
     Object.keys(p.taxesPaid).forEach(function (k) { det(k, p.taxesPaid[k], pc ? (pc.taxesPaid[k] || 0) : 0, null); });
@@ -141123,5 +141367,34 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   ui.register("writeOffReportPanel", { render: renderWriteOff, basis: false });
 })();
 
+</script>
+<script>
+/* Payroll -> P&L / dashboard card sync (fix: the refresh hook listed a non-existent `savePayroll`) */
+(function () {
+  "use strict";
+  function refreshPayrollViews() {
+    try { __normalizePayrollDates(); } catch (e) {}
+    try { if (typeof window.loadDashboard === "function") window.loadDashboard(); } catch (e) {}
+    try { if (typeof window.renderReports === "function") window.renderReports(); } catch (e) {}
+    try { if (typeof window.calculateTotalPayroll === "function") window.calculateTotalPayroll(); } catch (e) {}
+  }
+  window.__refreshPayrollViews = refreshPayrollViews;
+  ["loadDashboard", "renderReports", "renderProfitLoss"].forEach(function (name) {
+    var orig = window[name];
+    if (typeof orig !== "function" || orig.__payrollDated) return;
+    var wrapped = function () { try { __normalizePayrollDates(); } catch (e) {} return orig.apply(this, arguments); };
+    wrapped.__payrollDated = true;
+    window[name] = wrapped;
+  });
+  ["addGrossPay", "bulkAddGrossPay", "deletePayrollRecord", "bulkDeleteGrossPayroll", "clonePayroll"].forEach(function (name) {
+    var orig = window[name];
+    if (typeof orig !== "function" || orig.__payrollRefresh) return;
+    var wrapped = function () { var r = orig.apply(this, arguments); setTimeout(refreshPayrollViews, 0); return r; };
+    wrapped.__payrollRefresh = true;
+    window[name] = wrapped;
+  });
+  document.addEventListener("DOMContentLoaded", function () { setTimeout(refreshPayrollViews, 1500); });
+  window.addEventListener("load", function () { setTimeout(refreshPayrollViews, 2500); });
+})();
 </script>
 </body></html>
