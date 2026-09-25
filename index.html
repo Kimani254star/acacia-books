@@ -14091,7 +14091,7 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
     <div id="customerBox" class="hidden mt-2">
       <label class="font-semibold block mb-1">Customer</label>
-      <select id="manualCustomer" onchange="fetchUnpaidInvoices(this.value)" class="border p-2 rounded w-full">
+      <select id="manualCustomer" onchange="showCustomerUnpaid(this.value)" class="border p-2 rounded w-full">
         <option value="">Select Customer</option>
       </select>
     </div>
@@ -14101,7 +14101,7 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
     <div id="vendorBox" class="hidden mt-2">
       <label class="font-semibold block mb-1">Vendor</label>
-      <select id="manualVendor" onchange="fetchUnpaidBills(this.value)" class="border p-2 rounded w-full">
+      <select id="manualVendor" onchange="showVendorUnpaid(this.value)" class="border p-2 rounded w-full">
         <option value="">Select Vendor</option>
       </select>
     </div>
@@ -14869,8 +14869,46 @@ function ensurePettyCashAccount() {
 
 
 
-function applyManualJournalToUndeposited(entries, sign) {
+/* ACX FIX (audit §2): resolve a row index that came from a possibly
+   filtered/sorted rendered list back to its real position in storage. */
+window.__acxResolveRowIndex = function (fullArr, viewArr, index, keys) {
+  if (!Array.isArray(fullArr)) return -1;
+  var view = Array.isArray(viewArr) ? viewArr : fullArr;
+  var row = view[index];
+  if (!row) return -1;
+  if (view === fullArr) return index;
+  var i;
+  if (row.id !== undefined && row.id !== null && row.id !== "") {
+    i = fullArr.findIndex(function (x) { return x && x.id === row.id; });
+    if (i !== -1) return i;
+  }
+  var ks = keys || [];
+  i = fullArr.findIndex(function (x) {
+    if (!x) return false;
+    return ks.every(function (k) {
+      var a = x[k] === undefined ? null : x[k];
+      var b = row[k] === undefined ? null : row[k];
+      return a === b;
+    });
+  });
+  if (i !== -1) return i;
+  return fullArr.indexOf(row);
+};
+
+/* ACX FIX (audit §3.4): journals posted automatically by the system
+   (invoice payments, reversals, tax payments...) already moved the bank
+   balance when they were created. Editing/deleting them from the Journal
+   screen must NOT adjust Undeposited Funds a second time. */
+window.__acxIsSystemJournal = function (j) {
+  if (!j) return false;
+  var src = String(j.source || "").trim();
+  if (!src) return false;
+  return src.toLowerCase() !== "manual";
+};
+
+function applyManualJournalToUndeposited(entries, sign, journal) {
   if (!Array.isArray(entries) || !entries.length) return;
+  if (window.__acxIsSystemJournal && window.__acxIsSystemJournal(journal)) return;
 
   let delta = 0;
   entries.forEach(e => {
@@ -14898,6 +14936,161 @@ function applyManualJournalToUndeposited(entries, sign) {
   if (typeof syncBankBalancesToCOA === "function") { try { syncBankBalancesToCOA(); } catch (e) {} }
 }
 window.applyManualJournalToUndeposited = applyManualJournalToUndeposited;
+
+/* ===== ACX FIX (audit §3.2): shared payment-unwind helpers ===== */
+window.__acxUnwindInvoicePayments = function (invoice) {
+  if (!invoice) return 0;
+  var receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
+  var linked = receipts.filter(function (r) {
+    return r && (r.invoiceId === invoice.id ||
+      (invoice.invoiceNumber && r.invoiceNumber === invoice.invoiceNumber));
+  });
+  var paid = linked.reduce(function (s, r) { return s + (parseFloat(r.amount) || 0); }, 0);
+  var total = parseFloat(invoice.totalKES || invoice.total) || 0;
+
+  // 1. Reverse the bank balances the receipts increased.
+  if (linked.length) {
+    var banks2 = JSON.parse(localStorage.getItem("banks") || "[]");
+    linked.forEach(function (r) {
+      var bank = (r.bankIndex !== undefined && r.bankIndex !== "" && banks2[r.bankIndex]) ||
+        banks2.find(function (b) { return b && (b.name === r.bankName || b.name === r.bank); });
+      if (bank) bank.balance = (parseFloat(bank.balance) || 0) - (parseFloat(r.amount) || 0);
+    });
+    localStorage.setItem("banks", JSON.stringify(banks2));
+  }
+
+  // 2. Drop the receipts and customer payment records.
+  var ids = linked.map(function (r) { return r.id; });
+  if (linked.length) {
+    localStorage.setItem("receipts", JSON.stringify(receipts.filter(function (r) {
+      return ids.indexOf(r.id) === -1;
+    })));
+    var cps = JSON.parse(localStorage.getItem("customerPayments") || "[]");
+    localStorage.setItem("customerPayments", JSON.stringify(cps.filter(function (p) {
+      return !(p && (ids.indexOf(p.receiptId) !== -1 || p.invoiceId === invoice.id));
+    })));
+  }
+
+  // 3. Drop the matching transaction / manual transaction rows.
+  ["transactions", "manualTransactions"].forEach(function (key) {
+    var rows = JSON.parse(localStorage.getItem(key) || "[]");
+    var kept = rows.filter(function (t) {
+      if (!t) return false;
+      if (ids.indexOf(t.receiptId) !== -1 || ids.indexOf(t.sourceId) !== -1 || ids.indexOf(t.id) !== -1) return false;
+      if (t.invoiceId && t.invoiceId === invoice.id) return false;
+      if (invoice.invoiceNumber && t.ref === invoice.invoiceNumber &&
+          String(t.type || "").toLowerCase().indexOf("customer payment") !== -1) return false;
+      return true;
+    });
+    if (kept.length !== rows.length) localStorage.setItem(key, JSON.stringify(kept));
+  });
+
+  // 4. Remove the outstanding amount still sitting in Customer Receivables.
+  var outstanding = total - paid;
+  if (outstanding) {
+    var accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+    var acc = accounts.find(function (a) { return a && a.name === "Customer Receivables"; });
+    if (acc) {
+      acc.amount = (parseFloat(acc.amount) || 0) - outstanding;
+      localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+    }
+    if (typeof window.updateCustomerReceivables === "function") {
+      try { window.updateCustomerReceivables(invoice.customer || invoice.customerName, -outstanding); } catch (e) {}
+    }
+  }
+
+  // 5. Remove journal entries auto-posted for this invoice.
+  var journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
+  var keep = journals.filter(function (j) {
+    if (!j) return false;
+    if (j.invoiceId && j.invoiceId === invoice.id) return false;
+    if (!window.__acxIsSystemJournal(j)) return true;
+    var num = invoice.invoiceNumber;
+    if (num && (String(j.reference || "") === String(num) ||
+        String(j.description || "").indexOf(String(num)) !== -1)) return false;
+    return true;
+  });
+  if (keep.length !== journals.length) localStorage.setItem("manualJournals", JSON.stringify(keep));
+
+  if (typeof window.loadBanks === "function") { try { loadBanks(); } catch (e) {} }
+  if (typeof window.renderBankTable === "function") { try { renderBankTable(); } catch (e) {} }
+  if (typeof window.renderReceipts === "function") { try { renderReceipts(); } catch (e) {} }
+  if (typeof window.renderManualTransactions === "function") { try { renderManualTransactions(); } catch (e) {} }
+  if (typeof window.renderManualJournals === "function") { try { renderManualJournals(); } catch (e) {} }
+  return paid;
+};
+
+window.__acxUnwindBillPayments = function (bill) {
+  if (!bill) return 0;
+  var payments = JSON.parse(localStorage.getItem("billPayments") || "[]");
+  var linked = payments.filter(function (p) {
+    return p && p.billNumber === bill.billNumber && (!p.supplier || p.supplier === bill.supplier);
+  });
+  var paid = linked.reduce(function (s, p) { return s + (parseFloat(p.amount) || 0); }, 0);
+  if (!paid) paid = parseFloat(bill.paidAmount || bill.amountPaid) || 0;
+  var total = parseFloat(bill.total) || 0;
+
+  // 1. Put the cash back in the bank it left.
+  if (linked.length) {
+    var banks2 = JSON.parse(localStorage.getItem("banks") || "[]");
+    linked.forEach(function (p) {
+      var rate = parseFloat(p.exchangeRate) || 1;
+      var bank = banks2.find(function (b) { return b && b.name === p.bank; });
+      if (bank) bank.balance = (parseFloat(bank.balance) || 0) + ((parseFloat(p.amount) || 0) / rate);
+    });
+    localStorage.setItem("banks", JSON.stringify(banks2));
+
+    // 2. Drop the payment records.
+    var ids = linked.map(function (p) { return p.id; });
+    localStorage.setItem("billPayments", JSON.stringify(payments.filter(function (p) {
+      return linked.indexOf(p) === -1;
+    })));
+
+    // 3. Drop the matching transaction rows.
+    ["transactions", "manualTransactions"].forEach(function (key) {
+      var rows = JSON.parse(localStorage.getItem(key) || "[]");
+      var kept = rows.filter(function (t) {
+        if (!t) return false;
+        if (ids.indexOf(t.id) !== -1 || ids.indexOf(t.sourceId) !== -1 || ids.indexOf(t.paymentId) !== -1) return false;
+        if (t.billNumber && t.billNumber === bill.billNumber) return false;
+        if (t.ref === bill.billNumber && String(t.type || "").toLowerCase().indexOf("vendor payment") !== -1) return false;
+        return true;
+      });
+      if (kept.length !== rows.length) localStorage.setItem(key, JSON.stringify(kept));
+    });
+  }
+
+  // 4. Remove the outstanding amount still sitting in Supplier Payments.
+  var outstanding = total - paid;
+  if (outstanding) {
+    var accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+    var acc = accounts.find(function (a) { return a && a.name === "Supplier Payments"; });
+    if (acc) {
+      acc.amount = (parseFloat(acc.amount) || 0) - outstanding;
+      localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+    }
+  }
+
+  // 5. Remove journal entries auto-posted for this bill.
+  var journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
+  var keep = journals.filter(function (j) {
+    if (!j) return false;
+    if (!window.__acxIsSystemJournal(j)) return true;
+    var num = bill.billNumber;
+    if (num && (String(j.reference || "") === String(num) ||
+        String(j.description || "").indexOf(String(num)) !== -1)) return false;
+    return true;
+  });
+  if (keep.length !== journals.length) localStorage.setItem("manualJournals", JSON.stringify(keep));
+
+  if (typeof window.loadBanks === "function") { try { loadBanks(); } catch (e) {} }
+  if (typeof window.renderBankTable === "function") { try { renderBankTable(); } catch (e) {} }
+  if (typeof window.renderSupplierPayments === "function") { try { renderSupplierPayments(); } catch (e) {} }
+  if (typeof window.renderManualTransactions === "function") { try { renderManualTransactions(); } catch (e) {} }
+  if (typeof window.renderManualJournals === "function") { try { renderManualJournals(); } catch (e) {} }
+  return paid;
+};
+
 
 let exchangeRates = JSON.parse(localStorage.getItem("exchangeRates")) || { USD: 1, EUR: 1 };
 let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
@@ -16284,7 +16477,7 @@ function manualTransaction() {
         : "");
 
   const newTx = {
-    id: "MTX-" + Date.now(),
+    id: (isEditingTx && carryOldTx && carryOldTx.id) ? carryOldTx.id : ("MTX-" + Date.now()),
     bank: bankName,
     type,
     account: acc.name,
@@ -16323,9 +16516,7 @@ function manualTransaction() {
     if (moneyInTypes.includes(type)) acc.amount = (acc.amount || 0) + amount;
     else if (moneyOutTypes.includes(type)) acc.amount = (acc.amount || 0) - amount;
 
-    const idx = allTx.findIndex(
-      t => t.ref === oldTx.ref && t.date === oldTx.date && t.bank === oldTx.bank
-    );
+    const idx = allTx.findIndex(t => t.id === oldTx.id);
     if (idx !== -1) {
       allTx[idx] = newTx;
     } else {
@@ -16750,6 +16941,83 @@ function editManualTransaction(id) {
   }
 }
 
+// Undo the invoice/bill allocations a manual transaction made (applyInvoiceAllocations /
+// applyBillAllocations), so deleting or reversing the transaction doesn't leave those
+// invoices/bills permanently marked Paid/Partial after the payment itself is gone.
+function reverseFundsTransactionAllocations(tx) {
+  if (!tx || !tx.id) return;
+
+  // --- Customer side: reopen invoices / restore opening balance, drop the receipts ---
+  let receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
+  const myReceipts = receipts.filter(r => r.source === "fundsTransaction" && r.sourceId === tx.id);
+  if (myReceipts.length) {
+    const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+    const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+    myReceipts.forEach(r => {
+      const amt = parseFloat(r.amount) || 0;
+      if (r.openingBalance) {
+        const cust = customers.find(c => c.name === r.customer);
+        if (cust) cust.openingBalance = (parseFloat(cust.openingBalance) || 0) + amt;
+        return;
+      }
+      const inv = invoices.find(i => i.id === r.invoiceId);
+      if (!inv) return;
+      const total = parseFloat(inv.totalKES ?? inv.total ?? 0) || 0;
+      inv.amountPaid = Math.max((parseFloat(inv.amountPaid) || 0) - amt, 0);
+      inv.balance = Math.max(total - inv.amountPaid, 0);
+      inv.status = inv.amountPaid <= 0 ? "Unpaid" : (inv.balance > 0 ? "Partial" : "Paid");
+    });
+    localStorage.setItem("invoices", JSON.stringify(invoices));
+    localStorage.setItem("customers", JSON.stringify(customers));
+    receipts = receipts.filter(r => !(r.source === "fundsTransaction" && r.sourceId === tx.id));
+    localStorage.setItem("receipts", JSON.stringify(receipts));
+
+    let customerPayments = JSON.parse(localStorage.getItem("customerPayments") || "[]");
+    customerPayments = customerPayments.filter(p => !(p.source === "fundsTransaction" && p.sourceId === tx.id));
+    localStorage.setItem("customerPayments", JSON.stringify(customerPayments));
+
+    if (typeof renderInvoices === "function") { try { renderInvoices(); } catch (e) {} }
+    if (typeof renderReceipts === "function") { try { renderReceipts(); } catch (e) {} }
+    if (typeof renderCustomers === "function") { try { renderCustomers(); } catch (e) {} }
+    if (typeof recalculateCustomerReceivables === "function") { try { recalculateCustomerReceivables(); } catch (e) {} }
+    if (typeof renderAccountsReceivable === "function") { try { renderAccountsReceivable(); } catch (e) {} }
+  }
+
+  // --- Vendor side: reopen bills / restore opening balance, drop the bill payments ---
+  let billPayments = JSON.parse(localStorage.getItem("billPayments") || "[]");
+  const myBillPayments = billPayments.filter(p => p.source === "fundsTransaction" && p.sourceId === tx.id);
+  if (myBillPayments.length) {
+    const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+    const suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
+    myBillPayments.forEach(p => {
+      const amt = parseFloat(p.amount) || 0;
+      if (p.openingBalance) {
+        const supp = suppliers.find(s => s.name === p.supplier);
+        if (supp) {
+          supp.openingBalance = (parseFloat(supp.openingBalance) || 0) + amt;
+          supp.balance = (parseFloat(supp.balance) || 0) + amt;
+        }
+        return;
+      }
+      const bill = bills[p.billIndex];
+      if (!bill) return;
+      const total = parseFloat(bill.total) || 0;
+      bill.paidAmount = Math.max((parseFloat(bill.paidAmount) || 0) - amt, 0);
+      bill.amountPaid = bill.paidAmount;
+      bill.balance = Math.max(total - bill.paidAmount, 0);
+      bill.status = bill.paidAmount <= 0 ? "Unpaid" : (bill.balance > 0 ? "Partial" : "Paid");
+    });
+    localStorage.setItem("bills", JSON.stringify(bills));
+    localStorage.setItem("suppliers", JSON.stringify(suppliers));
+    billPayments = billPayments.filter(p => !(p.source === "fundsTransaction" && p.sourceId === tx.id));
+    localStorage.setItem("billPayments", JSON.stringify(billPayments));
+
+    if (typeof loadSupplierBills === "function") { try { loadSupplierBills(); } catch (e) {} }
+    if (typeof renderSupplierPayments === "function") { try { renderSupplierPayments(); } catch (e) {} }
+    if (typeof renderSuppliers === "function") { try { renderSuppliers(); } catch (e) {} }
+  }
+}
+
 function deleteManualTransaction(id) {
   let transactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
   let banks = JSON.parse(localStorage.getItem("banks") || "[]");
@@ -16762,9 +17030,14 @@ function deleteManualTransaction(id) {
   const tx = transactions[txIndex];
 
   if (!tx) return;
-  if (!confirm("Delete this manual transaction?")) return;
+  const hasAllocations = Array.isArray(tx.allocatedTo) && tx.allocatedTo.length > 0;
+  const confirmMsg = hasAllocations
+    ? "This payment is allocated to invoices/bills (or a prepayment). Deleting it will reopen those invoices/bills and remove the linked receipts/payments. Continue?"
+    : "Delete this manual transaction?";
+  if (!confirm(confirmMsg)) return;
 
   moveToRecycle(tx, "File", "ManualTransactions");
+  reverseFundsTransactionAllocations(tx);
 
   const bank = banks.find(b => b.name === tx.bank);
   if (bank) {
@@ -17491,11 +17764,16 @@ function getCheckedInvoiceAllocations() {
     .map(cb => {
       const amtInput = list.querySelector('.allocInvoiceAmount[data-id="' + cb.dataset.id + '"]');
       const markPaid = list.querySelector('.allocInvoiceMarkPaid[value="' + cb.dataset.id + '"]');
+      const isMarkPaid = !!(markPaid && markPaid.checked);
+      const balanceVal = parseFloat(cb.dataset.balance) || 0;
+      const typedAmt = parseFloat(amtInput && amtInput.value) || 0;
+      // Mark Paid always allocates exactly the remaining balance to this invoice —
+      // never a typed-in overpayment — so the excess falls through to prepayment instead.
       return {
         invoiceId: cb.dataset.id === "opening-balance" ? "opening-balance" : parseInt(cb.dataset.id, 10),
-        balance: parseFloat(cb.dataset.balance) || 0,
-        amount: parseFloat(amtInput && amtInput.value) || 0,
-        markPaid: !!(markPaid && markPaid.checked)
+        balance: balanceVal,
+        amount: isMarkPaid ? balanceVal : typedAmt,
+        markPaid: isMarkPaid
       };
     })
     .filter(a => a.amount > 0);
@@ -17508,11 +17786,16 @@ function getCheckedBillAllocations() {
     .map(cb => {
       const amtInput = list.querySelector('.allocBillAmount[data-idx="' + cb.dataset.idx + '"]');
       const markPaid = list.querySelector('.allocBillMarkPaid[value="' + cb.dataset.idx + '"]');
+      const isMarkPaid = !!(markPaid && markPaid.checked);
+      const balanceVal = parseFloat(cb.dataset.balance) || 0;
+      const typedAmt = parseFloat(amtInput && amtInput.value) || 0;
+      // Mark Paid always allocates exactly the remaining balance to this bill —
+      // never a typed-in overpayment — so the excess falls through to prepayment instead.
       return {
         billIndex: cb.dataset.idx === "opening-balance" ? "opening-balance" : parseInt(cb.dataset.idx, 10),
-        balance: parseFloat(cb.dataset.balance) || 0,
-        amount: parseFloat(amtInput && amtInput.value) || 0,
-        markPaid: !!(markPaid && markPaid.checked)
+        balance: balanceVal,
+        amount: isMarkPaid ? balanceVal : typedAmt,
+        markPaid: isMarkPaid
       };
     })
     .filter(a => a.amount > 0);
@@ -17583,7 +17866,10 @@ function applyInvoiceAllocations(allocations, meta) {
     const total = parseFloat(invoice.totalKES ?? invoice.total ?? 0) || 0;
     const existingPaid = parseFloat(invoice.amountPaid) || 0;
     let allocAmount = a.amount;
-    if (a.markPaid) allocAmount = Math.max(total - existingPaid, allocAmount);
+    // "Mark Paid" closes the invoice for exactly the remaining balance — never more,
+    // or a typed overpayment gets posted straight into this invoice instead of
+    // falling through to the transaction's unallocated/prepayment amount.
+    if (a.markPaid) allocAmount = Math.max(total - existingPaid, 0);
 
     invoice.amountPaid = existingPaid + allocAmount;
     invoice.balance = Math.max(total - invoice.amountPaid, 0);
@@ -17689,7 +17975,10 @@ function applyBillAllocations(allocations, meta) {
     const total = parseFloat(bill.total) || 0;
     const existingPaid = parseFloat(bill.paidAmount) || 0;
     let allocAmount = a.amount;
-    if (a.markPaid) allocAmount = Math.max(total - existingPaid, allocAmount);
+    // "Mark Paid" closes the bill for exactly the remaining balance — never more,
+    // or a typed overpayment gets posted straight into this bill instead of
+    // falling through to the transaction's unallocated/prepayment amount.
+    if (a.markPaid) allocAmount = Math.max(total - existingPaid, 0);
 
     bill.paidAmount = existingPaid + allocAmount;
     bill.amountPaid = bill.paidAmount;
@@ -23371,7 +23660,7 @@ button:hover {
     id="quoteSearch"
     placeholder="Search Quote Items (/)"
     class="border rounded-md pl-8 pr-3 py-1 text-sm w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-400"
-    oninput="searchQuoteItems()"
+    oninput="searchQuotes()"
   /><svg class="absolute left-2 top-1.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div><div class="mb-2 relative inline-block text-right"><button id="quoteOptionsBtn" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-9 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50" aria-haspopup="true" aria-expanded="false">
     Quote Options
     <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></button><div id="quoteSortDropdown" class="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50"><div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="quoteOptionsBtn"><button onclick="sortQuotesBy('quoteNumber')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center" role="menuitem"><svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -26022,7 +26311,7 @@ let editingInvoiceId = null;
 
 function searchInvoices() {
   const input = document.getElementById('invoiceSearch').value.toLowerCase();
-  const table = document.getElementById('invoiceTableBody'); 
+  const table = document.getElementById('invoiceTable'); 
   const rows = table.querySelectorAll('tr');
 
   rows.forEach(row => {
@@ -26034,7 +26323,7 @@ function searchInvoices() {
 }
 
 function updateInvoicePlaceholder() {
-  const tbody = document.getElementById('invoiceTableBody');
+  const tbody = document.getElementById('invoiceTable');
   const visibleRows = [...tbody.children].filter(row => row.style.display !== 'none');
 
   const oldPlaceholder = tbody.querySelector('.placeholder');
@@ -27719,6 +28008,10 @@ function deleteInvoice(id) {
       }
     });
   }
+  // ACX FIX (audit §3.2): a paid invoice must not leave its cash, receipts,
+  // transaction rows, control-account amount and journals behind.
+  window.__acxUnwindInvoicePayments(invoice);
+
   storedInvoices.splice(index, 1);
   localStorage.setItem("invoices", JSON.stringify(storedInvoices));
   invoices = storedInvoices;
@@ -27861,6 +28154,12 @@ function recordInvoicePayment(id) {
     let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
     let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
     const tx = {
+      // ACX FIX (audit §3.1): stamp the ids the delete functions look for,
+      // otherwise this row survives when the receipt is deleted.
+      id: receipt.id,
+      receiptId: receipt.id,
+      sourceId: receipt.id,
+      invoiceId: invoice.id,
       bank: bank.name,
       type: "Customer Payment",
       account: customerAcc.name,
@@ -27898,6 +28197,12 @@ function recordInvoicePayment(id) {
     localStorage.setItem("transactions", JSON.stringify(allTx));
     localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
     postInvoiceJournal(invoice);
+    // Journal entry for the cash side of this payment (Zoho-style): debit
+    // whichever account the money actually landed in — "Undeposited Funds"
+    // when that's what was picked, or the bank's own linked chart account —
+    // and credit Debtors Control. bank.balance was already updated above, so
+    // this only records the entry; it doesn't move any more money.
+    postInvoicePaymentJournal(invoice, [{ account: bank.chartAccount || bank.name, amount: appliedAmount }], receipt.date, false);
     if (overpayExcess > 0.005 && typeof window.__acxAddPrepaymentFromOverpayment === "function") {
       window.__acxAddPrepaymentFromOverpayment("customer", invoice.customer, overpayExcess, bank.name, invoice.invoiceNumber, receipt.date);
     }
@@ -27908,6 +28213,7 @@ function recordInvoicePayment(id) {
     renderBankTable();
     renderDebitControlPanel();
     updateBankDropdowns();
+    if (typeof renderManualJournals === "function") renderManualJournals();
     document.body.removeChild(modal);
     showToast(
       overpayExcess > 0.005
@@ -27927,7 +28233,13 @@ function reversePayment(id) {
 
   let receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
   const relatedReceipts = receipts.filter(r => String(r.invoiceId) === String(invoice.id));
-  const paid = relatedReceipts.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+  const receiptsPaid = relatedReceipts.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+  // invoice.amountPaid is the authoritative "Paid" figure shown on the Invoices
+  // list. Some payment paths (credit note application, bulk/recurring invoice
+  // payments, prepayment allocation, etc.) update it without always leaving a
+  // matching "receipts" entry, so receipts alone can under-report what's paid.
+  // Fall back to invoice.amountPaid whenever it's higher than the receipts total.
+  const paid = Math.max(receiptsPaid, parseFloat(invoice.amountPaid) || 0);
   if (paid <= 0) return alert("No payment to reverse.");
 
   const input = prompt(
@@ -27947,6 +28259,7 @@ function reversePayment(id) {
 
   
   let remaining = difference;
+  const reversedByAccount = {}; // account name -> amount pulled back out, for the journal entry
   for (let i = receipts.length - 1; i >= 0 && remaining > 0; i--) {
     if (String(receipts[i].invoiceId) !== String(invoice.id)) continue;
     const r = receipts[i];
@@ -27957,7 +28270,11 @@ function reversePayment(id) {
     let bank = null;
     if (typeof r.bankIndex === "number" && banks[r.bankIndex]) bank = banks[r.bankIndex];
     else if (r.bankName) bank = banks.find(b => b.name === r.bankName);
-    if (bank) bank.balance = (parseFloat(bank.balance) || 0) - take;
+    if (bank) {
+      bank.balance = (parseFloat(bank.balance) || 0) - take;
+      const acctName = bank.chartAccount || bank.name;
+      reversedByAccount[acctName] = (reversedByAccount[acctName] || 0) + take;
+    }
 
     if (amt - take <= 0.0001) {
       receipts.splice(i, 1);
@@ -27966,13 +28283,33 @@ function reversePayment(id) {
     }
     remaining -= take;
   }
+  // If some of the amount being reversed wasn't backed by a matching receipt
+  // (see the invoice.amountPaid fallback above), still pull it out of a bank
+  // so the books stay balanced, the same way bill reversal already does.
+  if (remaining > 0.0001 && banks.length) {
+    banks[0].balance = (parseFloat(banks[0].balance) || 0) - remaining;
+    const acctName = banks[0].chartAccount || banks[0].name;
+    reversedByAccount[acctName] = (reversedByAccount[acctName] || 0) + remaining;
+    remaining = 0;
+  }
   localStorage.setItem("receipts", JSON.stringify(receipts));
   localStorage.setItem("banks", JSON.stringify(banks));
 
+  // Matching journal entry for the reversal (mirrors the one posted when the
+  // payment was recorded), so Undeposited Funds / bank accounts and Debtors
+  // Control stay in sync in the Journal/General Ledger too.
+  postInvoicePaymentJournal(
+    invoice,
+    Object.keys(reversedByAccount).map(account => ({ account, amount: reversedByAccount[account] })),
+    new Date().toISOString().split("T")[0],
+    true
+  );
+
   
-  const finalPaid = receipts
-    .filter(r => String(r.invoiceId) === String(invoice.id))
-    .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+  // newPaid is exactly what the user asked the new paid amount to be —
+  // use it directly rather than re-deriving from receipts, since receipts
+  // may not fully account for invoice.amountPaid (see fallback above).
+  const finalPaid = newPaid;
   invoice.amountPaid = finalPaid;
   invoice.balance = Math.max(total - finalPaid, 0);
   if (finalPaid >= total) { invoice.status = "Paid"; invoice.paid = true; invoice.balance = 0; }
@@ -28029,6 +28366,7 @@ function reversePayment(id) {
   if (typeof renderBankTable === "function") renderBankTable();
   if (typeof updateBankDropdowns === "function") updateBankDropdowns();
   if (typeof updateDashboardTotals === "function") updateDashboardTotals();
+  if (typeof renderManualJournals === "function") renderManualJournals();
 
   showToast(`🔄 Reversed ${window.__fmtBase(difference)} KES on Invoice ${invoice.invoiceNumber}. New paid: ${window.__fmtBase(finalPaid)} KES.`);
 }
@@ -28226,6 +28564,34 @@ function postInvoiceJournal(invoice) {
     if (typeof renderManualJournals === "function") {
         renderManualJournals();
     }
+}
+// Zoho-style receipt journal: recordInvoicePayment() already moves the cash
+// itself (it adjusts bank.balance / Undeposited Funds directly), so this only
+// adds the matching journal entry for the Journal/General Ledger reports —
+// it must NOT touch bank balances again, or the amount would be double-counted.
+// `lines` is an array of { account, amount } — normally one line (one bank),
+// but reversePayment() can pass several if a reversal spans multiple receipts.
+function postInvoicePaymentJournal(invoice, lines, date, isReversal) {
+  const cleanLines = (lines || []).filter(l => l && l.amount > 0.0001);
+  if (!cleanLines.length) return;
+  const total = cleanLines.reduce((s, l) => s + l.amount, 0);
+  const desc = `${isReversal ? "Reversal of payment for" : "Payment received for"} Invoice ${invoice.invoiceNumber}`;
+  const entries = [];
+  if (isReversal) {
+    // Reversal: money leaves the deposit account(s) and Debtors Control goes back up.
+    entries.push({ account: "Debtors Control", description: desc, debit: total, credit: 0 });
+    cleanLines.forEach(l => entries.push({ account: l.account, description: desc, debit: 0, credit: l.amount }));
+  } else {
+    // Payment: cash lands in the deposit account (often "Undeposited Funds"), Debtors Control goes down.
+    cleanLines.forEach(l => entries.push({ account: l.account, description: desc, debit: l.amount, credit: 0 }));
+    entries.push({ account: "Debtors Control", description: desc, debit: 0, credit: total });
+  }
+  postJournal({
+    date: date || new Date().toISOString().split("T")[0],
+    description: desc,
+    source: isReversal ? "Invoice Payment Reversal" : "Invoice Payment",
+    entries
+  });
 }
 document.addEventListener("DOMContentLoaded", function () {
   loadCustomersToDropdown();
@@ -28837,6 +29203,9 @@ let ordersItemsPerPage = 25;
 function renderOrders(data = null) {
   const tbody = document.getElementById("orderTable");
   const orders = data || JSON.parse(localStorage.getItem("orders") || "[]");
+  // ACX FIX (audit §2): row buttons embed the index of this rendered list,
+  // which may be a filtered/sorted subset of storage.
+  window.__acxOrdersView = orders;
 
   if (!tbody) return;
 
@@ -29016,8 +29385,11 @@ function deleteOrder(index) {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
   const recycleBin = JSON.parse(localStorage.getItem("recycle_orders") || "[]");
 
+  // ACX FIX (audit §2): map the clicked row back to the real order.
+  index = window.__acxResolveRowIndex(orders, window.__acxOrdersView, index,
+    ["number", "date", "customerName"]);
   const o = orders[index];
-  if (!o) return;
+  if (!o) { alert("Order not found."); return; }
 
   if (!confirm("Are you sure you want to delete this order?")) return;
 
@@ -29560,7 +29932,7 @@ let editingQuoteIndex = null;
 let editingQuoteItemIndex = null;
 function searchQuotes() {
   const input = document.getElementById('quoteSearch').value.toLowerCase();
-  const table = document.getElementById('quotesTable'); 
+  const table = document.getElementById('quoteTable'); 
   const rows = table.querySelectorAll('tr');
 
   rows.forEach(row => {
@@ -29572,7 +29944,7 @@ function searchQuotes() {
 }
 
 function updateQuotePlaceholder() {
-  const tbody = document.getElementById('quotesTable');
+  const tbody = document.getElementById('quoteTable');
   const visibleRows = [...tbody.children].filter(row => row.style.display !== 'none');
 
   const oldPlaceholder = tbody.querySelector('.placeholder');
@@ -29952,8 +30324,11 @@ function deleteQuote(index) {
   if (!window.requirePermission('quotesTab', 'delete', 'delete quotes')) return;
 
   const quotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+  // ACX FIX (audit §2): map the clicked row back to the real quote.
+  index = window.__acxResolveRowIndex(quotes, window.__acxQuotesView, index,
+    ["quoteNumber", "date", "customer"]);
   const q = quotes[index];
-  if (!q) return;
+  if (!q) { alert("Quote not found."); return; }
 
   if (!confirm(`Delete quote ${q.quoteNumber}?`)) return;
 
@@ -29984,6 +30359,8 @@ let quotesItemsPerPage = 25;
 function renderQuotes(data = null) {
   const tbody = document.getElementById("quoteTable");
   const quotes = data || JSON.parse(localStorage.getItem("quotes") || "[]");
+  // ACX FIX (audit §2)
+  window.__acxQuotesView = quotes;
 
   tbody.innerHTML = "";
 
@@ -38475,6 +38852,37 @@ function deleteSupplier(index) {
   const supplier = suppliers[index];
   if (!supplier) return;
 
+  // ACX FIX (audit §3.3): same guard deleteCustomer already has, so bills
+  // are never orphaned against a supplier that no longer exists.
+  const __supName = supplier.name;
+  const __bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  const __billPays = JSON.parse(localStorage.getItem("billPayments") || "[]");
+  const __orders = JSON.parse(localStorage.getItem("purchaseOrders") || "[]");
+  const __debitNotes = JSON.parse(localStorage.getItem("debitNotes") || "[]");
+  const __purchaseReturns = JSON.parse(localStorage.getItem("purchaseReturns") || "[]");
+  const __has = [
+    __bills.some(b => b && b.supplier === __supName),
+    __billPays.some(p => p && p.supplier === __supName),
+    __orders.some(o => o && o.supplier === __supName),
+    __debitNotes.some(d => d && d.supplier === __supName),
+    __purchaseReturns.some(r => r && r.supplier === __supName)
+  ].some(Boolean);
+  if (__has) {
+    alert(
+`❌ Cannot delete "${__supName}"
+
+This supplier has existing transactions.
+
+������ Please delete ALL related records first:
+• Bills
+• Supplier Payments
+• Purchase Orders
+• Debit Notes
+• Purchase Returns`
+    );
+    return;
+  }
+
   if (!confirm("⚠️ Are you sure you want to delete this supplier?")) return;
 
   if (!supplier.id) supplier.id = crypto.randomUUID();
@@ -40609,6 +41017,10 @@ function filterBillsByStatus(status) {
 function loadSupplierBills(data = null) {
   const tbody = document.getElementById('supplierBillsList');
   const bills = data || JSON.parse(localStorage.getItem('bills') || '[]');
+  // Row buttons embed the row's index in this rendered list, which can be a
+  // filtered/sorted subset (see filterSupplierBills). Track it so functions
+  // like reverseBillPayment can resolve which bill a row index really means.
+  window.__acxSupplierBillsView = bills;
   tbody.innerHTML = bills.map((b, i) => {
     const paidAmount = b.paidAmount || 0;
     const dueAmount = (b.total || 0) - paidAmount;
@@ -40774,8 +41186,12 @@ function pushBillToEtims(index) {
 function deleteBill(index) {
   if (!window.requirePermission('supplierBillsTab', 'delete', 'delete supplier bills')) return;
   let bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  // ACX FIX (audit §2): the row index comes from the rendered (possibly
+  // filtered) Supplier Bills table — resolve the real bill first.
+  index = window.__acxResolveRowIndex(bills, window.__acxSupplierBillsView, index,
+    ["billNumber", "supplier", "date"]);
   const bill = bills[index];
-  if (!bill) return;
+  if (!bill) { alert("Bill not found."); return; }
 
   if (!confirm("Delete this bill?")) return;
 
@@ -40783,7 +41199,14 @@ function deleteBill(index) {
 
   moveToRecycle(bill, "File", "Bills");
 
-  updateSupplierBalance(bill.supplier, -bill.total);
+  // ACX FIX (audit §3.2): unwind any payments made against this bill
+  // (bank balance, payment records, transaction rows, control account,
+  // journal entries) before the bill disappears.
+  const __billPaidBack = window.__acxUnwindBillPayments(bill);
+
+  // Supplier balance already reflects the payments that were made, so only
+  // the outstanding part of the bill is rolled back here.
+  updateSupplierBalance(bill.supplier, -((parseFloat(bill.total) || 0) - __billPaidBack));
 
   (bill.items || []).forEach(item => {
     if (item.type === 'product') {
@@ -40862,8 +41285,11 @@ function editSupplierBill(index) {
   if (!window.requirePermission('supplierBillsTab', 'edit', 'edit supplier bills')) return;
   guardAction('canEdit', () => {
     const bills = JSON.parse(localStorage.getItem('bills') || '[]');
+    // ACX FIX (audit §2)
+    index = window.__acxResolveRowIndex(bills, window.__acxSupplierBillsView, index,
+      ["billNumber", "supplier", "date"]);
     const bill = bills[index];
-    if (!bill) return;
+    if (!bill) { alert("Bill not found."); return; }
 
     currentEditingBillIndex = index;
     editIndex = -1;
@@ -41030,6 +41456,11 @@ function recordBillPayment(index) {
     let manualTransactions = JSON.parse(localStorage.getItem("manualTransactions") || "[]");
     let allTx = JSON.parse(localStorage.getItem("transactions") || "[]");
     const tx = {
+      // ACX FIX (audit §3.1)
+      id: paymentRecord.id,
+      sourceId: paymentRecord.id,
+      paymentId: paymentRecord.id,
+      billNumber: bill.billNumber,
       bank: bank.name,
       type: "Vendor Payment",
       account: supplierAcc.name,
@@ -41085,8 +41516,22 @@ function recordBillPayment(index) {
 }
 function reverseBillPayment(index) {
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
+  // `index` is the row's position in whichever list was last rendered in the
+  // Supplier Bills table — which can be a filtered/sorted subset, not the raw
+  // storage order (see loadSupplierBills/filterSupplierBills). Resolve the
+  // actual bill via that rendered view first, then find its real position in
+  // the full "bills" array, instead of assuming index lines up with storage.
+  const viewBills = window.__acxSupplierBillsView || bills;
+  const viewBill = viewBills[index];
+  if (!viewBill) return alert("Bill not found.");
+  const realIndex = bills.findIndex(b =>
+    b.billNumber === viewBill.billNumber &&
+    b.supplier === viewBill.supplier &&
+    b.date === viewBill.date
+  );
+  if (realIndex === -1) return alert("Bill not found.");
+  index = realIndex;
   const bill = bills[index];
-  if (!bill) return alert("Bill not found.");
   const currentPaid = parseFloat(bill.paidAmount) || 0;
   if (currentPaid <= 0) return alert("This bill has no payment to reverse.");
 
@@ -53421,7 +53866,7 @@ function addManualJournal() {
     
     
     const oldJournal = journals[window.currentEditingJournalIndex];
-    if (oldJournal) applyManualJournalToUndeposited(oldJournal.entries, -1);
+    if (oldJournal) applyManualJournalToUndeposited(oldJournal.entries, -1, oldJournal);
     journals[window.currentEditingJournalIndex] = newJournal;
     window.currentEditingJournalIndex = null;
   } else {
@@ -53429,7 +53874,7 @@ function addManualJournal() {
   }
 
   localStorage.setItem("manualJournals", JSON.stringify(journals));
-  applyManualJournalToUndeposited(newJournal.entries, 1);
+  applyManualJournalToUndeposited(newJournal.entries, 1, newJournal);
   localStorage.removeItem("manualJournalDraft");
 
   renderManualJournals(); 
@@ -53579,11 +54024,15 @@ function cloneJournal(index) {
   const cloned = JSON.parse(JSON.stringify(journals[index]));
 
   cloned.reference = nextJournalNumber();
+  // ACX FIX (audit §3.4): a clone is a new, user-made entry.
+  cloned.source = "Manual";
+  cloned.postedBy = cloned.postedBy || "User";
+  delete cloned.invoiceId;
 
   journals.push(cloned);
 
   localStorage.setItem("manualJournals", JSON.stringify(journals));
-  applyManualJournalToUndeposited(cloned.entries, 1);
+  applyManualJournalToUndeposited(cloned.entries, 1, cloned);
 
   renderManualJournals();
 
@@ -53726,7 +54175,7 @@ function bulkDeleteJournals() {
 
   indexes.forEach(i => {
     const j = journals[i];
-    if (j) applyManualJournalToUndeposited(j.entries, -1);
+    if (j) applyManualJournalToUndeposited(j.entries, -1, j);
     journals.splice(i, 1);
   });
 
@@ -53815,6 +54264,12 @@ function editJournal(index) {
   if (!window.requirePermission('manualJournalsTab', 'edit', 'edit manual journals')) return;
   const journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
   const j = journals[index];
+  if (!j) return;
+  // ACX FIX (audit §3.4)
+  if (window.__acxIsSystemJournal(j)) {
+    alert("⚠️ This entry was posted automatically by the system (" + j.source + ").\n\nEdit it from the document it belongs to (e.g. use \"Reverse Payment\" on the invoice/bill) so bank and Undeposited Funds balances stay in sync.");
+    return;
+  }
 
   document.getElementById("journalDate").value = j.date;
   document.getElementById("journalDescription").value = j.description;
@@ -53861,10 +54316,16 @@ function deleteJournal(index) {
   const journal = journals[index];
   if (!journal) return;
 
+  // ACX FIX (audit §3.4)
+  if (window.__acxIsSystemJournal(journal) &&
+      !confirm("⚠️ This entry was posted automatically (" + journal.source + ").\nDeleting it here removes the record but does NOT undo the payment.\n\nDelete anyway?")) {
+    return;
+  }
+
   if (!journal.id) journal.id = crypto.randomUUID();
 
   moveToRecycle(journal, "File", "ManualJournals");
-  applyManualJournalToUndeposited(journal.entries, -1);
+  applyManualJournalToUndeposited(journal.entries, -1, journal);
 
   journals.splice(index, 1);
   localStorage.setItem("manualJournals", JSON.stringify(journals));
@@ -54121,7 +54582,7 @@ function manageManualJournalFiles() {
     const index = parseInt(action) - 1;
     if (!isNaN(index) && journals[index]) {
         if (confirm(`Delete journal dated ${journals[index].date}?`)) {
-            applyManualJournalToUndeposited(journals[index].entries, -1);
+            applyManualJournalToUndeposited(journals[index].entries, -1, journals[index]);
             journals.splice(index, 1);
             localStorage.setItem("manualJournals", JSON.stringify(journals));
             renderManualJournals();
@@ -127495,13 +127956,28 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
         font: "Inter", headingFont: "Inter", tagline: "", watermark: ""
       };
       var FONT_OPTS = [
-        "Inter", "Roboto", "Open Sans", "Lato", "Poppins", "Montserrat", "Nunito",
-        "Source Sans Pro", "Raleway", "Work Sans", "Rubik", "Mulish", "Quicksand", "Karla",
-        "DM Sans", "Manrope", "Josefin Sans", "Oswald", "PT Sans", "Ubuntu", "Fira Sans",
-        "Noto Sans", "Space Grotesk", "Barlow", "Cabin",
-        "Merriweather", "Playfair Display", "Crimson Text", "Lora", "EB Garamond", "Libre Baskerville",
-        "Cambria", "Georgia", "Times New Roman",
-        "Roboto Mono", "Courier New"
+        "Inter",
+        "Agency FB", "Algerian", "Arial", "Arial Black", "Arial Narrow", "Arial Rounded MT Bold",
+        "Bahnschrift", "Baskerville", "Bell MT", "Berlin Sans FB", "Bernard MT Condensed",
+        "Blackadder ITC", "Bodoni MT", "Book Antiqua", "Bookman Old Style", "Bradley Hand ITC",
+        "Britannic Bold", "Broadway", "Brush Script MT", "Calibri", "Calisto MT", "Cambria",
+        "Candara", "Century", "Century Gothic", "Century Schoolbook", "Chiller", "Colonna MT",
+        "Comic Sans MS", "Cooper Black", "Copperplate Gothic", "Corbel", "Courier New",
+        "Dubai", "Ebrima", "Edwardian Script ITC", "Elephant", "Engravers MT", "Eras Bold ITC",
+        "Franklin Gothic", "Freestyle Script", "French Script MT", "Gabriola", "Gadugi",
+        "Garamond", "Georgia", "Gigi", "Gill Sans MT", "Goudy Old Style", "Haettenschweiler",
+        "Harlow Solid Italic", "Harrington", "Helvetica", "High Tower Text",
+        "Impact", "Imprint MT Shadow", "Informal Roman", "Ink Free", "Javanese Text", "Jokerman",
+        "Juice ITC", "Kristen ITC", "Kunstler Script", "Lucida Bright", "Lucida Calligraphy",
+        "Lucida Console", "Lucida Fax", "Lucida Handwriting", "Lucida Sans", "Lucida Sans Typewriter",
+        "Lucida Unicode", "Magneto", "Maiandra GD", "Matura MT Script Capitals",
+        "Microsoft Sans Serif", "Microsoft YaHei", "Mistral", "Modern No. 20", "Monotype Corsiva",
+        "Montserrat", "Noto Sans", "Noto Serif", "OCR A Extended", "Old English Text MT", "Onyx",
+        "Open Sans", "Palatino Linotype", "Papyrus", "Perpetua", "Poppins", "Pristina", "Quicksand",
+        "Rage Italic", "Ravie", "Rockwell", "Rockwell Condensed", "Rockwell Extra Bold",
+        "Segoe Print", "Segoe Script", "Segoe UI", "Showcard Gothic", "SimSun", "Sitka", "Snap ITC",
+        "Stencil", "Tahoma", "Tempus Sans ITC", "Times New Roman", "Trebuchet MS", "Tw Cen MT",
+        "Verdana", "Viner Hand ITC", "Vivaldi", "Vladimir Script", "Wide Latin", "Wingdings", "Yu Gothic"
       ];
       var PRESET_COLORS = [
         "#1e3a8a", "#2563eb", "#0ea5e9", "#0d9488", "#16a34a", "#65a30d",
@@ -132123,6 +132599,8 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
     var wantTypes = type === "customer" ? MTX_TYPES_CUSTOMER : MTX_TYPES_SUPPLIER;
     var tx = J("manualTransactions", []);
     var allTx = J("transactions", []);
+    var accounts = J("chartOfAccounts", []);
+    var isCustomer = type === "customer";
     var candidates = tx
       .map(function (t, i) { return { t: t, i: i }; })
       .filter(function (o) { return wantTypes.indexOf(o.t.type) !== -1 && samePart(o.t.party, party) && (n(o.t.amount) - n(o.t.allocatedAmount)) > 0.005; })
@@ -132137,10 +132615,32 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
       tx[o.i].allocatedTo = (tx[o.i].allocatedTo || []).concat([(ref || "Prepayment applied") + " (KES " + take.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2) + ")"]);
       var aIdx = allTx.findIndex(function (x) { return x.id === o.t.id; });
       if (aIdx !== -1) { allTx[aIdx].allocatedAmount = newAllocated; allTx[aIdx].allocatedTo = tx[o.i].allocatedTo; }
+
+      // Move this slice out of the account the original transaction was posted to and
+      // into Debtors/Creditors Control, mirroring the journal entry consumePrepayment()
+      // posts for the prepayments-list pool — otherwise the ledger never reflects that
+      // this credit has now been applied to an invoice/bill.
+      var acctName = o.t.account;
+      if (acctName) {
+        var acctObj = accounts.filter(function (a) { return a.name === acctName; })[0];
+        if (acctObj) acctObj.amount = n(acctObj.amount) + (isCustomer ? -take : take);
+        postJournalEntry(
+          (isCustomer ? "Unallocated receipt applied to invoice " : "Unallocated payment applied to bill ") + (ref || ""),
+          isCustomer ? [
+            { account: acctName, description: "Applied to " + ref, debit: take, credit: 0 },
+            { account: "Debtors Control", description: "Applied to " + ref, debit: 0, credit: take }
+          ] : [
+            { account: "Creditors Control", description: "Applied to " + ref, debit: take, credit: 0 },
+            { account: acctName, description: "Applied to " + ref, debit: 0, credit: take }
+          ],
+          ref
+        );
+      }
+
       left -= take;
       consumed += take;
     });
-    if (consumed > 0.005) { S("manualTransactions", tx); S("transactions", allTx); }
+    if (consumed > 0.005) { S("manualTransactions", tx); S("transactions", allTx); S("chartOfAccounts", accounts); }
     return consumed;
   }
 
@@ -141713,5 +142213,320 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   document.addEventListener("DOMContentLoaded", function () { setTimeout(refreshPayrollViews, 1500); });
   window.addEventListener("load", function () { setTimeout(refreshPayrollViews, 2500); });
 })();
+</script>
+<script>
+
+/* =====================================================================
+   SALES HUB BUG FIXES
+   Adds the functions that were wired to buttons but never defined.
+   Loaded last so these definitions are the active ones.
+   ===================================================================== */
+(function () {
+  function LS(key) { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { return []; } }
+  function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+  function notify(msg) {
+    if (typeof showNotification === "function") showNotification(msg, "success");
+    else alert(msg);
+  }
+  function call(name, arg) { if (typeof window[name] === "function") window[name](arg); }
+  function csvEscape(v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; }
+  function download(filename, text, type) {
+    const blob = new Blob([text], { type: type || "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+  }
+  function pickCsv(cb) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv";
+    input.onchange = function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const rows = String(ev.target.result).split(/\r?\n/).filter(r => r.trim() !== "");
+        rows.shift(); // header
+        cb(rows.map(r => r.split(",").map(c => c.replace(/^"|"$/g, "").replace(/""/g, '"').trim())));
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+  function printHTML(title, html) {
+    const w = window.open("", "", "width=900,height=700");
+    if (!w) return alert("Please allow pop-ups to print.");
+    w.document.write('<html><head><title>' + title + '</title>' +
+      '<script src="https://cdn.tailwindcss.com"><\/script>' +
+      '<style>body{font-family:Arial, sans-serif;padding:20px;font-size:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px;text-align:left}button{display:none}</style>' +
+      '</head><body>' + html + '<\/body><\/html>');
+    w.document.close();
+    setTimeout(function () { w.focus(); w.print(); }, 400);
+  }
+  function printElement(selector, title) {
+    const el = document.querySelector(selector);
+    if (!el) return alert("Nothing to print yet.");
+    printHTML(title, el.innerHTML);
+  }
+  // Generic show/hide column helper for report tables
+  function columnToggler(containerId) {
+    return function (index, checkbox) {
+      const table = document.querySelector("#" + containerId + " table") ||
+                    document.getElementById(containerId);
+      if (!table) return;
+      const rows = table.closest("table") ? table.closest("table").querySelectorAll("tr") : table.querySelectorAll("tr");
+      rows.forEach(function (row) {
+        const cell = row.children[index];
+        if (cell) cell.style.display = checkbox.checked ? "" : "none";
+      });
+    };
+  }
+  function customizerToggler(id) {
+    return function () {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle("hidden");
+    };
+  }
+
+  /* ---------------- Quotes ---------------- */
+  window.exportQuotes = function () {
+    const quotes = LS("quotes");
+    if (!quotes.length) return alert("No quotes to export.");
+    const rows = ["Quote Number,Date,Customer,Validity,Total,VAT,Status"];
+    quotes.forEach(q => rows.push([
+      q.quoteNumber, q.date, q.customer, q.validity || q.validityDays || "",
+      q.total || 0, q.vat || 0, q.status || "Draft"
+    ].map(csvEscape).join(",")));
+    download("quotes.csv", rows.join("\n"));
+  };
+
+  window.importQuotes = function () {
+    pickCsv(function (rows) {
+      const quotes = LS("quotes");
+      let added = 0, skipped = 0;
+      rows.forEach(function (cols) {
+        if (cols.length < 2) return;
+        const q = {
+          id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + Math.random()),
+          quoteNumber: cols[0] || (typeof generateQuoteNumber === "function" ? generateQuoteNumber() : ""),
+          date: cols[1] || new Date().toISOString().slice(0, 10),
+          customer: cols[2] || "",
+          validity: cols[3] || "",
+          total: parseFloat(cols[4]) || 0,
+          vat: parseFloat(cols[5]) || 0,
+          status: cols[6] || "Draft",
+          items: []
+        };
+        if (q.quoteNumber && quotes.some(x => x.quoteNumber === q.quoteNumber)) { skipped++; return; }
+        quotes.push(q); added++;
+      });
+      save("quotes", quotes);
+      call("renderQuotes");
+      call("renderCustomerQuotesReport");
+      alert("Imported " + added + " quote(s)." + (skipped ? " " + skipped + " duplicate(s) skipped." : ""));
+    });
+  };
+
+  window.toggleCustomerQuotesColumn = columnToggler("customerQuotesBody");
+  if (typeof window.toggleCustomerQuotesColumnCustomizer !== "function")
+    window.toggleCustomerQuotesColumnCustomizer = customizerToggler("customerQuotesColumnCustomizer");
+
+  /* ---------------- Bulk Invoicing ---------------- */
+  window.exportBulkInvoices = function () {
+    const list = LS("bulkInvoices");
+    if (!list.length) return alert("No bulk invoices to export.");
+    const rows = ["Invoice Number,Date,Customer,Total,VAT,Status"];
+    list.forEach(b => rows.push([
+      b.invoiceNumber || b.bulkInvoiceNumber || "", b.date || "", b.customer || "",
+      b.total || 0, b.vat || 0, b.status || ""
+    ].map(csvEscape).join(",")));
+    download("bulk-invoices.csv", rows.join("\n"));
+  };
+
+  window.importBulkInvoices = function () {
+    pickCsv(function (rows) {
+      const list = LS("bulkInvoices");
+      let added = 0, skipped = 0;
+      rows.forEach(function (cols) {
+        if (cols.length < 2) return;
+        const rec = {
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          invoiceNumber: cols[0] || "",
+          date: cols[1] || new Date().toISOString().slice(0, 10),
+          customer: cols[2] || "",
+          total: parseFloat(cols[3]) || 0,
+          vat: parseFloat(cols[4]) || 0,
+          status: cols[5] || "Draft",
+          items: []
+        };
+        if (rec.invoiceNumber && list.some(x => (x.invoiceNumber || x.bulkInvoiceNumber) === rec.invoiceNumber)) { skipped++; return; }
+        list.push(rec); added++;
+      });
+      save("bulkInvoices", list);
+      call("renderBulkInvoices");
+      alert("Imported " + added + " bulk invoice(s)." + (skipped ? " " + skipped + " duplicate(s) skipped." : ""));
+    });
+  };
+
+  window.removeBulkItem = function (index) {
+    if (typeof bulkInvoiceItems === "undefined" || !Array.isArray(bulkInvoiceItems)) return;
+    bulkInvoiceItems.splice(index, 1);
+    call("renderBulkInvoiceItems");
+    call("calculateBulkInvoiceTotals");
+  };
+
+  /* ---------------- Credit Notes ---------------- */
+  window.printCreditNote = function (id) {
+    if (typeof window.previewCreditNote === "function") window.previewCreditNote(id);
+    setTimeout(function () {
+      printElement("#creditNotePreviewModal > div", "Credit Note");
+    }, 300);
+  };
+
+  window.cloneCreditNote = function (id) {
+    const notes = LS("creditNotes");
+    const original = notes.find(n => String(n.id) === String(id));
+    if (!original) return alert("Credit note not found.");
+    const copy = JSON.parse(JSON.stringify(original));
+    copy.id = Date.now();
+    copy.creditNoteNumber = (typeof generateCreditNoteNumber === "function")
+      ? generateCreditNoteNumber()
+      : "CLONE-" + (original.creditNoteNumber || "");
+    copy.date = new Date().toISOString().slice(0, 10);
+    copy.status = "Draft";
+    copy.isCloned = true;
+    copy.clonedFrom = original.id;
+    delete copy.fiscal;
+    notes.push(copy);
+    save("creditNotes", notes);
+    call("renderCreditNotes");
+    notify("Credit note cloned");
+  };
+
+  /* ---------------- Sales Returns ---------------- */
+  window.printSalesReturn = function (index) {
+    if (typeof previewSalesReturn === "function") previewSalesReturn(index);
+    setTimeout(function () {
+      printElement("#salesReturnPreviewContent", "Sales Return");
+    }, 300);
+  };
+
+  window.cloneSalesReturn = function (index) {
+    const returns = LS("salesReturns");
+    const original = returns[index];
+    if (!original) return alert("Sales return not found.");
+    const copy = JSON.parse(JSON.stringify(original));
+    copy.id = Date.now();
+    copy.returnNumber = "CLONE-" + (original.returnNumber || original.id || "");
+    copy.date = new Date().toISOString().slice(0, 10);
+    copy.status = "Draft";
+    copy.applied = false;
+    returns.push(copy);
+    save("salesReturns", returns);
+    call("renderSalesReturnList");
+    notify("Sales return cloned");
+  };
+
+  window.applySalesReturnToInvoice = function (index) {
+    const returns = LS("salesReturns");
+    const r = returns[index];
+    if (!r) return alert("Sales return not found.");
+    if (r.applied) return alert("This return has already been applied to an invoice.");
+
+    const invoices = LS("invoices");
+    const invoice = invoices.find(inv =>
+      String(inv.invoiceNumber) === String(r.invoiceId) ||
+      String(inv.id) === String(r.invoiceId)
+    );
+    if (!invoice) return alert("Linked invoice not found for this return.");
+
+    const amount = Number(r.total) || 0;
+    if (!amount) return alert("This return has no amount to apply.");
+
+    invoice.creditApplied = (Number(invoice.creditApplied) || 0) + amount;
+    invoice.amountPaid = (Number(invoice.amountPaid) || 0) + amount;
+
+    const invTotal = Number(invoice.total) || Number(invoice.amount) || 0;
+    if (invoice.amountPaid >= invTotal) invoice.status = "Paid";
+    else if (invoice.amountPaid > 0) invoice.status = "Partially Paid";
+
+    r.applied = true;
+    r.appliedDate = new Date().toISOString().slice(0, 10);
+    r.status = "Applied";
+
+    save("invoices", invoices);
+    save("salesReturns", returns);
+    call("renderSalesReturnList");
+    call("renderInvoices");
+    notify("Return applied to invoice " + (invoice.invoiceNumber || invoice.id));
+  };
+
+  window.updateReturnStatus = function (index, status) {
+    const returns = LS("salesReturns");
+    if (!returns[index]) return;
+    returns[index].status = status;
+    save("salesReturns", returns);
+    call("renderSalesReturnList");
+  };
+
+  window.toggleSalesReturnColumn = columnToggler("salesReturnBody");
+  if (typeof window.toggleSalesReturnColumnCustomizer !== "function")
+    window.toggleSalesReturnColumnCustomizer = customizerToggler("salesReturnColumnCustomizer");
+
+  /* ---------------- Delivery ---------------- */
+  window.printDelivery = function (index) {
+    if (typeof previewDelivery === "function") previewDelivery(index);
+    setTimeout(function () {
+      printElement("#deliveryPreviewContentWrapper", "Delivery Note");
+    }, 300);
+  };
+
+  window.cloneDelivery = function (index) {
+    const deliveries = LS("deliveries");
+    const original = deliveries[index];
+    if (!original) return alert("Delivery not found.");
+    const copy = JSON.parse(JSON.stringify(original));
+    copy.id = Date.now();
+    copy.deliveryNote = "CLONE-" + (original.deliveryNote || "");
+    copy.date = new Date().toISOString().slice(0, 10);
+    deliveries.push(copy);
+    save("deliveries", deliveries);
+    call("renderDeliveryTable");
+    notify("Delivery cloned");
+  };
+
+  /* ---------------- Receipts ---------------- */
+  window.cloneReceipt = function (id) {
+    const receipts = LS("receipts");
+    const original = receipts.find(r => String(r.id) === String(id));
+    if (!original) return alert("Receipt not found.");
+    const copy = JSON.parse(JSON.stringify(original));
+    copy.id = Date.now();
+    copy.receiptNumber = (typeof generateReceiptNumber === "function")
+      ? generateReceiptNumber()
+      : "CLONE-" + (original.receiptNumber || "");
+    copy.date = new Date().toISOString().slice(0, 10);
+    receipts.push(copy);
+    save("receipts", receipts);
+    call("renderReceipts");
+    notify("Receipt cloned");
+  };
+
+  /* ---------------- Recurring Invoices ---------------- */
+  window.toggleRecurringInvoiceColumn = columnToggler("recurringInvoiceSummary");
+  if (typeof window.toggleRecurringInvoiceColumnCustomizer !== "function")
+    window.toggleRecurringInvoiceColumnCustomizer = customizerToggler("recurringInvoiceColumnCustomizer");
+
+  /* ---------------- Multi-company safe invoice reader ---------------- */
+  window.getInvoices = function () {
+    if (typeof loadCompanyData === "function") {
+      const data = loadCompanyData("invoices");
+      if (Array.isArray(data)) return data;
+    }
+    return LS("invoices");
+  };
+})();
+
 </script>
 </body></html>
