@@ -7546,7 +7546,10 @@ document.getElementById('itemAttachment')?.addEventListener('change', function (
 
   <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
     <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-      <h3 class="text-sm font-bold text-gray-800">Price List Records</h3>
+      <div>
+        <h3 class="text-sm font-bold text-gray-800">Price List Records</h3>
+        <p class="text-xs text-gray-500 mt-0.5">📊 Margin &amp; Markup Comparison — ranked best to worst by margin</p>
+      </div>
       <button 
         id="bulkDeletePriceBtn"
         onclick="bulkDeletePriceList()"
@@ -7560,9 +7563,12 @@ document.getElementById('itemAttachment')?.addEventListener('change', function (
         <thead class="bg-gray-50 border-b border-gray-200 text-sm font-semibold text-gray-500 uppercase">
           <tr>
             <th class="p-3.5 w-10 text-center"><input type="checkbox" onclick="toggleSelectAllPriceList(this)" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"></th>
+            <th class="p-3.5 text-center">Rank</th>
             <th class="p-3.5">Item</th>
             <th class="p-3.5">Selling Price (KES)</th>
             <th class="p-3.5">Buying Price (KES)</th>
+            <th class="p-3.5">Margin (%)</th>
+            <th class="p-3.5">Markup (%)</th>
             <th class="p-3.5">Effective Date</th>
             <th class="p-3.5 text-right">Actions</th>
           </tr>
@@ -10639,7 +10645,7 @@ function renderPriceListTable() {
   if (merged.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center p-4 text-gray-500">
+        <td colspan="9" class="text-center p-4 text-gray-500">
           No items found.
         </td>
       </tr>
@@ -10647,21 +10653,55 @@ function renderPriceListTable() {
     return;
   }
 
-  tbody.innerHTML = merged.map((entry, index) => `
+  const dp = window.__getDecimalPlaces ? window.__getDecimalPlaces() : 2;
+
+  // 📊 Margin & Markup Comparison — margin % of selling price, markup % over cost,
+  // ranked best to worst by margin so the healthiest items surface first.
+  const withMargins = merged.map((entry, originalIndex) => {
+    const sell = entry.sellingPrice || 0;
+    const cost = entry.costPrice || 0;
+    const marginPct = sell > 0 ? ((sell - cost) / sell) * 100 : 0;
+    const markupPct = cost > 0 ? ((sell - cost) / cost) * 100 : 0;
+    return { entry, originalIndex, marginPct, markupPct };
+  });
+
+  const ranked = [...withMargins].sort((a, b) => b.marginPct - a.marginPct);
+  const rankMap = new Map();
+  ranked.forEach((r, i) => rankMap.set(r.originalIndex, i));
+
+  tbody.innerHTML = withMargins.map(({ entry, originalIndex, marginPct, markupPct }) => {
+    const index = originalIndex;
+    const rank = rankMap.get(originalIndex);
+    let rankBadge = `#${rank + 1}`;
+    if (rank === 0 && ranked.length > 1) rankBadge = `🏆 #1`;
+    if (rank === ranked.length - 1 && ranked.length > 1) rankBadge = `⚠️ #${rank + 1}`;
+    const marginClass = marginPct >= 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold";
+    const markupClass = markupPct >= 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold";
+    return `
     <tr>
 
       <td>
         <input type="checkbox" class="priceCheckbox">
       </td>
 
+      <td class="text-center">${rankBadge}</td>
+
       <td>${entry.name}</td>
 
       <td>
-        KSh ${entry.sellingPrice.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)}
+        KSh ${entry.sellingPrice.toFixed(dp)}
       </td>
 
       <td>
-        KSh ${entry.costPrice.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)}
+        KSh ${entry.costPrice.toFixed(dp)}
+      </td>
+
+      <td class="${marginClass}">
+        ${marginPct.toFixed(dp)}%
+      </td>
+
+      <td class="${markupClass}">
+        ${markupPct.toFixed(dp)}%
       </td>
 
       <td>
@@ -10730,9 +10770,10 @@ function renderPriceListTable() {
     </tr>
 
     <tr id="priceHistoryRow-${entry.item}-${index}" style="display:none">
-      <td colspan="6"></td>
+      <td colspan="9"></td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 function togglePriceMenu(index) {
   const menu = document.getElementById(`priceMenu-${index}`);
@@ -42167,6 +42208,8 @@ function showTab(id) {
 
   if (id === 'priceListTab') {
     if (typeof cstRefreshLinks === 'function') cstRefreshLinks();
+    if (typeof window.__invalidateInventoryCache === 'function') window.__invalidateInventoryCache();
+    if (document.getElementById('priceListTableBody') && typeof renderPriceListTable === 'function') renderPriceListTable();
   }
 
   if (id === 'bulkCostingTab') {
@@ -99862,7 +99905,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
     <div><label class="block font-medium mb-1">Profit Margin (%)</label><input id="profitMargin" type="number" class="border p-2 rounded w-full" placeholder="20" value="20" /></div><div class="mt-4 border-t pt-4"><h3 class="font-semibold mb-2">📈 Advanced Pricing Options</h3><label class="block font-medium mb-1">Markup (%)</label><input id="markup" type="number" class="border p-2 rounded w-full mb-3" placeholder="e.g., 30" /><label class="block font-medium mb-1">Target Margin (%)</label><input id="targetMargin" type="number" class="border p-2 rounded w-full mb-3" placeholder="e.g., 25" /><label class="block font-medium mb-1">Discount (%)</label><input id="discount" type="number" class="border p-2 rounded w-full mb-3" placeholder="e.g., 10" /></div><div id="marketPricingSection" class="mt-8 border-t pt-4"><h3 class="text-sm font-semibold mb-2">💹 Market Pricing Adjustment</h3><p class="text-gray-600 mb-3">
         Adjust selling prices manually based on market data or competitor prices.
-      </p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><label class="block font-medium mb-1">Market Average Price (KES)</label><input id="marketAverage" type="number" class="border p-2 rounded w-full" placeholder="e.g., 1200" /></div><div><label class="block font-medium mb-1">Competitor Price (KES)</label><input id="competitorPrice" type="number" class="border p-2 rounded w-full" placeholder="e.g., 1150" /></div><div><label class="block font-medium mb-1">Your Adjusted Price (KES)</label><input id="adjustedPrice" type="number" class="border p-2 rounded w-full" placeholder="e.g., 1180" /></div></div></div><div class="bg-gray-50 p-4 rounded border mt-6"><p><strong>Buying Price (KES):</strong><span id="bpDisplay">0.00</span></p><p><strong>Total Additional Costs (KES):</strong><span id="totalCost">0.00</span></p><p><strong>Final Cost (KES):</strong><span id="finalCost">0.00</span></p><p><strong>Selling Price (KES):</strong><span id="sellingPrice">0.00</span></p></div><div class="flex flex-wrap justify-end gap-2 mt-4"><button onclick="calculateCosting()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">🔄 Calculate</button><button id="saveBtn" onclick="saveCostingDraft()" class="px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-500">📝 Save Draft</button><button id="approveBtn" onclick="openCostingApproval()" class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">✅ Review &amp; Approve</button></div><p class="text-xs text-gray-500 text-right mt-1">Drafts are kept here only. Inventory pricing changes only after you review, approve and apply.</p><div class="flex justify-end gap-2 mt-4"><button onclick="exportCostingToExcel()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">📥 Export Excel</button><button onclick="exportCostingToPDF()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">📄 Export PDF</button></div><div id="costingDraftsCard" class="mt-6 bg-white p-4 rounded shadow overflow-auto border-l-4 border-amber-500"><h3 class="text-sm font-semibold mb-1">📝 Drafts awaiting approval <span id="costingDraftCount" class="ml-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-xs" style="display:none">0</span></h3><p class="text-sm text-gray-500 mb-2">Work in progress. A draft never changes inventory pricing — open it to keep editing, or review and approve it when you are happy.</p><table class="min-w-full border text-sm" id="costingDraftsTable"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Product</th><th class="border p-2 text-left">Cost / Unit</th><th class="border p-2 text-left">Proposed Price</th><th class="border p-2 text-left">Current Inventory Price</th><th class="border p-2 text-left">Effective Margin</th><th class="border p-2 text-left">Saved</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="costingDraftsBody"></tbody></table></div><div class="mt-6 bg-white p-4 rounded shadow overflow-auto"><h3 class="text-sm font-semibold mb-3">📊 Costing Summary</h3><table class="min-w-full border text-sm" id="costingTable"><thead class="bg-gray-100"><tr><th class="border p-2">Product</th><th class="border p-2">Buying Price (KES)</th><th class="border p-2">Total Extra Costs (KES)</th><th class="border p-2">Final Cost (KES)</th><th class="border p-2">Profit Margin (%)</th><th class="border p-2">Markup / Target</th><th class="border p-2">Discount</th><th class="border p-2">Selling (Standard)</th><th class="border p-2">Selling (Advanced)</th><th class="border p-2">After Discount</th><th class="border p-2">Effective Margin (%)</th><th class="border p-2">Status</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="costingTableBody"></tbody></table></div><div class="mt-6 bg-white p-4 rounded shadow overflow-auto"><h3 class="text-sm font-semibold mb-3">📊 Margin &amp; Markup Comparison</h3><p class="text-sm text-gray-500 mb-2">Ranked best to worst by effective margin, across all saved products.</p><table class="min-w-full border text-sm" id="marginComparisonTable"><thead class="bg-gray-100"><tr><th class="border p-2">Rank</th><th class="border p-2">Product</th><th class="border p-2">Cost/Unit (KES)</th><th class="border p-2">Std Margin (%)</th><th class="border p-2">Markup (%)</th><th class="border p-2">Selling (Standard)</th><th class="border p-2">Effective Margin (%)</th></tr></thead><tbody id="marginComparisonBody"></tbody></table></div></div></div><div id="bulkCostingTab" class="ml-84 mr-8 p-2"><h2 class="text-sm font-bold mb-4">🚢 Bulk Consignment Costing</h2><div id="bulkModeBanner" class="hidden mb-4"><div class="flex flex-wrap items-center justify-between gap-2 bg-amber-50 border border-amber-300 text-amber-900 rounded p-3 text-sm"><span id="bulkModeText"></span><button type="button" onclick="resetBulkForm()" class="px-2 py-1 border border-amber-600 rounded hover:bg-amber-100">＋ New consignment</button></div></div><div class="bg-gray-50 p-3 rounded-lg mb-6"><label class="block font-semibold mb-1">Consignment Name / Reference:</label><input type="text" id="consignmentName" placeholder="e.g., FMH/SE0619/25-26" class="w-full border rounded p-2" /></div><div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4"><div><label class="block font-medium mb-1">Currency</label><select id="bulkCurrency" class="border p-2 rounded w-full"><option value="KES" selected>KES (Kenyan Shilling)</option><option value="USD">USD (US Dollar)</option><option value="EUR">EUR (Euro)</option><option value="GBP">GBP (Pound Sterling)</option><option value="CNY">CNY (Chinese Yuan)</option></select></div><div><label class="block font-medium mb-1">Exchange Rate → KES</label><input id="exchangeRate" type="number" class="border p-2 rounded w-full" placeholder="e.g., 135.00" value="135" /></div><div><label class="block font-medium mb-1">🧮 Landed Cost Allocation</label><select id="landedAllocMethod" class="border p-2 rounded w-full" title="How the total landed costs (below) are spread across each product line"><option value="value">By Value (Cost)</option><option value="qty">By Quantity</option><option value="weight">By Weight (kg)</option></select></div><div class="flex items-end"><button id="updateExchange" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800 w-full">🔄 Update Exchange</button></div></div><p class="text-sm text-gray-500 -mt-2 mb-4">Landed cost = each product's buying value plus its fair share of the freight, duty, insurance and other charges below — allocated using the method chosen above.</p><div class="mb-8"><div class="flex justify-between items-center mb-2"><h3 class="text-sm font-semibold">Products in Consignment</h3><button id="addProductRow" class="bg-blue-900 hover:bg-blue-900 text-white text-sm px-1 py-1 rounded">➕ Add Product</button></div><div class="overflow-x-auto"><table class="min-w-full border border-gray-300 rounded-lg text-sm" id="bulkProductTable"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Product</th><th class="border p-2 text-right">Quantity (PCS)</th><th class="border p-2 text-right">Weight (kg)</th><th class="border p-2 text-right">Buying Price (<span id="currencyLabel">KES</span>)</th><th class="border p-2 text-right">Total Cost (<span id="currencyLabel2">KES</span>)</th><th class="border p-2 text-right">🧾 Landed Cost/Unit (KES)</th><th class="border p-2 text-right">🧾 Landed Total (KES)</th><th class="border p-2 text-right">Selling Price/Unit (KES)</th><th class="border p-2 text-right">Profit</th><th class="border p-2 text-right">Margin (%)</th><th class="border p-2 text-center">Action</th></tr></thead><tbody id="bulkProductBody"><tr><td class="border p-2"><select class="productSelect w-full border-none bg-transparent"></select></td><td class="border p-2"><input type="number" class="w-full text-right border-none qty" value="0" /></td><td class="border p-2"><input type="number" class="w-full text-right border-none weight" value="0" placeholder="0" /></td><td class="border p-2"><input type="number" class="w-full text-right border-none price" value="0" /></td><td class="border p-2 text-right total">0</td><td class="border p-2 text-right avg">0</td><td class="border p-2 text-right landedTotal">0</td><td class="border p-2"><input type="number" class="w-full text-right border-none sellingPrice" value="0" /></td><td class="border p-2 text-right profit">0</td><td class="border p-2 text-right marginPct">0%</td><td class="border p-2 text-center"><button class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800 removeRow">Delete</button></td></tr></tbody><tfoot class="bg-gray-100 font-bold"><tr><td class="border p-2 text-right" colspan="4">TOTAL</td><td id="bulkTotalCost" class="border p-2 text-right">0</td><td id="bulkAvgCost" class="border p-2 text-right">0</td><td id="bulkLandedTotal" class="border p-2 text-right">0</td><td class="border p-2"></td><td id="bulkTotalProfit" class="border p-2 text-right">0</td><td id="bulkAvgMargin" class="border p-2 text-right">0%</td><td class="border p-2"></td></tr></tfoot></table></div></div><section id="bulkCostingTable" class="mt-8"><h3 class="text-sm font-bold mb-4">Costing Breakdown (KES)</h3><table class="min-w-full border border-gray-300 rounded-lg text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Cost Category</th><th class="border p-2 text-right">Total Cost (KES)</th><th class="border p-2 text-right">Quantity (PCS)</th><th class="border p-2 text-right">Cost per Unit (KES)</th></tr></thead><tbody id="bulkCostBody"><tr><td class="border p-2">Direct Materials</td><td><input id="bulkDirectMaterials" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyDM" class="border p-2 text-right">0</td><td id="bulkUnitDM" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Direct Labor</td><td><input id="bulkDirectLabor" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyDL" class="border p-2 text-right">0</td><td id="bulkUnitDL" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Insurance</td><td><input id="bulkInsurance" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyIns" class="border p-2 text-right">0</td><td id="bulkUnitIns" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Licenses</td><td><input id="bulkLicenses" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyLic" class="border p-2 text-right">0</td><td id="bulkUnitLic" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Fixed Salaries</td><td><input id="bulkFixedSalaries" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyFS" class="border p-2 text-right">0</td><td id="bulkUnitFS" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Packaging</td><td><input id="bulkPackaging" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyPack" class="border p-2 text-right">0</td><td id="bulkUnitPack" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Transportation</td><td><input id="bulkTransportation" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyTrans" class="border p-2 text-right">0</td><td id="bulkUnitTrans" class="border p-2 text-right">0</td></tr><tr class="bg-gray-100 font-semibold"><td colspan="4" class="border p-2">Import Taxes & Charges</td></tr><tr><td class="border p-2">Import Duty</td><td><input id="bulkImportDuty" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyDuty" class="border p-2 text-right">0</td><td id="bulkUnitDuty" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Import Declaration Fee (IDF)</td><td><input id="bulkIDF" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyIDF" class="border p-2 text-right">0</td><td id="bulkUnitIDF" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Railway Development Levy (RDL)</td><td><input id="bulkRDL" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyRDL" class="border p-2 text-right">0</td><td id="bulkUnitRDL" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Excise Duty</td><td><input id="bulkExciseDuty" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyExc" class="border p-2 text-right">0</td><td id="bulkUnitExc" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Other Charges</td><td><input id="bulkOtherCharges" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyOther" class="border p-2 text-right">0</td><td id="bulkUnitOther" class="border p-2 text-right">0</td></tr><tr class="bg-gray-200 font-bold"><td class="border p-2 text-right">TOTAL</td><td id="bulkTotalCostKES" class="border p-2 text-right">0</td><td id="bulkTotalQty" class="border p-2 text-right">0</td><td id="bulkTotalCostPerUnit" class="border p-2 text-right">0</td></tr></tbody></table></section><div id="bulkMarketPricingSection" class="mt-8 border-t pt-4"><h3 class="text-sm font-semibold mb-2">💹 Market Pricing Adjustment</h3><p class="text-gray-600 mb-3 text-sm">Compare this consignment's average landed cost per unit against the market to fine-tune your selling price.</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><label class="block font-medium mb-1">Market Average Price (<span id="bulkCurrencyLabelMkt">KES</span>)</label><input id="bulkMarketAverage" type="number" class="border p-2 rounded w-full" placeholder="e.g., 1200" /></div><div><label class="block font-medium mb-1">Competitor Price (<span id="bulkCurrencyLabelComp">KES</span>)</label><input id="bulkCompetitorPrice" type="number" class="border p-2 rounded w-full" placeholder="e.g., 1150" /></div><div><label class="block font-medium mb-1">Your Adjusted Price (<span id="bulkCurrencyLabelAdj">KES</span>)</label><input id="bulkAdjustedPrice" type="number" class="border p-2 rounded w-full" placeholder="e.g., 1180" /></div></div><div id="bulkMarketPricingResult" class="bg-gray-50 p-3 rounded border mt-3 text-sm text-gray-600">Enter market figures above and click Calculate to see the comparison.</div></div><div class="flex flex-wrap justify-end gap-2 mt-6"><button onclick="updateBulkTotals()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">🔄 Calculate</button><button id="saveBulkDraftBtn" onclick="saveBulkDraft()" class="px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-500">📝 Save Draft</button><button id="approveBulkBtn" onclick="openBulkApproval()" class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">✅ Review &amp; Approve</button></div><p class="text-xs text-gray-500 text-right mt-1">Drafts are kept here only. Inventory pricing changes only after you review, approve and apply.</p><div class="flex justify-end gap-2 mt-4"><button onclick="exportSingleBulkConsignment(0)" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">📥 Export Excel</button><button onclick="exportCostingToPDF()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">📄 Export PDF</button></div><section id="bulkDraftsCard" class="mt-10 bg-white p-4 rounded-lg shadow border-l-4 border-amber-500 overflow-auto"><h3 class="text-sm font-semibold mb-1">📝 Consignment drafts awaiting approval <span id="bulkDraftCount" class="ml-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-xs" style="display:none">0</span></h3><p class="text-sm text-gray-500 mb-2">Work in progress. A draft never changes inventory pricing — open it to keep editing, or review and approve it when you are happy.</p><table class="min-w-full border text-sm" id="bulkDraftsTable"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Consignment</th><th class="border p-2 text-left">Product Lines</th><th class="border p-2 text-right">Landed Total (KES)</th><th class="border p-2 text-right">Avg Margin</th><th class="border p-2 text-left">Saved</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="bulkDraftsBody"></tbody></table></section><section id="bulkCostingSummarySection" class="mt-6 bg-gray-50 p-4 rounded-lg shadow"><h3 class="text-sm font-semibold mb-3 text-blue-900">📦 Saved Bulk Consignments</h3><table class="min-w-full border text-sm" id="bulkCostingSummaryTable"><thead class="bg-gray-100"><tr><th class="border p-2">Consignment Name</th><th class="border p-2">Currency</th><th class="border p-2">Exchange Rate</th><th class="border p-2">Total Cost (KES)</th><th class="border p-2">Total Quantity</th><th class="border p-2">Cost/Unit (KES)</th><th class="border p-2">Total Profit</th><th class="border p-2">Avg Margin (%)</th><th class="border p-2">Status</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="bulkCostingSummaryBody"></tbody></table></section><div class="mt-6 bg-white p-4 rounded shadow overflow-auto"><h3 class="text-sm font-semibold mb-3">📊 Costing Summary</h3><p class="text-sm text-gray-500 mb-2">Every product line from every saved consignment, most recent first.</p><table class="min-w-full border text-sm" id="bulkCostingProductSummaryTable"><thead class="bg-gray-100"><tr><th class="border p-2">Consignment</th><th class="border p-2">Product</th><th class="border p-2">Buying Price</th><th class="border p-2">Landed Cost/Unit</th><th class="border p-2">Landed Total</th><th class="border p-2">Selling Price</th><th class="border p-2">Profit</th><th class="border p-2">Margin (%)</th><th class="border p-2">Date</th></tr></thead><tbody id="bulkCostingProductSummaryBody"></tbody></table></div><div class="mt-6 bg-white p-4 rounded shadow overflow-auto"><h3 class="text-sm font-semibold mb-3">📊 Margin &amp; Markup Comparison</h3><p class="text-sm text-gray-500 mb-2">Ranked best to worst by margin, across all product lines in all saved consignments.</p><table class="min-w-full border text-sm" id="bulkMarginComparisonTable"><thead class="bg-gray-100"><tr><th class="border p-2">Rank</th><th class="border p-2">Product</th><th class="border p-2">Consignment</th><th class="border p-2">Landed Cost/Unit</th><th class="border p-2">Selling Price</th><th class="border p-2">Margin (%)</th></tr></thead><tbody id="bulkMarginComparisonBody"></tbody></table></div></div>
+      </p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><label class="block font-medium mb-1">Market Average Price (KES)</label><input id="marketAverage" type="number" class="border p-2 rounded w-full" placeholder="e.g., 1200" /></div><div><label class="block font-medium mb-1">Competitor Price (KES)</label><input id="competitorPrice" type="number" class="border p-2 rounded w-full" placeholder="e.g., 1150" /></div><div><label class="block font-medium mb-1">Your Adjusted Price (KES)</label><input id="adjustedPrice" type="number" class="border p-2 rounded w-full" placeholder="e.g., 1180" /></div></div></div><div class="bg-gray-50 p-4 rounded border mt-6"><p><strong>Buying Price (KES):</strong><span id="bpDisplay">0.00</span></p><p><strong>Total Additional Costs (KES):</strong><span id="totalCost">0.00</span></p><p><strong>Final Cost (KES):</strong><span id="finalCost">0.00</span></p><p><strong>Selling Price (KES):</strong><span id="sellingPrice">0.00</span></p></div><div class="flex flex-wrap justify-end gap-2 mt-4"><button onclick="calculateCosting()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">🔄 Calculate</button><button id="saveBtn" onclick="saveCostingDraft()" class="px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-500">📝 Save Draft</button><button id="approveBtn" onclick="openCostingApproval()" class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">✅ Review &amp; Approve</button></div><p class="text-xs text-gray-500 text-right mt-1">Drafts are kept here only. Inventory pricing changes only after you review, approve and apply.</p><div class="flex justify-end gap-2 mt-4"><button onclick="exportCostingToExcel()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">📥 Export Excel</button><button onclick="exportCostingToPDF()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">📄 Export PDF</button></div><div id="costingDraftsCard" class="mt-6 bg-white p-4 rounded shadow overflow-auto border-l-4 border-amber-500"><h3 class="text-sm font-semibold mb-1">📝 Drafts awaiting approval <span id="costingDraftCount" class="ml-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-xs" style="display:none">0</span></h3><p class="text-sm text-gray-500 mb-2">Work in progress. A draft never changes inventory pricing — open it to keep editing, or review and approve it when you are happy.</p><table class="min-w-full border text-sm" id="costingDraftsTable"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Product</th><th class="border p-2 text-left">Cost / Unit</th><th class="border p-2 text-left">Proposed Price</th><th class="border p-2 text-left">Current Inventory Price</th><th class="border p-2 text-left">Effective Margin</th><th class="border p-2 text-left">Saved</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="costingDraftsBody"></tbody></table></div><div class="mt-6 bg-white p-4 rounded shadow overflow-auto"><h3 class="text-sm font-semibold mb-3">📊 Costing Summary</h3><table class="min-w-full border text-sm" id="costingTable"><thead class="bg-gray-100"><tr><th class="border p-2">Product</th><th class="border p-2">Buying Price (KES)</th><th class="border p-2">Total Extra Costs (KES)</th><th class="border p-2">Final Cost (KES)</th><th class="border p-2">Profit Margin (%)</th><th class="border p-2">Markup / Target</th><th class="border p-2">Discount</th><th class="border p-2">Selling (Standard)</th><th class="border p-2">Selling (Advanced)</th><th class="border p-2">After Discount</th><th class="border p-2">Effective Margin (%)</th><th class="border p-2">Status</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="costingTableBody"></tbody></table></div><div class="mt-6 bg-white p-4 rounded shadow overflow-auto"><h3 class="text-sm font-semibold mb-3">📊 Margin &amp; Markup Comparison</h3><p class="text-sm text-gray-500 mb-2">Ranked best to worst by effective margin, across all saved products.</p><table class="min-w-full border text-sm" id="marginComparisonTable"><thead class="bg-gray-100"><tr><th class="border p-2">Rank</th><th class="border p-2">Product</th><th class="border p-2">Cost/Unit (KES)</th><th class="border p-2">Std Margin (%)</th><th class="border p-2">Markup (%)</th><th class="border p-2">Selling (Standard)</th><th class="border p-2">Effective Margin (%)</th></tr></thead><tbody id="marginComparisonBody"></tbody></table></div></div></div><div id="bulkCostingTab" class="ml-84 mr-8 p-2"><h2 class="text-sm font-bold mb-4">🚢 Bulk Consignment Costing</h2><div id="bulkModeBanner" class="hidden mb-4"><div class="flex flex-wrap items-center justify-between gap-2 bg-amber-50 border border-amber-300 text-amber-900 rounded p-3 text-sm"><span id="bulkModeText"></span><button type="button" onclick="resetBulkForm()" class="px-2 py-1 border border-amber-600 rounded hover:bg-amber-100">＋ New consignment</button></div></div><div class="bg-gray-50 p-3 rounded-lg mb-6"><label class="block font-semibold mb-1">Consignment Name / Reference:</label><input type="text" id="consignmentName" placeholder="e.g., FMH/SE0619/25-26" class="w-full border rounded p-2" /></div><div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4"><div><label class="block font-medium mb-1">Currency</label><select id="bulkCurrency" class="border p-2 rounded w-full"><option value="KES" selected>KES (Kenyan Shilling)</option><option value="USD">USD (US Dollar)</option><option value="EUR">EUR (Euro)</option><option value="GBP">GBP (Pound Sterling)</option><option value="CNY">CNY (Chinese Yuan)</option></select></div><div><label class="block font-medium mb-1">Exchange Rate → KES</label><input id="exchangeRate" type="number" class="border p-2 rounded w-full" placeholder="e.g., 135.00" value="135" /></div><div><label class="block font-medium mb-1">🧮 Landed Cost Allocation</label><select id="landedAllocMethod" class="border p-2 rounded w-full" title="How the total landed costs (below) are spread across each product line"><option value="value">By Value (Cost)</option><option value="qty">By Quantity</option><option value="weight">By Weight (kg)</option></select></div><div class="flex items-end"><button id="updateExchange" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800 w-full">🔄 Update Exchange</button></div></div><p class="text-sm text-gray-500 -mt-2 mb-4">Landed cost = each product's buying value plus its fair share of the freight, duty, insurance and other charges below — allocated using the method chosen above.</p><div class="mb-8"><div class="flex justify-between items-center mb-2"><h3 class="text-sm font-semibold">Products in Consignment</h3><button id="addProductRow" class="bg-blue-900 hover:bg-blue-900 text-white text-sm px-1 py-1 rounded">➕ Add Product</button></div><div class="overflow-x-auto"><table class="min-w-full border border-gray-300 rounded-lg text-sm" id="bulkProductTable"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Product</th><th class="border p-2 text-right">Quantity (PCS)</th><th class="border p-2 text-right">Weight (kg)</th><th class="border p-2 text-right">Buying Price (<span id="currencyLabel">KES</span>)</th><th class="border p-2 text-right">Total Cost (<span id="currencyLabel2">KES</span>)</th><th class="border p-2 text-right">🧾 Landed Cost/Unit (KES)</th><th class="border p-2 text-right">🧾 Landed Total (KES)</th><th class="border p-2 text-right">Selling Price/Unit (KES)</th><th class="border p-2 text-right">Profit</th><th class="border p-2 text-right">Margin (%)</th><th class="border p-2 text-center">Action</th></tr></thead><tbody id="bulkProductBody"><tr><td class="border p-2"><select class="productSelect w-full border-none bg-transparent"></select></td><td class="border p-2"><input type="number" class="w-full text-right border-none qty" value="0" /></td><td class="border p-2"><input type="number" class="w-full text-right border-none weight" value="0" placeholder="0" /></td><td class="border p-2"><input type="number" class="w-full text-right border-none price" value="0" /></td><td class="border p-2 text-right total">0</td><td class="border p-2 text-right avg">0</td><td class="border p-2 text-right landedTotal">0</td><td class="border p-2"><input type="number" class="w-full text-right border-none sellingPrice" value="0" /></td><td class="border p-2 text-right profit">0</td><td class="border p-2 text-right marginPct">0%</td><td class="border p-2 text-center"><button class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800 removeRow">Delete</button></td></tr></tbody><tfoot class="bg-gray-100 font-bold"><tr><td class="border p-2 text-right" colspan="4">TOTAL</td><td id="bulkTotalCost" class="border p-2 text-right">0</td><td id="bulkAvgCost" class="border p-2 text-right">0</td><td id="bulkLandedTotal" class="border p-2 text-right">0</td><td class="border p-2"></td><td id="bulkTotalProfit" class="border p-2 text-right">0</td><td id="bulkAvgMargin" class="border p-2 text-right">0%</td><td class="border p-2"></td></tr></tfoot></table></div></div><section id="bulkCostingTable" class="mt-8"><h3 class="text-sm font-bold mb-4">Costing Breakdown (KES)</h3><table class="min-w-full border border-gray-300 rounded-lg text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Cost Category</th><th class="border p-2 text-right">Total Cost (KES)</th><th class="border p-2 text-right">Quantity (PCS)</th><th class="border p-2 text-right">Cost per Unit (KES)</th></tr></thead><tbody id="bulkCostBody"><tr><td class="border p-2">Direct Materials</td><td><input id="bulkDirectMaterials" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyDM" class="border p-2 text-right">0</td><td id="bulkUnitDM" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Direct Labor</td><td><input id="bulkDirectLabor" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyDL" class="border p-2 text-right">0</td><td id="bulkUnitDL" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Insurance</td><td><input id="bulkInsurance" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyIns" class="border p-2 text-right">0</td><td id="bulkUnitIns" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Licenses</td><td><input id="bulkLicenses" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyLic" class="border p-2 text-right">0</td><td id="bulkUnitLic" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Fixed Salaries</td><td><input id="bulkFixedSalaries" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyFS" class="border p-2 text-right">0</td><td id="bulkUnitFS" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Packaging</td><td><input id="bulkPackaging" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyPack" class="border p-2 text-right">0</td><td id="bulkUnitPack" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Transportation</td><td><input id="bulkTransportation" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyTrans" class="border p-2 text-right">0</td><td id="bulkUnitTrans" class="border p-2 text-right">0</td></tr><tr class="bg-gray-100 font-semibold"><td colspan="4" class="border p-2">Import Taxes & Charges</td></tr><tr><td class="border p-2">Import Duty</td><td><input id="bulkImportDuty" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyDuty" class="border p-2 text-right">0</td><td id="bulkUnitDuty" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Import Declaration Fee (IDF)</td><td><input id="bulkIDF" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyIDF" class="border p-2 text-right">0</td><td id="bulkUnitIDF" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Railway Development Levy (RDL)</td><td><input id="bulkRDL" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyRDL" class="border p-2 text-right">0</td><td id="bulkUnitRDL" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Excise Duty</td><td><input id="bulkExciseDuty" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyExc" class="border p-2 text-right">0</td><td id="bulkUnitExc" class="border p-2 text-right">0</td></tr><tr><td class="border p-2">Other Charges</td><td><input id="bulkOtherCharges" type="number" class="w-full text-right border-none" /></td><td id="bulkQtyOther" class="border p-2 text-right">0</td><td id="bulkUnitOther" class="border p-2 text-right">0</td></tr><tr class="bg-gray-200 font-bold"><td class="border p-2 text-right">TOTAL</td><td id="bulkTotalCostKES" class="border p-2 text-right">0</td><td id="bulkTotalQty" class="border p-2 text-right">0</td><td id="bulkTotalCostPerUnit" class="border p-2 text-right">0</td></tr></tbody></table></section><div id="bulkMarketPricingSection" class="mt-8 border-t pt-4"><h3 class="text-sm font-semibold mb-2">💹 Market Pricing Adjustment</h3><p class="text-gray-600 mb-3 text-sm">Compare this consignment's average landed cost per unit against the market to fine-tune your selling price.</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><label class="block font-medium mb-1">Market Average Price (<span id="bulkCurrencyLabelMkt">KES</span>)</label><input id="bulkMarketAverage" type="number" class="border p-2 rounded w-full" placeholder="e.g., 1200" /></div><div><label class="block font-medium mb-1">Competitor Price (<span id="bulkCurrencyLabelComp">KES</span>)</label><input id="bulkCompetitorPrice" type="number" class="border p-2 rounded w-full" placeholder="e.g., 1150" /></div><div><label class="block font-medium mb-1">Your Adjusted Price (<span id="bulkCurrencyLabelAdj">KES</span>)</label><input id="bulkAdjustedPrice" type="number" class="border p-2 rounded w-full" placeholder="e.g., 1180" /></div></div><div id="bulkMarketPricingResult" class="bg-gray-50 p-3 rounded border mt-3 text-sm text-gray-600">Enter market figures above and click Calculate to see the comparison.</div></div><div class="flex flex-wrap justify-end gap-2 mt-6"><button onclick="updateBulkTotals()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">🔄 Calculate</button><button id="saveBulkDraftBtn" onclick="saveBulkDraft()" class="px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-500">📝 Save Draft</button><button id="approveBulkBtn" onclick="openBulkApproval()" class="px-3 py-1 bg-green-700 text-white rounded hover:bg-green-600">✅ Review &amp; Approve</button></div><p class="text-xs text-gray-500 text-right mt-1">Drafts are kept here only. Inventory pricing changes only after you review, approve and apply.</p><div class="flex justify-end gap-2 mt-4"><button onclick="exportSingleBulkConsignment(0)" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">📥 Export Excel</button><button onclick="exportCostingToPDF()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">📄 Export PDF</button></div><section id="bulkDraftsCard" class="mt-10 bg-white p-4 rounded-lg shadow border-l-4 border-amber-500 overflow-auto"><h3 class="text-sm font-semibold mb-1">📝 Consignment drafts awaiting approval <span id="bulkDraftCount" class="ml-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-xs" style="display:none">0</span></h3><p class="text-sm text-gray-500 mb-2">Work in progress. A draft never changes inventory pricing — open it to keep editing, or review and approve it when you are happy.</p><table class="min-w-full border text-sm" id="bulkDraftsTable"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Consignment</th><th class="border p-2 text-left">Product Lines</th><th class="border p-2 text-right">Landed Total (KES)</th><th class="border p-2 text-right">Avg Margin</th><th class="border p-2 text-left">Saved</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="bulkDraftsBody"></tbody></table></section><section id="bulkCostingSummarySection" class="mt-6 bg-gray-50 p-4 rounded-lg shadow"><h3 class="text-sm font-semibold mb-3 text-blue-900">📦 Saved Bulk Consignments</h3><table class="min-w-full border text-sm" id="bulkCostingSummaryTable"><thead class="bg-gray-100"><tr><th class="border p-2">Consignment Name</th><th class="border p-2">Currency</th><th class="border p-2">Exchange Rate</th><th class="border p-2">Total Cost (KES)</th><th class="border p-2">Total Quantity</th><th class="border p-2">Cost/Unit (KES)</th><th class="border p-2">Total Profit</th><th class="border p-2">Avg Margin (%)</th><th class="border p-2">Status</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="bulkCostingSummaryBody"></tbody></table></section><div class="mt-6 bg-white p-4 rounded shadow overflow-auto"><h3 class="text-sm font-semibold mb-3">📊 Costing Summary</h3><p class="text-sm text-gray-500 mb-2">Every product line from every saved consignment, most recent first.</p><table class="min-w-full border text-sm" id="bulkCostingProductSummaryTable"><thead class="bg-gray-100"><tr><th class="border p-2">Consignment</th><th class="border p-2">Product</th><th class="border p-2">Buying Price</th><th class="border p-2">Landed Cost/Unit</th><th class="border p-2">Landed Total</th><th class="border p-2">Selling Price</th><th class="border p-2">Profit</th><th class="border p-2">Margin (%)</th><th class="border p-2">Date</th></tr></thead><tbody id="bulkCostingProductSummaryBody"></tbody></table></div><div class="mt-6 bg-white p-4 rounded shadow overflow-auto"><h3 class="text-sm font-semibold mb-3">📊 Margin &amp; Markup Comparison</h3><p class="text-sm text-gray-500 mb-2">Ranked best to worst by margin, across all product lines in all saved consignments.</p><table class="min-w-full border text-sm" id="bulkMarginComparisonTable"><thead class="bg-gray-100"><tr><th class="border p-2">Rank</th><th class="border p-2">Product</th><th class="border p-2">Consignment</th><th class="border p-2">Landed Cost/Unit</th><th class="border p-2">Std Margin (%)</th><th class="border p-2">Markup (%)</th><th class="border p-2">Selling (Standard)</th><th class="border p-2">Effective Margin (%)</th></tr></thead><tbody id="bulkMarginComparisonBody"></tbody></table></div></div>
 <script>
 
 function addAdditionalField() {
@@ -107277,8 +107320,19 @@ function cstRevertChanges(changes, updateCost) {
   localStorage.setItem(cstPLKey(), JSON.stringify(priceList));
 }
 function cstRefreshPricingScreens() {
-  try { if (typeof renderPriceListTable === "function") renderPriceListTable(); } catch (e) { console.error("renderPriceListTable failed:", e); }
-  try { if (typeof renderInventoryTable === "function") renderInventoryTable(); } catch (e) { console.error("renderInventoryTable failed:", e); }
+  if (typeof window.__invalidateInventoryCache === "function") window.__invalidateInventoryCache();
+  var run = function () {
+    if (typeof window.__invalidateInventoryCache === "function") window.__invalidateInventoryCache();
+    try { if (document.getElementById("priceListTableBody") && typeof renderPriceListTable === "function") renderPriceListTable(); } catch (e) { console.error("renderPriceListTable failed:", e); }
+    try { if (document.getElementById("inventoryTableBody") && typeof renderInventoryTable === "function") renderInventoryTable(); } catch (e) { console.error("renderInventoryTable failed:", e); }
+  };
+  // Run immediately, then again on the next tick/frame. Some other showTab
+  // wrappers close modals / hydrate selects asynchronously after this fires,
+  // which can otherwise stomp on (or race ahead of) this refresh and leave
+  // the Price List / Stock tables showing the pre-costing price.
+  run();
+  setTimeout(run, 0);
+  if (typeof requestAnimationFrame === "function") requestAnimationFrame(run);
 }
 
 /* ---------- write the approved price into the Price List + inventory ---------- */
@@ -107588,12 +107642,15 @@ function autoFillBulkBuyingPrice(row, productName) {
   const currency = document.getElementById("bulkCurrency").value;
   const priceField = row.querySelector(".price");
 
-  let priceKES = product.buyPrice || 0;
+  // product.buyPrice is stored in KES; the row's price field is denominated in the
+  // consignment's selected currency, so convert KES -> that currency by dividing by
+  // the "Exchange Rate -> KES" (this must match applyExchangeRate(), which does the same).
+  let rowPrice = product.buyPrice || 0;
   if (currency !== "KES") {
-    priceKES = (product.buyPrice * exchangeRate).toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2);
+    rowPrice = (product.buyPrice / exchangeRate).toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2);
   }
 
-  priceField.value = priceKES;
+  priceField.value = rowPrice;
 
   const sellingField = row.querySelector(".sellingPrice");
   if (sellingField && !(parseFloat(sellingField.value) > 0)) {
@@ -107615,8 +107672,16 @@ function updateBulkTotals() {
   const rows = document.querySelectorAll("#bulkProductBody tr");
   const dp = window.__getDecimalPlaces ? window.__getDecimalPlaces() : 2;
 
+  // Buying Price / row "Total Cost" columns are denominated in the selected consignment
+  // currency, but Landed Cost/Unit, Landed Total, extra costs and everything downstream
+  // (incl. what ultimately gets applied to inventory pricing) is always in KES. Convert
+  // here once, using the same "Exchange Rate -> KES" as applyExchangeRate/autoFillBulkBuyingPrice.
+  const bulkCurrency = document.getElementById("bulkCurrency")?.value || "KES";
+  const bulkRate = parseFloat(document.getElementById("exchangeRate")?.value) || 1;
+  const toKES = v => (bulkCurrency !== "KES" ? v * bulkRate : v);
 
-  let totalCost = 0;
+  let totalCost = 0;     // native currency, matches the "Total Cost (currency)" column/footer
+  let totalCostKES = 0;  // KES equivalent, used for all landed-cost math below
   let totalQty = 0;
   let totalWeight = 0;
   const rowData = [];
@@ -107626,12 +107691,14 @@ function updateBulkTotals() {
     const weight = parseFloat(row.querySelector(".weight")?.value) || 0;
     const price = parseFloat(row.querySelector(".price").value) || 0;
     const rowTotal = qty * price;
+    const rowTotalKES = toKES(rowTotal);
     row.querySelector(".total").innerText = rowTotal.toFixed(dp);
 
     totalCost += rowTotal;
+    totalCostKES += rowTotalKES;
     totalQty += qty;
     totalWeight += weight;
-    rowData.push({ row, qty, weight, rowTotal });
+    rowData.push({ row, qty, weight, rowTotal: rowTotalKES });
   });
 
 
@@ -107639,7 +107706,7 @@ function updateBulkTotals() {
 
   const totalExtra = getBulkExtraCostsTotal();
   const allocMethod = document.getElementById("landedAllocMethod")?.value || "value";
-  let basisTotal = totalCost;
+  let basisTotal = totalCostKES;
   if (allocMethod === "qty") basisTotal = totalQty;
   else if (allocMethod === "weight") basisTotal = totalWeight > 0 ? totalWeight : totalQty;
 
@@ -107679,7 +107746,7 @@ function updateBulkTotals() {
   });
 
   document.getElementById("bulkTotalCost").innerText = totalCost.toFixed(dp);
-  document.getElementById("bulkAvgCost").innerText = totalQty > 0 ? (grandLandedTotal / totalQty).toFixed(dp) : "0";
+  document.getElementById("bulkAvgCost").innerText = totalQty > 0 ? (grandLandedTotal / totalQty).toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2) : "0";
   const landedTotalFooter = document.getElementById("bulkLandedTotal");
   if (landedTotalFooter) landedTotalFooter.innerText = grandLandedTotal.toFixed(dp);
 
@@ -107692,7 +107759,7 @@ function updateBulkTotals() {
     avgMarginEl.innerText = avgMargin.toFixed(1) + "%";
   }
 
-  updateBulkBreakdown(totalCost, totalQty);
+  updateBulkBreakdown(totalCostKES, totalQty);
   if (typeof updateBulkMarketPricing === "function") updateBulkMarketPricing();
 }
 
@@ -108047,21 +108114,30 @@ function renderBulkMarginComparison(consignments) {
   });
 
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center p-2 text-gray-500">No product lines saved yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center p-2 text-gray-500">No product lines saved yet.</td></tr>`;
     return;
   }
 
   rows.sort((a, b) => b.margin - a.margin);
 
   rows.forEach((r, i) => {
+    // Bulk lines only carry one selling price per product (no separate
+    // standard/advanced/discount tiers like single Costing), so "Std Margin"
+    // and "Effective Margin" are the same figure here — the margin actually
+    // achieved at the entered selling price. Markup is the same profit
+    // expressed against landed cost instead of against the selling price.
+    const markupPct = r.landedUnit > 0 ? ((r.selling - r.landedUnit) / r.landedUnit * 100) : 0;
+    const marginClass = r.margin >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold';
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="border p-2 text-center">${i + 1}</td>
       <td class="border p-2">${r.product}</td>
       <td class="border p-2">${r.consignment}</td>
       <td class="border p-2 text-right">${r.landedUnit.toFixed(dp)}</td>
+      <td class="border p-2 text-right ${marginClass}">${r.margin.toFixed(1)}%</td>
+      <td class="border p-2 text-right">${markupPct.toFixed(1)}%</td>
       <td class="border p-2 text-right">${r.selling.toFixed(dp)}</td>
-      <td class="border p-2 text-right ${r.margin >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}">${r.margin.toFixed(1)}%</td>
+      <td class="border p-2 text-right ${marginClass}">${r.margin.toFixed(1)}%</td>
     `;
     tbody.appendChild(tr);
   });
