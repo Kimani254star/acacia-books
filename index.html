@@ -101850,8 +101850,13 @@ function openCreateUserModal(index = null) {
 
   
   
-  const editingCustomRoleUser = index !== null && document.getElementById('newRole').value === 'custom';
-  if (!editingCustomRoleUser) {
+  // Only pre-fill role-default module access when CREATING a new user.
+  // For an existing user (index !== null), their real saved `modules` were
+  // just loaded onto the checkboxes above — re-running applyRoleDefaults()
+  // here would silently overwrite that saved per-module access with the
+  // role's full default set before Save is even clicked. Explicit role
+  // changes still trigger defaults via the #newRole "change" listener.
+  if (index === null) {
     applyRoleDefaults();
   }
   refreshModuleAccessGroupStates();
@@ -103501,6 +103506,19 @@ async function dcConfirmRestore() {
 
     dcUpdateRestoreProgress(__dcProgress, "Applying restored data\u2026");
 
+    // For a FULL restore, capture every key this company currently has
+    // *before* wiping it. A full restore is supposed to make the backup
+    // the whole truth, but localStorage.clear() below only erases the
+    // local copy — it never tells the cloud those keys are gone. Any key
+    // that isn't inside this particular backup (an older backup, a
+    // selective backup, or a key created after the backup was made) was
+    // otherwise left sitting untouched in the cloud, so the pull that
+    // runs right after the reload below silently pulled it straight back
+    // in — the exact "restore didn't stick, old data came back" bug.
+    // previousCompanyKeys is compared against restoredKeys further down
+    // so those leftover keys get touched (and pushed as deleted) too.
+    const previousCompanyKeys = (mode === "full" && NS.companyKeys) ? NS.companyKeys() : [];
+
     if (mode === "full") {
       localStorage.clear();
     }
@@ -103542,6 +103560,17 @@ async function dcConfirmRestore() {
       }
     }
 
+    // Keys this company had before a full restore that the backup did NOT
+    // bring back. They're gone locally now (localStorage.clear() above),
+    // but the cloud still has last-pushed values for them. Touching them
+    // too — even though there's nothing left to read for them — marks
+    // them dirty with a fresh timestamp so the next push sends their
+    // (now-missing/null) value as a deletion, and the cloud stops handing
+    // them back on future pulls instead of quietly resurrecting them.
+    const leftoverKeys = previousCompanyKeys.filter(function (k) {
+      return restoredKeys.indexOf(k) === -1 && !NS.isGlobal(k);
+    });
+
     // The writes above go straight to physical storage (NS.nSet), bypassing
     // the normal setItem path that stamps a key as "just changed locally"
     // and queues it for push. Without that, the pull that runs on the
@@ -103553,6 +103582,7 @@ async function dcConfirmRestore() {
     // and still gets pushed even if the reload is interrupted.
     if (NS.touch) {
       restoredKeys.forEach(function (k) { try { NS.touch(k); } catch (e) {} });
+      leftoverKeys.forEach(function (k) { try { NS.touch(k); } catch (e) {} });
       try { if (window.__companySyncKick) window.__companySyncKick(); } catch (e) {}
     }
 
