@@ -378,8 +378,31 @@ window.__acxMakeAmtLink = function (text) {
     CACHE[pk] = v;
     return v;
   }
-  function vSetItem(k, v){ nSet.call(REAL, phys(k), String(v)); markDirty(String(k)); }
-  function vRemoveItem(k){ nRem.call(REAL, phys(k)); markDirty(String(k)); }
+  /* Modules used to try localStorage.setItem = function(){...} to hook writes
+     (for audit logging, cache invalidation, live UI refresh, notifications).
+     That pattern doesn't work against this Proxy: the get trap always returns
+     the real methods.setItem/removeItem/clear regardless of what was
+     "assigned", so those wrappers never ran, and the assignment itself was
+     silently mis-stored as a data value under a literal "setItem" key. These
+     listener arrays are the supported way to observe writes/removes/clears. */
+  var setListeners = [], removeListeners = [], clearListeners = [];
+  function vSetItem(k, v){
+    var logical = String(k), newVal = String(v), oldVal;
+    if (setListeners.length) { try { oldVal = vGetItem(logical); } catch(e){ oldVal = null; } }
+    nSet.call(REAL, phys(logical), newVal);
+    markDirty(logical);
+    for (var i = 0; i < setListeners.length; i++){
+      try { setListeners[i](logical, newVal, oldVal === undefined ? null : oldVal); } catch(e){ console.warn('[companyNS] setItem listener', e); }
+    }
+  }
+  function vRemoveItem(k){
+    var logical = String(k);
+    nRem.call(REAL, phys(logical));
+    markDirty(logical);
+    for (var i = 0; i < removeListeners.length; i++){
+      try { removeListeners[i](logical); } catch(e){ console.warn('[companyNS] removeItem listener', e); }
+    }
+  }
   function virtualKeys(){
     var c = activeCompany(), out = [], i, K, suf = SEP + c;
     for (i = 0; i < REAL.length; i++){
@@ -409,6 +432,9 @@ window.__acxMakeAmtLink = function (text) {
     }
     for (i = 0; i < del.length; i++) nRem.call(REAL, del[i]);
     if (window.__acxBustStore) window.__acxBustStore();
+    for (i = 0; i < clearListeners.length; i++){
+      try { clearListeners[i](); } catch(e){ console.warn('[companyNS] clear listener', e); }
+    }
   }
   var methods = {
     getItem: vGetItem, setItem: vSetItem, removeItem: vRemoveItem, clear: vClear,
@@ -490,7 +516,21 @@ window.__acxMakeAmtLink = function (text) {
         if (K && K.indexOf(SEP) !== -1 && K.slice(-suf.length) === suf) out.push(K.slice(0, K.length - suf.length));
       }
       return out;
-    }
+    },
+    /* Register a callback for every write/removal/clear that goes through
+       localStorage, regardless of which company is active. Use these instead
+       of reassigning localStorage.setItem/removeItem/clear — that assignment
+       is intercepted by the Proxy below and never actually overrides the
+       real method. */
+    onSetItem: function(fn){ if (typeof fn === 'function') setListeners.push(fn); },
+    onRemoveItem: function(fn){ if (typeof fn === 'function') removeListeners.push(fn); },
+    onClear: function(fn){ if (typeof fn === 'function') clearListeners.push(fn); },
+    /* Mark a logical key dirty + freshly stamped without rewriting its value.
+       Used after a raw (nSet.call) write — e.g. backup restore — so the sync
+       engine knows this key just changed locally and (a) queues it for push,
+       and (b) won't let an incoming pull for an older/no-newer remote row
+       silently overwrite it before the push goes out. */
+    touch: function(logical){ markDirty(String(logical)); }
   };
   console.log('[companyNS] per-company storage isolation active');
 })();
@@ -970,8 +1010,31 @@ body{font-size:.875rem;line-height:1.25rem}
 #demoModulesGrid input[type="checkbox"]{accent-color:#1F4B3F;}
 #quoteModal > div{border-radius:1rem !important;box-shadow:0 20px 50px rgba(18,36,30,.35) !important;border-top:4px solid var(--ab-gold);}
 #quoteModal h3{color:var(--ab-ink) !important;font-weight:700;}
+.app-loader{position:fixed;inset:0;z-index:99999;background:var(--ab-ink,#12241E);display:flex;align-items:center;justify-content:center;transition:opacity .4s ease,visibility .4s ease;}
+.app-loader.app-loader-hide{opacity:0;visibility:hidden;pointer-events:none;}
+.app-loader-inner{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.app-loader-logo{width:64px;height:64px;animation:appLoaderPulse 1.4s ease-in-out infinite;}
+@keyframes appLoaderPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.12);opacity:.65;}}
+.app-loader-text{color:#F0EDE3;font-weight:700;font-size:1.05rem;letter-spacing:.04em;font-family:inherit;}
+.app-loader-bar{width:130px;height:3px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden;}
+.app-loader-bar-fill{width:35%;height:100%;background:var(--ab-gold,#D9A441);border-radius:999px;animation:appLoaderBar 1.1s ease-in-out infinite;}
+@keyframes appLoaderBar{0%{transform:translateX(-120%);}100%{transform:translateX(380%);}}
 </style>
-</head><body id="appBody"><div id="homeTab" class="bg-white text-gray-900"><style id="mktPageStyle">
+</head><body id="appBody"><div id="appLoader" class="app-loader"><div class="app-loader-inner"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="app-loader-logo"><path d="M12 22V13M12 13C12 13 6 12 6 6.5C6 6.5 9 8 12 6C15 8 18 6.5 18 6.5C18 12 12 13 12 13Z" stroke="#D9A441" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 13C12 13 8 14.5 7 18" stroke="#D9A441" stroke-width="1.4" stroke-linecap="round"/><path d="M12 13C12 13 16 14.5 17 18" stroke="#D9A441" stroke-width="1.4" stroke-linecap="round"/></svg><div class="app-loader-text">Acacia Books</div><div class="app-loader-bar"><div class="app-loader-bar-fill"></div></div></div></div><script>
+function showAppLoader(){
+  var el=document.getElementById('appLoader');
+  if(el){el.style.display='flex';el.classList.remove('app-loader-hide');}
+}
+function hideAppLoader(){
+  var el=document.getElementById('appLoader');
+  if(!el)return;
+  el.classList.add('app-loader-hide');
+  setTimeout(function(){ if(el) el.style.display='none'; },420);
+}
+window.addEventListener('load', function(){
+  setTimeout(hideAppLoader, 500);
+});
+</script><div id="homeTab" class="bg-white text-gray-900"><style id="mktPageStyle">
 .mkt-page{display:none}
 .mkt-page.active{display:block;min-height:calc(100vh - 56px)}
 .mkt-page.active[class*="grid"]{display:grid}
@@ -5052,28 +5115,17 @@ window.addEventListener("DOMContentLoaded", () => {
 (function () {
   var __invCache = null;
   var __mergedInvCache = null;
-  var origSetItem = localStorage.setItem.bind(localStorage);
-  var origRemoveItem = localStorage.removeItem.bind(localStorage);
-  var origClear = localStorage.clear.bind(localStorage);
   function invalidateIfInventoryKey(key) {
     if (typeof key === 'string' && key.indexOf('inventory') === 0) {
       __invCache = null;
       __mergedInvCache = null;
     }
   }
-  localStorage.setItem = function (key, value) {
-    invalidateIfInventoryKey(key);
-    return origSetItem(key, value);
-  };
-  localStorage.removeItem = function (key) {
-    invalidateIfInventoryKey(key);
-    return origRemoveItem(key);
-  };
-  localStorage.clear = function () {
-    __invCache = null;
-    __mergedInvCache = null;
-    return origClear();
-  };
+  if (window.__companyNS && window.__companyNS.onSetItem) {
+    window.__companyNS.onSetItem(function (key) { invalidateIfInventoryKey(key); });
+    window.__companyNS.onRemoveItem(function (key) { invalidateIfInventoryKey(key); });
+    window.__companyNS.onClear(function () { __invCache = null; __mergedInvCache = null; });
+  }
   window.__invalidateInventoryCache = function () {
     __invCache = null;
     __mergedInvCache = null;
@@ -6445,6 +6497,8 @@ async function handleLogin() {
     return;
   }
 
+  if (typeof showAppLoader === "function") showAppLoader();
+
   const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
 
   let candidate = storedUsers.find(x => {
@@ -6466,6 +6520,7 @@ async function handleLogin() {
   }
 
   if (!user) {
+    if (typeof hideAppLoader === "function") hideAppLoader();
     alert("❌ Invalid email, company name or password");
     return;
   }
@@ -6494,6 +6549,7 @@ async function handleLogin() {
   showApp();
   try { uploadLocalStorage?.(); } catch (err) {}
   try { window.logAudit("login", "Authentication", user.username || user.email || ""); } catch (err) {}
+  if (typeof hideAppLoader === "function") setTimeout(hideAppLoader, 350);
   return true;
 }
 
@@ -6797,6 +6853,8 @@ function showApp() {
       (Array.isArray(loggedInUser.modules) && loggedInUser.modules.includes("projectHubExternal"));
     projectHubLinkEl.classList.toggle("hidden", !hasProjectHubAccess);
   }
+
+  if (typeof hideAppLoader === "function") setTimeout(hideAppLoader, 300);
 }
 
 function logout() {
@@ -15754,7 +15812,9 @@ function renderBankTable() {
 
     <button onclick="viewBank(${index})">View</button>
 
-    ${bank.system ? "" : `
+    ${bank.system ? `
+      <button onclick="editSystemFundBalance(${index})">Edit</button>
+    ` : `
       <button onclick="editBank(${index})">Edit</button>
       <button onclick="deleteBank(${index})">Delete</button>
     `}
@@ -16012,6 +16072,78 @@ function editBank(index) {
     document.body.removeChild(modal);
   };
 }
+
+// Restricted edit for system-managed fund accounts (Undeposited Funds, Petty Cash):
+// lets the user correct/adjust the balance only - name, account number,
+// currency and chart mapping stay locked since other parts of the app key off them.
+function editSystemFundBalance(index) {
+  if (!window.requirePermission('fundsTab', 'edit', 'edit funds accounts')) return;
+  const bank = banks[index];
+  if (!bank) return;
+  const oldBalanceKES = convertToKES(bank.balance, bank.currency);
+
+  const modal = document.createElement("div");
+  modal.style.position = "fixed";
+  modal.style.top = "0";
+  modal.style.left = "0";
+  modal.style.width = "100%";
+  modal.style.height = "100%";
+  modal.style.backgroundColor = "rgba(0,0,0,0.5)";
+  modal.style.display = "flex";
+  modal.style.justifyContent = "center";
+  modal.style.alignItems = "center";
+  modal.style.zIndex = "1000";
+
+  const content = document.createElement("div");
+  content.style.backgroundColor = "#fff";
+  content.style.padding = "20px";
+  content.style.borderRadius = "8px";
+  content.style.width = "360px";
+  content.innerHTML = `
+    <h3>Edit Balance</h3>
+    <label>Account:</label>
+    <input type="text" value="${bank.name}" class="border p-1 w-full mb-2 bg-gray-100" disabled/>
+    <label>Balance (${bank.currency}):</label>
+    <input type="number" id="editSysFundBalance" value="${bank.balance}" class="border p-1 w-full mb-4"/>
+    <div class="flex justify-end gap-2">
+      <button id="saveEditSysFundBalance" class="bg-blue-900 text-white px-3 py-1 rounded">Save</button>
+      <button id="cancelEditSysFundBalance" class="bg-gray-400 text-white px-3 py-1 rounded">Cancel</button>
+    </div>
+  `;
+
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+
+  document.getElementById("cancelEditSysFundBalance").onclick = () => {
+    document.body.removeChild(modal);
+  };
+
+  document.getElementById("saveEditSysFundBalance").onclick = () => {
+    const newBalance = parseFloat(document.getElementById("editSysFundBalance").value);
+    if (isNaN(newBalance)) {
+      alert("Please enter a valid balance.");
+      return;
+    }
+
+    bank.balance = newBalance;
+
+    const accounts = JSON.parse(localStorage.getItem("chartOfAccounts") || "[]");
+    const acc = accounts.find(a => a.name === bank.chartAccount || a.code === bank.chartAccount);
+    if (acc) {
+      acc.amount = (acc.amount || 0) - oldBalanceKES + convertToKES(newBalance, bank.currency);
+      localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
+    }
+
+    saveBanks();
+    syncBankBalancesToCOA();
+    renderBalanceSheet();
+    renderOpeningBalances();
+    if (typeof renderAccounts === "function") renderAccounts();
+
+    document.body.removeChild(modal);
+  };
+}
+
 function deleteBank(index) {
   if (!window.requirePermission('fundsTab', 'delete', 'delete funds accounts')) return;
   if (!confirm("Delete this bank?")) return;
@@ -38481,7 +38613,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <div class="bg-white p-6 rounded shadow">
   <h3 class="text-sm font-semibold mb-4">Operational Cost List</h3>
   <button onclick="deleteSelectedOperationalCosts()" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-2 rounded hover:bg-blue-800 mb-4">Bulk Delete</button>
-  <div class="overflow-x-auto">
+  <div class="overflow-x-auto opcost-table-scroll" style="overflow-y:visible;">
     <table class="w-full text-sm border">
       <thead class="bg-gray-100">
         <tr>
@@ -38905,7 +39037,7 @@ function deleteSupplier(index) {
 
 This supplier has existing transactions.
 
-������ Please delete ALL related records first:
+ Please delete ALL related records first:
 • Bills
 • Supplier Payments
 • Purchase Orders
@@ -48942,7 +49074,9 @@ function previewOperationalCost(index) {
   const entry = costs[index];
   if (!entry) return alert("Operational cost entry not found.");
 
-  const panel = document.getElementById("opCostPreviewModal");
+  const opTab = document.getElementById("OperationalCostsTab");
+  const useFloating = !opTab || opTab.classList.contains("hidden");
+  const panel = useFloating ? document.getElementById("opCostPreviewFloatingSlot") : document.getElementById("opCostPreviewModal");
   if (!panel) return;
   window.__opCostPreviewIndex = index;
 
@@ -49108,15 +49242,22 @@ function previewOperationalCost(index) {
     </div>
   `;
 
-  panel.classList.remove("hidden");
-  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  if (useFloating) {
+    const floatingModal = document.getElementById("opCostPreviewFloatingModal");
+    if (floatingModal) floatingModal.classList.remove("hidden");
+  } else {
+    panel.classList.remove("hidden");
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
 }
 
 function closeOperationalCostPreviewModal() {
   const panel = document.getElementById("opCostPreviewModal");
-  if (!panel) return;
-  panel.classList.add("hidden");
-  panel.innerHTML = "";
+  if (panel) { panel.classList.add("hidden"); panel.innerHTML = ""; }
+  const floatingModal = document.getElementById("opCostPreviewFloatingModal");
+  const floatingSlot = document.getElementById("opCostPreviewFloatingSlot");
+  if (floatingModal) floatingModal.classList.add("hidden");
+  if (floatingSlot) floatingSlot.innerHTML = "";
   window.__opCostPreviewIndex = null;
 }
 
@@ -52897,6 +53038,7 @@ function manageCOAFiles(){
             <button onclick="sortBudgets('department')" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center justify-between">Sort by Department <span>&rarr;</span></button>
             <button onclick="sortBudgets('amount')" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center justify-between">Sort by Amount <span>&rarr;</span></button>
             <div class="my-1 border-t border-gray-100"></div>
+            <button onclick="previewBudgets()" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">🖨️ Preview Report</button>
             <button onclick="generateForecast()" class="w-full text-left px-4 py-2 text-blue-900 font-semibold hover:bg-blue-50">Run AI Forecast Model</button>
             <button onclick="resetBudgets()" class="w-full text-left px-4 py-2 text-blue-600 hover:bg-blue-50">Reset All Budget Data</button>
           </div>
@@ -53874,16 +54016,29 @@ function addManualJournal() {
   }
 
   const entries = [];
+  let hasBothSidesOnOneLine = false;
   rows.forEach(r => {
     const account = r.querySelector(".accountSelect").value;
     const lineDesc = r.querySelector(".lineDesc").value;
     const debit = parseFloat(r.querySelector(".debitInput").value) || 0;
     const credit = parseFloat(r.querySelector(".creditInput").value) || 0;
 
+    if (debit > 0 && credit > 0) hasBothSidesOnOneLine = true;
+
     if (account && (debit > 0 || credit > 0)) {
       entries.push({ account, description: lineDesc, debit, credit });
     }
   });
+
+  if (hasBothSidesOnOneLine) {
+    alert("⚠️ A journal line can't have both a Debit and a Credit. Split it into two separate lines.");
+    return;
+  }
+
+  if (entries.length < 2) {
+    alert("⚠️ A journal entry needs at least two lines (one debit, one credit).");
+    return;
+  }
 
   const totalDebit = entries.reduce((sum, e) => sum + e.debit, 0);
   const totalCredit = entries.reduce((sum, e) => sum + e.credit, 0);
@@ -66032,6 +66187,100 @@ function toggleBudgetDropdown() {
   document.getElementById("budgetDropdown")?.classList.toggle("hidden");
 }
 
+function previewBudgets() {
+  document.getElementById("budgetDropdown")?.classList.add("hidden");
+
+  if (!budgets || budgets.length === 0) {
+    alert("No budgets to preview.");
+    return;
+  }
+
+  let grandTotal = 0;
+  const rows = budgets.map(b => {
+    const lineTotal = (b.months || []).reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
+    grandTotal += lineTotal;
+    return `<tr>
+      <td>${b.account || "-"}</td>
+      <td>${b.department || "General"}</td>
+      <td>${b.period || "Monthly"}</td>
+      <td>${(b.months || []).length}</td>
+      <td style="text-align:right;">${money(lineTotal)}</td>
+    </tr>`;
+  }).join("");
+
+  const win = window.open('', '', 'width=900,height=700');
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Budget Preview</title>
+
+      <style>
+        body{
+          font-family: Arial, sans-serif;
+          padding: 20px;
+          color: #333;
+        }
+
+        h2{
+          color: #1e3a8a;
+          margin-bottom: 20px;
+        }
+
+        table{
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+        }
+
+        table, th, td{
+          border: 1px solid #ccc;
+        }
+
+        th, td{
+          padding: 12px;
+          text-align: left;
+        }
+
+        th{
+          background: #1e3a8a;
+          color: white;
+        }
+
+        tfoot td{
+          font-weight: bold;
+          background: #f3f4f6;
+        }
+
+        .footer{
+          margin-top: 40px;
+          font-size: 12px;
+          color: gray;
+        }
+
+        .print-btn{
+          margin-top: 20px;
+          padding: 10px 20px;
+          background: #1e3a8a;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+        }
+
+        .print-btn:hover{
+          background: #163172;
+        }
+      </style>
+    </head><body><h2>📊 Enterprise Budget Preview</h2><table><thead><tr><th>Account</th><th>Department</th><th>Period</th><th>Entries</th><th style="text-align:right;">Total (KES)</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="4">Grand Total</td><td style="text-align:right;">${money(grandTotal)}</td></tr></tfoot></table><button class="print-btn" onclick="window.print()">
+        🖨 Print PDF
+      </button><div class="footer">
+        Generated on ${new Date().toLocaleString()}
+      </div></body></html>
+  `);
+  win.document.close();
+}
+
 function resetBudgets(){
   if (!confirm("⚠️ This will permanently clear ALL planned budgets and actual spend records. Continue?")) return;
   budgets = [];
@@ -76615,6 +76864,10 @@ function showReport(reportId, element) {
             cell.textContent = formattedDate;
         }
     }
+
+    if (reportId === "taxComputationReport" && typeof window.renderTaxComputationReport === "function") {
+        window.renderTaxComputationReport();
+    }
 }
 function toggleFavorite(checkbox) {
   const reportName = checkbox.nextElementSibling;
@@ -77650,6 +77903,7 @@ function renderReports() {
     taxes = taxes.filter(t => inRange(t.date));
   }
 
+  if (typeof window.renderTaxComputationReport === "function") window.renderTaxComputationReport();
   if (typeof renderSalesByItem === "function") renderSalesByItem();
   if (typeof renderSalesByPersonReport === "function") renderSalesByPersonReport();
   if (typeof renderSalesByCustomerReport === "function") renderSalesByCustomerReport();
@@ -84793,7 +85047,8 @@ function computeTax(filteredRecords) {
   const additions = entertainment + fines + depreciation;
   const deductions = capitalAllowance + donations;
   const adjustedProfit = accountingProfit + additions - deductions;
-  const taxPayable = adjustedProfit * 0.3;
+  var __taxRatePct = (window.FR && window.FR.state && parseFloat(window.FR.state().taxRate)) || 30;
+  const taxPayable = adjustedProfit * (__taxRatePct / 100);
   const balanceTax = taxPayable - advanceTax;
 
   return {
@@ -84829,23 +85084,82 @@ function populateTaxTable(filteredRecords) {
   document.getElementById('taxBalance').innerText = data.balanceTax.toLocaleString(undefined, {minimumFractionDigits: (window.__getDecimalPlaces?window.__getDecimalPlaces():2), maximumFractionDigits: (window.__getDecimalPlaces?window.__getDecimalPlaces():2)});
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  let month = document.getElementById('taxSummaryMonth').value;
-  let startDate = document.getElementById('taxStartDate').value;
-  let endDate = document.getElementById('taxEndDate').value;
+window.renderTaxComputationReport = function () {
+  var monthEl = document.getElementById('taxSummaryMonth');
+  var startEl = document.getElementById('taxStartDate');
+  var endEl = document.getElementById('taxEndDate');
+  var basisEl = document.getElementById('taxBasis');
+  if (!monthEl && !startEl && !endEl) return;
 
-  let filteredRecords = records.filter(r => {
-    const date = new Date(r.date);
-    if (month) {
-      const [y,m] = month.split('-');
-      return date.getFullYear() == y && (date.getMonth()+1) == m;
-    } else if(startDate && endDate) {
-      return date >= new Date(startDate) && date <= new Date(endDate);
+  var month = monthEl ? monthEl.value : '';
+  var startDate = startEl ? startEl.value : '';
+  var endDate = endEl ? endEl.value : '';
+  var from, to;
+
+  if (month) {
+    var parts = month.split('-');
+    var y = parseInt(parts[0], 10), m = parseInt(parts[1], 10);
+    from = new Date(y, m - 1, 1).toISOString().slice(0, 10);
+    to = new Date(y, m, 0).toISOString().slice(0, 10);
+  } else if (startDate && endDate) {
+    from = startDate; to = endDate;
+  } else if (window.FR && window.FR.fyOf) {
+    var fy = window.FR.fyOf(new Date().toISOString().slice(0, 10));
+    from = fy.from; to = fy.to;
+  } else {
+    var now = new Date();
+    from = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10);
+    to = new Date(now.getFullYear(), 11, 31).toISOString().slice(0, 10);
+  }
+
+  var basis = basisEl ? basisEl.value : 'accrual';
+  var p = { pbt: 0, depreciation: 0, opexGroups: {} };
+  try {
+    if (window.FR && window.FR.pnl) {
+      var cur = window.FR.state ? window.FR.state() : {};
+      var settings = Object.assign({}, window.FR.DEFAULTS || {}, cur, { basis: basis });
+      p = window.FR.pnl(from, to, settings) || p;
     }
-    return true;
+  } catch (e) { console.warn('Tax computation: P&L lookup failed', e); }
+
+  var opex = p.opexGroups || {};
+  var entertainment = 0, donations = 0;
+  Object.keys(opex).forEach(function (k) {
+    var lk = String(k).toLowerCase();
+    if (lk.indexOf('entertainment') >= 0) entertainment += opex[k];
+    else if (lk.indexOf('donation') >= 0 || lk.indexOf('charity') >= 0) donations += opex[k];
   });
 
-  populateTaxTable(filteredRecords);
+  var advanceTax = 0;
+  try {
+    var taxPayments = JSON.parse(localStorage.getItem('taxPayments') || '[]');
+    var toEnd = new Date(to + 'T23:59:59');
+    var fromStart = new Date(from);
+    taxPayments.forEach(function (t) {
+      if (!t || t.type !== 'Corporate Tax') return;
+      var d = t.date ? new Date(t.date) : null;
+      if (!d || isNaN(d.getTime())) return;
+      if (d < fromStart || d > toEnd) return;
+      advanceTax += parseFloatSafe(t.amount);
+    });
+  } catch (e) { console.warn('Tax computation: advance tax lookup failed', e); }
+
+  var record = {
+    date: to,
+    profit: p.pbt || 0,
+    entertainment: entertainment,
+    fines: 0,
+    depreciation: p.depreciation || 0,
+    capitalAllowance: 0,
+    donations: donations,
+    advanceTax: advanceTax
+  };
+
+  populateTaxTable([record]);
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof window.renderTaxComputationReport === 'function') window.renderTaxComputationReport();
 });
 </script>
 <script>
@@ -89673,7 +89987,8 @@ window.addEventListener(
     <div><label class="block text-sm font-medium mb-1">Assignment Date</label><input id="phOwnDate" type="date" class="border p-2 rounded w-full"></div>
   </div>
   <div class="mt-3 flex gap-2">
-    <button onclick="phAssignOwner()" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Assign → Next</button>
+    <button id="phOwnSaveBtn" onclick="phAssignOwner()" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Assign → Next</button>
+    <button id="phOwnCancelEditBtn" onclick="phCancelOwnEdit()" class="bg-gray-300 text-gray-800 px-4 py-1 rounded hidden">Cancel Edit</button>
     <button onclick="phGoStep(3)" class="bg-gray-200 px-4 py-1 rounded">Skip</button>
   </div>
   <div class="mt-4"><h4 class="font-semibold mb-2 text-sm">Ownership for this plan</h4><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Owner</th><th class="border p-2">Team</th><th class="border p-2">Status</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="phOwnBody"></tbody></table></div>
@@ -89690,7 +90005,8 @@ window.addEventListener(
     <div><label class="block text-sm font-medium mb-1">Comment / Update</label><input id="phProgComment" class="border p-2 rounded w-full" placeholder="Brief progress update..."></div>
   </div>
   <div class="mt-3 flex gap-2">
-    <button onclick="phAddProgress()" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Add Update → Next</button>
+    <button id="phProgSaveBtn" onclick="phAddProgress()" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Add Update → Next</button>
+    <button id="phProgCancelEditBtn" onclick="phCancelProgEdit()" class="bg-gray-300 text-gray-800 px-4 py-1 rounded hidden">Cancel Edit</button>
     <button onclick="phGoStep(6)" class="bg-gray-200 px-4 py-1 rounded">Skip</button>
   </div>
   <div class="mt-4"><h4 class="font-semibold mb-2 text-sm">Progress history for this plan</h4><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Progress</th><th class="border p-2">Status</th><th class="border p-2">Person</th><th class="border p-2">Comment</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="phProgBody"></tbody></table></div>
@@ -89746,9 +90062,28 @@ window.addEventListener(
     <div class="sm:col-span-2"><label class="block text-sm font-medium mb-1">Reason / Note</label><input id="phRevComment" class="border p-2 rounded w-full" placeholder="Reason or note"></div>
   </div>
   <div class="mt-3 flex gap-2">
-    <button onclick="phApplyRevision()" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Apply Revision</button>
+    <button id="phRevSaveBtn" onclick="phApplyRevision()" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Apply Revision</button>
+    <button id="phRevCancelEditBtn" onclick="phCancelRevisionEdit()" class="bg-gray-300 text-gray-800 px-4 py-1 rounded hidden">Cancel Edit</button>
   </div>
   <div class="mt-4"><h4 class="font-semibold mb-2 text-sm">Revision history for this plan</h4><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Action</th><th class="border p-2">Comment</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr></thead><tbody id="phRevBody"></tbody></table></div>
+
+  <div class="border-t mt-6 pt-4">
+    <h3 class="text-sm font-semibold mb-1">🎯 Action Plan</h3>
+    <p class="text-sm text-gray-600 mb-3">Log follow-up action items arising from this review, assign a responsible person and due date, and track them through to completion.</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="sm:col-span-2"><label class="block text-sm font-medium mb-1">Action Item</label><input id="phApItem" type="text" class="border p-2 rounded w-full" placeholder="e.g., Renegotiate supplier rates"></div>
+      <div><label class="block text-sm font-medium mb-1">Responsible Person</label><input id="phApPerson" class="border p-2 rounded w-full" placeholder="e.g., Jane Doe"></div>
+      <div><label class="block text-sm font-medium mb-1">Due Date</label><input id="phApDue" type="date" class="border p-2 rounded w-full"></div>
+      <div><label class="block text-sm font-medium mb-1">Status</label><select id="phApStatus" class="border p-2 rounded w-full"><option>Not Started</option><option>In Progress</option><option>Completed</option><option>Delayed</option><option>On Hold</option></select></div>
+      <div><label class="block text-sm font-medium mb-1">Priority</label><select id="phApPriority" class="border p-2 rounded w-full"><option>High</option><option>Medium</option><option>Low</option></select></div>
+      <div class="sm:col-span-2"><label class="block text-sm font-medium mb-1">Notes</label><input id="phApNotes" type="text" class="border p-2 rounded w-full" placeholder="Additional notes..."></div>
+    </div>
+    <div class="mt-3 flex gap-2">
+      <button id="phApSaveBtn" onclick="phAddActionItem()" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Save Action Item</button>
+      <button id="phApCancelEditBtn" onclick="phCancelActionItemEdit()" class="bg-gray-300 text-gray-800 px-4 py-1 rounded hidden">Cancel Edit</button>
+    </div>
+    <div class="mt-4"><h4 class="font-semibold mb-2 text-sm">Action plan for this plan</h4><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Action Item</th><th class="border p-2">Responsible</th><th class="border p-2">Due Date</th><th class="border p-2">Priority</th><th class="border p-2">Status</th><th class="border p-2">Notes</th><th class="border p-2">Actions</th></tr></thead><tbody id="phApBody"></tbody></table></div>
+  </div>
 </div>
 
 </div>
@@ -97214,13 +97549,15 @@ Restore ZIP Backup
 type="date"
 id="migrationDate"
 class="border border-gray-300 rounded px-1 py-1"
-/></div><div class="flex justify-end gap-3 mb-4"><button id="editBtn" onclick="enableEdit()"
+/></div><div class="flex justify-end gap-3 mb-4"><button id="obEditBtn" onclick="enableEdit()"
 class="border border-blue-700 text-blue-700 px-3 py-1 rounded">
 Edit
-</button><button id="saveBtn" onclick="saveBalances()"
+</button><button id="obSaveBtn" onclick="saveBalances()"
 class="bg-blue-700 text-white px-3 py-1 rounded hidden">
 Save
-</button></div><table class="w-full border border-gray-300 text-sm"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Accounts</th><th class="p-2 text-left">Branch</th><th class="p-2 text-right">Debit (KES)</th><th class="p-2 text-right">Credit (KES)</th></tr></thead><tbody id="balanceBody"></tbody><tfoot class="bg-gray-200 font-semibold"><tr><td colspan="2" class="p-2 text-right">Totals:</td><td id="totalDebit" class="p-2 text-right">0.00</td><td id="totalCredit" class="p-2 text-right">0.00</td></tr></tfoot></table></div><div id="userActivityTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-sm font-bold mb-4 text-left">User Activity Audit Trail</h2><div class="flex flex-wrap gap-3 mb-4 items-center"><div class="relative"><input
+</button></div><table class="w-full border border-gray-300 text-sm"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Accounts</th><th class="p-2 text-left">Branch</th><th class="p-2 text-right">Debit (KES)</th><th class="p-2 text-right">Credit (KES)</th></tr></thead><tbody id="balanceBody"></tbody><tfoot class="bg-gray-200 font-semibold"><tr><td colspan="2" class="p-2 text-right">Totals:</td><td id="totalDebit" class="p-2 text-right">0.00</td><td id="totalCredit" class="p-2 text-right">0.00</td></tr></tfoot></table></div>
+<style>#balanceBody td.editable{background:#fffbe6;outline:2px solid #2563eb;outline-offset:-2px;cursor:text;}</style>
+<div id="userActivityTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-sm font-bold mb-4 text-left">User Activity Audit Trail</h2><div class="flex flex-wrap gap-3 mb-4 items-center"><div class="relative"><input
                 type="text"
                 id="activitySearch"
                 placeholder="Search Employee, Action, Module..."
@@ -98733,6 +99070,8 @@ Save
   </button><div id="userTableContainer"><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-center w-10"><input type="checkbox" onclick="toggleSelectAllUsers(this)"></th><th class="border p-2 text-left">Username</th><th class="border p-2 text-left">Email</th><th class="border p-2 text-left">Role</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="userTableBody" class="bg-white"></tbody></table></div></div>
  <div id="createUserModal"
 class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-opacity-50"><div class="bg-white p-6 rounded shadow w-[400px] max-w-full"><h2 class="text-sm font-bold mb-4" id="modalTitle">👤 Create New User</h2><input id="newUsername" class="w-full mb-2 p-2 border rounded" placeholder="Username" /><input id="newEmail" type="email" class="w-full mb-2 p-2 border rounded" placeholder="Email" /><input id="newPassword" type="password" class="w-full mb-2 p-2 border rounded" placeholder="Password" /><select id="newRole" class="w-full mb-2 p-2 border rounded"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="audit">Audit</option><option value="hr">Human Resource</option><option value="custom">Custom</option></select><input id="customRoleInput" class="w-full mb-2 p-2 border rounded hidden" placeholder="Enter custom role name" /><div class="mb-4" id="moduleAccessList"><label class="block font-semibold mb-1">Module Access</label><div class="flex items-center gap-2 mb-2 pb-2 border-b border-gray-300"><input type="checkbox" id="moduleAccessSelectAll"><label for="moduleAccessSelectAll" class="font-semibold text-sm cursor-pointer">Select All Modules</label></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="dashboard"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="dashboard"><span class="font-semibold text-sm">📊 Dashboard Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="dashboard"><label><input type="checkbox" value="dashboard"> 📊 Dashboard Hub</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="inventory"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="inventory"><span class="font-semibold text-sm">📦 Inventory / Stock</span></div><div class="pl-6 space-y-0.5" data-group-body="inventory"><label><input type="checkbox" value="inventoryTab"> Stock</label><label><input type="checkbox" value="movementTab"> Movement</label><label><input type="checkbox" value="priceListTab"> Price List</label><label><input type="checkbox" value="Amenend"> Amendments</label><label><input type="checkbox" value="BundleItems"> Bundle Items</label><label><input type="checkbox" value="BulkAdjustment"> Bulk Adjustments</label><label><input type="checkbox" value="packagesTab"> Packages</label><label><input type="checkbox" value="shipmentsTab"> Shipments</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="funds"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="funds"><span class="font-semibold text-sm">💰 Funds Hub (Sales)</span></div><div class="pl-6 space-y-0.5" data-group-body="funds"><label><input type="checkbox" value="fundsTab"> Funds Hub</label><label><input type="checkbox" value="customersTab"> Customer</label><label><input type="checkbox" value="invoicesTab"> Invoices</label><label><input type="checkbox" value="quotesTab"> Quotes</label><label><input type="checkbox" value="ordersTab"> Orders</label><label><input type="checkbox" value="bulkInvoicesTab"> Bulk Invoicing</label><label><input type="checkbox" value="creditNoteTab"> Credit Notes</label><label><input type="checkbox" value="salesReturnTab"> Sales Returns</label><label><input type="checkbox" value="receiptsTab"> Receipts</label><label><input type="checkbox" value="recurringInvoicesTab"> Recurring Invoices</label><label><input type="checkbox" value="deliveryTab"> Delivery</label><label><input type="checkbox" value="customerStatementTab"> Statements</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="suppliers"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="suppliers"><span class="font-semibold text-sm">🚚 Suppliers / Purchases</span></div><div class="pl-6 space-y-0.5" data-group-body="suppliers"><label><input type="checkbox" value="supplierTab"> Supplier</label><label><input type="checkbox" value="supplierPaymentsTab"> Supplier Payments</label><label><input type="checkbox" value="supplierBillsTab"> Bills</label><label><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label><label><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label><label><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label><label><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label><label><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label><label><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label><label><input type="checkbox" value="grnTab"> Goods Received</label><label><input type="checkbox" value="supplierStatementTab"> Supplier Statement</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="accountant"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="accountant"><span class="font-semibold text-sm">🧮 Accountant Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="accountant"><label><input type="checkbox" value="manualJournalsTab"> Manual Journals</label><label><input type="checkbox" value="recurringJournalsTab"> Recurring Journals</label><label><input type="checkbox" value="currencyAdjustmentsTab"> Currency Adjustments</label><label><input type="checkbox" value="nonCurrentAssetsTab"> Non-Current Assets</label><label><input type="checkbox" value="nonCurrentLiabilitiesTab"> Non-Current Liabilities</label><label><input type="checkbox" value="equityTab"> Equity</label><label><input type="checkbox" value="taxAdjustmentsTab"> Tax Adjustments</label><label><input type="checkbox" value="chartOfAccountsTab"> Chart of Accounts</label><label><input type="checkbox" value="currentAccountsTab"> Current Accounts</label><label><input type="checkbox" value="budgetsTab"> Budgets</label><label><input type="checkbox" value="transactionLockingTab"> Transaction Locking</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="payroll"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="payroll"><span class="font-semibold text-sm">👥 Payroll Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="payroll"><label><input type="checkbox" value="employeesTab"> Employees</label><label><input type="checkbox" value="earningsTab"> Earnings & Allowances</label><label><input type="checkbox" value="grossPayTab"> Earnings & Deductions</label><label><input type="checkbox" value="attendanceTab"> Attendance & Leave</label><label><input type="checkbox" value="payslipTab"> Payslip Generation</label><label><input type="checkbox" value="statutoryDeductionsTab"> Statutories</label><label><input type="checkbox" value="payrollReportsTab"> Payroll Reports</label><label><input type="checkbox" value="integrationsTab"> Integrations</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="reports"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="reports"><span class="font-semibold text-sm">📈 Reports Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="reports"><label><input type="checkbox" value="reportsPanel"> 📈 Reports Hub</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="plans"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="plans"><span class="font-semibold text-sm">🗂️ Plans & Projects</span></div><div class="pl-6 space-y-0.5" data-group-body="plans"><label><input type="checkbox" value="plansTab"> Plan Hub</label><label><input type="checkbox" value="projectTab"> Plan Progress</label><label><input type="checkbox" value="planTrackingTab"> Plan Tracking</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="settings"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="settings"><span class="font-semibold text-sm">⚙️ Settings Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="settings"><label><input type="checkbox" value="orgProfileTab"> Org Profile</label><label><input type="checkbox" value="warehousesTab"> Warehouses</label><label><input type="checkbox" value="DatacenterTab"> Data Center</label><label><input type="checkbox" value="systemConfigurationTab"> System Configuration</label><label><input type="checkbox" value="integrationsHubTab"> Integrations</label><label><input type="checkbox" value="userActivityTab"> User Activity</label><label><input type="checkbox" value="taxComplianceTab"> Tax Compliance</label><label><input type="checkbox" value="userManagementTab"> User Management</label><label><input type="checkbox" value="vatTab"> VAT</label><label><input type="checkbox" value="preferencesTab"> Preferences</label><label><input type="checkbox" value="settingstemplateTab"> Customization</label><label><input type="checkbox" value="costingTab"> Costing</label><label><input type="checkbox" value="bulkCostingTab"> Bulk Costing</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="files"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="files"><span class="font-semibold text-sm">📁 Files Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="files"><label><input type="checkbox" value="filesTab"> File Manager</label><label><input type="checkbox" value="recycleBinTab"> Recycle Bin</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="mail"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="mail"><span class="font-semibold text-sm">💬 Acacia Mail Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="mail"><label><input type="checkbox" value="mailHub"> 💬 Acacia Mail Hub</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="crm"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="crm"><span class="font-semibold text-sm">🏢 CRM Portal Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="crm"><label><input type="checkbox" value="crmHub"> 🏢 CRM Portal Hub</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="projecthub"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="projecthub"><span class="font-semibold text-sm">📁 Project Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="projecthub"><label><input type="checkbox" value="projectHubExternal"> 📁 Project Hub</label></div></div><div id="moduleAccessCustomGroup" class="mb-2 pb-1" data-group="custom"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="custom"><span class="font-semibold text-sm">🧩 Custom Modules</span></div><div class="pl-6 space-y-0.5" data-group-body="custom"></div></div></div><div class="flex justify-end space-x-2"><button onclick="saveUser()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button><button onclick="closeCreateUserModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button></div><p id="userCreateMsg" class="text-green-600 text-sm mt-2 hidden">✅ User saved successfully.</p></div></div>
+<div id="opCostPreviewFloatingModal" class="fixed inset-0 hidden z-[9999] flex items-center justify-center bg-black bg-opacity-50 p-4" onclick="if(event.target===this && typeof closeOperationalCostPreviewModal==='function') closeOperationalCostPreviewModal();"><div id="opCostPreviewFloatingSlot" class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"></div></div>
+<div id="phPlanPreviewFloatingModal" class="fixed inset-0 hidden z-[9999] flex items-center justify-center bg-black bg-opacity-50 p-4" onclick="if(event.target===this && typeof phClosePlanPreviewModal==='function') phClosePlanPreviewModal();"><div id="phPlanPreviewFloatingSlot" class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <style>
@@ -102946,6 +103285,7 @@ async function dcConfirmRestore() {
     } catch (eFree) {}
 
     const failedKeys = [];
+    const restoredKeys = [];
 
     for (const { key, raw } of entries) {
       if (NS.isGlobal(key) && key !== "exchangeRates") continue;
@@ -102955,10 +103295,25 @@ async function dcConfirmRestore() {
           NS.nSet.call(NS.real, key, raw);
         } else {
           NS.nSet.call(NS.real, key + NS.SEP + cid, raw);
+          restoredKeys.push(key);
         }
       } catch (eWrite) {
         failedKeys.push(key);
       }
+    }
+
+    // The writes above go straight to physical storage (NS.nSet), bypassing
+    // the normal setItem path that stamps a key as "just changed locally"
+    // and queues it for push. Without that, the pull that runs on the
+    // location.reload() below (startCloudSync -> pullCompany, which runs
+    // BEFORE the push) has no evidence this data is newer than whatever's
+    // already in the cloud, and can silently overwrite part of what was
+    // just restored before it ever syncs out. NS.touch() applies a fresh
+    // timestamp + dirty flag per restored key so the restore wins that race
+    // and still gets pushed even if the reload is interrupted.
+    if (NS.touch) {
+      restoredKeys.forEach(function (k) { try { NS.touch(k); } catch (e) {} });
+      try { if (window.__companySyncKick) window.__companySyncKick(); } catch (e) {}
     }
 
     try { window.logAudit("restore", "Backup", file.name + " (" + names.length + " keys)"); } catch (e) {}
@@ -103497,6 +103852,7 @@ function loadOpeningBalancesFromBS() {
 
   let totalDebit = 0;
   let totalCredit = 0;
+  let rowCount = 0;
 
   function renderSection(title, records, type) {
     if (!records.length) return;
@@ -103508,6 +103864,7 @@ function loadOpeningBalancesFromBS() {
       if (type === "credit") credit = _obNum(r.amount || r.value);
       totalDebit += debit;
       totalCredit += credit;
+      rowCount++;
       tbody.insertAdjacentHTML("beforeend", `<tr data-section="${title}" data-index="${idx}">
         <td class="account">${r.name || ""}</td>
         <td class="branch">--</td>
@@ -103523,17 +103880,27 @@ function loadOpeningBalancesFromBS() {
   renderSection("Non-current Liabilities", nonCurrentLiabilities, "credit");
   renderSection("Equity", equity, "credit");
 
+  if (!rowCount) {
+    tbody.insertAdjacentHTML("beforeend", `<tr><td colspan="4" class="p-3 text-center text-gray-400 italic">No opening balance accounts yet — add balances under Banks, Non-current Assets, Liabilities or Equity first, then they'll appear here to edit.</td></tr>`);
+  }
+
   document.getElementById("totalDebit").innerText = totalDebit.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2);
   document.getElementById("totalCredit").innerText = totalCredit.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2);
 }
 
 function enableEdit() {
-  document.querySelectorAll("#balanceBody td.debit, #balanceBody td.credit").forEach(td => {
+  const cells = document.querySelectorAll("#balanceBody td.debit, #balanceBody td.credit");
+  if (!cells.length) {
+    alert("There are no opening balance accounts to edit yet. Add balances under Banks, Non-current Assets, Liabilities or Equity first.");
+    return;
+  }
+  cells.forEach(td => {
     td.contentEditable = true;
     td.classList.add("editable");
   });
-  document.getElementById("saveBtn").classList.remove("hidden");
-  document.getElementById("editBtn").classList.add("hidden");
+  document.getElementById("obSaveBtn").classList.remove("hidden");
+  document.getElementById("obEditBtn").classList.add("hidden");
+  cells[0].focus();
 }
 
 function saveBalances() {
@@ -103541,8 +103908,8 @@ function saveBalances() {
   document.querySelectorAll("#balanceBody tr[data-section]").forEach(tr => {
     const section = tr.getAttribute("data-section");
     const index = parseInt(tr.getAttribute("data-index"));
-    const debit = parseFloat(tr.querySelector("td.debit").innerText) || 0;
-    const credit = parseFloat(tr.querySelector("td.credit").innerText) || 0;
+    const debit = _obParseEdited(tr.querySelector("td.debit").innerText);
+    const credit = _obParseEdited(tr.querySelector("td.credit").innerText);
 
     switch(section) {
       case "Banks":
@@ -103589,9 +103956,15 @@ function saveBalances() {
     td.contentEditable = false;
     td.classList.remove("editable");
   });
-  document.getElementById("saveBtn").classList.add("hidden");
-  document.getElementById("editBtn").classList.remove("hidden");
+  document.getElementById("obSaveBtn").classList.add("hidden");
+  document.getElementById("obEditBtn").classList.remove("hidden");
   loadOpeningBalancesFromBS();
+}
+
+function _obParseEdited(text) {
+  const cleaned = (text || "").toString().replace(/,/g, "").trim();
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : n;
 }
 
 document.addEventListener("DOMContentLoaded", loadOpeningBalancesFromBS);
@@ -110581,7 +110954,7 @@ function toggleSubmenu(id) {
     });
   });
 
-  var SOURCE_MAP = {"financial_dailyCashPosition": "transactions", "financial_expenseAnalysis": "bills", "financial_revenueAnalysis": "invoices", "financial_grossProfitAnalysis": "invoices", "financial_breakEvenAnalysis": "invoices", "financial_workingCapitalAnalysis": "balanceSheet", "financial_financialRatios": "balanceSheet", "financial_businessSnapshot": "invoices", "financial_multiYearTrendAnalysis": "invoices", "sales_dailySales": "invoices", "sales_monthlySales": "invoices", "sales_annualSales": "invoices", "sales_salesSummary": "invoices", "sales_revenueTrends": "invoices", "sales_salesByBranch": "invoices", "sales_salesByCategory": "invoices", "sales_salesByDayOfWeek": "invoices", "sales_salesByHour": "invoices", "sales_discountAnalysis": "invoices", "sales_priceVarianceAnalysis": "invoices", "customer_newCustomers": "customers", "customer_lostCustomers": "customers", "customer_customerGrowth": "customers", "customer_customerSegmentation": "customers", "customer_customerLifetimeValue": "customers", "customer_customerPurchaseFrequency": "invoices", "customer_customerCreditExposure": "customers", "customer_collectionEfficiency": "customerPayments", "customer_profitPerCustomer": "invoices", "customer_lossMakingCustomers": "invoices", "customer_receiptsForecast": "invoices", "inventory_stockLedger": "inventory", "inventory_stockAging": "inventory", "inventory_inventoryTurnover": "inventory", "inventory_inventoryValuationTrend": "inventory", "inventory_inventoryShrinkage": "inventory", "inventory_reorderSuggestions": "inventory", "inventory_fastMovingStock": "inventory", "inventory_slowMovingStock": "inventory", "inventory_deadStock": "inventory", "inventory_overstockReport": "inventory", "purchasing_purchaseTrends": "bills", "purchasing_purchasePriceVariance": "bills", "purchasing_supplierPerformance": "suppliers", "purchasing_supplierRanking": "suppliers", "purchasing_supplierLeadTime": "suppliers", "purchasing_supplierCreditUtilization": "suppliers", "purchasing_upcomingPayments": "bills", "purchasing_paymentForecast": "bills", "purchasing_costSavingsReport": "bills", "banking_bankTransactions": "transactions", "banking_dailyBankMovements": "transactions", "banking_depositAnalysis": "transactions", "banking_transferAnalysis": "transfers", "banking_bankChargesAnalysis": "transactions", "banking_cashVsBankAnalysis": "transactions", "tax_vatAnalysis": "vatReport", "tax_creditNotesTax": "creditNotes", "tax_debitNotesTax": "debitNotes", "profitability_profitByCustomer": "invoices", "profitability_profitByBranch": "invoices", "profitability_profitByCategory": "invoices", "profitability_profitByInvoice": "invoices", "profitability_lossMakingProducts": "invoices", "profitability_bookMarginAnalysis": "invoices", "human_employeeSummary": "employees", "human_employeeProductivity": "employees", "human_userPerformanceRanking": "users", "audit_userAccessReport": "users", "audit_riskDashboard": "auditLogs", "audit_dataQualityReport": "auditLogs", "management_executiveSummary": "invoices", "management_ceoDashboard": "invoices", "management_branchPerformanceDashboard": "invoices", "management_departmentPerformanceDashboard": "departmentalPnL", "forecasting_seasonalDemandAnalysis": "invoices", "forecasting_productAffinityAnalysis": "invoices", "forecasting_aiInventoryForecast": "inventory", "forecasting_cashConversionCycleReport": "invoices", "system_loginHistory": "userActivities", "system_activityLogs": "auditLogs", "system_databaseBackupStatus": "backupLogs", "system_synchronizationStatus": "backupLogs", "system_errorLogs": "auditLogs", "system_storageUsageReport": "fileManager", "system_systemPerformanceReport": "userActivities", "system_securityEventsReport": "auditLogs", "system_userSessionsReport": "userActivities", "system_apiUsageReport": "userActivities", "document_quotationsReport": "quotations", "document_invoicesReport": "invoices", "document_receiptsReport": "receipts", "document_deliveryNotesReport": "deliveries", "document_purchaseOrdersReport": "purchaseOrders", "document_goodsReceivedNotesReport": "grns", "document_creditNotesReport": "creditNotes", "document_debitNotesReport": "debitNotes", "document_returnedItemsReport": "salesReturns", "document_pendingDocumentsReport": "invoices"};
+  var SOURCE_MAP = {"financial_dailyCashPosition": "transactions", "financial_expenseAnalysis": "bills", "financial_revenueAnalysis": "invoices", "financial_grossProfitAnalysis": "invoices", "financial_breakEvenAnalysis": "invoices", "financial_workingCapitalAnalysis": "balanceSheet", "financial_financialRatios": "balanceSheet", "financial_businessSnapshot": "invoices", "financial_multiYearTrendAnalysis": "invoices", "sales_dailySales": "invoices", "sales_monthlySales": "invoices", "sales_annualSales": "invoices", "sales_salesSummary": "invoices", "sales_revenueTrends": "invoices", "sales_salesByBranch": "invoices", "sales_salesByCategory": "invoices", "sales_salesByDayOfWeek": "invoices", "sales_salesByHour": "invoices", "sales_discountAnalysis": "invoices", "sales_priceVarianceAnalysis": "invoices", "customer_newCustomers": "customers", "customer_lostCustomers": "customers", "customer_customerGrowth": "customers", "customer_customerSegmentation": "customers", "customer_customerLifetimeValue": "customers", "customer_customerPurchaseFrequency": "invoices", "customer_customerCreditExposure": "customers", "customer_collectionEfficiency": "customerPayments", "customer_profitPerCustomer": "invoices", "customer_lossMakingCustomers": "invoices", "customer_receiptsForecast": "invoices", "inventory_stockLedger": "inventory", "inventory_stockAging": "inventory", "inventory_inventoryTurnover": "inventory", "inventory_inventoryValuationTrend": "inventory", "inventory_inventoryShrinkage": "inventory", "inventory_reorderSuggestions": "inventory", "inventory_fastMovingStock": "inventory", "inventory_slowMovingStock": "inventory", "inventory_deadStock": "inventory", "inventory_overstockReport": "inventory", "purchasing_purchaseTrends": "bills", "purchasing_purchasePriceVariance": "bills", "purchasing_supplierPerformance": "suppliers", "purchasing_supplierRanking": "suppliers", "purchasing_supplierLeadTime": "suppliers", "purchasing_supplierCreditUtilization": "suppliers", "purchasing_upcomingPayments": "bills", "purchasing_paymentForecast": "bills", "purchasing_costSavingsReport": "bills", "banking_bankTransactions": "transactions", "banking_dailyBankMovements": "transactions", "banking_depositAnalysis": "transactions", "banking_transferAnalysis": "transfers", "banking_bankChargesAnalysis": "transactions", "banking_cashVsBankAnalysis": "transactions", "tax_vatAnalysis": "vatReport", "tax_creditNotesTax": "creditNotes", "tax_debitNotesTax": "debitNotes", "profitability_profitByCustomer": "invoices", "profitability_profitByBranch": "invoices", "profitability_profitByCategory": "invoices", "profitability_profitByInvoice": "invoices", "profitability_lossMakingProducts": "invoices", "profitability_bookMarginAnalysis": "invoices", "human_employeeSummary": "employees", "human_employeeProductivity": "employees", "human_userPerformanceRanking": "users", "audit_userAccessReport": "users", "audit_riskDashboard": "auditLogs", "audit_dataQualityReport": "auditLogs", "management_executiveSummary": "invoices", "management_ceoDashboard": "invoices", "management_branchPerformanceDashboard": "invoices", "management_departmentPerformanceDashboard": "invoices", "forecasting_seasonalDemandAnalysis": "invoices", "forecasting_productAffinityAnalysis": "invoices", "forecasting_aiInventoryForecast": "inventory", "forecasting_cashConversionCycleReport": "invoices", "system_loginHistory": "userActivities", "system_activityLogs": "auditLogs", "system_databaseBackupStatus": "backupLogs", "system_synchronizationStatus": "backupLogs", "system_errorLogs": "auditLogs", "system_storageUsageReport": "fileManager", "system_systemPerformanceReport": "userActivities", "system_securityEventsReport": "auditLogs", "system_userSessionsReport": "userActivities", "system_apiUsageReport": "userActivities", "document_quotationsReport": "quotations", "document_invoicesReport": "invoices", "document_receiptsReport": "receipts", "document_deliveryNotesReport": "deliveries", "document_purchaseOrdersReport": "purchaseOrders", "document_goodsReceivedNotesReport": "grns", "document_creditNotesReport": "creditNotes", "document_debitNotesReport": "debitNotes", "document_returnedItemsReport": "salesReturns", "document_pendingDocumentsReport": "invoices"};
   var DATE_FIELDS = ['date','createdAt','created_at','timestamp','time','issuedOn','invoiceDate','billDate','postedOn','dueDate','at'];
   var AMOUNT_FIELDS = ['amount','total','grandTotal','netTotal','value','price','balance','paid','due','subtotal'];
   var LABEL_FIELDS = ['name','customer','customerName','supplier','supplierName','description','reference','ref','number','invoiceNumber','billNumber','code','sku','item','title','user','username','email','status','type','event','action'];
@@ -110694,7 +111067,26 @@ function toggleSubmenu(id) {
       var margin = revenue ? ((profit/revenue*100).toFixed(1)+'%') : '';
       return {date:_date(r)?_date(r).toLocaleDateString():'',invoice:r.invoiceNumber||r.number||r.id,customer:r.customer||r.customerName||'',revenue:revenue,cost:cost,profit:profit,margin:margin};
     });},
-    profitability_lossMakingProducts: function(rows){return _grp(rows,function(r){return r.item||r.product;},'product').filter(function(r){return r.total<0;});},
+    profitability_lossMakingProducts: function(rows){
+      var m = {};
+      rows.forEach(function(r){
+        (r.items||[]).forEach(function(it){
+          var key = it.name || it.item || it.desc || it.description || it.product || '(unspecified)';
+          var revenue = _num(it.totalWithVat!=null ? it.totalWithVat : it.subtotal);
+          var cost = (typeof window.__pnlCogs === 'function') ? window.__pnlCogs([{items:[it]}]) : 0;
+          if(!m[key]) m[key] = {product:key, items:0, revenue:0, cost:0, profit:0};
+          m[key].items += 1;
+          m[key].revenue += revenue;
+          m[key].cost += cost;
+          m[key].profit += (revenue - cost);
+        });
+      });
+      return Object.keys(m).map(function(k){
+        var g = m[k];
+        g.margin = g.revenue ? ((g.profit/g.revenue*100).toFixed(1)+'%') : '';
+        return g;
+      }).filter(function(g){ return g.profit < 0; }).sort(function(a,b){ return (a.profit||0)-(b.profit||0); });
+    },
     profitability_bookMarginAnalysis: function(rows){
       
       
@@ -110857,8 +111249,52 @@ function toggleSubmenu(id) {
     financial_expenseAnalysis: function(rows){return _grp(rows,function(r){return r.category||r.account||r.type;},'category');},
     financial_revenueAnalysis: function(rows){return _grp(rows,function(r){return r.category||r.productCategory||'Sales';},'category');},
 
-    management_branchPerformanceDashboard: function(rows){return _grp(rows,function(r){return r.branch||r.branchName;},'branch');},
-    management_departmentPerformanceDashboard: function(rows){return _grp(rows,function(r){return r.department||r.dept;},'department');},
+    management_branchPerformanceDashboard: function(rows){
+      // Invoices don't carry a top-level branch, but each line item carries the
+      // warehouse it was sold from — flatten to line items and group by warehouse.
+      var lineItems = [];
+      rows.forEach(function(inv){
+        var items = (inv && inv.items) || [];
+        if (items.length){
+          items.forEach(function(it){
+            lineItems.push({
+              warehouse: it.warehouse || it.branch || 'Main',
+              amount: _num(it.totalWithVat!==undefined?it.totalWithVat:(it.subtotal!==undefined?it.subtotal:it.amount)),
+              date: inv.date
+            });
+          });
+        } else if (inv) {
+          // Fallback for invoices with no item breakdown.
+          lineItems.push({ warehouse: inv.warehouse || inv.branch || inv.branchName || 'Main', amount: _amt(inv), date: inv.date });
+        }
+      });
+      return _grp(lineItems, function(r){return r.warehouse;}, 'warehouse');
+    },
+    management_departmentPerformanceDashboard: function(rows){
+      var employees = [];
+      try { employees = JSON.parse(localStorage.getItem('employees') || '[]'); } catch(e) { employees = []; }
+      var empByKey = {};
+      employees.forEach(function(emp){
+        var dept = emp.department || 'Unassigned';
+        if (emp.id) empByKey[String(emp.id).toLowerCase()] = { name: emp.name || emp.id, department: dept };
+        if (emp.name) empByKey[String(emp.name).toLowerCase()] = { name: emp.name, department: dept };
+      });
+      var m = {};
+      rows.forEach(function(inv){
+        var spKey = inv && inv.salesPerson ? String(inv.salesPerson).toLowerCase() : '';
+        var match = spKey ? empByKey[spKey] : null;
+        var salesPerson = match ? match.name : (inv && inv.salesPerson ? inv.salesPerson : '(unassigned)');
+        var department = match ? match.department : 'Unassigned';
+        var key = department + '||' + salesPerson;
+        if (!m[key]) m[key] = { department: department, salesPerson: salesPerson, invoices: 0, total: 0 };
+        m[key].invoices += 1;
+        m[key].total += _amt(inv);
+      });
+      return Object.keys(m).map(function(k){ return m[k]; }).sort(function(a,b){
+        if (a.department !== b.department) return a.department < b.department ? -1 : 1;
+        return (b.total||0) - (a.total||0);
+      });
+    },
 
     forecasting_seasonalDemandAnalysis: function(rows){return _bucket(rows,function(r){var d=_date(r);return d?MON[d.getMonth()]:'';},'month');},
     forecasting_productAffinityAnalysis: function(rows){return _grp(rows,function(r){return r.item||r.product;},'product');},
@@ -111321,7 +111757,7 @@ function toggleSubmenu(id) {
     'saveRecurringInvoice','saveReceipt','saveDelivery',
     'saveSupplierBill','saveSupplierPayment','saveDebitNote','savePurchaseReturn',
     'saveGRN','savePurchaseOrder','saveOperationalCost','saveTaxPayment',
-    'saveManualJournal','saveRecurring','saveCurrencyAdjustment',
+    'addManualJournal','saveRecurring','saveCurrencyAdjustment',
     'addBank','recordRecurringPayment','reverseRecurringPayment'
   ];
 
@@ -111342,7 +111778,7 @@ function toggleSubmenu(id) {
     savePurchaseOrder:  ['Purchase Orders','PurchaseOrders','Purchases','Suppliers'],
     saveOperationalCost:['Operational Costs','Purchases','Suppliers'],
     saveTaxPayment:     ['Tax Payments','Purchases','Suppliers'],
-    saveManualJournal:  ['Manual Journals','Journals','Accountant'],
+    addManualJournal:   ['Manual Journals','Journals','Accountant'],
     saveRecurring:      ['Recurring Journals','Journals','Accountant'],
     saveCurrencyAdjustment:['Currency Adjustments','Accountant'],
     recordRecurringPayment:['Payments','Receipts','Sales','Customers'],
@@ -111357,7 +111793,7 @@ function toggleSubmenu(id) {
     saveSupplierPayment:'supplierPaymentDate', saveDebitNote:'debitNoteDate',
     savePurchaseReturn:'purchaseReturnDate', saveGRN:'grnDate',
     savePurchaseOrder:'poDate', saveOperationalCost:'operationalCostDate',
-    saveTaxPayment:'taxPaymentDate', saveManualJournal:'journalDate',
+    saveTaxPayment:'taxPaymentDate', addManualJournal:'journalDate',
     saveRecurring:'recurringJournalDate', saveCurrencyAdjustment:'currencyAdjDate'
   };
 
@@ -115870,6 +116306,8 @@ function PU(){ if(typeof progressUpdates!=="undefined"&&Array.isArray(progressUp
 function setPU(a){ if(typeof progressUpdates!=="undefined"){ progressUpdates=a; } else { window.__phPU=a; } phSave("planProgress",a); }
 function PR(){ if(typeof planRevisions!=="undefined"&&Array.isArray(planRevisions)) return planRevisions; window.__phPR=window.__phPR||phLoad("planRevisions"); return window.__phPR; }
 function setPR(a){ if(typeof planRevisions!=="undefined"){ planRevisions=a; } else { window.__phPR=a; } phSave("planRevisions",a); }
+function PA(){ window.__phPA=window.__phPA||phLoad("planActionItems"); return window.__phPA; }
+function setPA(a){ window.__phPA=a; phSave("planActionItems",a); }
 function PO(){ if(typeof planOwnerships!=="undefined"&&Array.isArray(planOwnerships)) return planOwnerships; window.__phPO=window.__phPO||phLoad("planOwnerships"); return window.__phPO; }
 function setPO(a){ if(typeof planOwnerships!=="undefined"){ planOwnerships=a; } else { window.__phPO=a; } phSave("planOwnerships",a); }
 let planRevenue = phLoad("planRevenue");
@@ -115911,7 +116349,7 @@ window.phOnSelPlan = function(){
   const p = phCurPlan();
   const info = g("phSelPlanInfo");
   if(info) info.textContent = p ? `${p.startDate||"?"} → ${p.endDate||"?"} · ${p.status||"Not Started"} · progress ${p.progress||0}%` : "No plan yet — create one in Step 1.";
-  phRenderOwn(); phRenderProg(); phRenderRev(); phRenderRevenue(); phRenderExpenses();
+  phRenderOwn(); phRenderProg(); phRenderRev(); phRenderRevenue(); phRenderExpenses(); phRenderActionItems();
   const from=g("phInvFrom"), to=g("phInvTo");
   if(p && from && !from.value) from.value = p.startDate||"";
   if(p && to && !to.value) to.value = p.endDate||"";
@@ -115986,43 +116424,296 @@ function phFillOwnerSelects(){
   if(g("phTeam")) g("phTeam").innerHTML=names.map(n=>`<option>${phEsc(n)}</option>`).join("");
   if (typeof window.axRefreshMultiSelect === "function") window.axRefreshMultiSelect("phTeam");
 }
+window.__phEditingOwnIndex = null;
+function phSetOwnFormMode(editing){
+  const btn = g("phOwnSaveBtn");
+  if(btn) btn.textContent = editing ? "Update Ownership" : "Assign → Next";
+  const cancelBtn = g("phOwnCancelEditBtn");
+  if(cancelBtn) cancelBtn.classList.toggle("hidden", !editing);
+}
+function phClearOwnForm(){
+  if(g("phOwner")) g("phOwner").value="";
+  if(g("phTeam")){ [...g("phTeam").options].forEach(o=>o.selected=false); if(typeof window.axRefreshMultiSelect==="function") window.axRefreshMultiSelect("phTeam"); }
+  if(g("phOwnStatus")) g("phOwnStatus").value="Not Started";
+  if(g("phOwnDate")) g("phOwnDate").value="";
+}
+window.phCancelOwnEdit = function(){
+  window.__phEditingOwnIndex = null;
+  phClearOwnForm();
+  phSetOwnFormMode(false);
+};
 window.phAssignOwner = function(){
   const p=phCurPlan(); if(!p) return alert("Create/select a plan first.");
   const owner=g("phOwner").value; if(!owner) return alert("Select an owner.");
   const team=[...g("phTeam").selectedOptions].map(o=>o.value);
   const status=g("phOwnStatus").value;
   const date=g("phOwnDate").value||new Date().toISOString().slice(0,10);
-  const arr=PO(); arr.push({planTitle:p.title,owner,team,status,date}); setPO(arr);
+  const arr=PO();
+  const editIndex = window.__phEditingOwnIndex;
+  if(editIndex!==null && editIndex!==undefined && arr[editIndex]){
+    arr[editIndex] = Object.assign({}, arr[editIndex], {owner,team,status,date});
+  } else {
+    arr.push({planTitle:p.title,owner,team,status,date});
+  }
+  setPO(arr);
   p.owner=owner; p.team=team; p.status=status; setP(P());
+  window.__phEditingOwnIndex = null;
+  phClearOwnForm();
+  phSetOwnFormMode(false);
   phRenderOwn(); phRenderOverview(); phRefreshReports(); phGoStep(3);
 };
+window.phEditOwn = function(i){
+  const arr=PO(); const rec=arr[i]; if(!rec) return alert("Ownership record not found.");
+  if(g("phOwner")) g("phOwner").value = rec.owner||"";
+  if(g("phTeam")){ [...g("phTeam").options].forEach(o=>{ o.selected = (rec.team||[]).includes(o.value); }); if(typeof window.axRefreshMultiSelect==="function") window.axRefreshMultiSelect("phTeam"); }
+  if(g("phOwnStatus")) g("phOwnStatus").value = rec.status||"Not Started";
+  if(g("phOwnDate")) g("phOwnDate").value = rec.date||"";
+  window.__phEditingOwnIndex = i;
+  phSetOwnFormMode(true);
+  const panel = document.getElementById("phStep2");
+  if(panel && panel.scrollIntoView) panel.scrollIntoView({behavior:"smooth", block:"start"});
+};
+window.phToggleOwnMenu = function(i){
+  const menu = document.getElementById(`planOwnMenu-${i}`);
+  if(!menu) return;
+  const isHidden = menu.classList.contains("hidden");
+  document.querySelectorAll('[id^="planOwnMenu-"]').forEach(m=>{ if(m!==menu) m.classList.add("hidden"); });
+  menu.classList.toggle("hidden", !isHidden);
+};
+window.phCloneOwn = function(i){
+  const arr=PO(); const rec=arr[i]; if(!rec) return;
+  arr.push(Object.assign({},rec,{date:new Date().toISOString().slice(0,10)}));
+  setPO(arr); phRenderOwn(); phRefreshReports();
+};
+window.phPreviewOwn = function(i){
+  const rec=PO()[i]; if(!rec) return alert("Ownership record not found.");
+  const html = `
+    <div class="bg-white p-6 rounded-2xl w-full relative">
+      <h3 class="text-sm font-bold mb-6 text-center text-slate-800">👤 Ownership Preview</h3>
+      <div class="flex justify-end gap-3 mb-6">
+        <button onclick="phClosePlanPreviewModal(); phEditOwn(${i});" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Edit</button>
+        <button onclick="phPrintOwnPDF(${i})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Print</button>
+        <button onclick="phDownloadOwnPDF(${i})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Download</button>
+        <button onclick="phEmailOwn(${i})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Email</button>
+        <button onclick="phClosePlanPreviewModal()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Close</button>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-gray-100">
+        <div style="color:#6b7280;font-size:13px;">Owner</div>
+        <div style="font-size:22px;font-weight:700;color:#111827;">${phEsc(rec.owner)}</div>
+        <div style="margin-top:14px;">
+          <span style="display:inline-block;background:#dbeafe;color:#1e3a8a;font-size:11px;font-weight:600;padding:4px 10px;border-radius:4px;">${phEsc((rec.status||"NOT STARTED").toUpperCase())}</span>
+        </div>
+        <div style="margin-top:22px;display:grid;grid-template-columns:1fr 1fr;row-gap:16px;column-gap:10px;">
+          ${phPreviewFieldRow("Plan", phEsc(rec.planTitle))}
+          ${phPreviewFieldRow("Team", phEsc((rec.team||[]).join(", ")))}
+          ${phPreviewFieldRow("Assignment Date", phEsc(rec.date))}
+        </div>
+      </div>
+    </div>`;
+  phShowPlanPreviewModal(html);
+};
+window.phEmailOwn = function(i){
+  const rec=PO()[i]; if(!rec) return alert("Ownership record not found.");
+  const loggedIn = JSON.parse(localStorage.getItem("loggedInUser")||"null")||{};
+  const recipient = prompt("Send this ownership record to:", loggedIn.email||"");
+  if(!recipient) return;
+  const subject = `Plan Ownership - ${rec.planTitle} (${rec.owner})`;
+  const body = `Plan Ownership\n\nPlan: ${rec.planTitle}\nOwner: ${rec.owner}\nTeam: ${(rec.team||[]).join(", ")||"-"}\nStatus: ${rec.status}\nAssignment Date: ${rec.date}\n`;
+  const mailtoLink = (typeof __logMail==="function") ? __logMail(`mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`) : `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoLink;
+};
+window.phDownloadOwnPDF = function(i){
+  const rec=PO()[i]; if(!rec) return alert("Ownership record not found.");
+  phOpenPrintable("Plan Ownership", `
+    <tr><td>Plan</td><td>${phEsc(rec.planTitle)}</td></tr>
+    <tr><td>Owner</td><td>${phEsc(rec.owner)}</td></tr>
+    <tr><td>Team</td><td>${phEsc((rec.team||[]).join(", ")||"-")}</td></tr>
+    <tr><td>Status</td><td>${phEsc(rec.status)}</td></tr>
+    <tr><td>Assignment Date</td><td>${phEsc(rec.date)}</td></tr>
+  `, true);
+};
+window.phPrintOwnPDF = function(i){ window.phDownloadOwnPDF(i); };
 function phRenderOwn(){
   const tb=g("phOwnBody"); if(!tb) return;
   const p=phCurPlan();
   const rows=p?PO().map((o,i)=>({o,i})).filter(x=>x.o.planTitle===p.title):[];
-  tb.innerHTML=rows.length?rows.map(x=>`<tr><td class="border p-2">${phEsc(x.o.owner)}</td><td class="border p-2">${phEsc((x.o.team||[]).join(", "))}</td><td class="border p-2">${phEsc(x.o.status)}</td><td class="border p-2">${phEsc(x.o.date)}</td><td class="border p-2 text-center"><button onclick="phDelOwn(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button></td></tr>`).join(""):'<tr><td colspan="5" class="border p-2 text-center text-gray-500">No ownership records yet.</td></tr>';
+  tb.innerHTML=rows.length?rows.map(x=>`<tr><td class="border p-2">${phEsc(x.o.owner)}</td><td class="border p-2">${phEsc((x.o.team||[]).join(", "))}</td><td class="border p-2">${phEsc(x.o.status)}</td><td class="border p-2">${phEsc(x.o.date)}</td><td class="border p-2 space-x-1 relative">
+      <button onclick="phPreviewOwn(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Preview</button>
+      <button onclick="phEditOwn(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Edit</button>
+      <button onclick="phDelOwn(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Delete</button>
+      <button onclick="phToggleOwnMenu(${x.i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">More ▼</button>
+      <div id="planOwnMenu-${x.i}" class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+        <button onclick="phEmailOwn(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">📧 Email</button>
+        <button onclick="phCloneOwn(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">📄 Clone</button>
+        <button onclick="phDownloadOwnPDF(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">⬇ Download</button>
+        <button onclick="phPrintOwnPDF(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">🖨 Print</button>
+      </div>
+    </td></tr>`).join(""):'<tr><td colspan="5" class="border p-2 text-center text-gray-500">No ownership records yet.</td></tr>';
 }
-window.phDelOwn=function(i){ const arr=PO(); arr.splice(i,1); setPO(arr); phRenderOwn(); phRefreshReports(); };
+window.phDelOwn=function(i){
+  const arr=PO(); arr.splice(i,1); setPO(arr);
+  if(window.__phEditingOwnIndex===i){
+    window.__phEditingOwnIndex=null;
+    phClearOwnForm();
+    phSetOwnFormMode(false);
+  }
+  phRenderOwn(); phRefreshReports();
+};
 
 
+window.__phEditingProgIndex = null;
+function phSetProgFormMode(editing){
+  const btn = g("phProgSaveBtn");
+  if(btn) btn.textContent = editing ? "Update Progress" : "Add Update → Next";
+  const cancelBtn = g("phProgCancelEditBtn");
+  if(cancelBtn) cancelBtn.classList.toggle("hidden", !editing);
+}
+function phClearProgForm(){
+  ["phProg","phProgPerson","phProgComment"].forEach(id=>{ if(g(id)) g(id).value=""; });
+  if(g("phProgStatus")) g("phProgStatus").value="Not Started";
+}
+window.phCancelProgEdit = function(){
+  window.__phEditingProgIndex = null;
+  phClearProgForm();
+  phSetProgFormMode(false);
+};
 window.phAddProgress = function(){
   const p=phCurPlan(); if(!p) return alert("Create/select a plan first.");
   const prog=Math.max(0,Math.min(100,parseFloat(g("phProg").value)||0));
+  const arr=PU();
+  const editIndex = window.__phEditingProgIndex;
   const rec={title:p.title,progress:prog,status:g("phProgStatus").value,person:g("phProgPerson").value.trim(),comment:g("phProgComment").value.trim(),date:new Date().toLocaleString()};
-  const arr=PU(); arr.push(rec); setPU(arr);
+  if(editIndex!==null && editIndex!==undefined && arr[editIndex]){
+    rec.date = arr[editIndex].date;
+    arr[editIndex] = rec;
+  } else {
+    arr.push(rec);
+  }
+  setPU(arr);
   p.progress=prog; p.status=rec.status; setP(P());
-  ["phProg","phProgPerson","phProgComment"].forEach(id=>g(id).value="");
+  window.__phEditingProgIndex = null;
+  phClearProgForm();
+  phSetProgFormMode(false);
   phRenderProg(); phRenderOverview(); phOnSelPlan(); phRefreshReports(); phGoStep(6);
 };
+window.phEditProg = function(i){
+  const arr=PU(); const rec=arr[i]; if(!rec) return alert("Progress update not found.");
+  if(g("phProg")) g("phProg").value = rec.progress||0;
+  if(g("phProgStatus")) g("phProgStatus").value = rec.status||"Not Started";
+  if(g("phProgPerson")) g("phProgPerson").value = rec.person||"";
+  if(g("phProgComment")) g("phProgComment").value = rec.comment||"";
+  window.__phEditingProgIndex = i;
+  phSetProgFormMode(true);
+  const panel = document.getElementById("phStep3");
+  if(panel && panel.scrollIntoView) panel.scrollIntoView({behavior:"smooth", block:"start"});
+};
+window.phToggleProgMenu = function(i){
+  const menu = document.getElementById(`planProgMenu-${i}`);
+  if(!menu) return;
+  const isHidden = menu.classList.contains("hidden");
+  document.querySelectorAll('[id^="planProgMenu-"]').forEach(m=>{ if(m!==menu) m.classList.add("hidden"); });
+  menu.classList.toggle("hidden", !isHidden);
+};
+window.phCloneProg = function(i){
+  const arr=PU(); const rec=arr[i]; if(!rec) return;
+  arr.push(Object.assign({},rec,{date:new Date().toLocaleString()}));
+  setPU(arr); phRenderProg(); phRefreshReports();
+};
+window.phPreviewProg = function(i){
+  const rec=PU()[i]; if(!rec) return alert("Progress update not found.");
+  const html = `
+    <div class="bg-white p-6 rounded-2xl w-full relative">
+      <h3 class="text-sm font-bold mb-6 text-center text-slate-800">📈 Progress Update Preview</h3>
+      <div class="flex justify-end gap-3 mb-6">
+        <button onclick="phClosePlanPreviewModal(); phEditProg(${i});" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Edit</button>
+        <button onclick="phPrintProgPDF(${i})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Print</button>
+        <button onclick="phDownloadProgPDF(${i})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Download</button>
+        <button onclick="phEmailProg(${i})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Email</button>
+        <button onclick="phClosePlanPreviewModal()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Close</button>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-gray-100">
+        <div style="color:#6b7280;font-size:13px;">Progress</div>
+        <div style="font-size:26px;font-weight:700;color:#111827;">${phEsc(rec.progress)}%</div>
+        <div style="margin-top:14px;">
+          <span style="display:inline-block;background:#dbeafe;color:#1e3a8a;font-size:11px;font-weight:600;padding:4px 10px;border-radius:4px;">${phEsc((rec.status||"NOT STARTED").toUpperCase())}</span>
+        </div>
+        <div style="margin-top:22px;display:grid;grid-template-columns:1fr 1fr;row-gap:16px;column-gap:10px;">
+          ${phPreviewFieldRow("Plan", phEsc(rec.title))}
+          ${phPreviewFieldRow("Responsible Person", phEsc(rec.person))}
+          ${phPreviewFieldRow("Date", phEsc(rec.date))}
+        </div>
+        ${rec.comment ? `<div style="margin-top:20px;"><div style="color:#6b7280;font-size:12px;">Comment / Update</div><div style="font-size:14px;color:#111827;">${phEsc(rec.comment)}</div></div>` : ""}
+      </div>
+    </div>`;
+  phShowPlanPreviewModal(html);
+};
+window.phEmailProg = function(i){
+  const rec=PU()[i]; if(!rec) return alert("Progress update not found.");
+  const loggedIn = JSON.parse(localStorage.getItem("loggedInUser")||"null")||{};
+  const recipient = prompt("Send this progress update to:", loggedIn.email||"");
+  if(!recipient) return;
+  const subject = `Plan Progress - ${rec.title} (${rec.progress}%)`;
+  const body = `Plan Progress Update\n\nPlan: ${rec.title}\nProgress: ${rec.progress}%\nStatus: ${rec.status}\nResponsible Person: ${rec.person||"-"}\nComment: ${rec.comment||"-"}\nDate: ${rec.date}\n`;
+  const mailtoLink = (typeof __logMail==="function") ? __logMail(`mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`) : `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoLink;
+};
+window.phDownloadProgPDF = function(i){
+  const rec=PU()[i]; if(!rec) return alert("Progress update not found.");
+  phOpenPrintable("Plan Progress Update", `
+    <tr><td>Plan</td><td>${phEsc(rec.title)}</td></tr>
+    <tr><td>Progress</td><td>${phEsc(rec.progress)}%</td></tr>
+    <tr><td>Status</td><td>${phEsc(rec.status)}</td></tr>
+    <tr><td>Responsible Person</td><td>${phEsc(rec.person||"-")}</td></tr>
+    <tr><td>Comment</td><td>${phEsc(rec.comment||"-")}</td></tr>
+    <tr><td>Date</td><td>${phEsc(rec.date)}</td></tr>
+  `, true);
+};
+window.phPrintProgPDF = function(i){ window.phDownloadProgPDF(i); };
 function phRenderProg(){
   const tb=g("phProgBody"); if(!tb) return;
   const p=phCurPlan();
   const rows=p?PU().map((r,i)=>({r,i})).filter(x=>x.r.title===p.title):[];
-  tb.innerHTML=rows.length?rows.map(x=>`<tr><td class="border p-2">${x.r.progress}%</td><td class="border p-2">${phEsc(x.r.status)}</td><td class="border p-2">${phEsc(x.r.person)}</td><td class="border p-2">${phEsc(x.r.comment)}</td><td class="border p-2">${phEsc(x.r.date)}</td><td class="border p-2 text-center"><button onclick="phDelProg(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button></td></tr>`).join(""):'<tr><td colspan="6" class="border p-2 text-center text-gray-500">No progress updates yet.</td></tr>';
+  tb.innerHTML=rows.length?rows.map(x=>`<tr><td class="border p-2">${x.r.progress}%</td><td class="border p-2">${phEsc(x.r.status)}</td><td class="border p-2">${phEsc(x.r.person)}</td><td class="border p-2">${phEsc(x.r.comment)}</td><td class="border p-2">${phEsc(x.r.date)}</td><td class="border p-2 space-x-1 relative">
+      <button onclick="phPreviewProg(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Preview</button>
+      <button onclick="phEditProg(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Edit</button>
+      <button onclick="phDelProg(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Delete</button>
+      <button onclick="phToggleProgMenu(${x.i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">More ▼</button>
+      <div id="planProgMenu-${x.i}" class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+        <button onclick="phEmailProg(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">📧 Email</button>
+        <button onclick="phCloneProg(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">📄 Clone</button>
+        <button onclick="phDownloadProgPDF(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">⬇ Download</button>
+        <button onclick="phPrintProgPDF(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">🖨 Print</button>
+      </div>
+    </td></tr>`).join(""):'<tr><td colspan="6" class="border p-2 text-center text-gray-500">No progress updates yet.</td></tr>';
 }
-window.phDelProg=function(i){ const arr=PU(); arr.splice(i,1); setPU(arr); phRenderProg(); phRefreshReports(); };
+window.phDelProg=function(i){
+  const arr=PU(); arr.splice(i,1); setPU(arr);
+  if(window.__phEditingProgIndex===i){
+    window.__phEditingProgIndex=null;
+    phClearProgForm();
+    phSetProgFormMode(false);
+  }
+  phRenderProg(); phRefreshReports();
+};
 
 
+window.__phEditingRevisionIndex = null;
+function phSetRevisionFormMode(editing){
+  const btn = g("phRevSaveBtn");
+  if(btn) btn.textContent = editing ? "Update Revision" : "Apply Revision";
+  const cancelBtn = g("phRevCancelEditBtn");
+  if(cancelBtn) cancelBtn.classList.toggle("hidden", !editing);
+}
+function phClearRevisionForm(){
+  if(g("phRevComment")) g("phRevComment").value="";
+  if(g("phRevNewEnd")) g("phRevNewEnd").value="";
+  if(g("phRevAction")) g("phRevAction").value="Extend";
+}
+window.phCancelRevisionEdit = function(){
+  window.__phEditingRevisionIndex = null;
+  phClearRevisionForm();
+  phSetRevisionFormMode(false);
+};
 window.phApplyRevision = function(){
   const p=phCurPlan(); if(!p) return alert("Create/select a plan first.");
   const action=g("phRevAction").value;
@@ -116030,20 +116721,305 @@ window.phApplyRevision = function(){
   const newEnd=g("phRevNewEnd").value;
   if(action==="Extend"){ if(!newEnd) return alert("Pick the new end date for the extension."); p.endDate=newEnd; }
   if(action==="Close"){ p.status="Completed"; }
-  const arr=PR(); arr.push({title:p.title,action,comment,date:new Date().toLocaleString()}); setPR(arr);
+  const arr=PR();
+  const editIndex = window.__phEditingRevisionIndex;
+  if(editIndex!==null && editIndex!==undefined && arr[editIndex]){
+    arr[editIndex] = Object.assign({}, arr[editIndex], {action,comment,newEnd});
+  } else {
+    arr.push({title:p.title,action,comment,date:new Date().toLocaleString()});
+  }
+  setPR(arr);
   setP(P());
-  g("phRevComment").value=""; g("phRevNewEnd").value="";
+  window.__phEditingRevisionIndex = null;
+  phClearRevisionForm();
+  phSetRevisionFormMode(false);
   phRenderRev(); phRenderOverview(); phOnSelPlan(); phRefreshReports(); phGoStep(4);
   alert("✅ Revision applied. Go to Plan Revenue (Plans Hub sidebar) to allocate sales to this plan.");
 };
+window.phEditRev = function(i){
+  const arr=PR(); const rec=arr[i]; if(!rec) return alert("Revision not found.");
+  if(g("phRevAction")) g("phRevAction").value = rec.action||"Extend";
+  if(g("phRevComment")) g("phRevComment").value = rec.comment||"";
+  if(g("phRevNewEnd")) g("phRevNewEnd").value = rec.newEnd||"";
+  window.__phEditingRevisionIndex = i;
+  phSetRevisionFormMode(true);
+  const panel = document.getElementById("phStep4");
+  if(panel && panel.scrollIntoView) panel.scrollIntoView({behavior:"smooth", block:"start"});
+};
+window.phToggleRevMenu = function(i){
+  const menu = document.getElementById(`planRevMenu-${i}`);
+  if(!menu) return;
+  const isHidden = menu.classList.contains("hidden");
+  document.querySelectorAll('[id^="planRevMenu-"]').forEach(m=>{ if(m!==menu) m.classList.add("hidden"); });
+  menu.classList.toggle("hidden", !isHidden);
+};
+window.phCloneRev = function(i){
+  const arr=PR(); const rec=arr[i]; if(!rec) return;
+  arr.push(Object.assign({},rec,{date:new Date().toLocaleString()}));
+  setPR(arr); phRenderRev(); phRefreshReports();
+};
+window.phPreviewRev = function(i){
+  const rec=PR()[i]; if(!rec) return alert("Revision not found.");
+  const html = `
+    <div class="bg-white p-6 rounded-2xl w-full relative">
+      <h3 class="text-sm font-bold mb-6 text-center text-slate-800">📌 Revision Preview</h3>
+      <div class="flex justify-end gap-3 mb-6">
+        <button onclick="phClosePlanPreviewModal(); phEditRev(${i});" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Edit</button>
+        <button onclick="phPrintRevPDF(${i})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Print</button>
+        <button onclick="phDownloadRevPDF(${i})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Download</button>
+        <button onclick="phEmailRev(${i})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Email</button>
+        <button onclick="phClosePlanPreviewModal()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Close</button>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-gray-100">
+        <div style="color:#6b7280;font-size:13px;">Action</div>
+        <div style="font-size:22px;font-weight:700;color:#111827;">${phEsc(rec.action)}</div>
+        <div style="margin-top:22px;display:grid;grid-template-columns:1fr 1fr;row-gap:16px;column-gap:10px;">
+          ${phPreviewFieldRow("Plan", phEsc(rec.title))}
+          ${phPreviewFieldRow("New End Date", phEsc(rec.newEnd))}
+          ${phPreviewFieldRow("Date", phEsc(rec.date))}
+        </div>
+        ${rec.comment ? `<div style="margin-top:20px;"><div style="color:#6b7280;font-size:12px;">Reason / Note</div><div style="font-size:14px;color:#111827;">${phEsc(rec.comment)}</div></div>` : ""}
+      </div>
+    </div>`;
+  phShowPlanPreviewModal(html);
+};
+window.phEmailRev = function(i){
+  const rec=PR()[i]; if(!rec) return alert("Revision not found.");
+  const loggedIn = JSON.parse(localStorage.getItem("loggedInUser")||"null")||{};
+  const recipient = prompt("Send this revision record to:", loggedIn.email||"");
+  if(!recipient) return;
+  const subject = `Plan Revision - ${rec.title} (${rec.action})`;
+  const body = `Plan Revision\n\nPlan: ${rec.title}\nAction: ${rec.action}\nComment: ${rec.comment||"-"}\nNew End Date: ${rec.newEnd||"-"}\nDate: ${rec.date}\n`;
+  const mailtoLink = (typeof __logMail==="function") ? __logMail(`mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`) : `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoLink;
+};
+window.phDownloadRevPDF = function(i){
+  const rec=PR()[i]; if(!rec) return alert("Revision not found.");
+  phOpenPrintable("Plan Revision", `
+    <tr><td>Plan</td><td>${phEsc(rec.title||"-")}</td></tr>
+    <tr><td>Action</td><td>${phEsc(rec.action)}</td></tr>
+    <tr><td>Comment</td><td>${phEsc(rec.comment||"-")}</td></tr>
+    <tr><td>New End Date</td><td>${phEsc(rec.newEnd||"-")}</td></tr>
+    <tr><td>Date</td><td>${phEsc(rec.date)}</td></tr>
+  `, true);
+};
+window.phPrintRevPDF = function(i){ window.phDownloadRevPDF(i); };
 function phRenderRev(){
   const tb=g("phRevBody"); if(!tb) return;
   const p=phCurPlan();
   const rows=p?PR().map((r,i)=>({r,i})).filter(x=>x.r.title===p.title):[];
-  tb.innerHTML=rows.length?rows.map(x=>`<tr><td class="border p-2">${phEsc(x.r.action)}</td><td class="border p-2">${phEsc(x.r.comment)}</td><td class="border p-2">${phEsc(x.r.date)}</td><td class="border p-2 text-center"><button onclick="phDelRev(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button></td></tr>`).join(""):'<tr><td colspan="4" class="border p-2 text-center text-gray-500">No revisions yet.</td></tr>';
+  tb.innerHTML=rows.length?rows.map(x=>`<tr><td class="border p-2">${phEsc(x.r.action)}</td><td class="border p-2">${phEsc(x.r.comment)}</td><td class="border p-2">${phEsc(x.r.date)}</td><td class="border p-2 space-x-1 relative">
+      <button onclick="phPreviewRev(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Preview</button>
+      <button onclick="phEditRev(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Edit</button>
+      <button onclick="phDelRev(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Delete</button>
+      <button onclick="phToggleRevMenu(${x.i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">More ▼</button>
+      <div id="planRevMenu-${x.i}" class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+        <button onclick="phEmailRev(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">📧 Email</button>
+        <button onclick="phCloneRev(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">📄 Clone</button>
+        <button onclick="phDownloadRevPDF(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">⬇ Download</button>
+        <button onclick="phPrintRevPDF(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">🖨 Print</button>
+      </div>
+    </td></tr>`).join(""):'<tr><td colspan="4" class="border p-2 text-center text-gray-500">No revisions yet.</td></tr>';
 }
-window.phDelRev=function(i){ const arr=PR(); arr.splice(i,1); setPR(arr); phRenderRev(); phRefreshReports(); };
+window.phDelRev=function(i){
+  const arr=PR(); arr.splice(i,1); setPR(arr);
+  if(window.__phEditingRevisionIndex===i){
+    window.__phEditingRevisionIndex=null;
+    phClearRevisionForm();
+    phSetRevisionFormMode(false);
+  }
+  phRenderRev(); phRefreshReports();
+};
 
+
+window.__phEditingActionItemIndex = null;
+function phSetActionItemFormMode(editing){
+  const btn = g("phApSaveBtn");
+  if(btn) btn.textContent = editing ? "Update Action Item" : "Save Action Item";
+  const cancelBtn = g("phApCancelEditBtn");
+  if(cancelBtn) cancelBtn.classList.toggle("hidden", !editing);
+}
+function phClearActionItemForm(){
+  ["phApItem","phApPerson","phApDue","phApNotes"].forEach(id=>{ if(g(id)) g(id).value=""; });
+  if(g("phApStatus")) g("phApStatus").value="Not Started";
+  if(g("phApPriority")) g("phApPriority").value="High";
+}
+window.phCancelActionItemEdit = function(){
+  window.__phEditingActionItemIndex = null;
+  phClearActionItemForm();
+  phSetActionItemFormMode(false);
+};
+window.phAddActionItem = function(){
+  const p=phCurPlan(); if(!p) return alert("Create/select a plan first.");
+  const item=g("phApItem").value.trim();
+  if(!item) return alert("Please enter the action item.");
+  const rec={
+    title:p.title,
+    item,
+    person:g("phApPerson").value.trim(),
+    due:g("phApDue").value,
+    priority:g("phApPriority").value,
+    status:g("phApStatus").value,
+    notes:g("phApNotes").value.trim(),
+    date:new Date().toLocaleString()
+  };
+  const arr=PA();
+  const editIndex = window.__phEditingActionItemIndex;
+  if(editIndex!==null && editIndex!==undefined && arr[editIndex]){
+    rec.date = arr[editIndex].date;
+    arr[editIndex]=rec;
+  } else {
+    arr.push(rec);
+  }
+  setPA(arr);
+  window.__phEditingActionItemIndex = null;
+  phClearActionItemForm();
+  phSetActionItemFormMode(false);
+  phRenderActionItems(); phRefreshReports();
+};
+window.phEditActionItem = function(i){
+  const arr=PA(); const rec=arr[i]; if(!rec) return alert("Action item not found.");
+  if(g("phApItem")) g("phApItem").value = rec.item||"";
+  if(g("phApPerson")) g("phApPerson").value = rec.person||"";
+  if(g("phApDue")) g("phApDue").value = rec.due||"";
+  if(g("phApPriority")) g("phApPriority").value = rec.priority||"High";
+  if(g("phApStatus")) g("phApStatus").value = rec.status||"Not Started";
+  if(g("phApNotes")) g("phApNotes").value = rec.notes||"";
+  window.__phEditingActionItemIndex = i;
+  phSetActionItemFormMode(true);
+  const panel = document.getElementById("phStep4");
+  if(panel && panel.scrollIntoView) panel.scrollIntoView({behavior:"smooth", block:"start"});
+};
+window.phDeleteActionItem = function(i){
+  const arr=PA(); arr.splice(i,1); setPA(arr);
+  if(window.__phEditingActionItemIndex===i){
+    window.__phEditingActionItemIndex=null;
+    phClearActionItemForm();
+    phSetActionItemFormMode(false);
+  }
+  phRenderActionItems(); phRefreshReports();
+};
+window.phToggleActionItemMenu = function(i){
+  const menu = document.getElementById(`planApMenu-${i}`);
+  if(!menu) return;
+  const isHidden = menu.classList.contains("hidden");
+  document.querySelectorAll('[id^="planApMenu-"]').forEach(m=>{ if(m!==menu) m.classList.add("hidden"); });
+  menu.classList.toggle("hidden", !isHidden);
+};
+window.phCloneActionItem = function(i){
+  const arr=PA(); const rec=arr[i]; if(!rec) return;
+  const clone=Object.assign({},rec,{date:new Date().toLocaleString(),status:"Not Started"});
+  arr.push(clone); setPA(arr);
+  phRenderActionItems(); phRefreshReports();
+};
+window.phPreviewActionItem = function(i){
+  const rec=PA()[i]; if(!rec) return alert("Action item not found.");
+  const html = `
+    <div class="bg-white p-6 rounded-2xl w-full relative">
+      <h3 class="text-sm font-bold mb-6 text-center text-slate-800">🎯 Action Item Preview</h3>
+      <div class="flex justify-end gap-3 mb-6">
+        <button onclick="phClosePlanPreviewModal(); phEditActionItem(${i});" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Edit</button>
+        <button onclick="phPrintActionItemPDF(${i})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Print</button>
+        <button onclick="phDownloadActionItemPDF(${i})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Download</button>
+        <button onclick="phEmailActionItem(${i})" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Email</button>
+        <button onclick="phClosePlanPreviewModal()" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Close</button>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-gray-100">
+        <div style="color:#6b7280;font-size:13px;">Action Item</div>
+        <div style="font-size:22px;font-weight:700;color:#111827;">${phEsc(rec.item)}</div>
+        <div style="margin-top:14px;">
+          <span style="display:inline-block;background:#dbeafe;color:#1e3a8a;font-size:11px;font-weight:600;padding:4px 10px;border-radius:4px;">${phEsc((rec.status||"NOT STARTED").toUpperCase())}</span>
+          <span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600;padding:4px 10px;border-radius:4px;margin-left:6px;">${phEsc((rec.priority||"-").toUpperCase())} PRIORITY</span>
+        </div>
+        <div style="margin-top:22px;display:grid;grid-template-columns:1fr 1fr;row-gap:16px;column-gap:10px;">
+          ${phPreviewFieldRow("Plan", phEsc(rec.title))}
+          ${phPreviewFieldRow("Responsible Person", phEsc(rec.person))}
+          ${phPreviewFieldRow("Due Date", phEsc(rec.due))}
+          ${phPreviewFieldRow("Logged On", phEsc(rec.date))}
+        </div>
+        ${rec.notes ? `<div style="margin-top:20px;"><div style="color:#6b7280;font-size:12px;">Notes</div><div style="font-size:14px;color:#111827;">${phEsc(rec.notes)}</div></div>` : ""}
+      </div>
+    </div>`;
+  phShowPlanPreviewModal(html);
+};
+window.phEmailActionItem = function(i){
+  const rec=PA()[i]; if(!rec) return alert("Action item not found.");
+  const loggedIn = JSON.parse(localStorage.getItem("loggedInUser")||"null")||{};
+  const recipient = prompt("Send this action item to:", loggedIn.email||"");
+  if(!recipient) return;
+  const subject = `Action Item - ${rec.item} (${rec.due||"no due date"})`;
+  const body = `Action Item\n\nPlan: ${rec.title}\nAction Item: ${rec.item}\nResponsible: ${rec.person||"-"}\nDue Date: ${rec.due||"-"}\nPriority: ${rec.priority||"-"}\nStatus: ${rec.status||"-"}\nNotes: ${rec.notes||"-"}\n`;
+  const mailtoLink = (typeof __logMail==="function") ? __logMail(`mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`) : `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoLink;
+};
+window.phDownloadActionItemPDF = function(i){
+  const rec=PA()[i]; if(!rec) return alert("Action item not found.");
+  phOpenPrintable("Action Item", `
+    <tr><td>Action Item</td><td>${phEsc(rec.item)}</td></tr>
+    <tr><td>Responsible</td><td>${phEsc(rec.person||"-")}</td></tr>
+    <tr><td>Due Date</td><td>${phEsc(rec.due||"-")}</td></tr>
+    <tr><td>Priority</td><td>${phEsc(rec.priority||"-")}</td></tr>
+    <tr><td>Status</td><td>${phEsc(rec.status||"-")}</td></tr>
+    <tr><td>Notes</td><td>${phEsc(rec.notes||"-")}</td></tr>
+    <tr><td>Plan</td><td>${phEsc(rec.title||"-")}</td></tr>
+  `, true);
+};
+window.phPrintActionItemPDF = function(i){ window.phDownloadActionItemPDF(i); };
+function phRenderActionItems(){
+  const tb=g("phApBody"); if(!tb) return;
+  const p=phCurPlan();
+  const rows = p ? PA().map((r,i)=>({r,i})).filter(x=>x.r.title===p.title) : [];
+  tb.innerHTML = rows.length ? rows.map(x=>`<tr><td class="border p-2">${phEsc(x.r.item)}</td><td class="border p-2">${phEsc(x.r.person)}</td><td class="border p-2">${phEsc(x.r.due)}</td><td class="border p-2">${phEsc(x.r.priority)}</td><td class="border p-2">${phEsc(x.r.status)}</td><td class="border p-2">${phEsc(x.r.notes)}</td><td class="border p-2 space-x-1 relative">
+      <button onclick="phPreviewActionItem(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Preview</button>
+      <button onclick="phEditActionItem(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Edit</button>
+      <button onclick="phDeleteActionItem(${x.i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Delete</button>
+      <button onclick="phToggleActionItemMenu(${x.i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">More ▼</button>
+      <div id="planApMenu-${x.i}" class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+        <button onclick="phEmailActionItem(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">📧 Email</button>
+        <button onclick="phCloneActionItem(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">📄 Clone</button>
+        <button onclick="phDownloadActionItemPDF(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">⬇ Download</button>
+        <button onclick="phPrintActionItemPDF(${x.i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">🖨 Print</button>
+      </div>
+    </td></tr>`).join("") : '<tr><td colspan="7" class="border p-2 text-center text-gray-500">No action items logged for this plan yet.</td></tr>';
+}
+
+
+function phOpenPrintable(title, rowsHtml, autoprint){
+  const win = window.open("", "_blank");
+  if(!win) return alert("Please allow pop-ups to preview/print/download this record.");
+  win.document.write(`
+    <html>
+    <head>
+      <title>${title}</title>
+      <style>
+        body { font-family: Arial; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 8px; border: 1px solid #ddd; }
+      </style>
+    </head><body><h2>${title}</h2><table>${rowsHtml}</table>
+      ${autoprint ? "<script>window.print();<\/script>" : ""}
+    </body>
+    </html>
+  `);
+  win.document.close();
+}
+
+window.phClosePlanPreviewModal = function(){
+  const modal = document.getElementById("phPlanPreviewFloatingModal");
+  const slot = document.getElementById("phPlanPreviewFloatingSlot");
+  if(modal) modal.classList.add("hidden");
+  if(slot) slot.innerHTML = "";
+};
+function phShowPlanPreviewModal(html){
+  const modal = document.getElementById("phPlanPreviewFloatingModal");
+  const slot = document.getElementById("phPlanPreviewFloatingSlot");
+  if(!modal || !slot) return;
+  slot.innerHTML = html;
+  modal.classList.remove("hidden");
+}
+function phPreviewFieldRow(label, value){
+  return `<div><div style="color:#6b7280;font-size:12px;">${label}</div><div style="font-size:14px;color:#111827;">${value||"-"}</div></div>`;
+}
 
 function phFillExpCategory(){
   const dropdown = g("phExpCategory"); if(!dropdown) return;
@@ -116937,13 +117913,10 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
 
   const WATCH = ['invoices','customers','suppliers','products','manualJournals','budgets','plannedBudgets','payments','receipts','supplierBills','expenses','users','quotes','orders','creditNotes','bankTransactions','approvalRequests'];
   (function(){
-    const raw = localStorage.setItem.bind(localStorage);
-    localStorage.setItem = function(k, v){
-      let before = null;
+    if (!window.__companyNS || !window.__companyNS.onSetItem) return;
+    window.__companyNS.onSetItem(function(k, v, before){
       const base = String(k).split('::')[0];
       const watched = WATCH.indexOf(base) !== -1;
-      if (watched) { try { before = localStorage.getItem(k); } catch(e){} }
-      raw(k, v);
       if (watched && before !== v && !AX.__silent) {
         let bc = 0, ac = 0;
         try { bc = (JSON.parse(before||'[]')||[]).length; } catch(e){}
@@ -116952,10 +117925,9 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
         const u = currentUser();
         const list = J(ACT_KEY, []);
         list.push({ id:'a'+Date.now()+Math.random().toString(36).slice(2,7), t:new Date().toISOString(), user:u.username, role:u.role, companyId:u.companyId, module:base, action:verb, details: verb + ' record in ' + base + ' (' + bc + ' \u2192 ' + ac + ')' });
-        try { raw(ACT_KEY, JSON.stringify(list.slice(-4000))); } catch(e){}
+        S(ACT_KEY, list.slice(-4000));
       }
-      return undefined;
-    };
+    });
   })();
 
   if (typeof window.showTab === 'function') {
@@ -118604,6 +119576,9 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     const bs = J('balanceSheet', {}) || {};
     const n = v => (parseFloat(v || 0) || 0);
     const baseCur = window.__getBaseCurrencyEarly ? window.__getBaseCurrencyEarly() : 'KES';
+    // A negative balance on a normally-debit (asset) row means the account is
+    // overdrawn / in a credit position - show it as a Credit, never a negative Debit.
+    const dc = v => (v >= 0 ? { debit: v, credit: 0 } : { debit: 0, credit: -v });
 
     const invValue = list => (list || []).reduce((t, p) => {
       const qty  = n(p.qty != null ? p.qty : (p.stock != null ? p.stock : p.quantity));
@@ -118633,7 +119608,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
       stock = (generic && generic.length) ? invValue(generic) : invValue(J('products', []));
       if (!stock) stock = invValue(J('inventory_Main', []));
     }
-    if (stock) rows.push({ id: 'sys-stock', name: 'Inventory / Stock on hand', type: 'Current asset', group: 'assets', debit: stock, credit: 0, source: 'Inventory', currency: baseCur });
+    if (stock) rows.push({ id: 'sys-stock', name: 'Inventory / Stock on hand', type: 'Current asset', group: 'assets', ...dc(stock), source: 'Inventory', currency: baseCur });
 
     
 
@@ -118649,12 +119624,12 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
       seenBank[key] = 1;
       const bal = n(b.balance != null ? b.balance : b.amount);
       if (!bal) return;
-      rows.push({ id: 'sys-bank-' + key, name: name, type: 'Current asset', group: 'assets', debit: bal, credit: 0, source: 'Banking', currency: b.currency || baseCur });
+      rows.push({ id: 'sys-bank-' + key, name: name, type: 'Current asset', group: 'assets', ...dc(bal), source: 'Banking', currency: b.currency || baseCur });
     });
 
     const ar = (J('invoices', []) || []).reduce((t, i) => t + n(i.balanceDue != null ? i.balanceDue : (i.balance != null ? i.balance : (n(i.total) - n(i.amountPaid)))), 0)
       + (J('customers', []) || []).reduce((t, c) => t + n(c.openingBalance), 0);
-    if (ar) rows.push({ id: 'sys-ar', name: 'Accounts receivable', type: 'Current asset', group: 'assets', debit: ar, credit: 0, source: 'Sales', currency: baseCur });
+    if (ar) rows.push({ id: 'sys-ar', name: 'Accounts receivable', type: 'Current asset', group: 'assets', ...dc(ar), source: 'Sales', currency: baseCur });
 
     const nca = (bs.nonCurrentAssets && bs.nonCurrentAssets.length ? bs.nonCurrentAssets : J('nonCurrentAssets', [])) || [];
     nca.forEach((a, i) => {
@@ -118670,7 +119645,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     if (!billList.length) billList = J('bills', []) || [];
     const ap = billList.reduce((t, b) => t + n(b.balanceDue != null ? b.balanceDue : (b.balance != null ? b.balance : (n(b.total) - n(b.amountPaid)))), 0)
       + (J('suppliers', []) || []).reduce((t, s) => t + n(s.openingBalance), 0);
-    if (ap) rows.push({ id: 'sys-ap', name: 'Accounts payable', type: 'Current liability', group: 'liabilities', debit: 0, credit: ap, source: 'Purchases', currency: baseCur });
+    if (ap) rows.push({ id: 'sys-ap', name: 'Accounts payable', type: 'Current liability', group: 'liabilities', debit: ap < 0 ? -ap : 0, credit: ap < 0 ? 0 : ap, source: 'Purchases', currency: baseCur });
 
     const ncl = (bs.nonCurrentLiabilities && bs.nonCurrentLiabilities.length ? bs.nonCurrentLiabilities : J('nonCurrentLiabilities', [])) || [];
     ncl.forEach((l, i) => {
@@ -124988,20 +125963,19 @@ try{
     return total;
   };
 
-    var _setItem = localStorage.setItem.bind(localStorage);
-  localStorage.setItem = function (key, value) {
-    var out = _setItem(key, value);
-    try {
-      if (TXN_SOURCES.indexOf(key) !== -1 || key === "manualJournals" || key === "coaPostings") {
-        var tab = el("chartOfAccountsTab") || el("accountsTab");
-        if (typeof window.renderAccounts === "function" && el("accountsTable") &&
-            (!tab || !tab.classList.contains("hidden"))) {
-          setTimeout(function () { try { window.renderAccounts(); } catch (e) {} }, 0);
+    if (window.__companyNS && window.__companyNS.onSetItem) {
+    window.__companyNS.onSetItem(function (key) {
+      try {
+        if (TXN_SOURCES.indexOf(key) !== -1 || key === "manualJournals" || key === "coaPostings") {
+          var tab = el("chartOfAccountsTab") || el("accountsTab");
+          if (typeof window.renderAccounts === "function" && el("accountsTable") &&
+              (!tab || !tab.classList.contains("hidden"))) {
+            setTimeout(function () { try { window.renderAccounts(); } catch (e) {} }, 0);
+          }
         }
-      }
-    } catch (e) {}
-    return out;
-  };
+      } catch (e) {}
+    });
+  }
 
     window.populateTaxTypeFromChartOfAccounts = function () {
     var dropdown = el("taxType");
@@ -130099,15 +131073,14 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   }
   window.acxApplySettings = applyAll;
 
-    var _setItem = localStorage.setItem;
-  localStorage.setItem = function (k, v) {
-    var r = _setItem.apply(this, arguments);
-    if (typeof k === "string" && k.indexOf(P) === 0) {
-      clearTimeout(window.__ACX_SAVE_T__);
-      window.__ACX_SAVE_T__ = setTimeout(applyAll, 60);
-    }
-    return r;
-  };
+    if (window.__companyNS && window.__companyNS.onSetItem) {
+    window.__companyNS.onSetItem(function (k) {
+      if (typeof k === "string" && k.indexOf(P) === 0) {
+        clearTimeout(window.__ACX_SAVE_T__);
+        window.__ACX_SAVE_T__ = setTimeout(applyAll, 60);
+      }
+    });
+  }
 
   var pending = null;
   function schedule() {
@@ -132326,37 +133299,35 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
   }
 
   var rawSet = localStorage.setItem.bind(localStorage);
-  localStorage.setItem = function (k, v) {
-    var base = String(k).split("::")[0];
-    var cfg = COLLECTIONS[base];
-    var before = null;
-    if (cfg) { try { before = localStorage.getItem(k); } catch (e) {} }
-    var out = rawSet(k, v);
-    if (cfg && before !== v) {
-      try {
-        var b = JSON.parse(before || "[]") || [], a = JSON.parse(v || "[]") || [];
-        if (a.length > b.length) {
-          var added = a.slice(b.length);
-          added.forEach(function (rec) {
-            var amount = cfg.event === "journal_posted" ? journalTotal(rec) : money(pick(rec, cfg.amt));
-            var ref = String(pick(rec, cfg.num) || "");
-            fire(cfg.event, {
-              type: cfg.label,
-              ref: ref,
-              amount: amount,
-              email: rec.email || rec.customerEmail || rec.supplierEmail || "",
-              phone: rec.phone || rec.customerPhone || rec.supplierPhone || "",
-              party: pick(rec, cfg.who),
-              message: cfg.label + " " + ref + (amount ? " (" + amount.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2) + ")" : "") + " was " +
-                (cfg.event === "journal_posted" ? "posted" : "created") +
-                (pick(rec, cfg.who) ? " for " + pick(rec, cfg.who) : "")
+  if (window.__companyNS && window.__companyNS.onSetItem) {
+    window.__companyNS.onSetItem(function (k, v, before) {
+      var base = String(k).split("::")[0];
+      var cfg = COLLECTIONS[base];
+      if (cfg && before !== v) {
+        try {
+          var b = JSON.parse(before || "[]") || [], a = JSON.parse(v || "[]") || [];
+          if (a.length > b.length) {
+            var added = a.slice(b.length);
+            added.forEach(function (rec) {
+              var amount = cfg.event === "journal_posted" ? journalTotal(rec) : money(pick(rec, cfg.amt));
+              var ref = String(pick(rec, cfg.num) || "");
+              fire(cfg.event, {
+                type: cfg.label,
+                ref: ref,
+                amount: amount,
+                email: rec.email || rec.customerEmail || rec.supplierEmail || "",
+                phone: rec.phone || rec.customerPhone || rec.supplierPhone || "",
+                party: pick(rec, cfg.who),
+                message: cfg.label + " " + ref + (amount ? " (" + amount.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2) + ")" : "") + " was " +
+                  (cfg.event === "journal_posted" ? "posted" : "created") +
+                  (pick(rec, cfg.who) ? " for " + pick(rec, cfg.who) : "")
+              });
             });
-          });
-        }
-      } catch (e) { console.warn("[acx-trigger] collection watch", base, e); }
-    }
-    return out;
-  };
+          }
+        } catch (e) { console.warn("[acx-trigger] collection watch", base, e); }
+      }
+    });
+  }
 
     function hookPayment() {
     if (typeof window.recordInvoicePayment !== "function") { return setTimeout(hookPayment, 500); }
