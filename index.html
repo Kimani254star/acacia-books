@@ -89729,10 +89729,11 @@ window.addEventListener(
     <div class="sm:col-span-2"><label class="block text-sm font-medium mb-1">Notes</label><input id="phExpNotes" type="text" class="border p-2 rounded w-full" placeholder="Additional notes..."></div>
   </div>
   <div class="mt-3 flex gap-2">
-    <button onclick="phAddExpense()" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Save Expense → Next</button>
+    <button id="phExpSaveBtn" onclick="phAddExpense()" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Save Expense → Next</button>
+    <button id="phExpCancelEditBtn" onclick="phCancelExpenseEdit()" class="bg-gray-300 text-gray-800 px-4 py-1 rounded hidden">Cancel Edit</button>
     <button onclick="phGoStep(4)" class="bg-gray-200 px-4 py-1 rounded">Skip</button>
   </div>
-  <div class="mt-4"><h4 class="font-semibold mb-2 text-sm">Expenses logged against this plan</h4><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Date</th><th class="border p-2">Description</th><th class="border p-2">Category</th><th class="border p-2">Bank</th><th class="border p-2">Amount (KES)</th></tr></thead><tbody id="phExpBody"></tbody><tfoot><tr class="bg-gray-100 font-bold"><td class="border p-2" colspan="4">Total</td><td class="border p-2" id="phExpTotalCell">0</td></tr></tfoot></table></div>
+  <div class="mt-4"><h4 class="font-semibold mb-2 text-sm">Expenses logged against this plan</h4><table class="w-full border text-sm"><thead class="bg-gray-200"><tr><th class="border p-2">Date</th><th class="border p-2">Description</th><th class="border p-2">Category</th><th class="border p-2">Bank</th><th class="border p-2">Amount (KES)</th><th class="border p-2">Actions</th></tr></thead><tbody id="phExpBody"></tbody><tfoot><tr class="bg-gray-100 font-bold"><td class="border p-2" colspan="4">Total</td><td class="border p-2" id="phExpTotalCell">0</td><td class="border p-2"></td></tr></tfoot></table></div>
 </div>
 
 
@@ -116071,6 +116072,76 @@ window.phUpdateExpVat = function(){
     calcOperationalCostVat(amt, rate, incl);
   }
 };
+window.__phEditingExpenseIndex = null;
+function phSetExpenseFormMode(editing){
+  const btn = g("phExpSaveBtn");
+  if(btn) btn.textContent = editing ? "Update Expense" : "Save Expense → Next";
+  const cancelBtn = g("phExpCancelEditBtn");
+  if(cancelBtn) cancelBtn.classList.toggle("hidden", !editing);
+}
+function phClearExpenseForm(){
+  ["phExpDate","phExpDesc","phExpVendor","phExpAmount","phExpNotes"].forEach(id=>{ if(g(id)) g(id).value=""; });
+  if(g("phExpVatInclusive")) g("phExpVatInclusive").checked=false;
+  if(g("phExpCategory")) g("phExpCategory").value="";
+  if(g("phExpMethod")) g("phExpMethod").value="";
+  if(g("phExpBank")) g("phExpBank").value="";
+  if(g("phExpVatRate")) g("phExpVatRate").value="";
+}
+window.phCancelExpenseEdit = function(){
+  window.__phEditingExpenseIndex = null;
+  phClearExpenseForm();
+  phSetExpenseFormMode(false);
+};
+window.phEditExpense = function(realIndex){
+  if (!window.requirePermission('OperationalCostsTab', 'edit', 'edit plan expenses')) return;
+  const costs = JSON.parse(localStorage.getItem("operationalCosts")||"[]");
+  const entry = costs[realIndex];
+  if(!entry) return alert("Expense entry not found.");
+
+  if(g("phExpDate")) g("phExpDate").value = entry.date || "";
+  if(g("phExpDesc")) g("phExpDesc").value = entry.description || "";
+  if(g("phExpVendor")) g("phExpVendor").value = entry.vendor || "";
+  if(g("phExpCategory")) g("phExpCategory").value = entry.category || "";
+  if(g("phExpMethod")) g("phExpMethod").value = entry.method || "";
+  if(typeof phFillExpBank === "function") phFillExpBank();
+  if(g("phExpBank")) g("phExpBank").value = entry.bank || "";
+  if(g("phExpAmount")) g("phExpAmount").value = (entry.enteredAmount !== undefined && entry.enteredAmount !== null) ? entry.enteredAmount : entry.amount;
+  if(g("phExpVatRate")) g("phExpVatRate").value = (entry.vatRate===undefined||entry.vatRate===null) ? "" : entry.vatRate;
+  if(g("phExpVatInclusive")) g("phExpVatInclusive").checked = !!entry.vatInclusive;
+  if(g("phExpNotes")) g("phExpNotes").value = entry.notes || "";
+  if(typeof window.phUpdateExpVat === "function") window.phUpdateExpVat();
+
+  window.__phEditingExpenseIndex = realIndex;
+  phSetExpenseFormMode(true);
+
+  const panel = document.getElementById("phStep6");
+  if(panel && panel.scrollIntoView) panel.scrollIntoView({behavior:"smooth", block:"start"});
+};
+window.phToggleExpenseMenu = function(index){
+  const menu = document.getElementById(`planExpMenu-${index}`);
+  if(!menu) return;
+  const isHidden = menu.classList.contains("hidden");
+  document.querySelectorAll('[id^="planExpMenu-"]').forEach(m=>{ if(m!==menu) m.classList.add("hidden"); });
+  menu.classList.toggle("hidden", !isHidden);
+};
+window.phCloneExpense = function(index){
+  if(typeof cloneOperationalCost === "function") cloneOperationalCost(index);
+  phRenderExpenses();
+  if(typeof phRenderOverview === "function"){ try{ phRenderOverview(); }catch(e){} }
+};
+window.phDeleteExpense = function(realIndex){
+  if(typeof deleteOperationalCost === "function"){
+    deleteOperationalCost(realIndex);
+  }
+  if(window.__phEditingExpenseIndex === realIndex){
+    window.__phEditingExpenseIndex = null;
+    phClearExpenseForm();
+    phSetExpenseFormMode(false);
+  }
+  phRenderExpenses();
+  if(typeof phRenderOverview === "function"){ try{ phRenderOverview(); }catch(e){} }
+  if(typeof phRefreshReports === "function"){ try{ phRefreshReports(); }catch(e){} }
+};
 window.phAddExpense = function(){
   const p = phCurPlan(); if(!p) return alert("Select a plan first (pick one at the top of Plan Progress).");
   const date=g("phExpDate").value, description=g("phExpDesc").value.trim();
@@ -116079,8 +116150,9 @@ window.phAddExpense = function(){
   if(!date || !description || isNaN(amount) || amount<=0) return alert("Please fill in date, description and a valid amount.");
   if(!bank) return alert("Please select a bank.");
 
-  
-  
+  const isEditing = window.__phEditingExpenseIndex !== null && window.__phEditingExpenseIndex !== undefined;
+  const editIndex = isEditing ? window.__phEditingExpenseIndex : null;
+
   if(g("costDate")) g("costDate").value = date;
   if(g("costDescription")) g("costDescription").value = description;
   if(g("costVendor")) g("costVendor").value = g("phExpVendor") ? g("phExpVendor").value.trim() : "";
@@ -116093,14 +116165,22 @@ window.phAddExpense = function(){
   if(g("costVatInclusive")) g("costVatInclusive").checked = g("phExpVatInclusive") ? g("phExpVatInclusive").checked : false;
   if(g("costNotes")) g("costNotes").value = g("phExpNotes") ? g("phExpNotes").value.trim() : "";
 
+  if(isEditing){
+    editingOperationalCostIndex = editIndex;
+  }
+
   const preCount = (JSON.parse(localStorage.getItem("operationalCosts")||"[]")).length;
   const finish = function(){
-    
-    
-    
     try{
       const costs = JSON.parse(localStorage.getItem("operationalCosts")||"[]");
-      if(costs.length > preCount){
+      if(editIndex !== null){
+        if(costs[editIndex]){
+          costs[editIndex].planTitle = p.title;
+          costs[editIndex].department = p.department || "";
+          costs[editIndex].source = "Plan Progress";
+          localStorage.setItem("operationalCosts", JSON.stringify(costs));
+        }
+      } else if(costs.length > preCount){
         costs[costs.length-1].planTitle = p.title;
         costs[costs.length-1].department = p.department || "";
         costs[costs.length-1].source = "Plan Progress";
@@ -116110,9 +116190,11 @@ window.phAddExpense = function(){
       }
     }catch(e){}
     if(typeof renderOperationalCosts==="function"){ try{ renderOperationalCosts(); }catch(e){} }
-    ["phExpDate","phExpDesc","phExpVendor","phExpAmount","phExpNotes"].forEach(id=>{ if(g(id)) g(id).value=""; });
-    if(g("phExpVatInclusive")) g("phExpVatInclusive").checked=false;
-    phRenderExpenses(); phRenderOverview(); phRefreshReports(); phGoStep(4);
+    window.__phEditingExpenseIndex = null;
+    phClearExpenseForm();
+    phSetExpenseFormMode(false);
+    phRenderExpenses(); phRenderOverview(); phRefreshReports();
+    if(editIndex === null) phGoStep(4);
   };
   if(typeof addOperationalCost === "function"){
     const ret = addOperationalCost();
@@ -116125,9 +116207,23 @@ function phRenderExpenses(){
   const tb=g("phExpBody"), totalCell=g("phExpTotalCell"); if(!tb) return;
   const p=phCurPlan();
   const costs = JSON.parse(localStorage.getItem("operationalCosts")||"[]");
-  const rows = p? costs.filter(c=>c.planTitle===p.title) : [];
+  const rows = p? costs.map((c,i)=>({c,i})).filter(x=>x.c.planTitle===p.title) : [];
   let total=0;
-  tb.innerHTML = rows.length ? rows.map(c=>{ total += parseFloat(c.amount)||0; return `<tr><td class="border p-2">${phEsc(c.date)}</td><td class="border p-2">${phEsc(c.description)}</td><td class="border p-2">${phEsc(c.category)}</td><td class="border p-2">${phEsc(c.bank||c.currentAccName||"")}</td><td class="border p-2">${phFmt(c.amount)}</td></tr>`; }).join("") : '<tr><td colspan="5" class="border p-2 text-center text-gray-500">No expenses logged for this plan yet.</td></tr>';
+  tb.innerHTML = rows.length ? rows.map(({c,i})=>{
+    total += parseFloat(c.amount)||0;
+    return `<tr><td class="border p-2">${phEsc(c.date)}</td><td class="border p-2">${phEsc(c.description)}</td><td class="border p-2">${phEsc(c.category)}</td><td class="border p-2">${phEsc(c.bank||c.currentAccName||"")}</td><td class="border p-2">${phFmt(c.amount)}</td><td class="border p-2 space-x-1 relative">
+        <button onclick="previewOperationalCost(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Preview</button>
+        <button onclick="phEditExpense(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Edit</button>
+        <button onclick="phDeleteExpense(${i})" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Delete</button>
+        <button onclick="phToggleExpenseMenu(${i})" class="border border-blue-900 text-white bg-blue-900 px-2 py-1 rounded hover:bg-blue-800">More ▼</button>
+        <div id="planExpMenu-${i}" class="hidden absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50">
+          <button onclick="emailOperationalCost(${i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">📧 Email</button>
+          <button onclick="phCloneExpense(${i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">📄 Clone</button>
+          <button onclick="downloadOperationalCostPDF(${i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">⬇ Download</button>
+          <button onclick="printOperationalCostPDF(${i})" class="block w-full text-left px-3 py-2 hover:bg-gray-100">🖨 Print</button>
+        </div>
+      </td></tr>`;
+  }).join("") : '<tr><td colspan="6" class="border p-2 text-center text-gray-500">No expenses logged for this plan yet.</td></tr>';
   if(totalCell) totalCell.textContent = phFmt(total);
 }
 
