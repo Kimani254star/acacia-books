@@ -1327,10 +1327,10 @@ setInterval(nextSlide, 9000);
     Manage subscription plans, monitor usage limits, control feature access, and track customer subscriptions effectively. View active plans, renewal dates, billing details, and usage statistics to ensure customers receive the correct services while maintaining efficient subscription management processes.
   </p></div><div id="feat-files" class="p-4 bg-white shadow-md rounded-xl border border-gray-200" style="scroll-margin-top:96px"><h3 class="font-bold text-sm text-blue-700 mb-2">📁 Files</h3><p class="text-gray-600">
     Store, organize, and manage important business documents, backups, attachments, contracts, invoices, and records securely. Access files quickly, maintain proper document organization, support recovery processes, and improve collaboration by keeping essential information centralized and easily accessible.
-  </p></div><div id="feat-crm" class="p-4 bg-white shadow-md rounded-xl border border-gray-200" style="scroll-margin-top:96px"><h3 class="font-bold text-sm text-green-700 mb-2">🤝 CRM</h3><p class="text-gray-600">
-    Strengthen customer relationships through lead tracking, opportunity management, follow-ups, communication records, and sales monitoring. Improve customer engagement, increase conversion rates, organize sales activities, and provide teams with tools that support business growth and long-term customer retention.
-  </p></div><div id="feat-email" class="p-4 bg-white shadow-md rounded-xl border border-gray-200" style="scroll-margin-top:96px"><h3 class="font-bold text-sm text-red-700 mb-2">📧 Email</h3><p class="text-gray-600">
-    Send, receive, organize, and manage business communications directly from the platform. Improve communication efficiency, maintain conversation histories, coordinate with customers and suppliers, and streamline workflows by keeping email activities integrated with your daily business operations.
+  </p></div><div id="feat-crm" class="p-4 bg-white shadow-md rounded-xl border border-gray-200" style="scroll-margin-top:96px"><h3 class="font-bold text-sm text-green-700 mb-2">🤝 CRM <span class="text-xs font-normal text-gray-400">(companion app)</span></h3><p class="text-gray-600">
+    Acacia CRM is a connected companion app, included with your plan, for lead tracking, opportunity management, follow-ups, and sales monitoring. Launch it any time from the CRM Portal link in your sidebar — it opens alongside your books in its own tab, so your customer and sales data stay one click away without leaving your workflow.
+  </p></div><div id="feat-email" class="p-4 bg-white shadow-md rounded-xl border border-gray-200" style="scroll-margin-top:96px"><h3 class="font-bold text-sm text-red-700 mb-2">📧 Email <span class="text-xs font-normal text-gray-400">(companion app)</span></h3><p class="text-gray-600">
+    Acacia Mail is a connected companion app, included free with your plan, for sending and organizing business email. Invoices, quotes, and statements can be sent straight to it with one click from any record, and you can open your inbox any time from the Mail Hub link in your sidebar.
   </p></div><div id="feat-settings" class="p-4 bg-white shadow-md rounded-xl border border-gray-200" style="scroll-margin-top:96px"><h3 class="font-bold text-sm text-blue-700 mb-2">⚙️ Settings</h3><p class="text-gray-600">
     Customize company profiles, warehouses, taxes, currencies, user permissions, costing methods, notification preferences, and system configurations. Adapt the platform to your specific business requirements, improve operational control, and create a working environment that matches your organizational processes.
   </p></div></section><section id="pricing" class="mkt-page py-16 bg-gray-300 text-center"><div class="ab-section-head" style="margin-bottom:1.5rem"><span class="ab-eyebrow">🌱 Plans</span><h2 class="ab-h2">Pricing that grows with the business</h2><p class="ab-sub">Start on Free, move up a tier the moment you need it — every plan shares the same data, so nothing gets re-entered.</p></div><div class="flex justify-center items-center mb-6"><label class="flex items-center cursor-pointer"><span class="mr-2 font-medium text-gray-700">Monthly</span><input type="checkbox" id="billingToggle" class="hidden" onchange="toggleBilling()"><span class="w-12 h-6 flex items-center bg-blue-900 rounded-full p-1 duration-300 ease-in-out"><span class="bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out"></span></span><span class="ml-2 font-medium text-gray-700">Yearly <span class="text-blue-900 text-sm">(2 months free)</span></span></label></div><style>
@@ -2985,8 +2985,29 @@ function addInventory(item) {
   saveCompanyData("inventory", inventory);
 }
 
-function getInventory() {
-  return loadCompanyData("inventory");
+function getInventory(warehouse) {
+  if (warehouse) {
+    return JSON.parse(localStorage.getItem('inventory_' + warehouse) || '[]');
+  }
+  // No warehouse given: fall back to the flat company-wide inventory list,
+  // and if that's empty, aggregate every per-warehouse inventory_<name> key.
+  // This is the single canonical getInventory() for the whole app — do not
+  // add another top-level declaration; callers that need a specific
+  // warehouse should pass it as the argument.
+  let items = loadCompanyData("inventory");
+  if (!Array.isArray(items) || !items.length) {
+    items = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf('inventory_') === 0) {
+        try {
+          const v = JSON.parse(localStorage.getItem(k) || '[]');
+          if (Array.isArray(v)) items = items.concat(v);
+        } catch (e) {}
+      }
+    }
+  }
+  return Array.isArray(items) ? items : [];
 }
 
 function addPayroll(record) {
@@ -7000,7 +7021,7 @@ window.addEventListener('DOMContentLoaded', () => {
     out.textContent = "Thinking…";
 
     var inventory = [];
-    try { inventory = JSON.parse(localStorage.getItem("inventory") || "[]"); } catch (e) {}
+    try { inventory = (typeof getInventory === "function") ? getInventory() : JSON.parse(localStorage.getItem("inventory") || "[]"); } catch (e) {}
 
     var reorderLevel = 10; 
     var low = inventory.filter(function (i) {
@@ -8774,11 +8795,6 @@ function setInventoryInactive(index, warehouse) {
   renderInventoryTable(); 
 }
 
-function getInventory(warehouse) {
-  return JSON.parse(localStorage.getItem(`inventory_${warehouse}`) || "[]");
-}
-
-
 
 
 
@@ -10483,9 +10499,6 @@ window.addEventListener('click',function(e){
 <script>
 const PRICE_LIST_KEY = "priceList";
 
-function getInventory(warehouse) {
-  return JSON.parse(localStorage.getItem("inventory_" + warehouse) || "[]");
-}
 function cstBuildPriceListMerged(warehouse) {
   const priceList = JSON.parse(localStorage.getItem(PRICE_LIST_KEY) || '[]');
   let inventoryItems = warehouse ? getInventory(warehouse) : getAllInventories();
@@ -11271,9 +11284,6 @@ function exportPriceListPDF() {
 <script>
 const AMENDMENTS_KEY = "amendments";
 
-function getInventory(warehouse) {
-  return JSON.parse(localStorage.getItem("inventory_" + warehouse) || "[]");
-}
 function searchAmendments() {
   const input = document.getElementById("amendSearch").value.toLowerCase();
   const warehouse = document.getElementById('amendmentsWarehouseSelect').value;
@@ -13069,7 +13079,7 @@ function createPackage() {
   if (!customer || !orderId) return alert("Select customer and order");
 
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-  const index = orders.findIndex(o => o.id == orderId);
+  const index = orders.findIndex(o => String(o.id) === String(orderId));
 
   if (index === -1) return alert("Order not found");
 
@@ -13225,7 +13235,7 @@ function emailPackage(id) {
 function clonePackage(id) {
   const packages = getAllPackages();
 
-  const pkg = packages.find(p => p.id == id);
+  const pkg = packages.find(p => String(p.id) === String(id));
 
   if (!pkg) return;
 
@@ -13255,7 +13265,7 @@ function printPackage(id) {
 function onDrop(targetId) {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
 
-  const order = orders.find(o => o.id == dragId);
+  const order = orders.find(o => String(o.id) === String(dragId));
 
   if (!order) return;
 
@@ -13274,7 +13284,7 @@ function viewPackage(id) {
 
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
 
-  const pkg = orders.find(o => o.id == id);
+  const pkg = orders.find(o => String(o.id) === String(id));
 
   if (!pkg) return alert("Package not found");
 
@@ -13362,7 +13372,7 @@ function viewPackage(id) {
 function deletePackage(id) {
   if (!confirm("Are you sure you want to delete this package?")) return;
   let orders = JSON.parse(localStorage.getItem("orders") || "[]");
-  orders = orders.filter(o => o.id != id);
+  orders = orders.filter(o => String(o.id) !== String(id));
   localStorage.setItem("orders", JSON.stringify(orders));
   renderPackages();
 }
@@ -16949,7 +16959,7 @@ function cloneManualTransaction(id) {
     localStorage.getItem("manualTransactions") || "[]"
   );
 
-  const tx = transactions.find(t => t.id == id);
+  const tx = transactions.find(t => String(t.id) === String(id));
 
   if (!tx) return;
 
@@ -16977,7 +16987,7 @@ function downloadManualTransactionPDF(id) {
     localStorage.getItem("manualTransactions") || "[]"
   );
 
-  const tx = transactions.find(t => t.id == id);
+  const tx = transactions.find(t => String(t.id) === String(id));
 
   if (!tx) return;
 
@@ -17012,7 +17022,7 @@ function printManualTransactionPDF(id) {
     localStorage.getItem("manualTransactions") || "[]"
   );
 
-  const tx = transactions.find(t => t.id == id);
+  const tx = transactions.find(t => String(t.id) === String(id));
 
   if (!tx) return;
 
@@ -21249,7 +21259,7 @@ document.getElementById("previewInvoiceNotesInput")
     if (!invoiceId) return;
 
     const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-    const index = invoices.findIndex(inv => inv.id == invoiceId);
+    const index = invoices.findIndex(inv => String(inv.id) === String(invoiceId));
     if (index === -1) return;
 
     invoices[index].notes = e.target.value;
@@ -21264,7 +21274,7 @@ function populateInvoiceNotes(invoice) {
     invoiceIdField.value = invoice.id;
 
     const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-    const storedInvoice = invoices.find(inv => inv.id == invoice.id);
+    const storedInvoice = invoices.find(inv => String(inv.id) === String(invoice.id));
 
     notesField.value = storedInvoice?.notes || "";
 }
@@ -26805,9 +26815,9 @@ function clearItemInputs() {
   const totalWithVat = subtotal + itemVAT;
 
   let category = "Exempt";
-  if (taxRate == "16") category = "General";
-  else if (taxRate == "8") category = "Other";
-  else if (taxRate == "0") category = "Zero";
+  if (String(taxRate) === "16") category = "General";
+  else if (String(taxRate) === "8") category = "Other";
+  else if (String(taxRate) === "0") category = "Zero";
 
   if (editingInvoiceId !== null) {
 
@@ -27054,6 +27064,28 @@ if (customerIndex !== -1) {
     }
 
     
+    // ACX FIX: when editing an existing invoice, restore stock for its PREVIOUS
+    // line items before deducting for the new ones. Without this, every re-save
+    // of an invoice deducted stock again for the full new quantity on top of the
+    // original deduction (a straight double-deduction on an unchanged edit), and
+    // any line whose quantity was reduced or removed entirely never got its
+    // stock back — inventory only ever drifted downward.
+    if (editingInvoiceId) {
+        const existingIndexForStock = invoices.findIndex(inv => inv.id === editingInvoiceId);
+        if (existingIndexForStock !== -1) {
+            const previousItems = (invoices[existingIndexForStock].items || []);
+            previousItems.forEach(item => {
+                const productName = (item.desc || "").trim();
+                const qty = parseFloat(item.qty) || 0;
+                const sku = item.sku || "";
+                if (qty > 0) {
+                    const restored = restoreStock(productName, qty, sku);
+                    if (!restored) console.warn("[stock] Could not restore previous invoice line on edit:", productName, qty);
+                }
+            });
+        }
+    }
+
     const notFound = [];
     invoiceItems.forEach(item => {
         const ok = findAndDeductStock((item.desc || "").trim(), parseFloat(item.qty) || 0, item.sku || "", item.batch);
@@ -27699,7 +27731,7 @@ function updateCustomerReceivables(customerName, deltaAmount) {
 }
 function previewInvoice(id) {
   const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-  const invoice = invoices.find(inv => inv.id == id);
+  const invoice = invoices.find(inv => String(inv.id) === String(id));
   if (!invoice) return alert("Invoice not found!");
   localStorage.setItem("currentInvoiceId", invoice.id);
   const customers = JSON.parse(localStorage.getItem("customers") || "[]");
@@ -29716,7 +29748,7 @@ function convertOrder(index) {
 function previewOrder(id) {
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
 
-  const order = orders.find(o => o.id == id);
+  const order = orders.find(o => String(o.id) === String(id));
 
   if (!order) {
     alert("Order not found");
@@ -32872,12 +32904,21 @@ function saveCreditNote() {
 
   const pendingReturn = window.__pendingCreditNoteFromReturn || null;
   if (!pendingReturn) {
-    let allInventory = getAllInventories();
-    creditNoteItems.forEach(item => {
-      const invItem = allInventory.find(i => i.name === item.product && i.warehouse === item.warehouse);
-      if (invItem) invItem.qty += item.qty;
+    // Persist the quantity bump to each item's actual per-warehouse
+    // inventory_<warehouse> record (the real inventory store), not the
+    // separate "inventory" flat key, which nothing else reliably keeps in
+    // sync and which was silently swallowing these updates.
+    const touchedWarehouses = new Set(creditNoteItems.map(item => item.warehouse));
+    touchedWarehouses.forEach(warehouse => {
+      const whInventory = getInventory(warehouse);
+      creditNoteItems
+        .filter(item => item.warehouse === warehouse)
+        .forEach(item => {
+          const invItem = whInventory.find(i => i.name === item.product);
+          if (invItem) invItem.qty += item.qty;
+        });
+      saveInventory(warehouse, whInventory);
     });
-    localStorage.setItem("inventory", JSON.stringify(allInventory));
   }
 
   let notes = JSON.parse(localStorage.getItem("creditNotes") || "[]");
@@ -33181,16 +33222,21 @@ function deleteCreditNote(id) {
 
   localStorage.setItem("chartOfAccounts", JSON.stringify(accounts));
 
-  let inventory = getAllInventories();
-
-  (note.items || []).forEach(item => {
-    const invItem = inventory.find(
-      i => i.name === item.product && i.warehouse === item.warehouse
-    );
-    if (invItem) invItem.qty -= item.qty;
+  // Persist the quantity reversal to each item's actual per-warehouse
+  // inventory_<warehouse> record (the real inventory store), not the
+  // separate "inventory" flat key, which nothing else reliably keeps in
+  // sync and which was silently swallowing these updates.
+  const touchedWarehouses = new Set((note.items || []).map(item => item.warehouse));
+  touchedWarehouses.forEach(warehouse => {
+    const whInventory = getInventory(warehouse);
+    (note.items || [])
+      .filter(item => item.warehouse === warehouse)
+      .forEach(item => {
+        const invItem = whInventory.find(i => i.name === item.product);
+        if (invItem) invItem.qty -= item.qty;
+      });
+    saveInventory(warehouse, whInventory);
   });
-
-  localStorage.setItem("inventory", JSON.stringify(inventory));
 
   let journal = JSON.parse(localStorage.getItem("journalEntries") || "[]");
   journal = journal.filter(j => !j.description.includes(note.number));
@@ -33832,7 +33878,7 @@ function viewAttachedInvoice(noteId) {
     return alert("No invoice attached");
   }
   const invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
-  const invoice = invoices.find(i => i.id == note.invoiceId);
+  const invoice = invoices.find(i => String(i.id) === String(note.invoiceId));
   if (!invoice) {
     return alert("Invoice not found");
   }
@@ -38683,7 +38729,7 @@ document.addEventListener("DOMContentLoaded", () => {
         Reset Column Width
       </button></div></div></div><div class="bg-white p-4 rounded shadow mb-6"><h3 class="text-sm font-semibold mb-4">Add GRN</h3><div class="mb-4"><label for="grnSupplier" class="block text-sm font-medium mb-1">Supplier</label><select id="grnSupplier" onchange="showSupplierBills()" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Supplier --</option></select></div><div class="mb-4"><label for="grnDate" class="block text-sm font-medium mb-1">GRN Date</label><input type="date" id="grnDate" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnBillSelect" class="block text-sm font-medium mb-1">Bill</label><select id="grnBillSelect" onchange="populateGRNItems()" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Bill --</option></select></div><div class="mb-4"><label for="grnNumber" class="block text-sm font-medium mb-1">GRN No.</label><input type="text" id="grnNumber" class="border bg-gray-100 p-2 rounded" style="width: 700px;" readonly></div><div class="mb-4"><label for="grnDescription" class="block text-sm font-medium mb-1">Description</label><input type="text" id="grnDescription" placeholder="Item Description" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnCollectionOption" class="block text-sm font-medium mb-1">Collection Option</label><select id="grnCollectionOption" class="border p-2 rounded" style="width: 700px;" onchange="handleAddNewOption(this,'customDeliveryOptions','Delivery Option')"><option value="">-- Select Collection Option --</option><option value="Own Transport">Own Transport / Company Vehicle</option><option value="Supplier Delivery">Supplier Delivery</option><option value="G4S Collections">G4S Collections</option><option value="Rider / Motorbike">Rider / Motorbike</option><option value="Third-Party Courier">Third-Party Courier</option><option value="Postal Service">Postal Service</option><option value="Other">Other</option>
         <option value="__add_new__">➕ Add New...</option>
-      </select></div><div class="mb-4"><label for="grnLocation" class="block text-sm font-medium mb-1">Receiving Location</label><input type="text" id="grnLocation" placeholder="Warehouse / Location" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnReferenceNumber" class="block text-sm font-medium mb-1">Reference Number</label><input type="text" id="grnReferenceNumber" placeholder="Bill / Reference No." class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnReceiver" class="block text-sm font-medium mb-1">Received By</label><input type="text" id="grnReceiver" placeholder="Receiver Name" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnTrackNumber" class="block text-sm font-medium mb-1">GRN Track Number</label><input type="text" id="grnTrackNumber" placeholder="Tracking Number / Reference" class="border p-2 rounded" style="width: 700px;"></div><div class="bg-white p-4 rounded shadow mb-6"><div class="text-left"><button type="button"  onclick="saveDraft()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Save as Draft </button><button type="button" onclick="addGRN()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Add GRN </button></div></form></div></div><div class="bg-white p-4 rounded shadow"><h3 class="text-sm font-semibold mb-2">GRN History</h3><button onclick="deleteSelectedGRN()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="p-2"><input type="checkbox" onclick="toggleSelectAllGRN(this)"></th><th class="p-2 text-left">GRN No.</th><th class="p-2 text-left">Supplier</th><th class="p-2 text-left">Item</th><th class="p-2 text-left">Date</th><th class="p-2 text-left">Description</th><th class="p-2 text-left">Location</th><th class="p-2 text-left">Reference No.</th><th class="p-2 text-left">Collection Option</th><th class="p-2 text-left">Received By</th><th class="p-2 text-left">Track No.</th><th class="p-2 text-left">Status</th><th class="p-2 text-left">Actions</th></tr></thead><tbody id="grnTableBody"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
+      </select></div><div class="mb-4"><label for="grnLocation" class="block text-sm font-medium mb-1">Receiving Location</label><select id="grnLocation" class="border p-2 rounded" style="width: 700px;"><option value="">-- Select Warehouse --</option></select></div><div class="mb-4"><label for="grnReferenceNumber" class="block text-sm font-medium mb-1">Reference Number</label><input type="text" id="grnReferenceNumber" placeholder="Bill / Reference No." class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnReceiver" class="block text-sm font-medium mb-1">Received By</label><input type="text" id="grnReceiver" placeholder="Receiver Name" class="border p-2 rounded" style="width: 700px;"></div><div class="mb-4"><label for="grnTrackNumber" class="block text-sm font-medium mb-1">GRN Track Number</label><input type="text" id="grnTrackNumber" placeholder="Tracking Number / Reference" class="border p-2 rounded" style="width: 700px;"></div><div class="bg-white p-4 rounded shadow mb-6"><div class="text-left"><button type="button"  onclick="saveDraft()"  class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Save as Draft </button><button type="button" onclick="addGRN()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"> Add GRN </button></div></form></div></div><div class="bg-white p-4 rounded shadow"><h3 class="text-sm font-semibold mb-2">GRN History</h3><button onclick="deleteSelectedGRN()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Bulk Delete</button><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="p-2"><input type="checkbox" onclick="toggleSelectAllGRN(this)"></th><th class="p-2 text-left">GRN No.</th><th class="p-2 text-left">Supplier</th><th class="p-2 text-left">Item</th><th class="p-2 text-left">Date</th><th class="p-2 text-left">Description</th><th class="p-2 text-left">Location</th><th class="p-2 text-left">Reference No.</th><th class="p-2 text-left">Collection Option</th><th class="p-2 text-left">Received By</th><th class="p-2 text-left">Track No.</th><th class="p-2 text-left">Status</th><th class="p-2 text-left">Actions</th></tr></thead><tbody id="grnTableBody"></tbody></table></div><div id="paginationControls" class="flex items-center justify-between mt-2 px-2 text-sm text-gray-600"><div>
     Total Count: <span id="totalCount">0</span></div><div>
     Show
     <select id="itemsPerPageSelect" class="border rounded px-1"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select>
@@ -39740,6 +39786,70 @@ function importSuppliers(event) {
 <script>
 let editingPaymentIndex = null;
 
+// ACX FIX (audit: array-index refs used instead of stable IDs): bills were
+// linked to payments via billIndex, the bill's position in the bills array at
+// save time. If bills are ever re-sorted, filtered, or one is removed between
+// payment and later edit/delete, bills[payment.billIndex] points at the wrong
+// bill or nothing. Bills now carry a stable id; getBillsWithIds() lazily
+// backfills an id onto any legacy bill record (once, persisting the result)
+// so every bill has one going forward, and resolveLinkedBill() looks payments
+// up by that id instead of by array position. Legacy payment records that
+// only have a billIndex still fall back to the old lookup as a best effort.
+function ensureBillIds(bills) {
+  let changed = false;
+  bills.forEach(b => {
+    if (b && !b.id) { b.id = crypto.randomUUID(); changed = true; }
+  });
+  return changed;
+}
+function getBillsWithIds() {
+  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  if (ensureBillIds(bills)) {
+    localStorage.setItem("bills", JSON.stringify(bills));
+  }
+  return bills;
+}
+function findBillById(bills, billId) {
+  return bills.find(b => b && b.id === billId) || null;
+}
+function resolveLinkedBill(payment, bills) {
+  if (!payment) return null;
+  if (payment.billId) return findBillById(bills, payment.billId);
+  if (payment.billIndex !== undefined && payment.billIndex !== "" && payment.billIndex !== "opening-balance") {
+    // Legacy record saved before bills had stable ids - best-effort fallback.
+    return bills[payment.billIndex] || null;
+  }
+  return null;
+}
+// ACX FIX (follow-up): paidAmount/balance/status were being kept in sync in
+// deleteSupplierPayment() but NOT in addSupplierPayment() (add or edit), so a
+// bill's balance/status could drift from its paidAmount as soon as a payment
+// was added or edited, and editing a payment never rolled back the bill it
+// used to be linked to before crediting the newly selected one. This single
+// helper is now the only place that mutates a bill's payment fields, used by
+// add/edit/delete/bulk-delete alike, so they can no longer diverge.
+function adjustBillPaidAmount(bills, billId, delta) {
+  if (!billId) return null;
+  const bill = findBillById(bills, billId);
+  if (!bill) return null;
+  const total = parseFloat(bill.total) || 0;
+  const newPaid = Math.max((parseFloat(bill.paidAmount || 0)) + delta, 0);
+  bill.paidAmount = newPaid;
+  bill.amountPaid = newPaid;
+  bill.balance = Math.max(total - newPaid, 0);
+  if (newPaid <= 0) bill.status = "Unpaid";
+  else if (newPaid >= total) bill.status = "Paid";
+  else bill.status = "Partial";
+
+  const bulkBills = JSON.parse(localStorage.getItem("bulkBills") || "[]");
+  const bbIdx = bulkBills.findIndex(bb => bb.billNumber === bill.billNumber && bb.supplier === bill.supplier);
+  if (bbIdx !== -1) {
+    bulkBills[bbIdx].status = bill.status;
+    localStorage.setItem("bulkBills", JSON.stringify(bulkBills));
+  }
+  return bill;
+}
+
 function searchSupplierPayments() {
   const input = document.getElementById("supplierPaymentsSearch").value.toLowerCase();
   const rows = document.querySelectorAll("#supplierPaymentsTable tr");
@@ -39762,7 +39872,7 @@ function addSupplierPayment() {
   const amount = parseFloat(document.getElementById("paymentAmount").value);
   const mode = document.getElementById("paymentMode").value.trim();
   const bank = document.getElementById("paymentMethod").value.trim();
-  const selectedBillIndex = document.getElementById("payBill").value;
+  const selectedBillId = document.getElementById("payBill").value;
 
   if (!date || !supplier || isNaN(amount) || !mode || !bank) {
     alert("Please fill in all required fields.");
@@ -39799,24 +39909,17 @@ function addSupplierPayment() {
       amount,
       mode,
       bank,
-      billIndex: selectedBillIndex
+      billId: selectedBillId
     };
 
     payments.push(payment);
 
-    if (selectedBillIndex !== "") {
+    if (selectedBillId !== "") {
 
-      let bills = JSON.parse(localStorage.getItem("bills") || "[]");
+      let bills = getBillsWithIds();
 
-      const bill = bills[selectedBillIndex];
-
-      if (bill) {
-
-        bill.paidAmount =
-          (parseFloat(bill.paidAmount || 0) + amount);
-
+      if (adjustBillPaidAmount(bills, selectedBillId, amount)) {
         localStorage.setItem("bills", JSON.stringify(bills));
-
       }
 
     }
@@ -39861,24 +39964,32 @@ function addSupplierPayment() {
       amount,
       mode,
       bank,
-      billIndex: selectedBillIndex
+      billId: selectedBillId
     };
 
-    if (selectedBillIndex !== "") {
+    {
+      // Roll back whatever bill this payment was previously linked to
+      // (which may differ from the newly selected bill, or may no longer
+      // be selected at all) before crediting the new selection, so editing
+      // a payment can never double-count against the old bill.
+      let bills = getBillsWithIds();
+      let billsChanged = false;
 
-      let bills = JSON.parse(localStorage.getItem("bills") || "[]");
-
-      const bill = bills[selectedBillIndex];
-
-      if (bill) {
-
-        bill.paidAmount =
-          (parseFloat(bill.paidAmount || 0) + amount);
-
-        localStorage.setItem("bills", JSON.stringify(bills));
-
+      const oldLinkedBill = resolveLinkedBill(oldPayment, bills);
+      if (oldLinkedBill) {
+        adjustBillPaidAmount(bills, oldLinkedBill.id, -(parseFloat(oldPayment.amount) || 0));
+        billsChanged = true;
       }
 
+      if (selectedBillId !== "") {
+        if (adjustBillPaidAmount(bills, selectedBillId, amount)) {
+          billsChanged = true;
+        }
+      }
+
+      if (billsChanged) {
+        localStorage.setItem("bills", JSON.stringify(bills));
+      }
     }
 
     transactions = transactions.filter(t => t.id !== oldPayment.id);
@@ -39939,13 +40050,10 @@ function renderSupplierPayments() {
 
     total += parseFloat(payment.amount);
 
-    const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+    const bills = getBillsWithIds();
 
-    const billText =
-      payment.billIndex !== "" &&
-      bills[payment.billIndex]
-        ? bills[payment.billIndex].billNumber
-        : "-";
+    const linkedBill = resolveLinkedBill(payment, bills);
+    const billText = linkedBill ? linkedBill.billNumber : "-";
 
     const row = document.createElement("tr");
 
@@ -40143,7 +40251,7 @@ function previewSupplierPayment(index) {
   const row = rows[index];
 
   const existing = document.getElementById('previewRow');
-  if (existing && existing.dataset.index == index) {
+  if (existing && String(existing.dataset.index) === String(index)) {
     existing.remove();
     return;
   }
@@ -40253,6 +40361,34 @@ function editSupplierPayment(index) {
   document.getElementById("paymentMode").value = payment.mode;
   document.getElementById("paymentMethod").value = payment.bank;
 
+  // ACX FIX (follow-up): this form was never restoring which bill the
+  // payment was linked to, so the "Pay Bill" dropdown silently reset to
+  // "none selected" on every edit - saving the edit would then roll back
+  // nothing and credit nothing, leaving the bill's balance stuck at
+  // whatever it was before the edit even opened. Repopulate the dropdown
+  // for this supplier, then re-select the bill this payment is linked to.
+  populateBillsBySupplier();
+  const payBillEl = document.getElementById("payBill");
+  if (payBillEl) {
+    const bills = getBillsWithIds();
+    const linkedBill = resolveLinkedBill(payment, bills);
+    if (linkedBill) {
+      const alreadyListed = Array.from(payBillEl.options).some(o => o.value === linkedBill.id);
+      if (!alreadyListed) {
+        // populateBillsBySupplier() only lists bills with an outstanding
+        // balance, so a bill this payment fully paid off wouldn't appear -
+        // add it back so the existing link stays visible and selectable.
+        const option = document.createElement("option");
+        option.value = linkedBill.id;
+        option.textContent = `${linkedBill.billNumber} (currently linked to this payment)`;
+        payBillEl.appendChild(option);
+      }
+      payBillEl.value = linkedBill.id;
+    } else {
+      payBillEl.value = "";
+    }
+  }
+
   editingPaymentIndex = index;
   document.getElementById("paymentSubmitBtn").textContent = "Update Payment";
 }
@@ -40285,28 +40421,13 @@ function deleteSupplierPayment(index) {
   payments.splice(index, 1);
 
   // Roll back the linked bill so it reflects the payment removal
-  if (payment.billIndex !== undefined && payment.billIndex !== "" && payment.billIndex !== "opening-balance") {
-    const bills = JSON.parse(localStorage.getItem("bills") || "[]");
-    const bill = bills[payment.billIndex];
-    if (bill) {
-      const total = parseFloat(bill.total) || 0;
-      const newPaid = Math.max((parseFloat(bill.paidAmount || 0)) - (parseFloat(payment.amount) || 0), 0);
-      bill.paidAmount = newPaid;
-      bill.amountPaid = newPaid;
-      bill.balance = Math.max(total - newPaid, 0);
-      if (newPaid <= 0) bill.status = "Unpaid";
-      else if (newPaid >= total) bill.status = "Paid";
-      else bill.status = "Partial";
-      bills[payment.billIndex] = bill;
-      localStorage.setItem("bills", JSON.stringify(bills));
-
-      const bulkBills = JSON.parse(localStorage.getItem("bulkBills") || "[]");
-      const bbIdx = bulkBills.findIndex(bb => bb.billNumber === bill.billNumber && bb.supplier === bill.supplier);
-      if (bbIdx !== -1) {
-        bulkBills[bbIdx].status = bill.status;
-        localStorage.setItem("bulkBills", JSON.stringify(bulkBills));
-      }
-    }
+  const bills = getBillsWithIds();
+  const bill = resolveLinkedBill(payment, bills);
+  if (bill) {
+    adjustBillPaidAmount(bills, bill.id, -(parseFloat(payment.amount) || 0));
+    // `bill` is a reference into `bills` (found by id or legacy index), so
+    // mutating it in place is enough - no array-position write-back needed.
+    localStorage.setItem("bills", JSON.stringify(bills));
   }
 
   localStorage.setItem("billPayments", JSON.stringify(payments));
@@ -40343,8 +40464,7 @@ function deleteSelectedSupplierPayments() {
   if (!confirm(`You selected ${selected.length} payment(s). Proceed?`)) return;
   if (!confirm("This action cannot be undone. Confirm delete?")) return;
 
-  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
-  const bulkBills = JSON.parse(localStorage.getItem("bulkBills") || "[]");
+  const bills = getBillsWithIds();
   let billsChanged = false;
 
   selected.sort((a, b) => b - a).forEach(index => {
@@ -40365,23 +40485,12 @@ function deleteSelectedSupplierPayments() {
     manualTx = manualTx.filter(t => t.id !== id);
 
     // Roll back the linked bill so it reflects the payment removal
-    if (payment.billIndex !== undefined && payment.billIndex !== "" && payment.billIndex !== "opening-balance") {
-      const bill = bills[payment.billIndex];
-      if (bill) {
-        const total = parseFloat(bill.total) || 0;
-        const newPaid = Math.max((parseFloat(bill.paidAmount || 0)) - (parseFloat(payment.amount) || 0), 0);
-        bill.paidAmount = newPaid;
-        bill.amountPaid = newPaid;
-        bill.balance = Math.max(total - newPaid, 0);
-        if (newPaid <= 0) bill.status = "Unpaid";
-        else if (newPaid >= total) bill.status = "Paid";
-        else bill.status = "Partial";
-        bills[payment.billIndex] = bill;
-        billsChanged = true;
-
-        const bbIdx = bulkBills.findIndex(bb => bb.billNumber === bill.billNumber && bb.supplier === bill.supplier);
-        if (bbIdx !== -1) bulkBills[bbIdx].status = bill.status;
-      }
+    const bill = resolveLinkedBill(payment, bills);
+    if (bill) {
+      adjustBillPaidAmount(bills, bill.id, -(parseFloat(payment.amount) || 0));
+      // `bill` is a reference into `bills`, so mutating it in place is
+      // enough - no array-position write-back needed.
+      billsChanged = true;
     }
 
     payments.splice(index, 1);
@@ -40389,7 +40498,6 @@ function deleteSelectedSupplierPayments() {
 
   if (billsChanged) {
     localStorage.setItem("bills", JSON.stringify(bills));
-    localStorage.setItem("bulkBills", JSON.stringify(bulkBills));
   }
 
   localStorage.setItem("billPayments", JSON.stringify(payments));
@@ -40450,7 +40558,7 @@ function populateSupplierDropdownById(id) {
 
     const supplier = this.value;
 
-    const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+    const bills = getBillsWithIds();
 
     const payBill = document.getElementById("payBill");
 
@@ -40464,7 +40572,7 @@ function populateSupplierDropdownById(id) {
         b.supplier === supplier &&
         (parseFloat(b.paidAmount || 0) < parseFloat(b.total || 0))
       )
-      .forEach((bill, index) => {
+      .forEach((bill) => {
 
         const due =
           parseFloat(bill.total || 0) -
@@ -40472,7 +40580,7 @@ function populateSupplierDropdownById(id) {
 
         const option = document.createElement("option");
 
-        option.value = index;
+        option.value = bill.id;
 
         option.textContent =
           `${bill.billNumber} | Due: KES ${due.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)}`;
@@ -40493,9 +40601,9 @@ function populateBillsBySupplier() {
   billDropdown.innerHTML =
     '<option value="">Select Bill (optional)</option>';
 
-  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  const bills = getBillsWithIds();
 
-  bills.forEach((bill, index) => {
+  bills.forEach((bill) => {
 
     const paidAmount = parseFloat(bill.paidAmount || 0);
 
@@ -40508,7 +40616,7 @@ function populateBillsBySupplier() {
 
       const option = document.createElement("option");
 
-      option.value = index;
+      option.value = bill.id;
 
       option.textContent =
         `${bill.billNumber} - Balance: KES ${balance.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)}`;
@@ -40536,7 +40644,7 @@ document.getElementById("paymentSupplierName")?.addEventListener("change", funct
 
   const supplier = this.value;
 
-  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+  const bills = getBillsWithIds();
 
   const payBill = document.getElementById("payBill");
 
@@ -40547,7 +40655,7 @@ document.getElementById("paymentSupplierName")?.addEventListener("change", funct
       b.supplier === supplier &&
       (parseFloat(b.paidAmount || 0) < parseFloat(b.total || 0))
     )
-    .forEach((bill, index) => {
+    .forEach((bill) => {
 
       const due =
         parseFloat(bill.total || 0) -
@@ -40555,7 +40663,7 @@ document.getElementById("paymentSupplierName")?.addEventListener("change", funct
 
       const option = document.createElement("option");
 
-      option.value = index;
+      option.value = bill.id;
 
       option.textContent =
         `${bill.billNumber} | Due: KES ${due.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)} | Due Date: ${bill.due || "-"}`;
@@ -40591,10 +40699,6 @@ function searchSupplierBills() {
   });
 }
 
-
-function getInventory(warehouse) {
-  return JSON.parse(localStorage.getItem('inventory_' + warehouse) || '[]');
-}
 
 function saveInventory(warehouse, updatedInventory) {
   localStorage.setItem('inventory_' + warehouse, JSON.stringify(updatedInventory));
@@ -40942,6 +41046,7 @@ function saveSupplierBill() {
 
 
   const bill = {
+    id: crypto.randomUUID(),
     billNumber,
     date,
     supplier,
@@ -41018,6 +41123,10 @@ function saveSupplierBill() {
     Object.keys(reverseMap).forEach(wh => {
       saveInventory(wh, reverseMap[wh]);
     });
+
+    // Preserve the bill's stable id across edits - otherwise every edit
+    // would mint a new id and orphan any payment already linked to it.
+    bill.id = oldBill.id || bill.id;
 
     bills[currentEditingBillIndex] = bill;
     updateSupplierBalance(bill.supplier, bill.total);
@@ -44837,16 +44946,29 @@ function convertPO(index) {
   if (!confirm("Approve conversion? This cannot be undone.")) return;
 
 
-  let grnList = JSON.parse(localStorage.getItem("grn") || "[]");
+  let grnList = JSON.parse(localStorage.getItem("grns") || "[]");
   grnList.push({
+    number: (typeof generateNextGRNNumber === "function") ? generateNextGRNNumber() : ("GRN-" + Date.now()),
     fromPO: po.poNumber,
     supplier: po.supplier,
     chartOfAccount: po.chartOfAccount,
     items: po.items,
     date: new Date().toISOString().split("T")[0],
-    status: "Pending Receipt"
+    status: "Approved"
   });
-  localStorage.setItem("grn", JSON.stringify(grnList));
+  localStorage.setItem("grns", JSON.stringify(grnList));
+  if (typeof renderGRNTable === "function") { try { renderGRNTable(); } catch (e) {} }
+
+  // Increase stock for each item received on this PO
+  (po.items || []).forEach(it => {
+    const itemName = it.name || it.desc || "";
+    const itemQty = parseFloat(it.qty) || 0;
+    if (itemName && itemQty > 0 && typeof restoreStock === "function") {
+      restoreStock(itemName, itemQty, it.sku);
+    }
+  });
+  if (typeof renderStockValuation === "function") { try { renderStockValuation(); } catch (e) {} }
+  if (typeof renderStockReports === "function") { try { renderStockReports(); } catch (e) {} }
 
 
   const bills = JSON.parse(localStorage.getItem("bills") || "[]");
@@ -45248,10 +45370,6 @@ function renderFilteredDebitNotes(notes) {
       `;
     });
   });
-}
-
-function getInventory(warehouse) {
-  return JSON.parse(localStorage.getItem('inventory_' + warehouse) || '[]');
 }
 
 function getAllInventories() {
@@ -46234,24 +46352,6 @@ document.getElementById("addDebitItemBtn")?.addEventListener("click", e => {
 document.getElementById("saveDebitNoteBtn")?.addEventListener("click", e => {
   e.preventDefault();
   saveDebitNote();
-});
-document.getElementById("itemsPerPageSelect")?.addEventListener("change", e => {
-  itemsPerPage = parseInt(e.target.value);
-  currentPage = 1;
-  renderDebitNotes();
-});
-document.getElementById("prevPageBtn")?.addEventListener("click", () => {
-  if (currentPage > 1) {
-    currentPage--;
-    renderDebitNotes();
-  }
-});
-document.getElementById("nextPageBtn")?.addEventListener("click", () => {
-  const notes = JSON.parse(localStorage.getItem("supplierDebitNotes") || "[]");
-  if (currentPage * itemsPerPage < notes.length) {
-    currentPage++;
-    renderDebitNotes();
-  }
 });
 });
 const debitBtn = document.getElementById('debitActionsBtn');
@@ -47983,7 +48083,7 @@ function previewTaxPayment(index) {
   const row = rows[index];
 
   const existing = document.getElementById('previewRow');
-  if (existing && existing.dataset.index == index) {
+  if (existing && String(existing.dataset.index) === String(index)) {
     existing.remove();
     return;
   }
@@ -50350,6 +50450,9 @@ function saveDraft() {
   let grns =
     JSON.parse(localStorage.getItem("grns") || "[]");
 
+  const editIndex = form.dataset.editIndex;
+  const isEditing = editIndex !== undefined && editIndex !== "" && grns[editIndex];
+
   const grnObj = {
     number,
     date,
@@ -50360,16 +50463,23 @@ function saveDraft() {
     receiver,
     trackNo,
     items,
-    status: "Draft"
+    status: isEditing ? (grns[editIndex].status || "Draft") : "Draft"
   };
 
-  grns.push(grnObj);
+  if (isEditing) {
+    grns[editIndex] = grnObj;
+    delete form.dataset.editIndex;
+  } else {
+    grns.push(grnObj);
+  }
 
   localStorage.setItem("grns", JSON.stringify(grns));
 
   renderGRNTable();
 
-  showGNNotification(`GRN ${number} saved as draft 📝`);
+  showGNNotification(isEditing ? `GRN ${number} updated 📝` : `GRN ${number} saved as draft 📝`);
+
+  form.dataset.items = "";
 }
 function addGRN() {
   if (!window.requirePermission('grnTab', 'add', 'add GRNs')) return;
@@ -71434,7 +71544,7 @@ function generatePayslip() {
   const employees = JSON.parse(localStorage.getItem("employees") || "[]");
 
   const payroll = payrollRecords.find(p => p.empID === empID && p.month === month);
-  const employee = employees.find(e => e.id == empID);
+  const employee = employees.find(e => String(e.id) === String(empID));
 
   if (!payroll || !employee) {
     alert("Data not found for this employee and month.");
@@ -71522,7 +71632,7 @@ function downloadSinglePayslipPDF(empID, month) {
   const employees = JSON.parse(localStorage.getItem("employees") || "[]");
 
   const payroll = payrollRecords.find(p => p.empID === empID && p.month === month);
-  const employee = employees.find(e => e.id == empID);
+  const employee = employees.find(e => String(e.id) === String(empID));
 
   if (!payroll || !employee) return alert("Data not found for this employee and month.");
 
@@ -71573,7 +71683,7 @@ function generateBulkPayslips() {
   }
 
   document.getElementById("bulkPayslipTableBody").innerHTML = records.map(payroll => {
-    const employee = employees.find(e => e.id == payroll.empID) || {};
+    const employee = employees.find(e => String(e.id) === String(payroll.empID)) || {};
     return `
       <tr>
         <td class="p-2 border">${payroll.empID}</td>
@@ -71616,7 +71726,7 @@ function downloadBulkPayslipPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   records.forEach((payroll, idx) => {
-    const employee = employees.find(e => e.id == payroll.empID) || { id: payroll.empID, name: "Unknown", department: "-", position: "-" };
+    const employee = employees.find(e => String(e.id) === String(payroll.empID)) || { id: payroll.empID, name: "Unknown", department: "-", position: "-" };
     if (idx > 0) doc.addPage();
     drawPayslipPage(doc, employee, payroll, month);
   });
@@ -75784,7 +75894,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         .forEach(cb => cb.checked = false);
     }
   </script>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 border rounded-lg bg-green-50"><h4 class="text-sm font-semibold">Active Batches</h4><p id="batchTrackingActive" class="text-sm font-bold text-green-700">0</p></div><div class="p-4 border rounded-lg bg-blue-50"><h4 class="text-sm font-semibold">Expired Batches</h4><p id="batchTrackingExpired" class="text-sm font-bold text-blue-700">0</p></div><div class="p-4 border rounded-lg bg-purple-50"><h4 class="text-sm font-semibold">Sold Out Batches</h4><p id="batchTrackingSoldOut" class="text-sm font-bold text-purple-700">0</p></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Total Quantity</h4><p id="batchTrackingTotalQty" class="text-sm font-bold">0</p></div><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Warehouses</h4><p id="batchTrackingWarehouses" class="text-sm font-bold">0</p></div><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Tracked Items</h4><p id="batchTrackingTrackedItems" class="text-sm font-bold">0</p></div></div><div class="bg-white p-4 rounded-xl shadow mb-6"><canvas id="batchTrackingChart"></canvas></div><div class="overflow-x-auto"><table class="w-full border text-sm" id="batchTrackingTable"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Batch No</th><th class="p-2 text-left">Item</th><th class="p-2 text-left">Quantity</th><th class="p-2 text-left">Warehouse</th><th class="p-2 text-left">Expiry Date</th><th class="p-2 text-left">Status</th></tr></thead><tbody id="batchTrackingBody"><tr><td colspan="6" class="p-2 text-center text-gray-500">No data yet</td></tr></tbody></table></div></div><div id="damagedStockPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border"><div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6"><div><h3 class="text-sm font-bold text-gray-800">Damaged Stock</h3></div><div class="flex flex-wrap items-right gap-3"><div><label class="text-sm font-semibold">Item</label><input type="text" id="damagedStockItem"
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 border rounded-lg bg-green-50"><h4 class="text-sm font-semibold">Active Batches</h4><p id="batchTrackingActive" class="text-sm font-bold text-green-700">0</p></div><div class="p-4 border rounded-lg bg-blue-50"><h4 class="text-sm font-semibold">Expired Batches</h4><p id="batchTrackingExpired" class="text-sm font-bold text-blue-700">0</p></div><div class="p-4 border rounded-lg bg-purple-50"><h4 class="text-sm font-semibold">Sold Out Batches</h4><p id="batchTrackingSoldOut" class="text-sm font-bold text-purple-700">0</p></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Total Quantity</h4><p id="batchTrackingTotalQty" class="text-sm font-bold">0</p></div><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Warehouses</h4><p id="batchTrackingWarehouses" class="text-sm font-bold">0</p></div><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Tracked Items</h4><p id="batchTrackingTrackedItems" class="text-sm font-bold">0</p></div></div><div class="bg-white p-4 rounded-xl shadow mb-6"><canvas id="batchTrackingChart"></canvas></div><div class="overflow-x-auto"><table class="w-full border text-sm" id="batchTrackingTable"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Batch No</th><th class="p-2 text-left">Item</th><th class="p-2 text-left">Quantity</th><th class="p-2 text-left">Warehouse</th><th class="p-2 text-left">Expiry Date</th><th class="p-2 text-left">Status</th><th class="p-2 text-left">Actions</th></tr></thead><tbody id="batchTrackingBody"><tr><td colspan="7" class="p-2 text-center text-gray-500">No data yet</td></tr></tbody></table></div></div><div id="damagedStockPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border"><div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6"><div><h3 class="text-sm font-bold text-gray-800">Damaged Stock</h3></div><div class="flex flex-wrap items-right gap-3"><div><label class="text-sm font-semibold">Item</label><input type="text" id="damagedStockItem"
           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
           placeholder="Item name"></div><div><label class="text-sm font-semibold">Warehouse</label><input type="text" id="damagedStockWarehouse"
           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
@@ -75884,7 +75994,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         .forEach(cb => cb.checked = false);
     }
   </script>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 border rounded-lg bg-red-50"><h4 class="text-sm font-semibold">Total Damaged Items</h4><p id="damagedStockTotalItems" class="text-sm font-bold text-red-700">0</p></div><div class="p-4 border rounded-lg bg-yellow-50"><h4 class="text-sm font-semibold">Total Loss Value</h4><p id="damagedStockLossValue" class="text-sm font-bold text-yellow-700">KES 0.00</p></div><div class="p-4 border rounded-lg bg-blue-50"><h4 class="text-sm font-semibold">Affected Warehouses</h4><p id="damagedStockWarehouses" class="text-sm font-bold text-blue-700">0</p></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Most Damaged Item</h4><p id="damagedStockTopItem" class="text-sm font-bold">N/A</p></div><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Damage Cases</h4><p id="damagedStockCases" class="text-sm font-bold">0</p></div><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Recovered Stock</h4><p id="damagedStockRecovered" class="text-sm font-bold">0</p></div></div><div class="bg-white p-4 rounded-xl shadow mb-6"><canvas id="damagedStockChart"></canvas></div><div class="overflow-x-auto"><table class="w-full border text-sm" id="damagedStockTable"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Item</th><th class="p-2 text-left">Warehouse</th><th class="p-2 text-left">Quantity</th><th class="p-2 text-left">Reason</th><th class="p-2 text-left">Date</th><th class="p-2 text-left">Loss Value</th></tr></thead><tbody id="damagedStockBody"><tr><td colspan="6" class="p-2 text-center text-gray-500">No data yet</td></tr></tbody></table></div></div><div id="expiredItemsPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border"><div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6"><div><h3 class="text-sm font-bold text-gray-800">Expired Items</h3></div><div class="flex flex-wrap items-right gap-3"><div><label class="text-sm font-semibold">Item</label><input type="text" id="expiredItemsSearch"
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 border rounded-lg bg-red-50"><h4 class="text-sm font-semibold">Total Damaged Items</h4><p id="damagedStockTotalItems" class="text-sm font-bold text-red-700">0</p></div><div class="p-4 border rounded-lg bg-yellow-50"><h4 class="text-sm font-semibold">Total Loss Value</h4><p id="damagedStockLossValue" class="text-sm font-bold text-yellow-700">KES 0.00</p></div><div class="p-4 border rounded-lg bg-blue-50"><h4 class="text-sm font-semibold">Affected Warehouses</h4><p id="damagedStockWarehouses" class="text-sm font-bold text-blue-700">0</p></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Most Damaged Item</h4><p id="damagedStockTopItem" class="text-sm font-bold">N/A</p></div><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Damage Cases</h4><p id="damagedStockCases" class="text-sm font-bold">0</p></div><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Recovered Stock</h4><p id="damagedStockRecovered" class="text-sm font-bold">0</p></div></div><div class="bg-white p-4 rounded-xl shadow mb-6"><canvas id="damagedStockChart"></canvas></div><div class="overflow-x-auto"><table class="w-full border text-sm" id="damagedStockTable"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Item</th><th class="p-2 text-left">Warehouse</th><th class="p-2 text-left">Quantity</th><th class="p-2 text-left">Reason</th><th class="p-2 text-left">Date</th><th class="p-2 text-left">Loss Value</th><th class="p-2 text-left">Actions</th></tr></thead><tbody id="damagedStockBody"><tr><td colspan="7" class="p-2 text-center text-gray-500">No data yet</td></tr></tbody></table></div></div><div id="expiredItemsPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border"><div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6"><div><h3 class="text-sm font-bold text-gray-800">Expired Items</h3></div><div class="flex flex-wrap items-right gap-3"><div><label class="text-sm font-semibold">Item</label><input type="text" id="expiredItemsSearch"
           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
           placeholder="Item name"></div><div><label class="text-sm font-semibold">Warehouse</label><input type="text" id="expiredItemsWarehouse"
           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
@@ -75984,7 +76094,7 @@ class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
         .forEach(cb => cb.checked = false);
     }
   </script>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 border rounded-lg bg-red-50"><h4 class="text-sm font-semibold">Expired Items</h4><p id="expiredItemsTotal" class="text-sm font-bold text-red-700">0</p></div><div class="p-4 border rounded-lg bg-yellow-50"><h4 class="text-sm font-semibold">Near Expiry</h4><p id="expiredItemsNearExpiry" class="text-sm font-bold text-yellow-700">0</p></div><div class="p-4 border rounded-lg bg-blue-50"><h4 class="text-sm font-semibold">Affected Warehouses</h4><p id="expiredItemsWarehouses" class="text-sm font-bold text-blue-700">0</p></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Disposed Items</h4><p id="expiredItemsDisposed" class="text-sm font-bold">0</p></div><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Recovered Items</h4><p id="expiredItemsRecovered" class="text-sm font-bold">0</p></div><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Loss Value</h4><p id="expiredItemsLossValue" class="text-sm font-bold">KES 0.00</p></div></div><div class="bg-white p-4 rounded-xl shadow mb-6"><canvas id="expiredItemsChart"></canvas></div><div class="overflow-x-auto"><table class="w-full border text-sm" id="expiredItemsTable"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Item</th><th class="p-2 text-left">Warehouse</th><th class="p-2 text-left">Quantity</th><th class="p-2 text-left">Expiry Date</th><th class="p-2 text-left">Status</th><th class="p-2 text-left">Loss Value</th></tr></thead><tbody id="expiredItemsBody"><tr><td colspan="6" class="p-2 text-center text-gray-500">No data yet</td></tr></tbody></table></div></div><div id="leaveSummaryPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border"><div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6"><div><h3 class="text-sm font-bold text-gray-800">Leave Summary Report</h3><p class="text-sm text-gray-500">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 border rounded-lg bg-red-50"><h4 class="text-sm font-semibold">Expired Items</h4><p id="expiredItemsTotal" class="text-sm font-bold text-red-700">0</p></div><div class="p-4 border rounded-lg bg-yellow-50"><h4 class="text-sm font-semibold">Near Expiry</h4><p id="expiredItemsNearExpiry" class="text-sm font-bold text-yellow-700">0</p></div><div class="p-4 border rounded-lg bg-blue-50"><h4 class="text-sm font-semibold">Affected Warehouses</h4><p id="expiredItemsWarehouses" class="text-sm font-bold text-blue-700">0</p></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Disposed Items</h4><p id="expiredItemsDisposed" class="text-sm font-bold">0</p></div><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Recovered Items</h4><p id="expiredItemsRecovered" class="text-sm font-bold">0</p></div><div class="p-4 border rounded-lg"><h4 class="text-sm font-semibold">Loss Value</h4><p id="expiredItemsLossValue" class="text-sm font-bold">KES 0.00</p></div></div><div class="bg-white p-4 rounded-xl shadow mb-6"><canvas id="expiredItemsChart"></canvas></div><div class="overflow-x-auto"><table class="w-full border text-sm" id="expiredItemsTable"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Item</th><th class="p-2 text-left">Warehouse</th><th class="p-2 text-left">Quantity</th><th class="p-2 text-left">Expiry Date</th><th class="p-2 text-left">Status</th><th class="p-2 text-left">Loss Value</th><th class="p-2 text-left">Actions</th></tr></thead><tbody id="expiredItemsBody"><tr><td colspan="7" class="p-2 text-center text-gray-500">No data yet</td></tr></tbody></table></div></div><div id="leaveSummaryPanel" class="report-view hidden bg-white rounded-xl shadow-md mb-6 p-6 border"><div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6"><div><h3 class="text-sm font-bold text-gray-800">Leave Summary Report</h3><p class="text-sm text-gray-500">
         Employee attendance, leave usage, balances and leave analytics
       </p></div><div class="flex flex-wrap items-end gap-3"><div><label class="text-sm font-semibold">Employee</label><input type="text" id="leaveSummaryEmployee"
           class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"
@@ -76830,45 +76940,6 @@ document.addEventListener('DOMContentLoaded', updateReportCount);
     });
 }
 
-function showReport(reportId, element) {
-
-    document.querySelectorAll(".report-view").forEach(function(view) {
-        view.classList.add("hidden");
-    });
-
-    document.querySelectorAll(".reports-sidebar li").forEach(function(li) {
-        li.classList.remove("active");
-    });
-
-    if (element) {
-        element.classList.add("active");
-    }
-
-    var __rv=document.getElementById(reportId);if(__rv){__rv.classList.remove("hidden");__rv.style.display="";}document.querySelectorAll(".report-view").forEach(function(v){if(v.id!==reportId){v.style.display="none";}});
-
-    const now = new Date();
-
-    const formattedDate = now.toLocaleString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-
-    const row = document.getElementById(reportId + "Row");
-
-    if (row) {
-        const cell = row.querySelector(".last-visited");
-        if (cell) {
-            cell.textContent = formattedDate;
-        }
-    }
-
-    if (reportId === "taxComputationReport" && typeof window.renderTaxComputationReport === "function") {
-        window.renderTaxComputationReport();
-    }
-}
 function toggleFavorite(checkbox) {
   const reportName = checkbox.nextElementSibling;
   if (checkbox.checked) {
@@ -77107,7 +77178,7 @@ function applyReportFilter(data, options) {
     const d = new Date(item[options.dateField]);
     if (month) {
       const [y, m] = month.split("-");
-      return d.getFullYear() == y && (d.getMonth() + 1) == parseInt(m);
+      return d.getFullYear() === y && (d.getMonth() + 1) === parseInt(m);
     }
     if (start && end) return d >= new Date(start) && d <= new Date(end);
     return true;
@@ -78997,7 +79068,7 @@ function filterByDate(data, field, prefix = "tb") {
 
     if (month) {
       const [y, m] = month.split("-");
-      return d.getFullYear() == y && (d.getMonth() + 1) == parseInt(m);
+      return d.getFullYear() === y && (d.getMonth() + 1) === parseInt(m);
     }
 
     if (start && end) {
@@ -79283,7 +79354,7 @@ function renderTrialBalance(filteredInvoices = null, filteredBills = null) {
   const payrollRecords = JSON.parse(localStorage.getItem('payrollRecords') || '[]');
   const taxes = JSON.parse(localStorage.getItem('taxPayments') || '[]');
   const banks = JSON.parse(localStorage.getItem('banks') || '[]');
-  const inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+  const inventory = (typeof getInventory === "function") ? getInventory() : JSON.parse(localStorage.getItem('inventory') || '[]');
   const equityRecords = JSON.parse(localStorage.getItem('equityRecords') || '[]');
   const shareholderEquity = parseFloat(localStorage.getItem('shareholderEquity') || '0');
   const manualTransactions = JSON.parse(localStorage.getItem('manualTransactions') || '[]');
@@ -80045,8 +80116,8 @@ function renderAccountsReceivable() {
       if (
         r.customer === inv.customer &&
         (
-          r.invoiceId == inv.id ||
-          r.invoiceNumber == inv.id
+          String(r.invoiceId) === String(inv.id) ||
+          String(r.invoiceNumber) === String(inv.id)
         )
       ) {
 
@@ -80432,8 +80503,8 @@ function renderAccountsPayable() {
       if (
         p.supplier === bill.supplier &&
         (
-          p.billId == bill.id ||
-          p.billNumber == bill.id
+          String(p.billId) === String(bill.id) ||
+          String(p.billNumber) === String(bill.id)
         )
       ) {
 
@@ -81449,7 +81520,7 @@ function renderAccountsReceivable() {
       paid = parseFloatSafe(inv.amountPaid);
     } else {
       paid = payments
-        .filter(p => p.customer === customer && !p.openingBalance && (p.invoiceId == inv.id || p.invoiceNumber == inv.invoiceNumber))
+        .filter(p => p.customer === customer && !p.openingBalance && (String(p.invoiceId) === String(inv.id) || String(p.invoiceNumber) === String(inv.invoiceNumber)))
         .reduce((sum, p) => sum + parseFloatSafe(p.amount), 0);
     }
 
@@ -81556,7 +81627,7 @@ function renderAccountsPayable() {
       paid = parseFloatSafe(bill.paidAmount);
     } else {
       paid = payments
-        .filter(p => p.supplier === supplier && !p.openingBalance && (p.billIndex == idx || p.billNumber == bill.billNumber))
+        .filter(p => p.supplier === supplier && !p.openingBalance && (String(p.billIndex) === String(idx) || String(p.billNumber) === String(bill.billNumber)))
         .reduce((s, p) => s + parseFloatSafe(p.amount || p.total || 0), 0);
     }
 
@@ -81767,7 +81838,7 @@ function exportFilteredTableToCSV(tableId, filename, monthFilterId = null, start
         const dateCell = row.querySelector("td:first-child");
         if (!dateCell) return true;
         const cellDate = new Date(dateCell.innerText);
-        return cellDate.getFullYear() == year && (cellDate.getMonth() + 1) == parseInt(month);
+        return cellDate.getFullYear() === year && (cellDate.getMonth() + 1) === parseInt(month);
       });
     }
   }
@@ -82407,7 +82478,7 @@ function renderAmendedWarehouseMovement() {
 
     if (month) {
       const [year, mon] = month.split('-');
-      if (!(date.getFullYear() == year && (date.getMonth() + 1) == mon)) return false;
+      if (!(date.getFullYear() === year && (date.getMonth() + 1) === mon)) return false;
     }
     if (startDate && date < new Date(startDate)) return false;
     if (endDate && date > new Date(endDate)) return false;
@@ -82513,7 +82584,7 @@ function renderProfitMargin() {
 
       if (month) {
         const [y, m] = month.split("-");
-        if (invDate.getFullYear() != y || (invDate.getMonth() + 1) != m) return;
+        if (invDate.getFullYear() !== y || (invDate.getMonth() + 1) !== m) return;
       } else if (startDate || endDate) {
         if (startDate && invDate < new Date(startDate)) return;
         if (endDate && invDate > new Date(endDate)) return;
@@ -85598,10 +85669,15 @@ function clearUserActivityFilter() {
   renderUserActivityReport();
 }
 
+// Single canonical showReport() for the whole app — do not add another
+// top-level declaration; add new per-report behavior to reportRenderers
+// or the special cases below instead.
 function showReport(panelId, element) {
 
-  document.querySelectorAll(".report-view")
-    .forEach(r => r.classList.add("hidden"));
+  document.querySelectorAll(".report-view").forEach(function(view) {
+    view.classList.add("hidden");
+    view.style.display = "none";
+  });
 
   document.querySelectorAll(".reports-sidebar li")
     .forEach(li => li.classList.remove("active"));
@@ -85616,6 +85692,7 @@ function showReport(panelId, element) {
   }
 
   panel.classList.remove("hidden");
+  panel.style.display = "";
 
   const row = document.getElementById(panelId + "Row");
   if (row) {
@@ -85629,6 +85706,10 @@ function showReport(panelId, element) {
         minute: '2-digit'
       });
     }
+  }
+
+  if (panelId === "taxComputationReport" && typeof window.renderTaxComputationReport === "function") {
+    window.renderTaxComputationReport();
   }
 
   if (panelId === "writeOffReportPanel" && typeof renderWriteOffReport === "function") {
@@ -86878,7 +86959,7 @@ function renderBatchTracking() {
   const start = document.getElementById("batchTrackingStart")?.value || "";
   const end = document.getElementById("batchTrackingEnd")?.value || "";
 
-  const data = JSON.parse(localStorage.getItem("batchTracking") || "[]");
+  const data = __ensureRecordIds("batchTracking");
 
   const filtered = data.filter(r => {
     const date = new Date(r.date || r.createdAt);
@@ -86897,7 +86978,11 @@ function renderBatchTracking() {
       <td class="p-2">${r.item || ""}</td>
       <td class="p-2">${r.quantity || ""}</td>
       <td class="p-2">${r.warehouse || ""}</td>
+      <td class="p-2">${r.expiryDate || ""}</td>
       <td class="p-2">${r.status || ""}</td>
+      <td class="p-2">${r.adjusted
+        ? '<span class="text-xs text-gray-500">Adjusted</span>'
+        : `<button onclick="adjustBatchTrackingRow('${r.id}')" class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">Adjust Stock</button>`}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -86947,7 +87032,7 @@ function renderDamagedStock() {
   const start = document.getElementById("damagedStockStart")?.value || "";
   const end = document.getElementById("damagedStockEnd")?.value || "";
 
-  const data = JSON.parse(localStorage.getItem("damagedStock") || "[]");
+  const data = __ensureRecordIds("damagedStock");
 
   const filtered = data.filter(r => {
     const date = new Date(r.date || r.createdAt);
@@ -86965,13 +87050,18 @@ function renderDamagedStock() {
     const loss = parseFloat(r.loss || r.amount || 0);
     totalLoss += loss;
 
+    const dateVal = r.date || r.createdAt;
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="p-2">${r.item || ""}</td>
+      <td class="p-2">${r.warehouse || ""}</td>
       <td class="p-2">${r.quantity || ""}</td>
-      <td class="p-2">${window.__fmtBase(loss)}</td>
       <td class="p-2">${r.reason || ""}</td>
-      <td class="p-2">${r.user || ""}</td>
+      <td class="p-2">${dateVal ? new Date(dateVal).toLocaleDateString() : ""}</td>
+      <td class="p-2">${window.__fmtBase(loss)}</td>
+      <td class="p-2">${r.writtenOff
+        ? '<span class="text-xs text-gray-500">Written Off</span>'
+        : `<button onclick="writeOffDamagedStockRow('${r.id}')" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700">Write Off</button>`}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -87024,7 +87114,7 @@ function renderExpiredItems() {
   const start = document.getElementById("expiredItemsStart")?.value || "";
   const end = document.getElementById("expiredItemsEnd")?.value || "";
 
-  const data = JSON.parse(localStorage.getItem("expiredItems") || "[]");
+  const data = __ensureRecordIds("expiredItems");
 
   const filtered = data.filter(r => {
     const date = new Date(r.expiryDate || r.date);
@@ -87045,10 +87135,14 @@ function renderExpiredItems() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="p-2">${r.item || ""}</td>
+      <td class="p-2">${r.warehouse || ""}</td>
       <td class="p-2">${r.quantity || ""}</td>
       <td class="p-2">${r.expiryDate || ""}</td>
+      <td class="p-2">${r.status || (r.disposed ? "Disposed" : "Expired")}</td>
       <td class="p-2">${window.__fmtBase(loss)}</td>
-      <td class="p-2">${r.reason || ""}</td>
+      <td class="p-2">${r.disposed
+        ? '<span class="text-xs text-gray-500">Disposed</span>'
+        : `<button onclick="disposeExpiredItemRow('${r.id}')" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700">Dispose / Write Off</button>`}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -87082,6 +87176,152 @@ function toggleExpiredItemsDarkMode(el) {
   if (!panel) return;
   panel.classList.toggle("bg-gray-900", el.checked);
   panel.classList.toggle("text-white", el.checked);
+}
+</script>
+<script>
+// --- Action shortcuts for report-only inventory views (Batch Tracking, Damaged Stock, Expired Items) ---
+// These let a user write off / adjust stock directly from the report row instead of having to
+// go back to the main Inventory or Stock Adjustment screens and re-enter the same details.
+// Records are matched by a stable r.id (never by array/filter position), which avoids the
+// same "index shifts under you" bug class flagged elsewhere in the app (e.g. supplier bill payments).
+
+function __ensureRecordIds(storageKey) {
+  let data = [];
+  try {
+    data = JSON.parse(localStorage.getItem(storageKey) || "[]");
+  } catch (e) {
+    console.warn(`Could not parse localStorage["${storageKey}"]; treating as empty.`, e);
+    data = [];
+  }
+  if (!Array.isArray(data)) return [];
+  let changed = false;
+  data.forEach(r => {
+    if (r && !r.id) {
+      r.id = (typeof crypto !== "undefined" && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : ("id_" + Date.now() + "_" + Math.random().toString(36).slice(2));
+      changed = true;
+    }
+  });
+  if (changed) {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    } catch (e) {
+      console.warn(`Could not persist generated ids for localStorage["${storageKey}"].`, e);
+    }
+  }
+  return data;
+}
+
+// Deducts qty from the matching item in the given warehouse's inventory and logs the
+// change to the existing Stock Adjustments (amendments) log, so it shows up in that
+// report too and stays auditable. Returns { success, message, deducted }.
+function __appReportWriteOff(warehouse, itemName, qty, reason, sourceLabel) {
+  try {
+    if (!warehouse || !itemName) {
+      return { success: false, message: "This record is missing a warehouse or item name, so stock can't be adjusted automatically. Use Stock Adjustment manually instead." };
+    }
+    qty = parseFloat(qty) || 0;
+    if (qty <= 0) {
+      return { success: false, message: "Nothing to write off — recorded quantity is zero." };
+    }
+    if (typeof getInventory !== "function" || typeof saveInventory !== "function") {
+      return { success: false, message: "Inventory functions are unavailable right now. Please try again from the Stock Adjustment screen." };
+    }
+    let inventory = getInventory(warehouse);
+    const item = inventory.find(i => i.name === itemName || i.sku === itemName);
+    if (!item) {
+      return { success: false, message: `"${itemName}" was not found in the "${warehouse}" inventory. It may already have been adjusted, or the warehouse/item name on this record doesn't match Inventory exactly.` };
+    }
+    const currentQty = parseFloat(item.qty) || 0;
+    const deduction = Math.min(qty, currentQty);
+    item.qty = currentQty - deduction;
+    saveInventory(warehouse, inventory);
+
+    try {
+      let amendments = JSON.parse(localStorage.getItem(typeof AMENDMENTS_KEY !== "undefined" ? AMENDMENTS_KEY : "amendments") || "[]");
+      amendments.unshift({
+        warehouse,
+        sku: item.sku || "",
+        item: item.name,
+        adjustmentType: "Remove",
+        quantity: -deduction,
+        reason: reason || sourceLabel,
+        date: new Date().toISOString(),
+        source: sourceLabel
+      });
+      localStorage.setItem(typeof AMENDMENTS_KEY !== "undefined" ? AMENDMENTS_KEY : "amendments", JSON.stringify(amendments));
+    } catch (e) {
+      console.warn("Wrote off stock but failed to log it to Stock Adjustments.", e);
+    }
+
+    if (typeof renderAmendmentsTable === "function") {
+      try { renderAmendmentsTable(); } catch (e) { console.warn("renderAmendmentsTable failed after write-off.", e); }
+    }
+    if (typeof updateAfterAdjustment === "function") {
+      try { updateAfterAdjustment({ single: true, warehouse }); } catch (e) { console.warn("updateAfterAdjustment failed after write-off.", e); }
+    }
+
+    const shortfall = qty - deduction;
+    const message = shortfall > 0
+      ? `${deduction} unit(s) of "${itemName}" written off from ${warehouse} (only ${deduction} were left in stock; ${shortfall} could not be deducted) and logged to Stock Adjustments.`
+      : `${deduction} unit(s) of "${itemName}" written off from ${warehouse} and logged to Stock Adjustments.`;
+    return { success: true, message, deducted: deduction };
+  } catch (e) {
+    console.warn("Write-off failed.", e);
+    return { success: false, message: "Something went wrong applying the write-off. No changes were saved." };
+  }
+}
+
+function writeOffDamagedStockRow(id) {
+  const data = JSON.parse(localStorage.getItem("damagedStock") || "[]");
+  const rec = data.find(r => r.id === id);
+  if (!rec) { alert("Couldn't find this record — the list may have changed. Please refresh and try again."); return; }
+  if (rec.writtenOff) { alert("This item has already been written off."); return; }
+  if (!confirm(`Write off ${rec.quantity || 0} unit(s) of "${rec.item}" from ${rec.warehouse || "its warehouse"}?\n\nThis will reduce Inventory and log a Stock Adjustment entry.`)) return;
+
+  const result = __appReportWriteOff(rec.warehouse, rec.item, rec.quantity, rec.reason, "Damaged stock write-off");
+  if (!result.success) { alert(result.message); return; }
+
+  rec.writtenOff = true;
+  rec.writtenOffDate = new Date().toISOString();
+  localStorage.setItem("damagedStock", JSON.stringify(data));
+  renderDamagedStock();
+  alert(result.message);
+}
+
+function disposeExpiredItemRow(id) {
+  const data = JSON.parse(localStorage.getItem("expiredItems") || "[]");
+  const rec = data.find(r => r.id === id);
+  if (!rec) { alert("Couldn't find this record — the list may have changed. Please refresh and try again."); return; }
+  if (rec.disposed) { alert("This item has already been disposed / written off."); return; }
+  if (!confirm(`Dispose ${rec.quantity || 0} unit(s) of "${rec.item}" from ${rec.warehouse || "its warehouse"}?\n\nThis will reduce Inventory and log a Stock Adjustment entry.`)) return;
+
+  const result = __appReportWriteOff(rec.warehouse, rec.item, rec.quantity, rec.reason, "Expired item disposal");
+  if (!result.success) { alert(result.message); return; }
+
+  rec.disposed = true;
+  rec.disposedDate = new Date().toISOString();
+  localStorage.setItem("expiredItems", JSON.stringify(data));
+  renderExpiredItems();
+  alert(result.message);
+}
+
+function adjustBatchTrackingRow(id) {
+  const data = JSON.parse(localStorage.getItem("batchTracking") || "[]");
+  const rec = data.find(r => r.id === id);
+  if (!rec) { alert("Couldn't find this batch — the list may have changed. Please refresh and try again."); return; }
+  if (rec.adjusted) { alert("This batch has already been adjusted."); return; }
+  if (!confirm(`Adjust stock for batch "${rec.batchNumber || ""}" — remove ${rec.quantity || 0} unit(s) of "${rec.item}" from ${rec.warehouse || "its warehouse"}?\n\nThis will reduce Inventory and log a Stock Adjustment entry.`)) return;
+
+  const result = __appReportWriteOff(rec.warehouse, rec.item, rec.quantity, `Batch ${rec.batchNumber || ""} (${rec.status || "adjustment"})`, "Batch tracking adjustment");
+  if (!result.success) { alert(result.message); return; }
+
+  rec.adjusted = true;
+  rec.adjustedDate = new Date().toISOString();
+  localStorage.setItem("batchTracking", JSON.stringify(data));
+  renderBatchTracking();
+  alert(result.message);
 }
 </script>
 <script>
@@ -103618,7 +103858,7 @@ function cloneBackupLog(id) {
 
   let logs = JSON.parse(localStorage.getItem("backupLogs") || "[]");
 
-  const log = logs.find(l => l.id == id);
+  const log = logs.find(l => String(l.id) === String(id));
 
   if (!log) return;
 
@@ -103643,7 +103883,7 @@ function printBackupLog(id) {
 
   let logs = JSON.parse(localStorage.getItem("backupLogs") || "[]");
 
-  const log = logs.find(l => l.id == id);
+  const log = logs.find(l => String(l.id) === String(id));
 
   if (!log) return;
 
@@ -106728,7 +106968,7 @@ function calculateCosting() {
       <p><strong>📉 Break-even Quantity:</strong>
         ${Math.ceil(breakEvenStandard)} units at Standard price,
         ${Math.ceil(breakEvenAdvanced)} units at Advanced/After-Discount price
-        <br><small class="text-gray-500">You produced ${quantity} unit${quantity == 1 ? '' : 's'} — selling this many covers your total cost of KSh ${totalCost.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)} at that price.</small>
+        <br><small class="text-gray-500">You produced ${quantity} unit${quantity === 1 ? '' : 's'} — selling this many covers your total cost of KSh ${totalCost.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)} at that price.</small>
       </p>
     </div>
     ${landedRows.length ? `
@@ -112977,194 +113217,17 @@ function refreshDashboardCards() {
   document.addEventListener("DOMContentLoaded", wireAllRates);
   setInterval(wireAllRates, 15000);
 
-
-  function inventoryTotal(){
-    let t = 0;
-    try {
-      const inv = ls("inventory", []) || [];
-      inv.forEach(i => { t += num(i.buyPrice||i.cost||i.unitCost||i.price) * num(i.qty||i.quantity||1); });
-    } catch(e){}
-   
-    try {
-      for (let i=0;i<localStorage.length;i++){
-        const k = localStorage.key(i);
-        if (!k || !k.startsWith("inventory_")) continue;
-        const arr = ls(k, []) || [];
-        arr.forEach(it => { t += num(it.buyPrice||it.cost||it.unitCost||it.price) * num(it.qty||it.quantity||1); });
-      }
-    } catch(e){}
-    return t;
-  }
-  function getNonCurrentAssets(){
-    const bs = ls("balanceSheet", {}) || {};
-    return Array.isArray(bs.nonCurrentAssets) ? bs.nonCurrentAssets : [];
-  }
-  function getNonCurrentLiabilities(){
-    const bs = ls("balanceSheet", {}) || {};
-    return Array.isArray(bs.nonCurrentLiabilities) ? bs.nonCurrentLiabilities : [];
-  }
-
-  function fmt(n){ return Number(n||0).toLocaleString(undefined,{minimumFractionDigits: (window.__getDecimalPlaces?window.__getDecimalPlaces():2),maximumFractionDigits: (window.__getDecimalPlaces?window.__getDecimalPlaces():2)}); }
-
-  function patchTrialBalance(){
-    const orig = window.renderTrialBalance;
-    if (typeof orig !== "function" || orig.__v3) return;
-    window.renderTrialBalance = function(){
-      const r = orig.apply(this, arguments);
-      try {
-        const tbl = document.getElementById("trialBalanceTable");
-        if (!tbl) return r;
-        const tbody = tbl.querySelector("tbody");
-       
-        const invRow = tbody.querySelector('tr[data-account="inventory"]');
-        const invTot = inventoryTotal();
-        if (invRow && invTot > 0){
-          invRow.querySelector(".debit").textContent  = fmt(invTot);
-          invRow.querySelector(".balance").textContent = fmt(invTot);
-        }
-      
-        injectBreakdownRows(tbody, "v3-nca", "1.2 Fixed Assets", getNonCurrentAssets(), "asset");
-       
-        injectLiabilityBreakdown(tbody);
-       
-        recomputeTbTotals(tbl);
-      } catch(e){ console.warn("v3 TB patch", e); }
-      return r;
-    };
-    window.renderTrialBalance.__v3 = true;
-  }
-
-  function injectBreakdownRows(tbody, marker, sectionLabel, items, kind){
-   
-    tbody.querySelectorAll('tr[data-v3-marker="'+marker+'"]').forEach(n => n.remove());
-    if (!items.length) return;
-  
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-    const header = rows.find(r => (r.textContent||"").trim().startsWith(sectionLabel));
-    if (!header) return;
-
-    let anchor = header;
-    items.forEach(it => {
-      const name = it.name || it.title || (kind==="asset"?"Asset":"Liability");
-      const val  = num(it.value || it.amount || it.total || it.cost || it.balance);
-      const tr   = document.createElement("tr");
-      tr.setAttribute("data-v3-marker", marker);
-      const dCell = kind === "liability" ? "" : fmt(val);
-      const cCell = kind === "liability" ? fmt(val) : "";
-      const bal   = kind === "liability" ? -val : val;
-      tr.innerHTML = `<td class="border p-2 pl-8">• ${name}</td>
-        <td class="border text-right"></td>
-        <td class="border text-right">${dCell}</td>
-        <td class="border text-right">${cCell}</td>
-        <td class="border text-right">${fmt(bal)}</td>`;
-      anchor.after(tr); anchor = tr;
-    });
-  }
-
-  function injectLiabilityBreakdown(tbody){
-  
-    tbody.querySelectorAll('tr[data-v3-section="ncl"]').forEach(n => n.remove());
-    const items = getNonCurrentLiabilities();
-    if (!items.length) return;
-   
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-    const liabHdr = rows.find(r => (r.textContent||"").trim().startsWith("2. LIABILITIES"));
-    if (!liabHdr) return;
-   
-    const eqHdr = rows.find(r => (r.textContent||"").trim().startsWith("3. EQUITY")) || liabHdr.parentElement.lastElementChild;
-    
-    const sub = document.createElement("tr");
-    sub.className = "bg-gray-50 font-medium";
-    sub.setAttribute("data-v3-section","ncl");
-    sub.innerHTML = '<td colspan="5" class="border p-2 pl-4">2.2 Non-Current Liabilities</td>';
-    eqHdr.parentElement.insertBefore(sub, eqHdr);
-    items.forEach(it => {
-      const name = it.name || it.title || "Liability";
-      const val  = num(it.amount || it.value || it.total || it.balance);
-      const tr = document.createElement("tr");
-      tr.setAttribute("data-v3-section","ncl");
-      tr.innerHTML = `<td class="border p-2 pl-8">• ${name}</td>
-        <td class="border text-right"></td>
-        <td class="border text-right"></td>
-        <td class="border text-right">${fmt(val)}</td>
-        <td class="border text-right">${fmt(-val)}</td>`;
-      eqHdr.parentElement.insertBefore(tr, eqHdr);
-    });
-  }
-
-  function recomputeTbTotals(tbl){
-    let op=0, d=0, c=0, b=0;
-    tbl.querySelectorAll("tbody tr").forEach(tr => {
-      const cells = tr.querySelectorAll("td");
-      if (cells.length < 5) return;
-      
-      if (cells[0].getAttribute("colspan")) return;
-      const parse = s => num(String(s||"").replace(/,/g,""));
-      op += parse(cells[1].textContent);
-      d  += parse(cells[2].textContent);
-      c  += parse(cells[3].textContent);
-      b  += parse(cells[4].textContent);
-    });
-    const set = (id,v) => { const n=$(id); if (n) n.textContent = fmt(v); };
-    set("tbOpeningTotal", op); set("tbDebitTotal", d);
-    set("tbCreditTotal", c);   set("tbBalanceTotal", b);
-  }
-
-  function patchGL(name){
-    const orig = window[name];
-    if (typeof orig !== "function" || orig.__v3) return;
-    window[name] = function(){
-      const r = orig.apply(this, arguments);
-      try {
-        const invTot = inventoryTotal();
-        const nca = getNonCurrentAssets().reduce((s,a) => s + num(a.value||a.amount||a.cost||a.balance), 0);
-        const ncl = getNonCurrentLiabilities().reduce((s,a) => s + num(a.amount||a.value||a.balance||a.total), 0);
-        const setVal = (id,v) => { const n=$(id); if (n) n.textContent = fmt(v); };
-        if (invTot){
-          setVal("glInventoryDebit", invTot); setVal("glInventoryCredit", 0);
-          setVal("glInventoryBalance", invTot); setVal("glInventoryRunningBalance", invTot);
-        }
-       
-        const host = document.getElementById(name === "renderGeneralLedger" ? "generalLedgerReport" : "generalLedgerDetailedReport");
-        if (host){
-          let strip = host.querySelector(".v3-nc-strip");
-          if (!strip){
-            strip = document.createElement("div");
-            strip.className = "v3-nc-strip mt-3 p-3 border-l-4 border-amber-500 bg-amber-50 text-sm rounded";
-            host.appendChild(strip);
-          }
-          const equityRecords = ls("equityRecords", []) || [];
-          const shareholderEquity = num(localStorage.getItem("shareholderEquity") || 0);
-          const equityTotal = shareholderEquity + equityRecords.reduce((s,e)=>s+num(e.value||e.amount),0);
-          const operationalCosts = ls("operationalCosts", []) || [];
-          const payrollRecords = ls("payrollRecords", []) || [];
-          const expensesTotal = operationalCosts.reduce((s,e)=>s+num(e.amount),0) +
-                                payrollRecords.reduce((s,p)=>s+num(p.net||p.amount),0);
-          const taxPayments = ls("taxPayments", []) || [];
-          const taxesTotal = taxPayments.reduce((s,t)=>s+num(t.amount),0);
-          strip.innerHTML =
-            `<strong>📒 Balance-sheet & P&L extras (auto):</strong>
-             Inventory / Stock: <b>${fmt(invTot)}</b> ·
-             Non-Current Assets: <b>${fmt(nca)}</b> ·
-             Non-Current Liabilities: <b>${fmt(ncl)}</b> ·
-             Equity: <b>${fmt(equityTotal)}</b> ·
-             Expenses: <b>${fmt(expensesTotal)}</b> ·
-             Taxes: <b>${fmt(taxesTotal)}</b>`;
-        }
-      } catch(e){ console.warn("v3 GL patch", e); }
-      return r;
-    };
-    window[name].__v3 = true;
-  }
-
-  function applyReportPatches(){
-    patchTrialBalance();
-    patchGL("renderGeneralLedger");
-    patchGL("renderGeneralLedgerDetailed");
-  }
-  setTimeout(applyReportPatches, 600);
-  setTimeout(applyReportPatches, 1800);
-  document.addEventListener("DOMContentLoaded", applyReportPatches);
+  /* ACX FIX: removed the dead TB/GL non-current-assets/inventory patch chain that
+     lived here (inventoryTotal/getNonCurrentAssets/getNonCurrentLiabilities/fmt/
+     patchTrialBalance/injectBreakdownRows/injectLiabilityBreakdown/recomputeTbTotals/
+     patchGL/applyReportPatches). It monkey-patched window.renderTrialBalance,
+     renderGeneralLedger and renderGeneralLedgerDetailed, but a later script
+     ("reports-patch v6", further down the file) fully replaces all three functions
+     with a self-contained implementation that already includes Inventory, Non-Current
+     Assets and Non-Current Liabilities, so this chain never ran and its DOM lookups
+     (data-account rows, "1. ..." section-label text matches) no longer match the
+     markup that v6 renders anyway. The storage-event listener just below is kept -
+     it still correctly refreshes whatever the live render functions are. */
 
   window.addEventListener("storage", e => {
     if (!e.key) return;
@@ -113362,8 +113425,8 @@ function refreshDashboardCards() {
   const _showTab = window.showTab;
   if (typeof _showTab === 'function'){
     window.showTab = function(id){
-      const r = _showTab.apply(this, arguments);
-      if (id === 'projectTab') setTimeout(populateProjectExpenseDropdowns, 50);
+      let r; try { r = _showTab.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before projectTab hook threw:', e); }
+      try { if (id === 'projectTab') setTimeout(populateProjectExpenseDropdowns, 50); } catch(e){ console.error('[showTab chain] projectTab hook:', e); }
       return r;
     };
   }
@@ -113828,20 +113891,13 @@ function toggleSubmenu(id) {
   }
 
   
-  function getInventory(){
-    var items = ls('inventory', []);
-    if(!Array.isArray(items) || !items.length){
-      
-      for(var i=0;i<localStorage.length;i++){
-        var k = localStorage.key(i);
-        if(k && k.indexOf('inventory_')===0){
-          var v = ls(k, null);
-          if(Array.isArray(v)) items = items.concat(v);
-        }
-      }
-    }
-    return Array.isArray(items) ? items : [];
-  }
+  // ACX FIX: this module used to keep its own local getInventory(), a third
+  // storage convention distinct from the app's canonical getInventory()
+  // (defined once, near the top of the file). Being closure-scoped it never
+  // clobbered the global version, but it could silently drift out of sync
+  // with it. Removed so calls below fall through to the one canonical
+  // getInventory() — same behavior (flat "inventory" key, falling back to
+  // aggregating every inventory_<warehouse> key), one place to maintain.
   function getMovements(){
     var m = ls('movements', []);
     return Array.isArray(m) ? m : [];
@@ -114260,12 +114316,6 @@ function toggleSubmenu(id) {
     var backup = ls('nonCurrentAssetsBackup', []) || [];
     return Array.isArray(backup) ? backup : [];
   }
-  function getNonCurrentLiabilities(){
-    var bs = ls('balanceSheet', {}) || {};
-    var live = Array.isArray(bs.nonCurrentLiabilities) ? bs.nonCurrentLiabilities : [];
-    if (live.length) return live;
-    return ls('nonCurrentLiabilitiesBackup', []) || [];
-  }
 
   
   
@@ -114322,409 +114372,19 @@ function toggleSubmenu(id) {
 
 
 
-  function patchCashFlow(){
-    var orig = window.renderCashFlow;
-    window.renderCashFlow = function(){
-      if (typeof orig === 'function'){ try { orig.apply(this, arguments); } catch(e){ console.warn(e); } }
-      var banks = ls('banks', []) || [];
-      var bankTotal = (typeof __banksForTotals==='function'?__banksForTotals(banks):banks).reduce(function(s,b){ return s + num(b.balance||b.amount||b.currentBalance); }, 0);
-
-      
-      var readNum = function(id){
-        var el = document.getElementById(id); if (!el) return 0;
-        return num((el.textContent||'').replace(/[^0-9.\-]/g,''));
-      };
-      var opTotal   = readNum('cfOperatingTotal');
-      var invTotal  = readNum('cfInvestingTotal');
-      var finTotal  = readNum('cfFinancingTotal');
-      var netChange = opTotal + invTotal + finTotal;
-
-      
-      var openingCash = bankTotal - netChange;
-      var closingCash = bankTotal; 
-
-      var setVal = function(id, val){
-        var el = document.getElementById(id); if (!el) return;
-        el.textContent = 'KES ' + fmt(val);
-      };
-      setVal('cfNetChange', netChange);
-      setVal('cfOpeningCash', openingCash);
-      setVal('cfClosingCash', closingCash);
-
-      try {
-        localStorage.setItem('cashFlowSummary', JSON.stringify({
-          openingCash: openingCash, closingCash: closingCash, netChange: netChange,
-          cashFromOperations: opTotal, investingTotal: invTotal, financingTotal: finTotal
-        }));
-      } catch(_){}
-    };
-  }
-
-  
-  
-  
-  function patchTrialBalance(){
-    var orig = window.renderTrialBalance;
-    if (typeof orig !== 'function') return;
-    window.renderTrialBalance = function(){
-      orig.apply(this, arguments);
-      var assets = getNonCurrentAssets();
-      var buckets = { equipment:0, furniture:0, vehicles:0, computers:0 };
-      assets.forEach(function(a){
-        var cost = num(a.cost||a.value||a.amount||a.purchasePrice);
-        var dep  = num(a.accumulatedDepreciation||a.depreciation);
-        var nbv  = cost - dep;
-        var cat  = (a.category||a.type||a.class||a.name||'').toLowerCase();
-        if (/vehic|motor|truck|car/.test(cat))         buckets.vehicles  += nbv;
-        else if (/comput|laptop|it |server|printer/.test(cat)) buckets.computers += nbv;
-        else if (/furn|fixture|desk|chair/.test(cat))  buckets.furniture += nbv;
-        else                                            buckets.equipment += nbv;
-      });
-      var ncLiab = getNonCurrentLiabilities();
-      var loans = ncLiab.reduce(function(s,l){ return s + num(l.balance||l.amount||l.value||l.outstanding); }, 0);
-
-      var setRow = function(acct, dr, cr){
-        var row = document.querySelector('#trialBalanceTable tbody tr[data-account="'+acct+'"]');
-        if (!row) return;
-        var d = row.querySelector('.debit'), c = row.querySelector('.credit'), b = row.querySelector('.balance');
-        if (d) d.textContent = fmt(dr);
-        if (c) c.textContent = fmt(cr);
-        if (b) b.textContent = fmt(dr - cr);
-      };
-      setRow('equipment', buckets.equipment, 0);
-      setRow('furniture', buckets.furniture, 0);
-      setRow('vehicles',  buckets.vehicles,  0);
-      setRow('computers', buckets.computers, 0);
-
-      
-      var tbody = document.querySelector('#trialBalanceTable tbody');
-      if (tbody && loans){
-        var ll = tbody.querySelector('tr[data-account="long_term_loans"]');
-        if (!ll){
-          ll = document.createElement('tr');
-          ll.setAttribute('data-account','long_term_loans');
-          ll.innerHTML = '<td class="border p-2 pl-8">Long-Term Loans</td>'+
-            '<td class="border text-right opening"></td>'+
-            '<td class="border text-right debit"></td>'+
-            '<td class="border text-right credit"></td>'+
-            '<td class="border text-right balance"></td>';
-          var creditorRow = tbody.querySelector('tr[data-account="creditors"]');
-          if (creditorRow && creditorRow.nextSibling) creditorRow.parentNode.insertBefore(ll, creditorRow.nextSibling);
-          else tbody.appendChild(ll);
-        }
-        setRow('long_term_loans', 0, loans);
-      }
-
-      
-      var totOp=0, totD=0, totC=0, totB=0;
-      tbody && tbody.querySelectorAll('tr[data-account]').forEach(function(r){
-        var d = num((r.querySelector('.debit')?.textContent||'').replace(/,/g,''));
-        var c = num((r.querySelector('.credit')?.textContent||'').replace(/,/g,''));
-        totD += d; totC += c; totB += (d-c);
-      });
-      var setId = function(id,v){ var e=document.getElementById(id); if(e) e.textContent = fmt(v); };
-      setId('tbDebitTotal', totD); setId('tbCreditTotal', totC); setId('tbBalanceTotal', totB);
-    };
-  }
-
-  
-  
-  
-  function ensureGLRow(afterId, label, id){
-    var anchor = document.getElementById(afterId);
-    if (!anchor || document.getElementById(id+'Debit')) return;
-    var tr = anchor.closest('tr'); if (!tr || !tr.parentNode) return;
-    var nr = document.createElement('tr');
-    nr.innerHTML =
-      '<td class="border px-2 py-1 pl-8">'+label+'</td>'+
-      '<td class="border text-right" id="'+id+'Debit">0</td>'+
-      '<td class="border text-right" id="'+id+'Credit">0</td>'+
-      '<td class="border text-right" id="'+id+'Balance">0</td>'+
-      '<td class="border text-right" id="'+id+'RunningBalance">0</td>';
-    tr.parentNode.insertBefore(nr, tr.nextSibling);
-  }
-  function patchGeneralLedger(){
-    var orig = window.renderGeneralLedger;
-    if (typeof orig !== 'function') return;
-    window.renderGeneralLedger = function(){
-      
-      ensureGLRow('glInventoryDebit',  'Fixed Assets (NBV)',    'glFixedAssets');
-      ensureGLRow('glAPDebit',         'Long-Term Loans',       'glLongTermLoans');
-      orig.apply(this, arguments);
-
-      var assets = getNonCurrentAssets();
-      var nbv = assets.reduce(function(s,a){
-        return s + (num(a.cost||a.value||a.amount||a.purchasePrice) - num(a.accumulatedDepreciation||a.depreciation));
-      }, 0);
-      var loans = getNonCurrentLiabilities().reduce(function(s,l){ return s + num(l.balance||l.amount||l.value||l.outstanding); }, 0);
-
-      var setPair = function(id, dr, cr){
-        var d=document.getElementById(id+'Debit'), c=document.getElementById(id+'Credit'),
-            b=document.getElementById(id+'Balance'), r=document.getElementById(id+'RunningBalance');
-        if(d) d.textContent = fmt(dr);
-        if(c) c.textContent = fmt(cr);
-        if(b) b.textContent = fmt(dr-cr);
-        if(r) r.textContent = fmt(dr-cr);
-      };
-      setPair('glFixedAssets', nbv, 0);
-      setPair('glLongTermLoans', 0, loans);
-    };
-  }
-
   function init(){
-    patchCashFlow();
-    patchTrialBalance();
-    patchGeneralLedger();
     try { renderFAR(); } catch(e){}
-    try { window.renderTrialBalance && window.renderTrialBalance(); } catch(e){}
-    try { window.renderGeneralLedger && window.renderGeneralLedger(); } catch(e){}
-    try { window.renderCashFlow && window.renderCashFlow(); } catch(e){}
-    console.info('[reports-patch v2] TB/GL/CF/FAR patched.');
+    console.info('[reports-patch v2] FAR rendered. (TB/GL/CF monkey-patches removed here - reports-patch v6, further down, fully replaces those render functions and already includes the same non-current-assets/long-term-loan figures.)');
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else setTimeout(init, 300);
 })();
 </script>
-<script>
-
-(function(){
-  var num = function(v){ v = parseFloat(v); return isFinite(v)?v:0; };
-  var ls  = function(k, def){ try { return JSON.parse(localStorage.getItem(k) || 'null') ?? def; } catch(e){ return def; } };
-  var fmt = function(n){ return Number(n||0).toLocaleString(undefined,{minimumFractionDigits: (window.__getDecimalPlaces?window.__getDecimalPlaces():2),maximumFractionDigits: (window.__getDecimalPlaces?window.__getDecimalPlaces():2)}); };
-
-  
-  function pnl(){
-    var inv       = ls('invoices', []) || [];
-    var otherInc  = ls('otherIncome', []) || [];
-    var ops       = ls('operationalCosts', []) || [];
-    var pay       = ls('payrollRecords', []) || [];
-    var taxes     = ls('taxPayments', []) || [];
-    var pld       = ls('profitLossData', {}) || {};
-
-    var revenue    = inv.reduce(function(s,x){ return s + num(x.subtotal||x.total||x.amount||x.grandTotal); },0);
-    var otherIncT  = otherInc.reduce(function(s,x){ return s + num(x.amount||x.total); },0);
-    var cogs       = num(pld.cogs) || inv.reduce(function(s,x){ return s + num(x.cost||x.cogs); },0);
-    var payroll    = num(pld.totalGross) || pay.reduce(function(s,x){ return s + num(x.gross||x.netPay||x.amount); },0);
-
-    
-    var buckets = { rent:0, utilities:0, transport:0, office:0 };
-    ops.forEach(function(o){
-      var k = String(o.category||o.type||o.name||o.description||'').toLowerCase();
-      var a = num(o.amount||o.total);
-      if      (/rent|lease/.test(k))                          buckets.rent      += a;
-      else if (/util|electric|water|power|internet|inter|phone|airtime/.test(k))
-                                                              buckets.utilities += a;
-      else if (/transp|fuel|petrol|diesel|vehicle|travel/.test(k))
-                                                              buckets.transport += a;
-      else                                                    buckets.office    += a;
-    });
-
-
-    var taxB = { paye:0, nssf:0, shif:0, vat:0, corp:0, other:0 };
-    var totalTax = 0;
-    taxes.forEach(function(t){
-      var k = String(t.type||t.category||t.name||t.description||'').toLowerCase();
-      var a = num(t.amount||t.total); totalTax += a;
-      if      (/paye/.test(k))                       taxB.paye += a;
-      else if (/nssf/.test(k))                       taxB.nssf += a;
-      else if (/shif|nhif/.test(k))                  taxB.shif += a;
-      else if (/vat/.test(k))                        taxB.vat  += a;
-      else if (/corp|income tax|profit tax/.test(k)) taxB.corp += a;
-      else                                           taxB.other+= a;
-    });
-
-    return {
-      revenue:revenue, otherIncome:otherIncT, cogs:cogs, payroll:payroll,
-      op:buckets, taxes:taxB, totalTax:totalTax
-    };
-  }
-
-
-
-
-  function patchTBFromPL(){
-    var orig = window.renderTrialBalance;
-    if (typeof orig !== 'function') return;
-    window.renderTrialBalance = function(){
-      orig.apply(this, arguments);
-      var p = pnl();
-      var tbody = document.querySelector('#trialBalanceTable tbody');
-      if (!tbody) return;
-
-      var setRow = function(acct, dr, cr){
-        var row = tbody.querySelector('tr[data-account="'+acct+'"]');
-        if (!row) return;
-        var d = row.querySelector('.debit'), c = row.querySelector('.credit'), b = row.querySelector('.balance');
-        if (d) d.textContent = fmt(dr);
-        if (c) c.textContent = fmt(cr);
-        if (b) b.textContent = fmt(dr - cr);
-      };
-
-      
-      setRow('sales',        0, p.revenue);
-      setRow('other_income', 0, p.otherIncome);
-
-      
-      setRow('salaries',        p.payroll,      0);
-      setRow('rent',            p.op.rent,      0);
-      setRow('utilities',       p.op.utilities, 0);
-      setRow('transport',       p.op.transport, 0);
-      setRow('office_expenses', p.op.office,    0);
-
-      
-      var lastExp = tbody.querySelector('tr[data-account="office_expenses"]');
-      var ensureRow = function(acct, label, before){
-        var r = tbody.querySelector('tr[data-account="'+acct+'"]');
-        if (r) return r;
-        r = document.createElement('tr');
-        r.setAttribute('data-account', acct);
-        r.innerHTML = '<td class="border p-2 pl-8">'+label+'</td>'+
-          '<td class="border text-right opening"></td>'+
-          '<td class="border text-right debit"></td>'+
-          '<td class="border text-right credit"></td>'+
-          '<td class="border text-right balance"></td>';
-        (before ? before.parentNode.insertBefore(r, before) : tbody.appendChild(r));
-        return r;
-      };
-      ensureRow('cogs', 'Cost of Goods Sold', tbody.querySelector('tr[data-account="salaries"]'));
-      setRow('cogs', p.cogs, 0);
-
-      
-      var totalRow = tbody.querySelector('tr.bg-gray-100.font-bold') ||
-                     tbody.querySelector('tr:last-child');
-      var header = tbody.querySelector('tr[data-tax-header="1"]');
-      if (!header){
-        header = document.createElement('tr');
-        header.setAttribute('data-tax-header','1');
-        header.className = 'bg-blue-100 font-semibold';
-        header.innerHTML = '<td colspan="5" class="border p-2">6. TAXES</td>';
-        totalRow.parentNode.insertBefore(header, totalRow);
-      }
-      [
-        ['tax_paye',      'PAYE Tax',            p.taxes.paye],
-        ['tax_nssf',      'NSSF Contribution',   p.taxes.nssf],
-        ['tax_shif',      'SHIF / NHIF',         p.taxes.shif],
-        ['tax_vat',       'VAT Paid',            p.taxes.vat],
-        ['tax_corp',      'Corporate / Income Tax', p.taxes.corp],
-        ['tax_other',     'Other Taxes',         p.taxes.other]
-      ].forEach(function(t){
-        ensureRow(t[0], t[1], totalRow);
-        setRow(t[0], num(t[2]), 0);
-      });
-
-      
-      var totD=0, totC=0;
-      tbody.querySelectorAll('tr[data-account]').forEach(function(r){
-        totD += num((r.querySelector('.debit')?.textContent||'').replace(/,/g,''));
-        totC += num((r.querySelector('.credit')?.textContent||'').replace(/,/g,''));
-      });
-      var setId = function(id,v){ var e=document.getElementById(id); if(e) e.textContent = fmt(v); };
-      setId('tbDebitTotal', totD); setId('tbCreditTotal', totC); setId('tbBalanceTotal', totD-totC);
-    };
-  }
-
-  
-  
-  
-  function setGL(id, dr, cr){
-    var d=document.getElementById(id+'Debit'), c=document.getElementById(id+'Credit'),
-        b=document.getElementById(id+'Balance'), r=document.getElementById(id+'RunningBalance');
-    if(d) d.textContent = fmt(dr);
-    if(c) c.textContent = fmt(cr);
-    if(b) b.textContent = fmt(dr-cr);
-    if(r) r.textContent = fmt(dr-cr);
-  }
-  function ensureGLRowAfter(anchorId, label, id){
-    var anchor = document.getElementById(anchorId);
-    if (!anchor || document.getElementById(id+'Debit')) return;
-    var tr = anchor.closest('tr'); if (!tr || !tr.parentNode) return;
-    var nr = document.createElement('tr');
-    nr.innerHTML =
-      '<td class="border px-2 py-1 pl-6">'+label+'</td>'+
-      '<td class="border text-right" id="'+id+'Debit">0</td>'+
-      '<td class="border text-right" id="'+id+'Credit">0</td>'+
-      '<td class="border text-right" id="'+id+'Balance">0</td>'+
-      '<td class="border text-right" id="'+id+'RunningBalance">0</td>';
-    tr.parentNode.insertBefore(nr, tr.nextSibling);
-  }
-  function ensureGLSection(label){
-    var body = document.getElementById('generalLedger'); if (!body) return null;
-    var existing = body.querySelector('tr[data-gl-section="'+label+'"]');
-    if (existing) return existing;
-    var tr = document.createElement('tr');
-    tr.setAttribute('data-gl-section', label);
-    tr.className = 'bg-blue-50 font-semibold';
-    tr.innerHTML = '<td colspan="5" class="border p-2">'+label+'</td>';
-    body.appendChild(tr);
-    return tr;
-  }
-  function ensureGLRowInSection(sectionLabel, label, id){
-    var section = ensureGLSection(sectionLabel);
-    if (!section || document.getElementById(id+'Debit')) return;
-    var nr = document.createElement('tr');
-    nr.innerHTML =
-      '<td class="border px-2 py-1 pl-6">'+label+'</td>'+
-      '<td class="border text-right" id="'+id+'Debit">0</td>'+
-      '<td class="border text-right" id="'+id+'Credit">0</td>'+
-      '<td class="border text-right" id="'+id+'Balance">0</td>'+
-      '<td class="border text-right" id="'+id+'RunningBalance">0</td>';
-    section.parentNode.insertBefore(nr, section.nextSibling);
-  }
-
-  function patchGLFromPL(){
-    var orig = window.renderGeneralLedger;
-    if (typeof orig !== 'function') return;
-    window.renderGeneralLedger = function(){
-      
-      ensureGLRowInSection('6. Income (from P&L)',   'Sales Revenue',       'glPLSales');
-      ensureGLRowInSection('6. Income (from P&L)',   'Other Income',        'glPLOther');
-      ensureGLRowInSection('7. Expenses (from P&L)', 'Cost of Goods Sold',  'glPLCogs');
-      ensureGLRowInSection('7. Expenses (from P&L)', 'Salaries & Wages',    'glPLSalaries');
-      ensureGLRowInSection('7. Expenses (from P&L)', 'Rent',                'glPLRent');
-      ensureGLRowInSection('7. Expenses (from P&L)', 'Utilities',           'glPLUtil');
-      ensureGLRowInSection('7. Expenses (from P&L)', 'Transport & Fuel',    'glPLTransport');
-      ensureGLRowInSection('7. Expenses (from P&L)', 'Office Expenses',     'glPLOffice');
-      ensureGLRowInSection('8. Taxes (from P&L)',    'PAYE Tax',            'glPLTaxPAYE');
-      ensureGLRowInSection('8. Taxes (from P&L)',    'NSSF Contribution',   'glPLTaxNSSF');
-      ensureGLRowInSection('8. Taxes (from P&L)',    'SHIF / NHIF',         'glPLTaxSHIF');
-      ensureGLRowInSection('8. Taxes (from P&L)',    'VAT Paid',            'glPLTaxVAT');
-      ensureGLRowInSection('8. Taxes (from P&L)',    'Corporate / Income Tax','glPLTaxCorp');
-      ensureGLRowInSection('8. Taxes (from P&L)',    'Other Taxes',         'glPLTaxOther');
-
-      orig.apply(this, arguments);
-
-      var p = pnl();
-      
-      setGL('glPLSales',    0, p.revenue);
-      setGL('glPLOther',    0, p.otherIncome);
-      
-      setGL('glPLCogs',      p.cogs,        0);
-      setGL('glPLSalaries',  p.payroll,     0);
-      setGL('glPLRent',      p.op.rent,     0);
-      setGL('glPLUtil',      p.op.utilities,0);
-      setGL('glPLTransport', p.op.transport,0);
-      setGL('glPLOffice',    p.op.office,   0);
-      
-      setGL('glPLTaxPAYE',  p.taxes.paye,  0);
-      setGL('glPLTaxNSSF',  p.taxes.nssf,  0);
-      setGL('glPLTaxSHIF',  p.taxes.shif,  0);
-      setGL('glPLTaxVAT',   p.taxes.vat,   0);
-      setGL('glPLTaxCorp',  p.taxes.corp,  0);
-      setGL('glPLTaxOther', p.taxes.other, 0);
-    };
-  }
-
-  function init(){
-    patchTBFromPL();
-    patchGLFromPL();
-    try { window.renderTrialBalance   && window.renderTrialBalance(); } catch(e){}
-    try { window.renderGeneralLedger  && window.renderGeneralLedger(); } catch(e){}
-    console.info('[reports-patch v3] TB & GL income/expense/taxes wired from P&L.');
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else setTimeout(init, 400);
-})();
-</script>
+<!-- ACX FIX: removed the dead "reports-patch v3" (patchTBFromPL/patchGLFromPL) block here.
+     It monkey-patched window.renderTrialBalance/renderGeneralLedger to inject P&L rows,
+     but a later script ("reports-patch v6", further down) fully replaces both functions
+     with a self-contained implementation that already includes the same P&L figures,
+     so this whole block never ran and its DOM lookups no longer matched anyway. -->
 <script>
 
 (function(){
@@ -117933,13 +117593,15 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
   if (typeof window.showTab === 'function') {
     const orig = window.showTab;
     window.showTab = function(id){
-      orig.apply(this, arguments);
-      try { logAudit('viewed', String(id).replace(/Tab$/,''), 'Opened ' + id); } catch(e){}
-      if (id === 'axAnalyticsTab') renderAnalytics();
-      if (id === 'axApprovalsTab') renderApprovals();
-      if (id === 'axAuditTab') renderActivity();
-      if (id === 'axBudgetTab') renderBudgetCenter();
-      if (id === 'preferencesTab' && typeof AX.refreshPrefPanels === 'function') AX.refreshPrefPanels();
+      try { orig.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before audit hook threw:', e); }
+      try {
+        try { logAudit('viewed', String(id).replace(/Tab$/,''), 'Opened ' + id); } catch(e){}
+        if (id === 'axAnalyticsTab') renderAnalytics();
+        if (id === 'axApprovalsTab') renderApprovals();
+        if (id === 'axAuditTab') renderActivity();
+        if (id === 'axBudgetTab') renderBudgetCenter();
+        if (id === 'preferencesTab' && typeof AX.refreshPrefPanels === 'function') AX.refreshPrefPanels();
+      } catch(e){ console.error('[showTab chain] audit/analytics hook:', e); }
     };
   }
 
@@ -119429,9 +119091,17 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
 
   function grnDefaults(){
     const loc = document.getElementById('grnLocation');
-    if (loc && !loc.value) {
-      const org = J('orgInfo', {});
-      loc.value = org.location || org.address || '';
+    if (loc && loc.tagName === 'SELECT') {
+      const currentVal = loc.value;
+      const warehouses = J('warehouses', []);
+      loc.innerHTML = '<option value="">-- Select Warehouse --</option>' +
+        warehouses.map(w => '<option>' + esc(w.name || w) + '</option>').join('');
+      if (currentVal && warehouses.some(w => (w.name || w) === currentVal)) {
+        loc.value = currentVal;
+      } else if (!currentVal && warehouses.length) {
+        const def = warehouses.find(w => w.isDefault || w.default) || warehouses[0];
+        loc.value = def.name || def;
+      }
     }
     const rec = document.getElementById('grnReceiver');
     if (rec && rec.tagName === 'INPUT') {
@@ -120032,7 +119702,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
 
   const origShow2 = window.showTab;
   window.showTab = function(id){
-    const r = origShow2.apply(this, arguments);
+    let r; try { r = origShow2.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before settings hook threw:', e); }
     try {
       if (id === 'userActivityTab') renderUserActivity();
       if (id === 'systemConfigurationTab') { openingBalances(); renderOB(); }
@@ -120040,7 +119710,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
       if (id === 'taxComplianceTab' && typeof window.renderTaxCompliance === 'function') window.renderTaxCompliance();
       if (id === 'grnTab') grnDefaults();
       if (id === 'fundsTab') txToggle();
-    } catch(e){}
+    } catch(e){ console.error('[showTab chain] settings hook:', e); }
     return r;
   };
 
@@ -120680,7 +120350,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
   const _origShowTab = window.showTab;
   if (typeof _origShowTab === 'function'){
     window.showTab = function(id){
-      const r = _origShowTab.apply(this, arguments);
+      let r; try { r = _origShowTab.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before inv-adapter hook threw:', e); }
       try {
         hydrateAllWarehouseSelects();
         if (id === 'packagesTab' && typeof renderPackages === 'function') renderPackages();
@@ -120959,7 +120629,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
   const _origShowTab = window.showTab;
   if (typeof _origShowTab === 'function'){
     window.showTab = function(name){
-      const r = _origShowTab.apply(this, arguments);
+      let r; try { r = _origShowTab.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before equity/tx adapter hook threw:', e); }
       try {
         if (name === 'equityTab'){
           if (typeof loadEquityAccounts === 'function') loadEquityAccounts();
@@ -121067,7 +120737,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     var orig = window.showTab;
     if (typeof orig !== 'function') return;
     window.showTab = function(id){
-      var r = orig.apply(this, arguments);
+      var r; try { r = orig.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before renderUASafe hook threw:', e); }
       try { if (id === 'userActivityTab') renderUASafe(); } catch(e){}
       return r;
     };
@@ -121198,7 +120868,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
   (function wrapShow(){
     var o = window.showTab; if (typeof o !== 'function') { setTimeout(wrapShow, 300); return; }
     if (window.__uaShowTabWrapped2) return; window.__uaShowTabWrapped2 = true;
-    window.showTab = function(id){ var r = o.apply(this, arguments); if (id==='userActivityTab') setTimeout(renderUAFromLS, 40); return r; };
+    window.showTab = function(id){ var r; try { r = o.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before renderUAFromLS hook threw:', e); } try { if (id==='userActivityTab') setTimeout(renderUAFromLS, 40); } catch(e){ console.error('[showTab chain] renderUAFromLS hook:', e); } return r; };
   })();
   setTimeout(function(){
     var t = document.getElementById('userActivityTab');
@@ -122205,14 +121875,14 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     if (window.__baLogShowTabWrapped) return;
     window.__baLogShowTabWrapped = true;
     window.showTab = function(id){
-      var r = orig.apply(this, arguments);
+      var r; try { r = orig.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before BulkAdjustment log hook threw:', e); }
       try {
         if (id === 'BulkAdjustment') {
           rebindBulkAdjustmentButtons();
           wireLogControls();
           window.renderBulkAdjustmentLog();
         }
-      } catch (e) {}
+      } catch (e) { console.error('[showTab chain] BulkAdjustment log hook:', e); }
       return r;
     };
   })();
@@ -124537,12 +124207,14 @@ try{
     if(typeof window.showTab === 'function' && !window.showTab.__zfWrapped){
       var orig = window.showTab;
       var wrapped = function(id){
-        var r = orig.apply(this, arguments);
-        window.__zfDefer(function(){
-          setupAll();
-          var t = document.getElementById(id);
-          if(t && t.__zfPanels) setOpen(t, false);
-        }, 2);
+        var r; try { r = orig.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before zf hook threw:', e); }
+        try {
+          window.__zfDefer(function(){
+            setupAll();
+            var t = document.getElementById(id);
+            if(t && t.__zfPanels) setOpen(t, false);
+          }, 2);
+        } catch(e){ console.error('[showTab chain] zf hook:', e); }
         return r;
       };
       wrapped.__zfWrapped = true;
@@ -124874,7 +124546,7 @@ try{
           if(sD && d<sD) ok=false;
           if(eD && d>eD) ok=false;
           if(ok && f.months.length) ok = f.months.some(function(m){
-            var p=m.split("-"); return d.getFullYear()==+p[0] && (d.getMonth()+1)==+p[1];
+            var p=m.split("-"); return d.getFullYear() === +p[0] && (d.getMonth() + 1) === +p[1];
           });
         }
       }
@@ -128279,12 +127951,14 @@ try{
     if (typeof window.showTab === "function" && !window.showTab.__vxHubWrapped){
       var orig = window.showTab;
       var wrapped = function (id){
-        var r = orig.apply(this, arguments);
-        setTimeout(function (){
-          setupExtraAll();
-          var t = el(id);
-          if (t && t.__zfPanels && EXTRA_TABS.indexOf(id) !== -1) setOpen(t, false);
-        }, 30);
+        var r; try { r = orig.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before vxHub hook threw:', e); }
+        try {
+          setTimeout(function (){
+            setupExtraAll();
+            var t = el(id);
+            if (t && t.__zfPanels && EXTRA_TABS.indexOf(id) !== -1) setOpen(t, false);
+          }, 30);
+        } catch(e){ console.error('[showTab chain] vxHub hook:', e); }
         return r;
       };
       wrapped.__vxHubWrapped = true;
@@ -128959,14 +128633,16 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
     if (typeof window.showTab !== "function" || window.showTab.__v230) return;
     var orig = window.showTab;
     var w = function(id){
-      var r = orig.apply(this, arguments);
-      setTimeout(function(){
-        setupHubs();
-        var t = el(id);
-        if (t && t.__hubPanels) setOpen(t, false);
-        ensureVatLinks();
-        try { decorateProfitLoss(); } catch(e){}
-      }, 60);
+      var r; try { r = orig.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before v230 hook threw:', e); }
+      try {
+        setTimeout(function(){
+          setupHubs();
+          var t = el(id);
+          if (t && t.__hubPanels) setOpen(t, false);
+          ensureVatLinks();
+          try { decorateProfitLoss(); } catch(e){}
+        }, 60);
+      } catch(e){ console.error('[showTab chain] v230 hook:', e); }
       return r;
     };
     w.__v230 = true;
@@ -131463,7 +131139,7 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
 
   async function generateInventoryForecast() {
     var inventory = [];
-    try { inventory = JSON.parse(localStorage.getItem("inventory") || "[]"); } catch (e) {}
+    try { inventory = (typeof getInventory === "function") ? getInventory() : JSON.parse(localStorage.getItem("inventory") || "[]"); } catch (e) {}
     var summary = inventory.slice(0, 40).map(function (i) {
       return { name: i.name || "Unnamed item", warehouse: i.warehouse || "Main Warehouse", qty: parseFloat(i.qty) || 0, sellPrice: parseFloat(i.sellPrice) || 0 };
     });
@@ -131555,7 +131231,7 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
     if (typeof window.showTab !== "function" || window.showTab.__acxWhFixWrapped) { setTimeout(hookShowTab, 300); return; }
     var orig = window.showTab;
     var wrapped = function (id) {
-      var r = orig.apply(this, arguments);
+      var r; try { r = orig.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before warehouse-restore hook threw:', e); }
       try {
         wireChangeListeners();
 
@@ -136532,8 +136208,8 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
     if (typeof window.showTab === 'function' && !window.showTab.__acxBankWrapped) {
     var orig = window.showTab;
     window.showTab = function () {
-      var r = orig.apply(this, arguments);
-      setTimeout(boot, 0);
+      var r; try { r = orig.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before bank-table hook threw:', e); }
+      try { setTimeout(boot, 0); } catch(e){ console.error('[showTab chain] bank-table hook:', e); }
       return r;
     };
     window.showTab.__acxBankWrapped = true;
@@ -138425,7 +138101,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   window.viewPackage = function (id) {
     var orders = [];
     try { orders = JSON.parse(localStorage.getItem('orders') || '[]'); } catch (e) {}
-    var pkg = orders.find(function (o) { return o.id == id; });
+    var pkg = orders.find(function (o) { return String(o.id) === String(id); });
     if (!pkg) { alert('Package not found'); return; }
     var itemsHtml = (pkg.items || []).map(function (item) {
       return '<tr><td style="border:1px solid #d1d5db;padding:10px">' + esc(item.desc || '-') + '</td>' +
@@ -139907,9 +139583,11 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   var _showTab = window.showTab;
   if (typeof _showTab === 'function') {
     window.showTab = function (id) {
-      var r = _showTab.apply(this, arguments);
-      if (id === 'Amenend' || id === 'BulkAdjustment') later(ensureFields);
-      later(sweep);
+      var r; try { r = _showTab.apply(this, arguments); } catch(e){ console.error('[showTab chain] link before field-sweep hook threw:', e); }
+      try {
+        if (id === 'Amenend' || id === 'BulkAdjustment') later(ensureFields);
+        later(sweep);
+      } catch(e){ console.error('[showTab chain] field-sweep hook:', e); }
       return r;
     };
   }
@@ -140132,23 +139810,16 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   function recipient() { return String(g(K_TO, "") || "").trim() || linked(); }
 
   function inventoryItems() {
-    var out = [];
+    // Route through the single canonical getInventory() so this stays in
+    // sync with the same fallback/aggregation logic used everywhere else,
+    // instead of re-implementing it locally.
     try {
-      var raw = JSON.parse(localStorage.getItem("inventory") || "[]");
-      if (Array.isArray(raw)) out = raw;
-    } catch (e) {}
-    if (!out.length) {
-      for (var i = 0; i < localStorage.length; i++) {
-        var k = localStorage.key(i);
-        if (k && k.indexOf("inventory_") === 0) {
-          try {
-            var arr = JSON.parse(localStorage.getItem(k) || "[]");
-            if (Array.isArray(arr)) out = out.concat(arr);
-          } catch (e) {}
-        }
+      if (typeof getInventory === "function") {
+        var items = getInventory();
+        if (Array.isArray(items)) return items;
       }
-    }
-    return out;
+    } catch (e) {}
+    return [];
   }
 
   function lowStock() {
