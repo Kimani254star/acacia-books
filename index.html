@@ -4570,76 +4570,113 @@ document.addEventListener("click", function(e) {
   </button><button id="orgDetailsToggle" onclick="toggleOrgDetails()"
   class="w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg text-sm">🏢 Organization Details
   </button>
-    <div id="commPanel" class="hidden fixed bottom-20 right-4 w-[430px] max-w-[95vw] h-[80vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
-
-    <div class="bg-white text-black border-b border-gray-200 px-1 py-1 flex justify-between items-center shrink-0">
-        <div>
-            <h3 class="text-sm font-bold">💬 Internal Communication</h3>
-            <p class="text-sm text-gray-500">Send messages & reports securely</p>
+<style id="tcStyle">
+#commPanel{--tc-blue:#1e3a8a;--tc-line:#e5e7eb;--tc-mute:#6b7280}
+#commPanel .tc-hide{display:none!important}
+#commPanel .tc-head{background:var(--tc-blue);color:#fff;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+#commPanel .tc-head h3{font-size:14px;font-weight:700;margin:0}
+#commPanel .tc-head p{font-size:12px;color:#bfdbfe;margin:0}
+#commPanel .tc-head button{color:#fff;font-size:14px;padding:2px 6px;border-radius:6px}
+#commPanel .tc-head button:hover{background:rgba(255,255,255,.15)}
+#commPanel .tc-body{display:flex;flex:1;min-height:0;background:#fff}
+#commPanel .tc-side{width:260px;flex-shrink:0;border-right:1px solid var(--tc-line);display:flex;flex-direction:column;min-height:0;background:#f9fafb}
+#commPanel .tc-me{position:relative;display:flex;align-items:center;gap:8px;padding:10px;border-bottom:1px solid var(--tc-line);background:#fff}
+#commPanel .tc-me-name{font-size:13px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+#commPanel #tcStatusBtn{display:flex;align-items:center;gap:5px;font-size:12px;color:#374151;padding:1px 4px;margin-left:-4px;border-radius:6px}
+#commPanel #tcStatusBtn:hover{background:#f3f4f6}
+#commPanel .tc-menu{position:absolute;left:10px;top:52px;z-index:5;background:#fff;border:1px solid #d1d5db;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:4px;min-width:150px}
+#commPanel .tc-menu button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font-size:13px;padding:6px 8px;border-radius:6px;color:#111827}
+#commPanel .tc-menu button:hover,#commPanel .tc-menu button.on{background:#eff6ff}
+#commPanel .tc-search{padding:8px 10px}
+#commPanel .tc-search input{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:5px 10px;font-size:13px;background:#fff;color:#111827}
+#commPanel .tc-list{flex:1;overflow-y:auto;min-height:0}
+#commPanel .tc-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 10px;border-bottom:1px solid #f0f1f3}
+#commPanel .tc-row:hover{background:#eef2ff}
+#commPanel .tc-row.on{background:#dbeafe}
+#commPanel .tc-rowmain{flex:1;min-width:0}
+#commPanel .tc-rowtop{display:flex;justify-content:space-between;gap:6px;align-items:baseline}
+#commPanel .tc-name{font-size:13px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#commPanel .tc-time{font-size:11px;color:var(--tc-mute);flex-shrink:0}
+#commPanel .tc-rowbot{display:flex;justify-content:space-between;gap:6px;align-items:center;margin-top:1px}
+#commPanel .tc-prev{font-size:12px;color:var(--tc-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#commPanel .tc-badge{background:#dc2626;color:#fff;font-size:11px;line-height:1;border-radius:9999px;padding:3px 6px;min-width:18px;text-align:center;flex-shrink:0}
+#commPanel .tc-av{position:relative;width:36px;height:36px;border-radius:9999px;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#commPanel .tc-av.sm{width:30px;height:30px;font-size:11px}
+#commPanel .tc-dot{display:inline-block;width:9px;height:9px;border-radius:9999px;flex-shrink:0}
+#commPanel .tc-av .tc-dot{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border:2px solid #fff;box-sizing:border-box}
+#commPanel .tc-empty{margin:auto;text-align:center;color:var(--tc-mute);font-size:13px;padding:24px}
+#commPanel .tc-main{flex:1;min-width:0;display:flex;flex-direction:column;background:#f3f4f6}
+#commPanel .tc-conv{display:flex;flex-direction:column;flex:1;min-height:0}
+#commPanel .tc-chead{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--tc-line);flex-shrink:0}
+#commPanel .tc-back{display:none;font-size:18px;padding:0 6px;color:#374151}
+#commPanel .tc-peer{font-size:14px;font-weight:700;color:#111827}
+#commPanel .tc-peers{font-size:12px;color:var(--tc-mute);display:flex;align-items:center;gap:5px}
+#commPanel .tc-msgs{flex:1;overflow-y:auto;min-height:0;padding:10px 12px}
+#commPanel .tc-day{text-align:center;margin:10px 0 6px}
+#commPanel .tc-day span{background:#e5e7eb;color:#4b5563;font-size:11px;border-radius:9999px;padding:2px 10px}
+#commPanel .tc-msg{display:flex;margin:3px 0}
+#commPanel .tc-msg.me{justify-content:flex-end}
+#commPanel .tc-bub{position:relative;max-width:78%;padding:6px 10px 4px;border-radius:12px;font-size:13px;line-height:1.35;color:#111827;background:#fff;box-shadow:0 1px 1px rgba(0,0,0,.08);word-break:break-word}
+#commPanel .tc-msg.me .tc-bub{background:#dbeafe}
+#commPanel .tc-bub a{color:#1d4ed8;text-decoration:underline}
+#commPanel .tc-bub.del{color:#9ca3af;font-style:italic}
+#commPanel .tc-meta{display:flex;justify-content:flex-end;align-items:center;gap:6px;font-size:10px;color:#6b7280;margin-top:2px}
+#commPanel .tc-x{opacity:0;font-size:11px;color:#6b7280;padding:0 2px}
+#commPanel .tc-bub:hover .tc-x{opacity:1}
+#commPanel .tc-x:hover{color:#dc2626}
+#commPanel .tc-err{background:#fef2f2;color:#b91c1c;border-top:1px solid #fecaca;font-size:12px;padding:6px 12px;flex-shrink:0}
+#commPanel .tc-comp{display:flex;align-items:flex-end;gap:6px;padding:8px;background:#fff;border-top:1px solid var(--tc-line);flex-shrink:0}
+#commPanel .tc-comp textarea{flex:1;border:1px solid #d1d5db;border-radius:18px;padding:7px 12px;font-size:13px;resize:none;max-height:96px;background:#fff;color:#111827;line-height:1.3}
+#commPanel .tc-iconbtn{width:34px;height:34px;border-radius:9999px;font-size:16px;flex-shrink:0}
+#commPanel .tc-iconbtn:hover{background:#f3f4f6}
+#commPanel .tc-send{background:var(--tc-blue);color:#fff;font-size:13px;font-weight:600;padding:7px 14px;border-radius:18px;flex-shrink:0}
+#commPanel .tc-send:hover{background:#1e40af}
+#tcDockBadge{display:inline-block;margin-left:6px;background:#dc2626;color:#fff;font-size:11px;line-height:1;border-radius:9999px;padding:2px 6px;vertical-align:middle}
+@media (max-width:640px){
+  #commPanel .tc-side{width:100%;border-right:0}
+  #commPanel .tc-main{display:none}
+  #commPanel .tc-body.tc-show-conv .tc-side{display:none}
+  #commPanel .tc-body.tc-show-conv .tc-main{display:flex}
+  #commPanel .tc-back{display:block}
+}
+</style>
+<div id="commPanel" class="hidden fixed bottom-20 right-4 w-[760px] max-w-[95vw] h-[80vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden" role="dialog" aria-label="Team chat">
+  <div class="tc-head">
+    <div><h3>💬 Team Chat</h3><p id="tcSub">Click a teammate to start a conversation</p></div>
+    <button type="button" onclick="toggleCommPanel()" aria-label="Close chat">✕</button>
+  </div>
+  <div id="tcBody" class="tc-body">
+    <aside class="tc-side">
+      <div class="tc-me">
+        <div id="tcMeAv" class="tc-av"></div>
+        <div style="min-width:0">
+          <div id="tcMeName" class="tc-me-name"></div>
+          <button id="tcStatusBtn" type="button" aria-haspopup="true"><span id="tcMeDot" class="tc-dot"></span><span id="tcMeLabel"></span><span style="font-size:10px">▾</span></button>
         </div>
-        <button onclick="toggleCommPanel()" class="text-sm text-black hover:text-blue-600">✖</button>
-    </div>
-
-    <div class="p-1 space-y-2 overflow-y-auto flex-1 custom-scrollbar">
-
-        <div class="grid grid-cols-2 gap-1">
-            <div>
-                <label class="text-sm font-semibold text-black">Recipient</label>
-                <select id="commUser" class="w-full mt-0.5 border rounded-lg p-1 bg-white text-black text-sm focus:ring-2 focus:ring-blue-600">
-                    <option value="">Choose Recipient</option>
-                    <option>Admin</option>
-                    <option>Sales</option>
-                    <option>Finance</option>
-                    <option>Operations</option>
-                    <option>Support</option>
-                </select>
-            </div>
-            <div>
-                <label class="text-sm font-semibold text-black">Priority</label>
-                <select id="commPriority" class="w-full mt-0.5 border rounded-lg p-1 bg-white text-black text-sm focus:ring-2 focus:ring-blue-600">
-                    <option value="normal">Normal</option>
-                    <option value="urgent">⚠️ Urgent</option>
-                </select>
-            </div>
+        <div id="tcMenu" class="tc-menu tc-hide" role="menu"></div>
+      </div>
+      <div class="tc-search"><input id="tcSearch" type="search" placeholder="Search teammates…" autocomplete="off"></div>
+      <div id="tcList" class="tc-list"></div>
+    </aside>
+    <section class="tc-main">
+      <div id="tcEmpty" class="tc-empty">💬<br>Select a teammate on the left to open a conversation.</div>
+      <div id="tcConv" class="tc-conv tc-hide">
+        <div class="tc-chead">
+          <button id="tcBack" type="button" class="tc-back" aria-label="Back to contacts">←</button>
+          <div id="tcPeerAv" class="tc-av sm"></div>
+          <div style="min-width:0"><div id="tcPeerName" class="tc-peer"></div><div class="tc-peers"><span id="tcPeerDot" class="tc-dot"></span><span id="tcPeerStatus"></span></div></div>
         </div>
-
-        <div>
-            <div class="flex justify-between items-center">
-                <label class="text-sm font-semibold text-black">Message</label>
-                <div class="flex gap-1">
-                    <button onclick="insertTemplate('Invoice Link')" class="text-sm bg-gray-100 text-gray-600 px-1 py-0.5 rounded hover:bg-gray-200">🧾 Invoice Template</button>
-                    <button onclick="insertTemplate('Report Update')" class="text-sm bg-gray-100 text-gray-600 px-1 py-0.5 rounded hover:bg-gray-200">📊 Report Template</button>
-                </div>
-            </div>
-            <textarea id="commMessage" rows="3" placeholder="Type your message..." class="w-full mt-0.5 border rounded-lg p-1 text-sm resize-none bg-white text-black focus:ring-2 focus:ring-blue-600"></textarea>
+        <div id="tcMsgs" class="tc-msgs"></div>
+        <div id="tcErr" class="tc-err tc-hide" role="alert"></div>
+        <div class="tc-comp">
+          <input id="tcFile" type="file" class="tc-hide">
+          <button id="tcAttach" type="button" class="tc-iconbtn" title="Attach a file (max 400 KB)" aria-label="Attach a file">📎</button>
+          <textarea id="tcInput" rows="1" placeholder="Type a message" aria-label="Message"></textarea>
+          <button id="tcSend" type="button" class="tc-send">Send</button>
         </div>
-
-        <div>
-            <label class="text-sm font-semibold text-black">Attachment</label>
-            <input id="commFile" type="file" class="w-full mt-0.5 border rounded-lg p-1 text-sm bg-white text-black">
-        </div>
-
-        <div class="grid grid-cols-2 gap-1">
-            <button onclick="sendPrivateMessage()" class="bg-blue-900 hover:bg-blue-800 text-white rounded-lg py-1 text-sm font-semibold transition-all transform hover:-translate-y-0.5">
-                📩 Send Message
-            </button>
-            <button onclick="sharePrivateReport()" class="bg-blue-700 hover:bg-blue-600 text-white rounded-lg py-1 text-sm font-semibold transition-all transform hover:-translate-y-0.5">
-                📄 Share Report
-            </button>
-        </div>
-
-        <div>
-            <div class="flex justify-between items-center mb-1">
-                <h4 class="text-sm font-semibold text-black">Recent Activity</h4>
-                <div class="flex gap-1 text-sm">
-                    <span class="inline-flex items-center text-green-600 bg-green-50 px-1 rounded">🟢 Live Connection</span>
-                </div>
-            </div>
-            <div id="commLog" class="border rounded-lg bg-white text-black p-1 h-32 overflow-y-auto text-sm space-y-1">
-            </div>
-        </div>
-
-    </div>
+      </div>
+    </section>
+  </div>
 </div>
 <div id="webinarPanel" class="hidden fixed bottom-20 right-4 w-[480px] max-w-[95vw] h-[80vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden z-50">
 
@@ -5457,155 +5494,6 @@ window.addEventListener('load', function () {
   s0.parentNode.insertBefore(s1, s0);
 });
 
-function toggleCommPanel() {
-  closeAllPanels("commPanel"); 
-  const panel = document.getElementById("commPanel");
-  panel.classList.toggle("hidden");
-  renderCommLog();
-}
-
-function sendPrivateMessage(sender = "You") {
-  const recipient = document.getElementById("commUser").value.trim();
-  const message = document.getElementById("commMessage").value.trim();
-  if (!recipient || !message) return alert("Select a recipient and type a message first.");
-
-  const comms = JSON.parse(localStorage.getItem("communications")) || [];
-  const newMsg = {
-    id: Date.now(),
-    sender,
-    recipient,
-    type: "text",
-    message,
-    date: new Date().toLocaleString()
-  };
-  comms.push(newMsg);
-  localStorage.setItem("communications", JSON.stringify(comms));
-
-  addNotificationForRecipient(recipient, `💬 New message from ${sender}`);
-  document.getElementById("commMessage").value = "";
-  renderCommLog();
-}
-
-function sharePrivateReport(sender = "You") {
-  const recipient = document.getElementById("commUser").value.trim();
-  const fileInput = document.getElementById("commFile");
-  const file = fileInput.files[0];
-  if (!recipient || !file) return alert("Select a recipient and attach a file first.");
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const comms = JSON.parse(localStorage.getItem("communications")) || [];
-    const newReport = {
-      id: Date.now(),
-      sender,
-      recipient,
-      type: "report",
-      fileName: file.name,
-      fileData: e.target.result,
-      date: new Date().toLocaleString()
-    };
-    comms.push(newReport);
-    localStorage.setItem("communications", JSON.stringify(comms));
-
-    addNotificationForRecipient(recipient, `📎 New report from ${sender}: ${newReport.fileName}`);
-    fileInput.value = "";
-    renderCommLog();
-  };
-  reader.readAsDataURL(file);
-}
-function addNotificationForRecipient(recipient, message) {
-  let notes = JSON.parse(localStorage.getItem("recipientNotifications") || "{}");
-  if (!notes[recipient]) notes[recipient] = [];
-  notes[recipient].unshift({ message, date: new Date().toLocaleString(), read: false });
-  localStorage.setItem("recipientNotifications", JSON.stringify(notes));
-  renderRecipientNotifications();
-}
-
-function renderRecipientNotifications() {
-  const recipient = document.getElementById("commUser").value; 
-  const notes = JSON.parse(localStorage.getItem("recipientNotifications") || "{}");
-  const recipientNotes = notes[recipient] || [];
-  const notifCount = document.getElementById("notifCount");
-  if (!notifCount) return;
-
-  const unread = recipientNotes.filter(n => !n.read).length;
-  notifCount.textContent = unread;
-  unread > 0 ? notifCount.classList.remove("hidden") : notifCount.classList.add("hidden");
-}
-
-function renderCommLog() {
-  const selectedRecipient = document.getElementById("commUser").value;
-  const logContainer = document.getElementById("commLog");
-  const comms = JSON.parse(localStorage.getItem("communications")) || [];
-
-  if (!selectedRecipient) {
-    logContainer.innerHTML = `<p class="text-gray-500">Select a recipient to view messages.</p>`;
-    return;
-  }
-
-  const filtered = comms.filter(c =>
-    c.recipient === selectedRecipient || c.sender === selectedRecipient
-  );
-
-  if (!filtered.length) {
-    logContainer.innerHTML = `<p class="text-gray-500">No messages yet.</p>`;
-    return;
-  }
-
-  logContainer.innerHTML = filtered.map(c => `
-    <div class="border-b py-1 flex justify-between items-start">
-      <div>
-        <strong>${c.sender}</strong> <span class="text-gray-500 text-sm">${c.date}</span><br>
-        ${c.type === "text"
-          ? c.message
-          : `<a href="${c.fileData}" download="${c.fileName}" class="text-blue-700 underline">📎 ${c.fileName}</a>`}
-      </div>
-      <div class="flex flex-col ml-2 space-y-1">
-        ${c.sender === "You" ? `
-          <button onclick="editMessage(${c.id})" class="bg-blue-500 text-white px-1 py-1 text-sm rounded hover:bg-blue-600">Edit</button>
-          <button onclick="deleteMessage(${c.id})" class="bg-blue-500 text-white px-1 py-1 text-sm rounded hover:bg-blue-600">Delete</button>
-        ` : `
-          <button onclick="replyMessage('${c.sender}', ${c.id})" class="bg-blue-500 text-white px-1 py-1 text-sm rounded hover:bg-blue-600">Reply</button>
-        `}
-      </div>
-    </div>
-  `).join("");
-}
-
-function editMessage(id) {
-  const comms = JSON.parse(localStorage.getItem("communications")) || [];
-  const msg = comms.find(c => c.id === id);
-  if (!msg) return;
-  const newText = prompt("Edit message:", msg.message || "");
-  if (newText !== null) {
-    msg.message = newText;
-    localStorage.setItem("communications", JSON.stringify(comms));
-    renderCommLog();
-  }
-}
-
-function deleteMessage(id) {
-  if (!confirm("Are you sure you want to delete this message?")) return;
-  let comms = JSON.parse(localStorage.getItem("communications")) || [];
-  comms = comms.filter(c => c.id !== id);
-  localStorage.setItem("communications", JSON.stringify(comms));
-  renderCommLog();
-}
-
-function replyMessage(sender, id) {
-  document.getElementById("commUser").value = sender;
-  const reply = prompt("Type your reply:");
-  if (reply) sendPrivateMessage("You"); 
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  renderCommLog();
-  renderRecipientNotifications();
-  document.getElementById("commUser")?.addEventListener("change", () => {
-    renderCommLog();
-    renderRecipientNotifications();
-  });
-});
 </script>
 <script>
 function handleSearch(query) {
@@ -5750,36 +5638,6 @@ function refreshData() {
   }, 80);
 }
 
-function toggleCommPanel() {
-  document.getElementById("commPanel").classList.toggle("hidden");
-}
-
-function sendPrivateMessage() {
-  const user = document.getElementById("commUser").value.trim();
-  const msg = document.getElementById("commMessage").value.trim();
-  if (!user || !msg) return alert("Please select a user and type a message.");
-
-  const log = document.getElementById("commLog");
-  const entry = `<div class="border-b py-1">
-      <strong class='text-blue-900'>To ${user}:</strong> ${msg}
-      <div class='text-sm text-gray-500'>${new Date().toLocaleString()}</div>
-    </div>`;
-  log.insertAdjacentHTML("afterbegin", entry);
-  document.getElementById("commMessage").value = "";
-}
-
-function sharePrivateReport() {
-  const user = document.getElementById("commUser").value.trim();
-  const file = document.getElementById("commFile").files[0];
-  if (!user || !file) return alert("Please select a user and attach a file.");
-  const log = document.getElementById("commLog");
-  const entry = `<div class="border-b py-1">
-      <strong class='text-green-700'>Report shared with ${user}:</strong> ${file.name}
-      <div class='text-sm text-gray-500'>${new Date().toLocaleString()}</div>
-    </div>`;
-  log.insertAdjacentHTML("afterbegin", entry);
-  document.getElementById("commFile").value = "";
-}
 function toggleWebinarPanel() {
   const panel = document.getElementById("webinarPanel");
   panel.classList.toggle("hidden");
@@ -5866,31 +5724,6 @@ function openCreate(tabId) {
 function refreshData() {
   addNotification("🔄 Data refreshed successfully");
   setTimeout(() => { location.reload(); }, 80);
-}
-</script>
-<script>
-function toggleCommPanel() {
-  document.getElementById("commPanel").classList.toggle("hidden");
-}
-
-function sendPrivateMessage() {
-  const user = document.getElementById("commUser").value.trim();
-  const msg = document.getElementById("commMessage").value.trim();
-  if (!user || !msg) return alert("Please select a user and type a message.");
-  const log = document.getElementById("commLog");
-  const entry = `<div class="border-b py-1"><strong class='text-blue-900'>To ${user}:</strong> ${msg}<div class='text-sm text-gray-500'>${new Date().toLocaleString()}</div></div>`;
-  log.insertAdjacentHTML("afterbegin", entry);
-  document.getElementById("commMessage").value = "";
-}
-
-function sharePrivateReport() {
-  const user = document.getElementById("commUser").value.trim();
-  const file = document.getElementById("commFile").files[0];
-  if (!user || !file) return alert("Please select a user and attach a file.");
-  const log = document.getElementById("commLog");
-  const entry = `<div class="border-b py-1"><strong class='text-green-700'>Report shared with ${user}:</strong> ${file.name}<div class='text-sm text-gray-500'>${new Date().toLocaleString()}</div></div>`;
-  log.insertAdjacentHTML("afterbegin", entry);
-  document.getElementById("commFile").value = "";
 }
 </script>
 <script>
@@ -122297,521 +122130,349 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
   
   
 
-  function userKey(){
-    try { var u = JSON.parse(localStorage.getItem('loggedInUser')||'null');
-      return u ? String(u.email||u.username||u.id||'guest').toLowerCase() : 'guest'; }
-    catch(e){ return 'guest'; }
-  }
-  function userName(){
-    try { var u = JSON.parse(localStorage.getItem('loggedInUser')||'null');
-      return u ? (u.name||u.username||u.email||'You') : 'You'; }
-    catch(e){ return 'You'; }
-  }
-  
-  
-  
-  var CQ_SHARED = 'cliq';
-  
-  var CQ_USER = 'cliq_u_' + userKey();
-  function CK(k){ return CQ_SHARED + '_' + k; }
-  function UK(k){ return CQ_USER + '_' + k; }
-  function cget(k, fb){ try { var v = localStorage.getItem(CK(k)); return v?JSON.parse(v):fb; } catch(e){ return fb; } }
-  function cset(k, v){ try { localStorage.setItem(CK(k), JSON.stringify(v)); } catch(e){} }
-  function uget(k, fb){ try { var v = localStorage.getItem(UK(k)); return v?JSON.parse(v):fb; } catch(e){ return fb; } }
-  function uset(k, v){ try { localStorage.setItem(UK(k), JSON.stringify(v)); } catch(e){} }
-  function nowISO(){ return new Date().toISOString(); }
-  function uid(p){ return (p||'id')+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6); }
-
-  
-  function seedIfEmpty(){
-    if (!cget('channels', null)){
-      cset('channels', [
-        { id:'gen',      name:'general',      topic:'Company-wide announcements', kind:'channel' },
-        { id:'sales',    name:'sales',        topic:'Sales team',                  kind:'channel' },
-        { id:'finance',  name:'finance',      topic:'Finance & accounting',        kind:'channel' },
-        { id:'ops',      name:'operations',   topic:'Daily operations',            kind:'channel' },
-        { id:'random',   name:'random',       topic:'Non-work chatter',            kind:'channel' }
-      ]);
-    }
-    if (!cget('dms', null)){
-      cset('dms', [
-        { id:'dm_admin',   name:'Admin',   kind:'dm', presence:'online'  },
-        { id:'dm_support', name:'Support', kind:'dm', presence:'online'  },
-        { id:'dm_finance', name:'Finance', kind:'dm', presence:'away'    },
-        { id:'dm_ops',     name:'Ops',     kind:'dm', presence:'offline' }
-      ]);
-    }
-    if (!uget('active', null)) uset('active', 'gen');
-  }
-
-  function loadMessages(convId){ return cget('msg_'+convId, []); }
-  function saveMessages(convId, arr){ cset('msg_'+convId, arr); }
-
-  function esc2(s){ return esc(s); }
-  function linkify(t){
-    return esc2(t)
-      .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" class="text-blue-700 underline">$1</a>')
-      .replace(/@([A-Za-z][\w.-]{1,30})/g, '<span class="bg-yellow-100 text-yellow-800 rounded px-1">@$1</span>')
-      .replace(/#([A-Za-z][\w.-]{1,30})/g, '<span class="bg-blue-100 text-blue-800 rounded px-1">#$1</span>')
-      .replace(/\n/g, '<br>');
-  }
-
-  function getConvs(){
-    var chans = cget('channels', []);
-    var dms   = cget('dms', []);
-    return { channels: chans, dms: dms };
-  }
-  function findConv(id){
-    var all = getConvs();
-    return all.channels.concat(all.dms).find(function(c){ return c.id===id; });
-  }
-
-  
-  
-  
-  
-  function unreadCount(convId){
-    var last = uget('lastRead_'+convId, null);
-    var msgs = loadMessages(convId);
-    var me = userName();
-    var n = 0;
-    for (var i = 0; i < msgs.length; i++){
-      var m = msgs[i];
-      if (m.by === me) continue;
-      if (!last || m.at > last) n++;
-    }
-    return n;
-  }
-  function totalUnread(){
-    var all = getConvs();
-    var n = 0;
-    all.channels.concat(all.dms).forEach(function(c){ n += unreadCount(c.id); });
-    return n;
-  }
-  function markRead(convId){ uset('lastRead_'+convId, nowISO()); }
-  function updateDockBadge(){
-    var t = totalUnread();
-    var btn = document.getElementById('commToggle'); if (!btn) return;
-    var badge = document.getElementById('cliqDockBadge');
-    if (t > 0){
-      if (!badge){
-        badge = document.createElement('span');
-        badge.id = 'cliqDockBadge';
-        badge.className = 'absolute -top-1 -right-1 bg-red-500 text-white text-sm leading-none rounded-full px-1 py-0.5 min-w-[14px] text-center';
-        btn.appendChild(badge);
-      }
-      badge.textContent = t > 99 ? '99+' : String(t);
-    } else if (badge){ badge.remove(); }
-  }
-
-  function renderSidebar(){
-    var side = document.getElementById('cliqSide'); if (!side) return;
-    var active = uget('active','gen');
-    var all = getConvs();
-    var chList = all.channels.map(function(c){
-      var unread = unreadCount(c.id);
-      return '<button data-cid="'+c.id+'" class="cliq-conv w-full text-left px-2 py-1 rounded hover:bg-blue-800 text-white text-sm flex items-center justify-between '+(active===c.id?'bg-blue-800':'')+'">' +
-        '<span># '+esc2(c.name)+'</span>' + (unread?'<span class="bg-red-500 text-white text-sm px-1 rounded-full">'+unread+'</span>':'') +
-      '</button>';
-    }).join('');
-    var dmList = all.dms.map(function(d){
-      var dot = d.presence==='online'?'🟢':(d.presence==='away'?'🟡':'⚪');
-      var unread = unreadCount(d.id);
-      return '<button data-cid="'+d.id+'" class="cliq-conv w-full text-left px-2 py-1 rounded hover:bg-blue-800 text-white text-sm flex items-center justify-between '+(active===d.id?'bg-blue-800':'')+'">' +
-        '<span>'+dot+' '+esc2(d.name)+'</span>' + (unread?'<span class="bg-red-500 text-white text-sm px-1 rounded-full">'+unread+'</span>':'') +
-      '</button>';
-    }).join('');
-    side.innerHTML =
-      '<div class="px-2 pt-2 pb-1 text-sm uppercase tracking-wide text-blue-200 flex items-center justify-between">Channels <button id="cliqAddCh" class="text-blue-200 hover:text-white text-sm">＋</button></div>'+
-      '<div class="space-y-0.5 px-1">'+chList+'</div>'+
-      '<div class="px-2 pt-3 pb-1 text-sm uppercase tracking-wide text-blue-200 flex items-center justify-between">Direct Messages <button id="cliqAddDm" class="text-blue-200 hover:text-white text-sm">＋</button></div>'+
-      '<div class="space-y-0.5 px-1">'+dmList+'</div>';
-
-    Array.prototype.forEach.call(side.querySelectorAll('.cliq-conv'), function(b){
-      b.addEventListener('click', function(){
-        uset('active', b.getAttribute('data-cid'));
-        markRead(b.getAttribute('data-cid'));
-        renderSidebar(); renderMain(); updateDockBadge();
-      });
-    });
-    updateDockBadge();
-    var addCh = document.getElementById('cliqAddCh');
-    if (addCh) addCh.onclick = function(){
-      var n = prompt('New channel name (letters, numbers, dashes)');
-      if (!n) return;
-      var chans = cget('channels', []);
-      var id = 'ch_'+n.toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,20);
-      chans.push({ id:id, name:n, topic:'', kind:'channel' });
-      cset('channels', chans); uset('active', id); renderSidebar(); renderMain();
-    };
-    var addDm = document.getElementById('cliqAddDm');
-    if (addDm) addDm.onclick = function(){
-      var n = prompt('Start DM with (name)');
-      if (!n) return;
-      var dms = cget('dms', []);
-      var id = 'dm_'+n.toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,20);
-      dms.push({ id:id, name:n, kind:'dm', presence:'offline' });
-      cset('dms', dms); uset('active', id); renderSidebar(); renderMain();
-    };
-  }
-
-  
-  function renderMain(){
-    var main = document.getElementById('cliqMain'); if (!main) return;
-    var id = uget('active','gen');
-    var conv = findConv(id);
-    if (!conv){ main.innerHTML = '<div class="p-6 text-sm text-gray-500">Select a conversation</div>'; return; }
-    markRead(id); updateDockBadge();
-    var isCh = conv.kind==='channel';
-    var msgs = loadMessages(id);
-    var msgsHtml = msgs.length ? msgs.map(function(m){
-      var t=''; try { t = new Date(m.at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); } catch(e){}
-      var file = m.file ? '<div class="mt-1 text-sm"><a href="'+m.file.url+'" download="'+esc2(m.file.name)+'" class="text-blue-700 underline">📎 '+esc2(m.file.name)+'</a> <span class="text-gray-400">('+(m.file.size||'')+')</span></div>' : '';
-      var task = m.task ? '<div class="mt-1 text-sm bg-emerald-50 border border-emerald-200 rounded px-2 py-1">✅ Task: '+esc2(m.task)+'</div>' : '';
-      var call = m.call ? '<div class="mt-1 text-sm bg-indigo-50 border border-indigo-200 rounded px-2 py-1">'+(m.call==='audio'?'📞 Audio call started':'📹 Video call started')+' — <a href="'+esc2(m.callUrl||'#')+'" target="_blank" class="text-indigo-700 underline">Join</a></div>' : '';
-      return '<div class="flex gap-2 py-1 px-2 hover:bg-gray-50">'+
-        '<div class="w-7 h-7 rounded-full bg-blue-900 text-white text-sm flex items-center justify-center shrink-0">'+esc2((m.by||'?').slice(0,2).toUpperCase())+'</div>'+
-        '<div class="min-w-0 flex-1">'+
-          '<div class="text-sm"><span class="font-semibold text-gray-900">'+esc2(m.by||'?')+'</span> <span class="text-gray-400">'+esc2(t)+'</span></div>'+
-          '<div class="text-sm text-gray-800 break-words">'+linkify(m.text||'')+'</div>'+
-          file+task+call+
-        '</div>'+
-      '</div>';
-    }).join('') : '<div class="p-6 text-center text-sm text-gray-400">No messages yet in <b>'+(isCh?'#':'@')+esc2(conv.name)+'</b>. Say hi 👋</div>';
-
-    main.innerHTML =
-      '<div class="flex items-center justify-between px-3 py-2 border-b bg-white shrink-0">'+
-        '<div class="min-w-0">'+
-          '<div class="font-bold text-sm text-gray-900 truncate">'+(isCh?'# ':'@ ')+esc2(conv.name)+'</div>'+
-          '<div class="text-sm text-gray-500 truncate">'+esc2(conv.topic||(isCh?'Channel':'Direct message'))+'</div>'+
-        '</div>'+
-        '<div class="flex items-center gap-1">'+
-          '<button id="cliqAudio" title="Start audio call" class="w-7 h-7 rounded hover:bg-gray-100 text-sm">📞</button>'+
-          '<button id="cliqVideo" title="Start video call" class="w-7 h-7 rounded hover:bg-gray-100 text-sm">📹</button>'+
-          '<button id="cliqTask"  title="Create task"      class="w-7 h-7 rounded hover:bg-gray-100 text-sm">✅</button>'+
-          '<button id="cliqPin"   title="Pinned & files"   class="w-7 h-7 rounded hover:bg-gray-100 text-sm">📎</button>'+
-        '</div>'+
-      '</div>'+
-      '<div id="cliqMsgs" class="flex-1 overflow-y-auto bg-gray-50">'+msgsHtml+'</div>'+
-      '<div class="border-t bg-white p-2 flex items-center gap-1">'+
-        '<input id="cliqFile" type="file" class="hidden">'+
-        '<button id="cliqAttach" class="w-8 h-8 rounded hover:bg-gray-100" title="Attach file">📎</button>'+
-        '<textarea id="cliqInput" rows="1" placeholder="Message '+(isCh?'#':'@')+conv.name+'  (Enter to send, Shift+Enter for newline)" class="flex-1 border rounded px-2 py-1 text-sm resize-none"></textarea>'+
-        '<button id="cliqSend" class="bg-blue-900 hover:bg-blue-800 text-white text-sm px-3 py-1.5 rounded">Send</button>'+
-      '</div>';
-
-    var msgsEl = document.getElementById('cliqMsgs');
-    if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
-
-    function pushMsg(payload){
-      var arr = loadMessages(id);
-      arr.push(Object.assign({ id: uid('m'), by: userName(), at: nowISO() }, payload));
-      if (arr.length > 1000) arr = arr.slice(-1000);
-      saveMessages(id, arr);
-      renderMain();
-    }
-
-    document.getElementById('cliqSend').onclick = function(){
-      var t = document.getElementById('cliqInput').value.trim();
-      if (!t) return;
-      pushMsg({ text: t });
-    };
-    document.getElementById('cliqInput')?.addEventListener('keydown', function(e){
-      if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('cliqSend').click(); }
-    });
-    document.getElementById('cliqAttach').onclick = function(){ document.getElementById('cliqFile').click(); };
-    document.getElementById('cliqFile').onchange = function(e){
-      var f = e.target.files && e.target.files[0]; if (!f) return;
-      var rd = new FileReader();
-      rd.onload = function(){
-        var kb = Math.round(f.size/1024);
-        pushMsg({ text: '', file: { name: f.name, url: rd.result, size: kb+' KB' } });
-      };
-      rd.readAsDataURL(f);
-      e.target.value = '';
-    };
-    document.getElementById('cliqAudio').onclick = function(){
-      var url = prompt('Paste meeting link (Google Meet / Zoom / Teams) or leave blank for placeholder:', 'https://meet.google.com/new');
-      pushMsg({ text: '', call:'audio', callUrl: url || '#' });
-    };
-    document.getElementById('cliqVideo').onclick = function(){
-      var url = prompt('Paste video meeting link:', 'https://meet.google.com/new');
-      pushMsg({ text: '', call:'video', callUrl: url || '#' });
-    };
-    document.getElementById('cliqTask').onclick = function(){
-      var t = prompt('Task description');
-      if (t) pushMsg({ text: '', task: t });
-    };
-    document.getElementById('cliqPin').onclick = function(){
-      var msgs = loadMessages(id).filter(function(m){ return m.file; });
-      alert(msgs.length? ('Files shared in this conversation:\n\n'+msgs.map(function(m,i){return (i+1)+'. '+m.file.name;}).join('\n')) : 'No files shared yet.');
-    };
-  }
-
-  
-  function upgradeCommPanel(){
-    var panel = document.getElementById('commPanel');
-    if (!panel || panel.dataset.cliqUpgraded) return;
-    seedIfEmpty();
-    panel.dataset.cliqUpgraded = '1';
-    panel.classList.remove('w-[430px]');
-    panel.classList.add('w-[720px]','max-w-[95vw]');
-    panel.innerHTML =
-      '<div class="bg-blue-900 text-white px-3 py-2 flex justify-between items-center shrink-0">'+
-        '<div><h3 class="text-sm font-bold">💬 Acacia Cliq — Team Chat</h3>'+
-        '<p class="text-sm text-blue-200">Channels · DMs · Calls · Files · Tasks</p></div>'+
-        '<button onclick="toggleCommPanel()" class="text-white hover:text-blue-300 text-sm">✕</button>'+
-      '</div>'+
-      '<div class="flex flex-1 overflow-hidden">'+
-        '<aside id="cliqSide" class="w-44 bg-blue-950 overflow-y-auto shrink-0"></aside>'+
-        '<section id="cliqMain" class="flex-1 flex flex-col bg-white overflow-hidden"></section>'+
-      '</div>';
-    renderSidebar();
-    renderMain();
-  }
-
-  
-  (function wrapToggle(){
-    var o = window.toggleCommPanel;
-    window.toggleCommPanel = function(){
-      var r; try { if (typeof o === 'function') r = o.apply(this, arguments);
-                   else { var p = document.getElementById('commPanel'); if (p) p.classList.toggle('hidden'); } } catch(e){}
-      setTimeout(upgradeCommPanel, 30);
-      return r;
-    };
-  })();
-
-  
-  setTimeout(function(){
-    var p = document.getElementById('commPanel');
-    if (p && !p.classList.contains('hidden')) upgradeCommPanel();
-  }, 600);
-
-  
-  
-  
-  function convSignature(){
-    var all = getConvs();
-    return all.channels.concat(all.dms).map(function(c){ return c.id+':'+loadMessages(c.id).length; }).join('|');
-  }
-  var lastSig = null;
-  setInterval(function(){
-    try {
-      var sig = convSignature();
-      if (sig === lastSig) return;
-      lastSig = sig;
-      var panel = document.getElementById('commPanel');
-      var open = panel && panel.dataset.cliqUpgraded && !panel.classList.contains('hidden');
-      if (open) {
-        var draft = '';
-        var inputEl = document.getElementById('cliqInput');
-        if (inputEl) draft = inputEl.value;
-        renderSidebar();
-        renderMain();
-        var newInput = document.getElementById('cliqInput');
-        if (newInput && draft) newInput.value = draft;
-      } else {
-        updateDockBadge();
-      }
-    } catch (e) {}
-  }, 3000);
-  setTimeout(updateDockBadge, 1200);
-
-  
-  window.acaciaCliq = { renderSidebar: renderSidebar, renderMain: renderMain, upgrade: upgradeCommPanel };
 })();
 </script>
 
 
 
-<style>
-  .ac-clip{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;}
-  .ac-clip-me{cursor:pointer;}
-  .ac-clip-me:hover .ac-avatar{box-shadow:0 0 0 3px rgba(16,185,129,.5);}
-  .ac-pin{width:9px;height:15px;border-radius:2px 2px 1px 1px;margin-bottom:-3px;box-shadow:0 1px 2px rgba(0,0,0,.35);}
-  .ac-avatar{width:28px;height:28px;border-radius:9999px;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);}
-  .ac-me-badge{font-size:8px;line-height:1;background:#111827;color:#fff;padding:2px 4px;border-radius:5px;margin-top:3px;white-space:nowrap;}
-  .ac-name{font-size:8px;line-height:1;color:#374151;margin-top:2px;max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;}
-</style>
 <script>
 (function(){
   'use strict';
-  if (window.__acaciaClipInstalled) return;
-  window.__acaciaClipInstalled = true;
+  if (window.__teamChatInstalled) return;
+  window.__teamChatInstalled = true;
 
-  var TREE_W = 600, TREE_H = 300;
-  var AC_LEVELS = [
-    { id:'available', label:'Available',     color:'#16a34a', y:34  },
-    { id:'meeting',   label:'In a Meeting',   color:'#2563eb', y:94  },
-    { id:'busy',      label:'Busy',           color:'#d97706', y:154 },
-    { id:'away',      label:'Away',           color:'#ea580c', y:214 },
-    { id:'offline',   label:'Offline',        color:'#6b7280', y:274 }
+  /* Team Chat — one click-to-chat panel (replaces the old Internal Communication / Cliq / Clip Chart code).
+     Storage: plain localStorage keys. The app's company layer already namespaces every key per company and
+     syncs it to the cloud, so messages reach teammates on other devices with no extra plumbing.
+     Every key has exactly ONE writer (the sender), so two people chatting can never overwrite each other:
+       tcm_<pair>_<sender>  messages sent by <sender> in that 1-to-1 conversation
+       tcf_<id>             an attachment (data URL) referenced by a message
+       tcr_<user>           per-user "read up to" markers
+       tcs_<user>           per-user status */
+  var STATUS = [
+    { id:'available', label:'Available', color:'#16a34a' },
+    { id:'busy',      label:'Busy',      color:'#dc2626' },
+    { id:'away',      label:'Away',      color:'#d97706' },
+    { id:'offline',   label:'Offline',   color:'#6b7280' }
   ];
-  var AC_COLORS = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899'];
+  var AV_COLORS = ['#ef4444','#f97316','#ca8a04','#16a34a','#0891b2','#2563eb','#7c3aed','#db2777'];
+  var MAX_FILE = 400 * 1024;
+  var MAX_MSGS = 500;
 
-  function acEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-  function acLoggedUser(){ try { return JSON.parse(localStorage.getItem('loggedInUser')||'null'); } catch(e){ return null; } }
-  function acUserKey(){ var u = acLoggedUser(); return u ? String(u.username||u.email||u.id||'guest') : 'guest'; }
-  function acCompanyId(){ var u = acLoggedUser(); return u ? String(u.companyId||'') : ''; }
-  function acTeam(){
-    try {
-      var all = JSON.parse(localStorage.getItem('users')||'[]');
-      var cid = acCompanyId();
-      return all.filter(function(u){ return String(u.companyId||'') === cid; });
-    } catch(e){ return []; }
+  var active = null;          // peer key of the open conversation
+  var lastHtml = '';          // last rendered message html (skip no-op redraws)
+  var lastMe = null;
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
+  function slug(s){ return String(s == null ? '' : s).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'x'; }
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function lget(k, fb){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch(e){ return fb; } }
+  // write + read back, so a full / blocked storage is reported instead of silently dropping the message
+  function lsave(k, v){
+    var s; try { s = JSON.stringify(v); localStorage.setItem(k, s); return localStorage.getItem(k) === s; } catch(e){ return false; }
   }
-  function acStatuses(){ try { return JSON.parse(localStorage.getItem('acaciaClipStatus')||'{}'); } catch(e){ return {}; } }
-  function acSaveStatuses(st){ try { localStorage.setItem('acaciaClipStatus', JSON.stringify(st)); } catch(e){} }
-  function acColorFor(name){
-    var h = 0, s = String(name||'?');
-    for (var i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
-    return AC_COLORS[h % AC_COLORS.length];
+  function colorFor(n){ var h = 0, s = String(n || '?'); for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return AV_COLORS[h % AV_COLORS.length]; }
+  function initials(n){ n = String(n || '?').trim(); var p = n.split(/\s+/); return (p.length > 1 ? p[0][0] + p[1][0] : n.slice(0, 2)).toUpperCase(); }
+  function statusInfo(id){ for (var i = 0; i < STATUS.length; i++) if (STATUS[i].id === id) return STATUS[i]; return STATUS[3]; }
+
+  function keyOf(u){ return slug(u && (u.username || u.email || u.id)); }
+  function me(){
+    var u = null; try { u = JSON.parse(localStorage.getItem('loggedInUser') || 'null'); } catch(e){}
+    if (!u) return null;
+    return { key: keyOf(u), name: u.username || u.name || u.email || 'You', company: String(u.companyId || '') };
   }
-  function acInitials(name){
-    name = String(name||'?').trim();
-    var parts = name.split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0]+parts[1][0]).toUpperCase();
-    return name.slice(0,2).toUpperCase();
-  }
-
-  window.__acPick = function(id){
-    var st = acStatuses(); var me = acUserKey();
-    st[me] = { status: id, at: new Date().toISOString() };
-    acSaveStatuses(st);
-    var p = document.getElementById('acPicker'); if (p) p.remove();
-    acRenderTree();
-  };
-  window.__acOpenPicker = function(ev){
-    ev.stopPropagation();
-    var existing = document.getElementById('acPicker');
-    if (existing) { existing.remove(); return; }
-    var trigger = ev.currentTarget;
-    var el = document.createElement('div');
-    el.id = 'acPicker';
-    el.className = 'absolute z-20 bg-white border border-gray-300 rounded-lg shadow-xl p-1 text-sm';
-    el.style.left = trigger.style.left;
-    el.style.top = trigger.style.top;
-    el.style.transform = 'translate(-50%, 4px)';
-    el.innerHTML = AC_LEVELS.map(function(l){
-      return '<button class="flex items-center gap-1 w-full text-left px-2 py-1 rounded hover:bg-gray-100 whitespace-nowrap" onclick="window.__acPick(\''+l.id+'\')">'+
-        '<span class="inline-block w-2 h-2 rounded-full" style="background:'+l.color+'"></span>'+acEsc(l.label)+'</button>';
-    }).join('');
-    var host = document.getElementById('acTreeOverlay');
-    if (host) host.appendChild(el);
-  };
-  document.addEventListener('click', function(e){
-    var p = document.getElementById('acPicker');
-    if (p && !p.contains(e.target) && e.target.id !== 'acPicker') p.remove();
-  });
-
-  function acRenderTree(){
-    var wrap = document.getElementById('acTreeOverlay');
-    if (!wrap) return;
-    var team = acTeam();
-    var statuses = acStatuses();
-    var me = acUserKey();
-    if (!statuses[me]) { statuses[me] = { status:'available', at:new Date().toISOString() }; acSaveStatuses(statuses); }
-
-    var buckets = {}; AC_LEVELS.forEach(function(l){ buckets[l.id] = []; });
-    
-    var seen = {};
-    team.concat([{ username: (acLoggedUser()||{}).username, email: (acLoggedUser()||{}).email }]).forEach(function(u){
-      var key = String(u.username || u.email || '');
-      if (!key || seen[key]) return;
-      seen[key] = 1;
-      var rec = statuses[key];
-      var lvl = (rec && buckets[rec.status]) ? rec.status : 'offline';
-      buckets[lvl].push({ key:key, name: u.username || u.email || key, isMe: key===me, at: rec ? rec.at : null });
+  function team(m){
+    var all = []; try { all = JSON.parse(localStorage.getItem('users') || '[]'); } catch(e){}
+    var seen = {}; seen[m.key] = 1; var out = [];
+    all.forEach(function(u){
+      if (!u || String(u.companyId || '') !== m.company) return;
+      var k = keyOf(u); if (!k || seen[k]) return; seen[k] = 1;
+      out.push({ key: k, name: u.username || u.name || u.email || k });
     });
-
-    var html = '';
-    AC_LEVELS.forEach(function(l){
-      var arr = buckets[l.id], n = arr.length;
-      var xStart = 110, xEnd = 470;
-      arr.forEach(function(person, i){
-        var x = n === 1 ? (xStart+xEnd)/2 : xStart + (xEnd-xStart) * (i/(n-1));
-        var col = acColorFor(person.name), initials = acInitials(person.name);
-        var timeTxt = person.at ? new Date(person.at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-        var title = person.name + ' — ' + l.label + (timeTxt ? (' (since '+timeTxt+')') : '');
-        html += '<div class="ac-clip'+(person.isMe?' ac-clip-me':'')+'" style="left:'+(x/TREE_W*100)+'%; top:'+(l.y/TREE_H*100)+'%;" title="'+acEsc(title)+'"'+(person.isMe?' onclick="window.__acOpenPicker(event)"':'')+'>'+
-          '<div class="ac-pin" style="background:'+l.color+'"></div>'+
-          '<div class="ac-avatar" style="background:'+col+'">'+acEsc(initials)+'</div>'+
-          '<div class="ac-name">'+acEsc(person.name)+'</div>'+
-          (person.isMe ? '<div class="ac-me-badge">tap to move</div>' : '') +
-        '</div>';
-      });
-    });
-    wrap.innerHTML = html;
+    out.sort(function(a, b){ return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
+    return out;
   }
+  function peerName(m, key){ var t = team(m); for (var i = 0; i < t.length; i++) if (t[i].key === key) return t[i].name; return key; }
 
-  function acBuildTreeSVG(){
-    var branches = AC_LEVELS.map(function(l){
-      return '<path d="M50 '+l.y+' Q 260 '+(l.y-14)+' 480 '+(l.y-6)+'" stroke="#8a5a34" stroke-width="7" fill="none" stroke-linecap="round"/>'+
-        '<ellipse cx="502" cy="'+(l.y-10)+'" rx="36" ry="15" fill="#8fae7a" opacity="0.9"/>'+
-        '<ellipse cx="478" cy="'+(l.y-20)+'" rx="27" ry="12" fill="#9fbb8a" opacity="0.9"/>'+
-        '<ellipse cx="468" cy="'+(l.y+3)+'" rx="25" ry="11" fill="#7fa06a" opacity="0.9"/>';
-    }).join('');
-    return '<svg viewBox="0 0 '+TREE_W+' '+TREE_H+'" preserveAspectRatio="none" class="absolute inset-0 w-full h-full">'+
-      '<path d="M45 '+TREE_H+' L45 18 Q50 8 55 18 L55 '+TREE_H+' Z" fill="#7a4a26"/>'+
-      branches +
-    '</svg>';
+  /* ---------- storage helpers ---------- */
+  function pair(a, b){ return [a, b].sort().join('~'); }
+  function mkey(m, peer, sender){ return 'tcm_' + pair(m.key, peer) + '_' + sender; }
+  function thread(m, peer){
+    var mine = lget(mkey(m, peer, m.key), []), theirs = lget(mkey(m, peer, peer), []);
+    mine.forEach(function(x){ x.mine = true; });
+    return mine.concat(theirs).sort(function(a, b){ return a.at < b.at ? -1 : a.at > b.at ? 1 : (a.id < b.id ? -1 : 1); });
   }
+  function readMap(m){ return lget('tcr_' + m.key, {}); }
+  function unreadOf(m, peer, msgs){
+    var last = readMap(m)[peer] || '';
+    return msgs.filter(function(x){ return !x.mine && !x.x && x.at > last; }).length;
+  }
+  function markRead(m, peer, msgs){
+    var newest = ''; msgs.forEach(function(x){ if (!x.mine && x.at > newest) newest = x.at; });
+    if (!newest) return;
+    var map = readMap(m); if ((map[peer] || '') >= newest) return;
+    map[peer] = newest; lsave('tcr_' + m.key, map);
+  }
+  function statusOf(key){ return lget('tcs_' + key, null); }
+  function setMyStatus(m, id){ lsave('tcs_' + m.key, { s: id, at: new Date().toISOString() }); }
 
-  function acMount(){
-    var panel = document.getElementById('commPanel');
-    if (!panel || panel.classList.contains('hidden')) return;
-    panel.classList.remove('w-[430px]','w-[720px]');
-    if (panel.classList.contains('w-[560px]') === false) panel.classList.add('w-[560px]');
-    if (panel.classList.contains('max-w-[95vw]') === false) panel.classList.add('max-w-[95vw]');
-    if (!panel.dataset.acBuilt) {
-      panel.dataset.acBuilt = '1';
-      panel.innerHTML =
-        '<div class="bg-emerald-900 text-white px-3 py-2 flex justify-between items-center shrink-0">'+
-          '<div><h3 class="text-sm font-bold">🌳 Acacia Clip Chart — Team Status</h3>'+
-          '<p class="text-sm text-emerald-200">Tap your clip on the tree to update where you are</p></div>'+
-          '<button onclick="toggleCommPanel()" class="text-white hover:text-blue-300 text-sm">✕</button>'+
-        '</div>'+
-        '<div class="flex-1 overflow-y-auto p-3 bg-gradient-to-b from-sky-50 to-emerald-50">'+
-          '<div id="acTreeWrap" class="relative w-full" style="height:300px;">'+
-            acBuildTreeSVG()+
-            '<div id="acTreeOverlay" class="absolute inset-0"></div>'+
-          '</div>'+
-          '<div id="acLegend" class="mt-3 grid grid-cols-2 gap-1 text-sm"></div>'+
-        '</div>';
-      var leg = document.getElementById('acLegend');
-      leg.innerHTML = AC_LEVELS.map(function(l){
-        return '<div class="flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full" style="background:'+l.color+'"></span><span class="text-gray-600">'+acEsc(l.label)+'</span></div>';
-      }).join('');
+  function appendMine(m, peer, msg){
+    var k = mkey(m, peer, m.key), arr = lget(k, []);
+    arr.push(msg); if (arr.length > MAX_MSGS) arr = arr.slice(-MAX_MSGS);
+    if (lsave(k, arr)) return true;
+    // storage full: drop the oldest attachments I sent in this chat, then try once more
+    var freed = false;
+    for (var i = 0; i < arr.length - 1; i++) {
+      if (arr[i].f && !arr[i].f.gone) { try { localStorage.removeItem('tcf_' + arr[i].f.id); } catch(e){} arr[i].f.gone = true; freed = true; if (i > arr.length / 2) break; }
     }
-    acRenderTree();
+    return freed ? lsave(k, arr) : false;
   }
 
-  (function wrapToggleForClip(){
-    var o = window.toggleCommPanel;
-    window.toggleCommPanel = function(){
+  /* ---------- formatting ---------- */
+  function fmtTime(iso){ try { return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch(e){ return ''; } }
+  function dayKey(iso){ try { var d = new Date(iso); return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); } catch(e){ return ''; } }
+  function dayLabel(iso){
+    var d = new Date(iso), n = new Date(), y = new Date(); y.setDate(n.getDate() - 1);
+    if (dayKey(iso) === dayKey(n.toISOString())) return 'Today';
+    if (dayKey(iso) === dayKey(y.toISOString())) return 'Yesterday';
+    return d.toLocaleDateString([], { day: 'numeric', month: 'short', year: d.getFullYear() === n.getFullYear() ? undefined : 'numeric' });
+  }
+  function listTime(iso){
+    if (!iso) return '';
+    var l = dayLabel(iso); return l === 'Today' ? fmtTime(iso) : l;
+  }
+  function ago(iso){
+    var s = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (!(s >= 0)) return '';
+    if (s < 90) return 'just now'; if (s < 3600) return Math.round(s / 60) + ' min ago';
+    if (s < 86400) return Math.round(s / 3600) + ' h ago'; return Math.round(s / 86400) + ' d ago';
+  }
+  function fmtSize(n){ return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+  function linkify(t){
+    return esc(t).replace(/(https?:\/\/[^\s<]+)/g, function(u){ return '<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + '</a>'; }).replace(/\n/g, '<br>');
+  }
+  function preview(x){
+    if (!x) return '';
+    var body = x.x ? 'Message deleted' : (x.f ? '📎 ' + x.f.name : x.t);
+    return (x.mine ? 'You: ' : '') + body;
+  }
 
+  /* ---------- rendering ---------- */
+  function avatar(name, dotColor){
+    return '<div class="tc-av" style="background:' + colorFor(name) + '">' + esc(initials(name)) +
+      (dotColor ? '<span class="tc-dot" style="background:' + dotColor + '"></span>' : '') + '</div>';
+  }
+  function peerStatus(key){ var r = statusOf(key); return statusInfo(r && r.s); }
 
+  function renderMe(m){
+    var r = statusOf(m.key), st = statusInfo(r && r.s);
+    $('tcMeAv').style.background = colorFor(m.name); $('tcMeAv').textContent = initials(m.name);
+    $('tcMeName').textContent = m.name;
+    $('tcMeDot').style.background = st.color; $('tcMeLabel').textContent = st.label;
+    $('tcMenu').innerHTML = STATUS.map(function(s){
+      return '<button type="button" role="menuitem" data-s="' + s.id + '"' + (s.id === st.id ? ' class="on"' : '') + '><span class="tc-dot" style="background:' + s.color + '"></span>' + s.label + '</button>';
+    }).join('');
+  }
 
-      var panel = document.getElementById('commPanel');
-      if (panel) panel.dataset.cliqUpgraded = '1';
-      var r; try { if (typeof o === 'function') r = o.apply(this, arguments); } catch(e){}
-      try { acMount(); } catch(e){}
-      setTimeout(acMount, 90); 
-      return r;
+  function renderList(m){
+    var q = ($('tcSearch').value || '').trim().toLowerCase(), totalUnread = 0;
+    var rows = team(m).map(function(p){
+      var msgs = thread(m, p.key), u = unreadOf(m, p.key, msgs);
+      totalUnread += u;
+      return { p: p, last: msgs[msgs.length - 1], unread: u, st: peerStatus(p.key) };
+    });
+    var list = $('tcList');
+    if (!rows.length) {
+      list.innerHTML = '<div class="tc-empty">No teammates yet.<br>Add users under Settings Hub → User Management and they will appear here.</div>';
+    } else {
+      rows = rows.filter(function(r){ return !q || r.p.name.toLowerCase().indexOf(q) !== -1; });
+      rows.sort(function(a, b){
+        if (a.last && b.last) return a.last.at < b.last.at ? 1 : -1;
+        if (a.last) return -1; if (b.last) return 1;
+        return a.p.name.toLowerCase() < b.p.name.toLowerCase() ? -1 : 1;
+      });
+      list.innerHTML = rows.length ? rows.map(function(r){
+        return '<button type="button" class="tc-row' + (r.p.key === active ? ' on' : '') + '" data-k="' + esc(r.p.key) + '">' +
+          avatar(r.p.name, r.st.color) +
+          '<div class="tc-rowmain"><div class="tc-rowtop"><span class="tc-name">' + esc(r.p.name) + '</span><span class="tc-time">' + esc(listTime(r.last && r.last.at)) + '</span></div>' +
+          '<div class="tc-rowbot"><span class="tc-prev">' + esc(r.last ? preview(r.last) : r.st.label) + '</span>' +
+          (r.unread ? '<span class="tc-badge">' + (r.unread > 99 ? '99+' : r.unread) + '</span>' : '') + '</div></div></button>';
+      }).join('') : '<div class="tc-empty">No teammate matches “' + esc(q) + '”.</div>';
+    }
+    setDockBadge(totalUnread);
+    var n = team(m).length;
+    $('tcSub').textContent = n ? (n + ' teammate' + (n === 1 ? '' : 's') + ' · click one to chat') : 'Click a teammate to start a conversation';
+    return totalUnread;
+  }
+
+  function setDockBadge(n){
+    var btn = $('commToggle'); if (!btn) return;
+    var b = $('tcDockBadge');
+    if (n > 0) {
+      if (!b) { b = document.createElement('span'); b.id = 'tcDockBadge'; btn.appendChild(b); }
+      b.textContent = n > 99 ? '99+' : String(n);
+    } else if (b) b.remove();
+  }
+
+  function renderConv(m, forceScroll){
+    var open = !!active;
+    $('tcEmpty').classList.toggle('tc-hide', open);
+    $('tcConv').classList.toggle('tc-hide', !open);
+    if (!open) return;
+    var name = peerName(m, active), st = peerStatus(active), rec = statusOf(active);
+    $('tcPeerName').textContent = name;
+    $('tcPeerAv').style.background = colorFor(name); $('tcPeerAv').textContent = initials(name);
+    $('tcPeerDot').style.background = st.color;
+    $('tcPeerStatus').textContent = st.label + (rec && rec.at ? ' · set ' + ago(rec.at) : '');
+
+    var msgs = thread(m, active), html = '', prevDay = '';
+    if (!msgs.length) html = '<div class="tc-empty">No messages yet. Say hi 👋</div>';
+    msgs.forEach(function(x){
+      var dk = dayKey(x.at);
+      if (dk !== prevDay) { html += '<div class="tc-day"><span>' + esc(dayLabel(x.at)) + '</span></div>'; prevDay = dk; }
+      var body;
+      if (x.x) body = '<div class="tc-bub del">🚫 This message was deleted';
+      else {
+        body = '<div class="tc-bub">';
+        if (x.t) body += '<div>' + linkify(x.t) + '</div>';
+        if (x.f) body += x.f.gone ? '<div>📎 ' + esc(x.f.name) + ' <i>(file no longer stored)</i></div>'
+          : '<div><a href="#" data-fid="' + esc(x.f.id) + '" data-fn="' + esc(x.f.name) + '">📎 ' + esc(x.f.name) + '</a> <span style="color:#6b7280">(' + esc(fmtSize(x.f.size || 0)) + ')</span></div>';
+      }
+      body += '<div class="tc-meta">' + (x.mine && !x.x ? '<button type="button" class="tc-x" data-del="' + esc(x.id) + '" title="Delete message" aria-label="Delete message">🗑</button>' : '') + esc(fmtTime(x.at)) + '</div></div>';
+      html += '<div class="tc-msg' + (x.mine ? ' me' : '') + '">' + body + '</div>';
+    });
+    var box = $('tcMsgs');
+    if (html !== lastHtml) {
+      var atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
+      box.innerHTML = html; lastHtml = html;
+      if (forceScroll || atBottom) box.scrollTop = box.scrollHeight;
+    }
+    markRead(m, active, msgs);
+  }
+
+  function refresh(forceScroll){
+    var m = me();
+    if (!$('commPanel')) return;
+    if (!m) { setDockBadge(0); return; }
+    if (!lastMe || lastMe !== m.key + '|' + m.company) { lastMe = m.key + '|' + m.company; active = null; lastHtml = ''; }
+    var panelOpen = !$('commPanel').classList.contains('hidden');
+    if (!panelOpen) { // closed: only keep the unread badge on the button fresh
+      var n = 0; team(m).forEach(function(p){ n += unreadOf(m, p.key, thread(m, p.key)); });
+      setDockBadge(n); return;
+    }
+    renderMe(m);
+    if (active) renderConv(m, forceScroll);   // marks as read first, so the list/badge below are already correct
+    renderList(m);
+  }
+
+  /* ---------- actions ---------- */
+  function showErr(t){ var e = $('tcErr'); e.textContent = t; e.classList.remove('tc-hide'); }
+  function clearErr(){ $('tcErr').classList.add('tc-hide'); }
+
+  function openConv(key){
+    active = key; lastHtml = ''; clearErr();
+    $('tcBody').classList.add('tc-show-conv');
+    refresh(true);
+    var ta = $('tcInput'); if (ta) ta.focus();
+  }
+
+  function send(){
+    var m = me(); if (!m || !active) return;
+    var ta = $('tcInput'), text = ta.value.trim(); if (!text) return;
+    var ok = appendMine(m, active, { id: uid(), at: new Date().toISOString(), t: text });
+    if (!ok) { showErr('Message NOT sent — browser storage is full or blocked. Your text is still in the box; free some space (delete old attachments) and try again.'); return; }
+    ta.value = ''; autosize(); clearErr(); refresh(true);
+  }
+
+  function sendFile(file){
+    var m = me(); if (!m || !active || !file) return;
+    if (file.size > MAX_FILE) { showErr('“' + file.name + '” is ' + fmtSize(file.size) + '. Attachments are limited to 400 KB — share larger files through the Files Hub.'); return; }
+    var rd = new FileReader(), peer = active;
+    rd.onerror = function(){ showErr('Could not read that file.'); };
+    rd.onload = function(){
+      var id = uid();
+      if (!lsave('tcf_' + id, rd.result)) { showErr('Attachment NOT sent — browser storage is full or blocked.'); return; }
+      var ok = appendMine(m, peer, { id: uid(), at: new Date().toISOString(), t: '', f: { id: id, name: file.name, size: file.size } });
+      if (!ok) { try { localStorage.removeItem('tcf_' + id); } catch(e){} showErr('Attachment NOT sent — browser storage is full or blocked.'); return; }
+      clearErr(); refresh(true);
     };
-  })();
+    rd.readAsDataURL(file);
+  }
 
-  setTimeout(function(){
-    var p = document.getElementById('commPanel');
-    if (p && !p.classList.contains('hidden')) acMount();
-  }, 700);
+  function deleteMine(id){
+    var m = me(); if (!m || !active) return;
+    var k = mkey(m, active, m.key), arr = lget(k, []);
+    for (var i = 0; i < arr.length; i++) if (arr[i].id === id) {
+      if (arr[i].f) { try { localStorage.removeItem('tcf_' + arr[i].f.id); } catch(e){} }
+      arr[i] = { id: arr[i].id, at: arr[i].at, x: 1 };
+      if (!lsave(k, arr)) showErr('Could not delete that message — storage is blocked.');
+      break;
+    }
+    refresh(false);
+  }
 
+  function downloadFile(fid, name){
+    var data = lget('tcf_' + fid, null);
+    if (!data) { showErr('That attachment is not available yet (it may still be syncing) — try again in a moment.'); return; }
+    var a = document.createElement('a'); a.href = data; a.download = name || 'file';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  function autosize(){ var ta = $('tcInput'); if (!ta) return; ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 96) + 'px'; }
+
+  /* ---------- wiring ---------- */
+  var wired = false;
+  function wire(){
+    if (wired || !$('commPanel')) return; wired = true;
+    $('tcList').addEventListener('click', function(e){ var b = e.target.closest('.tc-row'); if (b) openConv(b.getAttribute('data-k')); });
+    $('tcSearch').addEventListener('input', function(){ var m = me(); if (m) renderList(m); });
+    $('tcBack').addEventListener('click', function(){ active = null; lastHtml = ''; $('tcBody').classList.remove('tc-show-conv'); refresh(); });
+    $('tcSend').addEventListener('click', send);
+    $('tcInput').addEventListener('keydown', function(e){ if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+    $('tcInput').addEventListener('input', autosize);
+    $('tcAttach').addEventListener('click', function(){ $('tcFile').click(); });
+    $('tcFile').addEventListener('change', function(e){ var f = e.target.files && e.target.files[0]; e.target.value = ''; sendFile(f); });
+    $('tcMsgs').addEventListener('click', function(e){
+      var a = e.target.closest('[data-fid]'); if (a) { e.preventDefault(); downloadFile(a.getAttribute('data-fid'), a.getAttribute('data-fn')); return; }
+      var d = e.target.closest('[data-del]'); if (d) deleteMine(d.getAttribute('data-del'));
+    });
+    $('tcStatusBtn').addEventListener('click', function(e){ e.stopPropagation(); $('tcMenu').classList.toggle('tc-hide'); });
+    $('tcMenu').addEventListener('click', function(e){
+      var b = e.target.closest('[data-s]'); if (!b) return;
+      var m = me(); if (m) { setMyStatus(m, b.getAttribute('data-s')); }
+      $('tcMenu').classList.add('tc-hide'); refresh();
+    });
+    document.addEventListener('click', function(e){ var mn = $('tcMenu'); if (mn && !mn.classList.contains('tc-hide') && !mn.contains(e.target)) mn.classList.add('tc-hide'); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { var mn = $('tcMenu'); if (mn) mn.classList.add('tc-hide'); } });
+  }
+
+  window.toggleCommPanel = function(){
+    var p = $('commPanel'); if (!p) return;
+    wire();
+    var opening = p.classList.contains('hidden');
+    p.classList.toggle('hidden');
+    if (opening) {
+      var m = me();
+      if (m && !statusOf(m.key)) setMyStatus(m, 'available');   // first time in: show as available
+      lastHtml = ''; refresh(true);
+    }
+  };
+
+  // The app's cloud-sync layer calls window.renderCommLog after it applies remote changes, so new messages
+  // from teammates on other devices show up without polling delay.
+  window.renderCommLog = function(){ try { refresh(false); } catch(e){} };
+  window.addEventListener('storage', function(){ try { refresh(false); } catch(e){} });
+  var tick = 0;
   setInterval(function(){
-    var p = document.getElementById('commPanel');
-    if (p && p.dataset.acBuilt && !p.classList.contains('hidden')) acRenderTree();
-  }, 4000);
+    var p = $('commPanel'); if (!p) return;
+    tick++;
+    var open = !p.classList.contains('hidden');
+    if (open || tick % 4 === 0) { try { refresh(false); } catch(e){} }   // open: every 5 s; closed: badge every 20 s
+  }, 5000);
+  setTimeout(function(){ wire(); try { refresh(false); } catch(e){} }, 1500);
 
-  window.acaciaClipChart = { render: acRenderTree, mount: acMount };
+  window.acaciaTeamChat = { refresh: refresh, open: openConv };
 })();
 </script>
 
