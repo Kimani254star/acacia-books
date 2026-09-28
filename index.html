@@ -1020,6 +1020,10 @@ body{font-size:.875rem;line-height:1.25rem}
 .app-loader-bar-fill{width:35%;height:100%;background:var(--ab-gold,#D9A441);border-radius:999px;animation:appLoaderBar 1.1s ease-in-out infinite;}
 @keyframes appLoaderBar{0%{transform:translateX(-120%);}100%{transform:translateX(380%);}}
 </style>
+<style id="homeUniformText">
+/* Whole home page: every heading, paragraph, button, link and label = Tailwind text-xs */
+#homeTab, #homeTab *:not(i):not(svg):not(svg *){font-size:.875rem !important;line-height:1.25rem !important;}
+</style>
 </head><body id="appBody"><div id="appLoader" class="app-loader"><div class="app-loader-inner"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="app-loader-logo"><path d="M12 22V13M12 13C12 13 6 12 6 6.5C6 6.5 9 8 12 6C15 8 18 6.5 18 6.5C18 12 12 13 12 13Z" stroke="#D9A441" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 13C12 13 8 14.5 7 18" stroke="#D9A441" stroke-width="1.4" stroke-linecap="round"/><path d="M12 13C12 13 16 14.5 17 18" stroke="#D9A441" stroke-width="1.4" stroke-linecap="round"/></svg><div class="app-loader-text">Acacia Books</div><div class="app-loader-bar"><div class="app-loader-bar-fill"></div></div></div></div><script>
 function showAppLoader(){
   var el=document.getElementById('appLoader');
@@ -1750,6 +1754,39 @@ window.addEventListener('load', function(){
 .solution-card p.sol-best strong{color:#0f172a}
 @media(max-width:1024px){.bk-two{grid-template-columns:1fr;gap:40px}.bk-steps{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.bk-steps,.bk-checks{grid-template-columns:1fr}}
+&lt;/style>&lt;style id="homeUniformText">body,body *:not(i):not(svg):not(svg *){font-size:.875rem !important;line-height:1.25rem !important}&lt;/style>&lt;script>(function(){try{var t=localStorage.getItem('acxTheme');if(!t)t=(window.matchMedia&amp;&amp;matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';document.documentElement.setAttribute('data-theme',t)}catch(e){}})();&lt;/script>&lt;style id="homeDarkMode">
+.themeToggle{background:none;border:1px solid #e2e8f0;color:#475569;width:36px;height:36px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.2s}
+.themeToggle:hover{border-color:#2563eb;color:#2563eb}
+html[data-theme="dark"]{color-scheme:dark}
+html[data-theme="dark"] body{background:#0b1220;color:#e2e8f0}
+html[data-theme="dark"] header{background:rgba(11,18,32,.9);border-bottom-color:#1e293b}
+html[data-theme="dark"] .logoText h2,html[data-theme="dark"] .signIn,html[data-theme="dark"] .sectionTitle h2,html[data-theme="dark"] .solution-card h3,html[data-theme="dark"] .module h3,html[data-theme="dark"] .about-content h3,html[data-theme="dark"] .price-display h4,html[data-theme="dark"] .support-card h4,html[data-theme="dark"] .bk-step h3,html[data-theme="dark"] .bk-faq summary,html[data-theme="dark"] .pricing-card h3,html[data-theme="dark"] .solution-card p.sol-best strong,html[data-theme="dark"] .cmp-table th,html[data-theme="dark"] .cmp-table th:first-child,html[data-theme="dark"] .cmp-table td:first-child{color:#f1f5f9}
+html[data-theme="dark"] .logoText span,html[data-theme="dark"] .sectionTitle p,html[data-theme="dark"] .solution-card p,html[data-theme="dark"] .module p,html[data-theme="dark"] .about-content p,html[data-theme="dark"] .price-display span,html[data-theme="dark"] .support-card p,html[data-theme="dark"] .bk-text p,html[data-theme="dark"] .bk-text p em,html[data-theme="dark"] .bk-step p,html[data-theme="dark"] .bk-faq details p,html[data-theme="dark"] .solution-card p.sol-best,html[data-theme="dark"] .learn i,html[data-theme="dark"] .module-tab-btn{color:#94a3b8}
+html[data-theme="dark"] nav a,html[data-theme="dark"] .features div,html[data-theme="dark"] .about-stat-box p,html[data-theme="dark"] .bk-checks div,html[data-theme="dark"] .sol-list li,html[data-theme="dark"] .cmp-table th,html[data-theme="dark"] .cmp-table td,html[data-theme="dark"] .pricing-card ul li{color:#cbd5e1}
+html[data-theme="dark"] nav a:hover,html[data-theme="dark"] nav a.active{color:#60a5fa}
+html[data-theme="dark"] .solution-card,html[data-theme="dark"] .module,html[data-theme="dark"] .about-stat-box,html[data-theme="dark"] .support-card,html[data-theme="dark"] .bk-step,html[data-theme="dark"] .bk-faq details,html[data-theme="dark"] .pricing-card,html[data-theme="dark"] .pricing-controls-wrapper,html[data-theme="dark"] .cmp-wrap,html[data-theme="dark"] .ddMenu{background:#111a2e;border-color:#1e293b}
+html[data-theme="dark"] .section-alt{background:#0f172a;border-color:#1e293b}
+html[data-theme="dark"] .features div,html[data-theme="dark"] .bk-checks div,html[data-theme="dark"] .cmp-table th,html[data-theme="dark"] .module-tabs{background:#0f172a;border-color:#1e293b}
+html[data-theme="dark"] .cmp-table th,html[data-theme="dark"] .cmp-table td,html[data-theme="dark"] .learn,html[data-theme="dark"] .solution-card p.sol-best{border-color:#1e293b}
+html[data-theme="dark"] .cmp-table tr.cmp-price td{background:#14243f;color:#60a5fa}
+html[data-theme="dark"] .module-tab-btn.active{background:#1e293b;color:#60a5fa}
+html[data-theme="dark"] .sectionTitle span,html[data-theme="dark"] .sol-icon,html[data-theme="dark"] .blue{background:#14243f;color:#60a5fa}
+html[data-theme="dark"] .green{background:#0f2a1c;color:#4ade80}
+html[data-theme="dark"] .orange{background:#2e1a0c;color:#fb923c}
+html[data-theme="dark"] .purple{background:#221636;color:#a78bfa}
+html[data-theme="dark"] .cyan{background:#0a2830;color:#22d3ee}
+html[data-theme="dark"] .rose{background:#2f1119;color:#fb7185}
+html[data-theme="dark"] .ddItem{color:#e2e8f0}
+html[data-theme="dark"] .ddItem:hover{background:#14243f;color:#60a5fa}
+html[data-theme="dark"] .ddSep{background:#1e293b}
+html[data-theme="dark"] .bk-btn.ghost,html[data-theme="dark"] .btn-select{background:#111a2e;color:#e2e8f0;border-color:#334155}
+html[data-theme="dark"] .bk-btn.ghost:hover,html[data-theme="dark"] .btn-select:hover{border-color:#2563eb;color:#fff}
+html[data-theme="dark"] .pricing-card.featured .btn-select{background:#2563eb;color:#fff;border-color:#2563eb}
+html[data-theme="dark"] .pricing-card ul li.none{color:#64748b}
+html[data-theme="dark"] .slider{background:#334155}
+html[data-theme="dark"] .themeToggle{border-color:#334155;color:#facc15}
+html[data-theme="dark"] footer{background:#050a14;border-top-color:#1e293b}
+html[data-theme="dark"] .bottomFooter,html[data-theme="dark"] .social a{border-color:#1e293b}
 &lt;/style>&lt;/head>&lt;body>
 &lt;header>
         &lt;div class="logo">
@@ -1773,6 +1810,7 @@ window.addEventListener('load', function(){
             &lt;/ul>
         &lt;/nav>
         &lt;div class="actions">
+            &lt;button type="button" class="themeToggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">&lt;i class="fa-solid fa-moon">&lt;/i>&lt;/button>
             &lt;div class="signDrop" id="signDrop">&lt;button type="button" class="signIn" id="signInBtn" aria-haspopup="true">&lt;span id="signInLabel">Sign In&lt;/span> &lt;i class="fa-solid fa-chevron-down" style="font-size:11px">&lt;/i>&lt;/button>&lt;div class="ddMenu" id="ddMenu">&lt;div class="ddHead">Sign in to an app&lt;/div>&lt;a href="#" class="ddItem" data-app="books">&lt;i class="fa-solid fa-book">&lt;/i>&lt;span>Acacia Books&lt;/span>&lt;/a>&lt;a href="#" class="ddItem" data-app="https://kimani254star.github.io/acacia-crm/?from=books#dashboard">&lt;i class="fa-solid fa-users-gear">&lt;/i>&lt;span>CRM &amp; Engagement&lt;/span>&lt;/a>&lt;a href="#" class="ddItem" data-app="https://kimani254star.github.io/acacia-mail/">&lt;i class="fa-solid fa-envelope-open-text">&lt;/i>&lt;span>Secure Mail Router&lt;/span>&lt;/a>&lt;a href="#" class="ddItem" data-app="https://kimani254star.github.io/Acacia-Sales-Hub/#revenue">&lt;i class="fa-solid fa-cart-shopping">&lt;/i>&lt;span>Sales &amp; Distribution&lt;/span>&lt;/a>&lt;a href="#" class="ddItem" data-app="https://kimani254star.github.io/project-hub/">&lt;i class="fa-solid fa-diagram-project">&lt;/i>&lt;span>Projects&lt;/span>&lt;/a>&lt;a href="#" class="ddItem" data-app="https://kimani254star.github.io/Acacia-Plans/">&lt;i class="fa-solid fa-calendar-check">&lt;/i>&lt;span>Plans&lt;/span>&lt;/a>&lt;a href="#" class="ddItem" data-app="https://kimani254star.github.io/Acacia-books-expenses-/">&lt;i class="fa-solid fa-wallet">&lt;/i>&lt;span>Expense &amp; Ledger&lt;/span>&lt;/a>&lt;a href="#" class="ddItem" data-app="https://kimani254star.github.io/Acacia-books-inventory-/">&lt;i class="fa-solid fa-boxes-stacked">&lt;/i>&lt;span>Inventory Balancing&lt;/span>&lt;/a>&lt;a href="#" class="ddItem" data-app="https://kimani254star.github.io/Acacia-books-payroll/">&lt;i class="fa-solid fa-money-check-dollar">&lt;/i>&lt;span>Payroll &amp; Compensation&lt;/span>&lt;/a>&lt;/div>&lt;/div>
             &lt;a href="apps.html" class="getStarted">Explore Apps&lt;/a>
         &lt;/div>
@@ -2102,6 +2140,19 @@ document.addEventListener('click',function(e){
   else if(h==='#'){ e.preventDefault(); }
 });
 go('home'); refreshSignInLabel();
+(function(){
+  var b=document.getElementById('themeToggle'); if(!b) return;
+  function sync(){ var d=document.documentElement.getAttribute('data-theme')==='dark'; var i=b.querySelector('i'); if(i) i.className=d?'fa-solid fa-sun':'fa-solid fa-moon'; }
+  b.addEventListener('click',function(){
+    var d=document.documentElement.getAttribute('data-theme')==='dark';
+    var n=d?'light':'dark';
+    document.documentElement.setAttribute('data-theme',n);
+    try{localStorage.setItem('acxTheme',n)}catch(e){}
+    sync();
+  });
+  sync();
+})();
+
 &lt;/script>&lt;/body>&lt;/html></textarea>
 <script id="acaciaLandingJs">
 (function(){
