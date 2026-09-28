@@ -4621,9 +4621,6 @@ document.addEventListener("click", function(e) {
 #commPanel .tc-bub a{color:#1d4ed8;text-decoration:underline}
 #commPanel .tc-bub.del{color:#9ca3af;font-style:italic}
 #commPanel .tc-meta{display:flex;justify-content:flex-end;align-items:center;gap:6px;font-size:10px;color:#6b7280;margin-top:2px}
-#commPanel .tc-x{opacity:0;font-size:11px;color:#6b7280;padding:0 2px}
-#commPanel .tc-bub:hover .tc-x{opacity:1}
-#commPanel .tc-x:hover{color:#dc2626}
 #commPanel .tc-err{background:#fef2f2;color:#b91c1c;border-top:1px solid #fecaca;font-size:12px;padding:6px 12px;flex-shrink:0}
 #commPanel .tc-comp{display:flex;align-items:flex-end;gap:6px;padding:8px;background:#fff;border-top:1px solid var(--tc-line);flex-shrink:0}
 #commPanel .tc-comp textarea{flex:1;border:1px solid #d1d5db;border-radius:18px;padding:7px 12px;font-size:13px;resize:none;max-height:96px;background:#fff;color:#111827;line-height:1.3}
@@ -4631,6 +4628,26 @@ document.addEventListener("click", function(e) {
 #commPanel .tc-iconbtn:hover{background:#f3f4f6}
 #commPanel .tc-send{background:var(--tc-blue);color:#fff;font-size:13px;font-weight:600;padding:7px 14px;border-radius:18px;flex-shrink:0}
 #commPanel .tc-send:hover{background:#1e40af}
+#commPanel .tc-main{position:relative}
+#commPanel .tc-dd{position:absolute;top:1px;right:3px;font-size:12px;line-height:1;color:#6b7280;padding:2px 5px;border-radius:6px;opacity:0;background:inherit}
+#commPanel .tc-bub:hover .tc-dd,#commPanel .tc-dd:focus{opacity:1}
+@media (hover:none){#commPanel .tc-dd{opacity:.7}}
+#commPanel .tc-dd:hover{background:rgba(0,0,0,.08)}
+#commPanel .tc-quote{display:block;border-left:3px solid #2563eb;background:rgba(0,0,0,.06);border-radius:6px;padding:3px 8px;margin:1px 0 4px;cursor:pointer;max-width:100%}
+#commPanel .tc-quote b{display:block;font-size:11px;color:#1d4ed8}
+#commPanel .tc-quote span{display:block;font-size:12px;color:#4b5563;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#commPanel .tc-bub.tc-flash{animation:tcflash 1.2s ease}
+@keyframes tcflash{0%,60%{box-shadow:0 0 0 3px #facc15}100%{box-shadow:0 1px 1px rgba(0,0,0,.08)}}
+#commPanel .tc-mmenu{position:absolute;z-index:6;background:#fff;border:1px solid #d1d5db;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:4px;min-width:140px}
+#commPanel .tc-mmenu button{display:block;width:100%;text-align:left;font-size:13px;padding:6px 10px;border-radius:6px;color:#111827}
+#commPanel .tc-mmenu button:hover{background:#eff6ff}
+#commPanel .tc-mmenu button.danger{color:#dc2626}
+#commPanel .tc-replybar{display:flex;align-items:center;gap:8px;padding:6px 12px;background:#eff6ff;border-top:1px solid var(--tc-line);flex-shrink:0}
+#commPanel .tc-rq{flex:1;min-width:0;border-left:3px solid #2563eb;padding-left:8px}
+#commPanel .tc-rq b{display:block;font-size:12px;color:#1d4ed8}
+#commPanel .tc-rq span{display:block;font-size:12px;color:#4b5563;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#commPanel .tc-replybar button{font-size:14px;color:#6b7280;padding:2px 6px;border-radius:6px}
+#commPanel .tc-replybar button:hover{background:rgba(0,0,0,.08)}
 #tcDockBadge{display:inline-block;margin-left:6px;background:#dc2626;color:#fff;font-size:11px;line-height:1;border-radius:9999px;padding:2px 6px;vertical-align:middle}
 @media (max-width:640px){
   #commPanel .tc-side{width:100%;border-right:0}
@@ -4658,7 +4675,7 @@ document.addEventListener("click", function(e) {
       <div class="tc-search"><input id="tcSearch" type="search" placeholder="Search teammates…" autocomplete="off"></div>
       <div id="tcList" class="tc-list"></div>
     </aside>
-    <section class="tc-main">
+    <section id="tcMain" class="tc-main">
       <div id="tcEmpty" class="tc-empty">💬<br>Select a teammate on the left to open a conversation.</div>
       <div id="tcConv" class="tc-conv tc-hide">
         <div class="tc-chead">
@@ -4668,6 +4685,7 @@ document.addEventListener("click", function(e) {
         </div>
         <div id="tcMsgs" class="tc-msgs"></div>
         <div id="tcErr" class="tc-err tc-hide" role="alert"></div>
+        <div id="tcReplyBar" class="tc-replybar tc-hide"><div class="tc-rq"><b id="tcReplyWho"></b><span id="tcReplyTxt"></span></div><button id="tcReplyX" type="button" aria-label="Cancel reply">✕</button></div>
         <div class="tc-comp">
           <input id="tcFile" type="file" class="tc-hide">
           <button id="tcAttach" type="button" class="tc-iconbtn" title="Attach a file (max 400 KB)" aria-label="Attach a file">📎</button>
@@ -4675,6 +4693,7 @@ document.addEventListener("click", function(e) {
           <button id="tcSend" type="button" class="tc-send">Send</button>
         </div>
       </div>
+      <div id="tcMsgMenu" class="tc-mmenu tc-hide" role="menu"></div>
     </section>
   </div>
 </div>
@@ -122162,6 +122181,8 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
   var active = null;          // peer key of the open conversation
   var lastHtml = '';          // last rendered message html (skip no-op redraws)
   var lastMe = null;
+  var replyTo = null;         // {id,k,n,t} message being replied to
+  var menuFor = null;         // message id the ▾ menu is open for
 
   function $(id){ return document.getElementById(id); }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]; }); }
@@ -122332,20 +122353,21 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
       var dk = dayKey(x.at);
       if (dk !== prevDay) { html += '<div class="tc-day"><span>' + esc(dayLabel(x.at)) + '</span></div>'; prevDay = dk; }
       var body;
-      if (x.x) body = '<div class="tc-bub del">🚫 This message was deleted';
+      if (x.x) body = '<div class="tc-bub del" data-mid="' + esc(x.id) + '">🚫 This message was deleted';
       else {
-        body = '<div class="tc-bub">';
+        body = '<div class="tc-bub" data-mid="' + esc(x.id) + '"><button type="button" class="tc-dd" data-dd="' + esc(x.id) + '" title="Message options" aria-label="Message options" aria-haspopup="true">▾</button>';
+        if (x.r) body += '<div class="tc-quote" data-goto="' + esc(x.r.id) + '"><b>' + esc(x.r.k === m.key ? 'You' : x.r.n) + '</b><span>' + esc(x.r.t) + '</span></div>';
         if (x.t) body += '<div>' + linkify(x.t) + '</div>';
         if (x.f) body += x.f.gone ? '<div>📎 ' + esc(x.f.name) + ' <i>(file no longer stored)</i></div>'
           : '<div><a href="#" data-fid="' + esc(x.f.id) + '" data-fn="' + esc(x.f.name) + '">📎 ' + esc(x.f.name) + '</a> <span style="color:#6b7280">(' + esc(fmtSize(x.f.size || 0)) + ')</span></div>';
       }
-      body += '<div class="tc-meta">' + (x.mine && !x.x ? '<button type="button" class="tc-x" data-del="' + esc(x.id) + '" title="Delete message" aria-label="Delete message">🗑</button>' : '') + esc(fmtTime(x.at)) + '</div></div>';
+      body += '<div class="tc-meta">' + esc(fmtTime(x.at)) + '</div></div>';
       html += '<div class="tc-msg' + (x.mine ? ' me' : '') + '">' + body + '</div>';
     });
     var box = $('tcMsgs');
     if (html !== lastHtml) {
       var atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
-      box.innerHTML = html; lastHtml = html;
+      closeMsgMenu(); box.innerHTML = html; lastHtml = html;
       if (forceScroll || atBottom) box.scrollTop = box.scrollHeight;
     }
     markRead(m, active, msgs);
@@ -122355,7 +122377,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     var m = me();
     if (!$('commPanel')) return;
     if (!m) { setDockBadge(0); return; }
-    if (!lastMe || lastMe !== m.key + '|' + m.company) { lastMe = m.key + '|' + m.company; active = null; lastHtml = ''; }
+    if (!lastMe || lastMe !== m.key + '|' + m.company) { lastMe = m.key + '|' + m.company; active = null; lastHtml = ''; setReply(null); }
     var panelOpen = !$('commPanel').classList.contains('hidden');
     if (!panelOpen) { // closed: only keep the unread badge on the button fresh
       var n = 0; team(m).forEach(function(p){ n += unreadOf(m, p.key, thread(m, p.key)); });
@@ -122370,7 +122392,55 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
   function showErr(t){ var e = $('tcErr'); e.textContent = t; e.classList.remove('tc-hide'); }
   function clearErr(){ $('tcErr').classList.add('tc-hide'); }
 
+  function snippet(x){ var t = x.f ? '📎 ' + x.f.name : (x.t || ''); return t.length > 100 ? t.slice(0, 100) + '…' : t; }
+  function setReply(r){
+    replyTo = r;
+    var bar = $('tcReplyBar'); if (!bar) return;
+    bar.classList.toggle('tc-hide', !r);
+    if (r) { $('tcReplyWho').textContent = 'Replying to ' + r.n; $('tcReplyTxt').textContent = r.t; }
+  }
+  function closeMsgMenu(){ menuFor = null; var mn = $('tcMsgMenu'); if (mn) mn.classList.add('tc-hide'); }
+  function openMsgMenu(btn){
+    var m = me(); if (!m || !active) return;
+    var id = btn.getAttribute('data-dd'), menu = $('tcMsgMenu');
+    if (menuFor === id && !menu.classList.contains('tc-hide')) { closeMsgMenu(); return; }
+    var msg = thread(m, active).filter(function(x){ return x.id === id; })[0];
+    if (!msg || msg.x) return;
+    menuFor = id;
+    menu.innerHTML = '<button type="button" role="menuitem" data-act="reply">↩ Reply</button>' +
+      (msg.t ? '<button type="button" role="menuitem" data-act="copy">⧉ Copy text</button>' : '') +
+      (msg.mine ? '<button type="button" role="menuitem" data-act="delete" class="danger">🗑 Delete</button>' : '');
+    menu.classList.remove('tc-hide');
+    var mr = $('tcMain').getBoundingClientRect(), br = btn.getBoundingClientRect();
+    var left = br.right - mr.left - menu.offsetWidth, top = br.bottom - mr.top + 2;
+    left = Math.max(4, Math.min(left, mr.width - menu.offsetWidth - 4));
+    if (top + menu.offsetHeight > mr.height - 4) top = Math.max(4, br.top - mr.top - menu.offsetHeight - 2);
+    menu.style.left = left + 'px'; menu.style.top = top + 'px';
+  }
+  function menuAct(act){
+    var m = me(), id = menuFor; closeMsgMenu();
+    if (!m || !active || !id) return;
+    var msg = thread(m, active).filter(function(x){ return x.id === id; })[0]; if (!msg || msg.x) return;
+    if (act === 'reply') {
+      setReply({ id: msg.id, k: msg.mine ? m.key : active, n: msg.mine ? m.name : peerName(m, active), t: snippet(msg) });
+      var ta = $('tcInput'); if (ta) ta.focus();
+    } else if (act === 'copy') {
+      try { navigator.clipboard.writeText(msg.t); } catch(e){
+        try { var t = document.createElement('textarea'); t.value = msg.t; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); } catch(e2){}
+      }
+    } else if (act === 'delete') deleteMine(id);
+  }
+  function jumpTo(id){
+    var el = $('tcMsgs').querySelector('[data-mid="' + id + '"]');
+    if (!el) { showErr('The original message is no longer available.'); return; }
+    clearErr(); if (el.scrollIntoView) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    el.classList.remove('tc-flash'); void el.offsetWidth; el.classList.add('tc-flash');
+    setTimeout(function(){ el.classList.remove('tc-flash'); }, 1300);
+  }
+
   function openConv(key){
+    if (key !== active) setReply(null);
+    closeMsgMenu();
     active = key; lastHtml = ''; clearErr();
     $('tcBody').classList.add('tc-show-conv');
     refresh(true);
@@ -122380,9 +122450,10 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
   function send(){
     var m = me(); if (!m || !active) return;
     var ta = $('tcInput'), text = ta.value.trim(); if (!text) return;
-    var ok = appendMine(m, active, { id: uid(), at: new Date().toISOString(), t: text });
+    var msg = { id: uid(), at: new Date().toISOString(), t: text }; if (replyTo) msg.r = replyTo;
+    var ok = appendMine(m, active, msg);
     if (!ok) { showErr('Message NOT sent — browser storage is full or blocked. Your text is still in the box; free some space (delete old attachments) and try again.'); return; }
-    ta.value = ''; autosize(); clearErr(); refresh(true);
+    ta.value = ''; autosize(); clearErr(); setReply(null); refresh(true);
   }
 
   function sendFile(file){
@@ -122393,9 +122464,10 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     rd.onload = function(){
       var id = uid();
       if (!lsave('tcf_' + id, rd.result)) { showErr('Attachment NOT sent — browser storage is full or blocked.'); return; }
-      var ok = appendMine(m, peer, { id: uid(), at: new Date().toISOString(), t: '', f: { id: id, name: file.name, size: file.size } });
+      var fm = { id: uid(), at: new Date().toISOString(), t: '', f: { id: id, name: file.name, size: file.size } }; if (replyTo) fm.r = replyTo;
+      var ok = appendMine(m, peer, fm);
       if (!ok) { try { localStorage.removeItem('tcf_' + id); } catch(e){} showErr('Attachment NOT sent — browser storage is full or blocked.'); return; }
-      clearErr(); refresh(true);
+      clearErr(); setReply(null); refresh(true);
     };
     rd.readAsDataURL(file);
   }
@@ -122427,7 +122499,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     if (wired || !$('commPanel')) return; wired = true;
     $('tcList').addEventListener('click', function(e){ var b = e.target.closest('.tc-row'); if (b) openConv(b.getAttribute('data-k')); });
     $('tcSearch').addEventListener('input', function(){ var m = me(); if (m) renderList(m); });
-    $('tcBack').addEventListener('click', function(){ active = null; lastHtml = ''; $('tcBody').classList.remove('tc-show-conv'); refresh(); });
+    $('tcBack').addEventListener('click', function(){ setReply(null); closeMsgMenu(); active = null; lastHtml = ''; $('tcBody').classList.remove('tc-show-conv'); refresh(); });
     $('tcSend').addEventListener('click', send);
     $('tcInput').addEventListener('keydown', function(e){ if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
     $('tcInput').addEventListener('input', autosize);
@@ -122435,16 +122507,24 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     $('tcFile').addEventListener('change', function(e){ var f = e.target.files && e.target.files[0]; e.target.value = ''; sendFile(f); });
     $('tcMsgs').addEventListener('click', function(e){
       var a = e.target.closest('[data-fid]'); if (a) { e.preventDefault(); downloadFile(a.getAttribute('data-fid'), a.getAttribute('data-fn')); return; }
-      var d = e.target.closest('[data-del]'); if (d) deleteMine(d.getAttribute('data-del'));
+      var dd = e.target.closest('[data-dd]'); if (dd) { e.stopPropagation(); openMsgMenu(dd); return; }
+      var q = e.target.closest('[data-goto]'); if (q) jumpTo(q.getAttribute('data-goto'));
     });
+    $('tcMsgs').addEventListener('contextmenu', function(e){        // right-click a message = same menu
+      var b = e.target.closest('.tc-bub[data-mid]'); var btn = b && b.querySelector('[data-dd]');
+      if (btn) { e.preventDefault(); openMsgMenu(btn); }
+    });
+    $('tcMsgs').addEventListener('scroll', closeMsgMenu);
+    $('tcMsgMenu').addEventListener('click', function(e){ var b = e.target.closest('[data-act]'); if (b) menuAct(b.getAttribute('data-act')); });
+    $('tcReplyX').addEventListener('click', function(){ setReply(null); });
     $('tcStatusBtn').addEventListener('click', function(e){ e.stopPropagation(); $('tcMenu').classList.toggle('tc-hide'); });
     $('tcMenu').addEventListener('click', function(e){
       var b = e.target.closest('[data-s]'); if (!b) return;
       var m = me(); if (m) { setMyStatus(m, b.getAttribute('data-s')); }
       $('tcMenu').classList.add('tc-hide'); refresh();
     });
-    document.addEventListener('click', function(e){ var mn = $('tcMenu'); if (mn && !mn.classList.contains('tc-hide') && !mn.contains(e.target)) mn.classList.add('tc-hide'); });
-    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { var mn = $('tcMenu'); if (mn) mn.classList.add('tc-hide'); } });
+    document.addEventListener('click', function(e){ var mm = $('tcMsgMenu'); if (mm && !mm.classList.contains('tc-hide') && !mm.contains(e.target)) closeMsgMenu(); var mn = $('tcMenu'); if (mn && !mn.classList.contains('tc-hide') && !mn.contains(e.target)) mn.classList.add('tc-hide'); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { var mn = $('tcMenu'); if (mn) mn.classList.add('tc-hide'); var mm = $('tcMsgMenu'); if (mm && !mm.classList.contains('tc-hide')) closeMsgMenu(); else if (replyTo && !$('commPanel').classList.contains('hidden')) setReply(null); } });
   }
 
   window.toggleCommPanel = function(){
