@@ -145001,4 +145001,94 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
 })();
 
 </script>
+<script id="acxAccountGate">
+/* Acacia control gate: the Support Hub approves / deactivates companies.
+   Reads public.acacia_company_status. Missing row = existing customer (allowed);
+   a brand-new registration with no row is created as "pending". */
+(function(){
+  if (window.__acxGate) return; window.__acxGate = true;
+  var URL_ = window.__SUPA_URL__, KEY_ = window.__SUPA_KEY__;
+  if (!URL_ || !KEY_) return;
+  var H = { apikey: KEY_, Authorization: 'Bearer ' + KEY_, 'Content-Type': 'application/json' };
+  function me(){ try { return JSON.parse(localStorage.getItem('loggedInUser') || 'null'); } catch(e){ return null; } }
+  function effective(row){
+    if (!row) return 'active';
+    if (row.status === 'active' && row.paid_until && new Date(row.paid_until) < new Date()) return 'expired';
+    return row.status;
+  }
+  async function fetchRow(id){
+    var r = await fetch(URL_ + '/rest/v1/acacia_company_status?select=*&company_id=eq.' + encodeURIComponent(id), { headers: H });
+    if (!r.ok) throw new Error('status ' + r.status);
+    var a = await r.json(); return a[0] || null;
+  }
+  async function createPending(u){
+    var row = { company_id: u.companyId, company_name: u.companyName || '', owner_name: u.fullName || u.username || '',
+                email: u.email || '', plan: u.plan || 'Free', price: Number(u.price || 0), status: 'pending' };
+    await fetch(URL_ + '/rest/v1/acacia_company_status', { method: 'POST',
+      headers: Object.assign({ Prefer: 'resolution=ignore-duplicates,return=minimal' }, H), body: JSON.stringify(row) });
+    return row;
+  }
+  function heartbeat(u0){
+    try {
+      var id = (u0.email || u0.username || '').toLowerCase(); if (!id) return;
+      var k = 'acx_hb_' + u0.companyId + '_Books_' + id, last = Number(localStorage.getItem(k) || 0);
+      if (Date.now() - last < 5 * 60 * 1000) return;
+      localStorage.setItem(k, String(Date.now()));
+      fetch(URL_ + '/rest/v1/rpc/acx_heartbeat', { method: 'POST', headers: H, keepalive: true,
+        body: JSON.stringify({ p_company: u0.companyId, p_app: 'Books', p_user: id, p_role: String(u0.role || '') }) });
+    } catch(e){}
+  }
+  var MSG = {
+    pending:   ['Awaiting approval', 'Your account has been created and is waiting for approval by our team. You will be able to sign in as soon as it is approved.'],
+    expired:   ['Subscription expired', 'Your payment period has ended and this account has been deactivated. Renew your subscription to get access again.'],
+    suspended: ['Account deactivated', 'This account has been deactivated. Please contact support or renew your subscription.'],
+    rejected:  ['Registration not approved', 'This registration was not approved. Please contact support for help.']
+  };
+  function unlock(){ var o = document.getElementById('acxLock'); if (o) o.remove(); }
+  function lock(st){
+    var m = MSG[st] || MSG.suspended;
+    var o = document.getElementById('acxLock');
+    if (!o){
+      o = document.createElement('div'); o.id = 'acxLock';
+      o.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#0b1220;color:#e2e8f0;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,sans-serif';
+      document.body.appendChild(o);
+    }
+    o.innerHTML = '<div style="max-width:440px;text-align:center"><div style="font-size:42px;margin-bottom:8px">' + (st === 'pending' ? '\u23F3' : '\uD83D\uDD12') + '</div>' +
+      '<h2 style="font-size:22px;font-weight:700;margin:0 0 10px">' + m[0] + '</h2><p style="color:#94a3b8;line-height:1.6;margin:0 0 22px">' + m[1] + '</p>' +
+      '<button id="acxLockRetry" style="background:#2563eb;color:#fff;border:0;border-radius:8px;padding:10px 18px;margin:4px;cursor:pointer">Check again</button>' +
+      (st === 'expired' || st === 'suspended' ? '<a href="payment.html" style="display:inline-block;background:#16a34a;color:#fff;border-radius:8px;padding:10px 18px;margin:4px;text-decoration:none">Renew</a>' : '') +
+      '<button id="acxLockOut" style="background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:8px;padding:10px 18px;margin:4px;cursor:pointer">Sign out</button></div>';
+    document.getElementById('acxLockRetry').onclick = function(){ check(); };
+    document.getElementById('acxLockOut').onclick = function(){ try { localStorage.removeItem('loggedInUser'); } catch(e){} location.reload(); };
+  }
+  async function check(){
+    var u = me(); if (!u || !u.companyId) { unlock(); return; }
+    var ck = 'acx_gate_' + u.companyId;
+    try {
+      var row = await fetchRow(u.companyId);
+      if (!row){
+        var fresh = u.registered && (Date.now() - new Date(u.registered).getTime() < 15 * 60 * 1000);
+        if (!fresh) { localStorage.setItem(ck, 'active'); unlock(); return; }
+        await createPending(u); row = { status: 'pending' };
+      }
+      var st = effective(row);
+      localStorage.setItem(ck, st);
+      if (st === 'active') { unlock(); heartbeat(u); } else lock(st);
+    } catch(e){
+      var c = localStorage.getItem(ck);      /* offline: keep the last known state */
+      if (c && c !== 'active') lock(c);
+    }
+  }
+  window.acxCheckAccount = check;
+  var origShow = window.showApp;
+  if (typeof origShow === 'function'){
+    window.showApp = function(){ var r = origShow.apply(this, arguments); setTimeout(check, 50); return r; };
+  }
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) check(); });
+  setInterval(check, 60000);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(check, 1200); });
+  else setTimeout(check, 1200);
+})();
+</script>
+
 </body></html>
