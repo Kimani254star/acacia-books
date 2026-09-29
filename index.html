@@ -3914,7 +3914,7 @@ async function signUpWithGoogle() {
     return;
   }
 
-  const companyId = "comp_" + companyName.toLowerCase().replace(/[^a-z0-9]/g, "_");
+  const companyId = "comp_" + companyName.toLowerCase().replace(/[^a-z0-9]/g, "_") + "_" + (function(){ try { var a = new Uint32Array(2); crypto.getRandomValues(a); return (a[0].toString(36) + a[1].toString(36)).slice(0, 6); } catch(e){ return Math.random().toString(36).slice(2, 8); } })();
 
   const plan = localStorage.getItem("selectedPlan") || "Free";
   const price = parseFloat(localStorage.getItem("selectedPrice") || 0);
@@ -6435,7 +6435,7 @@ document.getElementById('dashBankTotal').textContent =
   (function () {
     try {
       const operationalCostsDash = JSON.parse(localStorage.getItem('operationalCosts') || '[]');
-      const operationalCostsTotalFY = __fyFilterDash(operationalCostsDash).reduce((sum, e) => sum + (parseFloat(e.amount || e.total) || 0), 0);
+      const operationalCostsTotalFY = ((typeof window.__acxSplitOpCosts === "function") ? window.__acxSplitOpCosts(__fyFilterDash(operationalCostsDash)).opex : __fyFilterDash(operationalCostsDash)).reduce((sum, e) => sum + (parseFloat(e.amount || e.total) || 0), 0);
       const operationalCostsMonthTotal = operationalCostsDash.filter(e => isCurrentMonth(e.date)).reduce((sum, e) => sum + (parseFloat(e.amount || e.total) || 0), 0);
 
       function isPrevMonth(d) {
@@ -6474,13 +6474,16 @@ document.getElementById('dashBankTotal').textContent =
         __pnlRevenue += (gross - vat);
       });
       const __pnlDiscountTotal = __pnlAllRevSources.reduce((sum, inv) => sum + (parseFloat(inv.discount || inv.discountAmount || inv.discountValue || 0) || 0), 0);
-      const __pnlCogsTotal = (typeof window.__pnlCogs === "function") ? window.__pnlCogs(__pnlAllRevSources) : 0;
+      const __acxSpD = (typeof window.__acxSplitOpCosts === "function") ? window.__acxSplitOpCosts(__pnlOpCostsAll) : null;
+      const __pnlCogsTotal = ((typeof window.__pnlCogs === "function") ? window.__pnlCogs(__pnlAllRevSources) : 0) + (__acxSpD ? __acxSpD.cogs.reduce((s, e) => s + (parseFloat(e.amount || e.total || 0) || 0), 0) : 0);
       const __pnlOtherIncomeTotal = __pnlOtherIncomesAll.reduce((sum, inc) => sum + (parseFloat(inc.amount || inc.total || inc.value || 0) || 0), 0)
         + __pnlManualOtherIncomeAll.reduce((sum, tx) => sum + (parseFloat(tx.amount || 0) || 0), 0);
-      const __pnlBadDebts = __pnlRevenue * 0.10;
-      const __pnlGrossProfit = (__pnlRevenue + __pnlOtherIncomeTotal) - __pnlDiscountTotal - __pnlCogsTotal - __pnlBadDebts;
+      // Bad debts = real invoice write-offs (no fixed % of revenue)
+      const __pnlBadDebts = (function () { try { const a = JSON.parse(localStorage.getItem('writeOffs') || '[]'); return (Array.isArray(a) ? a : []).reduce((sum, w) => sum + (parseFloat(w && w.amount) || 0), 0); } catch (e) { return 0; } })();
+      // Gross profit excludes other income; other income is added once, in Profit Before Tax
+      const __pnlGrossProfit = __pnlRevenue - __pnlDiscountTotal - __pnlCogsTotal - __pnlBadDebts;
       const __pnlBillTotal = __pnlBillsAll.reduce((sum, b) => sum + (parseFloat(b.subtotal || b.amount || 0) || 0), 0);
-      const __pnlOpCostsTotal = __pnlOpCostsAll.reduce((sum, e) => sum + (parseFloat(e.amount || e.total || 0) || 0), 0);
+      const __pnlOpCostsTotal = (__acxSpD ? __acxSpD.opex : __pnlOpCostsAll).reduce((sum, e) => sum + (parseFloat(e.amount || e.total || 0) || 0), 0);
       const __pnlDepEvents = (function () { try { const a = JSON.parse(localStorage.getItem('assetDepreciationEvents') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } })();
       const __pnlDepreciation = __pnlDepEvents.reduce((sum, h) => sum + (parseFloat(h && h.depreciationAmount) || 0), 0);
       const __pnlPayrollTotal = __pnlPayrollAll.reduce((sum, p) => sum + (parseFloat(p.net != null ? p.net : p.gross) || 0), 0);
@@ -6951,21 +6954,23 @@ function renderProfitBreakdownChart() {
   const discountTotal = invoices.reduce((sum, inv) =>
     sum + parseFloatSafe(inv.discount || inv.discountAmount || inv.discountValue || 0), 0);
 
-  const cogs = (typeof window.__pnlCogs === "function")
-    ? window.__pnlCogs(invoices)
-    : 0;
+  const __acxSpB = (typeof window.__acxSplitOpCosts === "function") ? window.__acxSplitOpCosts(operationalCosts) : null;
+  const cogs = ((typeof window.__pnlCogs === "function") ? window.__pnlCogs(invoices) : 0)
+    + (__acxSpB ? __acxSpB.cogs.reduce((s, e) => s + parseFloatSafe(e.amount || e.total || 0), 0) : 0);
 
   const manualOtherIncome = manualTx.filter(tx => tx.type === "Other Income");
   const otherIncomeTotal =
     otherIncomes.reduce((sum, inc) => sum + parseFloatSafe(inc.amount || inc.total || inc.value || 0), 0) +
     manualOtherIncome.reduce((sum, tx) => sum + parseFloatSafe(tx.amount || 0), 0);
 
-  const badDebts = revenue * 0.10;
+  // Bad debts = real invoice write-offs in the fiscal year (no fixed % of revenue)
+  const badDebts = (function () { try { const a = __fyFilter(JSON.parse(localStorage.getItem('writeOffs') || '[]')); return (Array.isArray(a) ? a : []).reduce((sum, w) => sum + parseFloatSafe(w && w.amount), 0); } catch (e) { return 0; } })();
 
-  const grossProfit = (revenue + otherIncomeTotal) - discountTotal - cogs - badDebts;
+  // Gross profit excludes other income; other income is added once, in Profit Before Tax
+  const grossProfit = revenue - discountTotal - cogs - badDebts;
 
   const billTotal = bills.reduce((sum, b) => sum + parseFloatSafe(b.subtotal || b.amount || 0), 0);
-  const operationalCostsTotal = operationalCosts.reduce((sum, e) => sum + parseFloatSafe(e.amount || e.total || 0), 0);
+  const operationalCostsTotal = (__acxSpB ? __acxSpB.opex : operationalCosts).reduce((sum, e) => sum + parseFloatSafe(e.amount || e.total || 0), 0);
   const payrollTotal = payrollRecords.reduce( (sum, p) => sum + parseFloatSafe(p.net || 0),0);
 
   const taxTotal = taxes.reduce((sum, t) => sum + parseFloatSafe(t.amount || t.total || 0), 0);
@@ -6980,7 +6985,7 @@ function renderProfitBreakdownChart() {
   const __caList = (function(){ try { var a = JSON.parse(localStorage.getItem('currencyAdjustments') || '[]'); return Array.isArray(a) ? a : []; } catch(e){ return []; } })();
   const currencyAdjustment = __caList.reduce(function(sum, a){ return sum + (parseFloatSafe(a && a.converted) || 0); }, 0);
 
-  const profitBeforeTax = grossProfit + currencyAdjustment - billTotal - operationalCostsTotal - depreciation - payrollTotal - interestPaid;
+  const profitBeforeTax = grossProfit + otherIncomeTotal + currencyAdjustment - billTotal - operationalCostsTotal - depreciation - payrollTotal - interestPaid;
   const incomeTax = profitBeforeTax > 0 ? profitBeforeTax * 0.30 : 0;
   const netProfit = profitBeforeTax - incomeTax;
 
@@ -28762,11 +28767,14 @@ function renderWriteOffReport() {
   });
 }
 function getNextControlInvoiceNo(controlUnitNo) {
-    const key = `etims_counter_${controlUnitNo}`;
-    let current = parseInt(localStorage.getItem(key) || "0", 10);
+    /* Multi-user company: each user counts in their own key and prefixes their code, so two users never issue the same number. */
+    var e = null; try { e = window.__acxSeries && window.__acxSeries.ensure(); } catch (_) {}
+    const key = `etims_counter_${controlUnitNo}` + (e ? "_" + e.user.key : "");
+    let current = parseInt(localStorage.getItem(key) || "0", 10) || 0;
     current += 1;
     localStorage.setItem(key, current);
-    return String(current).padStart(3, "0");
+    const seq = String(current).padStart(3, "0");
+    return e ? e.st.code + "-" + seq : seq;
 }
 function toggleAllInvoices(source) {
     const checkboxes = document.querySelectorAll(".invoiceCheckbox");
@@ -73360,7 +73368,7 @@ document.addEventListener("DOMContentLoaded", () => {
               checked
               onchange="toggleColumn(3,this)">
             Closing Balance
-          </label></div></div></div></div><table id="pnlTable" class="w-full border border-gray-300 mt-2 text-sm"><thead><tr class="bg-gray-100"><th class="border px-2 py-1 text-left">Item</th><th class="border px-2 py-1 text-right">Amount</th><th class="border px-2 py-1 text-right">Total</th><th class="border px-2 py-1 text-right">Closing Balance</th></tr></thead><tbody><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Sales Revenue</td><td></td><td></td><td></td></tr></tbody><tbody id="pnlRevenueBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Sales Revenue</td><td></td><td class="border px-2 py-1 text-right" id="pnlRevenue">0.00</td><td class="border px-2 py-1 text-right" id="closingRevenue">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Other Incomes</td><td></td><td></td><td></td></tr></tbody><tbody id="pnlOtherIncomesBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Other Incomes</td><td></td><td class="border px-2 py-1 text-right" id="pnlOtherIncomes">0.00</td><td class="border px-2 py-1 text-right" id="closingOtherIncomes">0.00</td></tr><tr><td class="border px-2 py-1">Discounts</td><td></td><td class="border px-2 py-1 text-right" id="pnlDiscount">0.00</td><td class="border px-2 py-1 text-right" id="closingDiscount">0.00</td></tr><tr><td class="border px-2 py-1">Cost of Goods Sold (COGS)</td><td></td><td class="border px-2 py-1 text-right" id="pnlCogs">0.00</td><td class="border px-2 py-1 text-right" id="closingCogs">0.00</td></tr><tr><td class="border px-2 py-1">Provision for Bad Debts</td><td></td><td class="border px-2 py-1 text-right" id="pnlBadDebts">0.00</td><td class="border px-2 py-1 text-right" id="closingBadDebts">0.00</td></tr><tr class="font-semibold"><td class="border px-2 py-1">Gross Profit</td><td></td><td class="border px-2 py-1 text-right" id="pnlGrossProfit">0.00</td><td class="border px-2 py-1 text-right" id="closingGrossProfit">0.00</td></tr><tr class="font-semibold text-blue-700"><td class="border px-2 py-1">Gross Profit Margin % (COGS x 100 / Total Sales)</td><td></td><td class="border px-2 py-1 text-right" id="pnlGrossMargin">0.00%</td><td class="border px-2 py-1 text-right" id="closingGrossMargin">0.00%</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Bills</td><td></td><td></td><td></td></tr></tbody><tbody id="pnlBillsBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Bills</td><td></td><td class="border px-2 py-1 text-right" id="pnlBills">0.00</td><td class="border px-2 py-1 text-right" id="closingBills">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Operational Costs</td><td></td><td></td><td></td></tr><tbody id="pnlOperationalCostsBreakdown"></tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Operational Costs</td><td></td><td class="border px-2 py-1 text-right" id="pnlExpenses">0.00</td><td class="border px-2 py-1 text-right" id="closingExpenses">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Current Accounts</td><td></td><td></td><td></td></tr><tbody id="pnlCurrentAccountsBreakdown"></tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Current Accounts</td><td></td><td class="border px-2 py-1 text-right" id="pnlCurrentAccounts">0.00</td><td class="border px-2 py-1 text-right" id="closingCurrentAccounts">0.00</td></tr><tr><td class="border px-2 py-1">Depreciation</td><td></td><td class="border px-2 py-1 text-right" id="pnlDepreciation">0.00</td><td class="border px-2 py-1 text-right" id="closingDepreciation">0.00</td></tr><tr><td class="border px-2 py-1">Interest Paid on Loan</td><td></td><td class="border px-2 py-1 text-right" id="pnlInterest">0.00</td><td class="border px-2 py-1 text-right" id="closingInterest">0.00</td></tr><tr><td class="border px-2 py-1">Payroll</td><td></td><td class="border px-2 py-1 text-right" id="pnlPayroll">0.00</td><td class="border px-2 py-1 text-right" id="closingPayroll">0.00</td></tr><tr><td class="border px-2 py-1">Currency Adjustment</td><td></td><td class="border px-2 py-1 text-right" id="pnlCurrencyAdjustment">0.00</td><td class="border px-2 py-1 text-right" id="closingCurrencyAdjustment">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Taxes</td><td></td><td></td><td></td></tr><tbody id="pnlTaxesBreakdown"></tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Taxes</td><td></td><td class="border px-2 py-1 text-right" id="pnlTaxes">0.00</td><td class="border px-2 py-1 text-right" id="closingTaxes">0.00</td></tr><tr class="font-semibold text-blue-700"><td class="border px-2 py-1">Profit Before Tax</td><td></td><td class="border px-2 py-1 text-right" id="pnlProfitBeforeTax">0.00</td><td class="border px-2 py-1 text-right" id="closingProfitBeforeTax">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Income Tax (30%)</td><td></td><td class="border px-2 py-1 text-right" id="pnlIncomeTax">0.00</td><td class="border px-2 py-1 text-right" id="closingIncomeTax">0.00</td></tr><tr class="font-bold text-green-800"><td class="border px-2 py-1">Net Profit After Tax</td><td></td><td class="border px-2 py-1 text-right" id="pnlProfit">0.00</td><td class="border px-2 py-1 text-right" id="closingProfit">0.00</td></tr></tbody></table></div><div id="bsReport" class="report-view hidden"><style>
+          </label></div></div></div></div><table id="pnlTable" class="w-full border border-gray-300 mt-2 text-sm"><thead><tr class="bg-gray-100"><th class="border px-2 py-1 text-left">Item</th><th class="border px-2 py-1 text-right">Amount</th><th class="border px-2 py-1 text-right">Total</th><th class="border px-2 py-1 text-right">Closing Balance</th></tr></thead><tbody><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Sales Revenue</td><td></td><td></td><td></td></tr></tbody><tbody id="pnlRevenueBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Sales Revenue</td><td></td><td class="border px-2 py-1 text-right" id="pnlRevenue">0.00</td><td class="border px-2 py-1 text-right" id="closingRevenue">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Other Incomes</td><td></td><td></td><td></td></tr></tbody><tbody id="pnlOtherIncomesBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Other Incomes</td><td></td><td class="border px-2 py-1 text-right" id="pnlOtherIncomes">0.00</td><td class="border px-2 py-1 text-right" id="closingOtherIncomes">0.00</td></tr><tr><td class="border px-2 py-1">Discounts</td><td></td><td class="border px-2 py-1 text-right" id="pnlDiscount">0.00</td><td class="border px-2 py-1 text-right" id="closingDiscount">0.00</td></tr><tr><td class="border px-2 py-1">Cost of Goods Sold (COGS)</td><td></td><td class="border px-2 py-1 text-right" id="pnlCogs">0.00</td><td class="border px-2 py-1 text-right" id="closingCogs">0.00</td></tr><tr><td class="border px-2 py-1">Bad Debts (Written Off)</td><td></td><td class="border px-2 py-1 text-right" id="pnlBadDebts">0.00</td><td class="border px-2 py-1 text-right" id="closingBadDebts">0.00</td></tr><tr class="font-semibold"><td class="border px-2 py-1">Gross Profit</td><td></td><td class="border px-2 py-1 text-right" id="pnlGrossProfit">0.00</td><td class="border px-2 py-1 text-right" id="closingGrossProfit">0.00</td></tr><tr class="font-semibold text-blue-700"><td class="border px-2 py-1">Gross Profit Margin % (COGS x 100 / Total Sales)</td><td></td><td class="border px-2 py-1 text-right" id="pnlGrossMargin">0.00%</td><td class="border px-2 py-1 text-right" id="closingGrossMargin">0.00%</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Bills</td><td></td><td></td><td></td></tr></tbody><tbody id="pnlBillsBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Bills</td><td></td><td class="border px-2 py-1 text-right" id="pnlBills">0.00</td><td class="border px-2 py-1 text-right" id="closingBills">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Operational Costs</td><td></td><td></td><td></td></tr><tbody id="pnlOperationalCostsBreakdown"></tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Operational Costs</td><td></td><td class="border px-2 py-1 text-right" id="pnlExpenses">0.00</td><td class="border px-2 py-1 text-right" id="closingExpenses">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Current Accounts</td><td></td><td></td><td></td></tr><tbody id="pnlCurrentAccountsBreakdown"></tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Current Accounts</td><td></td><td class="border px-2 py-1 text-right" id="pnlCurrentAccounts">0.00</td><td class="border px-2 py-1 text-right" id="closingCurrentAccounts">0.00</td></tr><tr><td class="border px-2 py-1">Depreciation</td><td></td><td class="border px-2 py-1 text-right" id="pnlDepreciation">0.00</td><td class="border px-2 py-1 text-right" id="closingDepreciation">0.00</td></tr><tr><td class="border px-2 py-1">Interest Paid on Loan</td><td></td><td class="border px-2 py-1 text-right" id="pnlInterest">0.00</td><td class="border px-2 py-1 text-right" id="closingInterest">0.00</td></tr><tr><td class="border px-2 py-1">Payroll</td><td></td><td class="border px-2 py-1 text-right" id="pnlPayroll">0.00</td><td class="border px-2 py-1 text-right" id="closingPayroll">0.00</td></tr><tr><td class="border px-2 py-1">Currency Adjustment</td><td></td><td class="border px-2 py-1 text-right" id="pnlCurrencyAdjustment">0.00</td><td class="border px-2 py-1 text-right" id="closingCurrencyAdjustment">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Taxes</td><td></td><td></td><td></td></tr><tbody id="pnlTaxesBreakdown"></tbody><tr class="font-semibold"><td class="border px-2 py-1">Total Taxes</td><td></td><td class="border px-2 py-1 text-right" id="pnlTaxes">0.00</td><td class="border px-2 py-1 text-right" id="closingTaxes">0.00</td></tr><tr class="font-semibold text-blue-700"><td class="border px-2 py-1">Profit Before Tax</td><td></td><td class="border px-2 py-1 text-right" id="pnlProfitBeforeTax">0.00</td><td class="border px-2 py-1 text-right" id="closingProfitBeforeTax">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Income Tax (30%)</td><td></td><td class="border px-2 py-1 text-right" id="pnlIncomeTax">0.00</td><td class="border px-2 py-1 text-right" id="closingIncomeTax">0.00</td></tr><tr class="font-bold text-green-800"><td class="border px-2 py-1">Net Profit After Tax</td><td></td><td class="border px-2 py-1 text-right" id="pnlProfit">0.00</td><td class="border px-2 py-1 text-right" id="closingProfit">0.00</td></tr></tbody></table></div><div id="bsReport" class="report-view hidden"><style>
   #bsReport h2.bs-title{display:flex;align-items:center;gap:8px;font-size:20px;font-weight:800;color:#1e3a8a;margin-bottom:.75rem}
   #balanceSheetTable{border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
   #balanceSheetTable thead th{background:#1e3a8a;color:#fff;position:sticky;top:0;z-index:1;font-weight:700}
@@ -73432,7 +73440,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </button><button onclick="clearBsSettings()"
             class="bg-gray-300 px-3 py-1 rounded hover:bg-gray-200">
             ResetNonCurrentLiabilitiesB
-          </button></div></div></div></div><table id="balanceSheetTable" class="w-full border border-gray-300 mt-2 text-sm"><thead><tr class="bg-gray-100"><th class="border px-2 py-1 text-left">Item</th><th class="border px-2 py-1 text-right">Amount</th><th class="border px-2 py-1 text-right">Total</th><th class="border px-2 py-1 text-right">Closing Balance</th></tr></thead><tbody><tr class="font-semibold bg-gray-50"><td class="border px-2 py-1">Current Assets</td><td></td><td></td><td></td></tr><tr><td class="border px-2 py-1 pl-4">Accounts Receivable</td><td></td><td class="border px-2 py-1 text-right" id="bsRevenue">0.00</td><td class="border px-2 py-1 text-right" id="closingBsRevenue">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Banks</td><td></td><td></td><td></td></tr></tbody><tbody id="bsBanksBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1 pl-4">Total Banks</td><td></td><td class="border px-2 py-1 text-right" id="bsBanks">0.00</td><td class="border px-2 py-1 text-right" id="closingBsBanks">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Provision for Bad Debts</td><td></td><td class="border px-2 py-1 text-right" id="bsBadDebts">0.00</td><td class="border px-2 py-1 text-right" id="closingBsBadDebts">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Inventory</td><td></td><td class="border px-2 py-1 text-right" id="bsInventory">0.00</td><td class="border px-2 py-1 text-right" id="closingBsInventory">0.00</td></tr><tr class="font-bold"><td class="border px-2 py-1 pl-4">Total Current Assets</td><td></td><td class="border px-2 py-1 text-right" id="bsCurrentAssets">0.00</td><td class="border px-2 py-1 text-right" id="closingBsCurrentAssets">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Non-Current Assets</td><td></td><td></td><td></td></tr></tbody><tbody id="bsNonCurrentAssetsBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1 pl-4">Total Non-Current Assets</td><td></td><td class="border px-2 py-1 text-right" id="bsNonCurrentAssetsTotal">0.00</td><td class="border px-2 py-1 text-right" id="closingBsNonCurrentAssetsTotal">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Depreciation</td><td></td><td class="border px-2 py-1 text-right" id="bsDepreciation">0.00</td><td class="border px-2 py-1 text-right" id="closingBsDepreciation">0.00</td></tr><tr class="font-bold text-blue-700"><td class="border px-2 py-1 pl-4">Total Assets</td><td></td><td class="border px-2 py-1 text-right" id="bsTotalAssets">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTotalAssets">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Current Liabilities</td><td></td><td></td><td></td></tr><tr><td class="border px-2 py-1 pl-4">Accounts Payable</td><td></td><td class="border px-2 py-1 text-right" id="bsBills">0.00</td><td class="border px-2 py-1 text-right" id="closingBsBills">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Operational Costs</td><td></td><td class="border px-2 py-1 text-right" id="bsExpenses">0.00</td><td class="border px-2 py-1 text-right" id="closingBsExpenses">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Payroll</td><td></td><td class="border px-2 py-1 text-right" id="bsPayroll">0.00</td><td class="border px-2 py-1 text-right" id="closingBsPayroll">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Taxes</td><td></td><td class="border px-2 py-1 text-right" id="bsTaxes">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTaxes">0.00</td></tr><tr class="font-bold"><td class="border px-2 py-1 pl-4">Total Current Liabilities</td><td></td><td class="border px-2 py-1 text-right" id="bsCurrentLiabilities">0.00</td><td class="border px-2 py-1 text-right" id="closingBsCurrentLiabilities">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Non-Current Liabilities</td><td></td><td></td><td></td></tr></tbody><tbody id="bsNonCurrentLiabilitiesBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1 pl-4">Total Non-Current Liabilities</td><td></td><td class="border px-2 py-1 text-right" id="bsNonCurrentLiabilitiesTotal">0.00</td><td class="border px-2 py-1 text-right" id="closingBsNonCurrentLiabilitiesTotal">0.00</td></tr><tr class="font-bold text-red-700"><td class="border px-2 py-1 pl-4">Total Liabilities</td><td></td><td class="border px-2 py-1 text-right" id="bsTotalLiabilities">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTotalLiabilities">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Equity</td><td></td><td></td><td></td></tr><tr><td class="border px-2 py-1 pl-4">Profit / Loss</td><td></td><td class="border px-2 py-1 text-right" id="bsEquityProfit">0.00</td><td class="border px-2 py-1 text-right" id="closingBsEquityProfit">0.00</td></tr><tr class="font-bold"><td class="border px-2 py-1 pl-4">Shareholder Equity</td><td></td><td></td><td></td></tr></tbody><tbody id="bsEquityBreakdown"></tbody><tbody><tr class="font-bold"><td class="border px-2 py-1 pl-4">Total Equity</td><td></td><td class="border px-2 py-1 text-right" id="bsEquity">0.00</td><td class="border px-2 py-1 text-right" id="closingBsEquity">0.00</td></tr><tr class="font-bold text-purple-700"><td class="border px-2 py-1 pl-4">Total Liabilities & Equity</td><td></td><td class="border px-2 py-1 text-right" id="bsTotalLiabilitiesEquity">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTotalLiabilitiesEquity">0.00</td></tr></tbody></table></div><div id="cashFlowReport" class="report-view hidden"><h2 class="text-sm font-bold mb-4">📦Cash Flow</h2><div class="mb-4"><label for="cfSummaryMonth" class="font-semibold">Step 1: Filter by Month</label><input type="month" id="cfSummaryMonth" class="border px-2 py-1 rounded w-full mt-1" onchange="renderCashFlow()"></div><div class="mb-4"><label class="font-semibold">Or Filter by Date Range</label><div class="flex gap-2 mt-1"><input type="date" id="cfStartDate" class="border px-1 py-1 rounded w-1/2" onchange="renderCashFlow()"><input type="date" id="cfEndDate" class="border px-1 py-1 rounded w-1/2" onchange="renderCashFlow()"></div></div><div class="mb-4 flex items-center gap-2"><select id="cfBasis" class="border px-2 py-1 rounded" onchange="renderCashFlow()"><option value="accrual">Accrual</option><option value="cash">Cash</option></select><button onclick="renderCashFlow()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
+          </button></div></div></div></div><table id="balanceSheetTable" class="w-full border border-gray-300 mt-2 text-sm"><thead><tr class="bg-gray-100"><th class="border px-2 py-1 text-left">Item</th><th class="border px-2 py-1 text-right">Amount</th><th class="border px-2 py-1 text-right">Total</th><th class="border px-2 py-1 text-right">Closing Balance</th></tr></thead><tbody><tr class="font-semibold bg-gray-50"><td class="border px-2 py-1">Current Assets</td><td></td><td></td><td></td></tr><tr><td class="border px-2 py-1 pl-4">Accounts Receivable</td><td></td><td class="border px-2 py-1 text-right" id="bsRevenue">0.00</td><td class="border px-2 py-1 text-right" id="closingBsRevenue">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Banks</td><td></td><td></td><td></td></tr></tbody><tbody id="bsBanksBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1 pl-4">Total Banks</td><td></td><td class="border px-2 py-1 text-right" id="bsBanks">0.00</td><td class="border px-2 py-1 text-right" id="closingBsBanks">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Bad Debts (Written Off)</td><td></td><td class="border px-2 py-1 text-right" id="bsBadDebts">0.00</td><td class="border px-2 py-1 text-right" id="closingBsBadDebts">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Inventory</td><td></td><td class="border px-2 py-1 text-right" id="bsInventory">0.00</td><td class="border px-2 py-1 text-right" id="closingBsInventory">0.00</td></tr><tr class="font-bold"><td class="border px-2 py-1 pl-4">Total Current Assets</td><td></td><td class="border px-2 py-1 text-right" id="bsCurrentAssets">0.00</td><td class="border px-2 py-1 text-right" id="closingBsCurrentAssets">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Non-Current Assets</td><td></td><td></td><td></td></tr></tbody><tbody id="bsNonCurrentAssetsBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1 pl-4">Total Non-Current Assets</td><td></td><td class="border px-2 py-1 text-right" id="bsNonCurrentAssetsTotal">0.00</td><td class="border px-2 py-1 text-right" id="closingBsNonCurrentAssetsTotal">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Depreciation</td><td></td><td class="border px-2 py-1 text-right" id="bsDepreciation">0.00</td><td class="border px-2 py-1 text-right" id="closingBsDepreciation">0.00</td></tr><tr class="font-bold text-blue-700"><td class="border px-2 py-1 pl-4">Total Assets</td><td></td><td class="border px-2 py-1 text-right" id="bsTotalAssets">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTotalAssets">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Current Liabilities</td><td></td><td></td><td></td></tr><tr><td class="border px-2 py-1 pl-4">Accounts Payable</td><td></td><td class="border px-2 py-1 text-right" id="bsBills">0.00</td><td class="border px-2 py-1 text-right" id="closingBsBills">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Operational Costs</td><td></td><td class="border px-2 py-1 text-right" id="bsExpenses">0.00</td><td class="border px-2 py-1 text-right" id="closingBsExpenses">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Payroll</td><td></td><td class="border px-2 py-1 text-right" id="bsPayroll">0.00</td><td class="border px-2 py-1 text-right" id="closingBsPayroll">0.00</td></tr><tr><td class="border px-2 py-1 pl-4">Taxes</td><td></td><td class="border px-2 py-1 text-right" id="bsTaxes">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTaxes">0.00</td></tr><tr class="font-bold"><td class="border px-2 py-1 pl-4">Total Current Liabilities</td><td></td><td class="border px-2 py-1 text-right" id="bsCurrentLiabilities">0.00</td><td class="border px-2 py-1 text-right" id="closingBsCurrentLiabilities">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Non-Current Liabilities</td><td></td><td></td><td></td></tr></tbody><tbody id="bsNonCurrentLiabilitiesBreakdown"></tbody><tbody><tr class="font-semibold"><td class="border px-2 py-1 pl-4">Total Non-Current Liabilities</td><td></td><td class="border px-2 py-1 text-right" id="bsNonCurrentLiabilitiesTotal">0.00</td><td class="border px-2 py-1 text-right" id="closingBsNonCurrentLiabilitiesTotal">0.00</td></tr><tr class="font-bold text-red-700"><td class="border px-2 py-1 pl-4">Total Liabilities</td><td></td><td class="border px-2 py-1 text-right" id="bsTotalLiabilities">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTotalLiabilities">0.00</td></tr><tr class="bg-gray-50 font-semibold"><td class="border px-2 py-1">Equity</td><td></td><td></td><td></td></tr><tr><td class="border px-2 py-1 pl-4">Profit / Loss</td><td></td><td class="border px-2 py-1 text-right" id="bsEquityProfit">0.00</td><td class="border px-2 py-1 text-right" id="closingBsEquityProfit">0.00</td></tr><tr class="font-bold"><td class="border px-2 py-1 pl-4">Shareholder Equity</td><td></td><td></td><td></td></tr></tbody><tbody id="bsEquityBreakdown"></tbody><tbody><tr class="font-bold"><td class="border px-2 py-1 pl-4">Total Equity</td><td></td><td class="border px-2 py-1 text-right" id="bsEquity">0.00</td><td class="border px-2 py-1 text-right" id="closingBsEquity">0.00</td></tr><tr class="font-bold text-purple-700"><td class="border px-2 py-1 pl-4">Total Liabilities & Equity</td><td></td><td class="border px-2 py-1 text-right" id="bsTotalLiabilitiesEquity">0.00</td><td class="border px-2 py-1 text-right" id="closingBsTotalLiabilitiesEquity">0.00</td></tr></tbody></table></div><div id="cashFlowReport" class="report-view hidden"><h2 class="text-sm font-bold mb-4">📦Cash Flow</h2><div class="mb-4"><label for="cfSummaryMonth" class="font-semibold">Step 1: Filter by Month</label><input type="month" id="cfSummaryMonth" class="border px-2 py-1 rounded w-full mt-1" onchange="renderCashFlow()"></div><div class="mb-4"><label class="font-semibold">Or Filter by Date Range</label><div class="flex gap-2 mt-1"><input type="date" id="cfStartDate" class="border px-1 py-1 rounded w-1/2" onchange="renderCashFlow()"><input type="date" id="cfEndDate" class="border px-1 py-1 rounded w-1/2" onchange="renderCashFlow()"></div></div><div class="mb-4 flex items-center gap-2"><select id="cfBasis" class="border px-2 py-1 rounded" onchange="renderCashFlow()"><option value="accrual">Accrual</option><option value="cash">Cash</option></select><button onclick="renderCashFlow()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-800">
     ✅ Apply Filter
   </button><button onclick="clearCashFlowFilter()" class="px-3 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">
     🧹 Clear Filter
@@ -79133,6 +79141,7 @@ function renderReports() {
   let operationalCosts = JSON.parse(localStorage.getItem('operationalCosts') || '[]');
   let payrollRecords = JSON.parse(localStorage.getItem('payrollRecords') || '[]');
   let taxes = JSON.parse(localStorage.getItem('taxPayments') || '[]');
+  let writeOffsPL = JSON.parse(localStorage.getItem('writeOffs') || '[]');
   const banks = JSON.parse(localStorage.getItem('banks') || '[]');
   const inventory = getAllInventories();
   const shareholderEquity = parseFloatSafe(localStorage.getItem('shareholderEquity') || '0');
@@ -79171,6 +79180,7 @@ function renderReports() {
   operationalCosts = operationalCosts.filter(c => inMonth(c.date));
   payrollRecords = payrollRecords.filter(p => inMonth(p.date));
   taxes = taxes.filter(t => inMonth(t.date));
+  writeOffsPL = writeOffsPL.filter(w => inMonth(w.date));
 }
 
   if (startDate && endDate) {
@@ -79186,6 +79196,7 @@ function renderReports() {
     operationalCosts = operationalCosts.filter(c => inRange(c.date));
     payrollRecords = payrollRecords.filter(p => inRange(p.date));
     taxes = taxes.filter(t => inRange(t.date));
+    writeOffsPL = writeOffsPL.filter(w => inRange(w.date));
   }
 
   if (typeof window.renderTaxComputationReport === "function") window.renderTaxComputationReport();
@@ -79234,7 +79245,15 @@ function renderReports() {
 
   const discountTotal = _allRevSources.reduce((sum, inv) => sum + parseFloatSafe(inv.discount || inv.discountAmount || inv.discountValue || 0), 0);
 
-  const cogs = (typeof window.__pnlCogs === "function") ? window.__pnlCogs([...invoices, ...recurringInvoicesPLDeduped]) : 0;
+  /* Keep operating costs pure: COGS-type entries go to COGS, tax-type entries go to Taxes */
+let __acxCogsExtra = 0;
+if (typeof window.__acxSplitOpCosts === "function") {
+  const __acxSp = window.__acxSplitOpCosts(operationalCosts);
+  __acxCogsExtra = __acxSp.cogs.reduce((s, e) => s + parseFloatSafe(e.amount || e.total || 0), 0);
+  __acxSp.tax.forEach(e => taxes.push({ type: (e.category || "Tax") + " (recorded as expense)", amount: e.amount || e.total || 0, date: e.date }));
+  operationalCosts = __acxSp.opex;
+}
+const cogs = ((typeof window.__pnlCogs === "function") ? window.__pnlCogs([...invoices, ...recurringInvoicesPLDeduped]) : 0) + __acxCogsExtra;
 
 const otherIncomes = JSON.parse(localStorage.getItem('otherIncomes') || '[]');
 const manualTx = JSON.parse(localStorage.getItem('manualTransactions') || '[]');
@@ -79276,9 +79295,11 @@ if (pnlOtherIncomesBreakdown) {
   }
 }
 
-const badDebts = revenue * 0.10; 
+// Bad debts = real invoice write-offs in the selected period (no fixed % of revenue)
+const badDebts = (Array.isArray(writeOffsPL) ? writeOffsPL : []).reduce((sum, w) => sum + parseFloatSafe(w && w.amount), 0);
 
-const grossProfit = (revenue + otherIncomeTotal) - discountTotal - cogs - badDebts;
+// Gross profit excludes other income; other income is added once, in Profit Before Tax
+const grossProfit = revenue - discountTotal - cogs - badDebts;
 
 const billTotal = bills.reduce((sum, b) => sum + parseFloatSafe(b.subtotal || b.amount || 0), 0);
 const operationalCostsTotal = operationalCosts.reduce((sum, e) => sum + parseFloatSafe(e.amount || e.total || 0), 0);
@@ -79622,7 +79643,7 @@ const bsBadDebtsBreakdown = document.getElementById("bsBadDebtsBreakdown");
 if (bsBadDebtsBreakdown) {
   bsBadDebtsBreakdown.innerHTML = `
     <tr>
-      <td class="border px-2 py-1 pl-6">• Provision for Bad Debts</td>
+      <td class="border px-2 py-1 pl-6">• Bad Debts (Written Off)</td>
       <td class="border px-2 py-1 text-right">${__bsMoney(badDebts)}</td>
       <td class="border px-2 py-1"></td>
     </tr>
@@ -117611,6 +117632,79 @@ function toggleSubmenu(id) {
 })();
 </script>
 <script>
+/* Safety net: if two different records in the same company ever carry the same document number, tell the user. Warn-only. */
+(function(){
+  var NS = window.__companyNS; if (!NS || !NS.onSetItem) return;
+  var WATCH = { invoices:1, bills:1, quotes:1, orders:1, receipts:1, purchaseOrders:1, grns:1, creditNotes:1 };
+  var FIELDS = ['invoiceNumber','billNumber','quoteNumber','orderNumber','receiptNumber','poNumber','grnNumber','creditNumber','number'];
+  var warned = {};
+  function numOf(r){ if (!r || typeof r !== 'object') return ''; for (var i = 0; i < FIELDS.length; i++){ var v = r[FIELDS[i]]; if (v !== undefined && v !== null && v !== '') return String(v); } return ''; }
+  function toast(msg){
+    try {
+      var d = document.createElement('div');
+      d.textContent = msg;
+      d.style.cssText = 'position:fixed;right:16px;bottom:16px;max-width:360px;background:#b91c1c;color:#fff;padding:10px 14px;border-radius:8px;z-index:2147483647;font:13px/1.4 sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.3)';
+      document.body.appendChild(d); setTimeout(function(){ if (d.parentNode) d.parentNode.removeChild(d); }, 9000);
+    } catch(e){}
+  }
+  NS.onSetItem(function(key, val){
+    if (!WATCH[key] || typeof val !== 'string') return;
+    var arr; try { arr = JSON.parse(val); } catch(e){ return; }
+    if (!Array.isArray(arr)) return;
+    var seen = {};
+    arr.forEach(function(r){
+      var n = numOf(r); if (!n) return;
+      var id = r.id !== undefined ? 'i' + r.id : 'j' + JSON.stringify(r);
+      if (seen[n] !== undefined && seen[n] !== id){
+        var w = key + ':' + n;
+        if (!warned[w]){ warned[w] = 1; console.warn('[numbering] duplicate number', n, 'in', key); toast('Duplicate number ' + n + ' found in ' + key + '. Two different documents share it, please review and renumber one.'); }
+      }
+      seen[n] = id;
+    });
+  });
+})();
+</script>
+<script>
+/* P&L classification: operating costs hold only real operating expenses.
+   Entries whose account is Cost of Goods Sold belong in COGS; tax-type accounts belong in Taxes. Uses the Chart of Accounts type. */
+(function(){
+  window.__acxSplitOpCosts = function(list){
+    var out = { opex: [], cogs: [], tax: [] };
+    var coa = []; try { coa = JSON.parse(localStorage.getItem('chartOfAccounts') || '[]') || []; } catch(e){}
+    var by = {};
+    coa.forEach(function(a){ if (!a) return; if (a.code != null) by[String(a.code).toLowerCase()] = a; if (a.name) by[String(a.name).toLowerCase()] = a; });
+    (Array.isArray(list) ? list : []).forEach(function(e){
+      var cat = String((e && (e.category || e.account)) || '').trim();
+      var a = by[cat.toLowerCase()], t = String((a && a.type) || ''), c = String((a && a.category) || '');
+      var isCogs = /^cost of goods sold$/i.test(t) || (!a && /^(cost of goods sold|cogs|cost of sales)$/i.test(cat));
+      var isTax = !isCogs && ((a && /tax|levy|duty|excise/i.test(t) && !/payable|receivable|deferred/i.test(t) && (!c || /expense/i.test(c)))
+                  || (!a && /^(corporate (income )?tax|income tax|capital gains tax|withholding tax|excise (duty|tax))$/i.test(cat)));
+      (isCogs ? out.cogs : isTax ? out.tax : out.opex).push(e);
+    });
+    return out;
+  };
+  /* Statement layout: taxes are not a cost of operating, so show them below Net Profit as a memo block. */
+  function moveTaxes(){
+    var tot = document.getElementById('pnlTaxes'), bd = document.getElementById('pnlTaxesBreakdown');
+    if (!tot || !bd) return;
+    var totRow = tot.closest('tr'), table = totRow && totRow.closest('table');
+    if (!table || table.getAttribute('data-acx-tax-moved')) return;
+    var hdr = Array.prototype.filter.call(table.querySelectorAll('tr'), function(r){ return r.cells[0] && r.cells[0].textContent.trim() === 'Taxes'; })[0];
+    if (!hdr) return;
+    table.setAttribute('data-acx-tax-moved', '1');
+    hdr.cells[0].textContent = 'Taxes & Levies (memo: not deducted from profit)';
+    totRow.cells[0].textContent = 'Total Taxes & Levies';
+    var a = document.createElement('tbody'); a.appendChild(hdr);
+    var b = document.createElement('tbody'); b.appendChild(totRow);
+    table.appendChild(a); table.appendChild(bd); table.appendChild(b);
+  }
+  try {
+    new MutationObserver(moveTaxes).observe(document.documentElement, { childList: true, subtree: true });
+    document.addEventListener('DOMContentLoaded', moveTaxes);
+  } catch(e){}
+})();
+</script>
+<script>
 (function(){
 function phLoad(k){ try{return JSON.parse(localStorage.getItem(k)||"[]");}catch(e){return [];} }
 function phSave(k,v){ try{localStorage.setItem(k,JSON.stringify(v));}catch(e){console.warn("save failed",k,e);} }
@@ -143501,45 +143595,53 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   var TYPE_ORDER = ["asset", "contra_asset", "liability", "equity", "income", "contra_income", "other_income", "cogs", "expense"];
   var TYPE_LABEL = { asset: "Assets", contra_asset: "Assets", liability: "Liabilities", equity: "Equity", income: "Income", contra_income: "Income", other_income: "Other Income", cogs: "Cost of Sales", expense: "Expenses" };
   function trialBalance(L, from, to) {
-    // balance-sheet accounts: cumulative to `to`; income/expense accounts: activity within [from,to]
+    // balance-sheet accounts: cumulative to `to` (closing) = opening brought forward from before `from` + movement within [from,to]
+    // income/expense accounts: activity within [from,to]; earlier years' profit sits in Retained Earnings, so they open at zero
     var acc = {};
     L.posts.forEach(function (p) {
       var bsType = (p.type === "asset" || p.type === "contra_asset" || p.type === "liability" || p.type === "equity");
       if (p.d > to || p.cashOnly) return;
       if (!bsType && (p.d < from || p.d === T0)) return;
-      var a = acc[p.acct] || (acc[p.acct] = { acct: p.acct, type: p.type, grp: p.grp, dr: 0, cr: 0 });
+      var a = acc[p.acct] || (acc[p.acct] = { acct: p.acct, type: p.type, grp: p.grp, dr: 0, cr: 0, odr: 0, ocr: 0 });
       a.dr += p.dr; a.cr += p.cr;
+      if (bsType && p.d < from) { a.odr += p.dr; a.ocr += p.cr; }
     });
-    var list = Object.keys(acc).map(function (k) { var a = acc[k]; var net = a.dr - a.cr; a.debit = net > 0 ? net : 0; a.credit = net < 0 ? -net : 0; a.balance = net; return a; });
+    var list = Object.keys(acc).map(function (k) {
+      var a = acc[k]; var net = a.dr - a.cr; a.debit = net > 0 ? net : 0; a.credit = net < 0 ? -net : 0; a.balance = net;
+      a.opening = a.odr - a.ocr; a.pdr = a.dr - a.odr; a.pcr = a.cr - a.ocr; // opening (Dr +/Cr -), period debits, period credits
+      return a;
+    });
     // earnings of prior periods and unclosed profit: the P&L accounts show only the period, the rest is Retained Earnings
     var m = L.meta;
     var prior = from > "1900-01-01" ? (m.narrow ? cumPBT(L, addDays(from, -1)) : cumNet(L, addDays(from, -1))) : 0;
     var prov = provisionCum(L, to) - provisionCum(L, addDays(from, -1));
     var taxDelta = m.narrow ? 0 : (cumTax(L, to) - cumTax(L, addDays(from, -1)));
     var ex = [];
-    if (Math.abs(prior) > 0.004) ex.push({ acct: "Retained Earnings (prior periods)", type: "equity", debit: prior < 0 ? -prior : 0, credit: prior > 0 ? prior : 0, balance: -prior, grp: "re" });
+    if (Math.abs(prior) > 0.004) ex.push({ acct: "Retained Earnings (prior periods)", type: "equity", debit: prior < 0 ? -prior : 0, credit: prior > 0 ? prior : 0, balance: -prior, grp: "re", opening: -prior, pdr: 0, pcr: 0 });
     if (provRate(L) > 0 && Math.abs(prov) > 0.004) {
-      ex.push({ acct: "Provision for Doubtful Debts (expense)", type: "expense", debit: prov > 0 ? prov : 0, credit: prov < 0 ? -prov : 0, balance: prov, grp: "baddebt" });
-      ex.push({ acct: "Provision for Doubtful Debts", type: "contra_asset", debit: 0, credit: provisionCum(L, to), balance: -provisionCum(L, to), grp: "prov" });
+      ex.push({ acct: "Provision for Doubtful Debts (expense)", type: "expense", debit: prov > 0 ? prov : 0, credit: prov < 0 ? -prov : 0, balance: prov, grp: "baddebt", opening: 0, pdr: prov > 0 ? prov : 0, pcr: prov < 0 ? -prov : 0 });
+      var provOpen = -provisionCum(L, addDays(from, -1)), provMv = -provisionCum(L, to) - provOpen;
+      ex.push({ acct: "Provision for Doubtful Debts", type: "contra_asset", debit: 0, credit: provisionCum(L, to), balance: -provisionCum(L, to), grp: "prov", opening: provOpen, pdr: provMv > 0 ? provMv : 0, pcr: provMv < 0 ? -provMv : 0 });
     }
     if (!m.narrow && Math.abs(taxDelta) > 0.004) {
-      ex.push({ acct: "Income Tax Expense", type: "expense", debit: taxDelta > 0 ? taxDelta : 0, credit: taxDelta < 0 ? -taxDelta : 0, balance: taxDelta, grp: "tax" });
+      ex.push({ acct: "Income Tax Expense", type: "expense", debit: taxDelta > 0 ? taxDelta : 0, credit: taxDelta < 0 ? -taxDelta : 0, balance: taxDelta, grp: "tax", opening: 0, pdr: taxDelta > 0 ? taxDelta : 0, pcr: taxDelta < 0 ? -taxDelta : 0 });
     }
     // income tax payable = charged − paid (payments are already in the ledger as debits on Income Tax Payable)
     var itpAcc = list.filter(function (a) { return a.acct === "Income Tax Payable"; })[0];
     var charged = m.narrow ? 0 : cumTax(L, to);
     if (charged > 0.004 || itpAcc) {
       var net = (itpAcc ? itpAcc.balance : 0) - charged;
+      var itpOpen = (itpAcc ? itpAcc.opening : 0) - (m.narrow ? 0 : cumTax(L, addDays(from, -1))), itpMv = net - itpOpen;
       list = list.filter(function (a) { return a.acct !== "Income Tax Payable"; });
-      list.push({ acct: "Income Tax Payable", type: "liability", grp: "itp", debit: net > 0 ? net : 0, credit: net < 0 ? -net : 0, balance: net });
+      list.push({ acct: "Income Tax Payable", type: "liability", grp: "itp", debit: net > 0 ? net : 0, credit: net < 0 ? -net : 0, balance: net, opening: itpOpen, pdr: itpMv > 0 ? itpMv : 0, pcr: itpMv < 0 ? -itpMv : 0 });
     }
     list = list.concat(ex);
-    var dr = 0, cr = 0; list.forEach(function (a) { dr += a.debit; cr += a.credit; });
+    var dr = 0, cr = 0, pdr = 0, pcr = 0, opn = 0; list.forEach(function (a) { dr += a.debit; cr += a.credit; pdr += a.pdr || 0; pcr += a.pcr || 0; opn += a.opening || 0; });
     // anything left over is unexplained opening balance — shown so the TB always proves itself
     var diff = dr - cr;
     if (Math.abs(diff) > 0.004 && !m.narrow) { /* balanced by construction; guard only */ }
     list.sort(function (a, b) { var ia = TYPE_ORDER.indexOf(a.type), ib = TYPE_ORDER.indexOf(b.type); return ia - ib || (a.acct < b.acct ? -1 : 1); });
-    return { list: list, dr: dr, cr: cr, diff: diff, from: from, to: to };
+    return { list: list, dr: dr, cr: cr, diff: diff, from: from, to: to, pdr: pdr, pcr: pcr, opening: opn };
   }
   function provRate(L) { return num(L.st.badDebtRate) / 100; }
   FR.trialBalance = function (from, to, st) { return trialBalance(FR.ledger(st), from, to); };
@@ -144141,25 +144243,30 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   var fmt = ui.fmt, row = ui.row;
   var GROUPS = [["Assets", ["asset", "contra_asset"]], ["Liabilities", ["liability"]], ["Equity", ["equity"]], ["Income", ["income", "contra_income", "other_income"]], ["Cost of Sales", ["cogs"]], ["Expenses", ["expense"]]];
   var DERIVED = { "Retained Earnings (prior periods)": 1, "Income Tax Expense": 1, "Provision for Doubtful Debts": 1, "Provision for Doubtful Debts (expense)": 1, "Income Tax Payable": 1 };
+  function dcFmt(n, showZero) { return Math.abs(n) < 0.005 ? (showZero ? fmt(0) : "") : fmt(Math.abs(n)) + (n > 0 ? " Dr" : " Cr"); }
   function acctLink(a) { return '<a class="fr-acct" data-acct="' + esc(a) + '">' + esc(a) + "</a>"; }
 
   /* ================= Trial Balance ================= */
   function renderTB(body, st, per) {
     var tb = FR.trialBalance(per.from, per.to), hz = st.hideZero, h = ui.periodLine(per, st) + ui.noteHtml(st);
-    var ok = Math.abs(tb.dr - tb.cr) < 0.01;
+    var ok = Math.abs(tb.dr - tb.cr) < 0.01, okOpen = Math.abs(tb.opening) < 0.01;
     h += ok ? '<div class="fr-ok">✅ Debits equal credits (' + esc(fmt(tb.dr)) + ").</div>" : '<div class="fr-bad">⚠️ Debits and credits differ by ' + esc(fmt(tb.dr - tb.cr)) + ".</div>";
-    h += '<div style="font-size:12px;color:#64748b;margin-bottom:6px">Balance-sheet accounts show their balance at the end date; income and expense accounts show the activity in the period. Profit from earlier periods sits in Retained Earnings.</div>';
+    if (!okOpen) h += '<div class="fr-bad">⚠️ Opening balances differ by ' + esc(fmt(tb.opening)) + ".</div>";
+    h += '<div style="font-size:12px;color:#64748b;margin-bottom:6px"><b>Opening Balance</b> is brought forward from the previous financial year(s), i.e. everything before the start of the period. <b>Debit</b> and <b>Credit</b> are the movements within the period. <b>Closing Balance</b> = Opening + this period (previous and current year together). Income and expense accounts start each period at zero; profit from earlier periods is carried in Retained Earnings.</div>';
     var rows = [];
     GROUPS.forEach(function (g) {
-      var list = tb.list.filter(function (a) { return g[1].indexOf(a.type) > -1 && (!hz || a.debit || a.credit); });
+      var list = tb.list.filter(function (a) { return g[1].indexOf(a.type) > -1 && (!hz || a.debit || a.credit || Math.abs(a.opening || 0) >= 0.005 || a.pdr || a.pcr); });
       if (!list.length) return;
-      rows.push('<tr class="sec"><td colspan="3">' + g[0] + "</td></tr>");
-      var d = 0, c = 0;
-      list.forEach(function (a) { d += a.debit; c += a.credit; rows.push(row([DERIVED[a.acct] ? esc(a.acct) : acctLink(a.acct), a.debit ? fmt(a.debit) : "", a.credit ? fmt(a.credit) : ""], "")); });
-      rows.push(row(["Total " + g[0], fmt(d), fmt(c)], "tot"));
+      rows.push('<tr class="sec"><td colspan="5">' + g[0] + "</td></tr>");
+      var o = 0, d = 0, c = 0, cl = 0;
+      list.forEach(function (a) {
+        o += a.opening || 0; d += a.pdr || 0; c += a.pcr || 0; cl += a.balance;
+        rows.push(row([DERIVED[a.acct] ? esc(a.acct) : acctLink(a.acct), dcFmt(a.opening || 0), a.pdr ? fmt(a.pdr) : "", a.pcr ? fmt(a.pcr) : "", dcFmt(a.balance)], ""));
+      });
+      rows.push(row(["Total " + g[0], dcFmt(o), fmt(d), fmt(c), dcFmt(cl)], "tot"));
     });
-    rows.push(row(["TOTAL", fmt(tb.dr), fmt(tb.cr)], "grand"));
-    body.innerHTML = h + ui.table(["Account", "Debit", "Credit"], rows, { numFrom: 1 });
+    rows.push(row(["TOTAL", dcFmt(tb.opening, true), fmt(tb.pdr), fmt(tb.pcr), dcFmt(tb.dr - tb.cr, true)], "grand"));
+    body.innerHTML = h + ui.table(["Account", "Opening Balance", "Debit", "Credit", "Closing Balance"], rows, { numFrom: 1 });
   }
 
   /* ================= General Ledger (summary, expandable) ================= */
