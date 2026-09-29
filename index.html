@@ -366,7 +366,7 @@ window.__acxMakeAmtLink = function (text) {
     try {
       var sk = '__stamps_' + c;
       var st = {}; try { st = JSON.parse(nGet.call(REAL, sk) || '{}'); } catch(_e){}
-      st[logical] = new Date().toISOString();
+      st[logical] = new Date(Date.now() + (window.__acxClockOffset || 0)).toISOString();
       nSet.call(REAL, sk, JSON.stringify(st));
     } catch(_e){}
     if (window.__companySyncKick) window.__companySyncKick();
@@ -14669,7 +14669,8 @@ function populateShipmentCustomerDropdown() {
   });
 }
 
-function generateNextShipmentNumber() {
+function generateNextShipmentNumber(){ return window.__acxSeries ? window.__acxSeries.call(generateNextShipmentNumber__acxOrig, this, arguments, 'sh', ['shipments'], 'shipmentNo', false) : generateNextShipmentNumber__acxOrig.apply(this, arguments); }
+function generateNextShipmentNumber__acxOrig() {
 
   const shipments = JSON.parse(localStorage.getItem("shipments") || "[]");
 
@@ -27740,7 +27741,8 @@ function populateSalesPersonDropdown() {
 document.addEventListener("DOMContentLoaded", () => {
     populateSalesPersonDropdown();
 });
-function generateInvoiceNumber() {
+function generateInvoiceNumber(){ return window.__acxSeries ? window.__acxSeries.call(generateInvoiceNumber__acxOrig, this, arguments, 'inv', ['invoices'], null, true) : generateInvoiceNumber__acxOrig.apply(this, arguments); }
+function generateInvoiceNumber__acxOrig() {
   
   
   if (typeof window.nextDocNumber === 'function') {
@@ -30290,7 +30292,8 @@ let pendingQuoteConversion = null;
 let pendingOrderConversion = null; 
 let editingOrderItemIndex = null;
 
-function generateOrderNumber() {
+function generateOrderNumber(){ return window.__acxSeries ? window.__acxSeries.call(generateOrderNumber__acxOrig, this, arguments, 'ord', ['orders'], null, false) : generateOrderNumber__acxOrig.apply(this, arguments); }
+function generateOrderNumber__acxOrig() {
   return "ORD-" + String(orders.length + 1).padStart(5, "0");
 }
 const orderOptionsBtn = document.getElementById("orderOptionsBtn");
@@ -31429,7 +31432,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-function generateQuoteNumber() {
+function generateQuoteNumber(){ return window.__acxSeries ? window.__acxSeries.call(generateQuoteNumber__acxOrig, this, arguments, 'quote', ['quotes'], 'quoteNumber', true) : generateQuoteNumber__acxOrig.apply(this, arguments); }
+function generateQuoteNumber__acxOrig() {
 
   if (typeof window.nextDocNumber === 'function') {
     const docNum = window.nextDocNumber('quote');
@@ -32325,7 +32329,8 @@ function loadBulkCustomers() {
   });
   if (typeof window.axRefreshMultiSelect === "function") window.axRefreshMultiSelect("bulkInvoiceCustomers");
 }
-function generateBulkInvoiceNumber() {
+function generateBulkInvoiceNumber(){ return window.__acxSeries ? window.__acxSeries.call(generateBulkInvoiceNumber__acxOrig, this, arguments, 'bulk', ['bulkInvoices'], 'bulkInvoiceNumber', false) : generateBulkInvoiceNumber__acxOrig.apply(this, arguments); }
+function generateBulkInvoiceNumber__acxOrig() {
   const invoices = JSON.parse(localStorage.getItem("bulkInvoices") || "[]");
   const nextNo = invoices.length + 1;
   document.getElementById("bulkInvoiceNumber").value = "BULK-" + String(nextNo).padStart(4, "0");
@@ -33910,7 +33915,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-function generateCreditNoteNumber() {
+function generateCreditNoteNumber(){ return window.__acxSeries ? window.__acxSeries.call(generateCreditNoteNumber__acxOrig, this, arguments, 'cn', ['creditNotes'], 'creditNumber', true) : generateCreditNoteNumber__acxOrig.apply(this, arguments); }
+function generateCreditNoteNumber__acxOrig() {
 
   if (typeof window.nextDocNumber === 'function') {
     const docNum = window.nextDocNumber('cn');
@@ -36923,7 +36929,8 @@ function closePreview() {
   const modal = document.getElementById("receiptPreviewModal");
   if (modal) modal.classList.add("hidden");
 }
-function generateReceiptNumber() {
+function generateReceiptNumber(){ return window.__acxSeries ? window.__acxSeries.call(generateReceiptNumber__acxOrig, this, arguments, 'rcpt', ['receipts'], null, true) : generateReceiptNumber__acxOrig.apply(this, arguments); }
+function generateReceiptNumber__acxOrig() {
 
   if (typeof window.nextDocNumber === 'function') {
     const docNum = window.nextDocNumber('rcpt');
@@ -37147,7 +37154,8 @@ function populateDeliveryItems() {
     }).filter(Boolean).join(", ");
   }
 }
-function generateNextTrackNumber() {
+function generateNextTrackNumber(){ return window.__acxSeries ? window.__acxSeries.call(generateNextTrackNumber__acxOrig, this, arguments, 'tr', ['deliveries'], 'deliveryTrackNumber', false) : generateNextTrackNumber__acxOrig.apply(this, arguments); }
+function generateNextTrackNumber__acxOrig() {
   const deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
   let nextTrack;
 
@@ -37221,15 +37229,15 @@ function addDelivery() {
   const items = JSON.parse(selectedInvoice.dataset.items || "[]");
   let deliveries = JSON.parse(localStorage.getItem("deliveries") || "[]");
 
-  const dnNumber = "DN" + String(deliveries.length + 1).padStart(3, "0");
+  const dnNumber = window.__acxFix("dn", "DN" + String(deliveries.length + 1).padStart(3, "0"), ["deliveries"]);
 
   let lastTrackNumber = deliveries.length
     ? deliveries[deliveries.length - 1].trackNumber
     : null;
 
-  let trackNumber = lastTrackNumber
+  let trackNumber = window.__acxFix("tr", lastTrackNumber
     ? "TR" + String(parseInt(lastTrackNumber.replace(/^TR/, "")) + 1).padStart(4, "0")
-    : "TR0001";
+    : "TR0001", ["deliveries"]);
 
   const location = document.getElementById("deliveryLocation").value.trim();
   const truckNumber = document.getElementById("deliveryTruckNumber").value.trim();
@@ -37336,7 +37344,7 @@ function renderDeliveryTable() {
 
         deliveryId: delivery.id,
 
-        shipmentNo: "SH" + String(shipments.length + 1).padStart(3, "0"),
+        shipmentNo: window.__acxFix("sh", "SH" + String(shipments.length + 1).padStart(3, "0"), ["shipments"]),
 
         customer: delivery.customer || "",
 
@@ -37848,7 +37856,8 @@ let editingRecurringInvoiceIndex = null;
 let recurringInvoices = JSON.parse(localStorage.getItem("recurringInvoices") || "[]");
 let recurringInvoiceItems = [];
 
-function generateRecurringInvoiceNumber() {
+function generateRecurringInvoiceNumber(){ return window.__acxSeries ? window.__acxSeries.call(generateRecurringInvoiceNumber__acxOrig, this, arguments, 'rinv', ['recurringInvoices'], null, false) : generateRecurringInvoiceNumber__acxOrig.apply(this, arguments); }
+function generateRecurringInvoiceNumber__acxOrig() {
   const count = recurringInvoices.length + 1;
   return "RINV-" + String(count).padStart(5, "0");
 }
@@ -42019,7 +42028,8 @@ document.getElementById('billItemDesc')?.addEventListener('change', () => {
 });
 
 
-function generateBillNumber() {
+function generateBillNumber(){ return window.__acxSeries ? window.__acxSeries.call(generateBillNumber__acxOrig, this, arguments, 'bill', ['bills'], null, false) : generateBillNumber__acxOrig.apply(this, arguments); }
+function generateBillNumber__acxOrig() {
   const bills = JSON.parse(localStorage.getItem('bills') || '[]');
   return `BIL-${String(bills.length + 1).padStart(4, '0')}`;
 }
@@ -44091,7 +44101,8 @@ function populateBulkBillProductDropdown() {
 }
 
 
-function generateBulkBillNumber() {
+function generateBulkBillNumber(){ return window.__acxSeries ? window.__acxSeries.call(generateBulkBillNumber__acxOrig, this, arguments, 'bb', ['bulkBills'], null, false) : generateBulkBillNumber__acxOrig.apply(this, arguments); }
+function generateBulkBillNumber__acxOrig() {
   const bills = JSON.parse(localStorage.getItem('bulkBills') || '[]');
   return `BB-${String(bills.length+1).padStart(4,'0')}`;
 }
@@ -45746,7 +45757,8 @@ function removePOItem(index) {
   poItems.splice(index, 1);
   renderPOItems();
 }
-function generatePONumber() {
+function generatePONumber(){ return window.__acxSeries ? window.__acxSeries.call(generatePONumber__acxOrig, this, arguments, 'po', ['purchaseOrders'], null, true) : generatePONumber__acxOrig.apply(this, arguments); }
+function generatePONumber__acxOrig() {
 
   if (typeof window.nextDocNumber === 'function') {
     const docNum = window.nextDocNumber('po');
@@ -47683,7 +47695,8 @@ function searchPurchaseReturns() {
   });
 }
 
-function generatePurchaseReturnNumber() {
+function generatePurchaseReturnNumber(){ return window.__acxSeries ? window.__acxSeries.call(generatePurchaseReturnNumber__acxOrig, this, arguments, 'pr', ['purchaseReturns'], null, false) : generatePurchaseReturnNumber__acxOrig.apply(this, arguments); }
+function generatePurchaseReturnNumber__acxOrig() {
   const returns = JSON.parse(localStorage.getItem("purchaseReturns") || "[]");
   const next = returns.length + 1;
   return "PR-" + next.toString().padStart(3, "0");
@@ -51339,7 +51352,8 @@ function searchGRNs() {
   }
 }
 
-function generateNextGRNNumber() {
+function generateNextGRNNumber(){ return window.__acxSeries ? window.__acxSeries.call(generateNextGRNNumber__acxOrig, this, arguments, 'grn', ['grns'], null, false) : generateNextGRNNumber__acxOrig.apply(this, arguments); }
+function generateNextGRNNumber__acxOrig() {
   grns = JSON.parse(localStorage.getItem("grns") || "[]");
   if (grns.length === 0) return "GN0001";
 
@@ -55288,7 +55302,8 @@ function restoreJournalDraft() {
   return true;
 }
 
-function nextJournalNumber() {
+function nextJournalNumber(){ return window.__acxSeries ? window.__acxSeries.call(nextJournalNumber__acxOrig, this, arguments, 'jn', ['manualJournals'], null, false) : nextJournalNumber__acxOrig.apply(this, arguments); }
+function nextJournalNumber__acxOrig() {
   const journals = JSON.parse(localStorage.getItem("manualJournals") || "[]");
   let max = 0;
   journals.forEach(j => {
@@ -56163,7 +56178,8 @@ function updateRecurringTotals() {
 }
 let editingRecurringIndex = null;
 
-function nextRecurringJournalNumber() {
+function nextRecurringJournalNumber(){ return window.__acxSeries ? window.__acxSeries.call(nextRecurringJournalNumber__acxOrig, this, arguments, 'rj', ['recurringJournals'], null, false) : nextRecurringJournalNumber__acxOrig.apply(this, arguments); }
+function nextRecurringJournalNumber__acxOrig() {
   const list = JSON.parse(localStorage.getItem("recurringJournals") || "[]");
   let max = 0;
   list.forEach(r => {
@@ -60021,7 +60037,8 @@ function parseCSV(csvText) {
         row.style.display = rowText.includes(query) ? '' : 'none';
     });
 }
-  function nextEquityNumber() {
+  function nextEquityNumber(){ return window.__acxSeries ? window.__acxSeries.call(nextEquityNumber__acxOrig, this, arguments, 'eq', ['equityRecords'], null, false) : nextEquityNumber__acxOrig.apply(this, arguments); }
+function nextEquityNumber__acxOrig() {
     const records = JSON.parse(localStorage.getItem("equityRecords") || "[]");
     let max = 0;
     records.forEach(r => {
@@ -61247,7 +61264,8 @@ function populateAssetAccounts() {
     if (prev) bankSel.value = prev;
   }
 }
-function generateAssetCode() {
+function generateAssetCode(){ return window.__acxSeries ? window.__acxSeries.call(generateAssetCode__acxOrig, this, arguments, 'asset', ['balanceSheet'], null, false) : generateAssetCode__acxOrig.apply(this, arguments); }
+function generateAssetCode__acxOrig() {
   const year = new Date().getFullYear();
   const assets = balanceSheet.nonCurrentAssets || [];
   const yearAssets = assets.filter(a => a.code && a.code.startsWith(year + "-A"));
@@ -64167,7 +64185,8 @@ function loadDraft() {
 
 window.onload = loadDraft;
 
-function nextLiabilityNumber() {
+function nextLiabilityNumber(){ return window.__acxSeries ? window.__acxSeries.call(nextLiabilityNumber__acxOrig, this, arguments, 'lc', ['balanceSheet'], null, false) : nextLiabilityNumber__acxOrig.apply(this, arguments); }
+function nextLiabilityNumber__acxOrig() {
   const list = (balanceSheet.nonCurrentLiabilities || []);
   let max = 0;
   list.forEach(l => {
@@ -97137,7 +97156,7 @@ const n=parseInt(String(r.revenueNo||"REV00000").replace("REV",""));
 if(n>max)max=n;
 });
 
-return "REV"+String(max+1).padStart(5,"0");
+return window.__acxFix("rev", "REV"+String(max+1).padStart(5,"0"), ["projectRevenue"]);
 },
 
 el(id){
@@ -116948,64 +116967,303 @@ function toggleSubmenu(id) {
 
   function comp(){ return NS.activeCompany(); }
 
-    async function pushDirty(){
-    var c = comp();
-    var keys = Object.keys(NS.dirty);
-    if (!keys.length) return;
-    var rows = [], i, k, raw, pushedKeys = [];
-    for (i = 0; i < keys.length; i++){
-      k = keys[i];
-      if (k === '@users'){ delete NS.dirty[k]; pushAccounts(); continue; }
-      if (!c) { delete NS.dirty[k]; continue; }
-      raw = NS.nGet.call(NS.real, k + NS.SEP + c);
-      rows.push({ company_id: c, key: k, value: raw === null ? null : raw, updated_at: new Date().toISOString() });
-      pushedKeys.push(k);
+    /* ================= Conflict-safe sync engine =================
+       Goal: two people working in the same company at the same time never lose each other's data.
+       * Record lists (invoices, bills, customers, banks, ...) are merged record-by-record with a
+         three-way merge: server copy + this device's copy + a fingerprint of the last server copy this
+         device saw (the "base"). Adds from either side are kept, deletes apply only if the other side did
+         not edit that record, same-record edits are merged field by field (running totals such as
+         bank balances are merged additively).
+       * Every push is a compare-and-swap on the row's updated_at: it only succeeds if the server row is
+         still the one this device last saw. Otherwise: fetch, merge, retry.
+       * Other keys (single settings objects/strings) stay last-write-wins, but with the same CAS guard.
+       * Only keys that actually differ from the server are pushed on start-up. */
+    var MERGE = (function(){
+      var ID_FIELDS = ['id','_id','uuid','invoiceNumber','billNumber','quoteNumber','orderNumber','receiptNumber','poNumber','grnNumber'];
+      function h32(s){
+        s = String(s); var a = 0xdeadbeef ^ s.length, b = 0x41c6ce57 ^ s.length, i, c;
+        for (i = 0; i < s.length; i++){ c = s.charCodeAt(i); a = Math.imul(a ^ c, 2654435761); b = Math.imul(b ^ c, 1597334677); }
+        a = Math.imul(a ^ (a >>> 16), 2246822507) ^ Math.imul(b ^ (b >>> 13), 3266489909);
+        b = Math.imul(b ^ (b >>> 16), 2246822507) ^ Math.imul(a ^ (a >>> 13), 3266489909);
+        return (4294967296 * (2097151 & b) + (a >>> 0)).toString(36);
+      }
+      function stable(v){
+        if (v === null || typeof v !== 'object') return String(JSON.stringify(v));
+        if (Array.isArray(v)) return '[' + v.map(stable).join(',') + ']';
+        return '{' + Object.keys(v).sort().map(function(k){ return JSON.stringify(k) + ':' + stable(v[k]); }).join(',') + '}';
+      }
+      function isObj(v){ return !!v && typeof v === 'object' && !Array.isArray(v); }
+      function isNum(v){ return typeof v === 'number' && isFinite(v); }
+      function parseArr(raw){ if (typeof raw !== 'string') return null; try { var v = JSON.parse(raw); return Array.isArray(v) ? v : null; } catch(e){ return null; } }
+      function ident(rec){
+        if (isObj(rec)){
+          for (var i = 0; i < ID_FIELDS.length; i++){
+            var v = rec[ID_FIELDS[i]];
+            if (v !== undefined && v !== null && v !== '' && typeof v !== 'object') return 'i:' + ID_FIELDS[i] + ':' + String(v);
+          }
+        }
+        return 'h:' + h32(stable(rec));
+      }
+      function index(arr){
+        var list = [], map = Object.create(null), seen = Object.create(null);
+        for (var i = 0; i < arr.length; i++){
+          var b = ident(arr[i]), n = seen[b] || 0; seen[b] = n + 1;
+          var id = n ? b + '#' + n : b, e = { id: id, h: h32(stable(arr[i])), rec: arr[i] };
+          list.push(e); map[id] = e;
+        }
+        return { list: list, map: map };
+      }
+      function fpOf(arr, keepRecs){
+        var ix = index(arr), f = {}, r = keepRecs ? {} : null;
+        ix.list.forEach(function(e){ f[e.id] = e.h; if (r) r[e.id] = e.rec; });
+        return { f: f, r: r };
+      }
+      function fpEqual(arr, ent){
+        if (!ent || !ent.f) return false;
+        var ix = index(arr), n = 0, id;
+        for (id in ent.f) n++;
+        if (n !== ix.list.length) return false;
+        for (var i = 0; i < ix.list.length; i++) if (ent.f[ix.list[i].id] !== ix.list[i].h) return false;
+        return true;
+      }
+      function sameSet(a, b){
+        var x = index(a), y = index(b);
+        if (x.list.length !== y.list.length) return false;
+        for (var i = 0; i < x.list.length; i++){ var o = y.map[x.list[i].id]; if (!o || o.h !== x.list[i].h) return false; }
+        return true;
+      }
+      function resolve(b, l, r, opt){
+        if (!isObj(l) || !isObj(r)) return opt.preferLocal ? l : r;
+        var bb = isObj(b) ? b : null, out = {}, keys = {}, k;
+        Object.keys(l).forEach(function(x){ keys[x] = 1; }); Object.keys(r).forEach(function(x){ keys[x] = 1; });
+        for (k in keys){
+          var lv = l[k], rv = r[k], bv = bb ? bb[k] : undefined, val;
+          var ls = stable(lv), rs = stable(rv), bs = bb ? stable(bv) : null;
+          if (ls === rs) val = lv;
+          else if (bb && ls === bs) val = rv;
+          else if (bb && rs === bs) val = lv;
+          else if (bb && opt.additive && opt.additive.indexOf(k) !== -1 && isNum(lv) && isNum(rv) && isNum(bv))
+            val = Math.round((bv + (lv - bv) + (rv - bv)) * 1e6) / 1e6;
+          else val = opt.preferLocal ? lv : rv;
+          if (val !== undefined) out[k] = val;
+        }
+        return out;
+      }
+      function merge3(L, R, base, opt){
+        opt = opt || {};
+        var lx = index(L), rx = index(R), bf = base && base.f, br = base && base.r, out = [], used = Object.create(null);
+        lx.list.forEach(function(e){
+          var r = rx.map[e.id], b = bf ? bf[e.id] : undefined;
+          if (r){
+            used[e.id] = 1;
+            if (e.h === r.h) out.push(e.rec);
+            else if (b !== undefined && e.h === b) out.push(r.rec);
+            else if (b !== undefined && r.h === b) out.push(e.rec);
+            else out.push(resolve(br ? br[e.id] : undefined, e.rec, r.rec, opt));
+          } else {
+            if (b !== undefined && e.h === b) return;   // deleted on the server, untouched here -> drop
+            out.push(e.rec);                            // added here (or edited here while deleted there) -> keep
+          }
+        });
+        rx.list.forEach(function(r){
+          if (used[r.id]) return;
+          var b = bf ? bf[r.id] : undefined;
+          if (b !== undefined && r.h === b) return;      // deleted here, untouched on the server -> drop
+          out.push(r.rec);                               // new on the server (or edited there while deleted here) -> keep
+        });
+        return out;
+      }
+      function additiveFor(k){
+        k = String(k);
+        if (k === 'banks') return ['balance'];
+        if (k === 'chartOfAccounts') return ['amount', 'balance'];
+        if (k === 'suppliers' || k === 'customers') return ['balance'];
+        if (k.indexOf('inventory_') === 0) return ['qty'];
+        return null;
+      }
+      function unionRaw(lraw, rraw, preferLocal){
+        var l = parseArr(lraw), r = parseArr(rraw);
+        if (!l || !r) return rraw;
+        return JSON.stringify(merge3(l, r, null, { preferLocal: !!preferLocal }));
+      }
+      return { h32: h32, stable: stable, parseArr: parseArr, index: index, fpOf: fpOf, fpEqual: fpEqual, sameSet: sameSet,
+               merge3: merge3, additiveFor: additiveFor, unionRaw: unionRaw };
+    })();
+    window.__acxMerge = MERGE;
+
+    var VER = {}, SEEN = {}, BASE = null, BASE_C = null, baseTimer = null, PULLED = false, CLOCK_DONE = false;
+    var pushing = false, again = false, retryMs = 600;
+
+    function nowIso(){ return new Date(Date.now() + (window.__acxClockOffset || 0)).toISOString(); }
+    async function syncClock(){
+      try {
+        var t0 = Date.now();
+        var r = await fetch(window.__SUPA_URL__ + '/rest/v1/', { method: 'HEAD', headers: { apikey: window.__SUPA_KEY__ } });
+        var d = r && r.headers && r.headers.get('date'); if (!d) return;
+        var srv = Date.parse(d), t1 = Date.now(); if (!isFinite(srv)) return;
+        var off = (srv + 500) - (t0 + t1) / 2;          // Date header has 1 s resolution
+        window.__acxClockOffset = Math.abs(off) < 2000 ? 0 : Math.round(off);
+      } catch(e){}
     }
-    if (!rows.length) return;
-    /* Only clear a key's dirty flag once the push is confirmed. Clearing it
-       up front (the old behavior) meant a failed/offline push silently
-       dropped that change forever — it never got retried, and other
-       devices never received it. On failure we leave the keys dirty and
-       schedule a retry instead. */
-    try {
-      var res = await sb.from('company_state').upsert(rows, { onConflict: 'company_id,key' });
-      if (res.error) { console.warn('[companySync] push error', res.error); kick(); return; }
-      pushedKeys.forEach(function(k){ delete NS.dirty[k]; });
-    } catch(e){ console.warn('[companySync] push failed', e); kick(); }
-  }
-  function kick(){
-    clearTimeout(pushTimer);
-    pushTimer = setTimeout(pushDirty, 600);
-  }
-  window.__companySyncKick = kick;
 
-  function flushNow(){
-    var c = comp(); if (!c) return;
-    var keys = Object.keys(NS.dirty); if (!keys.length) return;
-    var rows = [];
-    keys.forEach(function(k){
-      if (k === '@users') return;
-      var raw = NS.nGet.call(NS.real, k + NS.SEP + c);
-      rows.push({ company_id: c, key: k, value: raw === null ? null : raw, updated_at: new Date().toISOString() });
-      delete NS.dirty[k];
-    });
-    if (!rows.length) return;
-    try {
-      fetch(window.__SUPA_URL__ + '/rest/v1/company_state?on_conflict=company_id,key', {
-        method: 'POST', keepalive: true,
-        headers: { 'apikey': window.__SUPA_KEY__, 'Authorization': 'Bearer ' + window.__SUPA_KEY__, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
-        body: JSON.stringify(rows)
+    function baseKey(c){ return '__syncbase_' + c; }
+    function loadBase(){
+      var c = comp(); if (!c) return {};
+      if (BASE_C !== c){
+        BASE_C = c; VER = {}; SEEN = {}; PULLED = false;
+        try { BASE = JSON.parse(NS.nGet.call(NS.real, baseKey(c)) || '{}') || {}; } catch(e){ BASE = {}; }
+      }
+      return BASE;
+    }
+    function saveBaseNow(){
+      clearTimeout(baseTimer);
+      if (!BASE_C || !BASE) return;
+      try { NS.nSet.call(NS.real, baseKey(BASE_C), JSON.stringify(BASE)); }
+      catch(e){
+        try { Object.keys(BASE).forEach(function(k){ BASE[k].r = null; }); NS.nSet.call(NS.real, baseKey(BASE_C), JSON.stringify(BASE)); }
+        catch(e2){ try { NS.nRem.call(NS.real, baseKey(BASE_C)); } catch(e3){} BASE = {}; }
+      }
+    }
+    function saveBaseSoon(){ clearTimeout(baseTimer); baseTimer = setTimeout(saveBaseNow, 400); }
+    function setBase(k, arr){
+      loadBase(); var small = false;
+      try { small = JSON.stringify(arr).length <= 40000; } catch(e){}
+      var fp = MERGE.fpOf(arr, small); BASE[k] = { f: fp.f, r: fp.r }; saveBaseSoon();
+    }
+    function clearBase(k){ loadBase(); if (BASE[k]){ delete BASE[k]; saveBaseSoon(); } }
+    function write(phys, v){ NS.setApplying(true); try { NS.nSet.call(NS.real, phys, v); } finally { NS.setApplying(false); } }
+    function sameContent(a, b){
+      if (a === b) return true;
+      var x = MERGE.parseArr(a), y = MERGE.parseArr(b);
+      return !!(x && y && MERGE.sameSet(x, y));
+    }
+
+    /* Bring one server row into local storage. Returns true when local data changed. */
+    function applyRemote(k, remoteRaw, ver){
+      var c = comp(); if (!c) return false;
+      loadBase();
+      var phys = k + NS.SEP + c, localRaw = NS.nGet.call(NS.real, phys), localTs = NS.getStamp ? NS.getStamp(k) : null;
+      if (ver) VER[k] = ver;
+      SEEN[k] = remoteRaw === null || remoteRaw === undefined ? '' : MERGE.h32(String(remoteRaw));
+      if (remoteRaw === null || remoteRaw === undefined){
+        if (localRaw === null) return false;
+        if (localTs && ver && Date.parse(ver) <= Date.parse(localTs)) return false;
+        NS.setApplying(true); try { NS.nRem.call(NS.real, phys); } finally { NS.setApplying(false); }
+        clearBase(k); return true;
+      }
+      var rArr = MERGE.parseArr(remoteRaw), lArr = localRaw === null ? null : MERGE.parseArr(localRaw);
+      if (rArr && (localRaw === null || lArr)){
+        if (localRaw === null){ write(phys, remoteRaw); setBase(k, rArr); return true; }
+        if (localRaw === remoteRaw){ setBase(k, rArr); return false; }
+        var ent = BASE[k];
+        var preferLocal = !!(localTs && ver && Date.parse(localTs) > Date.parse(ver));
+        var merged = MERGE.merge3(lArr, rArr, ent, { preferLocal: preferLocal, additive: MERGE.additiveFor(k) });
+        var sameL = MERGE.sameSet(merged, lArr), sameR = MERGE.sameSet(merged, rArr);
+        if (!sameL) write(phys, JSON.stringify(merged));
+        setBase(k, rArr);
+        if (!sameR) NS.dirty[k] = 1;                    // we hold records the server does not have yet
+        return !sameL;
+      }
+      /* settings-type keys: last write wins */
+      if (localRaw !== null && localTs && ver && Date.parse(ver) <= Date.parse(localTs)) return false;
+      if (localRaw === remoteRaw) return false;
+      write(phys, remoteRaw); clearBase(k); return true;
+    }
+
+    function isDup(err){ return !!err && (err.code === '23505' || err.status === 409 || /duplicate key/i.test(String(err.message || ''))); }
+
+    /* Push one key with compare-and-swap; on conflict fetch, merge and retry. */
+    async function pushKey(k, depth){
+      depth = depth || 0;
+      var c = comp(); if (!c) return true;
+      loadBase();
+      var phys = k + NS.SEP + c, raw = NS.nGet.call(NS.real, phys), ver = VER[k], stamp = nowIso(), res;
+      var arr = raw === null ? null : MERGE.parseArr(raw);
+      try {
+        if (ver) res = await sb.from('company_state').update({ value: raw, updated_at: stamp }).eq('company_id', c).eq('key', k).eq('updated_at', ver).select('updated_at');
+        else     res = await sb.from('company_state').insert({ company_id: c, key: k, value: raw, updated_at: stamp }).select('updated_at');
+      } catch(e){ console.warn('[companySync] push failed', e); return false; }
+      if (res && !res.error && res.data && res.data.length){
+        VER[k] = res.data[0].updated_at || stamp;
+        SEEN[k] = raw === null ? '' : MERGE.h32(String(raw));
+        if (arr) setBase(k, arr); else clearBase(k);
+        return true;
+      }
+      if (res && res.error && !isDup(res.error)){ console.warn('[companySync] push error', res.error); return false; }
+      if (depth >= 4) return false;
+      var cur;
+      try { cur = await sb.from('company_state').select('value,updated_at').eq('company_id', c).eq('key', k).maybeSingle(); }
+      catch(e){ return false; }
+      if (!cur || cur.error) return false;
+      if (!cur.data){ delete VER[k]; return pushKey(k, depth + 1); }
+      if (applyRemote(k, cur.data.value, cur.data.updated_at)) refreshUI();
+      if (sameContent(NS.nGet.call(NS.real, phys), cur.data.value)) return true;   // nothing of ours left to send
+      return pushKey(k, depth + 1);
+    }
+
+    async function pushDirty(){
+      if (pushing){ again = true; return; }
+      pushing = true;
+      var failed = false;
+      try {
+        var c = comp(), keys = Object.keys(NS.dirty), i, k, ok;
+        for (i = 0; i < keys.length; i++){
+          k = keys[i];
+          if (k === '@users'){ delete NS.dirty[k]; pushAccounts(); continue; }
+          if (!c){ delete NS.dirty[k]; continue; }
+          delete NS.dirty[k];                            // edits made while pushing re-mark it dirty
+          ok = false;
+          try { ok = await pushKey(k); } catch(e){ console.warn('[companySync] push failed', e); }
+          if (!ok){ NS.dirty[k] = 1; failed = true; }
+        }
+      } finally { pushing = false; }
+      if (failed){ retryMs = Math.min(30000, retryMs * 2); clearTimeout(pushTimer); pushTimer = setTimeout(pushDirty, retryMs); }
+      else { retryMs = 600; if (again || Object.keys(NS.dirty).length){ again = false; kick(); } }
+    }
+    function kick(){
+      clearTimeout(pushTimer);
+      pushTimer = setTimeout(pushDirty, 600);
+    }
+    window.__companySyncKick = kick;
+
+    /* Tab closing / hiding: best-effort compare-and-swap PATCH. Anything that does not make it is picked
+       up on the next start (local data differs from the saved fingerprint, so it is merged and pushed). */
+    function flushNow(){
+      var c = comp(); if (!c) return;
+      saveBaseNow();
+      Object.keys(NS.dirty).forEach(function(k){
+        if (k === '@users') return;
+        var ver = VER[k]; if (!ver) return;
+        var raw = NS.nGet.call(NS.real, k + NS.SEP + c);
+        var body = JSON.stringify({ value: raw === null ? null : raw, updated_at: nowIso() });
+        if (body.length > 60000) return;                 // keepalive requests are capped at 64 KB
+        try {
+          fetch(window.__SUPA_URL__ + '/rest/v1/company_state?company_id=eq.' + encodeURIComponent(c) + '&key=eq.' + encodeURIComponent(k) + '&updated_at=eq.' + encodeURIComponent(ver), {
+            method: 'PATCH', keepalive: true,
+            headers: { 'apikey': window.__SUPA_KEY__, 'Authorization': 'Bearer ' + window.__SUPA_KEY__, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: body
+          });
+        } catch(e){}
       });
-    } catch(e){}
-  }
-  window.addEventListener('pagehide', flushNow);
-  document.addEventListener('visibilitychange', function(){ if (document.hidden) flushNow(); });
+    }
+    window.addEventListener('pagehide', flushNow);
+    document.addEventListener('visibilitychange', function(){ if (document.hidden) flushNow(); });
 
-  function pushAllCompanyKeys(){
-    var keys = NS.companyKeys(), i;
-    for (i = 0; i < keys.length; i++) NS.dirty[keys[i]] = 1;
-    kick();
-  }
+    /* Start-up / manual upload: queue only the keys that differ from what the server holds. */
+    function pushAllCompanyKeys(){
+      var c = comp(); if (!c) return;
+      loadBase();
+      if (PULLED){
+        NS.companyKeys().forEach(function(k){
+          var raw = NS.nGet.call(NS.real, k + NS.SEP + c);
+          if (!(k in SEEN)){ NS.dirty[k] = 1; return; }
+          var arr = raw === null ? null : MERGE.parseArr(raw);
+          if (arr && BASE[k]){ if (!MERGE.fpEqual(arr, BASE[k])) NS.dirty[k] = 1; return; }
+          if (SEEN[k] !== (raw === null ? '' : MERGE.h32(String(raw)))) NS.dirty[k] = 1;
+        });
+      }
+      kick();
+    }
 
     async function pushAccounts(){
     try {
@@ -117035,27 +117293,29 @@ function toggleSubmenu(id) {
   }
 
     async function pullCompany(){
-    var c = comp();
-    if (!c) return;
-    try {
-      var res = await sb.from('company_state').select('key,value,updated_at').eq('company_id', c);
-      if (res.error){ console.warn('[companySync] pull error', res.error); return; }
-      NS.setApplying(true);
-      (res.data || []).forEach(function(row){
-        var physKey = row.key + NS.SEP + c;
-        var hasLocal = NS.nGet.call(NS.real, physKey) !== null;
-        var localTs = NS.getStamp ? NS.getStamp(row.key) : null;
-        /* A missing local timestamp means we have no evidence local is newer
-           (e.g. first load, or data written before the stamp system existed) —
-           so only skip the remote value when we can actually prove local wins. */
-        if (hasLocal && localTs && row.updated_at && Date.parse(row.updated_at) <= Date.parse(localTs)) return;
-        if (row.value === null) NS.nRem.call(NS.real, physKey);
-        else NS.nSet.call(NS.real, physKey, row.value);
-      });
-      NS.setApplying(false);
-      console.log('[companySync] pulled', (res.data || []).length, 'keys for', c);
-    } catch(e){ NS.setApplying(false); console.warn('[companySync] pull failed', e); }
-  }
+      var c = comp();
+      if (!c) return;
+      try {
+        if (!CLOCK_DONE){ CLOCK_DONE = true; await syncClock(); }
+        var res = await sb.from('company_state').select('key,value,updated_at').eq('company_id', c);
+        if (res.error){ console.warn('[companySync] pull error', res.error); return; }
+        loadBase(); SEEN = {};
+        (res.data || []).forEach(function(row){
+          try { applyRemote(row.key, row.value, row.updated_at); } catch(e){ NS.setApplying(false); console.warn('[companySync] apply failed', row.key, e); }
+        });
+        PULLED = true; saveBaseNow();
+        console.log('[companySync] pulled', (res.data || []).length, 'keys for', c);
+      } catch(e){ NS.setApplying(false); console.warn('[companySync] pull failed', e); }
+    }
+    async function pullOne(k){
+      var c = comp(); if (!c) return;
+      try {
+        var cur = await sb.from('company_state').select('value,updated_at').eq('company_id', c).eq('key', k).maybeSingle();
+        if (cur && !cur.error && cur.data && applyRemote(k, cur.data.value, cur.data.updated_at)) refreshUI();
+        if (NS.dirty[k]) kick();
+      } catch(e){}
+    }
+    window.__companySync = { pushDirty: pushDirty, pullCompany: pullCompany, applyRemote: applyRemote, pushAllCompanyKeys: pushAllCompanyKeys, ver: function(){ return VER; } };
 
     var refreshTimer = null;
     var __CLOUD_REFRESH_FNS__ = [
@@ -117119,25 +117379,33 @@ function toggleSubmenu(id) {
           try {
             var row = payload.new || payload.old;
             if (!row || row.company_id !== c) return;
-            var physKey = row.key + NS.SEP + c;
-
-
-
-            var hasLocal = NS.nGet.call(NS.real, physKey) !== null;
-            var localTs = NS.getStamp ? NS.getStamp(row.key) : null;
-            if (hasLocal && localTs && row.updated_at && Date.parse(row.updated_at) <= Date.parse(localTs)) return;
-            NS.setApplying(true);
-            if (payload.eventType === 'DELETE' || row.value === null) NS.nRem.call(NS.real, physKey);
-            else NS.nSet.call(NS.real, physKey, row.value);
-            NS.setApplying(false);
-            refreshUI();
+            if (payload.eventType === 'DELETE'){
+              var pk = row.key + NS.SEP + c;
+              NS.setApplying(true); NS.nRem.call(NS.real, pk); NS.setApplying(false);
+              delete VER[row.key]; delete SEEN[row.key]; clearBase(row.key);
+              refreshUI(); return;
+            }
+            if (row.updated_at && VER[row.key] === row.updated_at) return;     // echo of our own push
+            if (!('value' in row)){ pullOne(row.key); return; }               // large row: value omitted by realtime
+            if (applyRemote(row.key, row.value, row.updated_at)) refreshUI();
+            if (NS.dirty[row.key]) kick();
           } catch(e){ NS.setApplying(false); }
         })
       .subscribe();
   }
 
+    async function refreshTeam(){
+      var c = comp(); if (!c) return;
+      try {
+        var r = await sb.from('app_accounts').select('login_id,username').eq('company_id', c);
+        if (r && !r.error && r.data){
+          NS.nSet.call(NS.real, '__acxRoster_' + c, JSON.stringify(r.data.map(function(x){ var n = x.username || x.login_id; return { key: n, name: n }; })));
+        }
+      } catch(e){}
+    }
     window.startCloudSync = async function(){
     await pullCompany();
+    await refreshTeam();
     subscribeCompanyChanges();
     pushAccounts();
     pushAllCompanyKeys();
@@ -117218,6 +117486,119 @@ function toggleSubmenu(id) {
   console.log('[companySync] per-company cloud sync active');
 })();
 
+</script>
+<script>
+/* Document numbering that cannot collide between users.
+   Every user in a multi-user company issues numbers from their own series: <prefix><CODE>-<sequence>
+   (e.g. INV-JO-0042 and INV-TA-0042 are different documents). The sequence comes from that user's own records
+   plus a per-user high-water mark stored in a key only that user ever writes, so it is safe under sync.
+   Single-user companies keep the old numbering format untouched. */
+(function(){
+  'use strict';
+  var NS = window.__companyNS; if (!NS) return;
+  function slug(s){ return String(s == null ? '' : s).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'x'; }
+  function esc(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function comp(){ return String(NS.activeCompany() || ''); }
+  function nowIso(){ return new Date(Date.now() + (window.__acxClockOffset || 0)).toISOString(); }
+  function me(){
+    var u = null; try { u = NS.currentUser(); } catch(e){}
+    return u ? { key: slug(u.username || u.email || u.id), name: String(u.username || u.name || u.email || 'user') } : null;
+  }
+  function stateKey(uk){ return 'docseq_' + uk; }
+  function readState(uk){ try { var v = localStorage.getItem(stateKey(uk)); return v ? JSON.parse(v) : null; } catch(e){ return null; } }
+  function writeState(uk, st){ try { localStorage.setItem(stateKey(uk), JSON.stringify(st)); } catch(e){} }
+  function claims(myKey){
+    var out = [];
+    try {
+      NS.companyKeys().forEach(function(k){
+        if (k.indexOf('docseq_') !== 0 || k === stateKey(myKey)) return;
+        try { var s = JSON.parse(localStorage.getItem(k)); if (s && s.code) out.push({ key: k.slice(7), code: s.code, since: s.since || '' }); } catch(e){}
+      });
+    } catch(e){}
+    return out;
+  }
+  /* everyone we know belongs to this company: local accounts + the cloud roster fetched at sync */
+  function team(){
+    var c = comp(), seen = {}, out = [];
+    function add(name){ var k = slug(name); if (!name || seen[k]) return; seen[k] = 1; out.push({ key: k, name: String(name) }); }
+    try { JSON.parse(NS.nGet.call(NS.real, 'users') || '[]').forEach(function(u){ if (u && String(u.companyId || '') === c) add(u.username || u.email || u.id); }); } catch(e){}
+    try { JSON.parse(NS.nGet.call(NS.real, '__acxRoster_' + c) || '[]').forEach(function(r){ if (r) add(r.name || r.key); }); } catch(e){}
+    out.sort(function(a, b){ return a.key < b.key ? -1 : a.key > b.key ? 1 : 0; });
+    return out;
+  }
+  function initials(name){
+    var w = String(name || '').replace(/@.*$/, '').split(/[^A-Za-z0-9]+/).filter(Boolean);
+    var s = w.length > 1 ? w[0][0] + w[1][0] : (w[0] || 'U').slice(0, 2);
+    return s.toUpperCase();
+  }
+  /* deterministic: same team list -> same codes on every device. first in key order keeps the plain initials */
+  function assignCodes(list){
+    var used = {}, map = {};
+    list.forEach(function(u){
+      var base = initials(u.name), code = base, n = 2;
+      while (used[code]) code = base + (n++);
+      used[code] = 1; map[u.key] = code;
+    });
+    return map;
+  }
+  function uniqueAgainstClaims(code, taken){ var base = code, n = 2; while (taken[code]) code = base + (n++); return code; }
+
+  /* returns { user, st } when this company is multi-user, otherwise null (legacy numbering) */
+  function ensure(){
+    var u = me(); if (!u || !comp()) return null;
+    var st = readState(u.key), oth = claims(u.key), tm = team();
+    var multi = !!(st && st.code) || oth.length > 0 || tm.length >= 2;
+    if (!multi) return null;
+    var taken = {}; oth.forEach(function(o){ taken[o.code] = o; });
+    var changed = false;
+    if (!st || !st.code){
+      var list = tm.slice(); if (!list.some(function(x){ return x.key === u.key; })) list.push({ key: u.key, name: u.name });
+      list.sort(function(a, b){ return a.key < b.key ? -1 : a.key > b.key ? 1 : 0; });
+      var code = assignCodes(list)[u.key] || initials(u.name);
+      st = st || {}; st.code = uniqueAgainstClaims(code, taken); st.since = nowIso(); st.hw = st.hw || {}; changed = true;
+    } else {
+      var clash = oth.filter(function(o){ return o.code === st.code && (o.since < st.since || (o.since === st.since && o.key < u.key)); });
+      if (clash.length){ var t2 = {}; oth.forEach(function(o){ t2[o.code] = 1; }); t2[st.code] = 1; st.code = uniqueAgainstClaims(initials(u.name), t2); st.since = nowIso(); changed = true; }
+    }
+    if (changed) writeState(u.key, st);
+    return { user: u, st: st };
+  }
+
+  /* legacy number -> this user's series number */
+  function fix(type, S, lists, opts){
+    opts = opts || {};
+    if (typeof S !== 'string' || !S) return S;
+    var e = ensure(); if (!e) return S;
+    var m = /^(.*?)(\d+)$/.exec(S); if (!m) return S;
+    var code = e.st.code, pfx = m[1], width = m[2].length;
+    if (new RegExp('(^|[-_/])' + esc(code) + '-$').test(pfx)) return S;         // already carries my code
+    var head = pfx + (/[-_\/]$/.test(pfx) ? '' : '-') + code + '-';
+    var max = 0, re = new RegExp('"' + esc(head) + '(\\d+)"', 'g');
+    (lists || []).forEach(function(k){
+      var raw = null; try { raw = localStorage.getItem(k); } catch(_){}
+      if (!raw) return; re.lastIndex = 0; var mm;
+      while ((mm = re.exec(raw))){ var n = parseInt(mm[1], 10); if (n > max) max = n; }
+    });
+    var hw = (e.st.hw || {})[head] || 0, next = Math.max(max, hw) + 1;
+    if (opts.reserve){ e.st.hw = e.st.hw || {}; e.st.hw[head] = next; writeState(e.user.key, e.st); }      // numbers that are never reused
+    else if (max > hw){ e.st.hw = e.st.hw || {}; e.st.hw[head] = max; writeState(e.user.key, e.st); }
+    return head + String(next).padStart(width, '0');
+  }
+  /* wrapper used around the original generators (which may return the number, fill a form field, or both) */
+  function call(orig, self, args, type, lists, fieldId, reserve){
+    var r = orig.apply(self, args), opts = { reserve: !!reserve };
+    var el = null; try { el = fieldId ? document.getElementById(fieldId) : null; } catch(e){}
+    if (typeof r === 'string' && r){
+      var out = fix(type, r, lists, opts);
+      if (el && out !== r && el.value === r) el.value = out;
+      return out;
+    }
+    if (el && el.value){ var o2 = fix(type, el.value, lists, opts); if (o2 !== el.value) el.value = o2; }
+    return r;
+  }
+  window.__acxSeries = { fix: fix, call: call, ensure: ensure, team: team, assignCodes: assignCodes };
+  window.__acxFix = function(type, S, lists, reserve){ try { return fix(type, S, lists, { reserve: !!reserve }); } catch(e){ return S; } };
+})();
 </script>
 <script>
 (function(){
@@ -122211,6 +122592,9 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
       var k = keyOf(u); if (!k || seen[k]) return; seen[k] = 1;
       out.push({ key: k, name: u.username || u.name || u.email || k });
     });
+    try { JSON.parse(localStorage.getItem('__acxRoster_' + m.company) || '[]').forEach(function(r){
+      var k = slug(r && (r.name || r.key)); if (!k || k === 'x' || seen[k]) return; seen[k] = 1; out.push({ key: k, name: String(r.name || r.key) });
+    }); } catch(e){}
     out.sort(function(a, b){ return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
     return out;
   }
@@ -138696,7 +139080,9 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
 
 
         if (hasLocal && (!lt || (rt && rt <= lt))) return;
-        lset(k + NS.SEP + c, snap.data[k]);
+        var __val = snap.data[k];
+        if (hasLocal && window.__acxMerge) { try { __val = window.__acxMerge.unionRaw(lget(k + NS.SEP + c), __val, lt > rt); } catch (e) {} }
+        lset(k + NS.SEP + c, __val);
         local[k] = remote[k] || snap.updatedAt;
         applied++;
       });
