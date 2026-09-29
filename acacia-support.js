@@ -25,12 +25,12 @@
   function ago(d){ var m = Math.round((Date.now() - new Date(d).getTime()) / 60000); if (m < 2) return 'now'; if (m < 90) return m + 'm'; var h = Math.round(m / 60); return h < 36 ? h + 'h' : Math.round(h / 24) + 'd'; }
 
   function build(){
-    btn = el('button', 'position:fixed;right:16px;bottom:16px;z-index:2147483000;background:#2563eb;color:#fff;border:0;border-radius:999px;padding:12px 18px;font:600 14px system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)', '\uD83D\uDCAC Support');
-    badge = el('span', 'display:none;background:#dc2626;color:#fff;border-radius:999px;font-size:11px;padding:1px 7px;margin-left:8px');
-    btn.appendChild(badge);
+    // No floating button of its own - Books' existing "Support" corner button
+    // (helpFabButton -> supportPopup -> Chat option) opens this panel instead,
+    // via window.acxOpenSupportPanel(), so there is only one support button.
     panel = el('div', 'display:none;position:fixed;right:16px;bottom:70px;z-index:2147483000;width:340px;max-width:calc(100vw - 32px);max-height:70vh;overflow:auto;background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.3);font:14px/1.45 system-ui,sans-serif');
-    btn.onclick = function(){ panel.style.display = panel.style.display === 'none' ? 'block' : 'none'; if (panel.style.display === 'block') render(); };
-    document.body.appendChild(panel); document.body.appendChild(btn);
+    document.body.appendChild(panel);
+    window.acxOpenSupportPanel = function(){ panel.style.display = panel.style.display === 'none' ? 'block' : 'none'; if (panel.style.display === 'block') render(); };
   }
   function head(title, back){
     var h = el('div', 'display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #e2e8f0;font-weight:700;position:sticky;top:0;background:#fff');
@@ -108,7 +108,11 @@
   }
   function updateBadge(){
     var n = mine().filter(function(t){ return t.unread; }).length;
-    badge.textContent = n; badge.style.display = n ? 'inline-block' : 'none';
+    var fab = document.getElementById('helpFabButton'); if (!fab) return;
+    var dot = document.getElementById('acxFabDot');
+    if (n){
+      if (!dot){ dot = el('span'); dot.id = 'acxFabDot'; dot.style.cssText = 'position:absolute;top:-3px;right:-3px;width:10px;height:10px;background:#dc2626;border:2px solid #fff;border-radius:999px'; fab.style.position = 'fixed'; fab.appendChild(dot); }
+    } else if (dot) dot.remove();
   }
   function poll(){
     var a = mine().slice(0, 8); if (!a.length) return;
