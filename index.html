@@ -4908,7 +4908,7 @@ document.addEventListener("click", function(e) {
                 <span class="font-bold text-sm text-slate-900">AI Assistant</span>
                 <span class="text-sm text-slate-500 leading-snug">Ask a question, get an instant answer</span>
             </button>
-            <button type="button" onclick="toggleTawkChat()" title="Chat live with our support team (developer-monitored)" class="flex flex-col items-start gap-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl p-3 text-left shadow-sm transition-all">
+            <button type="button" onclick="if(window.acxOpenSupportPanel){toggleSupportPopup();acxOpenSupportPanel();}else{toggleTawkChat();}" title="Chat with our support team" class="flex flex-col items-start gap-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl p-3 text-left shadow-sm transition-all">
                 <span class="text-sm">💬</span>
                 <span class="font-bold text-sm text-slate-900">Chat</span>
                 <span class="text-sm text-slate-500 leading-snug">Live chat with our team</span>
