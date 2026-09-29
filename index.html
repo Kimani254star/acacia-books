@@ -103844,6 +103844,16 @@ function deleteUser(index) {
   users.splice(index, 1);
   localStorage.setItem('users', JSON.stringify(users));
 
+  try {
+    var __delId = String(user.email || user.username || '').toLowerCase();
+    if (__delId && window.__SUPA_URL__ && window.__SUPA_KEY__){
+      fetch(window.__SUPA_URL__ + '/rest/v1/app_accounts?or=(login_id.eq.' + encodeURIComponent(__delId) + ',username.eq.' + encodeURIComponent(__delId) + ')', {
+        method: 'DELETE', keepalive: true,
+        headers: { apikey: window.__SUPA_KEY__, Authorization: 'Bearer ' + window.__SUPA_KEY__ }
+      }).catch(function(){});
+    }
+  } catch (e) {}
+
   try { window.logAudit('delete', 'User Management', user.username || user.email || ''); } catch (e) {}
 
   renderUserTable();
@@ -145165,6 +145175,10 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
         body: JSON.stringify({ p_company: u0.companyId, p_app: 'Books', p_user: id, p_role: String(u0.role || '') }) });
     } catch(e){}
   }
+  window.ACX_APP = 'Books';
+  window.acxSession = function(){ var u = me(); return (u && u.companyId) ? { companyId: String(u.companyId), obj: u } : null; };
+  var supLoaded = false;
+  function loadSupport(){ if (supLoaded || window.__acxSupport) return; supLoaded = true; var t = document.createElement('script'); t.src = 'acacia-support.js'; document.head.appendChild(t); }
   var MSG = {
     pending:   ['Awaiting approval', 'Your account has been created and is waiting for approval by our team. You will be able to sign in as soon as it is approved.'],
     expired:   ['Subscription expired', 'Your payment period has ended and this account has been deactivated. Renew your subscription to get access again.'],
@@ -145200,7 +145214,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
       }
       var st = effective(row);
       localStorage.setItem(ck, st);
-      if (st === 'active') { unlock(); heartbeat(u); } else lock(st);
+      if (st === 'active') { unlock(); heartbeat(u); loadSupport(); } else lock(st);
     } catch(e){
       var c = localStorage.getItem(ck);      /* offline: keep the last known state */
       if (c && c !== 'active') lock(c);
