@@ -133732,7 +133732,7 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
 </script>
 <script>
 (function () {
-  var SKIP = { reportsHome: 1, sales_salesSummary: 1, sales_dailySales: 1, sales_monthlySales: 1, sales_annualSales: 1, salesByItemPanel: 1, sales_salesByCategory: 1, sales_salesByBranch: 1, salesByPersonPanel: 1, salesByCustomerPanel: 1, sales_salesByHour: 1, sales_salesByDayOfWeek: 1, salesReturnPanel: 1, sales_discountAnalysis: 1, sales_priceVarianceAnalysis: 1, sales_revenueTrends: 1, salesComparisonPanel: 1, topSellingItemsPanel: 1, customerStatementPanel: 1, agedReceivablesPanel: 1, accountsReceivablePanel: 1, customer_customerCreditExposure: 1, customer_collectionEfficiency: 1, customer_receiptsForecast: 1, topCustomersPanel: 1, customer_newCustomers: 1, customer_lostCustomers: 1, customer_customerGrowth: 1, customer_customerPurchaseFrequency: 1, customer_customerLifetimeValue: 1, customer_customerSegmentation: 1, customer_profitPerCustomer: 1, customer_lossMakingCustomers: 1, customerOrdersPanel: 1, customerQuotesPanel: 1, creditNotesReport: 1, CreditcontrolPanel: 1, writeOffReportPanel: 1, pnlReport: 1, bsReport: 1, trialBalanceReport: 1, generalLedgerReport: 1, generalLedgerDetailedReport: 1, cashFlowReport: 1, financial_revenueAnalysis: 1, financial_expenseAnalysis: 1, financial_grossProfitAnalysis: 1, financial_workingCapitalAnalysis: 1, financial_financialRatios: 1, financial_businessSnapshot: 1, financial_multiYearTrendAnalysis: 1, financial_dailyCashPosition: 1, retainedEarningsPanel: 1, equityStatementPanel: 1 };
+  var SKIP = { budgetPanel: 1, budgetVariancePanel: 1, vatReport: 1, tax_vatAnalysis: 1, taxComputationReport: 1, taxesPanel: 1, reportsHome: 1, sales_salesSummary: 1, sales_dailySales: 1, sales_monthlySales: 1, sales_annualSales: 1, salesByItemPanel: 1, sales_salesByCategory: 1, sales_salesByBranch: 1, salesByPersonPanel: 1, salesByCustomerPanel: 1, sales_salesByHour: 1, sales_salesByDayOfWeek: 1, salesReturnPanel: 1, sales_discountAnalysis: 1, sales_priceVarianceAnalysis: 1, sales_revenueTrends: 1, salesComparisonPanel: 1, topSellingItemsPanel: 1, customerStatementPanel: 1, agedReceivablesPanel: 1, accountsReceivablePanel: 1, customer_customerCreditExposure: 1, customer_collectionEfficiency: 1, customer_receiptsForecast: 1, topCustomersPanel: 1, customer_newCustomers: 1, customer_lostCustomers: 1, customer_customerGrowth: 1, customer_customerPurchaseFrequency: 1, customer_customerLifetimeValue: 1, customer_customerSegmentation: 1, customer_profitPerCustomer: 1, customer_lossMakingCustomers: 1, customerOrdersPanel: 1, customerQuotesPanel: 1, creditNotesReport: 1, CreditcontrolPanel: 1, writeOffReportPanel: 1, pnlReport: 1, bsReport: 1, trialBalanceReport: 1, generalLedgerReport: 1, generalLedgerDetailedReport: 1, cashFlowReport: 1, financial_revenueAnalysis: 1, financial_expenseAnalysis: 1, financial_grossProfitAnalysis: 1, financial_workingCapitalAnalysis: 1, financial_financialRatios: 1, financial_businessSnapshot: 1, financial_multiYearTrendAnalysis: 1, financial_dailyCashPosition: 1, retainedEarningsPanel: 1, equityStatementPanel: 1 };
   var RENDERERS = { pnlReport: 'renderProfitLoss', bsReport: 'renderBalanceSheet' };
 
   function esc(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
@@ -145351,4 +145351,180 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
 })();
 </script>
 
+
+<script>
+/* Expense-Analysis-style filter bar for: Budget vs Actual, Budget Variance, VAT Summary, VAT Analysis, Tax Summary, Tax Transactions */
+(function () {
+  if (window.__bxBudgetBars) return; window.__bxBudgetBars = true;
+
+  var st = document.createElement("style");
+  st.textContent =
+    ".bx-bar{background:#f8fafc;border:1px solid #dbe3ee;border-radius:10px;padding:10px 12px;margin:0 0 12px}" +
+    ".bx-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}" +
+    ".bx-f{display:flex;flex-direction:column;gap:2px;font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;letter-spacing:.02em}" +
+    ".bx-f select,.bx-f input{font-size:13px;font-weight:400;text-transform:none;letter-spacing:0;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:5px 7px;background:#fff;min-width:120px}" +
+    ".bx-btn{font-size:13px;border:1px solid #1e3a8a;background:#1e3a8a;color:#fff;border-radius:6px;padding:6px 11px;cursor:pointer;font-weight:600}" +
+    ".bx-btn:hover{background:#1d4ed8}.bx-btn.ghost{background:#fff;color:#1e3a8a}.bx-btn.ghost:hover{background:#eff6ff}" +
+    ".bx-more{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #cbd5e1}.bx-more.open{display:block}" +
+    "@media print{.bx-bar{display:none!important}}";
+  document.head.appendChild(st);
+
+  function iso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function presetRange(k) {
+    var n = new Date(), y = n.getFullYear(), m = n.getMonth();
+    if (k === "thisMonth") return { from: iso(new Date(y, m, 1)), to: iso(new Date(y, m + 1, 0)) };
+    if (k === "lastMonth") return { from: iso(new Date(y, m - 1, 1)), to: iso(new Date(y, m, 0)) };
+    if (k === "thisQuarter") { var q = Math.floor(m / 3) * 3; return { from: iso(new Date(y, q, 1)), to: iso(new Date(y, q + 3, 0)) }; }
+    if (k === "lastQuarter") { var q2 = Math.floor(m / 3) * 3 - 3; return { from: iso(new Date(y, q2, 1)), to: iso(new Date(y, q2 + 3, 0)) }; }
+    if (k === "thisYear") return { from: y + "-01-01", to: y + "-12-31" };
+    return { from: "", to: "" };
+  }
+
+  function el(id) { return document.getElementById(id); }
+  function node(panel, ref) { if (!ref) return null; return ref.charAt(0) === "." ? panel.querySelector(ref) : el(ref); }
+  function setNode(panel, ref, v) { var n = node(panel, ref); if (n) n.value = v; }
+  function hide(n) { if (n) { n.setAttribute("data-bx-legacy", "1"); n.style.display = "none"; } }
+  function closest(id, sel) { var n = el(id); return n ? n.closest(sel) : null; }
+  function btnParent(panel, frag) { var b = panel.querySelector('button[onclick*="' + frag + '"]'); return b ? b.parentNode : null; }
+
+  var EXPORT = 'button[onclick*="exportFilteredTableToCSV"]';
+  var CFG = {
+    budgetPanel: {
+      title: "Budget vs Actual", start: "budgetStartDate", end: "budgetEndDate", month: "rptBudgetMonth",
+      dept: { id: "rptBudgetDepartment", label: "Department" }, more: [],
+      render: function () { if (typeof renderBudgetReport === "function") renderBudgetReport(); },
+      clear: function () { if (typeof clearFilterBudget === "function") clearFilterBudget(); },
+      legacy: function (panel) { return [closest("rptBudgetMonth", ".flex"), closest("budgetStartDate", ".flex"), closest("rptBudgetDepartment", ".flex"), btnParent(panel, "applyFilterBudget")]; }
+    },
+    budgetVariancePanel: {
+      title: "Budget Variance", start: "budgetVarianceStart", end: "budgetVarianceEnd",
+      dept: { id: "budgetVarianceDept", label: "Department", text: true },
+      more: [["budgetVarianceType", "Budget type"], ["budgetVarianceStatusMain", "Status"], ["budgetVarianceRange", "Variance range"]],
+      render: function () { if (typeof renderBudgetVarianceReport === "function") renderBudgetVarianceReport(); },
+      clear: function () { if (typeof clearBudgetVarianceFilters === "function") clearBudgetVarianceFilters(); },
+      legacy: function (panel) { var mb = panel.querySelector('button[onclick*="toggleBudgetVarianceMoreFilters"]'); return [closest("budgetVarianceDept", ".flex-wrap"), mb && mb.closest(".relative"), btnParent(panel, "applyBudgetVarianceFilters")]; }
+    },
+    vatReport: {
+      title: "VAT Summary", start: "vatStartDate", end: "vatEndDate", month: "vatSummaryMonth", basis: "vatBasis", more: [],
+      render: function () { if (typeof renderVatSummary === "function") renderVatSummary(); },
+      clear: function () { if (typeof clearVatSummaryFilter === "function") clearVatSummaryFilter(); else if (typeof renderVatSummary === "function") renderVatSummary(); },
+      legacy: function () { return [closest("vatSummaryMonth", ".mb-4"), closest("vatStartDate", ".mb-4"), closest("vatBasis", ".mb-4")]; }
+    },
+    tax_vatAnalysis: {
+      title: "VAT Analysis", start: ".rep-from", end: ".rep-to", more: [], rep: true,
+      render: function (bar) { if (typeof window.repRefresh === "function") window.repRefresh(bar); },
+      clear: function (bar) { if (typeof window.repRefresh === "function") window.repRefresh(bar); },
+      legacy: function (panel) { return [panel.querySelector(".rep-actions")]; }
+    },
+    taxComputationReport: {
+      title: "Tax Summary", start: "taxStartDate", end: "taxEndDate", month: "taxSummaryMonth", basis: "taxBasis", more: [],
+      allLabel: "Current fiscal year",
+      render: function () { if (typeof window.renderReports === "function") window.renderReports(); },
+      clear: function () { if (typeof window.renderReports === "function") window.renderReports(); },
+      legacy: function () { return [closest("taxSummaryMonth", ".mb-4"), closest("taxStartDate", ".mb-4"), closest("taxBasis", ".mb-4")]; }
+    },
+    taxesPanel: {
+      title: "Tax Transactions", start: "taxesStart", end: "taxesEnd", month: "taxesMonth", more: [],
+      render: function () { if (typeof renderTaxes === "function") renderTaxes(); },
+      clear: function () { if (typeof renderTaxes === "function") renderTaxes(); },
+      legacy: function (panel) { return [closest("taxesMonth", ".flex-wrap"), btnParent(panel, "renderTaxes()")]; }
+    }
+  };
+
+  function selectFrom(legacyId, label, key) {
+    var src = el(legacyId), opts = "";
+    if (src && src.tagName === "SELECT") opts = src.innerHTML;
+    return '<label class="bx-f">' + label + '<select data-bx="' + key + '">' + opts + "</select></label>";
+  }
+
+  function build(id) {
+    var cfg = CFG[id], panel = el(id);
+    if (!panel || panel.querySelector(":scope > .bx-bar")) return;
+    var presets = [["all", cfg.allLabel || "All time"], ["thisMonth", "This month"], ["lastMonth", "Last month"], ["thisQuarter", "This quarter"], ["lastQuarter", "Last quarter"], ["thisYear", "This year"], ["custom", "Custom"]];
+    var h = '<div class="bx-row">' +
+      '<label class="bx-f">Period<select data-bx="preset">' + presets.map(function (p) { return '<option value="' + p[0] + '">' + p[1] + "</option>"; }).join("") + "</select></label>" +
+      '<label class="bx-f">From<input type="date" data-bx="from"></label>' +
+      '<label class="bx-f">To<input type="date" data-bx="to"></label>';
+    if (cfg.basis) h += '<label class="bx-f">Basis<select data-bx="basis"><option value="accrual">Accrual</option><option value="cash">Cash</option></select></label>';
+    if (cfg.dept) {
+      if (cfg.dept.text) h += '<label class="bx-f">' + cfg.dept.label + '<input type="text" data-bx="dept" placeholder="All departments"></label>';
+      else h += selectFrom(cfg.dept.id, cfg.dept.label, "dept");
+    }
+    if (cfg.more.length) h += '<button type="button" class="bx-btn ghost" data-bx-act="more">⚙ More filters ▾</button>';
+    h += '<button type="button" class="bx-btn" data-bx-act="apply">Apply</button>' +
+      '<button type="button" class="bx-btn ghost" data-bx-act="reset">Reset</button>' +
+      '<button type="button" class="bx-btn ghost" data-bx-act="csv">⬇ CSV</button>' +
+      '<button type="button" class="bx-btn ghost" data-bx-act="print">🖨 Print</button></div>';
+    if (cfg.more.length) h += '<div class="bx-more"><div class="bx-row">' + cfg.more.map(function (m) { return selectFrom(m[0], m[1], m[0]); }).join("") + "</div></div>";
+
+    var bar = document.createElement("div");
+    bar.className = "bx-bar";
+    bar.innerHTML = h;
+
+    function q(k) { return bar.querySelector('[data-bx="' + k + '"]'); }
+    function push() {
+      setNode(panel, cfg.start, q("from").value);
+      setNode(panel, cfg.end, q("to").value);
+      if (cfg.month) setNode(panel, cfg.month, "");
+      if (cfg.basis) setNode(panel, cfg.basis, q("basis").value);
+      if (cfg.dept) setNode(panel, cfg.dept.id, q("dept").value);
+      cfg.more.forEach(function (m) { setNode(panel, m[0], q(m[0]).value); });
+      cfg.render(bar);
+    }
+    bar.addEventListener("change", function (e) {
+      var k = e.target.getAttribute && e.target.getAttribute("data-bx");
+      if (!k) return;
+      if (k === "preset") {
+        if (e.target.value !== "custom") { var r = presetRange(e.target.value); q("from").value = r.from; q("to").value = r.to; }
+        push();
+      } else if (k === "from" || k === "to") { q("preset").value = "custom"; push(); }
+      else push();
+    });
+    bar.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-bx-act]"); if (!b) return;
+      var act = b.getAttribute("data-bx-act");
+      if (act === "more") bar.querySelector(".bx-more").classList.toggle("open");
+      else if (act === "apply") push();
+      else if (act === "reset") {
+        q("preset").value = "all"; q("from").value = ""; q("to").value = "";
+        setNode(panel, cfg.start, ""); setNode(panel, cfg.end, "");
+        if (cfg.month) setNode(panel, cfg.month, "");
+        if (cfg.dept) { q("dept").value = ""; setNode(panel, cfg.dept.id, ""); }
+        cfg.more.forEach(function (m) { q(m[0]).value = ""; setNode(panel, m[0], ""); });
+        cfg.clear(bar);
+      }
+      else if (act === "csv") {
+        if (cfg.rep && typeof window.repCsv === "function") { window.repCsv(bar); return; }
+        var lb = panel.querySelector(EXPORT);
+        if (lb) lb.click();
+      }
+      else if (act === "print") {
+        var w = window.open("", "_blank"); if (!w) return;
+        var body = Array.prototype.map.call(panel.querySelectorAll("table"), function (t) { return t.outerHTML; }).join("<br>");
+        w.document.write("<html><head><title>" + cfg.title + '</title><style>body{font-family:Arial,sans-serif;padding:20px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #cbd5e1;padding:5px 8px;text-align:left}th{background:#eef2f7}</style></head><body><h3>' + cfg.title + "</h3>" + body + "</body></html>");
+        w.document.close(); w.focus(); w.print();
+      }
+    });
+
+    var heading = panel.querySelector(":scope > h2");
+    var first = panel.firstElementChild;
+    if (heading) panel.insertBefore(bar, heading.nextSibling);
+    else if (first) panel.insertBefore(bar, first.nextSibling);
+    else panel.appendChild(bar);
+    cfg.legacy(panel).forEach(hide);
+  }
+
+  function all() { Object.keys(CFG).forEach(build); }
+  function wrapShow() {
+    var o = window.showReport;
+    if (typeof o !== "function" || o.__bxWrapped) return;
+    var w = function (id) { var r = o.apply(this, arguments); try { if (CFG[id]) build(id); } catch (e) {} return r; };
+    w.__bxWrapped = true; window.showReport = w;
+  }
+  function init() { all(); wrapShow(); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+  window.addEventListener("load", init);
+  var n = 0, t = setInterval(function () { init(); if (++n > 20) clearInterval(t); }, 1500);
+})();
+</script>
 </body></html>
