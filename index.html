@@ -143850,7 +143850,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
       ".fr-card{border:1px solid #dbe3ee;border-radius:10px;padding:10px 12px;background:#fff}.fr-card b{display:block;font-size:11px;color:#64748b;text-transform:uppercase}" +
       ".fr-card span{font-size:18px;font-weight:700;color:#0f172a}.fr-card small{display:block;color:#64748b;font-size:11px}" +
       ".fr-neg{color:#b91c1c}.fr-pos{color:#15803d}.fr-h3{font-size:14px;font-weight:700;margin:14px 0 4px;color:#1e3a8a}" +
-      ".fr-hide{display:none!important}.fr-nocol2 tr>:nth-child(2),.fr-nocol5 tr>:nth-child(5){display:none}" +
+      ".fr-hide{display:none!important}.fr-nocol2 tr>:nth-child(2),.fr-nocol5 tr>:nth-child(5),.fr-nocol56 tr>:nth-child(5),.fr-nocol56 tr>:nth-child(6){display:none}" +
       ".fr-tbl td{color:#0f172a;text-decoration:none!important;font-weight:inherit}.fr-tbl td a{text-decoration:underline dotted!important}.fr-tbl tr.tot td,.fr-tbl tr.grand td,.fr-tbl tr.sec td{font-weight:700}" +
       ".report-view:has(> .fr-bar) > .__csvBar{display:none!important}" +
       "@media print{.fr-bar,.fr-noprint{display:none!important}}";
@@ -144100,63 +144100,75 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   function renderPnl(panel, st, per) {
     var p = FR.pnl(per.from, per.to), L = FR.ledger();
     var cmpPer = FR.comparePeriod(per, st.compare), pc = cmpPer ? FR.pnl(cmpPer.from, cmpPer.to) : null;
+    // Opening (b/f) = everything in previous financial years; Closing = opening + this period
+    var hasOpen = per.from > "1900-01-01", pb = null, openTax = 0, cumMargin = p.grossMarginPct;
+    if (hasOpen) {
+      var pEnd = U.addDays(per.from, -1); pb = FR.pnl("1900-01-01", pEnd);
+      var fd = null; for (var pi = 0; pi < L.posts.length; pi++) { if (L.posts[pi].d !== "0000-00-00") { fd = L.posts[pi].d; break; } }
+      if (fd) { var cur = FR.fyOf(fd).from, guard = 0; while (cur <= pEnd && guard++ < 60) { var f = FR.fyOf(cur), e = f.to < pEnd ? f.to : pEnd; openTax += FR.pnl(f.from, e).incomeTax; cur = U.addDays(f.to, 1); } }  // each fiscal year is taxed on its own profit
+      var ns = pb.netSales + p.netSales; cumMargin = ns > 0 ? (ns - pb.cogs - p.cogs) / ns * 100 : 0;
+    }
+    function keysOf(a, b) { var o = {}; Object.keys(a || {}).forEach(function (k) { o[k] = 1; }); Object.keys(b || {}).forEach(function (k) { o[k] = 1; }); return Object.keys(o); }
     var t = $("pnlTable"); if (!t) return;
-    t.classList.add("fr-tbl"); t.classList.toggle("fr-nocol2", !pc); t.classList.add("fr-nocol5");
+    t.classList.add("fr-tbl"); t.classList.toggle("fr-nocol2", !pc); t.classList.remove("fr-nocol56"); t.classList.toggle("fr-nocol5", !hasOpen);
     ui.drill = {};
     var rows = [], hz = st.hideZero;
     function C(v) { return pc ? '<td class="n">' + fmt(v) + "</td>" : "<td></td>"; }
-    function sec(label) { rows.push('<tr class="sec"><td colspan="5">' + esc(label) + "</td></tr>"); }
-    function det(label, v, cv, key, memo) {
-      if (hz && !num(v) && !num(cv)) return;
-      rows.push('<tr class="sub"' + (memo ? ' style="color:#64748b;font-style:italic"' : "") + "><td>• " + esc(label) + "</td>" + C(cv) + '<td class="n">' + link(v, key) + "</td><td></td><td></td></tr>");
+    function sec(label) { rows.push('<tr class="sec"><td colspan="6">' + esc(label) + "</td></tr>"); }
+    function O(ov) { return hasOpen ? '<td class="n">' + fmt(ov || 0) + "</td>" : "<td></td>"; }
+    function K(v, ov) { return '<td class="n">' + fmt(num(v) + num(ov)) + "</td>"; }
+    function det(label, v, cv, key, memo, ov) {
+      if (hz && !num(v) && !num(cv) && !num(ov)) return;
+      rows.push('<tr class="sub"' + (memo ? ' style="color:#64748b;font-style:italic"' : "") + "><td>• " + esc(label) + "</td>" + C(cv) + '<td class="n">' + link(v, key) + "</td><td></td>" + O(ov) + K(v, ov) + "</tr>");
     }
-    function tot(label, id, v, cv, cls) {
-      rows.push('<tr class="' + (cls || "tot") + '"><td>' + label + "</td>" + C(cv) + "<td></td>" + '<td class="n" id="pnl' + id + '">' + fmt(v) + '</td><td class="n" id="closing' + id + '">' + fmt(v) + "</td></tr>");
+    function tot(label, id, v, cv, cls, ov) {
+      rows.push('<tr class="' + (cls || "tot") + '"><td>' + label + "</td>" + C(cv) + "<td></td>" + '<td class="n" id="pnl' + id + '">' + fmt(v) + "</td>" + (hasOpen ? '<td class="n" id="opening' + id + '">' + fmt(ov || 0) + "</td>" : "<td></td>") + '<td class="n" id="closing' + id + '">' + fmt(hasOpen ? num(v) + num(ov) : v) + "</td></tr>");
     }
-    function plain(label, id, v, cv) { if (hz && !num(v) && !num(cv)) { rows.push('<tr class="fr-hide"><td>' + label + "</td><td></td><td></td><td id=\"pnl" + id + '">' + fmt(v) + '</td><td id="closing' + id + '">' + fmt(v) + "</td></tr>"); return; } tot(label, id, v, cv, ""); }
+    function plain(label, id, v, cv, ov) { if (hz && !num(v) && !num(cv) && !num(ov)) { rows.push('<tr class="fr-hide"><td>' + label + "</td><td></td><td></td><td id=\"pnl" + id + '">' + fmt(v) + '</td><td id="closing' + id + '">' + fmt(v) + "</td></tr>"); return; } tot(label, id, v, cv, "", ov); }
 
     sec("Sales Revenue");
-    Object.keys(p.revenueByAcct).sort().forEach(function (a) { det(a, p.revenueByAcct[a], pc ? (pc.revenueByAcct[a] || 0) : 0, dl(p.drill["rev:" + a] || [], "rev:" + a, a + " — invoices")); });
-    tot("Total Sales Revenue <small style='font-weight:400;color:#64748b'>(before discounts, excl. VAT)</small>", "Revenue", p.revenue, pc && pc.revenue);
+    keysOf(p.revenueByAcct, pb && pb.revenueByAcct).sort().forEach(function (a) { det(a, p.revenueByAcct[a] || 0, pc ? (pc.revenueByAcct[a] || 0) : 0, dl(p.drill["rev:" + a] || [], "rev:" + a, a + " — invoices"), false, pb ? (pb.revenueByAcct[a] || 0) : 0); });
+    tot("Total Sales Revenue <small style='font-weight:400;color:#64748b'>(before discounts, excl. VAT)</small>", "Revenue", p.revenue, pc && pc.revenue, undefined, pb ? pb.revenue : 0);
     sec("Other Incomes");
     var oi = {}; p.otherLines.forEach(function (l) { oi[l.label] = (oi[l.label] || 0) + l.amount; });
+    var oiB = {}; if (pb) pb.otherLines.forEach(function (l) { oiB[l.label] = (oiB[l.label] || 0) + l.amount; });
     var oiC = {}; if (pc) pc.otherLines.forEach(function (l) { oiC[l.label] = (oiC[l.label] || 0) + l.amount; });
-    Object.keys(oi).forEach(function (k) { det(k, oi[k], oiC[k] || 0, dl(p.otherLines.filter(function (l) { return l.label === k; }).map(function (l) { return { label: l.label, date: l.date, amount: l.amount }; }), "oi:" + k, k)); });
-    tot("Total Other Incomes", "OtherIncomes", p.otherIncome, pc && pc.otherIncome);
-    plain("Discounts &amp; Credit Notes <small style='font-weight:400;color:#64748b'>(deducted)</small>", "Discount", p.discounts, pc && pc.discounts);
-    plain("Cost of Goods Sold", "Cogs", p.cogs, pc && pc.cogs);
-    plain("Bad Debts <small style='font-weight:400;color:#64748b'>(write-offs" + (num(FR.state().badDebtRate) > 0 ? " + provision" : "") + ")</small>", "BadDebts", p.badDebts, pc && pc.badDebts);
-    tot("Gross Profit", "GrossProfit", p.grossProfit, pc && pc.grossProfit);
-    rows.push('<tr class="tot"><td>Gross Profit Margin % <small style="font-weight:400;color:#64748b">((Net sales − COGS) ÷ Net sales)</small></td>' + (pc ? '<td class="n">' + ui.pct(pc.grossMarginPct) + "</td>" : "<td></td>") + '<td></td><td class="n" id="pnlGrossMargin">' + ui.pct(p.grossMarginPct) + '</td><td class="n" id="closingGrossMargin">' + ui.pct(p.grossMarginPct) + "</td></tr>");
+    keysOf(oi, oiB).forEach(function (k) { det(k, oi[k] || 0, oiC[k] || 0, dl(p.otherLines.filter(function (l) { return l.label === k; }).map(function (l) { return { label: l.label, date: l.date, amount: l.amount }; }), "oi:" + k, k), false, oiB[k] || 0); });
+    tot("Total Other Incomes", "OtherIncomes", p.otherIncome, pc && pc.otherIncome, undefined, pb ? pb.otherIncome : 0);
+    plain("Discounts &amp; Credit Notes <small style='font-weight:400;color:#64748b'>(deducted)</small>", "Discount", p.discounts, pc && pc.discounts, pb ? pb.discounts : 0);
+    plain("Cost of Goods Sold", "Cogs", p.cogs, pc && pc.cogs, pb ? pb.cogs : 0);
+    plain("Bad Debts <small style='font-weight:400;color:#64748b'>(write-offs" + (num(FR.state().badDebtRate) > 0 ? " + provision" : "") + ")</small>", "BadDebts", p.badDebts, pc && pc.badDebts, pb ? pb.badDebts : 0);
+    tot("Gross Profit", "GrossProfit", p.grossProfit, pc && pc.grossProfit, undefined, pb ? pb.grossProfit : 0);
+    rows.push('<tr class="tot"><td>Gross Profit Margin % <small style="font-weight:400;color:#64748b">((Net sales − COGS) ÷ Net sales)</small></td>' + (pc ? '<td class="n">' + ui.pct(pc.grossMarginPct) + "</td>" : "<td></td>") + '<td></td><td class="n" id="pnlGrossMargin">' + ui.pct(p.grossMarginPct) + "</td>" + (hasOpen ? '<td class="n">' + ui.pct(pb.grossMarginPct) + "</td>" : "<td></td>") + '<td class="n" id="closingGrossMargin">' + ui.pct(cumMargin) + "</td></tr>");
 
     sec("Bills");
     var inv = FR.state().productBills !== "expense";
-    det(inv ? "Products (stock purchases — capitalised to inventory, not expensed)" : "Products", p.purchases.product, pc ? pc.purchases.product : 0, null, inv);
-    det("Services", p.purchases.service, pc ? pc.purchases.service : 0, dl(p.drill.bills || [], "bills", "Bills"));
-    tot("Total Bills <small style='font-weight:400;color:#64748b'>(expensed, excl. VAT)</small>", "Bills", p.bills, pc && pc.bills);
+    det(inv ? "Products (stock purchases — capitalised to inventory, not expensed)" : "Products", p.purchases.product, pc ? pc.purchases.product : 0, null, inv, pb ? pb.purchases.product : 0);
+    det("Services", p.purchases.service, pc ? pc.purchases.service : 0, dl(p.drill.bills || [], "bills", "Bills"), false, pb ? pb.purchases.service : 0);
+    tot("Total Bills <small style='font-weight:400;color:#64748b'>(expensed, excl. VAT)</small>", "Bills", p.bills, pc && pc.bills, undefined, pb ? pb.bills : 0);
 
     sec("Operational Costs");
-    Object.keys(p.opexGroups).sort().forEach(function (a) {
+    keysOf(p.opexGroups, pb && pb.opexGroups).sort().forEach(function (a) {
       var ca = L.meta.coa[low(a)], par = ca && (ca.parent || ca.parentAccount || ca.parentName);
-      det((par ? par + " › " : "") + a, p.opexGroups[a], pc ? (pc.opexGroups[a] || 0) : 0, dl(p.drill["opex:" + a] || [], "opex:" + a, a));
+      det((par ? par + " › " : "") + a, p.opexGroups[a] || 0, pc ? (pc.opexGroups[a] || 0) : 0, dl(p.drill["opex:" + a] || [], "opex:" + a, a), false, pb ? (pb.opexGroups[a] || 0) : 0);
     });
-    tot("Total Operational Costs", "Expenses", p.opex, pc && pc.opex);
+    tot("Total Operational Costs", "Expenses", p.opex, pc && pc.opex, undefined, pb ? pb.opex : 0);
     rows.push('<tr class="fr-hide"><td>Other Expenses</td><td></td><td></td><td id="pnlCurrentAccounts">' + fmt(0) + '</td><td id="closingCurrentAccounts">' + fmt(0) + "</td></tr>");
-    plain("Depreciation", "Depreciation", p.depreciation, pc && pc.depreciation);
-    plain("Interest Paid", "Interest", p.interest, pc && pc.interest);
-    plain("Payroll <small style='font-weight:400;color:#64748b'>(net pay)</small>", "Payroll", p.payroll, pc && pc.payroll);
-    plain("Currency Adjustment", "CurrencyAdjustment", p.fx, pc && pc.fx);
+    plain("Depreciation", "Depreciation", p.depreciation, pc && pc.depreciation, pb ? pb.depreciation : 0);
+    plain("Interest Paid", "Interest", p.interest, pc && pc.interest, pb ? pb.interest : 0);
+    plain("Payroll <small style='font-weight:400;color:#64748b'>(net pay)</small>", "Payroll", p.payroll, pc && pc.payroll, pb ? pb.payroll : 0);
+    plain("Currency Adjustment", "CurrencyAdjustment", p.fx, pc && pc.fx, pb ? pb.fx : 0);
     sec("Taxes paid (memo — VAT / PAYE etc. settle liabilities; not part of profit)");
-    Object.keys(p.taxesPaid).forEach(function (k) { det(k, p.taxesPaid[k], pc ? (pc.taxesPaid[k] || 0) : 0, null); });
-    tot("Total Taxes Paid", "Taxes", p.taxesPaidTotal, pc && pc.taxesPaidTotal, "");
-    tot("Profit Before Tax", "ProfitBeforeTax", p.pbt, pc && pc.pbt);
-    tot("Income Tax (" + num(FR.state().taxRate) + "% of profit)", "IncomeTax", p.incomeTax, pc && pc.incomeTax, "");
-    tot("Net Profit After Tax", "Profit", p.net, pc && pc.net, "grand");
+    keysOf(p.taxesPaid, pb && pb.taxesPaid).forEach(function (k) { det(k, p.taxesPaid[k] || 0, pc ? (pc.taxesPaid[k] || 0) : 0, null, false, pb ? (pb.taxesPaid[k] || 0) : 0); });
+    tot("Total Taxes Paid", "Taxes", p.taxesPaidTotal, pc && pc.taxesPaidTotal, "", pb ? pb.taxesPaidTotal : 0);
+    tot("Profit Before Tax", "ProfitBeforeTax", p.pbt, pc && pc.pbt, undefined, pb ? pb.pbt : 0);
+    tot("Income Tax (" + num(FR.state().taxRate) + "% of profit)", "IncomeTax", p.incomeTax, pc && pc.incomeTax, "", openTax);
+    tot("Net Profit After Tax", "Profit", p.net, pc && pc.net, "grand", pb ? pb.pbt - openTax : 0);
 
-    t.innerHTML = "<thead><tr><th>Item</th><th>" + (cmpPer ? esc(cmpPer.label) : "") + '</th><th class="n">Amount</th><th class="n">Total</th><th class="n">Closing Balance</th></tr></thead><tbody>' + rows.join("") + "</tbody>";
+    t.innerHTML = "<thead><tr><th>Item</th><th>" + (cmpPer ? esc(cmpPer.label) : "") + '</th><th class="n">Amount</th><th class="n">Total (this period)</th><th class="n">Opening (b/f)</th><th class="n">Closing Balance</th></tr></thead><tbody>' + rows.join("") + "</tbody>";
     t.querySelectorAll("th:nth-child(n+3)").forEach(function (h) { h.classList.add("n"); });
     var cap = caption(panel, t);
-    if (cap) { cap.className = "fy-period-caption"; cap.innerHTML = ui.periodLine(per, st) + (cmpPer ? '<div style="font-size:12px;color:#475569">Compared with ' + esc(cmpPer.label) + " (" + esc(cmpPer.from) + " to " + esc(cmpPer.to) + ")</div>" : "") + ui.noteHtml(st); }
+    if (cap) { cap.className = "fy-period-caption"; cap.innerHTML = ui.periodLine(per, st) + (cmpPer ? '<div style="font-size:12px;color:#475569">Compared with ' + esc(cmpPer.label) + " (" + esc(cmpPer.from) + " to " + esc(cmpPer.to) + ")</div>" : "") + (hasOpen ? '<div style="font-size:12px;color:#475569">Opening (b/f) = profit and loss of previous financial years · Closing Balance = opening + this period</div>' : "") + ui.noteHtml(st); }
   }
 
   /* ================= Balance Sheet ================= */
@@ -144219,7 +144231,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
     tot("Total Equity", "bsEquity", b.totalEquity, ob.totalEquity, "tot");
     tot("Total Liabilities &amp; Equity", "bsTotalLiabilitiesEquity", b.totalLE, ob.totalLE, "grand");
 
-    t.innerHTML = "<thead><tr><th>Item</th><th class=\"n\">" + (cmpPer ? esc(cmpPer.label) + " (as at " + esc(openAt) + ")" : "Opening (as at " + esc(openAt) + ")") + '</th><th class="n">Amount</th><th class="n">As at ' + esc(asAt) + '</th><th class="n">Closing Balance</th></tr></thead><tbody>' + rows.join("") + "</tbody>";
+    t.innerHTML = "<thead><tr><th>Item</th><th class=\"n\">" + (cmpPer ? esc(cmpPer.label) + " (as at " + esc(openAt) + ")" : "Opening Balance b/f (as at " + esc(openAt) + ")") + '</th><th class="n">Amount</th><th class="n">Closing Balance (as at ' + esc(asAt) + ')</th><th class="n">Closing Balance</th></tr></thead><tbody>' + rows.join("") + "</tbody>";
     t.querySelectorAll("th:nth-child(n+2)").forEach(function (h) { h.classList.add("n"); });
     var cap = caption(panel, t);
     if (cap) { cap.className = "fy-period-caption"; cap.innerHTML = '<div class="text-sm" style="color:#475569;margin:0 0 8px">Balances as at <b>' + esc(asAt) + "</b> · Amounts in " + esc( ui.fmt(0).split(" ")[0]) + "</div>" + ui.noteHtml(st); }
