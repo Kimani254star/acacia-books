@@ -104605,8 +104605,11 @@ function dcUpdateStorageMeter() {
   try {
     const NS = window.__companyNS;
     const real = NS ? NS.real : window.localStorage;
+    const cid = NS ? NS.activeCompany() : null;
     for (let i = 0; i < real.length; i++) {
       const k = real.key(i);
+      /* count only the active company's keys (and shared un-namespaced keys), not other companies */
+      if (NS && cid && k && k.indexOf(NS.SEP) !== -1 && k.split(NS.SEP).pop() !== cid) continue;
       const v = real.getItem(k);
       usedBytes += (k ? k.length : 0) + (v ? v.length : 0);
     }
@@ -104620,7 +104623,7 @@ function dcUpdateStorageMeter() {
     const quotaLabel = quotaMB >= 1024 ? (quotaMB / 1024).toFixed(1) + " GB" : Math.round(quotaMB) + " MB";
     bar.style.width = pct.toFixed(1) + "%";
     bar.className = "h-2 rounded-full transition-all " + (pct > 90 ? "bg-red-600" : pct > 70 ? "bg-yellow-500" : "bg-green-600");
-    text.textContent = `${usedMB.toFixed(2)} MB used across all companies signed into this browser \u2022 ~${pct.toFixed(1)}% of the ~${quotaLabel} browser storage limit`;
+    text.textContent = `${usedMB.toFixed(2)} MB used by this company \u2022 ~${pct.toFixed(1)}% of the ~${quotaLabel} browser storage limit`;
   }
 
 
@@ -104671,6 +104674,8 @@ function dcRenderStorageBreakdown() {
         displayKey = parts[0];
         clearable = parts[parts.length - 1] === cid;
       }
+      /* only show the active company's data (plus shared un-namespaced keys); never list other companies */
+      if (!clearable) continue;
       entries.push({ key: k, displayKey, size, clearable });
     }
   } catch (e) {}
@@ -104680,7 +104685,7 @@ function dcRenderStorageBreakdown() {
   const totalAll = entries.reduce((s, e) => s + e.size, 0) || 1;
 
   box.innerHTML = top.length
-    ? '<p class="text-xs text-gray-500 mb-1">Largest items in this browser\u2019s storage:</p>' +
+    ? '<p class="text-xs text-gray-500 mb-1">Largest items for this company:</p>' +
       top.map(e => {
         const kb = (e.size / 1024).toFixed(1);
         const pct = ((e.size / totalAll) * 100).toFixed(1);
