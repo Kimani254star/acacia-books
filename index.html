@@ -100773,6 +100773,9 @@ Save
     <div id="userManagementTab" class="hidden ml-84 mr-7 p-2"><h2 class="text-sm font-bold mb-4">👥 User Management</h2><button id="addUserBtn" onclick="openCreateUserModal()"class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">
     ➕ Add User
   </button>
+  <button id="inviteUserBtn" onclick="openInviteUserModal()" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800 ml-2">
+    ✉️ Invite User
+  </button>
   <button id="bulkDeleteUsersBtn" onclick="bulkDeleteUsers()" class="bg-blue-600 text-white font-bold px-3 py-1 rounded hover:bg-blue-700 ml-2">
     🗑️ Bulk Delete Selected
   </button><div id="userTableContainer"><table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-center w-10"><input type="checkbox" onclick="toggleSelectAllUsers(this)"></th><th class="border p-2 text-left">Username</th><th class="border p-2 text-left">Email</th><th class="border p-2 text-left">Role</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody id="userTableBody" class="bg-white"></tbody></table></div></div>
@@ -146718,6 +146721,249 @@ function axOpenChatOption(){
     if (tb) new MutationObserver(function () { decorateRows(); renderRoles(); }).observe(tb, { childList: true });
     var tab = document.getElementById('userManagementTab');
     if (tab) new MutationObserver(function () { if (!tab.classList.contains('hidden')) renderRoles(); }).observe(tab, { attributes: true, attributeFilter: ['class'] });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+<script>
+/* ===== Invite User (User Management) =====
+   Admin invites by email -> pending invite saved per company (syncs with company data)
+   -> invitee opens link, verifies against company data, picks username + password. */
+(function () {
+  var INV_KEY = 'userInvites', TTL_DAYS = 7;
+  var inviteMode = false, openingInvite = false, orig = {};
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function jget(k, d){ try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch(e){ return d; } }
+  function me(){ return jget('loggedInUser', {}) || {}; }
+  function rnd(n){ var a = new Uint8Array(n); crypto.getRandomValues(a); return Array.from(a).map(function(b){ return b.toString(16).padStart(2,'0'); }).join(''); }
+  function company(){
+    var li = me(), cid = String(li.companyId || '');
+    var c = jget('companies', []).find(function(x){ return String(x.companyId || '') === cid; });
+    return { id: cid, name: (c && c.companyName) || li.companyName || '', plan: li.plan };
+  }
+  function invites(){ return jget(INV_KEY, []); }
+  function saveInvites(a){ localStorage.setItem(INV_KEY, JSON.stringify(a)); try { window.uploadLocalStorage && window.uploadLocalStorage(); } catch(e){} }
+  function companyUsers(cid){ return jget('users', []).filter(function(u){ return String(u.companyId || '') === String(cid); }); }
+  function status(inv){
+    if (inv.status === 'revoked') return 'Revoked';
+    var taken = companyUsers(inv.companyId).some(function(u){ return (u.email || '').toLowerCase() === inv.email; });
+    if (inv.status === 'accepted' || taken) return 'Accepted';
+    if (Date.now() > inv.expires) return 'Expired';
+    return 'Pending';
+  }
+  function linkFor(inv){
+    var base = location.href.split('#')[0].split('?')[0];
+    var tok = btoa(JSON.stringify({ i: inv.id, s: inv.secret, c: inv.companyId, n: inv.companyName })).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    return base + '?acxInvite=' + tok;
+  }
+  function mailtoFor(inv){
+    var who = me().username || 'Your administrator';
+    var subj = 'You are invited to join ' + (inv.companyName || 'our company') + ' on Acacia Books';
+    var body = 'Hello,\n\n' + who + ' has invited you to join ' + (inv.companyName || 'the company') + ' on Acacia Books as ' +
+      (inv.role === 'custom' ? (inv.customRole || 'a custom role') : inv.role) + '.\n\nOpen this link to set your username and password:\n' + linkFor(inv) +
+      '\n\nThe link expires on ' + new Date(inv.expires).toDateString() + '.\n';
+    return 'mailto:' + encodeURIComponent(inv.email) + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body);
+  }
+  function copy(text, btn){
+    function done(){ if (btn){ var t = btn.textContent; btn.textContent = 'Copied ✓'; setTimeout(function(){ btn.textContent = t; }, 1400); } }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function(){ window.prompt('Copy this link:', text); });
+    else window.prompt('Copy this link:', text);
+  }
+
+  /* ---------- modal: reuse Create User modal in invite mode ---------- */
+  function $(id){ return document.getElementById(id); }
+  function show(el, on){ if (el) el.style.display = on ? '' : 'none'; }
+  function saveBtn(){ return document.querySelector('#createUserModal button[onclick="saveUser()"]'); }
+  function setInviteUI(on){
+    inviteMode = on;
+    ['newUsername','newPassword'].forEach(function(id){ show($(id), !on); });
+    show($('mailAcctRow'), !on);
+    var em = $('newEmail');
+    if (on){
+      orig.type = em.type; orig.ph = em.placeholder;
+      em.type = 'text'; em.placeholder = 'Email address (separate several with commas)';
+      $('modalTitle').textContent = '✉️ Invite User';
+    } else if (orig.type){ em.type = orig.type; em.placeholder = orig.ph; }
+    var b = saveBtn(); if (b){ if (on){ orig.btn = b.textContent; b.textContent = 'Send Invite'; } else if (orig.btn){ b.textContent = orig.btn; } }
+  }
+  window.openInviteUserModal = function(){
+    openingInvite = true;
+    try { window.openCreateUserModal(null); } finally { openingInvite = false; }
+    var m = $('createUserModal'); if (!m || m.classList.contains('hidden')) return;   /* permission guard refused */
+    setInviteUI(true);
+  };
+
+  var prevOpen = window.openCreateUserModal;
+  window.openCreateUserModal = function(){ if (!openingInvite && inviteMode) setInviteUI(false); return prevOpen.apply(this, arguments); };
+  var prevClose = window.closeCreateUserModal;
+  window.closeCreateUserModal = function(){ if (inviteMode) setInviteUI(false); return prevClose.apply(this, arguments); };
+  var prevSave = window.saveUser;
+  window.saveUser = function(){ return inviteMode ? submitInvite() : prevSave.apply(this, arguments); };
+
+  function submitInvite(){
+    var emails = ($('newEmail').value || '').split(/[,;\s]+/).map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean)
+      .filter(function(e, i, a){ return a.indexOf(e) === i; });
+    if (!emails.length){ alert('Enter at least one email address to invite.'); return; }
+    var bad = emails.filter(function(e){ return !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); });
+    if (bad.length){ alert('Please fix these email addresses:\n' + bad.join('\n')); return; }
+
+    var co = company(); if (!co.id){ alert('No company found for this login.'); return; }
+    var role = $('newRole').value, customRole = role === 'custom' ? $('customRoleInput').value.trim() : null;
+    if (role === 'custom' && !customRole){ alert('Enter the custom role name.'); return; }
+    var modules = Array.from(document.querySelectorAll('#moduleAccessList input[type="checkbox"]:checked:not(#moduleAccessSelectAll):not(.moduleGroupAll)')).map(function(cb){ return cb.value; });
+    var ram = (document.querySelector('input[name="reportAccessMode"]:checked') || {}).value || 'all';
+    var reports = ram === 'limited' ? Array.from(document.querySelectorAll('#reportAccessList input:checked')).map(function(c){ return c.value; }) : [];
+
+    var list = invites(), users = companyUsers(co.id);
+    var skip = [], todo = [];
+    emails.forEach(function(e){
+      var isUser = users.some(function(u){ return (u.email || '').toLowerCase() === e; });
+      var pend = list.some(function(i){ return i.companyId === co.id && i.email === e && status(i) === 'Pending'; });
+      (isUser || pend ? skip : todo).push(e);
+    });
+    if (!todo.length){ alert('Nothing to send: ' + skip.join(', ') + (skip.length > 1 ? ' are' : ' is') + ' already a user or has a pending invite.'); return; }
+
+    var limit = window.planUserLimit ? window.planUserLimit(co.plan) : null;
+    if (limit !== null && limit !== undefined){
+      var pending = list.filter(function(i){ return i.companyId === co.id && status(i) === 'Pending'; }).length;
+      if (users.length + pending + todo.length > limit){
+        alert('User limit reached: the ' + co.plan + ' plan allows ' + limit + ' user(s) in total (' + users.length + ' current, ' + pending + ' pending invite(s)). Upgrade your plan to invite more.');
+        return;
+      }
+    }
+
+    var now = Date.now(), created = todo.map(function(e){
+      return { id: 'inv_' + rnd(6), secret: rnd(16), email: e, role: role, customRole: customRole, modules: modules,
+               reportAccessMode: ram, reports: reports, companyId: co.id, companyName: co.name,
+               invitedBy: me().username || me().email || '', created: now, expires: now + TTL_DAYS * 864e5, status: 'pending' };
+    });
+    saveInvites(list.concat(created));
+    try { window.logAudit && window.logAudit('create', 'User Management', 'Invited ' + todo.join(', ')); } catch(e){}
+    window.closeCreateUserModal();
+    renderSection();
+    showResult(created, skip);
+  }
+
+  /* ---------- result dialog ---------- */
+  function overlay(html){
+    var o = document.createElement('div');
+    o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100000;display:flex;align-items:center;justify-content:center;padding:12px';
+    o.innerHTML = '<div style="background:#fff;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.3);max-width:560px;width:100%;max-height:90vh;overflow:auto;padding:20px;font-size:14px">' + html + '</div>';
+    document.body.appendChild(o); return o;
+  }
+  var BTN = 'border:1px solid #1e3a8a;background:#1e3a8a;color:#fff;font-weight:700;padding:2px 8px;border-radius:4px;cursor:pointer;margin-right:4px;font-size:12px';
+  function showResult(created, skipped){
+    var rows = created.map(function(inv, i){
+      return '<div style="border:1px solid #e5e7eb;border-radius:6px;padding:8px;margin-top:8px"><b>' + esc(inv.email) + '</b>' +
+        '<div style="margin-top:6px"><button style="' + BTN + '" data-c="' + i + '">Copy link</button><a style="' + BTN + ';text-decoration:none;display:inline-block" href="' + mailtoFor(inv) + '">✉️ Email invite</a></div></div>';
+    }).join('');
+    var o = overlay('<h2 style="font-weight:700;font-size:15px">✅ Invitation' + (created.length > 1 ? 's' : '') + ' created</h2>' +
+      '<p style="color:#4b5563;margin-top:4px">Send each person their link. It is valid for ' + TTL_DAYS + ' days and lets them choose their own username and password.</p>' + rows +
+      (skipped.length ? '<p style="color:#b45309;margin-top:8px">Skipped (already a user or already invited): ' + esc(skipped.join(', ')) + '</p>' : '') +
+      '<div style="text-align:right;margin-top:14px"><button id="acxInvDone" style="background:#d1d5db;padding:6px 14px;border-radius:4px">Done</button></div>');
+    o.querySelectorAll('[data-c]').forEach(function(b){ b.onclick = function(){ copy(linkFor(created[+b.dataset.c]), b); }; });
+    o.querySelector('#acxInvDone').onclick = function(){ o.remove(); };
+  }
+
+  /* ---------- pending invitations table ---------- */
+  function renderSection(){
+    var tab = $('userManagementTab'); if (!tab) return;
+    var sec = $('acxInvitesSection');
+    if (!sec){ sec = document.createElement('div'); sec.id = 'acxInvitesSection'; sec.className = 'mt-6'; var t = $('userTableContainer'); t && t.nextSibling ? tab.insertBefore(sec, t.nextSibling) : tab.appendChild(sec); }
+    var co = company(), list = invites().filter(function(i){ return i.companyId === co.id; }).sort(function(a, b){ return b.created - a.created; });
+    if (!list.length){ sec.innerHTML = ''; return; }
+    var colors = { Pending: '#b45309', Accepted: '#15803d', Expired: '#6b7280', Revoked: '#b91c1c' };
+    sec.innerHTML = '<h3 class="text-sm font-bold mb-2">✉️ Invitations</h3><table class="w-full border text-sm"><thead class="bg-gray-100"><tr>' +
+      '<th class="border p-2 text-left">Email</th><th class="border p-2 text-left">Role</th><th class="border p-2 text-left">Invited</th><th class="border p-2 text-left">Expires</th><th class="border p-2 text-left">Status</th><th class="border p-2 text-left">Actions</th></tr></thead><tbody class="bg-white">' +
+      list.map(function(inv){
+        var st = status(inv), live = st === 'Pending' || st === 'Expired';
+        return '<tr class="border-b"><td class="border p-2">' + esc(inv.email) + '</td><td class="border p-2">' + esc(inv.role === 'custom' ? inv.customRole : inv.role) + '</td>' +
+          '<td class="border p-2">' + new Date(inv.created).toLocaleDateString() + '</td><td class="border p-2">' + new Date(inv.expires).toLocaleDateString() + '</td>' +
+          '<td class="border p-2" style="font-weight:700;color:' + colors[st] + '">' + st + '</td><td class="border p-2">' +
+          (st === 'Pending' ? '<button style="' + BTN + '" data-act="copy" data-id="' + inv.id + '">Copy link</button><a style="' + BTN + ';text-decoration:none;display:inline-block" href="' + mailtoFor(inv) + '">Email</a>' : '') +
+          (live ? '<button style="' + BTN + '" data-act="renew" data-id="' + inv.id + '">' + (st === 'Expired' ? 'Renew' : 'Extend') + '</button>' : '') +
+          (st !== 'Accepted' && st !== 'Revoked' ? '<button style="' + BTN + '" data-act="revoke" data-id="' + inv.id + '">Revoke</button>' : '') +
+          (st === 'Accepted' || st === 'Revoked' ? '<button style="' + BTN + '" data-act="remove" data-id="' + inv.id + '">Remove</button>' : '') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+    sec.querySelectorAll('button[data-act]').forEach(function(b){
+      b.onclick = function(){
+        var all = invites(), inv = all.find(function(x){ return x.id === b.dataset.id; }); if (!inv) return;
+        if (!window.hasRole || !window.hasRole('admin')){ alert('🚫 You do not have permission to do that. Please contact your administrator.'); return; }
+        var a = b.dataset.act;
+        if (a === 'copy') return copy(linkFor(inv), b);
+        if (a === 'renew'){ inv.expires = Date.now() + TTL_DAYS * 864e5; inv.status = 'pending'; }
+        if (a === 'revoke'){ if (!confirm('Revoke the invitation for ' + inv.email + '? Their link will stop working.')) return; inv.status = 'revoked'; }
+        if (a === 'remove') all = all.filter(function(x){ return x.id !== inv.id; });
+        saveInvites(all); renderSection();
+      };
+    });
+  }
+
+  /* ---------- accept flow (invitee opens the link) ---------- */
+  function b64d(s){ s = s.replace(/-/g,'+').replace(/_/g,'/'); while (s.length % 4) s += '='; return JSON.parse(atob(s)); }
+  async function fetchInvite(tok){
+    if (!window.supabase || !window.__SUPA_URL__) throw new Error('Could not reach the server. Check your internet connection and try again.');
+    var sb = window.supabase.createClient(window.__SUPA_URL__, window.__SUPA_KEY__, { auth: { storageKey: 'acx-invite-check', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+    var r = await sb.from('company_state').select('value').eq('company_id', tok.c).eq('key', INV_KEY).maybeSingle();
+    if (r.error) throw new Error('Could not verify the invitation: ' + r.error.message);
+    var arr = r.data && r.data.value; if (typeof arr === 'string') { try { arr = JSON.parse(arr); } catch(e){ arr = []; } }
+    var inv = (arr || []).find(function(x){ return x.id === tok.i && x.secret === tok.s; });
+    if (!inv) throw new Error('This invitation was not found. It may have been revoked, or has not finished syncing yet. Ask your administrator to resend it.');
+    return inv;
+  }
+  function problem(inv){
+    if (inv.status === 'revoked') return 'This invitation has been revoked.';
+    if (inv.status === 'accepted') return 'This invitation has already been used.';
+    if (Date.now() > inv.expires) return 'This invitation has expired. Ask your administrator to renew it.';
+    return '';
+  }
+  async function startAccept(){
+    var q = new URLSearchParams(location.search).get('acxInvite'); if (!q) return;
+    var tok; try { tok = b64d(q); } catch(e){ overlay('<p>This invitation link is not valid.</p>'); return; }
+    var o = overlay('<p>Checking your invitation…</p>'), box = o.firstChild, inv;
+    try { inv = await fetchInvite(tok); } catch(e){ box.innerHTML = '<h2 style="font-weight:700">Invitation problem</h2><p style="margin-top:8px">' + esc(e.message) + '</p><div style="text-align:right;margin-top:12px"><button id="acxX" style="background:#d1d5db;padding:6px 14px;border-radius:4px">Close</button></div>'; box.querySelector('#acxX').onclick = function(){ o.remove(); }; return; }
+    var pr = problem(inv);
+    if (pr){ box.innerHTML = '<h2 style="font-weight:700">Invitation unavailable</h2><p style="margin-top:8px">' + esc(pr) + '</p><div style="text-align:right;margin-top:12px"><button id="acxX" style="background:#d1d5db;padding:6px 14px;border-radius:4px">Close</button></div>'; box.querySelector('#acxX').onclick = function(){ o.remove(); }; return; }
+    var inp = 'width:100%;margin-top:8px;padding:8px;border:1px solid #d1d5db;border-radius:4px';
+    box.innerHTML = '<h2 style="font-weight:700;font-size:16px">Join ' + esc(inv.companyName) + '</h2>' +
+      '<p style="color:#4b5563;margin-top:4px">You were invited by ' + esc(inv.invitedBy || 'your administrator') + ' as <b>' + esc(inv.role === 'custom' ? inv.customRole : inv.role) + '</b>. Choose a username and password to finish.</p>' +
+      '<input id="acxAccEmail" style="' + inp + ';background:#f3f4f6" value="' + esc(inv.email) + '" readonly>' +
+      '<input id="acxAccName" style="' + inp + '" placeholder="Username">' +
+      '<input id="acxAccPass" type="password" style="' + inp + '" placeholder="Password (min 6 characters)">' +
+      '<input id="acxAccPass2" type="password" style="' + inp + '" placeholder="Confirm password">' +
+      '<p id="acxAccMsg" style="color:#b91c1c;margin-top:8px;min-height:18px"></p>' +
+      '<div style="text-align:right;margin-top:8px"><button id="acxAccGo" style="background:#1e3a8a;color:#fff;font-weight:700;padding:6px 16px;border-radius:4px">Accept &amp; create account</button></div>';
+    var msg = box.querySelector('#acxAccMsg');
+    box.querySelector('#acxAccGo').onclick = async function(){
+      var name = box.querySelector('#acxAccName').value.trim(), p1 = box.querySelector('#acxAccPass').value, p2 = box.querySelector('#acxAccPass2').value;
+      if (!name) { msg.textContent = 'Enter a username.'; return; }
+      if (p1.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; return; }
+      if (p1 !== p2) { msg.textContent = 'Passwords do not match.'; return; }
+      var users = jget('users', []);
+      if (users.some(function(u){ return String(u.companyId) === String(inv.companyId) && ((u.email || '').toLowerCase() === inv.email || (u.username || '').toLowerCase() === name.toLowerCase()); })){
+        msg.textContent = 'That username or email already exists in this company. Choose another username, or log in if you already have an account.'; return; }
+      var user = { username: name, email: inv.email, role: inv.role, customRole: inv.customRole || null, modules: inv.modules || [],
+        reportAccessMode: inv.reportAccessMode || 'all', reports: inv.reports || [], companyId: String(inv.companyId), companyName: inv.companyName,
+        registered: new Date().toISOString(), provider: 'local', invitedVia: inv.id };
+      await setUserPassword(user, p1);
+      users.push(user); localStorage.setItem('users', JSON.stringify(users));
+      try { window.uploadLocalStorage && window.uploadLocalStorage(); } catch(e){}
+      history.replaceState(null, '', location.href.split('?')[0]);
+      box.innerHTML = '<h2 style="font-weight:700;font-size:16px">✅ Account created</h2><p style="margin-top:8px">Log in with <b>' + esc(inv.email) + '</b>, company <b>' + esc(inv.companyName) + '</b> and your new password.</p><div style="text-align:right;margin-top:12px"><button id="acxGoLogin" style="background:#1e3a8a;color:#fff;font-weight:700;padding:6px 16px;border-radius:4px">Go to login</button></div>';
+      box.querySelector('#acxGoLogin').onclick = function(){
+        o.remove();
+        var e = $('loginEmail'), c = $('loginCompanyId'); if (e) e.value = inv.email; if (c) c.value = inv.companyName;
+        try { window.openLogin && window.openLogin(); } catch(x){}
+      };
+    };
+  }
+
+  function init(){
+    renderSection();
+    var tab = $('userManagementTab');
+    if (tab) new MutationObserver(function(){ if (!tab.classList.contains('hidden')) renderSection(); }).observe(tab, { attributes: true, attributeFilter: ['class'] });
+    startAccept();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
