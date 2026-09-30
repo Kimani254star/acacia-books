@@ -131263,9 +131263,9 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
       var sub = formSection({
         id: "acxSubscriptionSection", key: "subscription", title: "💳 Manage Subscription",
         desc: "Plan, billing cycle and payment method",
-        def: { plan: "Standard", cycle: "Monthly", seats: "5", renews: "", method: "Card", billingEmail: "", autoRenew: true },
+        def: { plan: "Free", cycle: "Monthly", seats: "5", renews: "", method: "Card", billingEmail: "", autoRenew: true },
         fields: [
-          { k: "plan", l: "Plan", type: "select", options: ["Free", "Basic", "Standard", "Professional", "Advanced", "Enterprise"] },
+          { k: "plan", l: "Plan", type: "select", options: ["Free", "Starter", "Pro", "Business", "Enterprise", "All Access"] },
           { k: "cycle", l: "Billing cycle", type: "select", options: ["Monthly", "Quarterly", "Annual"] },
           { k: "seats", l: "Licensed users", type: "number" },
           { k: "renews", l: "Next renewal date", type: "date" },
@@ -145706,6 +145706,7 @@ function axOpenChatOption(){
         await createPending(u); row = { status: 'pending' };
       }
       var st = effective(row);
+      window.__acxCompanyRow = row; try { window.dispatchEvent(new CustomEvent('acx-company-row')); } catch(e){}
       localStorage.setItem(ck, st);
       if (st === 'active') {
         unlock(); heartbeat(u); loadSupport();
@@ -146456,4 +146457,138 @@ function axOpenChatOption(){
 })();
 </script>
 
+<script id="acxSubscriptionLink">
+/* Manage Subscription <-> real account plan, plus "Request a plan upgrade" (approved in the Support Hub). */
+(function(){
+  if (window.__acxSubLink) return; window.__acxSubLink = true;
+  var URL_ = window.__SUPA_URL__, KEY_ = window.__SUPA_KEY__;
+  var H = { apikey: KEY_, Authorization: 'Bearer ' + KEY_, 'Content-Type': 'application/json' };
+  var PLANS = [
+    { k: 'free', l: 'Free', p: 0 }, { k: 'starter', l: 'Starter', p: 1500 }, { k: 'pro', l: 'Pro', p: 3500 },
+    { k: 'business', l: 'Business', p: 7500 }, { k: 'enterprise', l: 'Enterprise', p: 0, custom: true }, { k: 'allaccess', l: 'All Access', p: 15000 }
+  ];
+  function key(p){ return String(p || 'free').toLowerCase().replace(/[^a-z]/g, ''); }
+  function planOf(p){ var k = key(p); for (var i = 0; i < PLANS.length; i++) if (PLANS[i].k === k) return PLANS[i]; return PLANS[0]; }
+  function rank(p){ return PLANS.indexOf(planOf(p)); }
+  function me(){ try { return JSON.parse(localStorage.getItem('loggedInUser') || 'null'); } catch(e){ return null; } }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function dateOnly(d){ if (!d) return ''; var x = new Date(d); return isNaN(x) ? '' : x.toISOString().slice(0, 10); }
+  function priceText(p){ return p.custom ? 'custom pricing' : (p.p ? 'KES ' + p.p.toLocaleString() + '/mo' : 'free'); }
+  function toast(m){ var t = document.createElement('div'); t.className = 'fixed bottom-5 right-5 z-[9999] bg-blue-900 text-white text-sm px-4 py-2 rounded shadow-lg'; t.textContent = m; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2600); }
+
+  var latest = null, lastFetch = 0, busy = false;
+
+  function currentPlan(){ var u = me() || {}; var row = window.__acxCompanyRow; return planOf(u.plan || (row && row.plan) || localStorage.getItem('selectedPlan')); }
+  function renewDate(){ var row = window.__acxCompanyRow, u = me() || {}; return dateOnly((row && row.paid_until) || u.expiry); }
+
+  /* After the Hub approves an upgrade, make the app itself run on the new plan. */
+  function applyApproved(){
+    var u = me(); if (!u || !latest || latest.status !== 'approved') return;
+    var np = planOf(latest.requested_plan);
+    if (rank(np.l) <= rank(u.plan)) return;
+    var row = window.__acxCompanyRow, price = (row && key(row.plan) === np.k && row.price != null) ? Number(row.price) : np.p;
+    u.plan = np.l; u.price = price;
+    try { localStorage.setItem('loggedInUser', JSON.stringify(u)); } catch(e){}
+    ['users', 'companies'].forEach(function(k){
+      try { var a = JSON.parse(localStorage.getItem(k) || '[]');
+        a.forEach(function(x){ if (x && String(x.companyId) === String(u.companyId)) { x.plan = np.l; x.price = price; } });
+        localStorage.setItem(k, JSON.stringify(a)); } catch(e){}
+    });
+    try { localStorage.setItem('selectedPlan', np.l); localStorage.setItem('selectedPrice', String(price)); } catch(e){}
+    try { if (window.AcaciaPlans) window.AcaciaPlans.applyPlanGating(); } catch(e){}
+    toast('Your plan is now ' + np.l);
+    decorate(true);
+  }
+
+  async function loadStatus(force){
+    var u = me(); if (!u || !u.companyId || !URL_) return;
+    if (!force && Date.now() - lastFetch < 20000) return;
+    lastFetch = Date.now();
+    try {
+      var r = await fetch(URL_ + '/rest/v1/rpc/acx_upgrade_status', { method: 'POST', headers: H, body: JSON.stringify({ p_company: String(u.companyId) }) });
+      if (!r.ok) return;
+      var a = await r.json(); latest = (a && a[0]) || null;
+      applyApproved(); renderBox();
+    } catch(e){}
+  }
+
+  async function sendRequest(box){
+    var u = me(); if (!u || !u.companyId) return;
+    var sel = box.querySelector('[data-up="plan"]'), cyc = box.querySelector('[data-up="cycle"]'), msg = box.querySelector('[data-up="msg"]'), btn = box.querySelector('[data-up="send"]');
+    if (!sel || !sel.value) { toast('Choose a plan first'); return; }
+    if (busy) return; busy = true; btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      var r = await fetch(URL_ + '/rest/v1/rpc/acx_request_upgrade', { method: 'POST', headers: H,
+        body: JSON.stringify({ p_company: String(u.companyId), p_requested: sel.value, p_billing: cyc ? cyc.value : 'Monthly', p_message: msg ? msg.value.trim() : '' }) });
+      if (!r.ok) {
+        var e = {}; try { e = await r.json(); } catch(x){}
+        var m = String(e.message || '');
+        if (/Company not found/i.test(m)) m = 'Your account is not linked to the support system yet. Please contact support.';
+        else if (/not an upgrade/i.test(m)) m = 'That plan is not higher than your current plan.';
+        else if (/active/i.test(m)) m = 'Only active accounts can request an upgrade.';
+        else if (/function|schema cache/i.test(m)) m = 'Upgrade requests are not switched on yet. Please contact support.';
+        alert(m || 'Could not send the request. Please try again.'); return;
+      }
+      toast('Upgrade request sent. We will review it shortly.');
+      await loadStatus(true);
+    } catch(e){ alert('Could not reach the server. Check your internet and try again.'); }
+    finally { busy = false; renderBox(); }
+  }
+
+  function renderBox(){
+    var box = document.getElementById('acxUpgradeBox'); if (!box) return;
+    if (box.contains(document.activeElement) && document.activeElement.tagName !== 'BODY' && box.getAttribute('data-sig') === sig()) return;
+    var cur = currentPlan(), u = me() || {}, role = String(u.role || 'admin').toLowerCase();
+    var canAsk = /admin|owner/.test(role);
+    var pend = latest && latest.status === 'pending';
+    var html = '<div class="flex items-center justify-between mb-3 flex-wrap gap-2"><h3 class="text-sm font-semibold">⬆️ Request a plan upgrade</h3><span class="text-sm text-gray-500">Current plan: <b>' + esc(cur.l) + '</b></span></div>';
+    if (latest && latest.status === 'approved' && rank(latest.requested_plan) <= rank(cur.l) && Date.now() - new Date(latest.decided_at || 0) < 14 * 86400000)
+      html += '<div class="mb-3 p-3 rounded border border-green-200 bg-green-50 text-sm text-green-800">✅ Your upgrade to <b>' + esc(latest.requested_plan) + '</b> was approved.</div>';
+    if (latest && latest.status === 'rejected')
+      html += '<div class="mb-3 p-3 rounded border border-gray-200 bg-gray-50 text-sm text-gray-700">Your last request for <b>' + esc(latest.requested_plan) + '</b> was not approved' + (latest.decision_note ? ': ' + esc(latest.decision_note) : '.') + '</div>';
+    if (pend) html += '<div class="mb-3 p-3 rounded border border-amber-200 bg-amber-50 text-sm text-amber-800">⏳ Your request for <b>' + esc(latest.requested_plan) + '</b> was sent on ' + esc(dateOnly(latest.created_at)) + ' and is waiting for approval. You can send a new one to replace it.</div>';
+    var higher = PLANS.filter(function(p){ return rank(p.l) > rank(cur.l); });
+    if (!higher.length) html += '<p class="text-sm text-gray-600">You are on the highest plan.</p>';
+    else if (!canAsk) html += '<p class="text-sm text-gray-600">Only an administrator can request a plan upgrade.</p>';
+    else {
+      html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block mb-1 text-sm font-medium">Upgrade to</label><select data-up="plan" class="border p-2 rounded w-full text-sm">' +
+        higher.map(function(p){ return '<option value="' + esc(p.l) + '">' + esc(p.l) + ' — ' + esc(priceText(p)) + '</option>'; }).join('') + '</select></div>' +
+        '<div><label class="block mb-1 text-sm font-medium">Billing cycle</label><select data-up="cycle" class="border p-2 rounded w-full text-sm"><option>Monthly</option><option>Annual</option></select></div>' +
+        '<div class="md:col-span-2"><label class="block mb-1 text-sm font-medium">Message (optional)</label><textarea data-up="msg" rows="2" class="border p-2 rounded w-full text-sm" placeholder="Anything our team should know?"></textarea></div></div>' +
+        '<div class="mt-4 flex gap-2"><button type="button" data-up="send" class="bg-blue-900 text-white font-bold px-3 py-1 rounded hover:bg-blue-800 text-sm">Send upgrade request</button></div>' +
+        '<p class="text-xs text-gray-500 mt-2">Your plan changes only after our team approves the request.</p>';
+    }
+    box.innerHTML = html; box.setAttribute('data-sig', sig());
+    var b = box.querySelector('[data-up="send"]'); if (b) b.onclick = function(){ sendRequest(box); };
+  }
+  function sig(){ return [currentPlan().k, latest ? latest.id + latest.status : ''].join('|'); }
+
+  /* Make the Manage Subscription form show the account's real plan. */
+  function decorate(force){
+    var sec = document.getElementById('acxSubscriptionSection'); if (!sec) return;
+    var u = me(); if (!u) return;
+    var sel = sec.querySelector('[data-f="plan"]');
+    if (sel && (force || sel.getAttribute('data-linked') !== '1')) {
+      var cur = currentPlan();
+      PLANS.forEach(function(p){ if (!Array.prototype.some.call(sel.options, function(o){ return o.value === p.l; })) sel.add(new Option(p.l, p.l)); });
+      Array.prototype.slice.call(sel.options).forEach(function(o){ if (!PLANS.some(function(p){ return p.l === o.value; })) sel.remove(o.index); });
+      sel.value = cur.l; sel.disabled = true; sel.setAttribute('data-linked', '1');
+      if (!sec.querySelector('[data-acx-planhint]')) { var h = document.createElement('p'); h.setAttribute('data-acx-planhint', '1'); h.className = 'text-xs text-gray-500 mt-1'; h.textContent = 'Set when you created your account. To move to a higher plan, use “Request a plan upgrade” below.'; sel.parentNode.appendChild(h); }
+      var cyc = sec.querySelector('[data-f="cycle"]'); if (cyc) cyc.value = /year|annual/i.test(String(u.billing || '')) ? 'Annual' : (cyc.value || 'Monthly');
+      var rn = sec.querySelector('[data-f="renews"]'), rd = renewDate(); if (rn && rd) { rn.value = rd; rn.readOnly = true; }
+      var se = sec.querySelector('[data-f="seats"]');
+      try { var lim = window.AcaciaPlans && window.AcaciaPlans.getLimit('users', cur.l); if (se && lim != null) se.value = lim; } catch(e){}
+      var be = sec.querySelector('[data-f="billingEmail"]'); if (be && !be.value) be.value = u.email || '';
+      ['orgSummaryPlan', 'planBadge', 'currentPlanLabel', 'headerPlan'].forEach(function(id){ var el = document.getElementById(id); if (el) el.textContent = cur.l; });
+      window.__ACX_PLAN__ = cur.l;
+    }
+    var box = document.getElementById('acxUpgradeBox');
+    if (!box) { box = document.createElement('div'); box.id = 'acxUpgradeBox'; box.className = 'bg-white rounded-xl shadow p-4 mb-6 border border-gray-200'; sec.parentNode.insertBefore(box, sec.nextSibling); renderBox(); loadStatus(true); }
+    else if (box.previousElementSibling !== sec) sec.parentNode.insertBefore(box, sec.nextSibling);
+  }
+
+  window.addEventListener('acx-company-row', function(){ decorate(true); renderBox(); });
+  setInterval(function(){ try { decorate(false); if (document.getElementById('acxUpgradeBox')) loadStatus(false); } catch(e){} }, 1000);
+})();
+</script>
 </body></html>
