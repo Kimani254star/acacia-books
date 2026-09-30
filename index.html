@@ -7744,19 +7744,6 @@ function acxApproveBillRow(index) {
   } catch (err) { /* ignore, non-critical */ }
 })();
 
-function acxCompanyMatches(x, input) {
-  const low = v => String(v || '').trim().toLowerCase();
-  input = low(input); if (!input || !x) return false;
-  if (low(x.companyName) === input || low(x.companyId) === input) return true;
-  if (Array.isArray(x.previousCompanyNames) && x.previousCompanyNames.some(n => low(n) === input)) return true;
-  try {
-    const o = JSON.parse(localStorage.getItem('orgInfo_' + x.companyId) || 'null');
-    if (o && (low(o.name) === input || low(o.companyId) === input)) return true;
-  } catch (e) {}
-  return false;
-}
-window.acxCompanyMatches = acxCompanyMatches;
-
 async function handleLogin() {
 
   const emailInput = (document.getElementById('loginEmail')?.value || '').trim().toLowerCase();
@@ -7784,7 +7771,7 @@ async function handleLogin() {
     const id = (x.companyId || "").toLowerCase();
 
     const loginMatch = email === emailInput;
-    const companyMatch = acxCompanyMatches(x, companyInput);
+    const companyMatch = name ? name === companyInput : id === companyInput;
 
     return loginMatch && companyMatch;
   });
@@ -102307,7 +102294,6 @@ function saveOrgInfo() {
 
 
     syncOrgBanksToFunds(orgBanksList, orgInfo.baseCurrency);
-    try { acxOnOrgNameChanged(orgInfo.name); } catch (e) {}
 
 
 
@@ -102827,38 +102813,6 @@ function filterReports(data) {
   }
   return filtered;
 }
-
-// Org Profile / Support renamed the company: keep every record in step so sign-in keeps working.
-window.__acxApplyCompanyName = function (cid, newName) {
-  newName = String(newName || '').trim(); if (!cid || !newName) return;
-  const get = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
-  const set = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
-  const ren = u => {
-    if (!u || String(u.companyId) !== String(cid) || u.companyName === newName) return;
-    const prev = Array.isArray(u.previousCompanyNames) ? u.previousCompanyNames.slice() : [];
-    if (u.companyName && prev.indexOf(u.companyName) < 0) prev.push(u.companyName);
-    u.previousCompanyNames = prev; u.companyName = newName;
-  };
-  const us = get('users'); if (Array.isArray(us)) { us.forEach(ren); set('users', us); }
-  const me = get('loggedInUser'); if (me) { ren(me); set('loggedInUser', me); }
-  const cs = get('companies'); if (Array.isArray(cs)) { cs.forEach(c => { if (c && String(c.companyId) === String(cid)) c.companyName = newName; }); set('companies', cs); }
-  const oi = get('orgInfo_' + cid); if (oi && oi.name !== newName) { oi.name = newName; set('orgInfo_' + cid, oi); }
-};
-function acxOnOrgNameChanged(newName) {
-  newName = String(newName || '').trim(); if (!newName) return;
-  let me = null; try { me = JSON.parse(localStorage.getItem('loggedInUser') || 'null'); } catch (e) {}
-  if (!me || !me.companyId || me.demo || me.companyName === newName) return;
-  window.__acxApplyCompanyName(me.companyId, newName);
-  try { if (window.__acxPushAccounts) window.__acxPushAccounts(); } catch (e) {}
-  try {
-    if (window.__SUPA_URL__) fetch(window.__SUPA_URL__ + '/rest/v1/acacia_company_status?company_id=eq.' + encodeURIComponent(me.companyId), {
-      method: 'PATCH', keepalive: true,
-      headers: { apikey: window.__SUPA_KEY__, Authorization: 'Bearer ' + window.__SUPA_KEY__, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ company_name: newName })
-    }).catch(function () {});
-  } catch (e) {}
-}
-window.acxOnOrgNameChanged = acxOnOrgNameChanged;
 
 function acxNextCompanyId() {
   let lastId = localStorage.getItem("lastCompanyId") || "ACC-000000";
@@ -117647,48 +117601,23 @@ function toggleSubmenu(id) {
       kick();
     }
 
-    function credFp(u){ u = u || {}; return JSON.stringify([u.passwordHash || '', u.passwordSalt || '', u.password || '', String(u.companyName || ''), String(u.email || '').toLowerCase()]); }
-    function seenKey(id){ return 'acx_accseen_' + String(id || '').toLowerCase(); }
-    window.__acxCredFp = credFp;
-    window.__acxMarkSeen = function(id, u){ try { localStorage.setItem(seenKey(id), credFp(u)); } catch(e){} };
-    /* The cloud copy of an account is changed by the Support Hub (password reset, company rename).
-       A device holding an older local copy must never push that stale copy back over it. Rule:
-       if cloud credentials differ from ours and we have NOT edited ours since we last synced -> cloud wins
-       (adopt it locally); if we edited them here (User Management / Org Profile) -> local wins. */
     async function pushAccounts(){
     try {
       var users = JSON.parse(NS.nGet.call(NS.real, 'users') || '[]');
       if (!Array.isArray(users) || !users.length) return;
-      var list = users.filter(function(u){ return u && (u.email || u.username); });
-      var ids = list.map(function(u){ return String(u.email || u.username).toLowerCase(); });
-      var q = await sb.from('app_accounts').select('login_id,data').in('login_id', ids);
-      if (q.error){ console.warn('[companySync] account read failed, not pushing', q.error); return; }
-      var cloud = {}; (q.data || []).forEach(function(r){ cloud[String(r.login_id).toLowerCase()] = r.data || {}; });
-      var adopted = false;
-      var rows = list.map(function(u, i){
-        var id = ids[i], c = cloud[id], out = u;
-        if (c && credFp(c) !== credFp(u)){
-          var seen = null; try { seen = localStorage.getItem(seenKey(id)); } catch(e){}
-          var localEdited = (seen !== null && credFp(u) !== seen);
-          if (!localEdited){
-            out = Object.assign({}, u, { passwordHash: c.passwordHash, passwordSalt: c.passwordSalt, companyName: c.companyName || u.companyName, previousCompanyNames: c.previousCompanyNames || u.previousCompanyNames });
-            if (!c.password) delete out.password;
-            list[i] = out; adopted = true;
-          }
-        }
-        try { localStorage.setItem(seenKey(id), credFp(out)); } catch(e){}
-        return { login_id: id, username: String(out.username || '').toLowerCase(), company_id: String(out.companyId || ''), data: out, updated_at: new Date().toISOString() };
+      var rows = users.filter(function(u){ return u && (u.email || u.username); }).map(function(u){
+        return {
+          login_id: String(u.email || u.username).toLowerCase(),
+          username: String(u.username || '').toLowerCase(),
+          company_id: String(u.companyId || ''),
+          data: u,
+          updated_at: new Date().toISOString()
+        };
       });
-      if (adopted){
-        var byId = {}; list.forEach(function(u){ byId[String(u.email || u.username).toLowerCase()] = u; });
-        var merged = users.map(function(u){ var k = u && String(u.email || u.username || '').toLowerCase(); return (k && byId[k]) || u; });
-        NS.nSet.call(NS.real, 'users', JSON.stringify(merged));
-      }
       var res = await sb.from('app_accounts').upsert(rows, { onConflict: 'login_id' });
       if (res.error) console.warn('[companySync] account push error', res.error);
     } catch(e){ console.warn('[companySync] account push failed', e); }
   }
-  window.__acxPushAccounts = pushAccounts;
   async function fetchAccount(id){
     try {
       id = String(id || '').trim().toLowerCase();
@@ -117847,15 +117776,9 @@ function toggleSubmenu(id) {
           if (local){
             var idx = users.indexOf(local);
             users[idx] = Object.assign({}, local, remote);
-            if (local.companyName && remote.companyName && local.companyName !== remote.companyName){
-              var pn = [].concat(local.previousCompanyNames || [], remote.previousCompanyNames || [], [local.companyName]);
-              users[idx].previousCompanyNames = pn.filter(function(v, k){ return v && pn.indexOf(v) === k; });
-              try { window.__acxApplyCompanyName(users[idx].companyId, remote.companyName); } catch(e){}
-            }
           } else {
             users.push(remote);
           }
-          try { window.__acxMarkSeen(id, remote); } catch(e){}
           NS.nSet.call(NS.real, 'users', JSON.stringify(users));
         }
       }
@@ -117911,47 +117834,6 @@ function toggleSubmenu(id) {
   console.log('[companySync] per-company cloud sync active');
 })();
 
-</script>
-<script>
-/* Live company-name refresh: when the Support Hub (or another device) renames the company,
-   this signed-in session picks the new name up within a minute, without a fresh login. */
-(function(){
-  if (!window.__SUPA_URL__ || !window.__SUPA_KEY__) return;
-  var busy = false;
-  function get(k){ try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e){ return null; } }
-  async function check(){
-    if (busy) return;
-    var me = get('loggedInUser');
-    if (!me || !me.companyId || me.demo || !navigator.onLine) return;
-    busy = true;
-    try {
-      var r = await fetch(window.__SUPA_URL__ + '/rest/v1/acacia_company_status?select=company_name&company_id=eq.' + encodeURIComponent(me.companyId), {
-        headers: { apikey: window.__SUPA_KEY__, Authorization: 'Bearer ' + window.__SUPA_KEY__ }
-      });
-      if (!r.ok) return;
-      var rows = await r.json();
-      var name = rows && rows[0] && String(rows[0].company_name || '').trim();
-      if (!name || name === me.companyName) return;
-      // Our own newer rename hasn't reached the cloud yet: the cloud still has the OLD name. Don't revert it.
-      if ((me.previousCompanyNames || []).indexOf(name) > -1) return;
-      if (typeof window.__acxApplyCompanyName !== 'function') return;
-      window.__acxApplyCompanyName(me.companyId, name);
-      var oi = get('orgInfo');
-      if (oi && oi.name !== name) { oi.name = name; try { localStorage.setItem('orgInfo', JSON.stringify(oi)); } catch(e){} }
-      var h = document.getElementById('orgNameHeader');
-      if (h && !/^Organization Profile$/.test(h.textContent.trim())) h.textContent = name;
-      var inp = document.getElementById('orgName');
-      if (inp && document.activeElement !== inp) inp.value = name;
-      try { if (typeof window.__acxRefreshBrandingIdentity === 'function') window.__acxRefreshBrandingIdentity(); } catch(e){}
-      console.log('[companyName] updated from cloud ->', name);
-    } catch(e){ /* offline or blocked: try again next time */ }
-    finally { busy = false; }
-  }
-  setInterval(check, 60000);
-  document.addEventListener('visibilitychange', function(){ if (!document.hidden) check(); });
-  window.addEventListener('online', check);
-  setTimeout(check, 4000);
-})();
 </script>
 <script>
 /* Document numbering that cannot collide between users.
