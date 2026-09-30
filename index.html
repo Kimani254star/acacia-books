@@ -6372,6 +6372,25 @@ function applyCurrency() {
 function __logMail(url){
   try{
     var raw=String(url||"");
+    (function(){
+      try{
+        var m0=raw.replace(/^mailto:/i,""); var qi0=m0.indexOf("?");
+        var to0=qi0>=0?decodeURIComponent(m0.slice(0,qi0)):decodeURIComponent(m0);
+        var qs0=qi0>=0?m0.slice(qi0+1):""; var p0={};
+        qs0.split("&").forEach(function(kv){ if(!kv) return; var pair=kv.split("="); p0[pair[0]]=decodeURIComponent((pair[1]||"").replace(/\+/g," ")); });
+        var u0=JSON.parse(localStorage.getItem("loggedInUser")||"null");
+        var org0=JSON.parse(localStorage.getItem("orgInfo")||"{}");
+        if(u0 && u0.companyId && window.__SUPA_URL__ && window.__SUPA_KEY__ && to0){
+          fetch(window.__SUPA_URL__+"/rest/v1/acacia_mail_queue", {
+            method:"POST", keepalive:true,
+            headers:{apikey:window.__SUPA_KEY__, Authorization:"Bearer "+window.__SUPA_KEY__, "Content-Type":"application/json", Prefer:"resolution=ignore-duplicates,return=minimal"},
+            body: JSON.stringify({ bid:"bk"+Date.now()+Math.floor(Math.random()*1000), company_id:String(u0.companyId),
+              from_name: org0.name||u0.fullName||"Acacia Books", from_email: org0.email||u0.email||"",
+              "to": to0, cc: p0.cc||"", subject: p0.subject||"(No subject)", body: p0.body||"" })
+          }).catch(function(){});
+        }
+      } catch(e){}
+    })();
     var m=raw.replace(/^mailto:/i,"");
     var qi=m.indexOf("?");
     var to=qi>=0?m.slice(0,qi):m;
