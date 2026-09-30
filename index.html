@@ -1,5 +1,111 @@
 <!DOCTYPE html><html lang="en"><head>
 <script>
+/* === ACX LAZY LIBS: export/PDF/QR/mail libraries load after first paint (or on first interaction) === */
+(function(){
+  if (window.__acxLazyLibs) return; window.__acxLazyLibs = true;
+  var NST=window.setTimeout.bind(window);
+  var CDN='https://cdnjs.cloudflare.com/ajax/libs/';
+  var LIBS=[
+    {u:CDN+'jspdf/2.5.1/jspdf.umd.min.js'},
+    {u:CDN+'html2pdf.js/0.10.1/html2pdf.bundle.min.js'},
+    {u:'https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js', after:function(){ if(window.QRCode&&window.QRCode.toCanvas) window.__QRCanvasLib=window.QRCode; }},
+    {u:CDN+'qrcodejs/1.0.0/qrcode.min.js', after:function(){
+        window.__QRCanvasLib=(window.__QRCanvasLib)||undefined;
+        var d=window.QRCode; if(d&&!d.toCanvas){window.__QRDivLib=d;}
+        if(window.__QRCanvasLib&&window.__QRDivLib){var C=window.__QRCanvasLib,D=window.__QRDivLib;window.QRCode=D;window.QRCode.toCanvas=C.toCanvas.bind(C);window.QRCode.toDataURL=C.toDataURL.bind(C);}
+        else if(window.__QRCanvasLib&&!window.__QRDivLib){window.QRCode=window.__QRCanvasLib;}
+    }},
+    {u:'https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js', after:function(){ try{ emailjs.init("YOUR_PUBLIC_KEY"); }catch(e){ console.warn("EmailJS not configured:", e); } }},
+    {u:CDN+'xlsx/0.18.5/xlsx.full.min.js'},
+    {u:CDN+'jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js'},
+    {u:CDN+'jszip/3.10.1/jszip.min.js'},
+    {u:CDN+'FileSaver.js/2.0.5/FileSaver.min.js'}
+  ];
+  var state=0, waiters=[], started=false;
+  function finish(){ state=2; window.__acxLibsReady=true; var w=waiters; waiters=[]; w.forEach(function(f){ try{f();}catch(e){} }); }
+  function start(){
+    if (started) return; started=true; state=1;
+    var left=LIBS.length;
+    LIBS.forEach(function(L){
+      var el=document.createElement('script'); el.src=L.u; el.async=false;
+      var done=function(){ try{ if(L.after) L.after(); }catch(e){} if(--left===0) finish(); };
+      el.onload=done; el.onerror=function(){ console.warn('[lazy-libs] failed to load', L.u); done(); };
+      document.head.appendChild(el);
+    });
+  }
+  window.__acxLoadLibs=function(cb){
+    if (state===2) { if(cb) cb(); return Promise.resolve(); }
+    return new Promise(function(res){ waiters.push(function(){ if(cb) cb(); res(); }); start(); });
+  };
+  function idleStart(){ NST(function(){ if(window.requestIdleCallback) requestIdleCallback(start,{timeout:3000}); else start(); }, 1200); }
+  if (document.readyState==='complete') idleStart(); else window.addEventListener('load', idleStart);
+  ['pointerdown','keydown','touchstart'].forEach(function(ev){ window.addEventListener(ev, start, {once:true, passive:true, capture:true}); });
+
+  /* Safety net: if someone clicks an export/print/import control before the libs arrive, hold the click, load, then replay it. */
+  var RX=/export|pdf|excel|xls|csv|print|qr|e-?mail|send|import|upload|download|statement|share|zip|backup|template/i;
+  var replaying=false;
+  document.addEventListener('click', function(e){
+    if (state===2 || replaying) return;
+    var t=e.target && e.target.closest ? e.target.closest('button,a,[onclick],input[type=file],label,li,[role=button]') : null;
+    if (!t) return;
+    var sig=(t.id||'')+' '+(t.getAttribute('onclick')||'')+' '+(t.textContent||'').slice(0,60)+' '+(t.getAttribute('title')||'');
+    if (!(t.type==='file' || RX.test(sig))) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    window.__acxLoadLibs(function(){ replaying=true; try{ t.click(); }finally{ replaying=false; } });
+  }, true);
+})();
+</script>
+<script>
+/* === ACX COALESCE: heavy "what changed?" listeners run once per burst of saves, ~250 ms later, off the click path === */
+(function(){
+  if (window.__acxCoalesce) return;
+  var NST = window.setTimeout.bind(window), jobs = Object.create(null), timer = null;
+  function run(){
+    timer = null; var js = jobs; jobs = Object.create(null);
+    for (var k in js) { try { js[k].fn(js[k].before, js[k].v); } catch(e){ console.warn('[coalesce]', k, e); } }
+  }
+  window.__acxCoalesce = function(id, key, before, v, fn){
+    var jk = id + '|' + key, j = jobs[jk];
+    if (j) { j.v = v; j.fn = fn; } else { jobs[jk] = { before: before, v: v, fn: fn }; }
+    if (!timer) timer = NST(run, 250);
+  };
+  window.__acxRunCoalesced = run;
+  window.addEventListener('pagehide', run);
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') run(); });
+})();
+</script>
+<script>
+/* === ACX INPUT DEBOUNCE: wait ~250 ms after typing before running search/filter handlers === */
+(function(){
+  if (window.__acxDebounceInputs) return; window.__acxDebounceInputs = true;
+  var NST=window.setTimeout.bind(window), NCT=window.clearTimeout.bind(window);
+  var DELAY=250, timers=new WeakMap(), replay=new WeakSet();
+  var RX=/search|filter|find|lookup/i;
+  function isSearchField(el){
+    if (!el || el.tagName!=='INPUT') return false;
+    var ty=(el.type||'text').toLowerCase();
+    if (ty!=='text' && ty!=='search') return false;
+    if (el.hasAttribute('data-no-debounce')) return false;
+    return RX.test((el.id||'')+' '+(el.name||'')+' '+(el.className&&el.className.baseVal===undefined?el.className:'')+' '+(el.placeholder||'')+' '+(el.getAttribute('aria-label')||''));
+  }
+  function handler(e){
+    var el=e.target;
+    if (replay.has(e) || !isSearchField(el)) return;
+    if (e.type==='keyup' && /^(Enter|Escape|Tab|ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Shift|Control|Alt|Meta)$/.test(e.key)) return;
+    if (e.isComposing) return;
+    e.stopImmediatePropagation();
+    var key=e.type, map=timers.get(el); if(!map){ map={}; timers.set(el,map); }
+    NCT(map[key]);
+    map[key]=NST(function(){
+      var ne = key==='keyup' ? new KeyboardEvent('keyup',{key:e.key,code:e.code,bubbles:true,cancelable:true}) : new Event(key,{bubbles:true,cancelable:true});
+      replay.add(ne); el.dispatchEvent(ne);
+    }, DELAY);
+  }
+  ['input','keyup','search'].forEach(function(t){ document.addEventListener(t, handler, true); });
+})();
+</script>
+
+<script>
 (function(){
   if (window.__acxPerf) return;
   window.__acxPerf = true;
@@ -321,6 +427,21 @@ window.__acxMakeAmtLink = function (text) {
       nRem = Storage.prototype.removeItem, nKey = Storage.prototype.key;
   var CACHE = Object.create(null);
   window.__acxStoreCache = CACHE;
+  /* PERF write-behind: setItem updates the in-memory copy at once and the slow physical write (plus its hooks) happens
+     ~40 ms later, coalescing bursts. Flushed on tab hide/close and before any raw read, key listing, remove or clear. */
+  var NST = window.setTimeout.bind(window), NCT = window.clearTimeout.bind(window);
+  var pending = Object.create(null), pendingN = 0, flushTimer = null, failToasted = false;
+  function writeFailed(pk, e){
+    try { console.error('[storage] could not save', pk, e); } catch(_e){}
+    if (failToasted) return; failToasted = true;
+    try {
+      var d = document.createElement('div');
+      d.textContent = 'Browser storage is full or unavailable. Your latest changes may not be saved. Please export a backup.';
+      d.style.cssText = 'position:fixed;left:16px;bottom:16px;max-width:380px;background:#b91c1c;color:#fff;padding:10px 14px;border-radius:8px;z-index:2147483647;font:13px/1.4 sans-serif';
+      (document.body || document.documentElement).appendChild(d);
+      NST(function(){ if (d.parentNode) d.parentNode.removeChild(d); failToasted = false; }, 12000);
+    } catch(_e){}
+  }
   (function(){
     var rawSet = nSet, rawRem = nRem;
     nSet = function(k, v){ CACHE[String(k)] = String(v); return rawSet.apply(this, arguments); };
@@ -331,6 +452,16 @@ window.__acxMakeAmtLink = function (text) {
     });
     window.__acxBustStore = function(){ for (var k in CACHE) delete CACHE[k]; };
   })();
+  function flushPending(){
+    if (!pendingN) return;
+    var p = pending; pending = Object.create(null); pendingN = 0;
+    if (flushTimer) { NCT(flushTimer); flushTimer = null; }
+    for (var pk in p) { try { nSet.call(REAL, pk, p[pk]); } catch(e){ writeFailed(pk, e); } }
+  }
+  window.__acxFlushStorage = flushPending;
+  window.addEventListener('pagehide', flushPending);
+  window.addEventListener('beforeunload', flushPending);
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') flushPending(); });
   var SEP = '::';
   var GLOBAL = { users:1, loggedInUser:1, companies:1, selectedPlan:1, selectedPrice:1, exchangeRates:1, __legacyCompany:1 };
   function isGlobal(k){
@@ -389,13 +520,21 @@ window.__acxMakeAmtLink = function (text) {
   function vSetItem(k, v){
     var logical = String(k), newVal = String(v), oldVal;
     if (setListeners.length) { try { oldVal = vGetItem(logical); } catch(e){ oldVal = null; } }
-    nSet.call(REAL, phys(logical), newVal);
+    var pkW = phys(logical);
+    if (isGlobal(logical)) { flushPending(); nSet.call(REAL, pkW, newVal); }
+    else {
+      CACHE[pkW] = newVal;
+      if (!(pkW in pending)) pendingN++;
+      pending[pkW] = newVal;
+      if (!flushTimer) flushTimer = NST(flushPending, 40);
+    }
     markDirty(logical);
     for (var i = 0; i < setListeners.length; i++){
       try { setListeners[i](logical, newVal, oldVal === undefined ? null : oldVal); } catch(e){ console.warn('[companyNS] setItem listener', e); }
     }
   }
   function vRemoveItem(k){
+    flushPending();
     var logical = String(k);
     nRem.call(REAL, phys(logical));
     markDirty(logical);
@@ -404,6 +543,7 @@ window.__acxMakeAmtLink = function (text) {
     }
   }
   function virtualKeys(){
+    flushPending();
     var c = activeCompany(), out = [], i, K, suf = SEP + c;
     for (i = 0; i < REAL.length; i++){
       K = nKey.call(REAL, i);
@@ -420,6 +560,7 @@ window.__acxMakeAmtLink = function (text) {
     return out;
   }
   function vClear(){
+    flushPending();
     var c = activeCompany(), i, K, suf = SEP + c, del = [];
     for (i = 0; i < REAL.length; i++){
       K = nKey.call(REAL, i);
@@ -462,6 +603,7 @@ window.__acxMakeAmtLink = function (text) {
     Object.defineProperty(window, 'localStorage', { get: function(){ return proxy; }, configurable: true });
   } catch(e){ console.warn('[companyNS] could not virtualize localStorage', e); }
   function allRealKeys(){
+    flushPending();
     var out = [], i, K;
     for (i = 0; i < REAL.length; i++){ K = nKey.call(REAL, i); if (K != null) out.push(K); }
     return out;
@@ -499,7 +641,10 @@ window.__acxMakeAmtLink = function (text) {
     return moved;
   }
   window.__companyNS = {
-    real: REAL, nGet: nGet, nSet: nSet, nRem: nRem, nKey: nKey, SEP: SEP,
+    real: REAL, nGet: function(){ flushPending(); return nGet.apply(this, arguments); },
+    nSet: function(){ flushPending(); return nSet.apply(this, arguments); },
+    nRem: function(){ flushPending(); return nRem.apply(this, arguments); },
+    nKey: function(){ flushPending(); return nKey.apply(this, arguments); }, SEP: SEP,
     migrate: migrateCompany, allRealKeys: allRealKeys,
     isGlobal: isGlobal, activeCompany: activeCompany, currentUser: currentUser,
     phys: phys, dirty: dirty,
@@ -509,6 +654,7 @@ window.__acxMakeAmtLink = function (text) {
       try { var st = JSON.parse(nGet.call(REAL, '__stamps_' + c) || '{}'); return st[logical] || null; } catch(e){ return null; }
     },
     companyKeys: function(){
+      flushPending();
       var c = activeCompany(); if (!c) return [];
       var out = [], i, K, suf = SEP + c;
       for (i = 0; i < REAL.length; i++){
@@ -4908,7 +5054,7 @@ document.addEventListener("click", function(e) {
                 <span class="font-bold text-sm text-slate-900">AI Assistant</span>
                 <span class="text-sm text-slate-500 leading-snug">Ask a question, get an instant answer</span>
             </button>
-            <button type="button" onclick="if(window.acxOpenSupportPanel){toggleSupportPopup();acxOpenSupportPanel();}else{toggleTawkChat();}" title="Chat with our support team" class="flex flex-col items-start gap-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl p-3 text-left shadow-sm transition-all">
+            <button type="button" onclick="axOpenChatOption()" title="Chat with our support team" class="flex flex-col items-start gap-0.5 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-xl p-3 text-left shadow-sm transition-all">
                 <span class="text-sm">💬</span>
                 <span class="font-bold text-sm text-slate-900">Chat</span>
                 <span class="text-sm text-slate-500 leading-snug">Live chat with our team</span>
@@ -11718,7 +11864,7 @@ window.addEventListener('click',function(e){
   }
 });
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
 const PRICE_LIST_KEY = "priceList";
 
@@ -24310,7 +24456,7 @@ button:hover {
 }
 
 </style>
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script><script>if(window.QRCode&&window.QRCode.toCanvas)window.__QRCanvasLib=window.QRCode;</script>
+
 <div id="bulkInvoicesTab" class="hidden ml-84 mr-7 p-2"><div class="relative mb-3"><input
     type="text"
     id="bulkInvoiceSearch"
@@ -31350,7 +31496,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderOrders();
 });
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <script>
 let quoteItems = [];
 let editingQuoteIndex = null;
@@ -35308,7 +35454,7 @@ function handleCreditNotesImport(event) {
   reader.readAsArrayBuffer(file);
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
 <script>
 
 
@@ -35317,7 +35463,7 @@ function handleCreditNotesImport(event) {
 
 try { emailjs.init("YOUR_PUBLIC_KEY"); } catch (e) { console.warn("EmailJS not configured:", e); }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <script>
 let returnItems = [];
 
@@ -39041,9 +39187,9 @@ window.deleteRecurring = deleteRecurring;
 window.editRecurring = editRecurring;
 window.previewRecurring = previewRecurring;
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+
 <script>
 function populateStatementCustomerDropdown() {
   const customers = JSON.parse(localStorage.getItem("customers") || "[]");
@@ -45245,8 +45391,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   loadBulkBills();
 });
 </script>
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-<script>window.__QRCanvasLib=(window.QRCode&&window.QRCode.toCanvas)?window.QRCode:window.__QRCanvasLib;</script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>(function(){var d=window.QRCode;if(d&&!d.toCanvas){window.__QRDivLib=d;}if(window.__QRCanvasLib&&window.__QRDivLib){var C=window.__QRCanvasLib,D=window.__QRDivLib;window.QRCode=D;window.QRCode.toCanvas=C.toCanvas.bind(C);window.QRCode.toDataURL=C.toDataURL.bind(C);}else if(window.__QRCanvasLib&&!window.__QRDivLib){window.QRCode=window.__QRCanvasLib;}})();</script>
+
+
 
 <script>
 
@@ -62760,7 +62906,7 @@ function manageAssetFiles() {
   }
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 <script>
 let currentAccounts = JSON.parse(localStorage.getItem("currentAccounts") || "[]");
 let currentTransactions = JSON.parse(localStorage.getItem("currentAccTransactions") || "[]");
@@ -90082,6 +90228,7 @@ function renderSalesTaxSummary() {
     const search = document.getElementById("salesTaxSummarySearch")?.value?.toLowerCase() || "";
 
     let invoices = JSON.parse(localStorage.getItem("invoices") || "[]");
+    if (window.__tf) invoices = invoices.filter(function (inv) { return window.__tf.ok(inv, "sales"); });
 
     if (month) {
         invoices = invoices.filter(inv =>
@@ -100605,8 +100752,8 @@ Save
 class="fixed inset-0 hidden z-100 flex items-center justify-center bg-black bg-opacity-50"><div class="bg-white p-6 rounded shadow w-[400px] max-w-full"><h2 class="text-sm font-bold mb-4" id="modalTitle">👤 Create New User</h2><input id="newUsername" class="w-full mb-2 p-2 border rounded" placeholder="Username" /><input id="newEmail" type="email" class="w-full mb-2 p-2 border rounded" placeholder="Email" /><input id="newPassword" type="password" class="w-full mb-2 p-2 border rounded" placeholder="Password" /><div id="mailAcctRow" class="mb-2 p-2 border rounded bg-gray-50 text-sm"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="newMailAcct" checked> ✉️ Also create Acacia Mail account (same email &amp; password)</label><input id="mailJoinCodeInput" class="w-full mt-2 p-2 border rounded" placeholder="Mail company join code (leave blank if first user)" /></div><select id="newRole" class="w-full mb-2 p-2 border rounded"><option value="admin">Admin</option><option value="sales">Sales</option><option value="account">Account</option><option value="procure">Procurement</option><option value="store">Store</option><option value="audit">Audit</option><option value="hr">Human Resource</option><option value="custom">Custom</option></select><input id="customRoleInput" class="w-full mb-2 p-2 border rounded hidden" placeholder="Enter custom role name" /><div class="mb-4" id="moduleAccessList"><label class="block font-semibold mb-1">Module Access</label><div class="flex items-center gap-2 mb-2 pb-2 border-b border-gray-300"><input type="checkbox" id="moduleAccessSelectAll"><label for="moduleAccessSelectAll" class="font-semibold text-sm cursor-pointer">Select All Modules</label></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="dashboard"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="dashboard"><span class="font-semibold text-sm">📊 Dashboard Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="dashboard"><label><input type="checkbox" value="dashboard"> 📊 Dashboard Hub</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="inventory"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="inventory"><span class="font-semibold text-sm">📦 Inventory / Stock</span></div><div class="pl-6 space-y-0.5" data-group-body="inventory"><label><input type="checkbox" value="inventoryTab"> Stock</label><label><input type="checkbox" value="movementTab"> Movement</label><label><input type="checkbox" value="priceListTab"> Price List</label><label><input type="checkbox" value="Amenend"> Amendments</label><label><input type="checkbox" value="BundleItems"> Bundle Items</label><label><input type="checkbox" value="BulkAdjustment"> Bulk Adjustments</label><label><input type="checkbox" value="packagesTab"> Packages</label><label><input type="checkbox" value="shipmentsTab"> Shipments</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="funds"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="funds"><span class="font-semibold text-sm">💰 Funds Hub (Sales)</span></div><div class="pl-6 space-y-0.5" data-group-body="funds"><label><input type="checkbox" value="fundsTab"> Funds Hub</label><label><input type="checkbox" value="customersTab"> Customer</label><label><input type="checkbox" value="invoicesTab"> Invoices</label><label><input type="checkbox" value="quotesTab"> Quotes</label><label><input type="checkbox" value="ordersTab"> Orders</label><label><input type="checkbox" value="bulkInvoicesTab"> Bulk Invoicing</label><label><input type="checkbox" value="creditNoteTab"> Credit Notes</label><label><input type="checkbox" value="salesReturnTab"> Sales Returns</label><label><input type="checkbox" value="receiptsTab"> Receipts</label><label><input type="checkbox" value="recurringInvoicesTab"> Recurring Invoices</label><label><input type="checkbox" value="deliveryTab"> Delivery</label><label><input type="checkbox" value="customerStatementTab"> Statements</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="suppliers"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="suppliers"><span class="font-semibold text-sm">🚚 Suppliers / Purchases</span></div><div class="pl-6 space-y-0.5" data-group-body="suppliers"><label><input type="checkbox" value="supplierTab"> Supplier</label><label><input type="checkbox" value="supplierPaymentsTab"> Supplier Payments</label><label><input type="checkbox" value="supplierBillsTab"> Bills</label><label><input type="checkbox" value="bulkBillingTab"> Bulk Billing</label><label><input type="checkbox" value="taxPaymentsTab"> Tax Payments</label><label><input type="checkbox" value="OperationalCostsTab"> Operational Costs</label><label><input type="checkbox" value="supplierPurchaseOrdersTab"> Purchase Orders</label><label><input type="checkbox" value="supplierDebitNotesTab"> Debit Notes</label><label><input type="checkbox" value="purchaseReturnsTab"> Purchase Returns</label><label><input type="checkbox" value="grnTab"> Goods Received</label><label><input type="checkbox" value="supplierStatementTab"> Supplier Statement</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="accountant"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="accountant"><span class="font-semibold text-sm">🧮 Accountant Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="accountant"><label><input type="checkbox" value="manualJournalsTab"> Manual Journals</label><label><input type="checkbox" value="recurringJournalsTab"> Recurring Journals</label><label><input type="checkbox" value="currencyAdjustmentsTab"> Currency Adjustments</label><label><input type="checkbox" value="nonCurrentAssetsTab"> Non-Current Assets</label><label><input type="checkbox" value="nonCurrentLiabilitiesTab"> Non-Current Liabilities</label><label><input type="checkbox" value="equityTab"> Equity</label><label><input type="checkbox" value="taxAdjustmentsTab"> Tax Adjustments</label><label><input type="checkbox" value="chartOfAccountsTab"> Chart of Accounts</label><label><input type="checkbox" value="currentAccountsTab"> Current Accounts</label><label><input type="checkbox" value="budgetsTab"> Budgets</label><label><input type="checkbox" value="transactionLockingTab"> Transaction Locking</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="payroll"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="payroll"><span class="font-semibold text-sm">👥 Payroll Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="payroll"><label><input type="checkbox" value="employeesTab"> Employees</label><label><input type="checkbox" value="earningsTab"> Earnings & Allowances</label><label><input type="checkbox" value="grossPayTab"> Earnings & Deductions</label><label><input type="checkbox" value="attendanceTab"> Attendance & Leave</label><label><input type="checkbox" value="payslipTab"> Payslip Generation</label><label><input type="checkbox" value="statutoryDeductionsTab"> Statutories</label><label><input type="checkbox" value="payrollReportsTab"> Payroll Reports</label><label><input type="checkbox" value="integrationsTab"> Integrations</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="reports"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="reports"><span class="font-semibold text-sm">📈 Reports Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="reports"><label><input type="checkbox" value="reportsPanel"> 📈 Reports Hub</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="plans"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="plans"><span class="font-semibold text-sm">🗂️ Plans & Projects</span></div><div class="pl-6 space-y-0.5" data-group-body="plans"><label><input type="checkbox" value="plansTab"> Plan Hub</label><label><input type="checkbox" value="projectTab"> Plan Progress</label><label><input type="checkbox" value="planTrackingTab"> Plan Tracking</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="settings"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="settings"><span class="font-semibold text-sm">⚙️ Settings Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="settings"><label><input type="checkbox" value="orgProfileTab"> Org Profile</label><label><input type="checkbox" value="warehousesTab"> Warehouses</label><label><input type="checkbox" value="DatacenterTab"> Data Center</label><label><input type="checkbox" value="systemConfigurationTab"> System Configuration</label><label><input type="checkbox" value="integrationsHubTab"> Integrations</label><label><input type="checkbox" value="userActivityTab"> User Activity</label><label><input type="checkbox" value="taxComplianceTab"> Tax Compliance</label><label><input type="checkbox" value="userManagementTab"> User Management</label><label><input type="checkbox" value="vatTab"> VAT</label><label><input type="checkbox" value="preferencesTab"> Preferences</label><label><input type="checkbox" value="settingstemplateTab"> Customization</label><label><input type="checkbox" value="costingTab"> Costing</label><label><input type="checkbox" value="bulkCostingTab"> Bulk Costing</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="files"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="files"><span class="font-semibold text-sm">📁 Files Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="files"><label><input type="checkbox" value="filesTab"> File Manager</label><label><input type="checkbox" value="recycleBinTab"> Recycle Bin</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="mail"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="mail"><span class="font-semibold text-sm">💬 Acacia Mail Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="mail"><label><input type="checkbox" value="mailHub"> 💬 Acacia Mail Hub</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="crm"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="crm"><span class="font-semibold text-sm">🏢 CRM Portal Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="crm"><label><input type="checkbox" value="crmHub"> 🏢 CRM Portal Hub</label></div></div><div class="mb-2 pb-1 border-b border-gray-100" data-group="projecthub"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="projecthub"><span class="font-semibold text-sm">📁 Project Hub</span></div><div class="pl-6 space-y-0.5" data-group-body="projecthub"><label><input type="checkbox" value="projectHubExternal"> 📁 Project Hub</label></div></div><div id="moduleAccessCustomGroup" class="mb-2 pb-1" data-group="custom"><div class="flex items-center gap-2 py-1"><input type="checkbox" class="moduleGroupAll" data-group="custom"><span class="font-semibold text-sm">🧩 Custom Modules</span></div><div class="pl-6 space-y-0.5" data-group-body="custom"></div></div></div><div class="flex justify-end space-x-2"><button onclick="saveUser()" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button><button onclick="closeCreateUserModal()" class="bg-gray-300 px-4 py-2 rounded">Cancel</button></div><div id="mailAcctMsg" class="text-sm mt-2 hidden"></div><p id="userCreateMsg" class="text-green-600 text-sm mt-2 hidden">✅ User saved successfully.</p></div></div>
 <div id="opCostPreviewFloatingModal" class="fixed inset-0 hidden z-[9999] flex items-center justify-center bg-black bg-opacity-50 p-4" onclick="if(event.target===this && typeof closeOperationalCostPreviewModal==='function') closeOperationalCostPreviewModal();"><div id="opCostPreviewFloatingSlot" class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"></div></div>
 <div id="phPlanPreviewFloatingModal" class="fixed inset-0 hidden z-[9999] flex items-center justify-center bg-black bg-opacity-50 p-4" onclick="if(event.target===this && typeof phClosePlanPreviewModal==='function') phClosePlanPreviewModal();"><div id="phPlanPreviewFloatingSlot" class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"></div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+
+
 <style>
   
   #settingstemplateTab section {
@@ -104181,8 +104328,8 @@ const roleModules = {
 window.addEventListener('DOMContentLoaded', renderUserTable);
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+
 <script>
 let backupLogs = JSON.parse(localStorage.getItem("backupLogs") || "[]");
 
@@ -109577,7 +109724,7 @@ function exportCostingToPDF() {
 </script>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
 <script>
 
 function addBulkProductRow() {
@@ -117723,8 +117870,17 @@ function toggleSubmenu(id) {
       document.body.appendChild(d); setTimeout(function(){ if (d.parentNode) d.parentNode.removeChild(d); }, 9000);
     } catch(e){}
   }
+  /* PERF: warn-only check, so run it once per key at idle time on the latest value instead of parsing the full list inside every save. */
+  var pendingVal = {}, scheduled = {};
+  var idle = window.requestIdleCallback ? function(f){ window.requestIdleCallback(f, { timeout: 3000 }); } : function(f){ setTimeout(f, 500); };
   NS.onSetItem(function(key, val){
     if (!WATCH[key] || typeof val !== 'string') return;
+    pendingVal[key] = val;
+    if (scheduled[key]) return;
+    scheduled[key] = true;
+    idle(function(){ scheduled[key] = false; var v = pendingVal[key]; pendingVal[key] = null; if (v) checkDupes(key, v); });
+  });
+  function checkDupes(key, val){
     var arr; try { arr = JSON.parse(val); } catch(e){ return; }
     if (!Array.isArray(arr)) return;
     var seen = {};
@@ -117737,7 +117893,7 @@ function toggleSubmenu(id) {
       }
       seen[n] = id;
     });
-  });
+  }
 })();
 </script>
 <script>
@@ -119403,10 +119559,10 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
   const WATCH = ['invoices','customers','suppliers','products','manualJournals','budgets','plannedBudgets','payments','receipts','supplierBills','expenses','users','quotes','orders','creditNotes','bankTransactions','approvalRequests'];
   (function(){
     if (!window.__companyNS || !window.__companyNS.onSetItem) return;
-    window.__companyNS.onSetItem(function(k, v, before){
+    var auditRun = function(k, v, before){
       const base = String(k).split('::')[0];
       const watched = WATCH.indexOf(base) !== -1;
-      if (watched && before !== v && !AX.__silent) {
+      if (watched && before !== v) {
         let bc = 0, ac = 0;
         try { bc = (JSON.parse(before||'[]')||[]).length; } catch(e){}
         try { ac = (JSON.parse(v||'[]')||[]).length; } catch(e){}
@@ -119416,6 +119572,10 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
         list.push({ id:'a'+Date.now()+Math.random().toString(36).slice(2,7), t:new Date().toISOString(), user:u.username, role:u.role, companyId:u.companyId, module:base, action:verb, details: verb + ' record in ' + base + ' (' + bc + ' \u2192 ' + ac + ')' });
         S(ACT_KEY, list.slice(-4000));
       }
+    };
+    window.__companyNS.onSetItem(function(k, v, before){
+      if (before === v || AX.__silent || WATCH.indexOf(String(k).split('::')[0]) === -1) return;
+      window.__acxCoalesce('audit', k, before, v, function(b, val){ auditRun(k, val, b); });
     });
   })();
 
@@ -119429,7 +119589,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
         if (id === 'axApprovalsTab') renderApprovals();
         if (id === 'axAuditTab') renderActivity();
         if (id === 'axBudgetTab') renderBudgetCenter();
-        if (id === 'preferencesTab' && typeof AX.refreshPrefPanels === 'function') AX.refreshPrefPanels();
+        if (id === 'preferencesTab' && typeof AX.refreshPrefPanels === 'function') AX.refreshPrefPanels(true);
       } catch(e){ console.error('[showTab chain] audit/analytics hook:', e); }
     };
   }
@@ -120119,7 +120279,15 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
         '</tr>';
       }).join('') || '<tr><td class="border p-2 text-gray-500" colspan="7">No runs yet</td></tr>';
     }
-    AX.refreshPrefPanels = function(){ fillEmail(); fillSms(); fillRules(); };
+    /* PERF: don't rebuild the (hidden) Preferences panels after every notification/workflow event.
+       Rebuild only when the panel is visible; otherwise mark it stale and refresh when it is next opened. */
+    var prefStale = false;
+    function prefVisible(){ var p = document.getElementById('preferencesTab'); return !!(p && p.getClientRects().length); }
+    AX.refreshPrefPanels = function(force){
+      if (force !== true && !prefVisible()) { prefStale = true; return; }
+      prefStale = false; fillEmail(); fillSms(); fillRules();
+    };
+    document.addEventListener('click', function(){ if (prefStale && prefVisible()) AX.refreshPrefPanels(true); }, true);
 
     pref.addEventListener('click', function(e){
       const t = e.target;
@@ -120254,7 +120422,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
       if (t.id === 'wfLogSearch') fillWfLog();
     });
 
-    AX.refreshPrefPanels();
+    AX.refreshPrefPanels(true);
   }
 
   function collections(){
@@ -129033,6 +129201,7 @@ try{
       var no = inv.invoiceNumber || inv.invoiceNo || inv.number || ("INV-" + inv.id);
       seen[no] = 1;
       if (!inPeriod(inv.date, p)) return;
+      if (window.__tf && !window.__tf.ok(inv, 'sales')) return;
       addDoc(out, inv, {
         source: inv.source === "bulk" ? "Bulk Invoice" : "Invoice", docNo: no,
         party: inv.customer || inv.customerName || "",
@@ -129043,6 +129212,7 @@ try{
       var no = inv.invoiceNo || inv.invoiceNumber || inv.number;
       if (no && seen[no]) return;           
       if (!inPeriod(inv.date, p)) return;
+      if (window.__tf && !window.__tf.ok(inv, 'sales')) return;
       seen[no] = 1;
       addDoc(out, inv, {
         source: "Bulk Invoice", docNo: no || "",
@@ -129053,6 +129223,7 @@ try{
       var no = inv.number || inv.invoiceNumber;
       if (no && seen[no]) return;
       if (!inPeriod(inv.date, p)) return;
+      if (window.__tf && !window.__tf.ok(inv, 'sales')) return;
       addDoc(out, inv, { source: "Recurring Invoice", docNo: no || "", party: inv.customer || inv.customerName || "" });
     });
     return out;
@@ -129065,6 +129236,7 @@ try{
       var no = b.billNumber || b.billNo || b.number || "";
       if (no) seen[no] = 1;
       if (!inPeriod(b.date, p)) return;
+      if (window.__tf && !window.__tf.ok(b, 'bill')) return;
       addDoc(out, b, {
         source: b.source === "bulk" ? "Bulk Bill" : "Bill", docNo: no, party: b.supplier || "",
         buckets: { General: b.purchasesGeneral, Other: b.purchasesOther, Zero: b.purchasesZero, Exempt: b.purchasesExempt }
@@ -129074,11 +129246,13 @@ try{
       var no = b.billNumber || b.billNo || "";
       if (no && seen[no]) return;
       if (!inPeriod(b.date, p)) return;
+      if (window.__tf && !window.__tf.ok(b, 'bill')) return;
       if (no) seen[no] = 1;
       addDoc(out, b, { source: "Bulk Bill", docNo: no, party: b.supplier || "" });
     });
     (LS("operationalCosts", []) || []).forEach(function (c){
       if (!inPeriod(c.date, p)) return;
+      if (window.__tf && !window.__tf.ok(c, 'cost')) return;
       var net = (c.netAmount !== undefined && c.netAmount !== null) ? num(c.netAmount) : num(c.amount);
       var vat = num(c.vat);
       var b = bucketOf({ vatRate: c.vatRate });
@@ -129103,6 +129277,8 @@ try{
     t.totalVat = t.vatGeneral + t.vatOther;
     return t;
   }
+
+  window.__vatLinesFor = function (p){ p = p || {}; return { sales: salesLines(p), purchases: purchaseLines(p) }; };
 
   window.__vatEngine = function (){
     var p = vatPeriod();
@@ -134699,7 +134875,7 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
 
   var rawSet = localStorage.setItem.bind(localStorage);
   if (window.__companyNS && window.__companyNS.onSetItem) {
-    window.__companyNS.onSetItem(function (k, v, before) {
+    var trigRun = function (k, v, before) {
       var base = String(k).split("::")[0];
       var cfg = COLLECTIONS[base];
       if (cfg && before !== v) {
@@ -134725,6 +134901,10 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
           }
         } catch (e) { console.warn("[acx-trigger] collection watch", base, e); }
       }
+    };
+    window.__companyNS.onSetItem(function (k, v, before) {
+      if (before === v || !COLLECTIONS[String(k).split("::")[0]]) return;
+      window.__acxCoalesce("trigger", k, before, v, function (b, val) { trigRun(k, val, b); });
     });
   }
 
@@ -145333,7 +145513,22 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
 })();
 
 </script>
-<script id="acxAccountGate">
+<script>
+function axOpenChatOption(){
+  if (window.acxOpenSupportPanel){ toggleSupportPopup(); acxOpenSupportPanel(); return; }
+  var s = document.createElement('script');
+  s.src = 'acacia-support.js';
+  s.onload = function(){
+    if (window.acxOpenSupportPanel){ toggleSupportPopup(); window.acxOpenSupportPanel(); }
+    else alert('Support chat loaded but did not start correctly. Please refresh the page and try again.');
+  };
+  s.onerror = function(){
+    alert('Support chat could not be reached (acacia-support.js failed to load - check it is uploaded in the same folder as this page). Falling back to live chat.');
+    toggleTawkChat();
+  };
+  document.head.appendChild(s);
+}
+</script><script id="acxAccountGate">
 /* Acacia control gate: the Support Hub approves / deactivates companies.
    Reads public.acacia_company_status. Missing row = existing customer (allowed);
    a brand-new registration with no row is created as "pending". */
@@ -145670,6 +145865,151 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
 </script>
 
 <script>
+/* Shared "More filters" for tax reports: Customer, Supplier, Sales person, Warehouse / branch, Account / category, Document currency, Payment status */
+(function () {
+  if (window.__tf) return;
+  var S = { customer: "", supplier: "", salesPerson: "", warehouse: "", account: "", currency: "", status: "" };
+  var LABEL = { customer: "Customer", supplier: "Supplier", salesPerson: "Sales person", warehouse: "Warehouse", account: "Account", currency: "Currency", status: "Status" };
+  var STATUS = [["", "All"], ["paid", "Paid"], ["partial", "Partly paid"], ["outstanding", "Outstanding (unpaid + partly paid)"], ["unpaid", "Unpaid only"]];
+  var PANELS = ["vatReport", "taxComputationReport", "tax_vatAnalysis", "salesTaxSummaryPanel"];
+  var bars = [];
+
+  var st = document.createElement("style");
+  st.textContent =
+    ".bx-more{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #cbd5e1}.bx-more.open{display:block}" +
+    ".bx-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.bx-chips:empty{display:none}" +
+    ".bx-chip{background:#e0e7ff;color:#1e3a8a;border-radius:999px;padding:2px 9px;font-size:12px;cursor:pointer}.bx-chip:hover{background:#c7d2fe}" +
+    ".bx-more .bx-f select{min-width:150px}";
+  document.head.appendChild(st);
+
+  function low(v) { return String(v == null ? "" : v).trim().toLowerCase(); }
+  function num(v) { var n = parseFloat(String(v == null ? "" : v).replace(/,/g, "")); return isNaN(n) ? 0 : n; }
+  function esc(t) { return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
+  function list(k) { try { var v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function narrow() { for (var k in S) if (S[k]) return true; return false; }
+  function visible() { return PANELS.some(function (id) { var n = document.getElementById(id); return n && n.offsetParent !== null; }); }
+
+  function statusOf(d) {
+    var total = num(d.totalKES != null ? d.totalKES : d.total), paid = num(d.amountPaid != null ? d.amountPaid : (d.paidAmount != null ? d.paidAmount : 0));
+    var s = low(d.status);
+    if (s === "written off" || s === "paid" || d.paid === true) return "paid";
+    if (total > 0 && paid >= total - 0.005) return "paid";
+    if (paid > 0.005 || /part/.test(s)) return "partial";
+    return "unpaid";
+  }
+  function statusPass(f, s) { if (!f) return true; if (f === "outstanding") return s === "unpaid" || s === "partial"; return f === s; }
+  function itemHas(doc, key, val) {
+    if (low(doc[key]) === low(val)) return true;
+    return (doc.items || []).some(function (it) { return low(it[key]) === low(val); });
+  }
+
+  /* does a source document survive the current filters?  kind: sales | bill | cost */
+  function ok(doc, kind) {
+    if (!narrow() || !visible()) return true;
+    if (kind === "sales") {
+      if (S.supplier) return false;
+      if (S.customer) {
+        var names = Array.isArray(doc.customers) ? doc.customers : [doc.customer || doc.customerName || ""];
+        if (!names.some(function (n) { return low(n) === low(S.customer); })) return false;
+      }
+      if (S.salesPerson && low(doc.salesPerson) !== low(S.salesPerson)) return false;
+      if (S.warehouse && !itemHas(doc, "warehouse", S.warehouse)) return false;
+      if (S.account && !(low(doc.account || "Sales Revenue") === low(S.account) || itemHas(doc, "account", S.account))) return false;
+      if (S.currency && low(doc.currency || "KES") !== low(S.currency)) return false;
+      if (!statusPass(S.status, statusOf(doc))) return false;
+      return true;
+    }
+    if (S.customer || S.salesPerson) return false;
+    if (kind === "bill") {
+      if (S.supplier && low(doc.supplier) !== low(S.supplier)) return false;
+      if (S.warehouse && !itemHas(doc, "warehouse", S.warehouse)) return false;
+      if (S.account && !(low(doc.chartOfAccount) === low(S.account) || itemHas(doc, "account", S.account))) return false;
+      if (S.currency && low(doc.currency || "KES") !== low(S.currency)) return false;
+      if (!statusPass(S.status, statusOf(doc))) return false;
+      return true;
+    }
+    /* operational cost */
+    if (S.warehouse) return false;
+    if (S.supplier && low(doc.supplier || doc.vendor || doc.payee) !== low(S.supplier)) return false;
+    if (S.account && low(doc.category || doc.account) !== low(S.account)) return false;
+    if (S.currency && low(doc.currency || "KES") !== low(S.currency)) return false;
+    if (S.status && !statusPass(S.status, doc.status ? statusOf(doc) : "paid")) return false;
+    return true;
+  }
+
+  function options() {
+    var o = { customer: {}, supplier: {}, salesPerson: {}, warehouse: {}, account: {}, currency: { KES: 1 } };
+    list("invoices").forEach(function (i) {
+      if (i.customer || i.customerName) o.customer[i.customer || i.customerName] = 1;
+      if (i.salesPerson) o.salesPerson[i.salesPerson] = 1;
+      if (i.currency) o.currency[String(i.currency).toUpperCase()] = 1;
+      o.account[i.account || "Sales Revenue"] = 1;
+      (i.items || []).forEach(function (it) { if (it.warehouse) o.warehouse[it.warehouse] = 1; });
+    });
+    list("bills").forEach(function (b) {
+      if (b.supplier) o.supplier[b.supplier] = 1;
+      if (b.currency) o.currency[String(b.currency).toUpperCase()] = 1;
+      if (b.chartOfAccount) o.account[b.chartOfAccount] = 1;
+      (b.items || []).forEach(function (it) { if (it.warehouse) o.warehouse[it.warehouse] = 1; });
+    });
+    list("operationalCosts").forEach(function (c) { var k = c.category || c.account; if (k) o.account[k] = 1; if (c.supplier || c.vendor) o.supplier[c.supplier || c.vendor] = 1; });
+    var out = {};
+    Object.keys(o).forEach(function (k) { out[k] = Object.keys(o[k]).sort(function (a, b) { return low(a) < low(b) ? -1 : 1; }); });
+    return out;
+  }
+
+  function field(key, label) {
+    return '<label class="bx-f">' + label + '<select data-tf="' + key + '"><option value="">All</option></select></label>';
+  }
+  function moreHtml() {
+    return '<div class="bx-more"><div class="bx-row">' +
+      field("customer", "Customer") + field("supplier", "Supplier") + field("salesPerson", "Sales person") + field("warehouse", "Warehouse / branch") +
+      '<label class="bx-f">Account / category<input type="text" data-tfs="account" placeholder="Type account name to filter…"><select data-tf="account"><option value="">All</option></select></label>' +
+      field("currency", "Document currency") +
+      '<label class="bx-f">Payment status<select data-tf="status">' + STATUS.map(function (s) { return '<option value="' + s[0] + '">' + s[1] + "</option>"; }).join("") + "</select></label>" +
+      '</div></div><div class="bx-chips"></div>';
+  }
+
+  function sync(bar) {
+    var o = options();
+    var term = low((bar.querySelector('[data-tfs="account"]') || {}).value);
+    bar.querySelectorAll("select[data-tf]").forEach(function (sel) {
+      var k = sel.getAttribute("data-tf");
+      if (k !== "status") {
+        var vals = o[k] || [];
+        if (k === "account" && term) vals = vals.filter(function (v) { return low(v).indexOf(term) > -1 || v === S.account; });
+        if (S[k] && vals.indexOf(S[k]) < 0) vals = vals.concat([S[k]]);
+        sel.innerHTML = '<option value="">All</option>' + vals.map(function (v) { return '<option value="' + esc(v) + '">' + esc(v) + "</option>"; }).join("");
+      }
+      sel.value = S[k] || "";
+    });
+    var chips = [];
+    Object.keys(LABEL).forEach(function (k) {
+      if (!S[k]) return;
+      var shown = k === "status" ? (STATUS.filter(function (s) { return s[0] === S[k]; })[0] || [0, S[k]])[1] : S[k];
+      chips.push('<span class="bx-chip" data-tf-clear="' + k + '">' + LABEL[k] + ": " + esc(shown) + " ✕</span>");
+    });
+    var c = bar.querySelector(".bx-chips"); if (c) c.innerHTML = chips.join("");
+  }
+  function syncAll() { bars = bars.filter(function (b) { return document.body.contains(b); }); bars.forEach(sync); }
+  function read(bar) {
+    bar.querySelectorAll("select[data-tf]").forEach(function (sel) { S[sel.getAttribute("data-tf")] = sel.value; });
+    syncAll();
+  }
+  function reg(bar) {
+    if (bars.indexOf(bar) < 0) bars.push(bar);
+    var s = bar.querySelector('[data-tfs="account"]');
+    if (s) s.addEventListener("input", function () { sync(bar); });
+    sync(bar);
+  }
+  function clear(k) { S[k] = ""; syncAll(); }
+  function reset() { for (var k in S) S[k] = ""; syncAll(); }
+
+  window.__tf = { S: S, ok: ok, narrow: narrow, moreHtml: moreHtml, reg: reg, sync: sync, syncAll: syncAll, read: read, clear: clear, reset: reset };
+})();
+</script>
+
+<script>
 /* Tax reports (VAT Summary, Tax Summary/Computation, Tax Transactions, Sales Tax Summary): P&L-style filter bar + working filters */
 (function () {
   if (window.__bxTaxBars) return; window.__bxTaxBars = true;
@@ -145704,13 +146044,13 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
 
   var CFG = {
     vatReport: {
-      title: "VAT Summary", month: "vatSummaryMonth", start: "vatStartDate", end: "vatEndDate", basis: "vatBasis",
+      title: "VAT Summary", more: true, month: "vatSummaryMonth", start: "vatStartDate", end: "vatEndDate", basis: "vatBasis",
       render: function () { call("renderVatSummary"); },
       clear: function () { call("clearVatSummaryFilter"); },
       csv: "vatSalesTable"
     },
     taxComputationReport: {
-      title: "Tax Summary", month: "taxSummaryMonth", start: "taxStartDate", end: "taxEndDate", basis: "taxBasis",
+      title: "Tax Summary", more: true, month: "taxSummaryMonth", start: "taxStartDate", end: "taxEndDate", basis: "taxBasis",
       render: function () { call("renderTaxSummaryReport"); },
       clear: function () { call("renderTaxSummaryReport"); },
       csv: "taxComputationTable"
@@ -145722,7 +146062,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
       csv: "taxesTable"
     },
     salesTaxSummaryPanel: {
-      title: "Sales Tax Summary", month: "salesTaxSummaryMonth", start: "salesTaxSummaryStart", end: "salesTaxSummaryEnd",
+      title: "Sales Tax Summary", more: true, month: "salesTaxSummaryMonth", start: "salesTaxSummaryStart", end: "salesTaxSummaryEnd",
       text: { id: "salesTaxSummarySearch", label: "Tax type", ph: "VAT, GST…" },
       render: function () { call("renderSalesTaxSummary"); },
       clear: function () { call("renderSalesTaxSummary"); },
@@ -145764,13 +146104,16 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
       '<label class="bx-f">To<input type="date" data-bx="to"></label>';
     if (cfg.basis) h += '<label class="bx-f">Basis<select data-bx="basis"><option value="accrual">Accrual</option><option value="cash">Cash</option></select></label>';
     if (cfg.text) h += '<label class="bx-f">' + cfg.text.label + '<input type="text" data-bx="text" placeholder="' + cfg.text.ph + '"></label>';
+    if (cfg.more) h += '<button type="button" class="bx-btn ghost" data-bx-act="more">⚙ More filters ▾</button>';
     h += '<button type="button" class="bx-btn" data-bx-act="apply">Apply</button>' +
       '<button type="button" class="bx-btn ghost" data-bx-act="reset">Reset</button>' +
       '<button type="button" class="bx-btn ghost" data-bx-act="csv">⬇ CSV</button>' +
       '<button type="button" class="bx-btn ghost" data-bx-act="print">🖨 Print</button></div>';
+    if (cfg.more && window.__tf) h += window.__tf.moreHtml();
     var bar = document.createElement("div");
     bar.className = "bx-bar";
     bar.innerHTML = h;
+    if (cfg.more && window.__tf) window.__tf.reg(bar);
     function q(k) { return bar.querySelector('[data-bx="' + k + '"]'); }
 
     /* start from whatever the report is currently filtered by */
@@ -145782,6 +146125,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
     if (cfg.text) q("text").value = val(cfg.text.id);
 
     function push() {
+      if (cfg.more && window.__tf) window.__tf.read(bar);
       setVal(cfg.month, "");
       setVal(cfg.start, q("from").value);
       setVal(cfg.end, q("to").value);
@@ -145790,6 +146134,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
       cfg.render();
     }
     bar.addEventListener("change", function (e) {
+      if (e.target.getAttribute && e.target.getAttribute("data-tf")) { push(); return; }
       var k = e.target.getAttribute && e.target.getAttribute("data-bx");
       if (!k) return;
       if (k === "preset") {
@@ -145800,11 +146145,14 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
     });
     bar.addEventListener("keydown", function (e) { if (e.key === "Enter") push(); });
     bar.addEventListener("click", function (e) {
+      var tc = e.target.closest("[data-tf-clear]");
+      if (tc && window.__tf) { window.__tf.clear(tc.getAttribute("data-tf-clear")); push(); return; }
       var b = e.target.closest("[data-bx-act]"); if (!b) return;
       var act = b.getAttribute("data-bx-act");
-      if (act === "apply") push();
+      if (act === "more") { if (window.__tf) window.__tf.sync(bar); bar.querySelector(".bx-more").classList.toggle("open"); }
+      else if (act === "apply") push();
       else if (act === "reset") {
-        q("preset").value = "all"; q("from").value = ""; q("to").value = "";
+        q("preset").value = "all"; q("from").value = ""; q("to").value = ""; if (cfg.more && window.__tf) window.__tf.reset();
         setVal(cfg.month, ""); setVal(cfg.start, ""); setVal(cfg.end, "");
         if (cfg.basis) { q("basis").value = "accrual"; setVal(cfg.basis, "accrual"); }
         if (cfg.text) { q("text").value = ""; setVal(cfg.text.id, ""); }
@@ -145840,7 +146188,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   function wrapShow() {
     var o = window.showReport;
     if (typeof o !== "function" || o.__bxTaxWrapped) return;
-    var w = function (id) { var r = o.apply(this, arguments); try { if (CFG[id]) build(id); } catch (e) {} return r; };
+    var w = function (id) { var r = o.apply(this, arguments); try { if (CFG[id]) { build(id); if (window.__tf) { window.__tf.syncAll(); if (window.__tf.narrow()) CFG[id].render(); } } } catch (e) {} return r; };
     w.__bxTaxWrapped = true;
     /* keep the budget wrapper's flag so it does not double-wrap */
     w.__bxWrapped = o.__bxWrapped;
@@ -145850,6 +146198,176 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
   window.addEventListener("load", init);
   var n = 0, t = setInterval(function () { init(); if (++n > 20) clearInterval(t); }, 1500);
+})();
+</script>
+
+<script>
+/* VAT Analysis: sales (output VAT, Cr) + purchases (input VAT, Dr) + VAT payments (Dr), with running closing balance */
+(function () {
+  if (window.__vatAnalysisBuilt) return; window.__vatAnalysisBuilt = true;
+  var ID = "tax_vatAnalysis";
+  var st = document.createElement("style");
+  st.textContent =
+    "#vaxWrap .vax-bar{background:#f8fafc;border:1px solid #dbe3ee;border-radius:10px;padding:10px 12px;margin:0 0 12px}" +
+    "#vaxWrap .vax-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}" +
+    "#vaxWrap .vax-f{display:flex;flex-direction:column;gap:2px;font-size:11px;color:#475569;font-weight:600;text-transform:uppercase}" +
+    "#vaxWrap .vax-f select,#vaxWrap .vax-f input{font-size:13px;font-weight:400;text-transform:none;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:5px 7px;background:#fff;min-width:120px}" +
+    "#vaxWrap .vax-btn{font-size:13px;border:1px solid #1e3a8a;background:#1e3a8a;color:#fff;border-radius:6px;padding:6px 11px;cursor:pointer;font-weight:600}" +
+    "#vaxWrap .vax-btn.ghost{background:#fff;color:#1e3a8a}#vaxWrap .vax-btn.ghost:hover{background:#eff6ff}" +
+    "#vaxWrap .vax-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:0 0 14px}" +
+    "#vaxWrap .vax-card{border:1px solid #dbe3ee;border-radius:10px;padding:10px 12px;background:#fff}" +
+    "#vaxWrap .vax-card b{display:block;font-size:11px;color:#64748b;text-transform:uppercase}" +
+    "#vaxWrap .vax-card span{font-size:18px;font-weight:700;color:#0f172a}" +
+    "#vaxWrap table{width:100%;border-collapse:collapse;font-size:13px}" +
+    "#vaxWrap th{background:#1e3a8a;color:#fff;padding:6px 8px;border:1px solid #1e3a8a;text-align:left}" +
+    "#vaxWrap td{padding:5px 8px;border:1px solid #e5eaf1}" +
+    "#vaxWrap .n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}" +
+    "#vaxWrap tr.sec td{background:#f1f5f9;font-weight:700}" +
+    "#vaxWrap tr.tot td{background:#f8fafc;font-weight:700;border-top:2px solid #94a3b8}" +
+    "#vaxWrap tr.grand td{background:#e8eefc;font-weight:800}" +
+    "@media print{#vaxWrap .vax-bar{display:none!important}}";
+  document.head.appendChild(st);
+
+  function el(i) { return document.getElementById(i); }
+  function num(v) { var n = parseFloat(String(v == null ? "" : v).replace(/,/g, "")); return isNaN(n) ? 0 : n; }
+  function esc(t) { return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function fmt(n) { return (Math.round(n * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function bal(n) { return Math.abs(n) < 0.005 ? "0.00" : fmt(Math.abs(n)) + (n > 0 ? " Cr" : " Dr"); }   /* Cr = VAT payable, Dr = VAT recoverable */
+  function iso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function presetRange(k) {
+    var n = new Date(), y = n.getFullYear(), m = n.getMonth();
+    if (k === "thisMonth") return [iso(new Date(y, m, 1)), iso(new Date(y, m + 1, 0))];
+    if (k === "lastMonth") return [iso(new Date(y, m - 1, 1)), iso(new Date(y, m, 0))];
+    if (k === "thisQuarter") { var q = Math.floor(m / 3) * 3; return [iso(new Date(y, q, 1)), iso(new Date(y, q + 3, 0))]; }
+    if (k === "lastQuarter") { var q2 = Math.floor(m / 3) * 3 - 3; return [iso(new Date(y, q2, 1)), iso(new Date(y, q2 + 3, 0))]; }
+    if (k === "thisYear") return [y + "-01-01", y + "-12-31"];
+    return ["", ""];
+  }
+  var PRESETS = [["all", "All time"], ["thisMonth", "This month"], ["lastMonth", "Last month"], ["thisQuarter", "This quarter"], ["lastQuarter", "Last quarter"], ["thisYear", "This year"], ["custom", "Custom"]];
+  var lastRows = [];
+
+  function panel() { return el(ID); }
+  function mount() {
+    var p = panel(); if (!p || el("vaxWrap")) return;
+    p.innerHTML =
+      '<div id="vaxWrap"><div style="border-bottom:1px solid #e5e7eb;padding:8px 4px;margin-bottom:10px"><h2 style="font-size:18px;font-weight:700;color:#1e3a8a;margin:0">VAT Analysis</h2>' +
+      '<div style="font-size:11px;color:#64748b">Tax Reports · Output VAT (sales) is Cr, input VAT (purchases) and VAT paid are Dr · Closing balance Cr = VAT payable</div></div>' +
+      '<div class="vax-bar"><div class="vax-row">' +
+      '<label class="vax-f">Period<select id="vaxPreset">' + PRESETS.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + "</option>"; }).join("") + "</select></label>" +
+      '<label class="vax-f">From<input type="date" id="vaxFrom"></label>' +
+      '<label class="vax-f">To<input type="date" id="vaxTo"></label>' +
+      '<label class="vax-f">Show<select id="vaxShow"><option value="both">Sales &amp; Purchases</option><option value="sales">Sales only</option><option value="purchases">Purchases only</option></select></label>' +
+      '<label class="vax-f">Search<input type="text" id="vaxSearch" placeholder="Document or party"></label>' +
+      '<button type="button" class="vax-btn ghost" id="vaxMore">⚙ More filters ▾</button>' +
+      '<button type="button" class="vax-btn" id="vaxApply">Apply</button>' +
+      '<button type="button" class="vax-btn ghost" id="vaxReset">Reset</button>' +
+      '<button type="button" class="vax-btn ghost" id="vaxCsv">⬇ CSV</button>' +
+      '<button type="button" class="vax-btn ghost" id="vaxPrint">🖨 Print</button></div>' + (window.__tf ? window.__tf.moreHtml() : '') + '</div>' +
+      '<div class="vax-cards" id="vaxCards"></div><div style="overflow-x:auto"><table id="vaxTable"></table></div></div>';
+    el("vaxPreset").onchange = function () {
+      if (this.value !== "custom") { var r = presetRange(this.value); el("vaxFrom").value = r[0]; el("vaxTo").value = r[1]; }
+      render();
+    };
+    ["vaxFrom", "vaxTo"].forEach(function (i) { el(i).onchange = function () { el("vaxPreset").value = "custom"; render(); }; });
+    var vbar = p.querySelector(".vax-bar");
+    if (window.__tf) {
+      window.__tf.reg(vbar);
+      vbar.addEventListener("change", function (e) { if (e.target.getAttribute && e.target.getAttribute("data-tf")) { window.__tf.read(vbar); render(); } });
+      vbar.addEventListener("click", function (e) { var c = e.target.closest("[data-tf-clear]"); if (c) { window.__tf.clear(c.getAttribute("data-tf-clear")); render(); } });
+    }
+    el("vaxMore").onclick = function () { if (window.__tf) window.__tf.sync(vbar); vbar.querySelector(".bx-more").classList.toggle("open"); };
+    el("vaxShow").onchange = render;
+    el("vaxSearch").oninput = render;
+    el("vaxApply").onclick = render;
+    el("vaxReset").onclick = function () { el("vaxPreset").value = "all"; el("vaxFrom").value = ""; el("vaxTo").value = ""; el("vaxShow").value = "both"; el("vaxSearch").value = ""; if (window.__tf) window.__tf.reset(); render(); };
+    el("vaxCsv").onclick = csv;
+    el("vaxPrint").onclick = function () {
+      var w = window.open("", "_blank"); if (!w) return;
+      w.document.write("<html><head><title>VAT Analysis</title><style>body{font-family:Arial,sans-serif;padding:20px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #cbd5e1;padding:5px 8px;text-align:left}th{background:#eef2f7}.n{text-align:right}</style></head><body><h3>VAT Analysis</h3>" + el("vaxCards").innerText.replace(/\n+/g, " · ") + "<br><br>" + el("vaxTable").outerHTML + "</body></html>");
+      w.document.close(); w.focus(); w.print();
+    };
+    render();
+  }
+
+  function inRange(d, from, to) {
+    if (!from && !to) return true;
+    if (!d) return false;
+    var s = String(d).slice(0, 10);
+    return !(from && s < from) && !(to && s > to);
+  }
+
+  function render() {
+    var t = el("vaxTable"); if (!t) return;
+    var from = el("vaxFrom").value, to = el("vaxTo").value, show = el("vaxShow").value, q = (el("vaxSearch").value || "").toLowerCase();
+    var lines = { sales: [], purchases: [] };
+    if (typeof window.__vatLinesFor === "function") {
+      try { lines = window.__vatLinesFor({ from: from, to: to }); } catch (e) { console.error("VAT Analysis:", e); }
+    }
+    var rows = [];
+    (lines.sales || []).forEach(function (l) { if (l.vat) rows.push({ d: l.date, kind: "Sales", src: l.source, doc: l.doc, party: l.party, desc: l.desc, net: l.net, rate: l.rate, dr: 0, cr: l.vat }); });
+    (lines.purchases || []).forEach(function (l) { if (l.vat) rows.push({ d: l.date, kind: "Purchases", src: l.source, doc: l.doc, party: l.party, desc: l.desc, net: l.net, rate: l.rate, dr: l.vat, cr: 0 }); });
+    var pays = [];
+    try { pays = JSON.parse(localStorage.getItem("taxPayments") || "[]") || []; } catch (e) {}
+    if (window.__tf && window.__tf.narrow()) pays = [];   /* payments can't be attributed to a customer / supplier / warehouse */
+    pays.forEach(function (x) {
+      if (!/vat/i.test(String(x.type || ""))) return;
+      if (!inRange(x.date, from, to)) return;
+      rows.push({ d: x.date, kind: "Payment", src: "VAT Payment", doc: x.reference || x.ref || "", party: x.contact || "", desc: x.description || "VAT paid", net: 0, rate: "", dr: num(x.amount), cr: 0 });
+    });
+    if (show === "sales") rows = rows.filter(function (r) { return r.kind === "Sales"; });
+    if (show === "purchases") rows = rows.filter(function (r) { return r.kind === "Purchases" || r.kind === "Payment"; });
+    if (q) rows = rows.filter(function (r) { return (r.doc + " " + r.party + " " + r.desc + " " + r.src).toLowerCase().indexOf(q) > -1; });
+    rows.sort(function (a, b) { return String(a.d || "").localeCompare(String(b.d || "")); });
+
+    var run = 0, sCr = 0, pDr = 0, payDr = 0, html = "";
+    var head = "<thead><tr><th>Date</th><th>Type</th><th>Document</th><th>Customer / Supplier</th><th>Description</th><th class='n'>Rate %</th><th class='n'>Net (excl. VAT)</th><th class='n'>Debit</th><th class='n'>Credit</th><th class='n'>Closing Balance</th></tr></thead>";
+    lastRows = [];
+    var groups = [["Sales", "Sales — Output VAT (Credit)"], ["Purchases", "Purchases — Input VAT (Debit)"], ["Payment", "VAT payments (Debit)"]];
+    /* one chronological ledger with running balance */
+    rows.forEach(function (r) {
+      run += r.cr - r.dr;
+      if (r.kind === "Sales") sCr += r.cr; else if (r.kind === "Purchases") pDr += r.dr; else payDr += r.dr;
+      var lbl = r.kind === "Sales" ? "Sales" : (r.kind === "Purchases" ? "Purchase" : "Payment");
+      html += "<tr><td>" + esc(String(r.d || "").slice(0, 10)) + "</td><td>" + lbl + "</td><td>" + esc(r.doc) + "</td><td>" + esc(r.party) + "</td><td>" + esc(r.desc) + "</td>" +
+        "<td class='n'>" + esc(r.rate) + "</td><td class='n'>" + (r.net ? fmt(r.net) : "") + "</td><td class='n'>" + (r.dr ? fmt(r.dr) : "") + "</td><td class='n'>" + (r.cr ? fmt(r.cr) : "") + "</td><td class='n'>" + bal(run) + "</td></tr>";
+      lastRows.push([String(r.d || "").slice(0, 10), lbl, r.doc, r.party, r.desc, r.rate, r.net ? r.net.toFixed(2) : "", r.dr ? r.dr.toFixed(2) : "", r.cr ? r.cr.toFixed(2) : "", bal(run)]);
+    });
+    if (!rows.length) html = "<tr><td colspan='10' style='padding:18px;text-align:center;color:#6b7280'>No VAT transactions for this period.</td></tr>";
+    var totDr = pDr + payDr;
+    html += "<tr class='sec'><td colspan='10'>Summary</td></tr>" +
+      "<tr class='tot'><td colspan='7'>Sales — Output VAT</td><td class='n'></td><td class='n'>" + fmt(sCr) + "</td><td class='n'></td></tr>" +
+      "<tr class='tot'><td colspan='7'>Purchases — Input VAT</td><td class='n'>" + fmt(pDr) + "</td><td class='n'></td><td class='n'></td></tr>" +
+      "<tr class='tot'><td colspan='7'>VAT paid</td><td class='n'>" + fmt(payDr) + "</td><td class='n'></td><td class='n'></td></tr>" +
+      "<tr class='grand'><td colspan='7'>Total / Closing balance</td><td class='n'>" + fmt(totDr) + "</td><td class='n'>" + fmt(sCr) + "</td><td class='n'>" + bal(run) + "</td></tr>";
+    t.innerHTML = head + "<tbody>" + html + "</tbody>";
+    var net = sCr - pDr;
+    el("vaxCards").innerHTML =
+      '<div class="vax-card"><b>Output VAT (sales) · Cr</b><span>' + fmt(sCr) + "</span></div>" +
+      '<div class="vax-card"><b>Input VAT (purchases) · Dr</b><span>' + fmt(pDr) + "</span></div>" +
+      '<div class="vax-card"><b>Net VAT (output − input)</b><span>' + bal(net) + "</span></div>" +
+      '<div class="vax-card"><b>VAT paid · Dr</b><span>' + fmt(payDr) + "</span></div>" +
+      '<div class="vax-card"><b>Closing balance</b><span>' + bal(run) + "</span></div>";
+    lastRows.head = ["Date", "Type", "Document", "Customer / Supplier", "Description", "Rate %", "Net", "Debit", "Credit", "Closing Balance"];
+  }
+
+  function csv() {
+    var out = [lastRows.head || []].concat(lastRows).map(function (r) { return r.map(function (c) { return '"' + String(c == null ? "" : c).replace(/"/g, '""') + '"'; }).join(","); }).join("\r\n");
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([out], { type: "text/csv" }));
+    a.download = "VAT Analysis.csv"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+
+  function wrapShow() {
+    var o = window.showReport;
+    if (typeof o !== "function" || o.__vaxWrapped) return;
+    var w = function (id) { var r = o.apply(this, arguments); if (id === ID) { try { mount(); if (window.__tf) window.__tf.syncAll(); render(); } catch (e) { console.error(e); } } return r; };
+    for (var k in o) { try { w[k] = o[k]; } catch (e) {} }
+    w.__vaxWrapped = true; window.showReport = w;
+  }
+  function init() { mount(); wrapShow(); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+  window.addEventListener("load", init);
+  var n = 0, tm = setInterval(function () { init(); if (++n > 20) clearInterval(tm); }, 1500);
 })();
 </script>
 
