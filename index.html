@@ -3636,9 +3636,9 @@ function resetPassword() {
   var code = String(Math.floor(100000 + Math.random() * 900000));
   __resetPending = { id: id, code: code, expires: Date.now() + 15 * 60000 };
   try { localStorage.setItem('passwordResetPending', JSON.stringify(__resetPending)); } catch(e){}
-  deliverResetMail(user, code);
+  try { deliverResetMail(user, code); } catch(e){}
   var s2 = document.getElementById('resetStep2'); if (s2) s2.classList.remove('hidden');
-  alert('\uD83D\uDCE7 A 6-digit reset code was sent to your Acacia Mail inbox. Open Acacia Mail to read it, then enter the code below.');
+  alert('\uD83D\uDD11 Your reset code is: ' + code + '\n\nEnter it below (valid for 15 minutes). Keep this to yourself.');
 }
 function deliverResetMail(user, code) {
   try {
@@ -117765,12 +117765,21 @@ function toggleSubmenu(id) {
         var local = users.find(function(x){
           return uemail && String(x.email || '').toLowerCase() === uemail;
         });
-        if (!local){
-          var remote = await window.__netGuard(fetchAccount(id), 6000);
-          if (remote){
+        // Always refresh this one account from Supabase before checking the
+        // password, not only when it's missing locally. A password reset or
+        // email change done from the Support Hub writes straight to
+        // Supabase, and this is what makes it take effect on the very next
+        // login attempt here, even on a device that already has the old
+        // (stale) copy cached.
+        var remote = await window.__netGuard(fetchAccount(id), 6000);
+        if (remote){
+          if (local){
+            var idx = users.indexOf(local);
+            users[idx] = Object.assign({}, local, remote);
+          } else {
             users.push(remote);
-            NS.nSet.call(NS.real, 'users', JSON.stringify(users));
           }
+          NS.nSet.call(NS.real, 'users', JSON.stringify(users));
         }
       }
     } catch(e){ console.warn('[companySync] cloud account lookup failed', e); }
