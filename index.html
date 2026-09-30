@@ -3636,9 +3636,9 @@ function resetPassword() {
   var code = String(Math.floor(100000 + Math.random() * 900000));
   __resetPending = { id: id, code: code, expires: Date.now() + 15 * 60000 };
   try { localStorage.setItem('passwordResetPending', JSON.stringify(__resetPending)); } catch(e){}
-  try { deliverResetMail(user, code); } catch(e){}
+  deliverResetMail(user, code);
   var s2 = document.getElementById('resetStep2'); if (s2) s2.classList.remove('hidden');
-  alert('\uD83D\uDD11 Your reset code is: ' + code + '\n\nEnter it below (valid for 15 minutes). Keep this to yourself.');
+  alert('\uD83D\uDCE7 A 6-digit reset code was sent to your Acacia Mail inbox. Open Acacia Mail to read it, then enter the code below.');
 }
 function deliverResetMail(user, code) {
   try {
