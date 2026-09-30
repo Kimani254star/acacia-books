@@ -83960,6 +83960,7 @@ function renderBudgetReport() {
   const startDate = document.getElementById("budgetStartDate").value;
   const endDate = document.getElementById("budgetEndDate").value;
   const selectedDept = document.getElementById("rptBudgetDepartment").value;
+  const __bxX = (typeof window.__bxExtra === "function") ? window.__bxExtra("budgetPanel") : {};
 
   const budgets = JSON.parse(localStorage.getItem("budgets") || "[]");
   const actuals = JSON.parse(localStorage.getItem("actuals") || "[]");
@@ -83992,6 +83993,7 @@ function renderBudgetReport() {
 
   budgets.forEach(b => {
     if (selectedDept && b.department !== selectedDept) return;
+    if (__bxX.account && b.account !== __bxX.account) return;
     b.months.forEach(m => {
       if (!monthMatches(m.month)) return;
       const key = `${b.account}|${b.department}`;
@@ -84002,6 +84004,7 @@ function renderBudgetReport() {
 
   actuals.forEach(a => {
     if (selectedDept && a.department !== selectedDept) return;
+    if (__bxX.account && a.account !== __bxX.account) return;
     a.months.forEach(m => {
       if (!monthMatches(m.month)) return;
       const key = `${a.account}|${a.department}`;
@@ -84010,7 +84013,7 @@ function renderBudgetReport() {
     });
   });
 
-  const rows = Object.values(summary);
+  const rows = (typeof window.__bxKeep === "function") ? window.__bxKeep(__bxX, Object.values(summary)) : Object.values(summary);
 
   if (rows.length === 0) {
     tbody.innerHTML = `<tr><td colspan="5" class="text-center p-2 text-gray-500">No data found.</td></tr>`;
@@ -90620,6 +90623,7 @@ function renderBudgetVarianceReport() {
   );
 
   let summary = {};
+  const __bxX = (typeof window.__bxExtra === "function") ? window.__bxExtra("budgetVariancePanel") : {};
 
   const varianceMonthAbbr = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
@@ -90650,6 +90654,8 @@ function renderBudgetVarianceReport() {
       department &&
       b.department !== department
     ) return;
+
+    if (__bxX.account && b.account !== __bxX.account) return;
 
     if (!Array.isArray(b.months))
       return;
@@ -90686,6 +90692,8 @@ function renderBudgetVarianceReport() {
       a.department !== department
     ) return;
 
+    if (__bxX.account && a.account !== __bxX.account) return;
+
     if (!Array.isArray(a.months))
       return;
 
@@ -90714,7 +90722,7 @@ function renderBudgetVarianceReport() {
     });
   });
 
-  let rows = Object.values(summary);
+  let rows = (typeof window.__bxKeep === "function") ? window.__bxKeep(__bxX, Object.values(summary)) : Object.values(summary);
 
   if (
     budgetVarianceCompareMode ===
@@ -133800,7 +133808,7 @@ html.dark .vx-link,html.dark .pnl-link{color:#93c5fd!important}
 </script>
 <script>
 (function () {
-  var SKIP = { budgetPanel: 1, budgetVariancePanel: 1, reportsHome: 1, sales_salesSummary: 1, sales_dailySales: 1, sales_monthlySales: 1, sales_annualSales: 1, salesByItemPanel: 1, sales_salesByCategory: 1, sales_salesByBranch: 1, salesByPersonPanel: 1, salesByCustomerPanel: 1, sales_salesByHour: 1, sales_salesByDayOfWeek: 1, salesReturnPanel: 1, sales_discountAnalysis: 1, sales_priceVarianceAnalysis: 1, sales_revenueTrends: 1, salesComparisonPanel: 1, topSellingItemsPanel: 1, customerStatementPanel: 1, agedReceivablesPanel: 1, accountsReceivablePanel: 1, customer_customerCreditExposure: 1, customer_collectionEfficiency: 1, customer_receiptsForecast: 1, topCustomersPanel: 1, customer_newCustomers: 1, customer_lostCustomers: 1, customer_customerGrowth: 1, customer_customerPurchaseFrequency: 1, customer_customerLifetimeValue: 1, customer_customerSegmentation: 1, customer_profitPerCustomer: 1, customer_lossMakingCustomers: 1, customerOrdersPanel: 1, customerQuotesPanel: 1, creditNotesReport: 1, CreditcontrolPanel: 1, writeOffReportPanel: 1, pnlReport: 1, bsReport: 1, trialBalanceReport: 1, generalLedgerReport: 1, generalLedgerDetailedReport: 1, cashFlowReport: 1, financial_revenueAnalysis: 1, financial_expenseAnalysis: 1, financial_grossProfitAnalysis: 1, financial_workingCapitalAnalysis: 1, financial_financialRatios: 1, financial_businessSnapshot: 1, financial_multiYearTrendAnalysis: 1, financial_dailyCashPosition: 1, retainedEarningsPanel: 1, equityStatementPanel: 1 };
+  var SKIP = { vatReport: 1, taxComputationReport: 1, taxesPanel: 1, salesTaxSummaryPanel: 1, budgetPanel: 1, budgetVariancePanel: 1, reportsHome: 1, sales_salesSummary: 1, sales_dailySales: 1, sales_monthlySales: 1, sales_annualSales: 1, salesByItemPanel: 1, sales_salesByCategory: 1, sales_salesByBranch: 1, salesByPersonPanel: 1, salesByCustomerPanel: 1, sales_salesByHour: 1, sales_salesByDayOfWeek: 1, salesReturnPanel: 1, sales_discountAnalysis: 1, sales_priceVarianceAnalysis: 1, sales_revenueTrends: 1, salesComparisonPanel: 1, topSellingItemsPanel: 1, customerStatementPanel: 1, agedReceivablesPanel: 1, accountsReceivablePanel: 1, customer_customerCreditExposure: 1, customer_collectionEfficiency: 1, customer_receiptsForecast: 1, topCustomersPanel: 1, customer_newCustomers: 1, customer_lostCustomers: 1, customer_customerGrowth: 1, customer_customerPurchaseFrequency: 1, customer_customerLifetimeValue: 1, customer_customerSegmentation: 1, customer_profitPerCustomer: 1, customer_lossMakingCustomers: 1, customerOrdersPanel: 1, customerQuotesPanel: 1, creditNotesReport: 1, CreditcontrolPanel: 1, writeOffReportPanel: 1, pnlReport: 1, bsReport: 1, trialBalanceReport: 1, generalLedgerReport: 1, generalLedgerDetailedReport: 1, cashFlowReport: 1, financial_revenueAnalysis: 1, financial_expenseAnalysis: 1, financial_grossProfitAnalysis: 1, financial_workingCapitalAnalysis: 1, financial_financialRatios: 1, financial_businessSnapshot: 1, financial_multiYearTrendAnalysis: 1, financial_dailyCashPosition: 1, retainedEarningsPanel: 1, equityStatementPanel: 1 };
   var RENDERERS = { pnlReport: 'renderProfitLoss', bsReport: 'renderBalanceSheet' };
 
   function esc(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
@@ -145445,9 +145453,9 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
 
 
 <script>
-/* Budget vs Actual + Budget Variance: filter bar styled like Expense Analysis */
+/* Budget vs Actual + Budget Variance: P&L-style filter bar (Period, dates, department, ⚙ More filters, Apply, Reset, CSV, Print) */
 (function () {
-  if (window.__bxBudgetBars) return; window.__bxBudgetBars = true;
+  if (window.__bxBudgetBars2) return; window.__bxBudgetBars2 = true;
 
   var st = document.createElement("style");
   st.textContent =
@@ -145458,8 +145466,29 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
     ".bx-btn{font-size:13px;border:1px solid #1e3a8a;background:#1e3a8a;color:#fff;border-radius:6px;padding:6px 11px;cursor:pointer;font-weight:600}" +
     ".bx-btn:hover{background:#1d4ed8}.bx-btn.ghost{background:#fff;color:#1e3a8a}.bx-btn.ghost:hover{background:#eff6ff}" +
     ".bx-more{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #cbd5e1}.bx-more.open{display:block}" +
+    ".bx-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.bx-chips:empty{display:none}" +
+    ".bx-chip{background:#e0e7ff;color:#1e3a8a;border-radius:999px;padding:2px 9px;font-size:12px;cursor:pointer}.bx-chip:hover{background:#c7d2fe}" +
     "@media print{.bx-bar{display:none!important}}";
   document.head.appendChild(st);
+
+  /* ---- extra-filter state, read by renderBudgetReport / renderBudgetVarianceReport ---- */
+  window.__bxState = window.__bxState || {};
+  window.__bxExtra = function (id) { return window.__bxState[id] || {}; };
+  window.__bxKeep = function (x, rows) {
+    if (!x || (!x.status && !x.range)) return rows;
+    return rows.filter(function (r) {
+      var bud = Number(r.budget) || 0, v = (Number(r.actual) || 0) - bud;
+      var pct = bud ? Math.abs(v) / Math.abs(bud) * 100 : (v ? Infinity : 0);
+      if (x.status === "over" && !(v > 0)) return false;
+      if (x.status === "under" && !(v < 0)) return false;
+      if (x.status === "on" && v !== 0) return false;
+      if (x.range === "0-10" && !(pct < 10)) return false;
+      if (x.range === "10-25" && !(pct >= 10 && pct < 25)) return false;
+      if (x.range === "25-50" && !(pct >= 25 && pct < 50)) return false;
+      if (x.range === "50+" && !(pct >= 50)) return false;
+      return true;
+    });
+  };
 
   function iso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function presetRange(k) {
@@ -145476,13 +145505,30 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   function el(id) { return document.getElementById(id); }
   function hide(n) { if (n) { n.setAttribute("data-bx-legacy", "1"); n.style.display = "none"; } }
   function setVal(id, v) { var n = el(id); if (n) n.value = v; }
+  function esc(t) { return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
+
+  function accountList() {
+    var seen = {};
+    ["budgets", "actuals"].forEach(function (k) {
+      try { (JSON.parse(localStorage.getItem(k) || "[]") || []).forEach(function (r) { if (r && r.account) seen[r.account] = 1; }); } catch (e) {}
+    });
+    return Object.keys(seen).sort();
+  }
+
+  /* extra ("More filters") fields shared by both reports */
+  var MORE = [
+    { key: "account", label: "Account", first: "All accounts", accounts: true },
+    { key: "status", label: "Status", first: "All", opts: [["over", "Over budget"], ["under", "Under budget"], ["on", "On target"]] },
+    { key: "range", label: "Variance range", first: "All", opts: [["0-10", "0 - 10%"], ["10-25", "10% - 25%"], ["25-50", "25% - 50%"], ["50+", "50%+"]] }
+  ];
+  var CHIP = { account: "Account", status: "Status", range: "Variance" };
+  var CHIPVAL = { over: "Over budget", under: "Under budget", on: "On target", "0-10": "0-10%", "10-25": "10-25%", "25-50": "25-50%", "50+": "50%+" };
 
   var CFG = {
     budgetPanel: {
       title: "Budget vs Actual",
       start: "budgetStartDate", end: "budgetEndDate", month: "rptBudgetMonth",
       dept: { id: "rptBudgetDepartment", label: "Department" },
-      more: [],
       render: function () { if (typeof renderBudgetReport === "function") renderBudgetReport(); },
       clear: function () { if (typeof clearFilterBudget === "function") clearFilterBudget(); },
       exportSel: 'button[onclick*="exportFilteredTableToCSV"]',
@@ -145498,7 +145544,6 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
       title: "Budget Variance",
       start: "budgetVarianceStart", end: "budgetVarianceEnd", month: null,
       dept: { id: "budgetVarianceDept", label: "Department", text: true },
-      more: [["budgetVarianceType", "Budget type"], ["budgetVarianceStatusMain", "Status"], ["budgetVarianceRange", "Variance range"]],
       render: function () { if (typeof renderBudgetVarianceReport === "function") renderBudgetVarianceReport(); },
       clear: function () { if (typeof clearBudgetVarianceFilters === "function") clearBudgetVarianceFilters(); },
       exportSel: 'button[onclick*="exportFilteredTableToCSV"]',
@@ -145513,40 +145558,58 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
     }
   };
 
-  function selectFrom(legacyId, label, key) {
-    var src = el(legacyId), opts = "";
-    if (src && src.tagName === "SELECT") opts = src.innerHTML;
-    return '<label class="bx-f">' + label + '<select data-bx="' + key + '">' + opts + "</select></label>";
+  function moreFieldHtml(m) {
+    var opts = "";
+    if (m.accounts) opts = accountList().map(function (a) { return '<option value="' + esc(a) + '">' + esc(a) + "</option>"; }).join("");
+    else opts = m.opts.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + "</option>"; }).join("");
+    return '<label class="bx-f">' + m.label + '<select data-bx="' + m.key + '"><option value="">' + m.first + "</option>" + opts + "</select></label>";
   }
 
   function build(id) {
     var cfg = CFG[id], panel = el(id);
     if (!panel || panel.querySelector(":scope > .bx-bar")) return;
+    window.__bxState[id] = window.__bxState[id] || {};
+    var S = window.__bxState[id];
+
     var h = '<div class="bx-row">' +
       '<label class="bx-f">Period<select data-bx="preset">' + PRESETS.map(function (p) { return '<option value="' + p[0] + '">' + p[1] + "</option>"; }).join("") + "</select></label>" +
       '<label class="bx-f">From<input type="date" data-bx="from"></label>' +
       '<label class="bx-f">To<input type="date" data-bx="to"></label>';
     if (cfg.dept.text) h += '<label class="bx-f">' + cfg.dept.label + '<input type="text" data-bx="dept" placeholder="All departments"></label>';
-    else h += selectFrom(cfg.dept.id, cfg.dept.label, "dept");
-    if (cfg.more.length) h += '<button type="button" class="bx-btn ghost" data-bx-act="more">⚙ More filters ▾</button>';
-    h += '<button type="button" class="bx-btn" data-bx-act="apply">Apply</button>' +
+    else {
+      var src = el(cfg.dept.id), dopts = (src && src.tagName === "SELECT") ? src.innerHTML : "";
+      h += '<label class="bx-f">' + cfg.dept.label + '<select data-bx="dept">' + dopts + "</select></label>";
+    }
+    h += '<button type="button" class="bx-btn ghost" data-bx-act="more">⚙ More filters ▾</button>' +
+      '<button type="button" class="bx-btn" data-bx-act="apply">Apply</button>' +
       '<button type="button" class="bx-btn ghost" data-bx-act="reset">Reset</button>' +
       '<button type="button" class="bx-btn ghost" data-bx-act="csv">⬇ CSV</button>' +
-      '<button type="button" class="bx-btn ghost" data-bx-act="print">🖨 Print</button></div>';
-    if (cfg.more.length) {
-      h += '<div class="bx-more"><div class="bx-row">' + cfg.more.map(function (m) { return selectFrom(m[0], m[1], m[0]); }).join("") + "</div></div>";
-    }
+      '<button type="button" class="bx-btn ghost" data-bx-act="print">🖨 Print</button></div>' +
+      '<div class="bx-more"><div class="bx-row">' + MORE.map(moreFieldHtml).join("") + "</div></div>" +
+      '<div class="bx-chips"></div>';
     var bar = document.createElement("div");
     bar.className = "bx-bar";
     bar.innerHTML = h;
 
     function q(k) { return bar.querySelector('[data-bx="' + k + '"]'); }
+    function refreshAccounts() {
+      var sel = q("account"); if (!sel) return;
+      var keep = sel.value, list = accountList();
+      sel.innerHTML = '<option value="">All accounts</option>' + list.map(function (a) { return '<option value="' + esc(a) + '">' + esc(a) + "</option>"; }).join("");
+      sel.value = keep;
+    }
+    function chips() {
+      var out = [];
+      MORE.forEach(function (m) { if (S[m.key]) out.push('<span class="bx-chip" data-bx-clear="' + m.key + '">' + CHIP[m.key] + ": " + esc(CHIPVAL[S[m.key]] || S[m.key]) + " ✕</span>"); });
+      bar.querySelector(".bx-chips").innerHTML = out.join("");
+    }
     function push() {
       setVal(cfg.start, q("from").value);
       setVal(cfg.end, q("to").value);
       if (cfg.month) setVal(cfg.month, "");
       setVal(cfg.dept.id, q("dept").value);
-      cfg.more.forEach(function (m) { setVal(m[0], q(m[0]).value); });
+      MORE.forEach(function (m) { S[m.key] = q(m.key).value; });
+      chips();
       cfg.render();
     }
     bar.addEventListener("change", function (e) {
@@ -145559,13 +145622,16 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
       else push();
     });
     bar.addEventListener("click", function (e) {
+      var c = e.target.closest("[data-bx-clear]");
+      if (c) { var ck = c.getAttribute("data-bx-clear"); q(ck).value = ""; push(); return; }
       var b = e.target.closest("[data-bx-act]"); if (!b) return;
       var act = b.getAttribute("data-bx-act");
-      if (act === "more") bar.querySelector(".bx-more").classList.toggle("open");
+      if (act === "more") { refreshAccounts(); bar.querySelector(".bx-more").classList.toggle("open"); }
       else if (act === "apply") push();
       else if (act === "reset") {
         q("preset").value = "all"; q("from").value = ""; q("to").value = ""; q("dept").value = "";
-        cfg.more.forEach(function (m) { q(m[0]).value = ""; setVal(m[0], ""); });
+        MORE.forEach(function (m) { q(m.key).value = ""; S[m.key] = ""; });
+        chips();
         cfg.clear();
       }
       else if (act === "csv") {
@@ -145581,7 +145647,6 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
       }
     });
 
-    // place the bar under the heading, hide the old filter controls (they stay in the page and are driven by the bar)
     var first = panel.firstElementChild;
     var heading = panel.querySelector(":scope > h2");
     if (heading) panel.insertBefore(bar, heading.nextSibling);
@@ -145603,4 +145668,189 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   var n = 0, t = setInterval(function () { init(); if (++n > 20) clearInterval(t); }, 1500);
 })();
 </script>
+
+<script>
+/* Tax reports (VAT Summary, Tax Summary/Computation, Tax Transactions, Sales Tax Summary): P&L-style filter bar + working filters */
+(function () {
+  if (window.__bxTaxBars) return; window.__bxTaxBars = true;
+
+  var st = document.createElement("style"); st.id = "bxTaxStyles";
+  st.textContent =
+    ".bx-bar{background:#f8fafc;border:1px solid #dbe3ee;border-radius:10px;padding:10px 12px;margin:0 0 12px}" +
+    ".bx-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}" +
+    ".bx-f{display:flex;flex-direction:column;gap:2px;font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;letter-spacing:.02em}" +
+    ".bx-f select,.bx-f input{font-size:13px;font-weight:400;text-transform:none;letter-spacing:0;color:#0f172a;border:1px solid #cbd5e1;border-radius:6px;padding:5px 7px;background:#fff;min-width:120px}" +
+    ".bx-btn{font-size:13px;border:1px solid #1e3a8a;background:#1e3a8a;color:#fff;border-radius:6px;padding:6px 11px;cursor:pointer;font-weight:600}" +
+    ".bx-btn:hover{background:#1d4ed8}.bx-btn.ghost{background:#fff;color:#1e3a8a}.bx-btn.ghost:hover{background:#eff6ff}" +
+    "@media print{.bx-bar{display:none!important}}";
+  document.head.appendChild(st);
+
+  function iso(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function presetRange(k) {
+    var n = new Date(), y = n.getFullYear(), m = n.getMonth();
+    if (k === "thisMonth") return { from: iso(new Date(y, m, 1)), to: iso(new Date(y, m + 1, 0)) };
+    if (k === "lastMonth") return { from: iso(new Date(y, m - 1, 1)), to: iso(new Date(y, m, 0)) };
+    if (k === "thisQuarter") { var q = Math.floor(m / 3) * 3; return { from: iso(new Date(y, q, 1)), to: iso(new Date(y, q + 3, 0)) }; }
+    if (k === "lastQuarter") { var q2 = Math.floor(m / 3) * 3 - 3; return { from: iso(new Date(y, q2, 1)), to: iso(new Date(y, q2 + 3, 0)) }; }
+    if (k === "thisYear") return { from: y + "-01-01", to: y + "-12-31" };
+    return { from: "", to: "" };
+  }
+  var PRESETS = [["all", "All time"], ["thisMonth", "This month"], ["lastMonth", "Last month"], ["thisQuarter", "This quarter"], ["lastQuarter", "Last quarter"], ["thisYear", "This year"], ["custom", "Custom"]];
+
+  function el(id) { return document.getElementById(id); }
+  function val(id) { var n = el(id); return n ? n.value : ""; }
+  function setVal(id, v) { var n = el(id); if (n) n.value = v; }
+  function call(fn) { try { if (typeof window[fn] === "function") window[fn](); } catch (e) { console.error(fn + " failed:", e); } }
+
+  var CFG = {
+    vatReport: {
+      title: "VAT Summary", month: "vatSummaryMonth", start: "vatStartDate", end: "vatEndDate", basis: "vatBasis",
+      render: function () { call("renderVatSummary"); },
+      clear: function () { call("clearVatSummaryFilter"); },
+      csv: "vatSalesTable"
+    },
+    taxComputationReport: {
+      title: "Tax Summary", month: "taxSummaryMonth", start: "taxStartDate", end: "taxEndDate", basis: "taxBasis",
+      render: function () { call("renderTaxSummaryReport"); },
+      clear: function () { call("renderTaxSummaryReport"); },
+      csv: "taxComputationTable"
+    },
+    taxesPanel: {
+      title: "Tax Transactions", month: "taxesMonth", start: "taxesStart", end: "taxesEnd",
+      render: function () { call("renderTaxes"); },
+      clear: function () { call("renderTaxes"); },
+      csv: "taxesTable"
+    },
+    salesTaxSummaryPanel: {
+      title: "Sales Tax Summary", month: "salesTaxSummaryMonth", start: "salesTaxSummaryStart", end: "salesTaxSummaryEnd",
+      text: { id: "salesTaxSummarySearch", label: "Tax type", ph: "VAT, GST…" },
+      render: function () { call("renderSalesTaxSummary"); },
+      clear: function () { call("renderSalesTaxSummary"); },
+      csv: "salesTaxSummaryTable"
+    }
+  };
+
+  /* legacy handlers in the Tax Summary panel call renderReports(), which is now the P&L renderer — point them at the tax renderer */
+  function repoint(panel) {
+    panel.querySelectorAll("[onchange],[onclick]").forEach(function (n) {
+      ["onchange", "onclick"].forEach(function (a) {
+        var v = n.getAttribute(a);
+        if (v && /(^|[^.\w])renderReports\(\)/.test(v)) n.setAttribute(a, v.replace(/renderReports\(\)/g, "window.renderTaxSummaryReport&&window.renderTaxSummaryReport()"));
+      });
+    });
+  }
+
+  function hideRow(panel, ctl) {
+    if (!ctl) return;
+    var node = ctl, target = ctl;
+    while (node && node !== panel) {
+      if (node.querySelector && !node.querySelector("table") && !node.querySelector(".bx-bar")) target = node;
+      else if (node !== ctl) break;
+      node = node.parentNode;
+    }
+    if (target === panel || target.closest(".bx-bar")) return;
+    target.setAttribute("data-bx-legacy", "1");
+    target.style.display = "none";
+  }
+
+  function build(id) {
+    var cfg = CFG[id], panel = el(id);
+    if (!panel || panel.querySelector(":scope > .bx-bar")) return;
+    if (id === "taxComputationReport") repoint(panel);
+
+    var h = '<div class="bx-row">' +
+      '<label class="bx-f">Period<select data-bx="preset">' + PRESETS.map(function (p) { return '<option value="' + p[0] + '">' + p[1] + "</option>"; }).join("") + "</select></label>" +
+      '<label class="bx-f">From<input type="date" data-bx="from"></label>' +
+      '<label class="bx-f">To<input type="date" data-bx="to"></label>';
+    if (cfg.basis) h += '<label class="bx-f">Basis<select data-bx="basis"><option value="accrual">Accrual</option><option value="cash">Cash</option></select></label>';
+    if (cfg.text) h += '<label class="bx-f">' + cfg.text.label + '<input type="text" data-bx="text" placeholder="' + cfg.text.ph + '"></label>';
+    h += '<button type="button" class="bx-btn" data-bx-act="apply">Apply</button>' +
+      '<button type="button" class="bx-btn ghost" data-bx-act="reset">Reset</button>' +
+      '<button type="button" class="bx-btn ghost" data-bx-act="csv">⬇ CSV</button>' +
+      '<button type="button" class="bx-btn ghost" data-bx-act="print">🖨 Print</button></div>';
+    var bar = document.createElement("div");
+    bar.className = "bx-bar";
+    bar.innerHTML = h;
+    function q(k) { return bar.querySelector('[data-bx="' + k + '"]'); }
+
+    /* start from whatever the report is currently filtered by */
+    var m0 = val(cfg.month), s0 = val(cfg.start), e0 = val(cfg.end);
+    if (m0 && !s0 && !e0) { var pp = m0.split("-"); s0 = m0 + "-01"; e0 = iso(new Date(+pp[0], +pp[1], 0)); }
+    q("from").value = s0; q("to").value = e0;
+    if (s0 || e0) q("preset").value = "custom";
+    if (cfg.basis && val(cfg.basis)) q("basis").value = val(cfg.basis);
+    if (cfg.text) q("text").value = val(cfg.text.id);
+
+    function push() {
+      setVal(cfg.month, "");
+      setVal(cfg.start, q("from").value);
+      setVal(cfg.end, q("to").value);
+      if (cfg.basis) setVal(cfg.basis, q("basis").value);
+      if (cfg.text) setVal(cfg.text.id, q("text").value);
+      cfg.render();
+    }
+    bar.addEventListener("change", function (e) {
+      var k = e.target.getAttribute && e.target.getAttribute("data-bx");
+      if (!k) return;
+      if (k === "preset") {
+        if (e.target.value !== "custom") { var r = presetRange(e.target.value); q("from").value = r.from; q("to").value = r.to; }
+        push();
+      } else if (k === "from" || k === "to") { q("preset").value = "custom"; push(); }
+      else push();
+    });
+    bar.addEventListener("keydown", function (e) { if (e.key === "Enter") push(); });
+    bar.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-bx-act]"); if (!b) return;
+      var act = b.getAttribute("data-bx-act");
+      if (act === "apply") push();
+      else if (act === "reset") {
+        q("preset").value = "all"; q("from").value = ""; q("to").value = "";
+        setVal(cfg.month, ""); setVal(cfg.start, ""); setVal(cfg.end, "");
+        if (cfg.basis) { q("basis").value = "accrual"; setVal(cfg.basis, "accrual"); }
+        if (cfg.text) { q("text").value = ""; setVal(cfg.text.id, ""); }
+        cfg.clear();
+      }
+      else if (act === "csv") {
+        var btn = panel.querySelector('button[onclick*="' + cfg.csv + '"]');
+        if (btn) btn.click();
+        else if (typeof exportFilteredTableToCSV === "function") exportFilteredTableToCSV(cfg.csv, cfg.title);
+      }
+      else if (act === "print") {
+        var w = window.open("", "_blank"); if (!w) return;
+        var tabs = Array.prototype.filter.call(panel.querySelectorAll("table"), function (t) { return t.rows.length > 0; })
+          .map(function (t) { return t.outerHTML; }).join("<br>");
+        w.document.write("<html><head><title>" + cfg.title + '</title><style>body{font-family:Arial,sans-serif;padding:20px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #cbd5e1;padding:5px 8px;text-align:left}th{background:#eef2f7}</style></head><body><h3>' + cfg.title + "</h3>" + tabs + "</body></html>");
+        w.document.close(); w.focus(); w.print();
+      }
+    });
+
+    var head = panel.querySelector(":scope > h2, :scope > p");
+    if (head) panel.insertBefore(bar, head.nextSibling); else panel.insertBefore(bar, panel.firstChild);
+
+    /* hide the old month / date / basis / apply / clear controls (they stay in the page and are driven by the bar) */
+    [cfg.month, cfg.start, cfg.end, cfg.basis, cfg.text && cfg.text.id].forEach(function (i) { if (i) hideRow(panel, el(i)); });
+    panel.querySelectorAll("button").forEach(function (b) {
+      if (b.closest(".bx-bar")) return;
+      var t = (b.textContent || "").replace(/[^\x20-\x7E]/g, "").trim().toLowerCase();
+      if (/^(apply filter|clear filter|clear|apply)$/.test(t)) hideRow(panel, b);
+    });
+  }
+
+  function all() { Object.keys(CFG).forEach(build); }
+  function wrapShow() {
+    var o = window.showReport;
+    if (typeof o !== "function" || o.__bxTaxWrapped) return;
+    var w = function (id) { var r = o.apply(this, arguments); try { if (CFG[id]) build(id); } catch (e) {} return r; };
+    w.__bxTaxWrapped = true;
+    /* keep the budget wrapper's flag so it does not double-wrap */
+    w.__bxWrapped = o.__bxWrapped;
+    window.showReport = w;
+  }
+  function init() { all(); wrapShow(); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+  window.addEventListener("load", init);
+  var n = 0, t = setInterval(function () { init(); if (++n > 20) clearInterval(t); }, 1500);
+})();
+</script>
+
 </body></html>
