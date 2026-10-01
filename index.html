@@ -103504,13 +103504,13 @@ async function saveUser() {
     if (editingUserIndex === null && window.__SUPA_URL__) {
       try {
         const __lk = (email || username).toLowerCase();
-        const __r = await fetch(window.__SUPA_URL__ + '/rest/v1/app_accounts?select=login_id,company_id&login_id=eq.' + encodeURIComponent(__lk), {
+        const __r = await fetch(window.__SUPA_URL__ + '/rest/v1/app_accounts?select=login_id,company_id&login_id=eq.' + encodeURIComponent(__lk) + '&company_id=eq.' + encodeURIComponent(companyId), {
           headers: { apikey: window.__SUPA_KEY__, Authorization: 'Bearer ' + window.__SUPA_KEY__ }
         });
         if (__r.ok) {
           const __rows = await __r.json();
           if (__rows && __rows.length) {
-            alert('"' + __lk + '" is already registered as a login' + (String(__rows[0].company_id || '') === companyId ? ' in this company' : ' in another company') + '. Use a different email for this user so the existing account is not replaced.');
+            alert('"' + __lk + '" is already a user in this company. Use a different email for this user, or edit the existing user instead.');
             return;
           }
         }
@@ -104231,7 +104231,7 @@ function deleteUser(index) {
   try {
     var __delId = String(user.email || user.username || '').toLowerCase();
     if (__delId && window.__SUPA_URL__ && window.__SUPA_KEY__){
-      fetch(window.__SUPA_URL__ + '/rest/v1/app_accounts?or=(login_id.eq.' + encodeURIComponent(__delId) + ',username.eq.' + encodeURIComponent(__delId) + ')', {
+      fetch(window.__SUPA_URL__ + '/rest/v1/app_accounts?company_id=eq.' + encodeURIComponent(String(user.companyId || me.companyId || '')) + '&or=(login_id.eq.' + encodeURIComponent(__delId) + ',username.eq.' + encodeURIComponent(__delId) + ')', {
         method: 'DELETE', keepalive: true,
         headers: { apikey: window.__SUPA_KEY__, Authorization: 'Bearer ' + window.__SUPA_KEY__ }
       }).catch(function(){});
@@ -117665,9 +117665,9 @@ function toggleSubmenu(id) {
     }
 
     function credFp(u){ u = u || {}; return JSON.stringify([u.passwordHash || '', u.passwordSalt || '', u.password || '', String(u.companyName || ''), String(u.email || '').toLowerCase()]); }
-    function seenKey(id){ return 'acx_accseen_' + String(id || '').toLowerCase(); }
+    function seenKey(id, co){ return 'acx_accseen_' + String(co || '') + '_' + String(id || '').toLowerCase(); }
     window.__acxCredFp = credFp;
-    window.__acxMarkSeen = function(id, u){ try { localStorage.setItem(seenKey(id), credFp(u)); } catch(e){} };
+    window.__acxMarkSeen = function(id, u){ try { localStorage.setItem(seenKey(id, u && u.companyId), credFp(u)); } catch(e){} };
     /* The cloud copy of an account is changed by the Support Hub (password reset, company rename).
        A device holding an older local copy must never push that stale copy back over it. Rule:
        if cloud credentials differ from ours and we have NOT edited ours since we last synced -> cloud wins
@@ -117681,17 +117681,17 @@ function toggleSubmenu(id) {
       var q = await sb.from('app_accounts').select('login_id,company_id,data').in('login_id', ids);
       if (q.error){ console.warn('[companySync] account read failed, not pushing', q.error); window.__acxAccountPushError = q.error.message || String(q.error); return { ok: false, error: window.__acxAccountPushError }; }
       var cloud = {}, cloudCo = {}, conflicts = [], dupSeen = {};
-      (q.data || []).forEach(function(r){ var k = String(r.login_id).toLowerCase(); cloud[k] = r.data || {}; cloudCo[k] = String(r.company_id || ''); });
+      (q.data || []).forEach(function(r){ var k = String(r.company_id || '') + '|' + String(r.login_id).toLowerCase(); cloud[k] = r.data || {}; });
       var adopted = false;
       var rows = list.map(function(u, i){
-        var id = ids[i], c = cloud[id], out = u;
+        var id = ids[i], ck = String(u.companyId || '') + '|' + id, c = cloud[ck], out = u;
         /* One login id = one account. Skip (never overwrite) a second local account that reuses the same
            email, or one whose email already belongs to an account of another company in the cloud. */
-        if (dupSeen[id]){ conflicts.push(id); return null; }
-        dupSeen[id] = 1;
-        if (cloudCo[id] && u.companyId && cloudCo[id] !== String(u.companyId)){ conflicts.push(id); return null; }
+        if (dupSeen[ck]){ conflicts.push(id); return null; }
+        dupSeen[ck] = 1;
+        /* The same email may exist in other companies: accounts are unique per company + email, so no cross-company conflict. */
         if (c && credFp(c) !== credFp(u)){
-          var seen = null; try { seen = localStorage.getItem(seenKey(id)); } catch(e){}
+          var seen = null; try { seen = localStorage.getItem(seenKey(id, u.companyId)); } catch(e){}
           var localEdited = (seen !== null && credFp(u) !== seen);
           if (!localEdited){
             out = Object.assign({}, u, { passwordHash: c.passwordHash, passwordSalt: c.passwordSalt, companyName: c.companyName || u.companyName, previousCompanyNames: c.previousCompanyNames || u.previousCompanyNames });
@@ -117699,24 +117699,24 @@ function toggleSubmenu(id) {
             list[i] = out; adopted = true;
           }
         }
-        try { localStorage.setItem(seenKey(id), credFp(out)); } catch(e){}
+        try { localStorage.setItem(seenKey(id, u.companyId), credFp(out)); } catch(e){}
         return { login_id: id, username: String(out.username || '').toLowerCase(), company_id: String(out.companyId || ''), data: out, updated_at: new Date().toISOString() };
       }).filter(Boolean);
       if (adopted){
-        var byId = {}; list.forEach(function(u){ byId[String(u.email || u.username).toLowerCase()] = u; });
-        var merged = users.map(function(u){ var k = u && String(u.email || u.username || '').toLowerCase(); return (k && byId[k]) || u; });
+        var byId = {}; list.forEach(function(u){ byId[String(u.companyId || '') + '|' + String(u.email || u.username).toLowerCase()] = u; });
+        var merged = users.map(function(u){ var k = u && (String(u.companyId || '') + '|' + String(u.email || u.username || '').toLowerCase()); return (k && byId[k]) || u; });
         NS.nSet.call(NS.real, 'users', JSON.stringify(merged));
       }
       var conflictMsg = conflicts.length ? ('These emails/logins are already used by a different account, so they were NOT synced and nothing was overwritten: ' + conflicts.join(', ') + '. Give each user their own unique email.') : null;
       if (!rows.length){ window.__acxAccountPushError = conflictMsg; return conflictMsg ? { ok: false, error: conflictMsg } : { ok: true }; }
-      var res = await sb.from('app_accounts').upsert(rows, { onConflict: 'login_id' });
+      var res = await sb.from('app_accounts').upsert(rows, { onConflict: 'company_id,login_id' });
       if (!res.error){ window.__acxAccountPushError = conflictMsg; return conflictMsg ? { ok: false, error: conflictMsg } : { ok: true }; }
       console.warn('[companySync] account push error (batch), retrying row by row', res.error);
       /* One rejected row used to block every other account in the batch. Push each row on its own so the
          good ones (e.g. a new User Management user) still reach Supabase, and remember the first error. */
       var firstErr = res.error, failedIds = [];
       for (var ri = 0; ri < rows.length; ri++){
-        var one = await sb.from('app_accounts').upsert([rows[ri]], { onConflict: 'login_id' });
+        var one = await sb.from('app_accounts').upsert([rows[ri]], { onConflict: 'company_id,login_id' });
         if (one.error){ failedIds.push(rows[ri].login_id); console.warn('[companySync] account push error for ' + rows[ri].login_id, one.error); }
       }
       window.__acxAccountPushError = failedIds.length ? (firstErr.message || String(firstErr)) : null;
@@ -117724,13 +117724,22 @@ function toggleSubmenu(id) {
     } catch(e){ console.warn('[companySync] account push failed', e); window.__acxAccountPushError = String(e && e.message || e); return { ok: false, error: window.__acxAccountPushError }; }
   }
   window.__acxPushAccounts = pushAccounts;
-  async function fetchAccount(id){
+  async function fetchAccount(id, companyInput){
     try {
       id = String(id || '').trim().toLowerCase();
       if (!id) return null;
-      var res = await sb.from('app_accounts').select('data').or('login_id.eq.' + id + ',username.eq.' + id);
+      var res = await sb.from('app_accounts').select('data,company_id').or('login_id.eq.' + id + ',username.eq.' + id);
       if (res.error || !res.data || !res.data.length) return null;
-      return res.data[0].data || null;
+      /* One email can belong to several companies: return the account of the company typed on the login form. */
+      var pick = null;
+      if (companyInput){
+        pick = res.data.filter(function(r){
+          var d = Object.assign({}, r.data || {});
+          d.companyId = d.companyId || r.company_id;
+          return window.acxCompanyMatches && window.acxCompanyMatches(d, companyInput);
+        })[0] || null;
+      } else if (res.data.length === 1){ pick = res.data[0]; }
+      return pick ? (pick.data || null) : null;
     } catch(e){ return null; }
   }
 
@@ -117863,13 +117872,15 @@ function toggleSubmenu(id) {
   window.handleLogin = async function(){
     try {
       var emailEl = document.getElementById('loginEmail');
+      var coEl = document.getElementById('loginCompanyId');
+      var coIn = coEl ? coEl.value.trim() : '';
       var uemail = emailEl ? emailEl.value.trim().toLowerCase() : '';
       var id = uemail;
       if (id){
         window.__loginBusy(true);
         var users = JSON.parse(NS.nGet.call(NS.real, 'users') || '[]');
         var local = users.find(function(x){
-          return uemail && String(x.email || '').toLowerCase() === uemail;
+          return uemail && String(x.email || '').toLowerCase() === uemail && (!coIn || window.acxCompanyMatches(x, coIn));
         });
         // Always refresh this one account from Supabase before checking the
         // password, not only when it's missing locally. A password reset or
@@ -117877,7 +117888,7 @@ function toggleSubmenu(id) {
         // Supabase, and this is what makes it take effect on the very next
         // login attempt here, even on a device that already has the old
         // (stale) copy cached.
-        var remote = await window.__netGuard(fetchAccount(id), 6000);
+        var remote = await window.__netGuard(fetchAccount(id, coIn), 6000);
         if (remote && local && remote.companyId && local.companyId && String(remote.companyId) !== String(local.companyId)) remote = null;
         if (remote){
           if (local){
@@ -146514,10 +146525,103 @@ function axOpenChatOption(){
     var box = document.getElementById('acxUpgradeBox');
     if (!box) { box = document.createElement('div'); box.id = 'acxUpgradeBox'; box.className = 'bg-white rounded-xl shadow p-4 mb-6 border border-gray-200'; sec.parentNode.insertBefore(box, sec.nextSibling); renderBox(); loadStatus(true); }
     else if (box.previousElementSibling !== sec) sec.parentNode.insertBefore(box, sec.nextSibling);
+    /* Upgrade + extra-user boxes belong to the Subscription tab only */
+    var on = sec.style.display !== 'none';
+    box.style.display = on ? '' : 'none';
+    var ub = document.getElementById('acxUsersBox');
+    if (!ub) { ub = document.createElement('div'); ub.id = 'acxUsersBox'; ub.className = 'bg-white rounded-xl shadow p-4 mb-6 border border-gray-200'; box.parentNode.insertBefore(ub, box.nextSibling); renderUsersBox(); loadUserReq(true); }
+    else if (ub.previousElementSibling !== box) box.parentNode.insertBefore(ub, box.nextSibling);
+    ub.style.display = on ? '' : 'none';
   }
 
-  window.addEventListener('acx-company-row', function(){ decorate(true); renderBox(); });
-  setInterval(function(){ try { decorate(false); if (document.getElementById('acxUpgradeBox')) loadStatus(false); } catch(e){} }, 1000);
+  /* ---------- Buy more users (per plan) ---------- */
+  /* Price per extra user per month, in KES. Change these numbers to change what customers see. */
+  var USER_PRICE = { free: 0, starter: 500, pro: 400, business: 300 };
+  var userReq = null, userReqFetch = 0, userBusy = false;
+  function baseLimit(plan){ var m = { free: 1, starter: 3, pro: 10, business: 25 }; return m[plan.k]; }
+  function extraNow(){ try { return typeof acxExtraUsers === 'function' ? acxExtraUsers() : 0; } catch(e){ return 0; } }
+  function usedUsers(){ try { var u = me() || {}; return typeof companyUserCount === 'function' ? companyUserCount(u.companyId) : 0; } catch(e){ return 0; } }
+  async function loadUserReq(force){
+    var u = me(); if (!u || !u.companyId || !URL_) return;
+    if (!force && Date.now() - userReqFetch < 20000) return;
+    userReqFetch = Date.now();
+    try {
+      var r = await fetch(URL_ + '/rest/v1/rpc/acx_extra_users_status', { method: 'POST', headers: H, body: JSON.stringify({ p_company: String(u.companyId) }) });
+      if (!r.ok) return;
+      var a = await r.json(); userReq = (a && a[0]) || null; renderUsersBox();
+    } catch(e){}
+  }
+  async function sendUserReq(box){
+    var u = me(); if (!u || !u.companyId || userBusy) return;
+    var q = box.querySelector('[data-ux="qty"]'), cyc = box.querySelector('[data-ux="cycle"]'), msg = box.querySelector('[data-ux="msg"]'), btn = box.querySelector('[data-ux="send"]');
+    var n = Math.floor(Number(q && q.value));
+    if (!isFinite(n) || n < 1 || n > 1000) { toast('Enter a number of users between 1 and 1000'); return; }
+    userBusy = true; btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      var r = await fetch(URL_ + '/rest/v1/rpc/acx_request_extra_users', { method: 'POST', headers: H,
+        body: JSON.stringify({ p_company: String(u.companyId), p_users: n, p_billing: cyc ? cyc.value : 'Monthly', p_message: msg ? msg.value.trim() : '' }) });
+      if (!r.ok) {
+        var e = {}; try { e = await r.json(); } catch(x){}
+        var m = String(e.message || '');
+        if (/function|schema cache/i.test(m)) m = 'Buying extra users is not switched on yet. Please contact support.';
+        else if (/Company not found/i.test(m)) m = 'Your account is not linked to the support system yet. Please contact support.';
+        alert(m || 'Could not send the request. Please try again.'); return;
+      }
+      toast('Request sent. We will confirm your extra users shortly.');
+      await loadUserReq(true);
+    } catch(e){ alert('Could not reach the server. Check your internet and try again.'); }
+    finally { userBusy = false; renderUsersBox(); }
+  }
+  function usersSig(){ return [currentPlan().k, extraNow(), usedUsers(), userReq ? userReq.id + userReq.status : ''].join('|'); }
+  function renderUsersBox(){
+    var box = document.getElementById('acxUsersBox'); if (!box) return;
+    if (box.contains(document.activeElement) && document.activeElement.tagName !== 'BODY' && box.getAttribute('data-sig') === usersSig()) return;
+    var cur = currentPlan(), u = me() || {}, canAsk = /admin|owner/.test(String(u.role || 'admin').toLowerCase());
+    var base = baseLimit(cur), extra = extraNow(), used = usedUsers();
+    var html = '<div class="flex items-center justify-between mb-3 flex-wrap gap-2"><h3 class="text-sm font-semibold">👥 Buy more users</h3><span class="text-sm text-gray-500">Current plan: <b>' + esc(cur.l) + '</b></span></div>';
+    if (base === undefined) {
+      html += '<p class="text-sm text-gray-600">Your ' + esc(cur.l) + ' plan already has unlimited users.</p>';
+      box.innerHTML = html; box.setAttribute('data-sig', usersSig()); return;
+    }
+    var total = base + extra;
+    html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3 text-sm">' +
+      '<div class="p-2 rounded border bg-gray-50"><div class="text-xs text-gray-500">Included in plan</div><b>' + base + '</b></div>' +
+      '<div class="p-2 rounded border bg-gray-50"><div class="text-xs text-gray-500">Extra users bought</div><b>' + extra + '</b></div>' +
+      '<div class="p-2 rounded border bg-gray-50"><div class="text-xs text-gray-500">Total allowed</div><b>' + total + '</b></div>' +
+      '<div class="p-2 rounded border bg-gray-50"><div class="text-xs text-gray-500">In use</div><b>' + used + ' of ' + total + '</b></div></div>';
+    /* price per extra user on every plan */
+    html += '<table class="w-full border text-sm mb-3"><thead class="bg-gray-100"><tr><th class="border p-2 text-left">Plan</th><th class="border p-2 text-center">Users included</th><th class="border p-2 text-left">Price per extra user</th></tr></thead><tbody>' +
+      PLANS.filter(function(p){ return USER_PRICE[p.k] !== undefined; }).map(function(p){
+        var isCur = p.k === cur.k;
+        return '<tr' + (isCur ? ' class="bg-blue-50 font-semibold"' : '') + '><td class="border p-2">' + esc(p.l) + (isCur ? ' (your plan)' : '') + '</td><td class="border p-2 text-center">' + baseLimit(p) + '</td><td class="border p-2">' + (USER_PRICE[p.k] ? 'KES ' + USER_PRICE[p.k].toLocaleString() + ' / user / month' : 'Not available') + '</td></tr>';
+      }).join('') + '<tr><td class="border p-2">Enterprise, All Access</td><td class="border p-2 text-center">Unlimited</td><td class="border p-2">Included</td></tr></tbody></table>';
+    var price = USER_PRICE[cur.k] || 0;
+    if (userReq && userReq.status === 'pending') html += '<div class="mb-3 p-3 rounded border border-amber-200 bg-amber-50 text-sm text-amber-800">⏳ Your request for <b>' + esc(userReq.users_requested) + '</b> extra user(s) was sent on ' + esc(dateOnly(userReq.created_at)) + ' and is waiting for approval. You can send a new one to replace it.</div>';
+    if (userReq && userReq.status === 'approved' && Date.now() - new Date(userReq.decided_at || 0) < 14 * 86400000) html += '<div class="mb-3 p-3 rounded border border-green-200 bg-green-50 text-sm text-green-800">✅ Your request for ' + esc(userReq.users_requested) + ' extra user(s) was approved.</div>';
+    if (userReq && userReq.status === 'rejected') html += '<div class="mb-3 p-3 rounded border border-gray-200 bg-gray-50 text-sm text-gray-700">Your last request for ' + esc(userReq.users_requested) + ' extra user(s) was not approved' + (userReq.decision_note ? ': ' + esc(userReq.decision_note) : '.') + '</div>';
+    if (!price) html += '<p class="text-sm text-gray-600">Extra users are not sold on the Free plan. Upgrade your plan above to add more users.</p>';
+    else if (!canAsk) html += '<p class="text-sm text-gray-600">Only an administrator can buy more users.</p>';
+    else {
+      html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block mb-1 text-sm font-medium">How many extra users?</label><input data-ux="qty" type="number" min="1" max="1000" value="1" class="border p-2 rounded w-full text-sm"></div>' +
+        '<div><label class="block mb-1 text-sm font-medium">Billing cycle</label><select data-ux="cycle" class="border p-2 rounded w-full text-sm"><option>Monthly</option><option>Annual</option></select></div>' +
+        '<div class="md:col-span-2"><label class="block mb-1 text-sm font-medium">Message (optional)</label><textarea data-ux="msg" rows="2" class="border p-2 rounded w-full text-sm" placeholder="Anything our team should know?"></textarea></div></div>' +
+        '<p class="text-sm mt-3" data-ux="total"></p>' +
+        '<div class="mt-3 flex gap-2"><button type="button" data-ux="send" class="bg-blue-900 text-white font-bold px-3 py-1 rounded hover:bg-blue-800 text-sm">Request extra users</button></div>' +
+        '<p class="text-xs text-gray-500 mt-2">Your user limit goes up only after our team approves the request.</p>';
+    }
+    box.innerHTML = html; box.setAttribute('data-sig', usersSig());
+    var q = box.querySelector('[data-ux="qty"]'), cyc = box.querySelector('[data-ux="cycle"]'), tt = box.querySelector('[data-ux="total"]');
+    function calc(){
+      if (!q || !tt) return;
+      var n = Math.max(0, Math.floor(Number(q.value) || 0)), months = (cyc && cyc.value === 'Annual') ? 12 : 1, amt = n * price * months * (months === 12 ? 0.9 : 1);
+      tt.innerHTML = n + ' user(s) × KES ' + price.toLocaleString() + ' = <b>KES ' + Math.round(amt).toLocaleString() + (months === 12 ? ' per year</b> (10% off)' : ' per month</b>') + ' &nbsp;·&nbsp; new limit: <b>' + (total + n) + ' users</b>';
+    }
+    if (q) { q.oninput = calc; cyc.onchange = calc; calc(); }
+    var b = box.querySelector('[data-ux="send"]'); if (b) b.onclick = function(){ sendUserReq(box); };
+  }
+
+  window.addEventListener('acx-company-row', function(){ decorate(true); renderBox(); renderUsersBox(); });
+  setInterval(function(){ try { decorate(false); if (document.getElementById('acxUpgradeBox')) loadStatus(false); if (document.getElementById('acxUsersBox')) { loadUserReq(false); renderUsersBox(); } } catch(e){} }, 1000);
 })();
 </script>
 <script>
@@ -146554,6 +146658,9 @@ function axOpenChatOption(){
   function getUsers() { try { return JSON.parse(localStorage.getItem('users')) || []; } catch (e) { return []; } }
   function customRoles() { try { return JSON.parse(localStorage.getItem(key()) || '[]') || []; } catch (e) { return []; } }
   function saveCustom(a) { localStorage.setItem(key(), JSON.stringify(a)); }
+  function bkey() { return 'acxRolesV2_builtin_' + cid(); }
+  function builtinOverrides() { try { return JSON.parse(localStorage.getItem(bkey()) || '{}') || {}; } catch (e) { return {}; } }
+  function saveBuiltinOverrides(o) { localStorage.setItem(bkey(), JSON.stringify(o)); }
   function allModuleIds() {
     var s = {}; MODULE_GROUPS.forEach(function (g) { g.modules.forEach(function (m) { s[m] = 1; }); });
     (typeof ALL_MODULES !== 'undefined' ? ALL_MODULES : []).forEach(function (m) { s[m] = 1; });
@@ -146573,7 +146680,8 @@ function axOpenChatOption(){
     return p;
   }
   function allRoles() {
-    var b = BUILTIN.map(function (r) { return { id: r.id, name: r.label, description: r.description, builtin: true, permissions: builtinPerms(r.id) }; });
+    var ov = builtinOverrides();
+    var b = BUILTIN.map(function (r) { var o = ov[r.id]; return { id: r.id, name: r.label, description: (o && o.description != null) ? o.description : r.description, builtin: true, modified: !!o, permissions: (o && o.permissions) ? o.permissions : builtinPerms(r.id) }; });
     return b.concat(customRoles().map(function (r) { return { id: r.id, name: r.name, description: r.description || '', builtin: false, permissions: r.permissions || blankPerms() }; }));
   }
   function findRole(v) { v = String(v || '').toLowerCase(); return allRoles().filter(function (r) { return String(r.id).toLowerCase() === v; })[0]; }
@@ -146598,14 +146706,14 @@ function axOpenChatOption(){
     var sec = ensureSection(); if (!sec) return;
     var rows = allRoles().map(function (r) {
       var n = roleUserCount(r.id), mods = modulesOf(r.permissions).length;
-      return '<tr class="border-b"><td class="border p-2 font-semibold">' + esc(r.name) + (r.builtin ? ' <span class="text-xs text-gray-500">(built-in)</span>' : '') + '</td>' +
+      return '<tr class="border-b"><td class="border p-2 font-semibold">' + esc(r.name) + (r.builtin ? ' <span class="text-xs text-gray-500">(built-in' + (r.modified ? ', edited' : '') + ')</span>' : '') + '</td>' +
         '<td class="border p-2">' + esc(r.description) + '</td>' +
         '<td class="border p-2 text-center">' + mods + '</td>' +
         '<td class="border p-2 text-center">' + n + '</td>' +
         '<td class="border p-2 space-x-1">' +
-        '<button type="button" data-acx-role="view" data-id="' + esc(r.id) + '" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">' + (r.builtin ? 'View' : 'Edit') + '</button>' +
+        '<button type="button" data-acx-role="view" data-id="' + esc(r.id) + '" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">' + 'Edit</button>' +
         '<button type="button" data-acx-role="clone" data-id="' + esc(r.id) + '" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Clone</button>' +
-        (r.builtin ? '' : '<button type="button" data-acx-role="delete" data-id="' + esc(r.id) + '" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Delete</button>') +
+        (r.builtin ? (r.modified ? '<button type="button" data-acx-role="reset" data-id="' + esc(r.id) + '" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Reset</button>' : '') : '<button type="button" data-acx-role="delete" data-id="' + esc(r.id) + '" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">Delete</button>') +
         '</td></tr>';
     }).join('');
     sec.innerHTML = '<div class="flex items-center justify-between mb-2"><h3 class="text-sm font-bold">Roles &amp; Permissions</h3>' +
@@ -146620,6 +146728,7 @@ function axOpenChatOption(){
     if (a === 'view') return openEditor(id);
     if (a === 'clone') return cloneRole(id);
     if (a === 'delete') return deleteRole(id);
+    if (a === 'reset') return resetBuiltin(id);
   });
 
   function cloneRole(id) {
@@ -146629,6 +146738,16 @@ function axOpenChatOption(){
     if (findRole(name) || BUILTIN.some(function (x) { return x.label.toLowerCase() === name.toLowerCase(); })) { alert('A role named "' + name + '" already exists.'); return; }
     var list = customRoles(); list.push({ id: name, name: name, description: r.description, permissions: clone(r.permissions) });
     saveCustom(list); renderRoles(); syncDropdown();
+  }
+  function resetBuiltin(id) {
+    var r = findRole(id); if (!r || !r.builtin) return;
+    if (!confirm('Reset "' + r.name + '" back to its original modules and permissions? Users on this role will be updated too.')) return;
+    var o = builtinOverrides(); delete o[id]; saveBuiltinOverrides(o);
+    var fresh = findRole(id), users = getUsers(), changed = false;
+    users.forEach(function (u) { if (String(u.companyId || '') === cid() && String(u.role || '').toLowerCase() === String(id).toLowerCase()) { u.permissions = clone(fresh.permissions); u.modules = modulesOf(fresh.permissions); changed = true; } });
+    if (changed) localStorage.setItem('users', JSON.stringify(users));
+    renderRoles(); syncDropdown();
+    try { if (typeof renderUserTable === 'function') renderUserTable(); } catch (e) { }
   }
   function deleteRole(id) {
     var n = roleUserCount(id);
@@ -146656,16 +146775,16 @@ function axOpenChatOption(){
   function closeEditor() { var m = document.getElementById('acxRoleModal'); if (m) m.remove(); }
   function openEditor(id) {
     closeEditor();
-    var r = id ? findRole(id) : null, ro = !!(r && r.builtin);
+    var r = id ? findRole(id) : null, ro = false, lockName = !!(r && r.builtin);
     var perms = r ? r.permissions : blankPerms();
     var m = document.createElement('div');
     m.id = 'acxRoleModal';
     m.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px';
     m.innerHTML = '<div style="background:#fff;border-radius:10px;max-width:1100px;width:100%;max-height:92vh;display:flex;flex-direction:column">' +
-      '<div style="padding:16px 20px;border-bottom:1px solid #e5e7eb"><h3 class="text-sm font-bold mb-2">' + (r ? (ro ? '🛡️ ' + esc(r.name) + ' (built-in, read only)' : '✏️ Edit Role') : '➕ New Role') + '</h3>' +
-      '<div class="flex gap-2 flex-wrap"><input id="acxRoleName" class="p-2 border rounded" style="min-width:220px" placeholder="Role name" value="' + esc(r ? r.name : '') + '"' + (ro ? ' disabled' : '') + '>' +
+      '<div style="padding:16px 20px;border-bottom:1px solid #e5e7eb"><h3 class="text-sm font-bold mb-2">' + (r ? (lockName ? '🛡️ Edit ' + esc(r.name) + ' (built-in role)' : '✏️ Edit Role') : '➕ New Role') + '</h3>' +
+      '<div class="flex gap-2 flex-wrap"><input id="acxRoleName" class="p-2 border rounded" style="min-width:220px" placeholder="Role name" value="' + esc(r ? r.name : '') + '"' + (lockName ? ' disabled' : '') + '>' +
       '<input id="acxRoleDesc" class="p-2 border rounded flex-1" style="min-width:260px" placeholder="Description (optional)" value="' + esc(r ? r.description : '') + '"' + (ro ? ' disabled' : '') + '></div>' +
-      (ro ? '<p class="text-xs text-gray-600 mt-2">Built-in roles cannot be changed. Use Clone to make an editable copy.</p>' : '') + '</div>' +
+      (lockName ? '<p class="text-xs text-gray-600 mt-2">Tick the modules and actions you want this role to have, then Save. Users on this role get the change straight away. Use Reset in the table to go back to the original.</p>' : '') + '</div>' +
       '<div style="padding:12px 20px;overflow:auto;flex:1">' + matrixHTML(perms, ro) + '</div>' +
       '<div style="padding:12px 20px;border-top:1px solid #e5e7eb;text-align:right">' +
       (ro ? '' : '<button type="button" id="acxRoleSave" class="bg-blue-700 text-white font-bold px-4 py-2 rounded hover:bg-blue-800 mr-2">💾 Save Role</button>') +
@@ -146694,10 +146813,11 @@ function axOpenChatOption(){
   function saveRole(existing) {
     var name = document.getElementById('acxRoleName').value.trim();
     var desc = document.getElementById('acxRoleDesc').value.trim();
+    if (existing && existing.builtin) name = existing.name;
     if (!name) { alert('Please enter a role name.'); return; }
-    var clash = allRoles().some(function (x) {
+    var clash = !(existing && existing.builtin) && allRoles().some(function (x) {
       return x.name.toLowerCase() === name.toLowerCase() && (!existing || String(x.id).toLowerCase() !== String(existing.id).toLowerCase());
-    }) || BUILTIN.some(function (x) { return x.id === name.toLowerCase(); });
+    }) || (!(existing && existing.builtin) && BUILTIN.some(function (x) { return x.id === name.toLowerCase(); }));
     if (clash) { alert('A role named "' + name + '" already exists.'); return; }
     var perms = blankPerms();
     document.querySelectorAll('#acxRoleModal .acxCell').forEach(function (c) {
@@ -146706,17 +146826,19 @@ function axOpenChatOption(){
       perms[mod][c.getAttribute('data-a')] = c.checked;
     });
     var list = customRoles(), oldId = existing ? existing.id : null;
-    if (existing) {
+    if (existing && existing.builtin) {
+      var ovs = builtinOverrides(); ovs[existing.id] = { description: desc, permissions: perms }; saveBuiltinOverrides(ovs);
+    } else if (existing) {
       list = list.map(function (r) { return String(r.id).toLowerCase() === String(oldId).toLowerCase() ? { id: name, name: name, description: desc, permissions: perms } : r; });
     } else {
       list.push({ id: name, name: name, description: desc, permissions: perms });
     }
-    saveCustom(list);
+    if (!(existing && existing.builtin)) saveCustom(list);
     /* keep users on this role in step with the role (rename + new permissions) */
     var users = getUsers(), changed = false, mods = modulesOf(perms);
     users.forEach(function (u) {
       if (String(u.companyId || '') === cid() && oldId && String(u.role || '').toLowerCase() === String(oldId).toLowerCase()) {
-        u.role = name; u.permissions = clone(perms); u.modules = mods.slice(); changed = true;
+        u.role = (existing && existing.builtin) ? existing.id : name; u.permissions = clone(perms); u.modules = mods.slice(); changed = true;
       }
     });
     if (changed) localStorage.setItem('users', JSON.stringify(users));
