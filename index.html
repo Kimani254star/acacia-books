@@ -267,6 +267,24 @@ window.__banksForTotals = function (list) {
   } else {
     window.__SUPA_URL__ = ''; window.__SUPA_KEY__ = '';
     console.warn('[Acacia] Offline copy: cloud sync is disabled. Use the live website to sync.');
+    /* hard stop: block every request to Supabase / Google Drive / Gmail-backup from an offline copy */
+    var BLOCK = /supabase\.co|googleapis\.com\/(drive|upload)/i;
+    var _f = window.fetch;
+    if (_f) window.fetch = function(u){
+      var url = (u && u.url) ? u.url : String(u);
+      if (BLOCK.test(url)) { console.warn('[Acacia] blocked (offline copy):', url); return Promise.reject(new TypeError('Offline copy: cloud sync disabled')); }
+      return _f.apply(this, arguments);
+    };
+    var _o = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(m, u){
+      if (BLOCK.test(String(u))) throw new Error('Offline copy: cloud sync disabled');
+      return _o.apply(this, arguments);
+    };
+    var _W = window.WebSocket;
+    if (_W) window.WebSocket = function(u){
+      if (BLOCK.test(String(u))) throw new Error('Offline copy: cloud sync disabled');
+      return new _W(u, arguments[1]);
+    };
     document.addEventListener('DOMContentLoaded', function(){
       var b = document.createElement('div');
       b.textContent = 'OFFLINE COPY - cloud sync is disabled here. Use the live website for your real data.';
@@ -139828,6 +139846,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
 
   function pushToGoogle(opts) {
     opts = opts || {};
+    if (!window.__ACX_LIVE__) return Promise.resolve(false);
     if (!companyId()) return Promise.resolve(false);
     var snap;
     try { snap = buildSnapshot(); } catch (e) { return Promise.reject(e); }
@@ -139845,6 +139864,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   }
 
   function pullFromGoogle(preferGmail) {
+    if (!window.__ACX_LIVE__) return Promise.resolve(0);
     if (!companyId()) return Promise.resolve(0);
     setStatus("Reading from Google…", "busy");
     var first = preferGmail ? gmailPull() : drivePull();
@@ -139884,7 +139904,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   }
 
     function syncAll(interactive) {
-    if (busy) return Promise.resolve();
+    if (!window.__ACX_LIVE__ || busy) return Promise.resolve();
     busy = true;
     return connectGoogle(interactive)
             .then(function () { return pullFromGoogle(false); })
@@ -139948,7 +139968,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
     var origStartCloudSync = window.startCloudSync;
   if (typeof origStartCloudSync === "function") {
     window.startCloudSync = async function () {
-      if (linkedEmail || (clientId() && NS.currentUser())) {
+      if (window.__ACX_LIVE__ && (linkedEmail || (clientId() && NS.currentUser()))) {
         try {
           await connectGoogle(false);
           try { if (window.__acxLoadTombs) await window.__acxLoadTombs(); } catch (e) {}
