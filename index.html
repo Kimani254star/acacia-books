@@ -7491,38 +7491,20 @@ document.addEventListener("DOMContentLoaded", () => {
 <script>
 let users = JSON.parse(localStorage.getItem("users") || "[]");
 
-const defaultUsers = [
-
-  { username: 'joseph', email: 'adminacaciabooks@gmail.com', password: 'admin123', role: 'admin',companyId: 'Speartech', modules: ['dashboard','inventory','funds','customers','suppliers','accountant','payroll','reports','settings'] },
-  { username: 'tabitha', password: 'admin123', role: 'admin',companyId: 'Speartech', modules: ['dashboard','inventory','funds','customers','suppliers','accountant','payroll','reports','settings'] },
-  { username: 'gianna', password: 'admin123', role: 'admin',companyId: 'Speartech', modules: ['dashboard','inventory','funds','customers','suppliers','accountant','payroll','reports','settings'] },
-
-  { username: 'james', password: 'sales123', role: 'sales',companyId: 'Speartech', modules: ['dashboard','customers','funds','reports'] },
-  { username: 'david', password: 'sales123', role: 'sales',companyId: 'Speartech', modules: ['dashboard','customers','funds','reports'] },
-
-  { username: 'Grace', password: 'account123', role: 'account',companyId: 'Speartech', modules: ['funds','accountant','payroll','reports'] },
-  { username: 'Antoine', password: 'account123', role: 'account',companyId: 'Speartech', modules: ['funds','accountant','payroll','reports'] },
-
-  { username: 'Kennedy', password: 'procure123', role: 'procure',companyId: 'Speartech', modules: ['dashboard','suppliers','funds'] },
-  { username: 'Joram',   password: 'store123',   role: 'store',companyId: 'Speartech',  modules: ['dashboard','inventory'] },
-  { username: 'felix',      password: 'hr123',      role: 'human resource',companyId: 'Speartech', modules: ['dashboard','payroll','reports','settings'] }
-];
-
-defaultUsers.forEach(u => {
-  if (!users.find(existing => existing.username === u.username)) {
-    users.push(u);
-  }
-});
-
-
-
-users.forEach(existing => {
-  const seed = defaultUsers.find(u => u.username === existing.username);
-  if (seed && seed.email && !existing.email) {
-    existing.email = seed.email;
-  }
-});
-
+/* Built-in sample users were removed: this is a live site, so no account may ship inside the page.
+   Every account now comes only from Register / User Management (and Supabase).
+   One-time cleanup: drop leftover sample users that were never really used - i.e. still carrying the
+   untouched plain-text sample password. A sample user who has signed in (password already hashed) or
+   whose password was changed is a real account and is kept. */
+(function () {
+  var legacy = { joseph: 'admin123', tabitha: 'admin123', gianna: 'admin123', james: 'sales123', david: 'sales123',
+                 grace: 'account123', antoine: 'account123', kennedy: 'procure123', joram: 'store123', felix: 'hr123' };
+  users = users.filter(function (u) {
+    if (!u || typeof u.password !== 'string') return true;
+    var k = String(u.username || '').toLowerCase();
+    return !(Object.prototype.hasOwnProperty.call(legacy, k) && u.password === legacy[k]);
+  });
+})();
 localStorage.setItem("users", JSON.stringify(users));
 
 
@@ -103491,6 +103473,32 @@ async function saveUser() {
   const __companyObj = __companiesList.find(c => String(c.companyId || '') === companyId);
   const companyName = (__companyObj && __companyObj.companyName) || loggedIn.companyName || '';
 
+  {
+    const __all = JSON.parse(localStorage.getItem('users') || '[]');
+    const __em = email.toLowerCase(), __un = username.toLowerCase();
+    const __dup = __all.find((x, i) => i !== editingUserIndex && String(x.companyId || '') === companyId && (
+      (__em && String(x.email || '').toLowerCase() === __em) || String(x.username || '').toLowerCase() === __un));
+    if (__dup) {
+      alert('A user with this ' + ((__em && String(__dup.email || '').toLowerCase() === __em) ? 'email' : 'username') + ' already exists in this company. Every user needs their own unique email and username (the email is their login), otherwise the new user replaces the existing one.');
+      return;
+    }
+    if (editingUserIndex === null && window.__SUPA_URL__) {
+      try {
+        const __lk = (email || username).toLowerCase();
+        const __r = await fetch(window.__SUPA_URL__ + '/rest/v1/app_accounts?select=login_id,company_id&login_id=eq.' + encodeURIComponent(__lk), {
+          headers: { apikey: window.__SUPA_KEY__, Authorization: 'Bearer ' + window.__SUPA_KEY__ }
+        });
+        if (__r.ok) {
+          const __rows = await __r.json();
+          if (__rows && __rows.length) {
+            alert('"' + __lk + '" is already registered as a login' + (String(__rows[0].company_id || '') === companyId ? ' in this company' : ' in another company') + '. Use a different email for this user so the existing account is not replaced.');
+            return;
+          }
+        }
+      } catch (e) { console.warn('[saveUser] duplicate check skipped', e); }
+    }
+  }
+
   if (editingUserIndex === null) {
     if (!canAddUser(companyId, loggedIn.plan, role)) {
       const limit = planUserLimit(loggedIn.plan);
@@ -117651,12 +117659,18 @@ function toggleSubmenu(id) {
       if (!Array.isArray(users) || !users.length) return { ok: true };
       var list = users.filter(function(u){ return u && (u.email || u.username); });
       var ids = list.map(function(u){ return String(u.email || u.username).toLowerCase(); });
-      var q = await sb.from('app_accounts').select('login_id,data').in('login_id', ids);
+      var q = await sb.from('app_accounts').select('login_id,company_id,data').in('login_id', ids);
       if (q.error){ console.warn('[companySync] account read failed, not pushing', q.error); window.__acxAccountPushError = q.error.message || String(q.error); return { ok: false, error: window.__acxAccountPushError }; }
-      var cloud = {}; (q.data || []).forEach(function(r){ cloud[String(r.login_id).toLowerCase()] = r.data || {}; });
+      var cloud = {}, cloudCo = {}, conflicts = [], dupSeen = {};
+      (q.data || []).forEach(function(r){ var k = String(r.login_id).toLowerCase(); cloud[k] = r.data || {}; cloudCo[k] = String(r.company_id || ''); });
       var adopted = false;
       var rows = list.map(function(u, i){
         var id = ids[i], c = cloud[id], out = u;
+        /* One login id = one account. Skip (never overwrite) a second local account that reuses the same
+           email, or one whose email already belongs to an account of another company in the cloud. */
+        if (dupSeen[id]){ conflicts.push(id); return null; }
+        dupSeen[id] = 1;
+        if (cloudCo[id] && u.companyId && cloudCo[id] !== String(u.companyId)){ conflicts.push(id); return null; }
         if (c && credFp(c) !== credFp(u)){
           var seen = null; try { seen = localStorage.getItem(seenKey(id)); } catch(e){}
           var localEdited = (seen !== null && credFp(u) !== seen);
@@ -117668,14 +117682,16 @@ function toggleSubmenu(id) {
         }
         try { localStorage.setItem(seenKey(id), credFp(out)); } catch(e){}
         return { login_id: id, username: String(out.username || '').toLowerCase(), company_id: String(out.companyId || ''), data: out, updated_at: new Date().toISOString() };
-      });
+      }).filter(Boolean);
       if (adopted){
         var byId = {}; list.forEach(function(u){ byId[String(u.email || u.username).toLowerCase()] = u; });
         var merged = users.map(function(u){ var k = u && String(u.email || u.username || '').toLowerCase(); return (k && byId[k]) || u; });
         NS.nSet.call(NS.real, 'users', JSON.stringify(merged));
       }
+      var conflictMsg = conflicts.length ? ('These emails/logins are already used by a different account, so they were NOT synced and nothing was overwritten: ' + conflicts.join(', ') + '. Give each user their own unique email.') : null;
+      if (!rows.length){ window.__acxAccountPushError = conflictMsg; return conflictMsg ? { ok: false, error: conflictMsg } : { ok: true }; }
       var res = await sb.from('app_accounts').upsert(rows, { onConflict: 'login_id' });
-      if (!res.error){ window.__acxAccountPushError = null; return { ok: true }; }
+      if (!res.error){ window.__acxAccountPushError = conflictMsg; return conflictMsg ? { ok: false, error: conflictMsg } : { ok: true }; }
       console.warn('[companySync] account push error (batch), retrying row by row', res.error);
       /* One rejected row used to block every other account in the batch. Push each row on its own so the
          good ones (e.g. a new User Management user) still reach Supabase, and remember the first error. */
@@ -117843,6 +117859,7 @@ function toggleSubmenu(id) {
         // login attempt here, even on a device that already has the old
         // (stale) copy cached.
         var remote = await window.__netGuard(fetchAccount(id), 6000);
+        if (remote && local && remote.companyId && local.companyId && String(remote.companyId) !== String(local.companyId)) remote = null;
         if (remote){
           if (local){
             var idx = users.indexOf(local);
