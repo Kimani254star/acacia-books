@@ -249,51 +249,7 @@ window.__banksForTotals = function (list) {
 })();
 </script>
 
-<script>
-/* ACACIA LIVE-ONLY SYNC GUARD
-   Cloud sync (Supabase + Google backup tier) runs ONLY on the uploaded website.
-   A downloaded index.html opened from disk (file://) or localhost never touches the cloud.
-   Optional: to lock to your exact domain(s), fill the list, e.g. ['books.mycompany.com'] */
-(function(){
-  var ALLOWED_HOSTS = [];
-  var p = location.protocol, h = (location.hostname || '').toLowerCase();
-  var live = (p === 'https:' || p === 'http:') && !!h &&
-             h !== 'localhost' && h !== '127.0.0.1' && h !== '[::1]' && !/\.local$/.test(h) &&
-             (!ALLOWED_HOSTS.length || ALLOWED_HOSTS.indexOf(h) !== -1);
-  window.__ACX_LIVE__ = live;
-  if (live) {
-    window.__SUPA_URL__ = 'https://xglsampckermarjpczdf.supabase.co';
-    window.__SUPA_KEY__ = 'sb_publishable_x-dPR7pzhvJgag9soW0I8w_yfKTmi6A';
-  } else {
-    window.__SUPA_URL__ = ''; window.__SUPA_KEY__ = '';
-    console.warn('[Acacia] Offline copy: cloud sync is disabled. Use the live website to sync.');
-    /* hard stop: block every request to Supabase / Google Drive / Gmail-backup from an offline copy */
-    var BLOCK = /supabase\.co|googleapis\.com\/(drive|upload)/i;
-    var _f = window.fetch;
-    if (_f) window.fetch = function(u){
-      var url = (u && u.url) ? u.url : String(u);
-      if (BLOCK.test(url)) { console.warn('[Acacia] blocked (offline copy):', url); return Promise.reject(new TypeError('Offline copy: cloud sync disabled')); }
-      return _f.apply(this, arguments);
-    };
-    var _o = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function(m, u){
-      if (BLOCK.test(String(u))) throw new Error('Offline copy: cloud sync disabled');
-      return _o.apply(this, arguments);
-    };
-    var _W = window.WebSocket;
-    if (_W) window.WebSocket = function(u){
-      if (BLOCK.test(String(u))) throw new Error('Offline copy: cloud sync disabled');
-      return new _W(u, arguments[1]);
-    };
-    document.addEventListener('DOMContentLoaded', function(){
-      var b = document.createElement('div');
-      b.textContent = 'OFFLINE COPY - cloud sync is disabled here. Use the live website for your real data.';
-      b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:2147483647;background:#b45309;color:#fff;font:600 13px/1.4 system-ui,sans-serif;text-align:center;padding:6px 10px;pointer-events:none';
-      document.body.appendChild(b);
-    });
-  }
-})();
-</script>
+<script>window.__SUPA_URL__='https://xglsampckermarjpczdf.supabase.co';window.__SUPA_KEY__='sb_publishable_x-dPR7pzhvJgag9soW0I8w_yfKTmi6A';</script>
 <script>
 
 window.__CURRENCY_OPTIONS__ = ["KES","USD","EUR","GBP","AUD","CAD","CHF","CNY","JPY","INR","ZAR","NGN","UGX","TZS"];
@@ -117593,42 +117549,6 @@ function toggleSubmenu(id) {
     })();
     window.__acxMerge = MERGE;
 
-    /* ---- TOMBSTONES: remembers deleted records so stale copies cannot bring them back ---- */
-    var TOMB = {}, TOMB_C = null;
-    function tombFor(k){ return TOMB[k] || (TOMB[k] = {}); }
-    function tombStrip(k, arr){
-      var t = TOMB[k]; if (!t || !Array.isArray(arr)) return arr;
-      var ix = MERGE.index(arr), out = [], changed = false;
-      ix.list.forEach(function(e){ if (t[e.id] && t[e.id] === e.h) changed = true; else out.push(e.rec); });
-      return changed ? out : arr;
-    }
-    window.__acxTombFilter = function(k, raw){
-      try {
-        var a = MERGE.parseArr(raw); if (!a || !TOMB[k]) return raw;
-        var o = tombStrip(k, a); return o === a ? raw : JSON.stringify(o);
-      } catch(e){ return raw; }
-    };
-    async function loadTombs(){
-      var c = comp(); if (!c || !window.__ACX_LIVE__) return;
-      if (TOMB_C !== c){ TOMB = {}; TOMB_C = c; }
-      try {
-        for (var from = 0; from < 20000; from += 1000){
-          var res = await sb.from('company_tombstones').select('key,rec_id,rec_hash').eq('company_id', c).range(from, from + 999);
-          if (res.error){ console.warn('[companySync] tombstones unavailable', res.error.message); return; }
-          (res.data || []).forEach(function(r){ tombFor(r.key)[r.rec_id] = r.rec_hash; });
-          if (!res.data || res.data.length < 1000) break;
-        }
-      } catch(e){ console.warn('[companySync] tombstone load failed', e); }
-    }
-    window.__acxLoadTombs = loadTombs;
-    function stripLocalKey(k){
-      var c = comp(); if (!c) return false;
-      var phys = k + NS.SEP + c, raw = NS.nGet.call(NS.real, phys), a = raw === null ? null : MERGE.parseArr(raw);
-      if (!a) return false;
-      var o = tombStrip(k, a); if (o === a) return false;
-      write(phys, JSON.stringify(o)); return true;
-    }
-
     var VER = {}, SEEN = {}, BASE = null, BASE_C = null, baseTimer = null, PULLED = false, CLOCK_DONE = false;
     var pushing = false, again = false, retryMs = 600;
 
@@ -117691,11 +117611,11 @@ function toggleSubmenu(id) {
       }
       var rArr = MERGE.parseArr(remoteRaw), lArr = localRaw === null ? null : MERGE.parseArr(localRaw);
       if (rArr && (localRaw === null || lArr)){
-        if (localRaw === null){ var rClean = tombStrip(k, rArr); write(phys, rClean === rArr ? remoteRaw : JSON.stringify(rClean)); setBase(k, rArr); if (rClean !== rArr) NS.dirty[k] = 1; return true; }
+        if (localRaw === null){ write(phys, remoteRaw); setBase(k, rArr); return true; }
         if (localRaw === remoteRaw){ setBase(k, rArr); return false; }
         var ent = BASE[k];
         var preferLocal = !!(localTs && ver && Date.parse(localTs) > Date.parse(ver));
-        var merged = tombStrip(k, MERGE.merge3(lArr, rArr, ent, { preferLocal: preferLocal, additive: MERGE.additiveFor(k) }));
+        var merged = MERGE.merge3(lArr, rArr, ent, { preferLocal: preferLocal, additive: MERGE.additiveFor(k) });
         var sameL = MERGE.sameSet(merged, lArr), sameR = MERGE.sameSet(merged, rArr);
         if (!sameL) write(phys, JSON.stringify(merged));
         setBase(k, rArr);
@@ -117717,15 +117637,6 @@ function toggleSubmenu(id) {
       loadBase();
       var phys = k + NS.SEP + c, raw = NS.nGet.call(NS.real, phys), ver = VER[k], stamp = nowIso(), res;
       var arr = raw === null ? null : MERGE.parseArr(raw);
-      var delRows = [];
-      try {
-        if (arr && BASE && BASE[k] && BASE[k].f && window.__ACX_LIVE__){
-          var pix = MERGE.index(arr), present = {}, total = 0, id;
-          pix.list.forEach(function(e){ present[e.id] = 1; });
-          for (id in BASE[k].f){ total++; if (!present[id]) delRows.push({ company_id: c, key: k, rec_id: id, rec_hash: BASE[k].f[id], writer_origin: location.origin }); }
-          if (delRows.length > 20 && delRows.length > total * 0.5) delRows = [];   // safety: never mass-tombstone
-        }
-      } catch(e){ delRows = []; }
       try {
         if (ver) res = await sb.from('company_state').update({ value: raw, updated_at: stamp }).eq('company_id', c).eq('key', k).eq('updated_at', ver).select('updated_at');
         else     res = await sb.from('company_state').insert({ company_id: c, key: k, value: raw, updated_at: stamp }).select('updated_at');
@@ -117734,13 +117645,6 @@ function toggleSubmenu(id) {
         VER[k] = res.data[0].updated_at || stamp;
         SEEN[k] = raw === null ? '' : MERGE.h32(String(raw));
         if (arr) setBase(k, arr); else clearBase(k);
-        if (delRows.length){
-          try {
-            var tr = await sb.from('company_tombstones').upsert(delRows, { onConflict: 'company_id,key,rec_id', ignoreDuplicates: false });
-            if (!tr.error) delRows.forEach(function(d){ tombFor(k)[d.rec_id] = d.rec_hash; });
-            else console.warn('[companySync] tombstone write failed', tr.error.message);
-          } catch(e){}
-        }
         return true;
       }
       if (res && res.error && !isDup(res.error)){ console.warn('[companySync] push error', res.error); return false; }
@@ -117906,7 +117810,6 @@ function toggleSubmenu(id) {
         var res = await sb.from('company_state').select('key,value,updated_at').eq('company_id', c);
         if (res.error){ console.warn('[companySync] pull error', res.error); return; }
         loadBase(); SEEN = {};
-        await loadTombs();
         (res.data || []).forEach(function(row){
           try { applyRemote(row.key, row.value, row.updated_at); } catch(e){ NS.setApplying(false); console.warn('[companySync] apply failed', row.key, e); }
         });
@@ -117996,15 +117899,6 @@ function toggleSubmenu(id) {
             if (!('value' in row)){ pullOne(row.key); return; }               
             if (applyRemote(row.key, row.value, row.updated_at)) refreshUI();
             if (NS.dirty[row.key]) kick();
-          } catch(e){ NS.setApplying(false); }
-        })
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'company_tombstones', filter: 'company_id=eq.' + c },
-        function(payload){
-          try {
-            var t = payload.new; if (!t || t.company_id !== c || !t.key) return;
-            tombFor(t.key)[t.rec_id] = t.rec_hash;
-            if (stripLocalKey(t.key)){ NS.dirty[t.key] = 1; kick(); refreshUI(); }
           } catch(e){ NS.setApplying(false); }
         })
       .subscribe();
@@ -139703,7 +139597,6 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
         if (hasLocal && (!lt || (rt && rt <= lt))) return;
         var __val = snap.data[k];
         if (hasLocal && window.__acxMerge) { try { __val = window.__acxMerge.unionRaw(lget(k + NS.SEP + c), __val, lt > rt); } catch (e) {} }
-        try { if (window.__acxTombFilter) __val = window.__acxTombFilter(k, __val); } catch (e) {}
         lset(k + NS.SEP + c, __val);
         local[k] = remote[k] || snap.updatedAt;
         applied++;
@@ -139846,7 +139739,6 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
 
   function pushToGoogle(opts) {
     opts = opts || {};
-    if (!window.__ACX_LIVE__) return Promise.resolve(false);
     if (!companyId()) return Promise.resolve(false);
     var snap;
     try { snap = buildSnapshot(); } catch (e) { return Promise.reject(e); }
@@ -139864,7 +139756,6 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   }
 
   function pullFromGoogle(preferGmail) {
-    if (!window.__ACX_LIVE__) return Promise.resolve(0);
     if (!companyId()) return Promise.resolve(0);
     setStatus("Reading from Google…", "busy");
     var first = preferGmail ? gmailPull() : drivePull();
@@ -139904,7 +139795,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   }
 
     function syncAll(interactive) {
-    if (!window.__ACX_LIVE__ || busy) return Promise.resolve();
+    if (busy) return Promise.resolve();
     busy = true;
     return connectGoogle(interactive)
             .then(function () { return pullFromGoogle(false); })
@@ -139948,7 +139839,7 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
   var origKick = window.__companySyncKick;
   window.__companySyncKick = function () {
     var args = arguments, self = this;
-    if (!window.__ACX_LIVE__ || !linkedEmail || !companyId()) {
+    if (!linkedEmail || !companyId()) {
       try { if (typeof origKick === "function") origKick.apply(self, args); } catch (e) {}
       return;
     }
@@ -139962,16 +139853,15 @@ window.__GOOGLE_CLIENT_ID__ = window.__GOOGLE_CLIENT_ID__ || "";
     }, AUTO_PUSH_DEBOUNCE_MS);
   };
   window.addEventListener("pagehide", function () {
-    if (window.__ACX_LIVE__ && linkedEmail && companyId()) { try { pushToGoogle({ gmail: false }); } catch (e) {} }
+    if (linkedEmail && companyId()) { try { pushToGoogle({ gmail: false }); } catch (e) {} }
   });
 
     var origStartCloudSync = window.startCloudSync;
   if (typeof origStartCloudSync === "function") {
     window.startCloudSync = async function () {
-      if (window.__ACX_LIVE__ && (linkedEmail || (clientId() && NS.currentUser()))) {
+      if (linkedEmail || (clientId() && NS.currentUser())) {
         try {
           await connectGoogle(false);
-          try { if (window.__acxLoadTombs) await window.__acxLoadTombs(); } catch (e) {}
           await pullFromGoogle(false);
           await pushToGoogle({ gmail: false });
         } catch (e) { console.warn("[gsync] Google tier skipped:", e.message); }
