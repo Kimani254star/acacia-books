@@ -8027,6 +8027,19 @@ async function registerUser() {
     acxIssueCompanyId(companyId, orgInfo);
   }
 
+  /* Free Acacia Mail: same company name, email and password as this Books account. Never blocks registration. */
+  try {
+    if (typeof window.__createMailAccount === 'function' && password.length >= 6) {
+      const __mr = await Promise.race([
+        window.__createMailAccount({ name: rawName || cleanName, email: cleanEmail, password: password, company: companyName, companyId: companyId, fresh: true }),
+        new Promise(function (res) { setTimeout(function () { res({ ok: false, msg: 'Mail setup timed out.' }); }, 8000); })
+      ]);
+      if (__mr && !__mr.ok) console.warn('[register] Mail account not created:', __mr.msg);
+    } else if (password.length < 6) {
+      console.warn('[register] Mail account skipped: Mail needs a password of at least 6 characters.');
+    }
+  } catch (e) { console.warn('[register] Mail account failed', e); }
+
   if (price === 0) {
     closeLogin();
     showApp();
@@ -103489,15 +103502,15 @@ window.__createMailAccount = async function (u) {
     var mc = window.supabase.createClient(window.__SUPA_URL__, window.__SUPA_KEY__, {
       auth: { storageKey: 'acacia-mail-provision', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
     });
-    var code = u.code || localStorage.getItem('mailJoinCode') || '';
+    var code = u.code || (u.fresh ? '' : (localStorage.getItem('mailJoinCode') || ''));
     var r = await mc.auth.signUp({ email: u.email.toLowerCase(), password: u.password,
-      options: { data: { name: u.name, company: u.company, join_code: code } } });
+      options: { data: { name: u.name, company: u.company, join_code: code, source: 'books', books_company_id: String(u.companyId || '') } } });
     if (r.error) {
       if (/already/i.test(r.error.message)) return { ok: true, msg: 'This email already has a Mail account, so nothing was changed.' };
       return { ok: false, msg: r.error.message };
     }
     if (!r.data || !r.data.session) {
-      return { ok: true, msg: 'Mail account created. Confirm the email Supabase sent, then sign in to Mail.' };
+      return { ok: true, msg: 'Mail account created. Sign in to Mail with the same email and password.' };
     }
     /* Signed in on this throw-away client: join the company now and remember its code for the next users. */
     var j = await mc.rpc('mail_join', { p_name: u.company, p_code: code });
