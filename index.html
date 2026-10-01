@@ -2160,6 +2160,28 @@ window.addEventListener('load', function(){
         @media(max-width: 1200px) {
             .pricing-grid { grid-template-columns: repeat(2, 1fr); }
         }
+
+        /* ===== Pricing display: 6-column grid, compact white cards, blue accent (content unchanged) ===== */
+        .pricing-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; align-items: stretch; max-width: 1400px; margin: 0 auto 40px; }
+        .pricing-card { padding: 22px 18px 18px; border-radius: 14px; border: 1px solid #e3e8f0; box-shadow: none; text-align: left; }
+        .pricing-card:hover { transform: none; box-shadow: 0 6px 18px rgba(15,23,42,.06); border-color: #cbd5e6; }
+        .pricing-card.featured { border-color: #2563eb; box-shadow: none; }
+        .pricing-card.featured .badge-pop { background: #fff; color: #2563eb; border: 1px solid #2563eb; font-size: 12px; letter-spacing: .05em; padding: 3px 14px; top: -13px; }
+        .pricing-card h3 { font-size: 16px; margin-bottom: 4px; }
+        .price-display { margin-bottom: 16px; }
+        .price-display h4 { display: inline; font-size: 15px; font-weight: 700; letter-spacing: 0; }
+        .price-display span { font-size: 13px; color: #6b7280; font-weight: 400; }
+        .pricing-card ul { gap: 0; border-top: none; padding-top: 0; margin-bottom: 8px; flex: 1; }
+        .pricing-card ul li { font-size: 13px; color: #6b7280; padding: 7px 0; border-top: 1px solid #eef1f6; gap: 8px; }
+        .pricing-card ul li:first-child { border-top: none; }
+        .pricing-card ul.pc-collapsed li:nth-child(n+6) { display: none; }
+        .pc-more { background: none; border: 0; color: #2563eb; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; padding: 8px 0 16px; text-align: left; }
+        .pc-more:hover { text-decoration: underline; }
+        .btn-select { background: #2563eb; border-color: #2563eb; color: #fff; padding: 11px; font-size: 14px; font-weight: 700; border-radius: 6px; }
+        .btn-select:hover { background: #1d4ed8; border-color: #1d4ed8; }
+        @media(max-width: 1280px) { .pricing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media(max-width: 800px) { .pricing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media(max-width: 520px) { .pricing-grid { grid-template-columns: 1fr; } }
         @media(max-width: 1024px) {
             .hero { flex-direction: column; text-align: center; padding-top: 60px; }
             .leftHero, .rightHero, .about-wrapper, .ctaBox { width: 100%; grid-template-columns: 1fr; }
@@ -2650,6 +2672,30 @@ html[data-theme="dark"] .tour-copy p,html[data-theme="dark"] .tour-copy li{color
             updatePricing();
         }
 
+        function acxCollapseCards() {
+            var LIM = 5;
+            document.querySelectorAll('.pricing-card ul').forEach(function (ul) {
+                var n = ul.children.length;
+                var btn = ul.nextElementSibling;
+                var has = btn ? btn.classList.contains('pc-more') : false;
+                if (n &lt;= LIM) {
+                    ul.classList.remove('pc-collapsed');
+                    if (has) btn.remove();
+                    return;
+                }
+                var open = ul.dataset.open === '1';
+                ul.classList.toggle('pc-collapsed', !open);
+                if (!has) {
+                    btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'pc-more';
+                    btn.onclick = function () { ul.dataset.open = (ul.dataset.open === '1') ? '0' : '1'; acxCollapseCards(); };
+                    ul.parentNode.insertBefore(btn, ul.nextSibling);
+                }
+                btn.textContent = open ? 'Show less \u25B2' : ('Show ' + (n - LIM) + ' more features \u25BE');
+            });
+        }
+
         function updatePricing() {
             const isYearly = document.getElementById("billingCycle").checked;
             const periodLabel = isYearly ? "/yr" : "/mo";
@@ -2672,6 +2718,7 @@ html[data-theme="dark"] .tour-copy p,html[data-theme="dark"] .tour-copy li{color
                     featureListElement.innerHTML = workingFeatures[plan];
                 }
             });
+            acxCollapseCards();
         }
 
         function initCounters() {
@@ -3112,28 +3159,27 @@ document.getElementById('demoForm')?.addEventListener('submit', function(e) {
 @media (min-width:640px){#pricingCards{grid-template-columns:repeat(2,1fr);}}
 @media (min-width:900px){#pricingCards{grid-template-columns:repeat(3,1fr);}}
 @media (min-width:1280px){#pricingCards{grid-template-columns:repeat(6,1fr);gap:1rem;}}
-.pc-card{position:relative;display:flex;flex-direction:column;background:linear-gradient(180deg,#ffffff 0%,#fbfcf5 100%);border-radius:1rem;border:1px solid #e5e7eb;padding:1.35rem 1.1rem 1.1rem;text-align:left;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:transform .22s cubic-bezier(.4,0,.2,1),box-shadow .22s ease,border-color .22s ease;}
-.pc-card:hover{transform:translateY(-6px);box-shadow:0 16px 32px rgba(18,36,30,.16);border-color:#bcd4c8;}
-.pc-card.pc-popular{border:2px solid #1F4B3F;box-shadow:0 10px 30px rgba(18,36,30,.2);background:linear-gradient(180deg,#f3f8f5 0%,#ffffff 60%);z-index:1;}
-@media (min-width:1280px){.pc-card.pc-popular{transform:scale(1.06);}
-.pc-card.pc-popular:hover{transform:scale(1.06) translateY(-6px);}}
-.pc-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#D9A441,#B9832E);color:#12241E;font-size:11px;font-weight:700;letter-spacing:.03em;padding:4px 14px;border-radius:999px;white-space:nowrap;box-shadow:0 4px 10px rgba(185,131,46,.35);}
-.pc-name{font-size:1.05rem;font-weight:700;color:#1F4B3F;margin-bottom:.15rem;}
-.pc-tagline{font-size:.75rem;color:#6b7280;margin-bottom:.75rem;min-height:1.5em;}
-.pc-price{display:flex;align-items:baseline;gap:.25rem;margin-bottom:1rem;}
-.pc-price .amt{font-size:1.4rem;font-weight:800;color:#12241E;letter-spacing:-.01em;}
-.pc-price .per{font-size:.75rem;color:#6b7280;font-weight:600;}
+/* Pricing display: clean white cards, thin borders, blue accent (content unchanged) */
+#pricing.mkt-page{background-color:#fff !important;}
+.pc-card{position:relative;display:flex;flex-direction:column;background:#fff;border-radius:14px;border:1px solid #e3e8f0;padding:1.4rem 1.1rem 1.1rem;text-align:left;box-shadow:none;transition:border-color .2s ease,box-shadow .2s ease;}
+.pc-card:hover{border-color:#cbd5e6;box-shadow:0 6px 18px rgba(15,23,42,.06);}
+.pc-card.pc-popular{border:1px solid #2563eb;background:#fff;box-shadow:none;z-index:1;}
+.pc-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #2563eb;color:#2563eb;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 14px;border-radius:999px;white-space:nowrap;box-shadow:none;}
+.pc-name{font-size:1rem;font-weight:700;color:#111827;margin-bottom:.2rem;}
+.pc-tagline{font-size:.8rem;color:#6b7280;margin-bottom:1.6rem;min-height:1.5em;}
+.pc-price{display:flex;align-items:baseline;gap:.15rem;margin-bottom:1.1rem;}
+.pc-price .amt{font-size:.9rem;font-weight:700;color:#111827;letter-spacing:0;}
+.pc-price .per{font-size:.8rem;color:#6b7280;font-weight:400;}
 .pc-features{list-style:none;margin:0 0 .5rem;padding:0;flex:1;}
-.pc-features li{display:flex;align-items:flex-start;gap:.4rem;font-size:.78rem;color:#374151;padding:.26rem 0;border-top:1px solid #f3f4f6;}
+.pc-features li{display:flex;align-items:flex-start;gap:.4rem;font-size:.82rem;line-height:1.35;color:#6b7280;padding:.42rem 0;border-top:1px solid #eef1f6;}
+.pc-features li strong{color:#111827;font-weight:700;}
 .pc-features li:first-child{border-top:none;}
 .pc-features li.pc-extra{display:none;}
 .pc-card.pc-expanded .pc-features li.pc-extra{display:flex;}
-.pc-toggle{background:none;border:none;color:#1F4B3F;font-size:.72rem;font-weight:700;cursor:pointer;padding:.35rem 0 .8rem;text-align:left;}
+.pc-toggle{background:none;border:none;color:#2563eb;font-size:.8rem;font-weight:700;cursor:pointer;padding:.5rem 0 1rem;text-align:left;}
 .pc-toggle:hover{text-decoration:underline;}
-.pc-cta{display:block;width:100%;text-align:center;background:#1F4B3F;color:#fff;font-weight:600;padding:.6rem 1rem;border-radius:.5rem;border:none;cursor:pointer;transition:background .15s ease,transform .15s ease;font-size:.85rem;}
-.pc-cta:hover{background:#2F6B57;transform:translateY(-1px);}
-.pc-card.pc-popular .pc-cta{background:linear-gradient(135deg,#D9A441,#B9832E);color:#12241E;}
-.pc-card.pc-popular .pc-cta:hover{background:#e8b768;}
+.pc-cta{display:block;width:100%;text-align:center;background:#2563eb;color:#fff;font-weight:700;padding:.7rem 1rem;border-radius:.4rem;border:none;cursor:pointer;transition:background .15s ease;font-size:.85rem;}
+.pc-cta:hover{background:#1d4ed8;}
 @media (max-width:639px){#pricingCards{padding:0 1rem;}}
 </style>
 <div id="pricingCards">
@@ -3273,7 +3319,7 @@ document.getElementById('demoForm')?.addEventListener('submit', function(e) {
 <div class="ab-section-head" style="margin:3rem auto 1rem"><h3 class="ab-h2" style="font-size:1.25rem">Usage limits</h3><p class="ab-sub">Every plan shares the same data — only the ceilings change.</p></div>
 <div style="max-width:1100px;margin:0 auto;padding:0 1.25rem;overflow-x:auto">
 <table style="width:100%;background:#fff;border-radius:.75rem;border-collapse:collapse;font-size:.8rem;text-align:left;box-shadow:0 1px 3px rgba(0,0,0,.08)">
-<thead><tr style="background:#1F4B3F;color:#fff"><th style="padding:.55rem .7rem">Limit</th><th style="padding:.55rem .7rem">Free</th><th style="padding:.55rem .7rem">Starter</th><th style="padding:.55rem .7rem">Pro</th><th style="padding:.55rem .7rem">Business</th><th style="padding:.55rem .7rem">Enterprise</th></tr></thead>
+<thead><tr style="background:#1F4B3F;color:#fff"><th style="padding:.55rem .7rem">Limit</th><th style="padding:.55rem .7rem">Free</th><th style="padding:.55rem .7rem">Starter</th><th style="padding:.55rem .7rem">Pro</th><th style="padding:.55rem .7rem">Business</th><th style="padding:.55rem .7rem">Enterprise</th><th style="padding:.55rem .7rem">All Access</th></tr></thead>
 <tbody id="planLimitsBody"></tbody></table>
 </div>
 <script>
@@ -3285,16 +3331,16 @@ function togglePricingCard(btn){
 }
 (function(){
   var rows = [
-    ['Users','1','3','10','25','Custom'],
-    ['Warehouses','1','2','5','15','Custom'],
-    ['Customers','100','500','2,500','10,000','Custom'],
-    ['Suppliers','50','250','1,000','5,000','Custom'],
-    ['Products','100','1,000','5,000','25,000','Custom'],
-    ['Invoices / month','25','200','1,000','5,000','Custom'],
-    ['Bills / month','25','200','1,000','5,000','Custom'],
-    ['Projects','0','0','10','50','Custom'],
-    ['Payroll employees','5','25','100','500','Custom'],
-    ['File storage','100 MB','1 GB','5 GB','25 GB','Custom']
+    ['Users','1','3','10','25','Custom','Custom'],
+    ['Warehouses','1','2','5','15','Custom','Custom'],
+    ['Customers','100','500','2,500','10,000','Custom','Custom'],
+    ['Suppliers','50','250','1,000','5,000','Custom','Custom'],
+    ['Products','100','1,000','5,000','25,000','Custom','Custom'],
+    ['Invoices / month','25','200','1,000','5,000','Custom','Custom'],
+    ['Bills / month','25','200','1,000','5,000','Custom','Custom'],
+    ['Projects','0','0','10','50','Custom','Custom'],
+    ['Payroll employees','5','25','100','500','Custom','Custom'],
+    ['File storage','100 MB','1 GB','5 GB','25 GB','Custom','Custom']
   ];
   var body = document.getElementById('planLimitsBody');
   if (!body) return;
@@ -121002,41 +121048,112 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
   }
 
   function planCards(){
-    const cards = Array.from(document.querySelectorAll('#pricingCards > div')).map(d => ({
-      name: (d.querySelector('h3')||{}).textContent || '',
-      price: num((d.querySelector('p[data-month]')||{}).dataset ? d.querySelector('p[data-month]').dataset.month : 0)
-    })).filter(p => p.name);
-    return cards.length ? cards : [{name:'Free',price:0},{name:'Starter',price:2000},{name:'Pro',price:5000},{name:'Business',price:8000},{name:'Enterprise',price:12000},{name:'All Access',price:20000}];
+    const cards = Array.from(document.querySelectorAll('#pricingCards > div')).map(d => {
+      const nm = d.querySelector('.pc-name') || d.querySelector('h3');
+      const am = d.querySelector('[data-month]');
+      const name = ((nm && nm.textContent) || '').trim();
+      return { name: name, price: am ? num(am.dataset.month) : 0, custom: !am && !!name && !/^free$/i.test(name) };
+    }).filter(p => p.name);
+    return cards.length ? cards : [{name:'Free',price:0},{name:'Starter',price:1500},{name:'Pro',price:3500},{name:'Business',price:7500},{name:'Enterprise',price:0,custom:true},{name:'All Access',price:15000}];
   }
 
+  const REG_APPS = [{k:'mail',l:'Acacia Mail',p:0},{k:'crm',l:'Acacia Books CRM',p:1200},{k:'projects',l:'Acacia Projects',p:1500},{k:'payroll',l:'Acacia Payroll',p:2000},{k:'sell',l:'Acacia Sell',p:2500}];
+  const REG_CUR = [['KES','Kenyan Shilling'],['USD','US Dollar'],['EUR','Euro'],['GBP','British Pound'],['AUD','Australian Dollar'],['CAD','Canadian Dollar'],['CHF','Swiss Franc'],['CNY','Chinese Yuan'],['JPY','Japanese Yen'],['INR','Indian Rupee'],['ZAR','South African Rand'],['NGN','Nigerian Naira'],['GHS','Ghanaian Cedi'],['UGX','Ugandan Shilling'],['TZS','Tanzanian Shilling'],['RWF','Rwandan Franc'],['ETB','Ethiopian Birr'],['AED','UAE Dirham']];
+  const REG_FB = {USD:129,EUR:140,GBP:163,AUD:84,CAD:94,CHF:145,CNY:17.8,JPY:0.86,INR:1.52,ZAR:7.2,NGN:0.085,GHS:8.6,UGX:0.035,TZS:0.05,RWF:0.095,ETB:1.05,AED:35.1};
+  let regCur = 'KES';
+  try { const sv = localStorage.getItem('acxPricingCurrency'); if (sv && REG_CUR.some(c => c[0] === sv)) regCur = sv; } catch (e) {}
+  function regKesPer(code){
+    let v = REG_FB[code];
+    try { const st = JSON.parse(localStorage.getItem('exchangeRates') || '{}') || {}; if (Number(st[code]) > 0) v = Number(st[code]); } catch (e) {}
+    try { const c = JSON.parse(localStorage.getItem('acxPricingRates') || 'null'); if (c && c.rates && c.t && (Date.now() - c.t) < 43200000 && Number(c.rates[code]) > 0) v = 1 / Number(c.rates[code]); } catch (e) {}
+    return v;
+  }
+  function regFmt(kes){
+    kes = Number(kes) || 0;
+    if (regCur === 'KES') return 'KES ' + Math.round(kes).toLocaleString('en-US');
+    const v = kes / regKesPer(regCur);
+    if (!isFinite(v)) return 'KES ' + Math.round(kes).toLocaleString('en-US');
+    const d = Math.abs(v) >= 100 ? 0 : 2;
+    try { return new Intl.NumberFormat('en-US', {style:'currency', currency:regCur, currencyDisplay:'code', minimumFractionDigits:d, maximumFractionDigits:d}).format(v).replace(/\u00a0/g, ' '); }
+    catch (e) { return regCur + ' ' + v.toFixed(d); }
+  }
+  function regRefreshLive(){
+    try { const c = JSON.parse(localStorage.getItem('acxPricingRates') || 'null'); if (c && c.t && (Date.now() - c.t) < 43200000) return; } catch (e) {}
+    if (!window.fetch) return;
+    fetch('https://open.er-api.com/v6/latest/KES').then(r => r.json()).then(d => {
+      if (d && d.result === 'success' && d.rates) { try { localStorage.setItem('acxPricingRates', JSON.stringify({t: Date.now(), rates: d.rates})); } catch (e) {} const sm = window.__acxRegRefresh; if (sm) sm(); }
+    }).catch(() => {});
+  }
   function buildRegisterPlans(){
     const form = document.getElementById('registerForm');
     if (!form || form.dataset.axPlans) return;
     form.dataset.axPlans = '1';
     const plans = planCards();
-    const wrap = el('<div id="regPlanWrap" class="mb-3"><label class="block text-sm font-semibold text-blue-900 mb-1">Choose your plan</label>' +
-      '<select id="regPlan" class="w-full border p-2 rounded">' + plans.map(p => '<option value="' + esc(p.name) + '" data-price="' + p.price + '">' + esc(p.name) + ' \u2014 KES ' + p.price.toLocaleString() + '/mo</option>').join('') + '</select>' +
-      '<div class="flex items-center gap-2 mt-2"><select id="regBilling" class="border p-2 rounded text-sm w-1/2"><option value="monthly">Monthly</option><option value="yearly">Yearly (2 months free)</option></select>' +
+    const wrap = el('<div id="regPlanWrap" class="mb-3"><div class="flex items-center justify-between mb-1"><label class="block text-sm font-semibold text-blue-900">Choose your plan</label><select id="regCurrency" class="border p-1 rounded text-sm" aria-label="Show prices in">' + REG_CUR.map(c => '<option value="' + c[0] + '"' + (c[0] === regCur ? ' selected' : '') + '>' + c[0] + ' - ' + c[1] + '</option>').join('') + '</select></div>' +
+      '<select id="regPlan" class="w-full border p-2 rounded">' + plans.map(p => '<option value="' + esc(p.name) + '" data-price="' + p.price + '" data-custom="' + (p.custom ? 1 : 0) + '">' + esc(p.name) + ' \u2014 ' + (p.custom ? 'Custom pricing' : regFmt(p.price) + '/mo') + '</option>').join('') + '</select>' +
+      '<div class="flex items-center gap-2 mt-2"><select id="regBilling" class="border p-2 rounded text-sm w-1/2"><option value="monthly">Monthly</option><option value="yearly">Full year (10% off)</option></select>' +
       '<a href="#pricing" onclick="closeLogin()" class="text-sm text-blue-600 hover:underline">Compare all plans</a></div>' +
+      '<div id="regAppsBox" class="mt-3 border rounded p-2 text-left"><div class="flex items-center justify-between mb-1"><span class="text-sm font-semibold text-blue-900">Companion apps</span><label class="text-sm flex items-center gap-1 cursor-pointer"><input type="checkbox" id="regAllApps"> Select all apps</label></div>' +
+      REG_APPS.map(a => '<label class="flex items-center justify-between text-sm py-0.5 cursor-pointer"><span><input type="checkbox" class="reg-app mr-2" value="' + a.k + '" data-price="' + a.p + '">' + a.l + '</span><span class="text-gray-500 reg-app-price" data-kes="' + a.p + '">' + (a.p ? '+ ' + regFmt(a.p) + '/mo' : 'Free') + '</span></label>').join('') +
+      '<p id="regAppsNote" class="text-xs text-gray-500 mt-1"></p></div>' +
       '<p id="regPlanSummary" class="text-sm text-gray-600 mt-1"></p></div>');
     const btn = form.querySelector('button[onclick*="handleRegister"]');
     btn.parentNode.insertBefore(wrap, btn);
 
-    function summary(){
-      const sel = document.getElementById('regPlan');
-      const opt = sel.options[sel.selectedIndex];
-      const price = num(opt.dataset.price);
+    function isAllAccess(){ const s0 = document.getElementById('regPlan'); return !!s0 && /^all\s*access$/i.test(s0.value); }
+    function totals(){
+      const sel = document.getElementById('regPlan'), opt = sel.options[sel.selectedIndex];
+      const planPrice = num(opt.dataset.price), custom = opt.dataset.custom === '1';
       const yearly = document.getElementById('regBilling').value === 'yearly';
-      const total = yearly ? Math.round(price * 12 * 0.9) : price;
-      document.getElementById('regPlanSummary').textContent = price === 0
-        ? 'Free plan \u2014 no payment required, activated immediately.'
-        : 'You will pay KES ' + total.toLocaleString() + (yearly ? ' per year' : ' per month') + ' after creating your account.';
-      localStorage.setItem('selectedPlan', sel.value);
-      localStorage.setItem('selectedPrice', String(price));
-      localStorage.setItem('selectedBilling', yearly ? 'yearly' : 'monthly');
+      const boxes = Array.from(document.querySelectorAll('#regAppsBox .reg-app'));
+      const ticked = boxes.filter(b => b.checked);
+      const included = isAllAccess();
+      const addons = included ? 0 : ticked.reduce((t, b) => t + num(b.dataset.price), 0);
+      const monthly = planPrice + addons;
+      const due = yearly ? Math.round(monthly * 12 * 0.9) : monthly;
+      return { plan: sel.value, custom: custom, planPrice: planPrice, addons: addons, monthly: monthly, yearly: yearly, due: due,
+               allApps: included || (boxes.length > 0 && ticked.length === boxes.length), apps: ticked.map(b => b.value) };
     }
+    window.__acxRegTotals = totals;
+    function summary(){
+      const boxes = Array.from(document.querySelectorAll('#regAppsBox .reg-app'));
+      const allBox = document.getElementById('regAllApps');
+      const included = isAllAccess();
+      boxes.forEach(b => { if (included) b.checked = true; b.disabled = included; });
+      if (allBox) { allBox.checked = boxes.length > 0 && boxes.every(b => b.checked); allBox.disabled = included; }
+      const t = totals();
+      const note = document.getElementById('regAppsNote');
+      if (note) note.textContent = included ? 'All Access already includes every app \u2014 nothing extra to pay.' : (t.allApps ? 'All apps selected.' : 'Tick the apps you want, or choose Select all apps.');
+      /* re-label every price in the chosen currency */
+      Array.from(document.getElementById('regPlan').options).forEach((o, i) => { const pl = plans[i]; if (pl) o.textContent = pl.name + ' \u2014 ' + (pl.custom ? 'Custom pricing' : regFmt(pl.price) + '/mo'); });
+      document.querySelectorAll('#regAppsBox .reg-app-price').forEach(sp => { const k = Number(sp.dataset.kes); sp.textContent = k ? '+ ' + regFmt(k) + '/mo' : 'Free'; });
+      const cyc = t.yearly ? ' per year' : ' per month';
+      const withApps = t.allApps ? ' (all apps included)' : (t.apps.length ? ' (incl. ' + t.apps.length + ' app' + (t.apps.length > 1 ? 's' : '') + ')' : '');
+      document.getElementById('regPlanSummary').textContent = t.custom
+        ? 'Custom pricing \u2014 our team will contact you after you create your account.'
+        : t.monthly === 0
+        ? 'Free plan \u2014 no payment required, activated immediately.'
+        : 'You will pay ' + regFmt(t.due) + cyc + withApps + ' after creating your account.' + (regCur !== 'KES' ? ' This is approximate \u2014 you are billed in Kenyan Shillings (KES ' + t.due.toLocaleString() + ').' : '');
+      localStorage.setItem('selectedPlan', t.plan);
+      localStorage.setItem('selectedPrice', String(t.monthly));
+      localStorage.setItem('selectedBilling', t.yearly ? 'yearly' : 'monthly');
+      localStorage.setItem('selectedApps', JSON.stringify(t.apps));
+      localStorage.setItem('selectedAllApps', t.allApps ? '1' : '0');
+      localStorage.setItem('selectedAmountDue', String(t.due));
+    }
+    window.__acxRegRefresh = summary;
+    document.getElementById('regCurrency')?.addEventListener('change', function(){
+      regCur = this.value; try { localStorage.setItem('acxPricingCurrency', regCur); } catch (e) {}
+      if (regCur !== 'KES') regRefreshLive();
+      summary();
+    });
+    if (regCur !== 'KES') regRefreshLive();
     document.getElementById('regPlan')?.addEventListener('change', summary);
     document.getElementById('regBilling')?.addEventListener('change', summary);
+    document.getElementById('regAllApps')?.addEventListener('change', function(){
+      const on = this.checked; document.querySelectorAll('#regAppsBox .reg-app').forEach(b => { if (!b.disabled) b.checked = on; }); summary();
+    });
+    document.querySelectorAll('#regAppsBox .reg-app').forEach(b => b.addEventListener('change', summary));
     const stored = localStorage.getItem('selectedPlan');
     if (stored) { const s = document.getElementById('regPlan'); Array.from(s.options).forEach(o => { if (o.value === stored) s.value = stored; }); }
     summary();
@@ -121061,7 +121178,7 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     if (sel) {
       const opt = sel.options[sel.selectedIndex];
       localStorage.setItem('selectedPlan', sel.value);
-      localStorage.setItem('selectedPrice', String(num(opt.dataset.price)));
+      localStorage.setItem('selectedPrice', String(window.__acxRegTotals ? window.__acxRegTotals().monthly : num(opt.dataset.price)));
     }
     logAudit('account creation started', 'auth', localStorage.getItem('selectedPlan') || 'Free');
     if (typeof origRegister === 'function') return origRegister.apply(this, arguments);
@@ -121094,14 +121211,14 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
         if (users.find(u => (u.companyName||'').trim().toLowerCase() === companyName.toLowerCase() && ((u.username||'').toLowerCase() === cleanName || (cleanEmail && (u.email||'').toLowerCase() === cleanEmail)))) { alert('\uD83D\uDEAB This user already exists for ' + companyName + '. Sign in instead, or use the company switcher to add another company.'); return; }
         const expiry = new Date(); expiry.setDate(expiry.getDate() + 30);
         const companyId = 'company_' + Date.now();
-        const user = { username: cleanName, email: cleanEmail, companyName, companyCountry, role:'admin', plan: localStorage.getItem('selectedPlan') || 'Free', price: price, billing: localStorage.getItem('selectedBilling') || 'monthly', companyId, registered: new Date().toISOString(), expiry: expiry.toISOString(), status:'pending', provider:'local' };
+        const user = { username: cleanName, email: cleanEmail, companyName, companyCountry, role:'admin', plan: localStorage.getItem('selectedPlan') || 'Free', price: price, billing: localStorage.getItem('selectedBilling') || 'monthly', apps: (function(){ try { return JSON.parse(localStorage.getItem('selectedApps') || '[]'); } catch(e) { return []; } })(), allApps: localStorage.getItem('selectedAllApps') === '1', amountDue: num(localStorage.getItem('selectedAmountDue')), companyId, registered: new Date().toISOString(), expiry: expiry.toISOString(), status:'pending', provider:'local' };
         await setUserPassword(user, pass);
         users.push(user); S('users', users);
         S('loggedInUser', user);
 
         const companies = J('companies', []);
         if (!companies.find(c => c.companyId === companyId)) {
-          companies.push({ companyId, companyName, ownerName: user.username, email: user.email, plan: user.plan, price: user.price, status: user.status, registered: user.registered, expiry: user.expiry });
+          companies.push({ companyId, companyName, ownerName: user.username, email: user.email, plan: user.plan, price: user.price, billing: user.billing, apps: user.apps, allApps: user.allApps, amountDue: user.amountDue, status: user.status, registered: user.registered, expiry: user.expiry });
           S('companies', companies);
         }
         const orgInfo = { name: companyName, email: user.email, location: companyCountry, baseCurrency: companyBaseCurrency, companyId, updatedAt: new Date().toISOString() };
@@ -121120,9 +121237,9 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
           accStep.classList.add('hidden');
           payStep.classList.remove('hidden');
           const yearly = (localStorage.getItem('selectedBilling') || 'monthly') === 'yearly';
-          const total = yearly ? Math.round(price * 12 * 0.9) : price;
+          const total = num(localStorage.getItem('selectedAmountDue')) || (yearly ? Math.round(price * 12 * 0.9) : price);
           const sp = document.getElementById('regPaymentSummary');
-          if (sp) sp.innerText = 'You selected the ' + user.plan + ' plan \u2014 KES ' + total.toLocaleString() + (yearly ? ' per year' : ' per month') + '. Complete payment to activate your account.';
+          if (sp) sp.innerText = 'You selected the ' + user.plan + ' plan' + (user.allApps ? ' with all apps' : (user.apps && user.apps.length ? ' + ' + user.apps.length + ' app(s)' : '')) + ' \u2014 KES ' + total.toLocaleString() + (yearly ? ' per year' : ' per month') + '. Complete payment to activate your account.';
         }
         return;
       }
@@ -145576,8 +145693,10 @@ function axOpenChatOption(){
   async function createPending(u){
     var row = { company_id: u.companyId, company_name: u.companyName || '', owner_name: u.fullName || u.username || '',
                 email: u.email || '', plan: u.plan || 'Free', price: Number(u.price || 0), status: 'pending' };
-    await fetch(URL_ + '/rest/v1/acacia_company_status', { method: 'POST',
-      headers: Object.assign({ Prefer: 'resolution=ignore-duplicates,return=minimal' }, H), body: JSON.stringify(row) });
+    var ext = { billing: /^y/i.test(String(u.billing || '')) ? 'Yearly' : 'Monthly', all_apps: !!u.allApps, apps: (u.apps || []).join(','), amount_due: Number(u.amountDue || u.price || 0) };
+    var hdr = Object.assign({ Prefer: 'resolution=ignore-duplicates,return=minimal' }, H);
+    var r1 = await fetch(URL_ + '/rest/v1/acacia_company_status', { method: 'POST', headers: hdr, body: JSON.stringify(Object.assign({}, row, ext)) });
+    if (!r1.ok) { try { await fetch(URL_ + '/rest/v1/acacia_company_status', { method: 'POST', headers: hdr, body: JSON.stringify(row) }); } catch(e){} } /* new columns not created yet: still register */
     return row;
   }
   function heartbeat(u0){
@@ -146492,7 +146611,7 @@ function axOpenChatOption(){
     else if (!canAsk) html += '<p class="text-sm text-gray-600">Only an administrator can request a plan upgrade.</p>';
     else {
       html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block mb-1 text-sm font-medium">Upgrade to</label><select data-up="plan" class="border p-2 rounded w-full text-sm">' +
-        higher.map(function(p){ return '<option value="' + esc(p.l) + '">' + esc(p.l) + ' — ' + esc(priceText(p)) + '</option>'; }).join('') + '</select></div>' +
+        PLANS.map(function(p){ var ok = rank(p.l) > rank(cur.l); return '<option value="' + esc(p.l) + '"' + (ok ? '' : ' disabled') + '>' + esc(p.l) + ' — ' + esc(priceText(p)) + (p.k === cur.k ? ' (current plan)' : (ok ? '' : ' (lower plan)')) + '</option>'; }).join('') + '</select></div>' +
         '<div><label class="block mb-1 text-sm font-medium">Billing cycle</label><select data-up="cycle" class="border p-2 rounded w-full text-sm"><option>Monthly</option><option>Annual</option></select></div>' +
         '<div class="md:col-span-2"><label class="block mb-1 text-sm font-medium">Message (optional)</label><textarea data-up="msg" rows="2" class="border p-2 rounded w-full text-sm" placeholder="Anything our team should know?"></textarea></div></div>' +
         '<div class="mt-4 flex gap-2"><button type="button" data-up="send" class="bg-blue-900 text-white font-bold px-3 py-1 rounded hover:bg-blue-800 text-sm">Send upgrade request</button></div>' +
