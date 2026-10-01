@@ -6367,7 +6367,49 @@ function applyCurrency() {
     el.textContent = `${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: (window.__getDecimalPlaces?window.__getDecimalPlaces():2), maximumFractionDigits: (window.__getDecimalPlaces?window.__getDecimalPlaces():2) })}`;
   });
 }
+/* ---- Email -> Acacia Mail: every "Email" action in Books becomes a DRAFT in Acacia Mail (same company),
+       opened ready to review and send from there. Nothing is sent from here and no desktop mail app is opened. ---- */
+window.__ACX_MAIL_URL__ = window.__ACX_MAIL_URL__ || 'acacia-mail.html';
+function __acxQueueMailDraft(raw){
+  try{
+    var m=String(raw||"").replace(/^mailto:/i,""), qi=m.indexOf("?");
+    var dec=function(v){ try{ return decodeURIComponent(String(v).replace(/\+/g," ")); }catch(e){ return String(v); } };
+    var to=dec(qi>=0?m.slice(0,qi):m), qs=qi>=0?m.slice(qi+1):"", p={};
+    qs.split("&").forEach(function(kv){ if(!kv) return; var i=kv.indexOf("="); var k=(i<0?kv:kv.slice(0,i)).toLowerCase(); p[k]=i<0?"":dec(kv.slice(i+1)); });
+    var u=JSON.parse(localStorage.getItem("loggedInUser")||"null")||{};
+    var org=JSON.parse(localStorage.getItem("orgInfo")||"{}")||{};
+    var company=u.companyName||org.name||"";
+    if(!u.companyId || !String(company).replace(/[^a-zA-Z0-9]/g,"")) return null;
+    var d={ bid:"bk_"+Date.now()+"_"+Math.random().toString(36).slice(2,7), company:company,
+      slug:String(company).toLowerCase().replace(/[^a-z0-9]/g,""),
+      fromName:org.name||u.fullName||u.username||"Acacia Books", fromEmail:org.email||u.email||"",
+      to:to, cc:p.cc||"", bcc:p.bcc||"", subject:p.subject||"(No subject)", body:p.body||"", time:Date.now() };
+    /* 1) same-browser queue (Mail reads it on open/focus) */
+    try{
+      var g=(window.__companyNS&&window.__companyNS.nGet)||Storage.prototype.getItem, st=(window.__companyNS&&window.__companyNS.nSet)||Storage.prototype.setItem, rl=(window.__companyNS&&window.__companyNS.real)||window.localStorage;
+      var q=[]; try{ q=JSON.parse(g.call(rl,"acacia_books_to_mail")||"[]")||[]; }catch(e1){ q=[]; }
+      q.push(d); st.call(rl,"acacia_books_to_mail",JSON.stringify(q.slice(-200)));
+      try{ var bc=new BroadcastChannel("acacia_books_mail"); bc.postMessage("new"); bc.close(); }catch(e2){}
+    }catch(e3){}
+    /* 2) cloud queue (same bid, so Mail never shows the draft twice) */
+    try{
+      if(window.__SUPA_URL__ && window.__SUPA_KEY__){
+        var row={ bid:d.bid, company_id:String(u.companyId), from_name:d.fromName, from_email:d.fromEmail, "to":d.to, cc:d.cc, subject:d.subject, body:d.body };
+        if(d.bcc) row.bcc=d.bcc;
+        fetch(window.__SUPA_URL__+"/rest/v1/acacia_mail_queue",{ method:"POST", keepalive:true,
+          headers:{apikey:window.__SUPA_KEY__, Authorization:"Bearer "+window.__SUPA_KEY__, "Content-Type":"application/json", Prefer:"resolution=ignore-duplicates,return=minimal"},
+          body:JSON.stringify(row) }).catch(function(){});
+      }
+    }catch(e4){}
+    /* 3) open Acacia Mail on that draft (re-uses the same tab if already open) */
+    var w=null; try{ w=window.open(window.__ACX_MAIL_URL__+"?bid="+encodeURIComponent(d.bid),"acaciaMail"); }catch(e5){}
+    if(!w){ try{ alert("\u2709\uFE0F Draft saved to Acacia Mail (Drafts). Your browser blocked the new tab \u2013 open Acacia Mail to review and send it."); }catch(e6){} }
+    return d;
+  }catch(e){ return null; }
+}
+window.__acxQueueMailDraft = __acxQueueMailDraft;
 function __logMail(url){
+  try{ if(__acxQueueMailDraft(url)) return "javascript:void(0)"; }catch(eq){}
   try{
     var raw=String(url||"");
     (function(){
@@ -103488,6 +103530,13 @@ async function saveUser() {
   localStorage.setItem('users', JSON.stringify(users));
   document.getElementById('userCreateMsg').classList.remove('hidden');
   renderUserTable();
+  // Push the account to Supabase right away so it shows in the Support Hub under this company.
+  try {
+    if (typeof window.__acxPushAccounts === 'function') {
+      const __pr = await window.__acxPushAccounts();
+      if (__pr && __pr.ok === false) alert('User saved on this device, but it could not be synced to the cloud (so Support will not see it yet):\n' + (__pr.error || 'unknown error') + '\n\nRun the SQL fix in Supabase, then edit/save the user again.');
+    }
+  } catch (e) { console.warn('[saveUser] account push failed', e); }
   let __closeDelay = 800;
   const __mailBox = document.getElementById('newMailAcct');
   if (__wasCreate && email && __mailBox && __mailBox.checked && typeof window.__createMailAccount === 'function') {
@@ -117599,11 +117648,11 @@ function toggleSubmenu(id) {
     async function pushAccounts(){
     try {
       var users = JSON.parse(NS.nGet.call(NS.real, 'users') || '[]');
-      if (!Array.isArray(users) || !users.length) return;
+      if (!Array.isArray(users) || !users.length) return { ok: true };
       var list = users.filter(function(u){ return u && (u.email || u.username); });
       var ids = list.map(function(u){ return String(u.email || u.username).toLowerCase(); });
       var q = await sb.from('app_accounts').select('login_id,data').in('login_id', ids);
-      if (q.error){ console.warn('[companySync] account read failed, not pushing', q.error); return; }
+      if (q.error){ console.warn('[companySync] account read failed, not pushing', q.error); window.__acxAccountPushError = q.error.message || String(q.error); return { ok: false, error: window.__acxAccountPushError }; }
       var cloud = {}; (q.data || []).forEach(function(r){ cloud[String(r.login_id).toLowerCase()] = r.data || {}; });
       var adopted = false;
       var rows = list.map(function(u, i){
@@ -117626,8 +117675,18 @@ function toggleSubmenu(id) {
         NS.nSet.call(NS.real, 'users', JSON.stringify(merged));
       }
       var res = await sb.from('app_accounts').upsert(rows, { onConflict: 'login_id' });
-      if (res.error) console.warn('[companySync] account push error', res.error);
-    } catch(e){ console.warn('[companySync] account push failed', e); }
+      if (!res.error){ window.__acxAccountPushError = null; return { ok: true }; }
+      console.warn('[companySync] account push error (batch), retrying row by row', res.error);
+      /* One rejected row used to block every other account in the batch. Push each row on its own so the
+         good ones (e.g. a new User Management user) still reach Supabase, and remember the first error. */
+      var firstErr = res.error, failedIds = [];
+      for (var ri = 0; ri < rows.length; ri++){
+        var one = await sb.from('app_accounts').upsert([rows[ri]], { onConflict: 'login_id' });
+        if (one.error){ failedIds.push(rows[ri].login_id); console.warn('[companySync] account push error for ' + rows[ri].login_id, one.error); }
+      }
+      window.__acxAccountPushError = failedIds.length ? (firstErr.message || String(firstErr)) : null;
+      return failedIds.length ? { ok: false, failed: failedIds, error: window.__acxAccountPushError } : { ok: true };
+    } catch(e){ console.warn('[companySync] account push failed', e); window.__acxAccountPushError = String(e && e.message || e); return { ok: false, error: window.__acxAccountPushError }; }
   }
   window.__acxPushAccounts = pushAccounts;
   async function fetchAccount(id){
@@ -121058,11 +121117,15 @@ else { try{phInit();}catch(e){console.warn("phInit",e);} }
     e.preventDefault();
     e.stopPropagation();
     const href = a.getAttribute('href');
-    try { if (typeof window.__logMail === 'function') window.__logMail(href); } catch(err){}
+    let __res = null;
+    try { if (typeof window.__logMail === 'function') __res = window.__logMail(href); } catch(err){}
+    const __drafted = typeof __res === 'string' && __res.indexOf('javascript:') === 0;
     const to = decodeURIComponent(href.replace(/^mailto:/i, '').split('?')[0]);
-    logAudit('emailed', 'mail', 'Email sent to ' + to);
-    if (typeof window.renderMailbox === 'function') try { window.renderMailbox(); } catch(err){}
-    alert('\u2709\uFE0F Email sent to ' + to);
+    logAudit('emailed', 'mail', (__drafted ? 'Email draft opened in Acacia Mail for ' : 'Email sent to ') + to);
+    if (!__drafted) {
+      if (typeof window.renderMailbox === 'function') try { window.renderMailbox(); } catch(err){}
+      alert('\u2709\uFE0F Email sent to ' + to);
+    }
   }, true);
 
   window.populateGRNItems = function(){
