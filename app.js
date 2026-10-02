@@ -116098,7 +116098,7 @@ try{
 
     var LEGACY_BTN = /^(apply|apply filter|clear|clear filter|reset|export csv|export|collapse sub-accounts|expand sub-accounts|customize report columns|compare with)/i;
 
-  function isOurs(el) { return !!el.closest('[data-std-bar], .fr-bar, .fr-body'); }
+  function isOurs(el) { return !!el.closest('[data-std-bar], .fr-bar, .fr-body, .bx-bar, .vax-bar'); }
 
   function legacyControls(panel) {
     var out = [];
@@ -116487,7 +116487,7 @@ try{
             drop.innerHTML = columnsPanelHtml(panel, id);
             if (!wasOpen) drop.classList.add('hidden');
           }
-          hideLegacy(panel);
+          if (!SKIP[id]) hideLegacy(panel);
         }
       } catch (e) { console.error('standard filter bar injection failed:', e); }
       return r;
