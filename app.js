@@ -50113,9 +50113,7 @@ function renderAccounts() {
       row.setAttribute("data-coa-code", String(acc.code || "").toLowerCase().trim());
       if (depth > 0) row.style.background = "#fafafa";
       const badgeStyle = coaTypeBadgeStyle(acc.type);
-      const sysTag = isSystemCOAAccount(acc)
-        ? `<div class="text-sm text-gray-400 mt-0.5">&#128274; system</div>`
-        : "";
+      const sysTag = "";
 
 
 
@@ -116574,9 +116572,8 @@ try{
     var block = document.createElement("div");
     block.className = "mb-4";
     block.innerHTML =
-      '<label for="accountRootType" class="block font-medium mb-1">Type <span class="text-red-600">*</span> ' +
-      '<span class="text-sm font-normal text-gray-500">(drives the Balance Sheet / P&amp;L)</span></label>' +
-      '<select id="accountRootType" class="border p-2 rounded" style="width: 700px;">' +
+      '<label for="accountRootType" class="block font-medium mb-1">Type <span class="text-red-600">*</span></label>' +
+      '<select id="accountRootType" class="border p-2 rounded" style="width: 700px; height: 42px; box-sizing: border-box;">' +
       '<option value="">Select Type</option>' +
       ROOTS.map(function (r) { return '<option value="' + r + '">' + r + '</option>'; }).join("") +
       "</select>";
@@ -116586,8 +116583,7 @@ try{
     
     var lbl = wrap.querySelector('label[for="accountType"]');
     if (lbl) {
-      lbl.innerHTML = 'Category <span class="text-sm font-normal text-gray-500">' +
-        "(detailed grouping — used for reporting and account lists, not for Balance Sheet maths)</span>";
+      lbl.textContent = 'Category';
     }
 
     
@@ -116602,18 +116598,8 @@ try{
   }
 
     function injectNotice() {
-    if (document.getElementById("acxCoaSystemNote")) return true;
-    var table = document.getElementById("accountsTable");
-    if (!table) return false;
-    var host = table.closest("table") || table;
-    var note = document.createElement("div");
-    note.id = "acxCoaSystemNote";
-    note.className = "mb-2 p-2 rounded border border-amber-300 bg-amber-50 text-sm text-amber-900";
-    note.innerHTML = "🔒 <b>System accounts</b> (Customer Receivables, Supplier Payments, Accounts Receivable/Payable, " +
-      "Undeposited Funds, VAT Payable, Inventory, Cost of Goods Sold, Sales Revenue, Retained Earnings) are posted to " +
-      "automatically by invoices, bills, payments and stock movements. Please do not delete, rename or duplicate them — " +
-      "renaming is remapped automatically, but deleting or duplicating them will break automatic postings.";
-    (host.parentNode || document.body).insertBefore(note, host);
+    var old = document.getElementById("acxCoaSystemNote");
+    if (old && old.parentNode) old.parentNode.removeChild(old);
     return true;
   }
 
@@ -116626,7 +116612,7 @@ try{
       if (cells.length < 3) return;
       tr.dataset.acxBadged = "1";
       var nameCell = cells[1];
-      if (isSystem(nameCell.textContent)) {
+      if (false && isSystem(nameCell.textContent)) {
         tr.classList.add("bg-amber-50");
         var b = document.createElement("span");
         b.className = "ml-1 text-sm px-1 py-0.5 rounded bg-amber-200 text-amber-900 align-middle";
@@ -116772,7 +116758,7 @@ try{
     var wrapped = function (index) {
       try {
         var acc = accounts()[index];
-        if (acc && isSystem(acc.name)) {
+        if (false && acc && isSystem(acc.name)) {
           if (!confirm('🔒 "' + acc.name + '" is a system account used automatically by invoices, bills, payments or stock.\n\n' +
                        "Deleting it will break those automatic postings.\n\nDelete anyway?")) return;
         }

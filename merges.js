@@ -244,6 +244,8 @@
     if (!groups.length) {
       return note('No duplicate ' + c.label + 's found (same name or PIN, same currency).' + (split ? ' ' + split + ' match(es) kept separate because currencies differ.' : ''), 'error');
     }
+    var sysCount = 0;
+    groups.forEach(function (g) { g.slice(1).forEach(function (i) { if (isSystem(list[i])) sysCount++; }); });
     var total = groups.reduce(function (a, g) { return a + g.length; }, 0);
     var lines = groups.map(function (g) {
       return '• ' + (list[g[0]].name || '-') + ' [' + cur(list[g[0]]) + '] — ' + g.length + ' records';
@@ -350,8 +352,8 @@
   /* Pick keeper: a system account if present, otherwise the first one in the list */
   function order(list, g) {
     var sys = g.filter(function (i) { return isSystem(list[i]); });
-    if (sys.length > 1) return null;
-    if (sys.length === 1) return [sys[0]].concat(g.filter(function (i) { return i !== sys[0]; }));
+    /* system accounts can be merged too: the first system account is kept */
+    if (sys.length >= 1) return [sys[0]].concat(g.filter(function (i) { return i !== sys[0]; }));
     return g.slice();
   }
 
@@ -369,7 +371,6 @@
       sel.forEach(function (i) { cats[catOf(list[i])] = 1; });
       if (Object.keys(cats).length > 1) return note('Selected accounts are in different categories (e.g. Asset and Expense). Only accounts of the same category can be merged.', 'error');
       var g = order(list, sel.slice().sort(function (a, b) { return a - b; }));
-      if (!g) return note('More than one selected account is a system account. System accounts cannot be merged into each other.', 'error');
       groups.push(g);
     } else {
       var by = {};
@@ -395,7 +396,7 @@
     });
     var shown = lines.slice(0, 15).join('\n') + (lines.length > 15 ? '\n…and ' + (lines.length - 15) + ' more' : '');
     if (!confirm('Merge ' + total + ' accounts into ' + groups.length + '?\n\n' + shown +
-      '\n\nOpening balances are added, blank details are filled, and all transactions, journals, banks and budgets using the merged accounts are moved to the kept account. A backup is saved first.')) return;
+      (sysCount ? '\n\n⚠ ' + sysCount + ' system account(s) will be merged into the kept account.' : '') + '\n\nOpening balances are added, blank details are filled, and all transactions, journals, banks and budgets using the merged accounts are moved to the kept account. A backup is saved first.')) return;
 
     /* backup (chart + every key we are about to touch) */
     var backup = { at: new Date().toISOString(), chartOfAccounts: JSON.stringify(list), keys: {} };
