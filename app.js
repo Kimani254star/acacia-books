@@ -49722,15 +49722,64 @@ try{
   let editingIndex = null;
 
 function searchCOA() {
-    const query = document.getElementById('coaSearch').value.toLowerCase();
-    const rows = document.getElementById('accountsTable').querySelectorAll('tr');
+    const input = document.getElementById('coaSearch');
+    const table = document.getElementById('accountsTable');
+    if (!input || !table) return;
+
+    const norm = s => String(s == null ? '' : s).toLowerCase().replace(/\s+/g, ' ').trim();
+    const query = norm(input.value);
+    const tokens = query ? query.split(' ') : [];
+
+    const oldMsg = document.getElementById('coaNoMatchRow');
+    if (oldMsg) oldMsg.remove();
+
+    const rows = Array.from(table.querySelectorAll('tr.coa-group-row'));
+    const headers = Array.from(table.querySelectorAll('tr.coa-group-header'));
+
+    // Empty search: show everything again
+    if (!tokens.length) {
+        rows.forEach(r => { r.style.display = ''; });
+        headers.forEach(h => {
+            h.style.display = '';
+            const arrow = h.querySelector('.coa-group-arrow');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+        });
+        window.__coaAllExpanded = true;
+        return;
+    }
+
+    const groupHasMatch = {};
+    let totalMatches = 0;
 
     rows.forEach(row => {
-        const rowText = Array.from(row.querySelectorAll('td'))
-                             .map(td => td.textContent.toLowerCase())
-                             .join(' ');
-        row.style.display = rowText.includes(query) ? '' : 'none';
+        // Search the account data (name, code, type, category), not buttons or balances
+        const hay = row.getAttribute('data-coa-search') || norm(
+            Array.from(row.querySelectorAll('td')).slice(1, 6).map(td => td.textContent).join(' ')
+        );
+        const code = row.getAttribute('data-coa-code') || '';
+        const match = tokens.every(t => hay.includes(t)) || (code && code === query);
+
+        row.style.display = match ? '' : 'none';
+        if (match) {
+            totalMatches++;
+            groupHasMatch[row.getAttribute('data-coa-group-key')] = true;
+        }
     });
+
+    // Show a group header only when it has matching accounts
+    headers.forEach(h => {
+        const has = !!groupHasMatch[h.getAttribute('data-coa-group-key')];
+        h.style.display = has ? '' : 'none';
+        const arrow = h.querySelector('.coa-group-arrow');
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
+    });
+
+    if (!totalMatches) {
+        const tr = document.createElement('tr');
+        tr.id = 'coaNoMatchRow';
+        tr.innerHTML = '<td colspan="9" class="p-3 text-center text-gray-500">No accounts match your search</td>';
+        table.appendChild(tr);
+    }
 }
 
 
@@ -50060,6 +50109,8 @@ function renderAccounts() {
       const row = document.createElement("tr");
       row.className = "coa-group-row" + (depth > 0 ? " coa-subaccount-row" : "");
       row.setAttribute("data-coa-group-key", groupKey);
+      row.setAttribute("data-coa-search", [acc.name, acc.code, acc.type, acc.category].join(" ").toLowerCase().replace(/\s+/g, " ").trim());
+      row.setAttribute("data-coa-code", String(acc.code || "").toLowerCase().trim());
       if (depth > 0) row.style.background = "#fafafa";
       const badgeStyle = coaTypeBadgeStyle(acc.type);
       const sysTag = isSystemCOAAccount(acc)
@@ -50166,6 +50217,9 @@ function renderAccounts() {
   });
 
   if (typeof window.populateParentAccountSelect === "function") window.populateParentAccountSelect();
+
+  const __coaBox = document.getElementById("coaSearch");
+  if (__coaBox && __coaBox.value.trim() && typeof searchCOA === "function") searchCOA();
 
 }
 
