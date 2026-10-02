@@ -2,12 +2,15 @@
    - Stops logging "Opened: <menu>" / Quick Create open-close / refresh noise.
    - Adds real, detailed alerts: overdue invoices, bills due, low/out of stock, expired / expiring batches,
      plus new invoice / bill activity (e.g. created by another user).
+   - NEW: change log - records what actually happened (created / paid / updated / deleted) for invoices, bills,
+     quotes, orders, receipts, payments, credit/debit notes, POs, GRNs, returns, customers, suppliers, journals, users,
+     with before -> after values, amounts, and who did it when the record stores that.
    - Richer panel: icon, title, detail lines, relative time, unread highlight, click-to-open, mark all read, clear. */
 (function () {
   'use strict';
   if (window.__acxNotifPlus) return; window.__acxNotifPlus = true;
 
-  var KEY = 'notifications', MAX = 100, LOW_QTY = 5, DUE_SOON_DAYS = 7, EXPIRY_DAYS = 30, MAX_LINES = 4;
+  var KEY = 'notifications', MAX = 200, LOW_QTY = 5, DUE_SOON_DAYS = 7, EXPIRY_DAYS = 30, MAX_LINES = 4;
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var num = function (v) { var x = parseFloat(String(v == null ? '' : v).replace(/,/g, '')); return isNaN(x) ? 0 : x; };
@@ -75,7 +78,7 @@
     });
     if (over.length) {
       over.sort(function (a, b) { return b.days - a.days; });
-      out['inv-overdue'] = { type: 'overdue', tab: 'invoicesTab', title: over.length + ' overdue invoice' + (over.length > 1 ? 's' : ''), lines: more(over.map(function (x) { return x.line; }), MAX_LINES) };
+      out['inv-overdue'] = { type: 'overdue', tab: 'invoicesTab', title: over.length + ' overdue invoice' + (over.length > 1 ? 's' : ''), full: over.map(function (x) { return x.line; }).slice(0, 60), lines: more(over.map(function (x) { return x.line; }), MAX_LINES) };
     }
 
     /* bills overdue / due soon */
@@ -89,8 +92,8 @@
       if (diff < 0) bo.push({ k: diff, line: base + ' \u00B7 ' + (-diff) + 'd overdue' });
       else if (diff <= DUE_SOON_DAYS) bs.push({ k: diff, line: base + ' \u00B7 ' + (diff === 0 ? 'due today' : 'due in ' + diff + 'd') });
     });
-    if (bo.length) { bo.sort(function (a, b) { return a.k - b.k; }); out['bill-overdue'] = { type: 'bill', tab: 'supplierBillsTab', title: bo.length + ' overdue bill' + (bo.length > 1 ? 's' : '') + ' to pay', lines: more(bo.map(function (x) { return x.line; }), MAX_LINES) }; }
-    if (bs.length) { bs.sort(function (a, b) { return a.k - b.k; }); out['bill-soon'] = { type: 'bill', tab: 'supplierBillsTab', title: bs.length + ' bill' + (bs.length > 1 ? 's' : '') + ' due within ' + DUE_SOON_DAYS + ' days', lines: more(bs.map(function (x) { return x.line; }), MAX_LINES) }; }
+    if (bo.length) { bo.sort(function (a, b) { return a.k - b.k; }); out['bill-overdue'] = { type: 'bill', tab: 'supplierBillsTab', title: bo.length + ' overdue bill' + (bo.length > 1 ? 's' : '') + ' to pay', full: bo.map(function (x) { return x.line; }).slice(0, 60), lines: more(bo.map(function (x) { return x.line; }), MAX_LINES) }; }
+    if (bs.length) { bs.sort(function (a, b) { return a.k - b.k; }); out['bill-soon'] = { type: 'bill', tab: 'supplierBillsTab', title: bs.length + ' bill' + (bs.length > 1 ? 's' : '') + ' due within ' + DUE_SOON_DAYS + ' days', full: bs.map(function (x) { return x.line; }).slice(0, 60), lines: more(bs.map(function (x) { return x.line; }), MAX_LINES) }; }
 
     /* stock + batches */
     var low = [], outc = 0, exp = [], soon = [];
@@ -110,9 +113,9 @@
         });
       });
     });
-    if (low.length) { low.sort(function (a, b) { return a.q - b.q; }); out['stock'] = { type: 'stock', tab: 'inventoryTab', title: low.length + ' item' + (low.length > 1 ? 's' : '') + ' low on stock' + (outc ? ' (' + outc + ' out)' : ''), lines: more(low.map(function (x) { return x.line; }), MAX_LINES) }; }
-    if (exp.length) { exp.sort(function (a, b) { return a.k - b.k; }); out['batch-expired'] = { type: 'expiry', tab: 'inventoryTab', title: exp.length + ' expired batch' + (exp.length > 1 ? 'es' : '') + ' still in stock', lines: more(exp.map(function (x) { return x.line; }), MAX_LINES) }; }
-    if (soon.length) { soon.sort(function (a, b) { return a.k - b.k; }); out['batch-soon'] = { type: 'expiry', tab: 'inventoryTab', title: soon.length + ' batch' + (soon.length > 1 ? 'es' : '') + ' expiring within ' + EXPIRY_DAYS + ' days', lines: more(soon.map(function (x) { return x.line; }), MAX_LINES) }; }
+    if (low.length) { low.sort(function (a, b) { return a.q - b.q; }); out['stock'] = { type: 'stock', tab: 'inventoryTab', title: low.length + ' item' + (low.length > 1 ? 's' : '') + ' low on stock' + (outc ? ' (' + outc + ' out)' : ''), full: low.map(function (x) { return x.line; }).slice(0, 60), lines: more(low.map(function (x) { return x.line; }), MAX_LINES) }; }
+    if (exp.length) { exp.sort(function (a, b) { return a.k - b.k; }); out['batch-expired'] = { type: 'expiry', tab: 'inventoryTab', title: exp.length + ' expired batch' + (exp.length > 1 ? 'es' : '') + ' still in stock', full: exp.map(function (x) { return x.line; }).slice(0, 60), lines: more(exp.map(function (x) { return x.line; }), MAX_LINES) }; }
+    if (soon.length) { soon.sort(function (a, b) { return a.k - b.k; }); out['batch-soon'] = { type: 'expiry', tab: 'inventoryTab', title: soon.length + ' batch' + (soon.length > 1 ? 'es' : '') + ' expiring within ' + EXPIRY_DAYS + ' days', full: soon.map(function (x) { return x.line; }).slice(0, 60), lines: more(soon.map(function (x) { return x.line; }), MAX_LINES) }; }
     return out;
   }
 
@@ -120,12 +123,12 @@
     var l = load(), c = cid(), dkey = '__notifDismiss_' + c, dismissed = jget(dkey, {}), changed = false;
     var seen = {};
     Object.keys(alerts).forEach(function (k) {
-      var a = alerts[k], sig = JSON.stringify([a.title, a.lines]);
+      var a = alerts[k], sig = JSON.stringify([a.title, a.full || a.lines]);
       if (dismissed[k] === sig) { seen[k] = 1; return; }
       var ex = null; for (var i = 0; i < l.length; i++) if (l[i].key === k) { ex = l[i]; break; }
       seen[k] = 1;
-      if (!ex) { l.unshift({ id: uid(), message: a.title, title: a.title, lines: a.lines, tab: a.tab, type: a.type, key: k, sig: sig, ts: Date.now(), time: new Date().toLocaleString(), read: false }); changed = true; }
-      else if (ex.sig !== sig) { ex.title = ex.message = a.title; ex.lines = a.lines; ex.sig = sig; ex.ts = Date.now(); ex.time = new Date().toLocaleString(); ex.read = false; changed = true; }
+      if (!ex) { l.unshift({ id: uid(), message: a.title, title: a.title, lines: a.lines, full: a.full, tab: a.tab, type: a.type, key: k, sig: sig, ts: Date.now(), time: new Date().toLocaleString(), read: false }); changed = true; }
+      else if (ex.sig !== sig) { ex.title = ex.message = a.title; ex.lines = a.lines; ex.full = a.full; ex.sig = sig; ex.ts = Date.now(); ex.time = new Date().toLocaleString(); ex.read = false; changed = true; }
     });
     /* resolved alerts disappear; forget their dismissal too */
     var keep = l.filter(function (n) { return !n.key || n.type === 'new' || seen[n.key]; });
@@ -158,7 +161,7 @@
           made.push({ title: 'New ' + d.noun + ' ' + (r[d.num] || ''), type: 'new', tab: d.tab, lines: [(r[d.who] || '-') + ' \u00B7 ' + fmt(r.currency, num(r.total)), due ? 'Due ' + due.toLocaleDateString() : ''].filter(Boolean) });
         });
       } else if (fresh.length > 3) {
-        made.push({ title: fresh.length + ' new ' + d.noun + 's', type: 'new', tab: d.tab, lines: more(fresh.map(function (r) { return (r[d.num] || '') + ' \u00B7 ' + (r[d.who] || '-') + ' \u00B7 ' + fmt(r.currency, num(r.total)); }), MAX_LINES) });
+        made.push({ title: fresh.length + ' new ' + d.noun + 's', type: 'new', tab: d.tab, full: fresh.map(function (r) { return (r[d.num] || '') + ' \u00B7 ' + (r[d.who] || '-') + ' \u00B7 ' + fmt(r.currency, num(r.total)); }).slice(0, 60), lines: more(fresh.map(function (r) { return (r[d.num] || '') + ' \u00B7 ' + (r[d.who] || '-') + ' \u00B7 ' + fmt(r.currency, num(r.total)); }), MAX_LINES) });
       }
     });
     jset(sk, { inv: Object.keys(sets.inv), bill: Object.keys(sets.bill) });
@@ -169,19 +172,130 @@
     }
   }
 
+
+  /* ---------- change log: what actually happened ---------- */
+  var WATCH = [
+    { k: 'invoices', noun: 'Invoice', tab: 'invoicesTab', nums: ['invoiceNumber', 'number', 'id'], who: ['customer', 'customerName'], amt: ['total', 'amount'] },
+    { k: 'bills', noun: 'Bill', tab: 'supplierBillsTab', nums: ['billNumber', 'number', 'id'], who: ['supplier', 'supplierName'], amt: ['total', 'amount'] },
+    { k: 'quotes', noun: 'Quote', tab: 'quotesTab', nums: ['quoteNumber', 'number', 'id'], who: ['customer', 'customerName'], amt: ['total', 'amount'] },
+    { k: 'orders', noun: 'Sales order', tab: 'ordersTab', nums: ['orderNumber', 'number', 'id'], who: ['customer', 'customerName'], amt: ['total', 'amount'] },
+    { k: 'receipts', noun: 'Receipt', tab: 'receiptsTab', nums: ['receiptNumber', 'number', 'id'], who: ['customer', 'customerName'], amt: ['amount', 'total'] },
+    { k: 'billPayments', noun: 'Bill payment', tab: 'supplierPaymentsTab', nums: ['reference', 'id'], who: ['supplier', 'supplierName'], amt: ['amount', 'total'] },
+    { k: 'creditNotes', noun: 'Credit note', tab: 'creditNoteTab', nums: ['number', 'creditNoteNumber', 'id'], who: ['customer', 'customerName'], amt: ['total', 'amount'] },
+    { k: 'supplierDebitNotes', noun: 'Debit note', tab: 'supplierDebitNotesTab', nums: ['number', 'debitNoteNumber', 'id'], who: ['supplier', 'supplierName'], amt: ['total', 'amount'] },
+    { k: 'purchaseOrders', noun: 'Purchase order', tab: 'supplierPurchaseOrdersTab', nums: ['poNumber', 'number', 'id'], who: ['supplier', 'supplierName'], amt: ['total', 'amount'] },
+    { k: 'grns', noun: 'GRN', tab: 'grnTab', nums: ['grnNumber', 'number', 'id'], who: ['supplier', 'supplierName'], amt: ['total', 'amount'] },
+    { k: 'salesReturns', noun: 'Sales return', tab: 'salesReturnTab', nums: ['returnNumber', 'number', 'id'], who: ['customer', 'customerName'], amt: ['total', 'amount'] },
+    { k: 'purchaseReturns', noun: 'Purchase return', tab: 'purchaseReturnsTab', nums: ['returnNumber', 'number', 'id'], who: ['supplier', 'supplierName'], amt: ['total', 'amount'] },
+    { k: 'deliveries', noun: 'Delivery', tab: 'deliveryTab', nums: ['deliveryNumber', 'number', 'id'], who: ['customer', 'customerName'], amt: ['total', 'amount'] },
+    { k: 'manualJournals', noun: 'Journal', tab: 'manualJournalsTab', nums: ['journalNo', 'journalNumber', 'number', 'reference', 'id'], who: ['description', 'narration', 'notes'], amt: ['total', 'amount', 'debit'] },
+    { k: 'customers', noun: 'Customer', tab: 'customersTab', nums: ['name', 'id'], who: [], amt: [], lite: true },
+    { k: 'suppliers', noun: 'Supplier', tab: 'supplierTab', nums: ['name', 'id'], who: [], amt: [], lite: true },
+    { k: 'users', noun: 'User', tab: 'userManagementTab', nums: ['username', 'name', 'id'], who: ['role'], amt: [], lite: true }
+  ];
+  var ACTOR = ['updatedBy', 'modifiedBy', 'editedBy', 'createdBy', 'user', 'username', 'preparedBy', 'salesperson'];
+  var pick = function (r, fs) { for (var i = 0; i < fs.length; i++) { var v = r[fs[i]]; if (v != null && v !== '' && typeof v !== 'object') return v; } return ''; };
+  var isDraft = function (s) { return /^\s*draft/i.test(String(s || '')); };
+  var isPaid = function (s) { return /^\s*paid/i.test(String(s || '')); };
+  function idOf(r, w) { var v = (r.id != null && r.id !== '') ? r.id : pick(r, w.nums); return v === '' ? null : String(v); }
+  /* signature: [number, party, amount, status, balance, due, actor, currency] */
+  function sigOf(r, w) {
+    var st = pick(r, ['status', 'packageStatus']); if (!st && r.paid === true) st = 'Paid';
+    var bal = (r.balance != null && r.balance !== '') ? num(r.balance) : null;
+    return [String(pick(r, w.nums)), String(pick(r, w.who)), num(pick(r, w.amt)), String(st), bal, String(r.dueDate || ''), String(pick(r, ACTOR)), String(r.currency || '')];
+  }
+  var head = function (w, s) { return w.noun + (s[0] ? ' ' + s[0] : ''); };
+  var low = function (w) { return w.noun.charAt(0).toLowerCase() + w.noun.slice(1); };
+  function body(w, s) {
+    var l = [], who = s[1], a = s[2] ? fmt(s[7], s[2]) : '';
+    if (who || a) l.push((who || '-') + (a ? ' \u00B7 ' + a : ''));
+    var d = pd(s[5]); if (d) l.push('Due ' + d.toLocaleDateString());
+    if (s[3]) l.push('Status: ' + s[3]);
+    if (s[6]) l.push('By ' + s[6]);
+    return l;
+  }
+  function delta(w, o, n) {
+    var L = [], h = head(w, n);
+    if (o[2] !== n[2]) L.push('Amount: ' + fmt(n[7], o[2]) + ' \u2192 ' + fmt(n[7], n[2]));
+    if (o[3] !== n[3]) L.push('Status: ' + (o[3] || '-') + ' \u2192 ' + (n[3] || '-'));
+    if (o[4] != null && n[4] != null && o[4] !== n[4]) L.push('Balance: ' + fmt(n[7], o[4]) + ' \u2192 ' + fmt(n[7], n[4]));
+    if (o[1] !== n[1] && !w.lite) L.push('Name/Details: ' + (o[1] || '-') + ' \u2192 ' + (n[1] || '-'));
+    if (o[5] !== n[5]) L.push('Due date: ' + (o[5] || '-') + ' \u2192 ' + (n[5] || '-'));
+    if (o[0] !== n[0] && o[0]) L.push('Number: ' + o[0] + ' \u2192 ' + n[0]);
+    if (!L.length) return null;
+    var r = { tab: w.tab, type: 'edit' }, who = n[1] ? [n[1] + (n[2] ? ' \u00B7 ' + fmt(n[7], n[2]) : '')] : [];
+    if (isDraft(o[3]) && !isDraft(n[3])) { r.title = 'New ' + low(w) + ' ' + n[0]; r.type = 'new'; r.lines = body(w, n); return r; }
+    var cleared = o[4] != null && n[4] != null && o[4] > 0.005 && n[4] <= 0.005;
+    if ((isPaid(n[3]) && !isPaid(o[3])) || cleared) { r.title = h + ' paid in full'; r.type = 'paid'; }
+    else if (o[4] != null && n[4] != null && n[4] < o[4]) { r.title = 'Payment of ' + fmt(n[7], o[4] - n[4]) + ' on ' + h; r.type = 'paid'; }
+    else if (o[3] !== n[3] && n[3]) r.title = h + ' \u2192 ' + n[3];
+    else r.title = h + ' updated';
+    if (n[6]) L.push('By ' + n[6]);
+    r.lines = who.concat(L);
+    return r;
+  }
+
+  var fps = {}, snap = null, snapCid = '';
+  function fpOf(s) { var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return s.length + ':' + h; }
+
+  function changes() {
+    var c = cid(); if (!c) return 0;
+    var sk = '__notifSnap_' + c;
+    if (snapCid !== c) { snap = jget(sk, null); snapCid = c; fps = {}; }
+    var first = !snap; if (first) snap = {};
+    var made = [], dirty = false;
+
+    WATCH.forEach(function (w) {
+      var raw = null; try { raw = localStorage.getItem(w.k); } catch (e) {}
+      if (raw == null) return;
+      var f = fpOf(raw); if (fps[w.k] === f) return; fps[w.k] = f;
+      var data; try { data = JSON.parse(raw); } catch (e) { return; }
+      if (!Array.isArray(data)) return;
+      var old = snap[w.k], nm = {};
+      data.forEach(function (r) { if (!r || typeof r !== 'object') return; var id = idOf(r, w); if (id != null) nm[id] = sigOf(r, w); });
+      snap[w.k] = nm; dirty = true;
+      if (first || !old) return; /* first time seen = silent baseline */
+
+      var add = [], del = [], chg = [];
+      Object.keys(nm).forEach(function (id) {
+        if (!old[id]) { if (!isDraft(nm[id][3])) add.push(nm[id]); }
+        else if (!w.lite) { var d = delta(w, old[id], nm[id]); if (d) chg.push(d); }
+      });
+      Object.keys(old).forEach(function (id) { if (!nm[id] && !isDraft(old[id][3])) del.push(old[id]); });
+
+      var one = function (s) { return head(w, s) + (s[1] ? ' \u00B7 ' + s[1] : '') + (s[2] ? ' \u00B7 ' + fmt(s[7], s[2]) : ''); };
+      if (add.length > 3) { var fl = add.map(one); made.push({ title: add.length + ' new ' + low(w) + 's', type: 'new', tab: w.tab, lines: more(fl.slice(), MAX_LINES), full: fl.slice(0, 60) }); }
+      else add.forEach(function (s) { made.push({ title: 'New ' + low(w) + ' ' + s[0], type: 'new', tab: w.tab, lines: body(w, s) }); });
+      if (chg.length > 3) {
+        var cl = chg.map(function (x) { return x.title + (x.lines[1] ? ' \u2014 ' + x.lines[1] : ''); });
+        made.push({ title: chg.length + ' ' + low(w) + 's updated', type: 'edit', tab: w.tab, lines: more(cl.slice(), MAX_LINES), full: cl.slice(0, 60) });
+      } else chg.forEach(function (x) { made.push(x); });
+      if (del.length > 3) { var dl = del.map(one); made.push({ title: del.length + ' ' + low(w) + 's deleted', type: 'del', tab: w.tab, lines: more(dl.slice(), MAX_LINES), full: dl.slice(0, 60) }); }
+      else del.forEach(function (s) { made.push({ title: head(w, s) + ' deleted', type: 'del', tab: w.tab, lines: body(w, s) }); });
+    });
+
+    if (dirty) jset(sk, snap);
+    if (made.length) {
+      var l = load();
+      made.reverse().forEach(function (m) { l.unshift({ id: uid(), message: m.title, title: m.title, lines: m.lines, full: m.full, tab: m.tab, type: m.type, key: '', ts: Date.now(), time: new Date().toLocaleString(), read: false }); });
+      save(l); render();
+    }
+    return made.length;
+  }
+
   var lastScan = 0;
   function scan(force) {
     try {
       if (!cid()) return;
       if (!force && Date.now() - lastScan < 60000) return;
       lastScan = Date.now();
-      sync(buildAlerts()); activity(); render();
+      sync(buildAlerts()); changes(); render();
     } catch (e) { console.warn('[notifications-plus]', e); }
   }
 
   /* ---------- UI ---------- */
-  var ICON = { overdue: ['\u23F0', '#fee2e2', '#b91c1c'], bill: ['\uD83D\uDCB3', '#ffedd5', '#c2410c'], stock: ['\uD83D\uDCE6', '#fef3c7', '#b45309'], expiry: ['\u231B', '#ede9fe', '#6d28d9'], new: ['\uD83E\uDDFE', '#dbeafe', '#1d4ed8'], info: ['\uD83D\uDD14', '#f3f4f6', '#4b5563'] };
-  var filter = 'all', fresh = {};
+  var ICON = { overdue: ['\u23F0', '#fee2e2', '#b91c1c'], bill: ['\uD83D\uDCB3', '#ffedd5', '#c2410c'], stock: ['\uD83D\uDCE6', '#fef3c7', '#b45309'], expiry: ['\u231B', '#ede9fe', '#6d28d9'], new: ['\uD83E\uDDFE', '#dbeafe', '#1d4ed8'], paid: ['\u2705', '#dcfce7', '#15803d'], edit: ['\u270F\uFE0F', '#e0f2fe', '#0369a1'], del: ['\uD83D\uDDD1\uFE0F', '#fee2e2', '#b91c1c'], info: ['\uD83D\uDD14', '#f3f4f6', '#4b5563'] };
+  var filter = 'all', fresh = {}, opened = {};
 
   function rel(ts) {
     var s = Math.max(0, Math.round((Date.now() - ts) / 1000));
@@ -218,7 +332,12 @@
       var id = li.getAttribute('data-id');
       if (e.target.closest('.acx-np-x')) { dismiss(id); return; }
       var n = load().filter(function (x) { return x.id === id; })[0];
-      if (n && n.tab && typeof window.showTab === 'function') { p.classList.add('hidden'); try { window.showTab(n.tab); } catch (x) {} }
+      if (!n) return;
+      if (e.target.closest('[data-go]')) {
+        if (n.tab && typeof window.showTab === 'function') { p.classList.add('hidden'); try { window.showTab(n.tab); } catch (x) {} }
+        return;
+      }
+      opened[id] = !opened[id]; render();
     });
   }
 
@@ -235,15 +354,17 @@
     }
     ul.innerHTML = shown.map(function (n) {
       var ic = ICON[n.type] || ICON.info;
-      var lines = (n.lines || []).map(function (x) { return '<div style="font-size:12px;color:#4b5563;margin-top:2px;line-height:1.35">' + esc(x) + '</div>'; }).join('');
-      return '<li class="acx-np-item' + (fresh[n.id] || !n.read ? ' fresh' : '') + '" data-id="' + esc(n.id) + '">' +
+      var shownLines = (opened[n.id] && n.full && n.full.length) ? n.full : (n.lines || []);
+      var lines = shownLines.map(function (x) { return '<div style="font-size:12px;color:#4b5563;margin-top:2px;line-height:1.35">' + esc(x) + '</div>'; }).join('');
+      return '<li class="acx-np-item' + (fresh[n.id] || !n.read ? ' fresh' : '') + '" data-id="' + esc(n.id) + '" title="' + esc(n.time || '') + '">' +
         '<div class="acx-np-ic" style="background:' + ic[1] + ';color:' + ic[2] + '">' + ic[0] + '</div>' +
         '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#111827;padding-right:16px">' + esc(n.title || n.message) + '</div>' + lines +
-        '<div style="font-size:11px;color:#9ca3af;margin-top:4px">' + rel(n.ts) + (n.tab ? ' \u00B7 <span style="color:#2563eb">View \u203A</span>' : '') + '</div></div>' +
+        '<div style="font-size:11px;color:#9ca3af;margin-top:4px">' + rel(n.ts) + ((n.full && n.full.length > (n.lines || []).length) ? ' \u00B7 <span style="color:#6b7280">' + (opened[n.id] ? 'Show less \u25B4' : 'Show all \u25BE') + '</span>' : '') + (n.tab ? ' \u00B7 <span data-go="1" style="color:#2563eb">View \u203A</span>' : '') + '</div></div>' +
         '<button class="acx-np-x" title="Dismiss">\u2715</button></li>';
     }).join('');
   }
   window.renderNotifications = function () { render(); };
+  window.__acxNotifChanges = changes;
 
   function markAllRead() { var l = load(); l.forEach(function (n) { n.read = true; }); save(l); }
   function dismiss(id) {
@@ -261,7 +382,7 @@
     var p = $('notifPopup'); if (!p) return;
     p.classList.toggle('hidden');
     if (!p.classList.contains('hidden')) {
-      scan(false);
+      scan(false); changes();
       fresh = {}; load().forEach(function (n) { if (!n.read) fresh[n.id] = 1; });
       markAllRead(); render();
     }
@@ -277,6 +398,8 @@
     purge(); render();
     setTimeout(function () { scan(true); }, 2500);
     setInterval(function () { scan(true); }, 10 * 60 * 1000);
+    setTimeout(function () { changes(); }, 3000);
+    setInterval(function () { if (!document.hidden) { try { changes(); } catch (e) {} } }, 8000);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(boot, 0); }); else boot();
 })();
