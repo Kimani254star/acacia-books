@@ -124797,7 +124797,7 @@ try{
           : "";
 
         var cur = el(cfg.currency);
-        q(".zf-cur").textContent = (cur && cur.value) ? cur.value : "KES";
+        q(".zf-cur").textContent = (cur && cur.value) ? cur.value : (window.__getBaseCurrencyEarly ? window.__getBaseCurrencyEarly() : "KES");
 
         var totalEl = el(cfg.total);
         if (totalEl && totalEl.type === "hidden") {
@@ -124837,6 +124837,7 @@ try{
 
     var cur = el(cfg.currency);
     if (cur && !cur.__zfBound) { cur.__zfBound = true; cur.addEventListener("change", recalc); }
+    (cfg.watch||[]).forEach(function(i){var n=el(i);n&&!n.__zfW&&(n.__zfW=!0,["input","change"].forEach(function(v){n.addEventListener(v,function(){setTimeout(recalc,0)})}))});
 
     
 
@@ -124885,7 +124886,15 @@ try{
         var arr = (typeof poItems !== "undefined") ? poItems : window.poItems;
         if (!Array.isArray(arr)) return arr;
         return arr.map(function (it) { return { totalWithVat: it.subtotal + it.vat, vat: it.vat }; });
-      } }
+      } },
+
+    // ---- added: same card for Bulk Invoicing, Quotes, Credit Notes, Recurring Invoices, Bulk Billing, Debit Notes ----
+    {key:"bulkInvoice",card:"bulkInvoiceSummaryCard",prefix:"bulkInvoice",tbody:"bulkInvoiceItemTableBody",total:"bulkInvoiceTotal",vat:"bulkInvoiceVAT",currency:"bulkInvoiceCurrency",watch:["bulkInvoiceCurrency","bulkInvoiceCurrencyRate"],vatCol:4,subCol:5,items:function(){var a="undefined"!=typeof bulkInvoiceItems?bulkInvoiceItems:window.bulkInvoiceItems;if(!Array.isArray(a))return a;var r=parseFloat((document.getElementById("bulkInvoiceCurrencyRate")||{}).value)||1;return a.map(function(i){return{totalWithVat:(i.subtotal+i.vatAmount)*r,vat:i.vatAmount*r}})}},
+    {key:"quote",card:"quoteSummaryCard",prefix:"quote",tbody:"quoteItemsTableBody",total:"quoteTotal",vat:"quoteVAT",currency:"quoteCurrency",watch:["quoteCurrency"],vatCol:4,subCol:5,subExcludesTax:!0,items:function(){var a="undefined"!=typeof quoteItems?quoteItems:window.quoteItems;if(!Array.isArray(a))return a;return a.map(function(i){return{totalWithVat:i.subtotal+i.vat,vat:i.vat}})}},
+    {key:"credit",card:"creditSummaryCard",prefix:"credit",tbody:"creditItemsTableBody",watch:[],vatCol:4,subCol:5,subExcludesTax:!0,items:function(){var a="undefined"!=typeof creditNoteItems?creditNoteItems:window.creditNoteItems;if(!Array.isArray(a))return a;return a.map(function(i){return{totalWithVat:i.subtotal+i.vatAmount,vat:i.vatAmount}})}},
+    {key:"recurringInvoice",card:"recurringInvoiceSummaryCard",prefix:"recurringInvoice",tbody:"recurringInvoiceItemTableBody",currency:"recurringInvoiceCurrency",watch:["recurringInvoiceCurrency"],vatCol:4,subCol:5,items:function(){var a="undefined"!=typeof recurringInvoiceItems?recurringInvoiceItems:window.recurringInvoiceItems;if(!Array.isArray(a))return a;return a.map(function(i){return{totalWithVat:i.total,vat:i.vat}})}},
+    {key:"bulkBill",card:"bulkBillSummaryCard",prefix:"bulkBill",tbody:"bulkBillItemsTableBody",total:"bulkBillTotalAmount",vat:"bulkBillVATTotal",currency:"bulkBillCurrency",watch:["bulkBillCurrency","bulkBillCurrencyRate"],vatCol:4,subCol:5,items:function(){var a="undefined"!=typeof bulkBillItems?bulkBillItems:window.bulkBillItems;if(!Array.isArray(a))return a;var r=parseFloat((document.getElementById("bulkBillCurrencyRate")||{}).value)||1;return a.map(function(i){return{totalWithVat:(i.subtotal+i.vat)*r,vat:i.vat*r}})}},
+    {key:"debit",card:"debitSummaryCard",prefix:"debit",tbody:"debitItemsTableBody",watch:[],vatCol:4,subCol:5,subExcludesTax:!0,items:function(){var a="undefined"!=typeof debitItems?debitItems:window.debitItems;if(!Array.isArray(a))return a;return a.map(function(i){return{totalWithVat:i.subtotal+i.vat,vat:i.vat}})}}
   ];
 
   var made = {};
