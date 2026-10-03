@@ -4177,7 +4177,7 @@ function loadDashboard() {
   const taxTotal = taxPayments.reduce((sum, tx) => sum + (parseFloat(tx.amount != null ? tx.amount : tx.total) || 0), 0);
   const exchangeRates = JSON.parse(localStorage.getItem("exchangeRates") || "{}");
   const bankTotal = (typeof __banksForTotals==='function'?__banksForTotals(banks):banks).reduce((sum, b) => {
-    const rate = exchangeRates[b.currency] || 1;
+    const rate = (window.acxKesPer?window.acxKesPer(b.currency):exchangeRates[b.currency]||1);
     return sum + (parseFloat(b.balance) || 0) * rate;
   }, 0);
 
@@ -4372,7 +4372,7 @@ function loadDashboardBanks() {
     if (!grouped[bank.currency]) grouped[bank.currency] = 0;
     grouped[bank.currency] += bal;
 
-    const rate = rates[bank.currency] || 1;
+    const rate = (window.acxKesPer?window.acxKesPer(bank.currency):rates[bank.currency]||1);
     baseTotal += bal * rate;
   });
 
@@ -5016,7 +5016,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return sum + (qty * buy);
   }, 0);
   const bankTotal = (typeof __banksForTotals==='function'?__banksForTotals(banks):banks).reduce((sum, b) => {
-    const rate = exchangeRates[b.currency] || 1;
+    const rate = (window.acxKesPer?window.acxKesPer(b.currency):exchangeRates[b.currency]||1);
     return sum + (parseFloat(b.balance) || 0) * rate;
   }, 0);
 
@@ -23109,7 +23109,7 @@ function recordInvoicePayment(id) {
   const content = document.createElement("div");
   content.style = "background:#fff;padding:20px;border-radius:8px;width:400px;";
   content.innerHTML = `
-    <h3>Record Payment for Invoice ${invoice.invoiceNumber}</h3><label>Amount (Outstanding: ${window.__fmtBase(balance)} KES. You may enter more to create a prepayment for the extra):</label><input type="number" id="invoicePaymentAmount" class="border p-1 w-full mb-2"
+    <h3>Record Payment for Invoice ${invoice.invoiceNumber}</h3><label>Amount (Outstanding: ${window.__fmtBase(balance)} ${window.__getBaseCurrencyEarly()}. You may enter more to create a prepayment for the extra):</label><input type="number" id="invoicePaymentAmount" class="border p-1 w-full mb-2"
       value="${balance.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)}" min="0" step="0.01" /><label>Select Bank:</label><select id="invoicePaymentBank" class="border p-1 w-full mb-2"><option value="">Select Bank</option>
       ${bankOptions}
     </select><label>Exchange Rate (to KES):</label><input type="number" id="invoicePaymentExchangeRate" class="border p-1 w-full mb-2"
@@ -23128,7 +23128,7 @@ function recordInvoicePayment(id) {
     let appliedAmount = Math.min(amountPaidNow, balance);
     let overpayExcess = Math.max(amountPaidNow - balance, 0);
     if (overpayExcess > 0.005) {
-      const ok = confirm(`This payment is ${window.__fmtBase(overpayExcess)} KES more than the ${window.__fmtBase(balance)} KES owed on Invoice ${invoice.invoiceNumber}.\n\nCreate a prepayment of ${window.__fmtBase(overpayExcess)} KES for ${invoice.customer} with the extra?`);
+      const ok = confirm(`This payment is ${window.__fmtBase(overpayExcess)} ${window.__getBaseCurrencyEarly()} more than the ${window.__fmtBase(balance)} ${window.__getBaseCurrencyEarly()} owed on Invoice ${invoice.invoiceNumber}.\n\nCreate a prepayment of ${window.__fmtBase(overpayExcess)} ${window.__getBaseCurrencyEarly()} for ${invoice.customer} with the extra?`);
       if (!ok) return;
     }
     const bankIndex = parseInt(document.getElementById("invoicePaymentBank").value);
@@ -23232,7 +23232,7 @@ function recordInvoicePayment(id) {
     document.body.removeChild(modal);
     showToast(
       overpayExcess > 0.005
-        ? `✅ Invoice ${invoice.invoiceNumber} paid in full — ${window.__fmtBase(overpayExcess)} KES recorded as a prepayment`
+        ? `✅ Invoice ${invoice.invoiceNumber} paid in full — ${window.__fmtBase(overpayExcess)} ${window.__getBaseCurrencyEarly()} recorded as a prepayment`
         : invoice.status === "Paid"
         ? `✅ Invoice ${invoice.invoiceNumber} fully paid`
         : `✅ Partial payment recorded for Invoice ${invoice.invoiceNumber}`
@@ -23258,7 +23258,7 @@ function reversePayment(id) {
   if (paid <= 0) return alert("No payment to reverse.");
 
   const input = prompt(
-    `Current paid: ${window.__fmtBase(paid)} KES (Total: ${window.__fmtBase(total)} KES)\n` +
+    `Current paid: ${window.__fmtBase(paid)} ${window.__getBaseCurrencyEarly()} (Total: ${window.__fmtBase(total)} ${window.__getBaseCurrencyEarly()})\n` +
     `Enter NEW paid amount (0 to fully reverse):`,
     "0"
   );
@@ -23383,7 +23383,7 @@ function reversePayment(id) {
   if (typeof updateDashboardTotals === "function") updateDashboardTotals();
   if (typeof renderManualJournals === "function") renderManualJournals();
 
-  showToast(`🔄 Reversed ${window.__fmtBase(difference)} KES on Invoice ${invoice.invoiceNumber}. New paid: ${window.__fmtBase(finalPaid)} KES.`);
+  showToast(`🔄 Reversed ${window.__fmtBase(difference)} ${window.__getBaseCurrencyEarly()} on Invoice ${invoice.invoiceNumber}. New paid: ${window.__fmtBase(finalPaid)} ${window.__getBaseCurrencyEarly()}.`);
 }
 function syncInvoiceReceipt(invoice) {
   const receipts = JSON.parse(localStorage.getItem('receipts') || "[]");
@@ -26590,7 +26590,7 @@ function recordBulkInvoicePayment(invoiceNo) {
   const content = document.createElement("div");
   content.style = "background:#fff;padding:20px;border-radius:8px;width:400px;";
   content.innerHTML = `
-    <h3>Record Payment for Bulk Invoice ${invoice.invoiceNumber}</h3><label>Amount (Outstanding: ${window.__fmtBase(balance)} KES. You may enter more to create a prepayment for the extra):</label><input type="number" id="bulkInvoicePaymentAmount" class="border p-1 w-full mb-2"
+    <h3>Record Payment for Bulk Invoice ${invoice.invoiceNumber}</h3><label>Amount (Outstanding: ${window.__fmtBase(balance)} ${window.__getBaseCurrencyEarly()}. You may enter more to create a prepayment for the extra):</label><input type="number" id="bulkInvoicePaymentAmount" class="border p-1 w-full mb-2"
       value="${balance.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)}" min="0" step="0.01" /><label>Select Bank:</label><select id="bulkInvoicePaymentBank" class="border p-1 w-full mb-2"><option value="">Select Bank</option>
       ${bankOptions}
     </select><label>Exchange Rate (to KES):</label><input type="number" id="bulkInvoicePaymentExchangeRate" class="border p-1 w-full mb-2"
@@ -26611,7 +26611,7 @@ function recordBulkInvoicePayment(invoiceNo) {
     let appliedAmount = Math.min(amountPaidNow, balance);
     let overpayExcess = Math.max(amountPaidNow - balance, 0);
     if (overpayExcess > 0.005) {
-      const ok = confirm(`This payment is ${window.__fmtBase(overpayExcess)} KES more than the ${window.__fmtBase(balance)} KES owed on Invoice ${invoice.invoiceNumber}.\n\nCreate a prepayment of ${window.__fmtBase(overpayExcess)} KES for ${invoice.customer} with the extra?`);
+      const ok = confirm(`This payment is ${window.__fmtBase(overpayExcess)} ${window.__getBaseCurrencyEarly()} more than the ${window.__fmtBase(balance)} ${window.__getBaseCurrencyEarly()} owed on Invoice ${invoice.invoiceNumber}.\n\nCreate a prepayment of ${window.__fmtBase(overpayExcess)} ${window.__getBaseCurrencyEarly()} for ${invoice.customer} with the extra?`);
       if (!ok) return;
     }
     const bankIndex = parseInt(document.getElementById("bulkInvoicePaymentBank").value);
@@ -26712,7 +26712,7 @@ function recordBulkInvoicePayment(invoiceNo) {
 
     document.body.removeChild(modal);
     const msg = overpayExcess > 0.005
-      ? `✅ Bulk Invoice ${invoice.invoiceNumber} paid in full — ${window.__fmtBase(overpayExcess)} KES recorded as a prepayment`
+      ? `✅ Bulk Invoice ${invoice.invoiceNumber} paid in full — ${window.__fmtBase(overpayExcess)} ${window.__getBaseCurrencyEarly()} recorded as a prepayment`
       : invoice.status === "Paid"
       ? `✅ Bulk Invoice ${invoice.invoiceNumber} fully paid`
       : `✅ Partial payment recorded for Bulk Invoice ${invoice.invoiceNumber}`;
@@ -26776,7 +26776,7 @@ function reverseBulkInvoicePayment(invoiceNo) {
   if (paid <= 0) return alert("No payment to reverse.");
 
   const input = prompt(
-    `Current paid: ${window.__fmtBase(paid)} KES (Total: ${window.__fmtBase(total)} KES)\n` +
+    `Current paid: ${window.__fmtBase(paid)} ${window.__getBaseCurrencyEarly()} (Total: ${window.__fmtBase(total)} ${window.__getBaseCurrencyEarly()})\n` +
     `Enter NEW paid amount (0 to fully reverse):`,
     "0"
   );
@@ -26843,7 +26843,7 @@ function reverseBulkInvoicePayment(invoiceNo) {
   if (typeof renderAccountsReceivable === "function") renderAccountsReceivable();
   if (typeof renderBankTable === "function") renderBankTable();
   if (typeof updateBankDropdowns === "function") updateBankDropdowns();
-  const msg = `✅ Payment reversed for Bulk Invoice ${invoiceNo}. New paid: ${window.__fmtBase(newPaid)} KES.`;
+  const msg = `✅ Payment reversed for Bulk Invoice ${invoiceNo}. New paid: ${window.__fmtBase(newPaid)} ${window.__getBaseCurrencyEarly()}.`;
   if (typeof showToast === "function") showToast(msg); else alert(msg);
 }
 
@@ -28349,7 +28349,7 @@ function applyCreditToInvoice(noteId) {
   }
 
   const invoiceOptions = candidateInvoices
-    .map(x => `<option value="${x.idx}">${x.inv.invoiceNumber} — Balance ${window.__fmtBase(x.balance)} KES</option>`)
+    .map(x => `<option value="${x.idx}">${x.inv.invoiceNumber} — Balance ${window.__fmtBase(x.balance)} ${window.__getBaseCurrencyEarly()}</option>`)
     .join("");
 
 
@@ -28363,7 +28363,7 @@ function applyCreditToInvoice(noteId) {
   content.innerHTML = `
     <h3>Apply Credit Note ${note.number}</h3>
     <p style="margin:6px 0;font-size:13px;color:#444">
-      Available Credit: <b>${window.__fmtBase(remainingCredit)} KES</b>
+      Available Credit: <b>${window.__fmtBase(remainingCredit)} ${window.__getBaseCurrencyEarly()}</b>
     </p>
     <label>Apply to Invoice:</label>
     <select id="creditApplyInvoiceSelect" class="border p-1 w-full mb-2">${invoiceOptions}</select>
@@ -28384,8 +28384,8 @@ function applyCreditToInvoice(noteId) {
   function suggestAmount() {
     const chosen = candidateInvoices.find(x => String(x.idx) === select.value);
     if (!chosen) return;
-    amountInput.value = window.__fmtBase(Math.min(remainingCredit, chosen.balance));
-    amountInput.max = window.__fmtBase(Math.min(remainingCredit, chosen.balance));
+    amountInput.value = window.__rawAmt(Math.min(remainingCredit, chosen.balance));
+    amountInput.max = window.__rawAmt(Math.min(remainingCredit, chosen.balance));
   }
   select.addEventListener("change", suggestAmount);
   suggestAmount();
@@ -28400,7 +28400,7 @@ function applyCreditToInvoice(noteId) {
     const amount = parseFloat(amountInput.value);
     const cap = Math.min(remainingCredit, chosen.balance);
     if (isNaN(amount) || amount <= 0 || amount > cap + 0.0001) {
-      return alert(`Invalid amount. Must be between 0.01 and ${window.__fmtBase(cap)} KES.`);
+      return alert(`Invalid amount. Must be between 0.01 and ${window.__fmtBase(cap)} ${window.__getBaseCurrencyEarly()}.`);
     }
 
     const invoicesAll = JSON.parse(localStorage.getItem("invoices") || "[]");
@@ -28482,7 +28482,7 @@ function applyCreditToInvoice(noteId) {
     document.body.removeChild(modal);
     const msg = note.status === "Applied"
       ? `✅ Credit Note ${note.number} fully applied to Invoice ${invoice.invoiceNumber}.`
-      : `✅ ${window.__fmtBase(amount)} KES from Credit Note ${note.number} applied to Invoice ${invoice.invoiceNumber}. Remaining credit: ${window.__fmtBase(remainingCredit - amount)} KES.`;
+      : `✅ ${window.__fmtBase(amount)} ${window.__getBaseCurrencyEarly()} from Credit Note ${note.number} applied to Invoice ${invoice.invoiceNumber}. Remaining credit: ${window.__fmtBase(remainingCredit - amount)} ${window.__getBaseCurrencyEarly()}.`;
     if (typeof showToast === "function") showToast(msg); else alert(msg);
   };
 }
@@ -28519,7 +28519,7 @@ function applyCredit(invoiceId) {
   }
 
   const noteOptions = candidateNotes
-    .map(x => `<option value="${x.idx}">${x.note.number} — Available ${window.__fmtBase(x.remaining)} KES</option>`)
+    .map(x => `<option value="${x.idx}">${x.note.number} — Available ${window.__fmtBase(x.remaining)} ${window.__getBaseCurrencyEarly()}</option>`)
     .join("");
 
   const modal = document.createElement("div");
@@ -28529,7 +28529,7 @@ function applyCredit(invoiceId) {
   content.innerHTML = `
     <h3>Apply Credit to Invoice ${invoice.invoiceNumber}</h3>
     <p style="margin:6px 0;font-size:13px;color:#444">
-      Outstanding Balance: <b>${window.__fmtBase(balance)} KES</b>
+      Outstanding Balance: <b>${window.__fmtBase(balance)} ${window.__getBaseCurrencyEarly()}</b>
     </p>
     <label>Credit Note:</label>
     <select id="applyCreditNoteSelect" class="border p-1 w-full mb-2">${noteOptions}</select>
@@ -28550,8 +28550,8 @@ function applyCredit(invoiceId) {
     const chosen = candidateNotes.find(x => String(x.idx) === select.value);
     if (!chosen) return;
     const cap = Math.min(balance, chosen.remaining);
-    amountInput.value = window.__fmtBase(cap);
-    amountInput.max = window.__fmtBase(cap);
+    amountInput.value = window.__rawAmt(cap);
+    amountInput.max = window.__rawAmt(cap);
   }
   select.addEventListener("change", suggestAmount);
   suggestAmount();
@@ -28566,7 +28566,7 @@ function applyCredit(invoiceId) {
     const amount = parseFloat(amountInput.value);
     const cap = Math.min(balance, chosen.remaining);
     if (isNaN(amount) || amount <= 0 || amount > cap + 0.0001) {
-      return alert(`Invalid amount. Must be between 0.01 and ${window.__fmtBase(cap)} KES.`);
+      return alert(`Invalid amount. Must be between 0.01 and ${window.__fmtBase(cap)} ${window.__getBaseCurrencyEarly()}.`);
     }
 
     const notesAll = JSON.parse(localStorage.getItem("creditNotes") || "[]");
@@ -28659,7 +28659,7 @@ function applyCredit(invoiceId) {
     if (typeof renderManualTransactions === "function") renderManualTransactions();
 
     document.body.removeChild(modal);
-    const msg = `✅ ${window.__fmtBase(amount)} KES from Credit Note ${note.number} applied to Invoice ${invoice.invoiceNumber}.`;
+    const msg = `✅ ${window.__fmtBase(amount)} ${window.__getBaseCurrencyEarly()} from Credit Note ${note.number} applied to Invoice ${invoice.invoiceNumber}.`;
     if (typeof showToast === "function") showToast(msg); else alert(msg);
   };
 }
@@ -35071,7 +35071,7 @@ function populateBillProductDropdown() {
   const inventory = getAllInventories();
 
   inventory.forEach(item => {
-    const priceInBase = item.buyPrice * (exchangeRates[item.currency] || 1);
+    const priceInBase = item.buyPrice * ((window.acxKesPer?window.acxKesPer(item.currency):exchangeRates[item.currency]||1));
     const opt = document.createElement('option');
     opt.value = JSON.stringify({ 
       name: item.name, 
@@ -35927,8 +35927,8 @@ function recordBillPayment(index) {
     <h3>Record Payment for Bill ${bill.billNumber}</h3>
     <p style="margin:6px 0;font-size:13px;color:#444">
       Total: ${(parseFloat(bill.total)||0).toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)} KES &nbsp;|&nbsp;
-      Paid: ${window.__fmtBase(alreadyPaid)} KES &nbsp;|&nbsp;
-      Outstanding: <b>${window.__fmtBase(outstanding)} KES</b>
+      Paid: ${window.__fmtBase(alreadyPaid)} ${window.__getBaseCurrencyEarly()} &nbsp;|&nbsp;
+      Outstanding: <b>${window.__fmtBase(outstanding)} ${window.__getBaseCurrencyEarly()}</b>
     </p>
     <label>Payment Amount (KES). You may enter more than the outstanding to create a prepayment for the extra:</label>
     <input type="number" id="paymentAmountInput" class="border p-1 w-full mb-2" value="${outstanding.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)}" min="0.01" step="0.01"/>
@@ -35974,7 +35974,7 @@ function recordBillPayment(index) {
     let appliedAmount = Math.min(inputAmount, outstanding);
     let overpayExcess = Math.max(inputAmount - outstanding, 0);
     if (overpayExcess > 0.005) {
-      const ok = confirm(`This payment is ${window.__fmtBase(overpayExcess)} KES more than the ${window.__fmtBase(outstanding)} KES owed on Bill ${bill.billNumber}.\n\nCreate a prepayment of ${window.__fmtBase(overpayExcess)} KES for ${bill.supplier} with the extra?`);
+      const ok = confirm(`This payment is ${window.__fmtBase(overpayExcess)} ${window.__getBaseCurrencyEarly()} more than the ${window.__fmtBase(outstanding)} ${window.__getBaseCurrencyEarly()} owed on Bill ${bill.billNumber}.\n\nCreate a prepayment of ${window.__fmtBase(overpayExcess)} ${window.__getBaseCurrencyEarly()} for ${bill.supplier} with the extra?`);
       if (!ok) return;
     }
 
@@ -36072,10 +36072,10 @@ function recordBillPayment(index) {
     document.body.removeChild(modal);
     alert(
       overpayExcess > 0.005
-        ? `✅ Bill ${bill.billNumber} paid in full — ${window.__fmtBase(overpayExcess)} KES recorded as a prepayment for ${bill.supplier}.`
+        ? `✅ Bill ${bill.billNumber} paid in full — ${window.__fmtBase(overpayExcess)} ${window.__getBaseCurrencyEarly()} recorded as a prepayment for ${bill.supplier}.`
         : bill.status === "Paid"
         ? `✅ Bill ${bill.billNumber} fully paid.`
-        : `✅ Partial payment of ${window.__fmtBase(appliedAmount)} KES recorded for Bill ${bill.billNumber}. Outstanding: ${window.__fmtBase(bill.balance)} KES.`
+        : `✅ Partial payment of ${window.__fmtBase(appliedAmount)} ${window.__getBaseCurrencyEarly()} recorded for Bill ${bill.billNumber}. Outstanding: ${window.__fmtBase(bill.balance)} ${window.__getBaseCurrencyEarly()}.`
     );
   };
 }
@@ -36102,7 +36102,7 @@ function reverseBillPayment(index) {
 
   const total = parseFloat(bill.total) || 0;
   const input = prompt(
-    `Current paid: ${window.__fmtBase(currentPaid)} KES (Total: ${window.__fmtBase(total)} KES)\n` +
+    `Current paid: ${window.__fmtBase(currentPaid)} ${window.__getBaseCurrencyEarly()} (Total: ${window.__fmtBase(total)} ${window.__getBaseCurrencyEarly()})\n` +
     `Enter NEW paid amount (0 to fully reverse):`,
     "0"
   );
@@ -36191,7 +36191,7 @@ function reverseBillPayment(index) {
   if (typeof renderCreditcontrolAnalysis === "function") renderCreditcontrolAnalysis();
   if (typeof updateBankDropdowns === "function") updateBankDropdowns();
 
-  alert(`Reversed ${window.__fmtBase(reverseAmount)} KES on Bill ${bill.billNumber}. New paid: ${window.__fmtBase(newPaid)} KES.`);
+  alert(`Reversed ${window.__fmtBase(reverseAmount)} ${window.__getBaseCurrencyEarly()} on Bill ${bill.billNumber}. New paid: ${window.__fmtBase(newPaid)} ${window.__getBaseCurrencyEarly()}.`);
 }
 
 function writeOffBill(index) {
@@ -37804,8 +37804,8 @@ function recordBulkBillPayment(index) {
     <h3>Record Payment for Bulk Bill ${bill.billNumber}</h3>
     <p style="margin:6px 0;font-size:13px;color:#444">
       Total: ${(parseFloat(bill.total)||0).toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)} KES &nbsp;|&nbsp;
-      Paid: ${window.__fmtBase(alreadyPaid)} KES &nbsp;|&nbsp;
-      Outstanding: <b>${window.__fmtBase(outstanding)} KES</b>
+      Paid: ${window.__fmtBase(alreadyPaid)} ${window.__getBaseCurrencyEarly()} &nbsp;|&nbsp;
+      Outstanding: <b>${window.__fmtBase(outstanding)} ${window.__getBaseCurrencyEarly()}</b>
     </p>
     <label>Payment Amount (KES). You may enter more than the outstanding to create a prepayment for the extra:</label>
     <input type="number" id="bulkPaymentAmountInput" class="border p-1 w-full mb-2" value="${outstanding.toFixed(window.__getDecimalPlaces?window.__getDecimalPlaces():2)}" min="0.01" step="0.01"/>
@@ -37851,7 +37851,7 @@ function recordBulkBillPayment(index) {
     let appliedAmount = Math.min(inputAmount, outstanding);
     let overpayExcess = Math.max(inputAmount - outstanding, 0);
     if (overpayExcess > 0.005) {
-      const ok = confirm(`This payment is ${window.__fmtBase(overpayExcess)} KES more than the ${window.__fmtBase(outstanding)} KES owed on Bulk Bill ${bill.billNumber}.\n\nCreate a prepayment of ${window.__fmtBase(overpayExcess)} KES for ${bill.supplier} with the extra?`);
+      const ok = confirm(`This payment is ${window.__fmtBase(overpayExcess)} ${window.__getBaseCurrencyEarly()} more than the ${window.__fmtBase(outstanding)} ${window.__getBaseCurrencyEarly()} owed on Bulk Bill ${bill.billNumber}.\n\nCreate a prepayment of ${window.__fmtBase(overpayExcess)} ${window.__getBaseCurrencyEarly()} for ${bill.supplier} with the extra?`);
       if (!ok) return;
     }
 
@@ -37957,10 +37957,10 @@ function recordBulkBillPayment(index) {
     document.body.removeChild(modal);
     alert(
       overpayExcess > 0.005
-        ? `✅ Bulk Bill ${bill.billNumber} paid in full — ${window.__fmtBase(overpayExcess)} KES recorded as a prepayment for ${bill.supplier}.`
+        ? `✅ Bulk Bill ${bill.billNumber} paid in full — ${window.__fmtBase(overpayExcess)} ${window.__getBaseCurrencyEarly()} recorded as a prepayment for ${bill.supplier}.`
         : bill.status === "Paid"
         ? `✅ Bulk Bill ${bill.billNumber} fully paid.`
-        : `✅ Partial payment of ${window.__fmtBase(appliedAmount)} KES recorded for Bulk Bill ${bill.billNumber}. Outstanding: ${window.__fmtBase(bill.balance)} KES.`
+        : `✅ Partial payment of ${window.__fmtBase(appliedAmount)} ${window.__getBaseCurrencyEarly()} recorded for Bulk Bill ${bill.billNumber}. Outstanding: ${window.__fmtBase(bill.balance)} ${window.__getBaseCurrencyEarly()}.`
     );
   };
 }
@@ -37978,7 +37978,7 @@ function reverseBulkBillPayment(index) {
 
   const total = parseFloat(bill.total) || 0;
   const input = prompt(
-    `Current paid: ${window.__fmtBase(currentPaid)} KES (Total: ${window.__fmtBase(total)} KES)\n` +
+    `Current paid: ${window.__fmtBase(currentPaid)} ${window.__getBaseCurrencyEarly()} (Total: ${window.__fmtBase(total)} ${window.__getBaseCurrencyEarly()})\n` +
     `Enter NEW paid amount (0 to fully reverse):`,
     "0"
   );
@@ -38072,7 +38072,7 @@ function reverseBulkBillPayment(index) {
   if (typeof renderCreditcontrolAnalysis === "function") renderCreditcontrolAnalysis();
   if (typeof updateBankDropdowns === "function") updateBankDropdowns();
 
-  const msg = `✅ Reversed ${window.__fmtBase(reverseAmount)} KES on Bulk Bill ${bill.billNumber}. New paid: ${window.__fmtBase(newPaid)} KES.`;
+  const msg = `✅ Reversed ${window.__fmtBase(reverseAmount)} ${window.__getBaseCurrencyEarly()} on Bulk Bill ${bill.billNumber}. New paid: ${window.__fmtBase(newPaid)} ${window.__getBaseCurrencyEarly()}.`;
   if (typeof showToast === "function") showToast(msg); else alert(msg);
 }
 
@@ -40271,7 +40271,7 @@ function performDebitNoteApplication(noteIndex, billIndex, amount) {
   const alreadyPaid = parseFloat(bill.paidAmount) || 0;
   const balance = Math.max(billTotal - alreadyPaid, 0);
   if (amount > balance + 0.0001) {
-    alert(`Amount exceeds the bill's outstanding balance of ${window.__fmtBase(balance)} KES.`);
+    alert(`Amount exceeds the bill's outstanding balance of ${window.__fmtBase(balance)} ${window.__getBaseCurrencyEarly()}.`);
     return false;
   }
 
@@ -40349,7 +40349,7 @@ function performDebitNoteApplication(noteIndex, billIndex, amount) {
   if (typeof renderDebitNotesReport === "function") renderDebitNotesReport();
   if (typeof renderManualTransactions === "function") renderManualTransactions();
 
-  const msg = `✅ ${window.__fmtBase(amount)} KES applied from Debit Note to Bill ${bill.billNumber}.`;
+  const msg = `✅ ${window.__fmtBase(amount)} ${window.__getBaseCurrencyEarly()} applied from Debit Note to Bill ${bill.billNumber}.`;
   if (typeof showToast === "function") showToast(msg); else alert(msg);
   return true;
 }
@@ -40379,7 +40379,7 @@ function applyDebitToBill(index) {
   }
 
   const billOptions = candidates
-    .map(x => `<option value="${x.idx}">${x.bill.billNumber} — Balance ${window.__fmtBase(x.balance)} KES</option>`)
+    .map(x => `<option value="${x.idx}">${x.bill.billNumber} — Balance ${window.__fmtBase(x.balance)} ${window.__getBaseCurrencyEarly()}</option>`)
     .join("");
 
   const modal = document.createElement("div");
@@ -40388,7 +40388,7 @@ function applyDebitToBill(index) {
   content.style = "background:#fff;padding:20px;border-radius:8px;width:400px;";
   content.innerHTML = `
     <h3>Apply Debit Note to Bill</h3>
-    <p style="margin:6px 0;font-size:13px;color:#444">Available Debit: <b>${window.__fmtBase(remaining)} KES</b></p>
+    <p style="margin:6px 0;font-size:13px;color:#444">Available Debit: <b>${window.__fmtBase(remaining)} ${window.__getBaseCurrencyEarly()}</b></p>
     <label>Apply to Bill:</label>
     <select id="debitApplyBillSelect" class="border p-1 w-full mb-2">${billOptions}</select>
     <label>Amount to Apply (KES):</label>
@@ -40407,8 +40407,8 @@ function applyDebitToBill(index) {
     const chosen = candidates.find(x => String(x.idx) === select.value);
     if (!chosen) return;
     const cap = Math.min(remaining, chosen.balance);
-    amountInput.value = window.__fmtBase(cap);
-    amountInput.max = window.__fmtBase(cap);
+    amountInput.value = window.__rawAmt(cap);
+    amountInput.max = window.__rawAmt(cap);
   }
   select.addEventListener("change", suggestAmount);
   suggestAmount();
@@ -40422,7 +40422,7 @@ function applyDebitToBill(index) {
     const amount = parseFloat(amountInput.value);
     const cap = Math.min(remaining, chosen.balance);
     if (isNaN(amount) || amount <= 0 || amount > cap + 0.0001) {
-      return alert(`Invalid amount. Must be between 0.01 and ${window.__fmtBase(cap)} KES.`);
+      return alert(`Invalid amount. Must be between 0.01 and ${window.__fmtBase(cap)} ${window.__getBaseCurrencyEarly()}.`);
     }
     if (performDebitNoteApplication(index, chosen.idx, amount)) {
       document.body.removeChild(modal);
@@ -40455,7 +40455,7 @@ function applyDebit(billIndex) {
   }
 
   const noteOptions = candidates
-    .map(x => `<option value="${x.idx}">${x.note.reference || ("Debit Note #" + (x.idx + 1))} — Available ${window.__fmtBase(x.remaining)} KES</option>`)
+    .map(x => `<option value="${x.idx}">${x.note.reference || ("Debit Note #" + (x.idx + 1))} — Available ${window.__fmtBase(x.remaining)} ${window.__getBaseCurrencyEarly()}</option>`)
     .join("");
 
   const modal = document.createElement("div");
@@ -40464,7 +40464,7 @@ function applyDebit(billIndex) {
   content.style = "background:#fff;padding:20px;border-radius:8px;width:400px;";
   content.innerHTML = `
     <h3>Apply Debit Note to Bill ${bill.billNumber}</h3>
-    <p style="margin:6px 0;font-size:13px;color:#444">Outstanding Balance: <b>${window.__fmtBase(balance)} KES</b></p>
+    <p style="margin:6px 0;font-size:13px;color:#444">Outstanding Balance: <b>${window.__fmtBase(balance)} ${window.__getBaseCurrencyEarly()}</b></p>
     <label>Debit Note:</label>
     <select id="billApplyDebitSelect" class="border p-1 w-full mb-2">${noteOptions}</select>
     <label>Amount to Apply (KES):</label>
@@ -40483,8 +40483,8 @@ function applyDebit(billIndex) {
     const chosen = candidates.find(x => String(x.idx) === select.value);
     if (!chosen) return;
     const cap = Math.min(balance, chosen.remaining);
-    amountInput.value = window.__fmtBase(cap);
-    amountInput.max = window.__fmtBase(cap);
+    amountInput.value = window.__rawAmt(cap);
+    amountInput.max = window.__rawAmt(cap);
   }
   select.addEventListener("change", suggestAmount);
   suggestAmount();
@@ -40498,7 +40498,7 @@ function applyDebit(billIndex) {
     const amount = parseFloat(amountInput.value);
     const cap = Math.min(balance, chosen.remaining);
     if (isNaN(amount) || amount <= 0 || amount > cap + 0.0001) {
-      return alert(`Invalid amount. Must be between 0.01 and ${window.__fmtBase(cap)} KES.`);
+      return alert(`Invalid amount. Must be between 0.01 and ${window.__fmtBase(cap)} ${window.__getBaseCurrencyEarly()}.`);
     }
     if (performDebitNoteApplication(chosen.idx, billIndex, amount)) {
       document.body.removeChild(modal);
@@ -66468,7 +66468,7 @@ if (bankTable) {
   let __bankTableHtml = '';
   banks.forEach(b => {
     const balance = parseFloatSafe(b.balance);
-    const rate = parseFloatSafe(b.rateToKES) || parseFloatSafe(exchangeRates[b.currency]) || 1;
+    const rate = parseFloatSafe(b.rateToKES) || parseFloatSafe(exchangeRates[b.currency]) || (window.acxKesPer?window.acxKesPer(b.currency):1);
     const converted = balance * rate;
 
     __bankTableHtml += `
@@ -99350,234 +99350,8 @@ try{
    
 }catch(e){console.error('[app.js script 266]',e)}
 
-/* ---- script 267 ---- */
-try{
-
-   (function(){
-     const LS_CUR = 'appBaseCurrency';
-     const LS_LANG = 'appLanguage';
-     const LS_DEC = 'appDecimalPlaces';
-     const KNOWN = ['KES','USD','EUR','GBP','JPY','AUD','CAD','CHF','CNY','INR','NZD','SGD','ZAR','KRW','MXN','BRL','RUB','TRY','NOK','SEK','DKK','SAR','AED','HKD','UGX','TZS','RWF','ETB','NGN','GHS','EGP','QAR','KWD','BHD','OMR','ZMW'];
-     const ALIAS = { 'KSH':'KES', 'KSHS':'KES' };
-     
-     const FALLBACK = {USD:129,EUR:140,GBP:163,JPY:0.86,AUD:84,CAD:94,CHF:145,CNY:17.8,INR:1.52,NZD:77,SGD:96,ZAR:7.2,KRW:0.093,MXN:7.1,BRL:23.5,RUB:1.4,TRY:3.9,NOK:12.2,SEK:12.4,DKK:18.8,SAR:34.4,AED:35.1,HKD:16.6,UGX:0.035,TZS:0.05,RWF:0.095,ETB:1.05,NGN:0.085,GHS:8.6,EGP:2.6,QAR:35.4,KWD:420,BHD:342,OMR:335,ZMW:4.8};
-
-     function getOrg(){
-       try { return JSON.parse(localStorage.getItem('orgInfo')||'{}')||{}; }
-       catch(e){ return {}; }
-     }
-     function getRates(){
-       let stored = {};
-       try { stored = JSON.parse(localStorage.getItem('exchangeRates')||'{}')||{}; } catch(e){}
-       return Object.assign({}, FALLBACK, stored);
-     }
-     function norm(code){
-       code = String(code||'').toUpperCase();
-       return ALIAS[code] || code;
-     }
-
-     function convert(amount, from, to){
-       if (!isFinite(amount)) return null;
-       from = norm(from); to = norm(to);
-       if (from === to) return amount;
-       const rates = getRates();
-       const rFrom = from === 'KES' ? 1 : Number(rates[from]);
-       const rTo   = to   === 'KES' ? 1 : Number(rates[to]);
-       if (!rFrom || !rTo) return null; 
-       return amount * rFrom / rTo;
-     }
-     function fmt(n){
-       const d = window.__getDecimalPlaces ? window.__getDecimalPlaces() : 2;
-       return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
-     }
-
-     function getCurrent(){
-       const org = getOrg();
-       return {
-         cur: norm(localStorage.getItem(LS_CUR) || org.baseCurrency || (document.getElementById('baseCurrency')||{}).value || 'KES'),
-         lang: localStorage.getItem(LS_LANG) || org.language || (document.getElementById('language')||{}).value || 'en'
-       };
-     }
-
-     
-     window.__getBaseCurrency = function(){ return getCurrent().cur; };
-     window.__convertToBase = function(amount, from){
-       const v = convert(Number(amount), from || 'KES', getCurrent().cur);
-       return v == null ? Number(amount) : v;
-     };
-
-     
-     const codeAlt = KNOWN.join('|') + '|Ksh|KSh|KSH|ksh|Kshs|KShs';
-     const RX_PRE = new RegExp('\\b(' + codeAlt + ')\\.?\\s*(-?[0-9][0-9,]*(?:\\.[0-9]+)?)','g');
-     const RX_SUF = new RegExp('(-?[0-9][0-9,]*(?:\\.[0-9]+)?)\\s*(' + codeAlt + ')\\b','g');
-     const RX_LABEL = new RegExp('\\(\\s*(' + KNOWN.join('|') + ')\\s*\\)','g');
-
-     
-     
-     function hasMatch(rx, s){
-       rx.lastIndex = 0;
-       const r = rx.test(s);
-       rx.lastIndex = 0;
-       return r;
-     }
-
-     function rewriteText(text, target){
-       let out = text.replace(RX_PRE, (m, code, num) => {
-         const val = parseFloat(num.replace(/,/g,''));
-         if (!isFinite(val)) return m;
-         const conv = convert(val, code, target);
-         if (conv == null) return m;
-         return target + ' ' + fmt(conv);
-       });
-       out = out.replace(RX_SUF, (m, num, code) => {
-         const val = parseFloat(num.replace(/,/g,''));
-         if (!isFinite(val)) return m;
-         const conv = convert(val, code, target);
-         if (conv == null) return m;
-         return fmt(conv) + ' ' + target;
-       });
-
-       out = out.replace(RX_LABEL, (m, code) => m.replace(code, target));
-       return out;
-     }
-
-     function convertTextNodes(root, target){
-       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-         acceptNode: (n) => {
-           if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
-           const p = n.parentNode;
-           if (!p) return NodeFilter.FILTER_REJECT;
-           const tag = p.nodeName;
-           if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'OPTION' || tag === 'TEXTAREA') return NodeFilter.FILTER_REJECT;
-           if (p.closest && p.closest('input,select,textarea')) return NodeFilter.FILTER_REJECT;
-           return (hasMatch(RX_PRE, n.nodeValue) || hasMatch(RX_SUF, n.nodeValue) || hasMatch(RX_LABEL, n.nodeValue)) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
-         }
-       });
-       const nodes = [];
-       let cur; while ((cur = walker.nextNode())) nodes.push(cur);
-       nodes.forEach(n => {
-         const next = rewriteText(n.nodeValue, target);
-         if (next !== n.nodeValue) n.nodeValue = next;
-       });
-     }
-
-     
-     const DICT = {
-       fr: {"Dashboard":"Tableau de bord","Inventory":"Inventaire","Funds":"Fonds","Customers":"Clients","Suppliers":"Fournisseurs","Accountant":"Comptable","Payroll":"Paie","Reports":"Rapports","Plans":"Plans","Settings":"Paramètres","Files":"Fichiers","Save":"Enregistrer","Cancel":"Annuler","Delete":"Supprimer","Edit":"Modifier","Add":"Ajouter","Search":"Rechercher","Total":"Total","Balance":"Solde","Date":"Date","Amount":"Montant","Description":"Description","Status":"Statut","Actions":"Actions","Base Currency":"Devise de base","Language":"Langue","Fiscal Year":"Exercice fiscal","Time Zone":"Fuseau horaire","Invoices":"Factures","Bills":"Factures fournisseurs","Payments":"Paiements","Expenses":"Dépenses","Print":"Imprimer","Export":"Exporter","Paid":"Payé","Due Date":"Échéance","Subtotal":"Sous-total","Tax":"Taxe"},
-       sw: {"Dashboard":"Dashibodi","Inventory":"Bidhaa","Funds":"Fedha","Customers":"Wateja","Suppliers":"Wasambazaji","Accountant":"Mhasibu","Payroll":"Malipo","Reports":"Ripoti","Plans":"Mipango","Settings":"Mipangilio","Files":"Faili","Save":"Hifadhi","Cancel":"Ghairi","Delete":"Futa","Edit":"Hariri","Add":"Ongeza","Search":"Tafuta","Total":"Jumla","Balance":"Salio","Date":"Tarehe","Amount":"Kiasi","Description":"Maelezo","Status":"Hali","Actions":"Vitendo","Base Currency":"Sarafu ya Msingi","Language":"Lugha","Fiscal Year":"Mwaka wa Fedha","Time Zone":"Saa za Eneo","Invoices":"Ankara","Bills":"Bili","Payments":"Malipo","Expenses":"Matumizi","Print":"Chapisha","Export":"Hamisha","Paid":"Imelipwa","Due Date":"Tarehe ya Mwisho","Subtotal":"Jumla ndogo","Tax":"Kodi"},
-       es: {"Dashboard":"Panel","Inventory":"Inventario","Funds":"Fondos","Customers":"Clientes","Suppliers":"Proveedores","Accountant":"Contable","Payroll":"Nómina","Reports":"Informes","Plans":"Planes","Settings":"Ajustes","Files":"Archivos","Save":"Guardar","Cancel":"Cancelar","Delete":"Eliminar","Edit":"Editar","Add":"Añadir","Search":"Buscar","Total":"Total","Balance":"Saldo","Date":"Fecha","Amount":"Importe","Description":"Descripción","Status":"Estado","Actions":"Acciones","Base Currency":"Moneda base","Language":"Idioma","Fiscal Year":"Año fiscal","Time Zone":"Zona horaria","Invoices":"Facturas","Bills":"Facturas de compra","Payments":"Pagos","Expenses":"Gastos","Print":"Imprimir","Export":"Exportar","Paid":"Pagado","Due Date":"Vencimiento","Subtotal":"Subtotal","Tax":"Impuesto"},
-       de: {"Dashboard":"Übersicht","Inventory":"Bestand","Funds":"Mittel","Customers":"Kunden","Suppliers":"Lieferanten","Accountant":"Buchhalter","Payroll":"Gehalt","Reports":"Berichte","Plans":"Pläne","Settings":"Einstellungen","Files":"Dateien","Save":"Speichern","Cancel":"Abbrechen","Delete":"Löschen","Edit":"Bearbeiten","Add":"Hinzufügen","Search":"Suchen","Total":"Gesamt","Balance":"Saldo","Date":"Datum","Amount":"Betrag","Description":"Beschreibung","Status":"Status","Actions":"Aktionen","Base Currency":"Basiswährung","Language":"Sprache","Fiscal Year":"Geschäftsjahr","Time Zone":"Zeitzone","Invoices":"Rechnungen","Bills":"Eingangsrechnungen","Payments":"Zahlungen","Expenses":"Ausgaben","Print":"Drucken","Export":"Exportieren","Paid":"Bezahlt","Due Date":"Fälligkeit","Subtotal":"Zwischensumme","Tax":"Steuer"},
-       pt: {"Dashboard":"Painel","Inventory":"Estoque","Funds":"Fundos","Customers":"Clientes","Suppliers":"Fornecedores","Accountant":"Contador","Payroll":"Folha","Reports":"Relatórios","Plans":"Planos","Settings":"Configurações","Files":"Arquivos","Save":"Salvar","Cancel":"Cancelar","Delete":"Excluir","Edit":"Editar","Add":"Adicionar","Search":"Buscar","Total":"Total","Balance":"Saldo","Date":"Data","Amount":"Valor","Description":"Descrição","Status":"Status","Actions":"Ações","Base Currency":"Moeda base","Language":"Idioma","Fiscal Year":"Ano fiscal","Time Zone":"Fuso horário","Invoices":"Faturas","Bills":"Contas a pagar","Payments":"Pagamentos","Expenses":"Despesas","Print":"Imprimir","Export":"Exportar","Paid":"Pago","Due Date":"Vencimento","Subtotal":"Subtotal","Tax":"Imposto"},
-       ar: {"Dashboard":"لوحة التحكم","Inventory":"المخزون","Funds":"الأموال","Customers":"العملاء","Suppliers":"الموردون","Accountant":"المحاسب","Payroll":"الرواتب","Reports":"التقارير","Plans":"الخطط","Settings":"الإعدادات","Files":"الملفات","Save":"حفظ","Cancel":"إلغاء","Delete":"حذف","Edit":"تعديل","Add":"إضافة","Search":"بحث","Total":"الإجمالي","Balance":"الرصيد","Date":"التاريخ","Amount":"المبلغ","Description":"الوصف","Status":"الحالة","Actions":"إجراءات","Base Currency":"العملة الأساسية","Language":"اللغة","Fiscal Year":"السنة المالية","Time Zone":"المنطقة الزمنية","Invoices":"الفواتير","Bills":"فواتير الشراء","Payments":"المدفوعات","Expenses":"المصروفات","Print":"طباعة","Export":"تصدير","Paid":"مدفوع","Due Date":"تاريخ الاستحقاق","Subtotal":"المجموع الفرعي","Tax":"الضريبة"},
-       zh: {"Dashboard":"仪表板","Inventory":"库存","Funds":"资金","Customers":"客户","Suppliers":"供应商","Accountant":"会计","Payroll":"工资","Reports":"报告","Plans":"计划","Settings":"设置","Files":"文件","Save":"保存","Cancel":"取消","Delete":"删除","Edit":"编辑","Add":"添加","Search":"搜索","Total":"合计","Balance":"余额","Date":"日期","Amount":"金额","Description":"描述","Status":"状态","Actions":"操作","Base Currency":"基础货币","Language":"语言","Fiscal Year":"财政年度","Time Zone":"时区","Invoices":"发票","Bills":"账单","Payments":"付款","Expenses":"支出","Print":"打印","Export":"导出","Paid":"已付","Due Date":"到期日","Subtotal":"小计","Tax":"税"},
-       hi: {"Dashboard":"डैशबोर्ड","Inventory":"इन्वेंटरी","Funds":"धन","Customers":"ग्राहक","Suppliers":"आपूर्तिकर्ता","Accountant":"लेखाकार","Payroll":"वेतन","Reports":"रिपोर्ट","Plans":"योजनाएँ","Settings":"सेटिंग्स","Files":"फ़ाइलें","Save":"सहेजें","Cancel":"रद्द करें","Delete":"हटाएँ","Edit":"संपादित करें","Add":"जोड़ें","Search":"खोजें","Total":"कुल","Balance":"शेष","Date":"तारीख","Amount":"राशि","Description":"विवरण","Status":"स्थिति","Actions":"कार्रवाइयाँ","Base Currency":"आधार मुद्रा","Language":"भाषा","Fiscal Year":"वित्तीय वर्ष","Time Zone":"समय क्षेत्र","Invoices":"चालान","Bills":"बिल","Payments":"भुगतान","Expenses":"खर्च","Print":"प्रिंट","Export":"निर्यात","Paid":"भुगतान किया","Due Date":"नियत तारीख","Subtotal":"उप-योग","Tax":"कर"},
-       ru: {"Dashboard":"Панель","Inventory":"Склад","Funds":"Средства","Customers":"Клиенты","Suppliers":"Поставщики","Accountant":"Бухгалтер","Payroll":"Зарплата","Reports":"Отчёты","Plans":"Планы","Settings":"Настройки","Files":"Файлы","Save":"Сохранить","Cancel":"Отмена","Delete":"Удалить","Edit":"Изменить","Add":"Добавить","Search":"Поиск","Total":"Итого","Balance":"Баланс","Date":"Дата","Amount":"Сумма","Description":"Описание","Status":"Статус","Actions":"Действия","Base Currency":"Базовая валюта","Language":"Язык","Fiscal Year":"Финансовый год","Time Zone":"Часовой пояс","Invoices":"Счета","Bills":"Счета поставщиков","Payments":"Платежи","Expenses":"Расходы","Print":"Печать","Export":"Экспорт","Paid":"Оплачено","Due Date":"Срок оплаты","Subtotal":"Промежуточный итог","Tax":"Налог"},
-       ja: {"Dashboard":"ダッシュボード","Inventory":"在庫","Funds":"資金","Customers":"顧客","Suppliers":"仕入先","Accountant":"会計士","Payroll":"給与","Reports":"レポート","Plans":"プラン","Settings":"設定","Files":"ファイル","Save":"保存","Cancel":"キャンセル","Delete":"削除","Edit":"編集","Add":"追加","Search":"検索","Total":"合計","Balance":"残高","Date":"日付","Amount":"金額","Description":"説明","Status":"状態","Actions":"操作","Base Currency":"基準通貨","Language":"言語","Fiscal Year":"会計年度","Time Zone":"タイムゾーン","Invoices":"請求書","Bills":"支払請求書","Payments":"支払い","Expenses":"経費","Print":"印刷","Export":"エクスポート","Paid":"支払済み","Due Date":"期日","Subtotal":"小計","Tax":"税"},
-       ko: {"Dashboard":"대시보드","Inventory":"재고","Funds":"자금","Customers":"고객","Suppliers":"공급업체","Accountant":"회계사","Payroll":"급여","Reports":"보고서","Plans":"플랜","Settings":"설정","Files":"파일","Save":"저장","Cancel":"취소","Delete":"삭제","Edit":"편집","Add":"추가","Search":"검색","Total":"합계","Balance":"잔액","Date":"날짜","Amount":"금액","Description":"설명","Status":"상태","Actions":"작업","Base Currency":"기준 통화","Language":"언어","Fiscal Year":"회계 연도","Time Zone":"시간대","Invoices":"청구서","Bills":"매입 청구서","Payments":"결제","Expenses":"지출","Print":"인쇄","Export":"내보내기","Paid":"지불됨","Due Date":"만기일","Subtotal":"소계","Tax":"세금"},
-       it: {"Dashboard":"Cruscotto","Inventory":"Inventario","Funds":"Fondi","Customers":"Clienti","Suppliers":"Fornitori","Accountant":"Contabile","Payroll":"Paghe","Reports":"Report","Plans":"Piani","Settings":"Impostazioni","Files":"File","Save":"Salva","Cancel":"Annulla","Delete":"Elimina","Edit":"Modifica","Add":"Aggiungi","Search":"Cerca","Total":"Totale","Balance":"Saldo","Date":"Data","Amount":"Importo","Description":"Descrizione","Status":"Stato","Actions":"Azioni","Base Currency":"Valuta base","Language":"Lingua","Fiscal Year":"Anno fiscale","Time Zone":"Fuso orario","Invoices":"Fatture","Bills":"Fatture fornitori","Payments":"Pagamenti","Expenses":"Spese","Print":"Stampa","Export":"Esporta","Paid":"Pagato","Due Date":"Scadenza","Subtotal":"Subtotale","Tax":"Imposta"},
-       nl: {"Dashboard":"Dashboard","Inventory":"Voorraad","Funds":"Fondsen","Customers":"Klanten","Suppliers":"Leveranciers","Accountant":"Boekhouder","Payroll":"Loonlijst","Reports":"Rapporten","Plans":"Plannen","Settings":"Instellingen","Files":"Bestanden","Save":"Opslaan","Cancel":"Annuleren","Delete":"Verwijderen","Edit":"Bewerken","Add":"Toevoegen","Search":"Zoeken","Total":"Totaal","Balance":"Saldo","Date":"Datum","Amount":"Bedrag","Description":"Omschrijving","Status":"Status","Actions":"Acties","Base Currency":"Basisvaluta","Language":"Taal","Fiscal Year":"Boekjaar","Time Zone":"Tijdzone","Invoices":"Facturen","Bills":"Inkoopfacturen","Payments":"Betalingen","Expenses":"Uitgaven","Print":"Afdrukken","Export":"Exporteren","Paid":"Betaald","Due Date":"Vervaldatum","Subtotal":"Subtotaal","Tax":"Belasting"},
-       tr: {"Dashboard":"Panel","Inventory":"Envanter","Funds":"Fonlar","Customers":"Müşteriler","Suppliers":"Tedarikçiler","Accountant":"Muhasebeci","Payroll":"Bordro","Reports":"Raporlar","Plans":"Planlar","Settings":"Ayarlar","Files":"Dosyalar","Save":"Kaydet","Cancel":"İptal","Delete":"Sil","Edit":"Düzenle","Add":"Ekle","Search":"Ara","Total":"Toplam","Balance":"Bakiye","Date":"Tarih","Amount":"Tutar","Description":"Açıklama","Status":"Durum","Actions":"İşlemler","Base Currency":"Ana Para Birimi","Language":"Dil","Fiscal Year":"Mali Yıl","Time Zone":"Saat Dilimi","Invoices":"Faturalar","Bills":"Alış Faturaları","Payments":"Ödemeler","Expenses":"Giderler","Print":"Yazdır","Export":"Dışa Aktar","Paid":"Ödendi","Due Date":"Vade Tarihi","Subtotal":"Ara Toplam","Tax":"Vergi"},
-       vi: {"Dashboard":"Bảng điều khiển","Inventory":"Kho hàng","Funds":"Quỹ","Customers":"Khách hàng","Suppliers":"Nhà cung cấp","Accountant":"Kế toán","Payroll":"Lương","Reports":"Báo cáo","Plans":"Gói","Settings":"Cài đặt","Files":"Tệp","Save":"Lưu","Cancel":"Hủy","Delete":"Xóa","Edit":"Sửa","Add":"Thêm","Search":"Tìm kiếm","Total":"Tổng","Balance":"Số dư","Date":"Ngày","Amount":"Số tiền","Description":"Mô tả","Status":"Trạng thái","Actions":"Thao tác","Base Currency":"Tiền tệ cơ sở","Language":"Ngôn ngữ","Fiscal Year":"Năm tài chính","Time Zone":"Múi giờ","Invoices":"Hóa đơn","Bills":"Hóa đơn mua","Payments":"Thanh toán","Expenses":"Chi phí","Print":"In","Export":"Xuất","Paid":"Đã thanh toán","Due Date":"Ngày đến hạn","Subtotal":"Tạm tính","Tax":"Thuế"},
-       th: {"Dashboard":"แดชบอร์ด","Inventory":"สินค้าคงคลัง","Funds":"เงินทุน","Customers":"ลูกค้า","Suppliers":"ซัพพลายเออร์","Accountant":"นักบัญชี","Payroll":"เงินเดือน","Reports":"รายงาน","Plans":"แผน","Settings":"การตั้งค่า","Files":"ไฟล์","Save":"บันทึก","Cancel":"ยกเลิก","Delete":"ลบ","Edit":"แก้ไข","Add":"เพิ่ม","Search":"ค้นหา","Total":"รวม","Balance":"ยอดคงเหลือ","Date":"วันที่","Amount":"จำนวนเงิน","Description":"คำอธิบาย","Status":"สถานะ","Actions":"การดำเนินการ","Base Currency":"สกุลเงินหลัก","Language":"ภาษา","Fiscal Year":"ปีงบประมาณ","Time Zone":"เขตเวลา","Invoices":"ใบแจ้งหนี้","Bills":"บิล","Payments":"การชำระเงิน","Expenses":"ค่าใช้จ่าย","Print":"พิมพ์","Export":"ส่งออก","Paid":"ชำระแล้ว","Due Date":"วันครบกำหนด","Subtotal":"ยอดรวมย่อย","Tax":"ภาษี"},
-       fa: {"Dashboard":"داشبورد","Inventory":"موجودی","Funds":"وجوه","Customers":"مشتریان","Suppliers":"تأمین‌کنندگان","Accountant":"حسابدار","Payroll":"حقوق","Reports":"گزارش‌ها","Plans":"طرح‌ها","Settings":"تنظیمات","Files":"فایل‌ها","Save":"ذخیره","Cancel":"لغو","Delete":"حذف","Edit":"ویرایش","Add":"افزودن","Search":"جستجو","Total":"جمع","Balance":"موجودی","Date":"تاریخ","Amount":"مبلغ","Description":"توضیحات","Status":"وضعیت","Actions":"عملیات","Base Currency":"ارز پایه","Language":"زبان","Fiscal Year":"سال مالی","Time Zone":"منطقه زمانی","Invoices":"فاکتورها","Bills":"صورت‌حساب‌ها","Payments":"پرداخت‌ها","Expenses":"هزینه‌ها","Print":"چاپ","Export":"خروجی","Paid":"پرداخت شده","Due Date":"سررسید","Subtotal":"جمع جزء","Tax":"مالیات"},
-       id: {"Dashboard":"Dasbor","Inventory":"Inventaris","Funds":"Dana","Customers":"Pelanggan","Suppliers":"Pemasok","Accountant":"Akuntan","Payroll":"Penggajian","Reports":"Laporan","Plans":"Paket","Settings":"Pengaturan","Files":"Berkas","Save":"Simpan","Cancel":"Batal","Delete":"Hapus","Edit":"Ubah","Add":"Tambah","Search":"Cari","Total":"Total","Balance":"Saldo","Date":"Tanggal","Amount":"Jumlah","Description":"Deskripsi","Status":"Status","Actions":"Aksi","Base Currency":"Mata Uang Dasar","Language":"Bahasa","Fiscal Year":"Tahun Fiskal","Time Zone":"Zona Waktu","Invoices":"Faktur","Bills":"Tagihan","Payments":"Pembayaran","Expenses":"Pengeluaran","Print":"Cetak","Export":"Ekspor","Paid":"Lunas","Due Date":"Jatuh Tempo","Subtotal":"Subtotal","Tax":"Pajak"},
-       he: {"Dashboard":"לוח בקרה","Inventory":"מלאי","Funds":"כספים","Customers":"לקוחות","Suppliers":"ספקים","Accountant":"רואה חשבון","Payroll":"שכר","Reports":"דוחות","Plans":"תוכניות","Settings":"הגדרות","Files":"קבצים","Save":"שמור","Cancel":"ביטול","Delete":"מחק","Edit":"ערוך","Add":"הוסף","Search":"חיפוש","Total":"סה\"כ","Balance":"יתרה","Date":"תאריך","Amount":"סכום","Description":"תיאור","Status":"סטטוס","Actions":"פעולות","Base Currency":"מטבע בסיס","Language":"שפה","Fiscal Year":"שנת כספים","Time Zone":"אזור זמן","Invoices":"חשבוניות","Bills":"חשבוניות ספק","Payments":"תשלומים","Expenses":"הוצאות","Print":"הדפס","Export":"ייצוא","Paid":"שולם","Due Date":"תאריך יעד","Subtotal":"סכום ביניים","Tax":"מס"}
-     };
-     function translate(lang){
-       const map = DICT[lang]; if (!map) return;
-       const keys = Object.keys(map).sort((a,b)=>b.length-a.length);
-       const rx = new RegExp('\\b(' + keys.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')\\b','g');
-       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
-         acceptNode: n => {
-           if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
-           const p = n.parentNode; if (!p) return NodeFilter.FILTER_REJECT;
-           const t = p.nodeName;
-           if (t==='SCRIPT'||t==='STYLE'||t==='OPTION'||t==='TEXTAREA') return NodeFilter.FILTER_REJECT;
-           if (p.closest && p.closest('input,select,textarea')) return NodeFilter.FILTER_REJECT;
-           return hasMatch(rx, n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
-         }
-       });
-       const nodes=[]; let cur; while((cur=walker.nextNode())) nodes.push(cur);
-       nodes.forEach(n => { n.nodeValue = n.nodeValue.replace(rx,(m,k)=>map[k]||m); });
-       document.documentElement.lang = lang;
-       document.documentElement.dir = (lang==='ar'||lang==='he'||lang==='fa') ? 'rtl' : 'ltr';
-     }
-
-     function applyAll(){
-       const { cur, lang } = getCurrent();
-       syncControls();
-       try { convertTextNodes(document.body, cur); } catch(e){ console.warn(e); }
-       if (lang && lang !== 'en') { try { translate(lang); } catch(e){ console.warn(e); } }
-     }
-
-     function syncControls(){
-       const bc = document.getElementById('baseCurrency');
-       const savedC = localStorage.getItem(LS_CUR);
-       if (bc && savedC && bc.value !== savedC) bc.value = savedC;
-       const lg = document.getElementById('language');
-       const savedL = localStorage.getItem(LS_LANG);
-       if (lg && savedL && lg.value !== savedL) lg.value = savedL;
-       const dp = document.getElementById('decimalPlaces');
-       const savedD = localStorage.getItem(LS_DEC);
-       if (dp && savedD && dp.value !== savedD) dp.value = savedD;
-     }
-
-     
-     document.addEventListener('change', function(e){
-       const t = e.target;
-       if (!t || !t.id) return;
-       if (t.id === 'baseCurrency'){
-         localStorage.setItem(LS_CUR, t.value);
-         try {
-           const org = getOrg(); org.baseCurrency = t.value;
-           localStorage.setItem('orgInfo', JSON.stringify(org));
-         } catch(err){}
-         setTimeout(applyAll, 50);
-       }
-       if (t.id === 'language'){
-         localStorage.setItem(LS_LANG, t.value);
-         try {
-           const org = getOrg(); org.language = t.value;
-           localStorage.setItem('orgInfo', JSON.stringify(org));
-         } catch(err){}
-         
-         setTimeout(() => location.reload(), 150);
-       }
-       if (t.id === 'decimalPlaces'){
-         localStorage.setItem(LS_DEC, t.value);
-         try {
-           const org = getOrg(); org.decimalPlaces = t.value;
-           localStorage.setItem('orgInfo', JSON.stringify(org));
-         } catch(err){}
-         setTimeout(() => {
-           applyAll();
-           if (typeof window.updateDashboard === 'function') window.updateDashboard();
-           else if (typeof window.renderCharts === 'function') window.renderCharts();
-         }, 50);
-       }
-     });
-
-     function init(){
-       syncControls();
-       applyAll();
-       
-       const mo = new MutationObserver(() => {
-         if (init._t) clearTimeout(init._t);
-         init._t = setTimeout(applyAll, 250);
-       });
-       mo.observe(document.body, { childList:true, subtree:true, characterData:true });
-       
-       window.applyBaseCurrencyAndLanguage = applyAll;
-     }
-
-     if (document.readyState === 'loading') {
-       document.addEventListener('DOMContentLoaded', init);
-     } else {
-       init();
-     }
-   })();
-   
-}catch(e){console.error('[app.js script 267]',e)}
+/* ---- script 267: legacy currency text rewriter + 38-word translator removed (see locale.js) ---- */
+try{}catch(e){}
 
 /* ---- script 268 ---- */
 try{
@@ -109574,7 +109348,7 @@ try{
     var rates = {};
     try { rates = JSON.parse(localStorage.getItem("exchangeRates") || "{}") || {}; } catch (e) { rates = {}; }
     var bankTotal = bankAccountsForTotals().reduce(function (s, b) {
-      return s + num(b.balance) * (rates[b.currency] || 1);
+      return s + num(b.balance) * ((window.acxKesPer?window.acxKesPer(b.currency):rates[b.currency]||1));
     }, 0);
 
     if (window.comparisonChartInstance) window.comparisonChartInstance.destroy();
@@ -109718,7 +109492,7 @@ try{
     var rates = {};
     try { rates = JSON.parse(localStorage.getItem("exchangeRates") || "{}") || {}; } catch (e) {}
     return LS("banks").filter(isUndeposited).reduce(function (s, b) {
-      return s + num(b.balance) * (rates[b.currency] || 1);
+      return s + num(b.balance) * ((window.acxKesPer?window.acxKesPer(b.currency):rates[b.currency]||1));
     }, 0);
   }
   window.__banksForTotals = function (list) {
