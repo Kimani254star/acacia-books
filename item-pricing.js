@@ -4,6 +4,7 @@
    - Does NOT change app-2.js. Load it AFTER app-2.js (same way as coa-ledger.js).
    - itemSellPrice keeps meaning "selling price BEFORE tax" (invoices add the tax on top),
      so existing invoices / reports keep working.
+   - Tax rate is taken from the BUY VAT rule (buyVatRule); falls back to the sell VAT rule only if no buy rule is selected.
    - Extra fields are saved on the item: profitMargin, pricingMethod, sellTaxRate, finalPrice.
 
    Formulas (margin is on the selling price before tax, i.e. gross margin):
@@ -29,6 +30,13 @@
   function rateOf(rule) {
     var m = String(rule || '').match(/(\d+(?:\.\d+)?)\s*%/);
     return m ? parseFloat(m[1]) : 0;
+  }
+
+  /* Tax rate comes from the BUY VAT rule; if no buy rule is chosen yet, fall back to the sell VAT rule */
+  function taxRate() {
+    var b = $('buyVatRule'), s = $('sellVatRule');
+    var v = b && b.value ? b.value : (s ? s.value : '');
+    return rateOf(v);
   }
 
   /* ---------- pure calculation (no DOM) ---------- */
@@ -97,7 +105,7 @@
           '<option value="inclusive">Tax inclusive — selling price already includes tax</option></select></div>' +
         '<div><label for="itemFinalPrice">Final price (customer pays)</label><input id="itemFinalPrice" type="number" step="0.01" placeholder="0.00"></div>' +
       '</div>' +
-      '<div class="ip-auto"><input type="checkbox" id="itemPricingAuto" checked><label for="itemPricingAuto" style="margin:0">Auto-update selling price when buying price, margin or sell tax changes</label></div>' +
+      '<div class="ip-auto"><input type="checkbox" id="itemPricingAuto" checked><label for="itemPricingAuto" style="margin:0">Auto-update selling price when buying price, margin or buy VAT rule changes</label></div>' +
       '<div class="ip-res">' +
         '<div class="ip-row"><span>Buying price</span><span id="ipCost">0.00</span></div>' +
         '<div class="ip-row"><span>Selling price before tax</span><span id="ipNet">0.00</span></div>' +
@@ -111,7 +119,7 @@
     sell.placeholder = 'Selling Price (before tax)';
 
     function ctx() {
-      return { cost: $('itemBuyPrice').value, rate: rateOf(($('sellVatRule') || {}).value), method: $('itemPricingMethod').value, margin: $('itemMarginPct').value };
+      return { cost: $('itemBuyPrice').value, rate: taxRate(), method: $('itemPricingMethod').value, margin: $('itemMarginPct').value };
     }
     function show(r) {
       busy = true;
@@ -149,7 +157,8 @@
     $('itemPricingMethod').addEventListener('change', function () { run('method'); });
     $('itemSellPrice').addEventListener('input', function () { run('net'); });
     $('itemFinalPrice').addEventListener('input', function () { run('final'); });
-    if ($('sellVatRule')) $('sellVatRule').addEventListener('change', function () { run('tax'); });
+    if ($('buyVatRule')) $('buyVatRule').addEventListener('change', function () { run('tax'); });
+    if ($('sellVatRule')) $('sellVatRule').addEventListener('change', function () { run('tax'); });  /* only matters while no buy rule is chosen */
     return true;
   }
 
@@ -166,7 +175,7 @@
           net: parseFloat(($('itemSellPrice') || {}).value),
           margin: num(($('itemMarginPct') || {}).value),
           method: ($('itemPricingMethod') || {}).value || 'exclusive',
-          rate: rateOf(($('sellVatRule') || {}).value),
+          rate: taxRate(),
           final: num(($('itemFinalPrice') || {}).value)
         };
         var out = origSave.apply(this, arguments);
