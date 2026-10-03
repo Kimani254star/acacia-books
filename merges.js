@@ -1,5 +1,5 @@
 /* ===== All Merge features in one file =====
-   1. Inventory  2. Customers & Suppliers  3. Chart of Accounts
+   1. Inventory  2. Customers & Suppliers  3. Chart of Accounts  4. PDF downloads
    Each section is self-contained. */
 
 /* ---------- 1. Inventory merge ---------- */
@@ -459,3 +459,193 @@
   };
 })();
 
+/* ---------- 4. PDF download fix (all documents) ----------
+   Loads jsPDF / AutoTable / html2pdf (with backup CDNs), wraps every
+   download/export/generate ...PDF function so the libraries are ready,
+   hardens the shared invoice/quote/bill downloader, and makes the
+   bulk-adjustment download a real PDF. */
+(function () {
+  "use strict";
+  if (window.__acxPdfFix) return;
+  window.__acxPdfFix = true;
+
+  var LIBS = {
+    jspdf: {
+      ok: function () { return !!(window.jspdf && window.jspdf.jsPDF); },
+      urls: [
+        "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+        "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"
+      ]
+    },
+    autotable: {
+      ok: function () {
+        return !!(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API &&
+                  typeof window.jspdf.jsPDF.API.autoTable === "function");
+      },
+      urls: [
+        "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js",
+        "https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/jspdf.plugin.autotable.min.js"
+      ]
+    },
+    html2pdf: {
+      ok: function () { return typeof window.html2pdf === "function"; },
+      urls: [
+        "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js",
+        "https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"
+      ]
+    }
+  };
+
+  function loadScript(url, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement("script"), done = false;
+      var timer = setTimeout(function () { fin(new Error("timeout " + url)); }, timeoutMs || 20000);
+      function fin(err) {
+        if (done) return; done = true; clearTimeout(timer);
+        if (err) { try { s.remove(); } catch (e) {} reject(err); } else resolve();
+      }
+      s.src = url; s.async = true;
+      s.onload = function () { fin(null); };
+      s.onerror = function () { fin(new Error("failed " + url)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  var pending = {};
+  function ensure(name) {
+    var lib = LIBS[name];
+    if (lib.ok()) return Promise.resolve();
+    if (pending[name]) return pending[name];
+    var p = (function tryUrls(i) {
+      if (i >= lib.urls.length) return Promise.reject(new Error("Could not load " + name));
+      return loadScript(lib.urls[i]).then(function () {
+        if (!lib.ok()) throw new Error(name + " loaded but not usable");
+      }).catch(function () { return tryUrls(i + 1); });
+    })(0);
+    pending[name] = p;
+    p.catch(function () { pending[name] = null; });   // allow retry on next click
+    return p;
+  }
+
+  function allReady() { return LIBS.jspdf.ok() && LIBS.autotable.ok() && LIBS.html2pdf.ok(); }
+
+  function ensureAll() {
+    if (allReady()) return Promise.resolve();
+    var jsp = ensure("jspdf").then(function () { return ensure("autotable").catch(function () {}); });
+    return Promise.all([jsp, ensure("html2pdf")]).then(function () {});
+  }
+  window.__acxEnsureAllPdfLibs = ensureAll;
+
+  /* ---- 1. pre-load quietly once the page is up ---- */
+  function preload() { ensureAll().catch(function () {}); }
+  if (document.readyState === "complete") setTimeout(preload, 800);
+  else window.addEventListener("load", function () { setTimeout(preload, 800); });
+
+  /* ---- 2. wrap PDF functions so libs are ready first ---- */
+  var NAME_RE = /^(download|export|generate|rep)[A-Za-z0-9_]*(PDF|Pdf)$/;
+
+  function wrapFn(name) {
+    var fn = window[name];
+    if (typeof fn !== "function" || fn.__acxPdfWrapped || fn.__acxDlWrapped) return;
+    var w = function () {
+      var self = this, args = arguments;
+      if (allReady() || (LIBS.jspdf.ok() && LIBS.html2pdf.ok())) return fn.apply(self, args);
+      return ensureAll().then(function () { return fn.apply(self, args); }).catch(function (err) {
+        console.error("[pdf-fix] " + name + " failed:", err);
+        alert("Could not load the PDF tools. Please check your internet connection and try again.");
+      });
+    };
+    w.__acxPdfWrapped = true;
+    try { window[name] = w; } catch (e) {}
+  }
+
+  function wrapAll() {
+    try {
+      Object.getOwnPropertyNames(window).forEach(function (n) { if (NAME_RE.test(n)) wrapFn(n); });
+    } catch (e) { console.warn("[pdf-fix] wrapAll", e); }
+  }
+  wrapAll();
+  var runs = 0;
+  var iv = setInterval(function () { wrapAll(); if (++runs > 25) clearInterval(iv); }, 700);
+  window.addEventListener("load", function () { setTimeout(wrapAll, 300); setTimeout(wrapAll, 2000); });
+
+  /* ---- 3. sturdier shared blob downloader (invoice, quote, bill...) ---- */
+  function saveBlob(blob, filename) {
+    var file = new Blob([blob], { type: "application/octet-stream" });
+    var url = URL.createObjectURL(file);
+    var ua = navigator.userAgent || "";
+    var ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (ios && window.top !== window.self) {
+      window.open(url, "_blank");
+      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+      return;
+    }
+    var a = document.createElement("a");
+    a.href = url; a.download = filename || "document.pdf"; a.style.display = "none";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  }
+  window.__acxSaveBlob = saveBlob;
+
+  function render(el, opt) {
+    return window.html2pdf().set(opt).from(el).toPdf().get("pdf").then(function (pdf) {
+      return pdf.output("blob");
+    });
+  }
+
+  window.__downloadPdfBlob = async function (el, opt) {
+    opt = opt || {};
+    try {
+      await ensure("html2pdf");
+      var blob;
+      try {
+        blob = await render(el, opt);
+      } catch (e1) {
+        console.warn("[pdf-fix] first render failed, retrying lighter:", e1);
+        var lighter = Object.assign({}, opt, {
+          image: { type: "jpeg", quality: 0.92 },
+          html2canvas: Object.assign({}, opt.html2canvas || {}, { scale: 1, useCORS: true, allowTaint: true, logging: false })
+        });
+        blob = await render(el, lighter);
+      }
+      saveBlob(blob, opt.filename || "document.pdf");
+    } catch (e) {
+      console.error("[pdf-fix] PDF download failed:", e);
+      alert("Could not generate the PDF. Please check your internet connection and try again.");
+    }
+  };
+
+  /* ---- 4. real PDF for bulk-adjustment log download (was a text file named .pdf) ---- */
+  window.downloadBAAdjLogEntry = async function (wh, idx) {
+    try {
+      await ensure("jspdf");
+      var list = JSON.parse(localStorage.getItem("bulkAdjustments_" + wh) || "[]");
+      var a = list[parseInt(idx, 10)];
+      if (!a) { alert("Adjustment entry not found."); return; }
+      var change = Number(a.change != null ? a.change : (a.adjustment || 0));
+      var when = a.createdAt || a.date || Date.now(), whenTxt;
+      try { whenTxt = new Date(when).toLocaleString(); } catch (e) { whenTxt = String(when); }
+      var ref = "BA-" + String(wh).replace(/\s+/g, "").toUpperCase() + "-" + idx;
+      var doc = new window.jspdf.jsPDF();
+      doc.setFontSize(16); doc.text("Bulk Stock Adjustment", 14, 18);
+      doc.setFontSize(11);
+      [
+        "Reference: " + ref,
+        "Warehouse: " + wh,
+        "Date: " + whenTxt,
+        "",
+        "Product: " + (a.product || a.item || ""),
+        "SKU: " + (a.sku || "-"),
+        "Old Qty: " + (a.oldQty != null ? a.oldQty : "-"),
+        "New Qty: " + (a.newQty != null ? a.newQty : "-"),
+        "Change: " + (change > 0 ? "+" : "") + change,
+        "Reason: " + (a.reason || "-"),
+        "Status: " + (a.status || "-")
+      ].forEach(function (line, i) { doc.text(line, 14, 32 + i * 8); });
+      saveBlob(doc.output("blob"), ref + ".pdf");
+    } catch (e) {
+      console.error("[pdf-fix] downloadBAAdjLogEntry failed:", e);
+      alert("Could not generate the PDF. Please try again.");
+    }
+  };
+})();
