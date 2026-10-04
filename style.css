@@ -1670,3 +1670,24 @@ body.acx-dock-open #acxDockToggle,body.acx-nav-open #acxDockToggle{display:none}
 /* Notification popup + quick-create panel must float above everything (sidebars 1300, panels 1400, dock backdrop 1250) */
 #notifPopup,#quickCreatePanel{z-index:1500!important}
 #acxOrgPanel{z-index:10050!important}
+
+/* Notification panel: keep text readable on both light and dark backgrounds */
+#notifPopup .acx-np-item{color:#111827}
+#notifPopup .acx-np-pill{color:#374151;background:#fff}
+#notifPopup .acx-np-pill.on{color:#fff;background:#1e3a8a}
+html.dark #notifPopup,html[data-theme=dark] #notifPopup,html[data-theme=amoled] #notifPopup,html[data-theme=solar-dark] #notifPopup{background:#1f2937!important;color:#e5e7eb!important;border-color:#374151!important}
+html.dark #notifPopup .bg-white,html[data-theme=dark] #notifPopup .bg-white,html[data-theme=amoled] #notifPopup .bg-white,html[data-theme=solar-dark] #notifPopup .bg-white{background:#1f2937!important}
+html.dark #notifPopup .acx-np-item,html[data-theme=dark] #notifPopup .acx-np-item,html[data-theme=amoled] #notifPopup .acx-np-item,html[data-theme=solar-dark] #notifPopup .acx-np-item{color:#e5e7eb;border-bottom-color:#374151}
+html.dark #notifPopup .acx-np-item:hover,html[data-theme=dark] #notifPopup .acx-np-item:hover,html[data-theme=amoled] #notifPopup .acx-np-item:hover,html[data-theme=solar-dark] #notifPopup .acx-np-item:hover{background:#273449}
+html.dark #notifPopup .acx-np-item.fresh,html[data-theme=dark] #notifPopup .acx-np-item.fresh,html[data-theme=amoled] #notifPopup .acx-np-item.fresh,html[data-theme=solar-dark] #notifPopup .acx-np-item.fresh{background:#1e3a5f;box-shadow:inset 3px 0 0 #60a5fa}
+html.dark #notifPopup .acx-np-pill:not(.on),html[data-theme=dark] #notifPopup .acx-np-pill:not(.on),html[data-theme=amoled] #notifPopup .acx-np-pill:not(.on),html[data-theme=solar-dark] #notifPopup .acx-np-pill:not(.on){background:#374151;color:#e5e7eb;border-color:#4b5563}
+
+/* Warehouses / Branches cards: text colour always matches the card background */
+#warehousesTab .wh-card{color:#111827}
+#warehousesTab .wh-card #branchList li,#warehousesTab .wh-card #branchList li span{color:#111827}
+#warehousesTab .wh-card input,#warehousesTab .wh-card select{color:#111827;background-color:#fff}
+html.dark #warehousesTab .wh-card,html[data-theme=dark] #warehousesTab .wh-card,html[data-theme=amoled] #warehousesTab .wh-card,html[data-theme=solar-dark] #warehousesTab .wh-card{background:#1f2937;color:#e5e7eb;border-color:#374151}
+html.dark #warehousesTab .wh-card-title,html[data-theme=dark] #warehousesTab .wh-card-title,html[data-theme=amoled] #warehousesTab .wh-card-title,html[data-theme=solar-dark] #warehousesTab .wh-card-title{color:#e5e7eb}
+html.dark #warehousesTab .wh-card-sub,html[data-theme=dark] #warehousesTab .wh-card-sub,html[data-theme=amoled] #warehousesTab .wh-card-sub,html[data-theme=solar-dark] #warehousesTab .wh-card-sub{color:#9ca3af}
+html.dark #warehousesTab .wh-card #branchList li,html.dark #warehousesTab .wh-card #branchList li span,html[data-theme=dark] #warehousesTab .wh-card #branchList li,html[data-theme=dark] #warehousesTab .wh-card #branchList li span,html[data-theme=amoled] #warehousesTab .wh-card #branchList li,html[data-theme=amoled] #warehousesTab .wh-card #branchList li span,html[data-theme=solar-dark] #warehousesTab .wh-card #branchList li,html[data-theme=solar-dark] #warehousesTab .wh-card #branchList li span{color:#e5e7eb}
+html.dark #warehousesTab .wh-card input,html.dark #warehousesTab .wh-card select,html[data-theme=dark] #warehousesTab .wh-card input,html[data-theme=dark] #warehousesTab .wh-card select,html[data-theme=amoled] #warehousesTab .wh-card input,html[data-theme=amoled] #warehousesTab .wh-card select,html[data-theme=solar-dark] #warehousesTab .wh-card input,html[data-theme=solar-dark] #warehousesTab .wh-card select{background-color:#111827;color:#e5e7eb;border-color:#4b5563}
