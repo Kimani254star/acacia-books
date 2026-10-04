@@ -1667,3 +1667,6 @@ body.acx-dock-open #acxDockToggle,body.acx-nav-open #acxDockToggle{display:none}
 .reports-sidebar{width:100%;height:auto;max-height:40vh;position:static;border-right:0;border-bottom:1px solid var(--app-border,#ddd)}
 .reports-content{height:auto;overflow:visible;padding:12px}
 #sidebar a,#sidebar button{min-height:40px}}
+/* Notification popup + quick-create panel must float above everything (sidebars 1300, panels 1400, dock backdrop 1250) */
+#notifPopup,#quickCreatePanel{z-index:1500!important}
+#acxOrgPanel{z-index:10050!important}
