@@ -750,18 +750,18 @@ try{
       m("emailBill", "Email") + m("reverseBillPayment", "Reverse Payment") + m("cloneBill", "Clone") + m("writeOffBill", "Write Off") + m("undoWriteOffBill", "Undo Write Off") + m("applyDebit", "Apply Debit") + "</div></div>";
   }
   function billsRow(r, bills) {
-    /* generated bills now appear as their own rows in Bills (by their own date), not nested under the template */
-    return null;
+    /* generated bills show as their own rows right under their template, inside Recurring Bills only */
     var mine = []; bills.forEach(function (b, i) { if (b && b.recurringId === r.id) mine.push({ b: b, i: i }); });
     if (!mine.length || collapsed[r.id]) return null;
-    mine.sort(function (x, y) { return String(x.b.date || "").localeCompare(String(y.b.date || "")); });
-    var rows = mine.map(function (o) {
-      var b = o.b, paid = num(b.paidAmount);
-      return "<tr><td>" + esc(b.billNumber) + "</td><td>" + esc(b.date) + "</td><td>" + esc(b.due || "") + "</td><td>" + fmt(b.total) + "</td><td>" + fmt(paid) + "</td><td>" + fmt(num(b.total) - paid) + "</td><td>" + billStatus(b) + '</td><td style="white-space:nowrap">' + billBtns(o.i) + "</td></tr>";
-    }).join("");
-    var tr = document.createElement("tr");
-    tr.innerHTML = '<td></td><td colspan="9" style="background:#f8fafc;padding:6px 8px"><table style="width:100%;border-collapse:collapse;font-size:12px" border="1" cellpadding="4"><thead style="background:#eef2f7"><tr><th>Bill #</th><th>Date</th><th>Due</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + rows + "</tbody></table></td>";
-    return tr;
+    mine.sort(function (x, y) { return String(x.b.billNumber || "").localeCompare(String(y.b.billNumber || ""), undefined, { numeric: true }); });
+    var frag = document.createDocumentFragment();
+    mine.forEach(function (o) {
+      var b = o.b, paid = num(b.paidAmount), tr = document.createElement("tr");
+      tr.style.background = "#f8fafc";
+      tr.innerHTML = "<td></td><td>&#8627; " + esc(b.billNumber) + "</td><td>" + esc(b.date) + "</td><td>" + esc(b.supplier) + "</td><td>Due " + esc(b.due || "-") + "</td><td>Paid " + fmt(paid) + "</td><td>" + fmt(b.total) + "</td><td>Bal " + fmt(num(b.total) - paid) + "</td><td>" + billStatus(b) + '</td><td style="white-space:nowrap">' + billBtns(o.i) + "</td>";
+      frag.appendChild(tr);
+    });
+    return frag;
   }
   window.rbToggleBills = function (id) { collapsed[id] = !collapsed[id]; render(); };
   window.rbBillMenu = function (i) {
@@ -785,6 +785,21 @@ try{
   document.addEventListener("click", function (e) { if (!e.target.closest || !e.target.closest('[id^="rb-bill-menu-"], [onclick^="rbBillMenu"]')) document.querySelectorAll('[id^="rb-bill-menu-"]').forEach(function (x) { x.classList.add("hidden"); }); });
 
   var BTN = 'class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"';
+  /* template row: same buttons as Bills. Record Payment / ETIMS / Share act on the latest open bill of the template */
+  function tplBtns(r, id) {
+    var q = "'" + id + "'", b = function (fn, l) { return '<button onclick="' + fn + "(" + q + ')" ' + BTN + ">" + l + "</button>"; };
+    var m = function (fn, l) { return '<button onclick="' + fn + "(" + q + ')" class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">' + l + "</button>"; };
+    return b("rbEdit", "Edit") + " " + b("rbDelete", "Delete") + " " + b("rbPreview", "Preview") + " " + b("rbTplPay", "Record Payment") + " " + b("rbTplEtims", "Push to ETIMS") + " " + b("rbTplShare", "Share") +
+      ' <div class="relative inline-block"><button onclick="rbBillMenu(\'t' + id + '\')" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">More \u25BE</button><div id="rb-bill-menu-t' + id + '" class="hidden absolute right-0 mt-1 w-40 bg-white border rounded shadow z-50 flex flex-col">' +
+      m("rbGenerateNow", "Generate Now") + m("rbToggle", r.status === "Active" ? "Pause" : "Resume") + m("rbToggleBills", collapsed[r.id] ? "Show Bills" : "Hide Bills") + m("rbShowBills", "Bills Summary") + "</div></div>";
+  }
+  function latestOpen(id) {
+    var all = jget("bills", []), best = -1;
+    all.forEach(function (b, i) { if (b && b.recurringId === id) { if (best < 0 || num(b.paidAmount) < num(b.total)) best = i; } });
+    return best;
+  }
+  function tplAct(fn) { return function (id) { var i = latestOpen(id); if (i < 0) return alert("No bills generated yet for this recurring bill."); window.rbBillAct(fn, i); }; }
+  window.rbTplPay = tplAct("recordBillPayment"); window.rbTplEtims = tplAct("pushBillToEtims"); window.rbTplShare = tplAct("shareBill");
   function render() {
     var tb = $("rbTable"); if (!tb) return;
     var a = filtered(), n = a.length, pages = Math.max(1, Math.ceil(n / perPage));
@@ -795,7 +810,7 @@ try{
     a.slice(s, e).forEach(function (r) {
       var id = esc(r.id), tr = document.createElement("tr"), nb = allBills.filter(function (b) { return b && b.recurringId === r.id; }).length;
       tr.innerHTML = '<td><input type="checkbox" class="rbCheck" data-id="' + id + '"></td><td>' + esc(r.number) + "</td><td>" + esc(r.date) + "</td><td>" + esc(r.supplier) + "</td><td>" + esc(r.recurrenceType === "none" ? "once" : r.recurrenceType) + "</td><td>" + esc(r.nextDate || "-") + "</td><td>" + money(r.total, r.currency) + "</td><td>" + String(nb) + "</td><td>" + esc(r.status) + "</td><td>" +
-        '<button onclick="rbPreview(\'' + id + '\')" ' + BTN + '>Preview</button> <button onclick="rbEdit(\'' + id + '\')" ' + BTN + '>Edit</button> <button onclick="rbDelete(\'' + id + '\')" ' + BTN + '>Delete</button> <button onclick="rbGenerateNow(\'' + id + '\')" ' + BTN + '>Generate Now</button> <button onclick="rbToggle(\'' + id + '\')" ' + BTN + ">" + (r.status === "Active" ? "Pause" : "Resume") + '</button> <button onclick="rbShowBills(\'' + id + '\')" ' + BTN + ">Bills</button></td>";
+        tplBtns(r, id) + "</td>";
       tb.appendChild(tr);
       var br = billsRow(r, allBills); if (br) tb.appendChild(br);
     });
@@ -974,9 +989,8 @@ try{
       }
       return c;
     });
-    var no = "";
-    try { no = typeof window.generateInvoiceNumber === "function" ? window.generateInvoiceNumber() : ""; } catch (e) { no = ""; }
-    if (!no) no = "INV-" + Date.now();
+    /* generated invoices continue the recurring RINV- series (never the normal INV- series) */
+    var no = typeof window.__acxNextRinv === "function" ? window.__acxNextRinv(invoices) : "RINV-" + Date.now();
     /* several invoices can be made in one run before "invoices" is saved, so the generator keeps returning the
        same next number; make sure this one is not already used in the list being built */
     var taken = {}; invoices.forEach(function (i) { if (i && i.invoiceNumber) taken[String(i.invoiceNumber)] = 1; });
