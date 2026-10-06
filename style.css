@@ -1691,3 +1691,27 @@ html.dark #warehousesTab .wh-card-title,html[data-theme=dark] #warehousesTab .wh
 html.dark #warehousesTab .wh-card-sub,html[data-theme=dark] #warehousesTab .wh-card-sub,html[data-theme=amoled] #warehousesTab .wh-card-sub,html[data-theme=solar-dark] #warehousesTab .wh-card-sub{color:#9ca3af}
 html.dark #warehousesTab .wh-card #branchList li,html.dark #warehousesTab .wh-card #branchList li span,html[data-theme=dark] #warehousesTab .wh-card #branchList li,html[data-theme=dark] #warehousesTab .wh-card #branchList li span,html[data-theme=amoled] #warehousesTab .wh-card #branchList li,html[data-theme=amoled] #warehousesTab .wh-card #branchList li span,html[data-theme=solar-dark] #warehousesTab .wh-card #branchList li,html[data-theme=solar-dark] #warehousesTab .wh-card #branchList li span{color:#e5e7eb}
 html.dark #warehousesTab .wh-card input,html.dark #warehousesTab .wh-card select,html[data-theme=dark] #warehousesTab .wh-card input,html[data-theme=dark] #warehousesTab .wh-card select,html[data-theme=amoled] #warehousesTab .wh-card input,html[data-theme=amoled] #warehousesTab .wh-card select,html[data-theme=solar-dark] #warehousesTab .wh-card input,html[data-theme=solar-dark] #warehousesTab .wh-card select{background-color:#111827;color:#e5e7eb;border-color:#4b5563}
+
+/* ===== Table contrast fix (white text on white/light rows) =====
+   Cause: dark mode lightens the text, but the zebra-stripe rows (and the
+   --app-surface vars) stayed light, so text became white on white.
+   Dark themes now get dark row backgrounds; light themes get dark text. */
+html.dark,html[data-theme=dark],html[data-theme=amoled],html[data-theme=solar-dark]{
+  --app-surface:#1f2937;--app-surface-alt:#111827;--app-fg:#e5e7eb;--app-muted:#9ca3af;--app-border:#334155}
+html[data-theme=amoled]{--app-surface:#0a0a0a;--app-surface-alt:#141414}
+html[data-theme=solar-dark]{--app-surface:#073642;--app-surface-alt:#04222b;--app-fg:#e5e7eb}
+
+html.dark tbody tr:nth-child(odd),html[data-theme=dark] tbody tr:nth-child(odd),
+html[data-theme=amoled] tbody tr:nth-child(odd),html[data-theme=solar-dark] tbody tr:nth-child(odd){background-color:var(--app-surface)!important}
+html.dark tbody tr:nth-child(even),html[data-theme=dark] tbody tr:nth-child(even),
+html[data-theme=amoled] tbody tr:nth-child(even),html[data-theme=solar-dark] tbody tr:nth-child(even){background-color:var(--app-surface-alt)!important}
+html.dark tbody td,html[data-theme=dark] tbody td,html[data-theme=amoled] tbody td,html[data-theme=solar-dark] tbody td,
+html.dark tbody th,html[data-theme=dark] tbody th,html[data-theme=amoled] tbody th,html[data-theme=solar-dark] tbody th{
+  background-color:transparent!important;color:#e5e7eb!important}
+html.dark tbody a,html[data-theme=dark] tbody a,html[data-theme=amoled] tbody a,html[data-theme=solar-dark] tbody a{color:#93c5fd}
+
+/* Light themes: table text must always be dark, even if a parent set white text */
+html:not(.dark):not([data-theme=dark]):not([data-theme=amoled]):not([data-theme=solar-dark]) tbody td,
+html:not(.dark):not([data-theme=dark]):not([data-theme=amoled]):not([data-theme=solar-dark]) tbody th{color:var(--app-fg,#111827)}
+html:not(.dark):not([data-theme=dark]):not([data-theme=amoled]):not([data-theme=solar-dark]) tbody tr:nth-child(odd){background-color:var(--app-surface,#fff)}
+html:not(.dark):not([data-theme=dark]):not([data-theme=amoled]):not([data-theme=solar-dark]) tbody td a{color:var(--app-accent,#2563eb)}

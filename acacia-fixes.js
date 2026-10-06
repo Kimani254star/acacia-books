@@ -21,6 +21,9 @@
  *      when the script that defines them is not loaded.
  *  P9  Old recurring invoices (made before the recurring flags existed) are tagged and linked to their
  *      template, so they leave Invoices and show under Recurring Invoices, like recurring bills.
+ *  P10 Deleting a recurring invoice (single or bulk) now also handles the invoices it generated: delete them
+ *      (full reversal like Delete Invoice: receivables, payments, ledger, stock, Recycle Bin) or keep them
+ *      as normal invoices. Invoices left behind by templates deleted earlier are offered the same choice once.
  */
 (function () {
   "use strict";
@@ -526,6 +529,107 @@
     if (migrateOldRecurring()) { call("renderInvoices"); call("renderRecurringInvoices"); }
   }
 
+  /* ---------------- P10: deleting a recurring invoice handles its generated invoices ---------------- */
+  function tplIds() { return ls("recurringInvoices", []).filter(Boolean).map(function (t) { return String(t.id); }); }
+  function linkId(i) {
+    if (i.recurringRef != null && i.recurringRef !== "") return String(i.recurringRef);
+    if (i.recurringId != null && i.recurringId !== "") return String(i.recurringId);
+    return "";
+  }
+  function invExists(id) { return ls("invoices", []).some(function (x) { return x && String(x.id) === String(id); }); }
+  function removeGenerated(list) {
+    var del = fn("deleteInvoice"), unwind = fn("__acxUnwindInvoicePayments");
+    var sc = W.confirm, st = W.showToast, done = 0, kept = [];
+    W.confirm = function () { return true; };
+    if (st) W.showToast = function () {};
+    try {
+      list.forEach(function (inv) {
+        if (invExists(inv.id)) {
+          if (del) { try { del.call(W, inv.id); } catch (e) { console.warn("[acacia-fixes] deleteInvoice", e); } }
+          if (invExists(inv.id)) kept.push(inv.invoiceNumber || inv.id); else done++;
+        } else {
+          /* already dropped by the old delete without reversing its payments / ledger */
+          if (unwind) { try { unwind(inv); } catch (e) { console.warn("[acacia-fixes] unwind", e); } }
+          done++;
+        }
+      });
+    } finally { W.confirm = sc; if (st) W.showToast = st; }
+    return { done: done, kept: kept };
+  }
+  function detachGenerated(list) {
+    var arr = ls("invoices", []);
+    list.forEach(function (inv) {
+      var i = arr.findIndex(function (x) { return x && String(x.id) === String(inv.id); });
+      var rec = i >= 0 ? arr[i] : JSON.parse(JSON.stringify(inv));
+      delete rec.recurringRef; delete rec.recurringId; delete rec.fromRecurring; delete rec.isRecurring;
+      rec.source = "recurring-removed";
+      if (i >= 0) arr[i] = rec; else arr.push(rec);
+    });
+    lsSet("invoices", arr);
+    try { W.invoices = arr; } catch (e) {}
+  }
+  function afterRecurringCleanup() {
+    ["renderInvoices", "renderRecurringInvoices", "renderRecurringInvoiceReport", "renderCustomers", "renderAccountsReceivable",
+     "renderCustomerStatement", "updateDashboardTotals", "loadDashboard"].forEach(function (n) { call(n); });
+    call("afterChange");
+  }
+  function askAndHandle(gen, intro) {
+    if (!gen.length) return;
+    var delIt = W.confirm(intro + "\n\nOK = delete them too (rolls back receivables, payments, stock and ledger; they go to the Recycle Bin).\nCancel = keep them as normal invoices in Invoices.");
+    if (delIt) {
+      var r = removeGenerated(gen), msg = "✅ Deleted " + r.done + " generated invoice(s).";
+      if (r.kept.length) msg += "\n\n⚠️ Not deleted (locked period or error):\n• " + r.kept.slice(0, 8).join("\n• ");
+      W.alert(msg);
+    } else {
+      detachGenerated(gen);
+      W.alert("Kept " + gen.length + " invoice(s) as normal invoices.");
+    }
+    afterRecurringCleanup();
+  }
+  function installRecurringDelete() {
+    ["deleteRecurring", "bulkDeleteRecurringInvoices"].forEach(function (n) {
+      var f = W[n];
+      if (typeof f !== "function" || f.__acxRecDel) return;
+      var w = function () {
+        var before = tplIds(), snap = ls("invoices", []).filter(function (i) { return i && linkId(i); });
+        var r = f.apply(this, arguments);
+        var now = {}; tplIds().forEach(function (id) { now[id] = 1; });
+        var removed = {}, any = false;
+        before.forEach(function (id) { if (!now[id]) { removed[id] = 1; any = true; } });
+        if (any) setTimeout(function () {
+          var gen = snap.filter(function (i) { return removed[linkId(i)]; });
+          askAndHandle(gen, "The deleted recurring invoice(s) have " + gen.length + " generated invoice(s) that still count in the Dashboard and reports.");
+        }, 80);
+        return r;
+      };
+      Object.keys(f).forEach(function (k) { try { w[k] = f[k]; } catch (x) {} });
+      w.__acxRecDel = true;
+      W[n] = w;
+    });
+  }
+  function findOrphanInvoices() {
+    var have = {}; tplIds().forEach(function (id) { have[id] = 1; });
+    return ls("invoices", []).filter(function (i) {
+      if (!i || i.fromBulk || i.isBulk || i.source === "bulk") return false;
+      var id = linkId(i);
+      return id && !have[id] && (i.fromRecurring || i.source === "Recurring Invoice" || (i.recurringRef != null && i.recurringRef !== ""));
+    });
+  }
+  W.acxCleanOrphanRecurringInvoices = function () {
+    var gen = findOrphanInvoices();
+    if (!gen.length) return W.alert("No leftover invoices from deleted recurring invoices were found.");
+    askAndHandle(gen, "Found " + gen.length + " invoice(s) from recurring invoices that were deleted earlier. They are hidden from Invoices but still count in the Dashboard and reports.");
+  };
+  var orphanAsked = false;
+  function offerOrphanCleanup() {
+    if (orphanAsked) return;
+    try { if (sessionStorage.getItem("__acxOrphanAsked") || !localStorage.getItem("loggedInUser")) return; } catch (e) { return; }
+    if (!findOrphanInvoices().length) return;
+    orphanAsked = true;
+    try { sessionStorage.setItem("__acxOrphanAsked", "1"); } catch (e) {}
+    W.acxCleanOrphanRecurringInvoices();
+  }
+
   /* ---------------- install ---------------- */
   function install() {
     try {
@@ -537,10 +641,12 @@
       installBulk();
       installMissing();
       installRecurringMigration();
+      installRecurringDelete();
       wrapAll();                 // afterChange around everything (outermost)
     } catch (e) { console.error("[acacia-fixes] install failed", e); }
   }
   install();
   if (document.readyState !== "complete") W.addEventListener("load", function () { setTimeout(install, 0); });
+  setTimeout(offerOrphanCleanup, 4000);
   setTimeout(install, 1500); // late scripts (sync.js, recycle-restore.js) may redefine handlers
 })();
