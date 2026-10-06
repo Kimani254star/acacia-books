@@ -750,6 +750,8 @@ try{
       m("emailBill", "Email") + m("reverseBillPayment", "Reverse Payment") + m("cloneBill", "Clone") + m("writeOffBill", "Write Off") + m("undoWriteOffBill", "Undo Write Off") + m("applyDebit", "Apply Debit") + "</div></div>";
   }
   function billsRow(r, bills) {
+    /* generated bills now appear as their own rows in Bills (by their own date), not nested under the template */
+    return null;
     var mine = []; bills.forEach(function (b, i) { if (b && b.recurringId === r.id) mine.push({ b: b, i: i }); });
     if (!mine.length || collapsed[r.id]) return null;
     mine.sort(function (x, y) { return String(x.b.date || "").localeCompare(String(y.b.date || "")); });
@@ -792,7 +794,7 @@ try{
     var allBills = jget("bills", []);
     a.slice(s, e).forEach(function (r) {
       var id = esc(r.id), tr = document.createElement("tr"), nb = allBills.filter(function (b) { return b && b.recurringId === r.id; }).length;
-      tr.innerHTML = '<td><input type="checkbox" class="rbCheck" data-id="' + id + '"></td><td>' + esc(r.number) + "</td><td>" + esc(r.date) + "</td><td>" + esc(r.supplier) + "</td><td>" + esc(r.recurrenceType === "none" ? "once" : r.recurrenceType) + "</td><td>" + esc(r.nextDate || "-") + "</td><td>" + money(r.total, r.currency) + "</td><td>" + (nb ? '<button onclick="rbToggleBills(\'' + id + '\')" class="underline font-semibold">' + (collapsed[r.id] ? "\u25B8 " : "\u25BE ") + nb + "</button>" : "0") + "</td><td>" + esc(r.status) + "</td><td>" +
+      tr.innerHTML = '<td><input type="checkbox" class="rbCheck" data-id="' + id + '"></td><td>' + esc(r.number) + "</td><td>" + esc(r.date) + "</td><td>" + esc(r.supplier) + "</td><td>" + esc(r.recurrenceType === "none" ? "once" : r.recurrenceType) + "</td><td>" + esc(r.nextDate || "-") + "</td><td>" + money(r.total, r.currency) + "</td><td>" + String(nb) + "</td><td>" + esc(r.status) + "</td><td>" +
         '<button onclick="rbPreview(\'' + id + '\')" ' + BTN + '>Preview</button> <button onclick="rbEdit(\'' + id + '\')" ' + BTN + '>Edit</button> <button onclick="rbDelete(\'' + id + '\')" ' + BTN + '>Delete</button> <button onclick="rbGenerateNow(\'' + id + '\')" ' + BTN + '>Generate Now</button> <button onclick="rbToggle(\'' + id + '\')" ' + BTN + ">" + (r.status === "Active" ? "Pause" : "Resume") + '</button> <button onclick="rbShowBills(\'' + id + '\')" ' + BTN + ">Bills</button></td>";
       tb.appendChild(tr);
       var br = billsRow(r, allBills); if (br) tb.appendChild(br);
@@ -975,6 +977,14 @@ try{
     var no = "";
     try { no = typeof window.generateInvoiceNumber === "function" ? window.generateInvoiceNumber() : ""; } catch (e) { no = ""; }
     if (!no) no = "INV-" + Date.now();
+    /* several invoices can be made in one run before "invoices" is saved, so the generator keeps returning the
+       same next number; make sure this one is not already used in the list being built */
+    var taken = {}; invoices.forEach(function (i) { if (i && i.invoiceNumber) taken[String(i.invoiceNumber)] = 1; });
+    var guardNo = 0;
+    while (taken[no] && guardNo++ < 100000) {
+      var mm = /^(.*?)(\d+)$/.exec(no);
+      no = mm ? mm[1] + String(parseInt(mm[2], 10) + 1).padStart(mm[2].length, "0") : no + "-2";
+    }
     var inv = {
       id: Date.now() + (++seq), invoiceNumber: no, fromRecurring: true, source: "Recurring Invoice",
       recurringRef: rt.id, recurringRunNumber: rt.number, recurringRun: runDate,
