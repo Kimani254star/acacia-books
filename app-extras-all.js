@@ -492,8 +492,10 @@ try{
   function makeBill(rb, runDate) {
     var bills = jget("bills", []);
     var used = {}; bills.forEach(function (b) { used[b.billNumber] = 1; });
-    var no = ""; try { no = typeof generateBillNumber === "function" ? generateBillNumber() : ""; } catch (e) { no = ""; }
-    var g = 0; while (!no || used[no]) { g++; no = "BIL-" + pad(bills.length + g, 4); if (g > 5000) break; }
+    /* recurring bills use their own RB- series so they never mix with the normal BIL- numbers */
+    var rbMax = 0; bills.forEach(function (b) { var m = /^RB-(\d+)$/.exec(String(b.billNumber || "")); if (m) rbMax = Math.max(rbMax, parseInt(m[1], 10)); });
+    var no = "RB-" + pad(rbMax + 1, 4);
+    while (used[no]) { rbMax++; no = "RB-" + pad(rbMax + 1, 4); }
     var rate = num(rb.currencyRate) || 1;
     var its = (rb.items || []).map(function (it) { var c = calc(it); return Object.assign({}, it, { subtotal: c.subtotal, vat: c.vat }); });
     var t = totals(its);
