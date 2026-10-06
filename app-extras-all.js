@@ -302,6 +302,28 @@ try{
   }
   function call(name) { try { if (typeof window[name] === "function") return window[name].apply(window, Array.prototype.slice.call(arguments, 1)); } catch (e) { console.warn("[recurringBills]", name, e); } }
 
+  /* A generated bill is hidden from Bills only while its recurring template still exists.
+   * If the template is gone (deleted, or lost by a sync/restore) the bill is an orphan:
+   * it must be visible in Bills so it can be deleted, otherwise it still counts in
+   * supplier balances / payables / dashboard but can never be seen or removed. */
+  window.__acxRbHasTemplate = function (b) {
+    try {
+      var id = b && b.recurringId; if (!id) return false;
+      return list().some(function (r) { return r && r.id === id; });
+    } catch (e) { return true; }
+  };
+  function orphanBills() {
+    return jget("bills", []).filter(function (b) { return b && b.source === "recurring" && !window.__acxRbHasTemplate(b); });
+  }
+  setTimeout(function () {
+    try {
+      if (!localStorage.getItem("loggedInUser")) return;
+      var n = orphanBills().length; if (!n) return;
+      call("loadSupplierBills");
+      toast(n + " hidden recurring bill(s) had no recurring template. They now show in Bills - delete them there to correct supplier balances and the dashboard.");
+    } catch (e) { console.warn("[recurringBills] orphan check", e); }
+  }, 4000);
+
   /* ---------- dates ---------- */
   function addMonths(y, m, anchor, n) {
     var t = m + n, ny = y + Math.floor(t / 12), nm = ((t % 12) + 12) % 12;
