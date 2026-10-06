@@ -465,7 +465,7 @@ try{
 
   /* ---------- bill creation ---------- */
   function refreshAfterBills() {
-    ["loadSupplierBills", "renderSuppliers", "renderAccountsPayable", "renderInventorySummary", "renderInventoryTable", "updateDashboardTotals", "loadDashboard", "renderManualJournals"].forEach(function (n) { call(n); });
+    ["loadSupplierBills", "renderSuppliers", "renderAccountsPayable", "renderInventorySummary", "renderInventoryTable", "updateDashboardTotals", "loadDashboard", "renderManualJournals", "updateAccountsPayable", "renderCreditcontrolAnalysis", "renderTrialBalance", "renderGeneralLedger"].forEach(function (n) { call(n); });
   }
   function makeBill(rb, runDate) {
     var bills = jget("bills", []);
@@ -608,22 +608,57 @@ try{
     showForm(true);
     var tab = $("recurringBillsTab"); if (tab) tab.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+  /* delete generated bills completely: recycle bin, payments, supplier balance, payables/balance sheet, stock and auto journals */
+  function purge(targets) {
+    if (!targets.length) return 0;
+    var snap = jget("bills", []), done = {};
+    targets.forEach(function (t) {
+      var b = snap.filter(function (x) { return x && x.billNumber === t.billNumber && x.recurringId === t.recurringId; })[0] || t, r = 0;
+      try { if (!b.id) b.id = uuid(); call("moveToRecycle", b, "File", "Bills"); } catch (e) {}
+      try { if (typeof window.__acxUnwindBillPayments === "function") r = window.__acxUnwindBillPayments(b) || 0; } catch (e) { console.warn("[recurringBills] unwind", e); }
+      if (r) call("updateSupplierBalance", b.supplier, r);
+      call("reverseBillFromLedger", b);
+      done[b.billNumber] = 1;
+    });
+    var js = jget("manualJournals", []);
+    var kept = js.filter(function (j) { return !(j && j.billNumber && done[j.billNumber] && String(j.source || "") === "Auto"); });
+    if (kept.length !== js.length) jset("manualJournals", kept);
+    jset("bills", jget("bills", []).filter(function (x) { return !(x && done[x.billNumber] && x.recurringId); }));
+    return targets.length;
+  }
+  function detach(ids) {
+    var all = jget("bills", []);
+    all.forEach(function (b) { if (b && ids.indexOf(b.recurringId) > -1) { b.source = "recurring-removed"; delete b.recurringId; } });
+    jset("bills", all);
+  }
+  function removeTemplates(ids) {
+    var rbs = list().filter(function (r) { return ids.indexOf(r.id) > -1; }); if (!rbs.length) return;
+    var mine = jget("bills", []).filter(function (b) { return b && ids.indexOf(b.recurringId) > -1; });
+    if (!confirm("Delete recurring bill " + rbs.map(function (r) { return r.number; }).join(", ") + "?\n\nNo more bills will be created from it.")) return;
+    var withBills = false;
+    if (mine.length) withBills = confirm("It has " + mine.length + " generated bill(s).\n\nOK = delete them too (rolls back supplier balance, payables, stock, payments and journals).\nCancel = keep them as normal bills in Bills.");
+    if (withBills) purge(mine); else if (mine.length) detach(ids);
+    saveList(list().filter(function (r) { return ids.indexOf(r.id) < 0; }));
+    if (ids.indexOf(editId) > -1) resetForm();
+    if (mine.length) refreshAfterBills();
+    render();
+    if (mine.length) toast(withBills ? mine.length + " generated bill(s) deleted and rolled back." : mine.length + " generated bill(s) kept in Bills.");
+  }
   function del(id) {
     if (!can("delete", "delete recurring bills")) return;
-    var all = list(), rb = all.filter(function (r) { return r.id === id; })[0]; if (!rb) return;
-    if (!confirm("Delete recurring bill " + rb.number + "?\n\nBills it already generated stay in Bills (delete them there if needed). No more bills will be created.")) return;
-    saveList(all.filter(function (r) { return r.id !== id; }));
-    if (editId === id) resetForm();
-    render();
+    removeTemplates([id]);
   }
   function bulkDelete() {
     if (!can("delete", "delete recurring bills")) return;
     var ids = checked(); if (!ids.length) return alert("Select at least one recurring bill.");
-    if (!confirm("Delete " + ids.length + " recurring bill(s)? Bills already generated stay in Bills.")) return;
-    saveList(list().filter(function (r) { return ids.indexOf(r.id) < 0; }));
-    if (ids.indexOf(editId) > -1) resetForm();
-    render();
+    removeTemplates(ids);
   }
+  window.rbDelBill = function (idx) {
+    if (!can("delete", "delete supplier bills")) return;
+    var b = jget("bills", [])[idx]; if (!b) return alert("Bill not found.");
+    if (!confirm("Delete bill " + b.billNumber + "?\n\nIt moves to the Recycle Bin and supplier balance, payables, stock, payments and journals are rolled back.")) return;
+    purge([b]); refreshAfterBills(); render(); toast("Bill " + b.billNumber + " deleted.");
+  };
   function checked() { return Array.prototype.map.call(document.querySelectorAll("#rbTable .rbCheck:checked"), function (c) { return c.getAttribute("data-id"); }); }
   function toggleAll(box) { Array.prototype.forEach.call(document.querySelectorAll("#rbTable .rbCheck"), function (c) { c.checked = box.checked; }); }
   function clone() {
@@ -679,6 +714,50 @@ try{
     });
     return a;
   }
+  /* ---------- generated bills: one line each, same actions as the Bills list ---------- */
+  var collapsed = {};
+  var SB = 'class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"';
+  function billStatus(b) { var p = num(b.paidAmount), t = num(b.total); return b.pendingApproval ? "Pending Approval" : (t > 0 && p >= t ? "Full Paid" : p > 0 ? "Partial Paid" : "Unpaid"); }
+  function billBtns(i) {
+    var a = function (fn, l) { return '<button onclick="rbBillAct(\'' + fn + "'," + i + ')" ' + SB + ">" + l + "</button>"; };
+    var m = function (fn, l) { return '<button onclick="rbBillAct(\'' + fn + "'," + i + ')" class="w-full text-left px-2 py-2 text-sm text-blue-900 hover:bg-blue-900 hover:text-white">' + l + "</button>"; };
+    return a("editSupplierBill", "Edit") + " " + '<button onclick="rbDelBill(' + i + ')" ' + SB + ">Delete</button>" + " " + a("previewBill", "Preview") + " " + a("recordBillPayment", "Record Payment") + " " + a("pushBillToEtims", "Push to ETIMS") + " " + a("shareBill", "Share") +
+      ' <div class="relative inline-block"><button onclick="rbBillMenu(' + i + ')" class="border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800">More \u25BE</button><div id="rb-bill-menu-' + i + '" class="hidden absolute right-0 mt-1 w-40 bg-white border rounded shadow z-50 flex flex-col">' +
+      m("emailBill", "Email") + m("reverseBillPayment", "Reverse Payment") + m("cloneBill", "Clone") + m("writeOffBill", "Write Off") + m("undoWriteOffBill", "Undo Write Off") + m("applyDebit", "Apply Debit") + "</div></div>";
+  }
+  function billsRow(r, bills) {
+    var mine = []; bills.forEach(function (b, i) { if (b && b.recurringId === r.id) mine.push({ b: b, i: i }); });
+    if (!mine.length || collapsed[r.id]) return null;
+    mine.sort(function (x, y) { return String(x.b.date || "").localeCompare(String(y.b.date || "")); });
+    var rows = mine.map(function (o) {
+      var b = o.b, paid = num(b.paidAmount);
+      return "<tr><td>" + esc(b.billNumber) + "</td><td>" + esc(b.date) + "</td><td>" + esc(b.due || "") + "</td><td>" + fmt(b.total) + "</td><td>" + fmt(paid) + "</td><td>" + fmt(num(b.total) - paid) + "</td><td>" + billStatus(b) + '</td><td style="white-space:nowrap">' + billBtns(o.i) + "</td></tr>";
+    }).join("");
+    var tr = document.createElement("tr");
+    tr.innerHTML = '<td></td><td colspan="9" style="background:#f8fafc;padding:6px 8px"><table style="width:100%;border-collapse:collapse;font-size:12px" border="1" cellpadding="4"><thead style="background:#eef2f7"><tr><th>Bill #</th><th>Date</th><th>Due</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + rows + "</tbody></table></td>";
+    return tr;
+  }
+  window.rbToggleBills = function (id) { collapsed[id] = !collapsed[id]; render(); };
+  window.rbBillMenu = function (i) {
+    var m = $("rb-bill-menu-" + i);
+    document.querySelectorAll('[id^="rb-bill-menu-"]').forEach(function (x) { if (x !== m) x.classList.add("hidden"); });
+    if (m) m.classList.toggle("hidden");
+  };
+  window.rbBillAct = function (fn, idx) {
+    var f = window[fn]; if (typeof f !== "function") return alert("This action is not available.");
+    document.querySelectorAll('[id^="rb-bill-menu-"]').forEach(function (x) { x.classList.add("hidden"); });
+    var all = jget("bills", []), before = all.length;
+    window.__acxSupplierBillsView = all;
+    if ((fn === "previewBill" || fn === "editSupplierBill") && typeof showTab === "function") { try { showTab("supplierBillsTab"); } catch (e) {} }
+    f(idx);
+    if (fn === "cloneBill") {
+      var a2 = jget("bills", []);
+      if (a2.length > before) { for (var k = before; k < a2.length; k++) ["source", "recurringId", "recurringNumber", "recurringRun"].forEach(function (p) { delete a2[k][p]; }); jset("bills", a2); call("loadSupplierBills"); }
+    }
+    setTimeout(render, 400);
+  };
+  document.addEventListener("click", function (e) { if (!e.target.closest || !e.target.closest('[id^="rb-bill-menu-"], [onclick^="rbBillMenu"]')) document.querySelectorAll('[id^="rb-bill-menu-"]').forEach(function (x) { x.classList.add("hidden"); }); });
+
   var BTN = 'class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800"';
   function render() {
     var tb = $("rbTable"); if (!tb) return;
@@ -686,11 +765,13 @@ try{
     if (page > pages) page = pages; if (page < 1) page = 1;
     var s = (page - 1) * perPage, e = s + perPage;
     tb.innerHTML = "";
+    var allBills = jget("bills", []);
     a.slice(s, e).forEach(function (r) {
-      var id = esc(r.id), tr = document.createElement("tr");
-      tr.innerHTML = '<td><input type="checkbox" class="rbCheck" data-id="' + id + '"></td><td>' + esc(r.number) + "</td><td>" + esc(r.date) + "</td><td>" + esc(r.supplier) + "</td><td>" + esc(r.recurrenceType === "none" ? "once" : r.recurrenceType) + "</td><td>" + esc(r.nextDate || "-") + "</td><td>" + money(r.total, r.currency) + "</td><td>" + esc(r.generated || 0) + "</td><td>" + esc(r.status) + "</td><td>" +
+      var id = esc(r.id), tr = document.createElement("tr"), nb = allBills.filter(function (b) { return b && b.recurringId === r.id; }).length;
+      tr.innerHTML = '<td><input type="checkbox" class="rbCheck" data-id="' + id + '"></td><td>' + esc(r.number) + "</td><td>" + esc(r.date) + "</td><td>" + esc(r.supplier) + "</td><td>" + esc(r.recurrenceType === "none" ? "once" : r.recurrenceType) + "</td><td>" + esc(r.nextDate || "-") + "</td><td>" + money(r.total, r.currency) + "</td><td>" + (nb ? '<button onclick="rbToggleBills(\'' + id + '\')" class="underline font-semibold">' + (collapsed[r.id] ? "\u25B8 " : "\u25BE ") + nb + "</button>" : "0") + "</td><td>" + esc(r.status) + "</td><td>" +
         '<button onclick="rbPreview(\'' + id + '\')" ' + BTN + '>Preview</button> <button onclick="rbEdit(\'' + id + '\')" ' + BTN + '>Edit</button> <button onclick="rbDelete(\'' + id + '\')" ' + BTN + '>Delete</button> <button onclick="rbGenerateNow(\'' + id + '\')" ' + BTN + '>Generate Now</button> <button onclick="rbToggle(\'' + id + '\')" ' + BTN + ">" + (r.status === "Active" ? "Pause" : "Resume") + '</button> <button onclick="rbShowBills(\'' + id + '\')" ' + BTN + ">Bills</button></td>";
       tb.appendChild(tr);
+      var br = billsRow(r, allBills); if (br) tb.appendChild(br);
     });
     var set = function (id, t) { var el = $(id); if (el) el.textContent = t; };
     set("rbTotalCount", n); set("rbPageInfo", n ? (s + 1) + " - " + Math.min(e, n) + " of " + n : "0 - 0");
@@ -782,6 +863,8 @@ try{
       if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) menu.classList.add("hidden");
     });
     try { if (typeof acxCanOpenTab === "function" && !acxCanOpenTab("supplierBillsTab")) { var b = document.querySelector('button[onclick*="recurringBillsTab"]'); if (b && b.parentNode) b.parentNode.style.display = "none"; } } catch (e) {}
+    var _lb = window.loadSupplierBills;
+    if (typeof _lb === "function" && !_lb.__rb) { window.loadSupplierBills = function () { var r = _lb.apply(this, arguments); try { render(); } catch (e) {} return r; }; window.loadSupplierBills.__rb = 1; }
     setTimeout(function () { runAllDue(true); }, 3500);
     setInterval(function () { runAllDue(true); }, 30 * 60 * 1000);
     window.addEventListener("focus", function () { runAllDue(true); });
@@ -940,3 +1023,173 @@ try{
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
+
+/* ===== Recycle Bin restore fix (merged) ===== */
+try{
+/* Acacia Books: Recycle Bin restore fix.
+   Problem: window.restoreItem only knew File Manager files/folders. Every other record
+   (invoices, customers, bills, employees...) was sent to the bin with type "File" and
+   originalFolder = its module name, so "Restore" / "Restore Selected" pushed it into the
+   File Manager store instead of back into its module (and for other types just deleted it).
+   This replaces restoreItem so each record goes back into its own list.
+   Load AFTER app-3.js:  <script defer src="recycle-restore.js"></script> */
+(function () {
+  "use strict";
+  if (window.__acxRestoreFix) return;
+  window.__acxRestoreFix = true;
+
+  /* originalFolder -> where the record lives.
+     k = localStorage key, cache = in-memory variable that must be refreshed (if any),
+     r = render functions to call, side = deleting it also changed balances/stock/ledgers */
+  var MAP = {
+    Invoices: { k: "invoices", cache: "invoices", r: ["renderInvoices", "renderInvoiceTable", "renderInvoiceList", "updateDashboardTotals"], side: 1 },
+    BulkInvoices: { k: "bulkInvoices", r: ["renderBulkInvoices"], side: 1 },
+    Quotes: { k: "quotes", r: ["renderQuotes", "renderCustomerQuotesReport"] },
+    SalesReturns: { k: "salesReturns", r: ["renderSalesReturnList"], side: 1 },
+    Receipts: { k: "receipts", r: ["renderReceipts"], side: 1 },
+    Deliveries: { k: "deliveries", r: ["renderDeliveryTable", "renderPackages"], side: 1 },
+    Customers: { k: "customers", r: ["renderCustomers"] },
+    Suppliers: { k: "suppliers", r: ["renderSuppliers"] },
+    Bills: { k: "bills", r: ["renderBills", "renderSuppliers", "renderAccountsPayable"], side: 1 },
+    BulkBills: { k: "bulkBills", r: ["loadBulkBills", "renderSuppliers", "renderAccountsPayable"], side: 1 },
+    SupplierQuotes: { k: "supplierQuotes", r: ["renderSupplierQuotes"] },
+    PurchaseOrders: { k: "purchaseOrders", r: ["renderPurchaseOrders"] },
+    SupplierDebitNotes: { k: "supplierDebitNotes", r: ["renderDebitNotes", "renderDebitNotesReport"] },
+    DebitNotes: { k: "supplierDebitNotes", r: ["renderDebitNotes", "renderDebitNotesReport"] },
+    PurchaseReturns: { k: "purchaseReturns", r: ["renderPurchaseReturns", "renderInventoryTable"], side: 1 },
+    SupplierPayments: { k: "billPayments", r: ["renderSupplierPayments"], side: 1 },
+    TaxPayments: { k: "taxPayments", r: ["renderTaxPayments"], side: 1 },
+    OperationalCosts: { k: "operationalCosts", r: ["renderOperationalCosts"] },
+    GRN: { k: "grns", r: ["renderGRNTable"] },
+    GRNs: { k: "grns", r: ["renderGRNTable"] },
+    ManualJournals: { k: "manualJournals", r: ["renderManualJournals"], side: 1 },
+    RecurringJournals: { k: "recurringJournals", r: ["renderRecurringJournalList"] },
+    CurrencyAdjustments: { k: "currencyAdjustments", r: ["renderCurrencyAdjustments"] },
+    ChartOfAccounts: { k: "chartOfAccounts", r: ["renderAccounts"] },
+    EquityRecords: { k: "equityRecords", r: ["renderEquity", "renderEquityStatement"] },
+    CurrentAccounts: { k: "currentAccounts", cache: "currentAccounts", r: ["renderCurrentAccounts"] },
+    Employees: { k: "employees", r: ["renderEmployees", "updateEmployeeDropdowns"] },
+    Earnings: { k: "earnings", r: ["renderEarnings"] },
+    Attendance: { k: "attendance", r: ["renderAttendanceTable"] },
+    BankAccounts: { k: "bankAccounts", r: ["renderBankAccountsTable"] },
+    Banks: { k: "banks", r: ["renderBalanceSheet", "renderOpeningBalances", "renderAccounts"], side: 1 },
+    ManualTransactions: { k: "manualTransactions", r: ["renderManualTransactions"], side: 1 },
+    Shipments: { k: "shipments", r: ["renderShipmentTable"] },
+    Movements: { k: "movements", r: ["renderMovementTable", "renderStockTransfer"], side: 1 },
+    BulkAdjustments: { k: "baLog", r: ["renderBALog", "renderInventoryTable"], side: 1 },
+    BALog: { k: "baLog", r: ["renderBALog", "renderInventoryTable"], side: 1 },
+    Users: { k: "users", r: ["renderUserTable"] },
+    Plans: { k: "plans", cache: "plans", r: ["renderPlans", "renderPlansTable"] },
+    PlanProgress: { k: "planProgress", cache: "progressUpdates", r: ["renderProgressTable"] },
+    PlanOwnerships: { k: "planOwnerships", cache: "planOwnerships", r: ["renderOwnerships"] },
+    Actuals: { k: "actuals", cache: "actuals", r: ["renderActuals", "renderComparison"] },
+    RevisionHistory: { k: "revisionHistoryData", cache: "revisionHistoryData", r: ["renderRevisionHistory", "renderComparison"] },
+    NonCurrentAssets: { k: "balanceSheet", sub: "nonCurrentAssets", cache: "balanceSheet", r: ["renderNonCurrentAssets", "renderBalanceSheet"], side: 1 },
+    NonCurrentLiabilities: { k: "balanceSheet", sub: "nonCurrentLiabilities", cache: "balanceSheet", r: ["renderNonCurrentLiabilities", "renderNonCurrentLiabilitiesSummary", "renderLoanSchedule", "renderBalanceSheet"], side: 1 }
+  };
+
+  var origRestore = window.restoreItem;
+
+  function rd(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function wr(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+  function call(n) { try { if (typeof window[n] === "function") window[n](); } catch (e) { console.warn("[recycle-restore]", n, e); } }
+
+  function specFor(rec) {
+    var f = String(rec.originalFolder || "");
+    if (rec.type !== "File") return null;
+    if (MAP.hasOwnProperty(f)) return MAP[f];
+    if (f.indexOf("Amendments-") === 0) return { k: "amendments", r: ["renderAmendmentsTable", "renderAmendedWarehouseMovement"], side: 1 };
+    if (f === "Stock") {
+      var wh = (rec.data && rec.data.warehouse) || "";
+      if (!wh && typeof window.__invWarehouseNames === "function") { try { wh = (window.__invWarehouseNames() || [])[0] || ""; } catch (e) {} }
+      return wh ? { k: "inventory_" + wh, inv: 1, r: ["renderInventoryTable"] } : null;
+    }
+    if (localStorage.getItem("inventory_" + f) !== null) return { k: "inventory_" + f, inv: 1, r: ["renderInventoryTable"] };
+    return null; /* real File Manager file */
+  }
+
+  function same(a, b) {
+    if (a && b && a.id != null && b.id != null) return String(a.id) === String(b.id);
+    try { return JSON.stringify(a) === JSON.stringify(b); } catch (e) { return false; }
+  }
+
+  /* refresh an in-memory copy (a top-level let/var in the app) so the module doesn't overwrite the restored record later */
+  function syncCache(name, key) {
+    var ge = eval; /* indirect eval = global scope */
+    try {
+      if (ge("typeof " + name) === "undefined") return false;
+      ge(name + "=JSON.parse(localStorage.getItem(" + JSON.stringify(key) + ")||" + (name === "balanceSheet" ? "'{}'" : "'[]'") + ")");
+      return true;
+    } catch (e) { return false; }
+  }
+
+  var batch = null, timer = null;
+  function report(r) {
+    if (!batch) batch = { ok: 0, side: 0, bad: [], reload: false };
+    if (r.ok) { batch.ok++; if (r.side) batch.side++; if (r.reload) batch.reload = true; } else batch.bad.push(r.msg);
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      var b = batch; batch = null;
+      var m = [];
+      if (b.ok) m.push(b.ok + " item" + (b.ok > 1 ? "s" : "") + " restored.");
+      if (b.side) m.push("Linked balances, stock or ledger entries were not re-applied automatically; please check them.");
+      if (b.reload) m.push("Refresh the page to see it in its module.");
+      if (b.bad.length) m.push(b.bad[0] + (b.bad.length > 1 ? " (+" + (b.bad.length - 1) + " more)" : ""));
+      toast(m.join(" "), !b.ok);
+    }, 150);
+  }
+
+  function toast(msg, bad) {
+    var t = document.getElementById("acxRestoreToast");
+    if (!t) {
+      t = document.createElement("div"); t.id = "acxRestoreToast";
+      t.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:2147483000;max-width:420px;padding:10px 16px;border-radius:8px;color:#fff;font:14px/1.4 system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.25)";
+      document.body.appendChild(t);
+    }
+    t.style.background = bad ? "#b91c1c" : "#1e3a8a";
+    t.textContent = msg; t.style.display = "block";
+    clearTimeout(t._h); t._h = setTimeout(function () { t.style.display = "none"; }, 6000);
+  }
+
+  window.restoreItem = function (index) {
+    var bin = rd("recycleBin", []);
+    var rec = bin[index];
+    if (!rec) return;
+
+    /* File Manager files and folders: keep the original behaviour */
+    if (rec.type === "Folder") return origRestore.apply(this, arguments);
+    var spec = specFor(rec);
+    if (!spec) {
+      if (rec.type === "File" && typeof origRestore === "function") return origRestore.apply(this, arguments);
+      report({ ok: false, msg: '"' + (rec.name || "Item") + '" (' + (rec.type || "unknown type") + ") can't be restored automatically, so it was left in the Recycle Bin." });
+      return;
+    }
+
+    var data;
+    try { data = JSON.parse(JSON.stringify(rec.data)); } catch (e) { data = rec.data; }
+    if (data == null) { report({ ok: false, msg: '"' + (rec.name || "Item") + '" has no saved data to restore.' }); return; }
+
+    try {
+      var cur, arr;
+      if (spec.sub) { cur = rd(spec.k, {}); if (!Array.isArray(cur[spec.sub])) cur[spec.sub] = []; arr = cur[spec.sub]; }
+      else { cur = arr = rd(spec.k, []); if (!Array.isArray(arr)) { arr = cur = []; } }
+      if (!arr.some(function (x) { return same(x, data); })) arr.push(data);
+      wr(spec.k, cur);               /* put it back first... */
+      bin.splice(index, 1);          /* ...then take it out of the bin */
+      localStorage.setItem("recycleBin", JSON.stringify(bin));
+    } catch (e) {
+      console.error("[recycle-restore]", e);
+      report({ ok: false, msg: 'Could not restore "' + (rec.name || "item") + '": ' + (e.message || e) });
+      return;
+    }
+
+    var reload = false;
+    if (spec.cache && !syncCache(spec.cache, spec.k)) reload = true;
+    if (spec.inv) { call("__invRefreshCaches"); call("syncInventoryBalancesToCOA"); }
+    (spec.r || []).forEach(call);
+    call("renderRecycleBin");
+    report({ ok: true, side: spec.side, reload: reload });
+  };
+})();
+
+}catch(e){console.error('[recycle-restore]',e)}
