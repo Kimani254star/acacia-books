@@ -442,7 +442,17 @@ try{
     if (box) box.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Subtotal</span><b>' + money(t.subtotal, cur) + '</b></div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>VAT</span><b>' + money(t.vat, cur) + '</b></div><div style="display:flex;justify-content:space-between;border-top:1px solid #cbd5e1;padding-top:6px"><span>Total per bill</span><b>' + money(t.total, cur) + "</b></div>" +
       (rate !== 1 ? '<div style="display:flex;justify-content:space-between;margin-top:4px;color:#64748b"><span>Base currency</span><span>' + fmt(t.total * rate) + "</span></div>" : "");
   }
+  function showForm(show) {
+    var b = $("rbFormBox"); if (b) b.classList.toggle("hidden", !show);
+    var n = $("rbNewBtn"); if (n) n.textContent = show ? "Close" : "New";
+  }
+  function toggleForm() {
+    var b = $("rbFormBox"); if (!b) return;
+    if (b.classList.contains("hidden")) { resetForm(); refreshDropdowns(); $("rbNumber").value = nextNumber(); showForm(true); }
+    else resetForm();
+  }
   function resetForm() {
+    showForm(false);
     editId = null; editItemIdx = null; items = [];
     ["rbDate", "rbNextDate", "rbEndDate", "rbRecurrenceDays", "rbItemQty", "rbItemPrice", "rbItemDiscount"].forEach(function (id) { var e = $(id); if (e) e.value = ""; });
     ["rbSupplier", "rbTermDays", "rbAccount", "rbProduct", "rbItemType"].forEach(function (id) { var e = $(id); if (e) e.value = ""; });
@@ -595,6 +605,7 @@ try{
     var h = $("rbFormTitle"); if (h) h.textContent = "Edit Recurring Bill " + rb.number;
     var n = $("rbEditNote"); if (n) n.classList.remove("hidden");
     toggleRecurrence(); renderItems();
+    showForm(true);
     var tab = $("recurringBillsTab"); if (tab) tab.scrollIntoView({ behavior: "smooth", block: "start" });
   }
   function del(id) {
@@ -706,19 +717,40 @@ try{
   function preview(id) {
     var rb = list().filter(function (r) { return r.id === id; })[0]; if (!rb) return;
     var org = jget("orgInfo", {}), sup = jget("suppliers", []).filter(function (s) { return s.name === rb.supplier; })[0] || {};
-    var rows = (rb.items || []).map(function (it, i) { return "<tr><td>" + (i + 1) + "</td><td>" + esc(it.desc) + "</td><td>" + esc(it.type) + "</td><td>" + esc(it.qty) + "</td><td>" + fmt(it.price) + "</td><td>" + fmt(it.vat) + "</td><td>" + fmt(num(it.subtotal) + num(it.vat)) + "</td></tr>"; }).join("");
-    var freq = rb.recurrenceType === "custom" ? "every " + rb.recurrenceDays + " days" : (rb.recurrenceType === "none" ? "once" : rb.recurrenceType);
-    modal('<div id="rbPrintArea"><h3 style="font-size:15px;font-weight:bold;text-align:center;margin-bottom:10px">Recurring Bill ' + esc(rb.number) + '</h3>' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:10px"><div><b>Supplier</b><br>' + esc(rb.supplier) + "<br>" + esc(sup.address || "") + "<br>PIN: " + esc(sup.krapin || "") + '</div><div style="text-align:right"><b>' + esc(org.name || "My Company") + "</b><br>PIN: " + esc(org.pin || "") + "<br>" + esc(org.address || "") + "</div></div>" +
-      "<p>Start: " + esc(rb.date) + " &nbsp;|&nbsp; Repeats: " + esc(freq) + " &nbsp;|&nbsp; Next run: " + esc(rb.nextDate || "-") + (rb.endDate ? " &nbsp;|&nbsp; Ends: " + esc(rb.endDate) : "") + " &nbsp;|&nbsp; Terms: " + esc(rb.termDays || 0) + " days &nbsp;|&nbsp; Account: " + esc(rb.chartOfAccount) + " &nbsp;|&nbsp; Status: " + esc(rb.status) + "</p>" +
-      '<table style="width:100%;border-collapse:collapse;margin-top:8px" border="1" cellpadding="5"><thead style="background:#f3f4f6"><tr><th>#</th><th>Item</th><th>Type</th><th>Qty</th><th>Price</th><th>VAT</th><th>Total</th></tr></thead><tbody>' + rows + "</tbody></table>" +
-      '<div style="text-align:right;margin-top:8px;font-weight:600"><p>Subtotal: ' + money(rb.subtotal, rb.currency) + "</p><p>VAT: " + money(rb.vat, rb.currency) + "</p><p>Total per bill: " + money(rb.total, rb.currency) + "</p></div></div>" +
-      '<div style="text-align:right;margin-top:12px"><button id="rbPrintBtn" ' + BTN + '>Print</button> <button id="rbCloseBtn" ' + BTN + ">Close</button></div>");
+    var cur = rb.currency || "KES";
+    var rows = (rb.items || []).map(function (it) {
+      var r = String(it.taxRate == null ? "" : it.taxRate).trim().toLowerCase(), lab = "";
+      if (r === "16") lab = "16%"; else if (r === "8") lab = "8%"; else if (r === "0" || r === "zero") lab = "Zero"; else if (r === "exempt") lab = "Exempt";
+      var tot = num(it.subtotal) + num(it.vat);
+      return '<tr><td class="p-2">' + esc(it.desc) + '</td><td class="p-2">' + esc(it.qty) + '</td><td class="p-2">' + money(it.price, cur) + '</td><td class="p-2">' + money(it.vat, cur) + (lab ? " (" + lab + ")" : "") + '</td><td class="p-2">' + money(tot, cur) + "</td></tr>";
+    }).join("");
+    var t = totals(rb.items || []);
+    var freq = rb.recurrenceType === "custom" ? "Every " + rb.recurrenceDays + " days" : (rb.recurrenceType === "none" ? "Once" : String(rb.recurrenceType || "").charAt(0).toUpperCase() + String(rb.recurrenceType || "").slice(1));
+    modal('<div class="bg-white p-6 rounded-2xl w-full relative">' +
+      '<h3 class="text-sm font-bold mb-6 text-center text-slate-800">\uD83D\uDCCB Recurring Bill Preview</h3>' +
+      '<div class="flex justify-end gap-3 mb-6">' +
+      '<button id="rbPrintBtn" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Print</button>' +
+      '<button id="rbCsvBtn" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Download</button>' +
+      '<button id="rbCloseBtn" class="px-1 py-1 bg-blue-900 text-white rounded hover:bg-blue-900">Close</button></div>' +
+      '<div id="rbPrintArea" class="bg-white p-6 rounded-xl border border-gray-100">' +
+      '<div class="flex justify-between mb-4"><div><strong>Recurring Bill Number:</strong> <span>' + esc(rb.number) + '</span></div><div><strong>Start Date:</strong> <span>' + esc(rb.date) + "</span></div></div>" +
+      '<div class="text-right mb-4"><h4 class="font-semibold">Company</h4><p>' + esc(org.name || "My Company Ltd") + "</p><p>PIN: <span>" + esc(org.pin || "P00000000") + "</span></p><p>Address: <span>" + esc(org.address || "123 Business Rd, Nairobi") + "</span></p></div>" +
+      '<div class="text-left mb-4"><h4 class="font-semibold">Supplier</h4><p>' + esc(sup.name || rb.supplier) + "</p><p>PIN: <span>" + esc(sup.krapin || "") + "</span></p><p>Address: <span>" + esc(sup.address || "") + "</span></p></div>" +
+      '<div class="mb-4 text-sm"><p><strong>Repeats:</strong> ' + esc(freq) + " &nbsp;|&nbsp; <strong>Next run:</strong> " + esc(rb.nextDate || "-") + (rb.endDate ? " &nbsp;|&nbsp; <strong>Ends:</strong> " + esc(rb.endDate) : "") + " &nbsp;|&nbsp; <strong>Terms:</strong> " + esc(rb.termDays || 0) + " days &nbsp;|&nbsp; <strong>Account:</strong> " + esc(rb.chartOfAccount) + " &nbsp;|&nbsp; <strong>Status:</strong> " + esc(rb.status) + " &nbsp;|&nbsp; <strong>Bills generated:</strong> " + (rb.generated || 0) + "</p></div>" +
+      '<table class="w-full text-sm border mt-4"><thead class="bg-gray-100"><tr><th class="p-2">Item</th><th class="p-2">Qty</th><th class="p-2">Unit Price</th><th class="p-2">VAT</th><th class="p-2">Total</th></tr></thead><tbody id="rbPreviewItems">' + rows + "</tbody>" +
+      '<tfoot class="bg-gray-100 font-semibold"><tr><td colspan="4" class="p-2 text-right">Subtotal</td><td class="p-2">' + money(t.subtotal, cur) + '</td></tr><tr><td colspan="4" class="p-2 text-right">VAT</td><td class="p-2">' + money(t.vat, cur) + '</td></tr><tr><td colspan="4" class="p-2 text-right">Grand Total (per bill)</td><td class="p-2">' + money(t.total, cur) + "</td></tr></tfoot></table></div></div>");
     $("rbCloseBtn").onclick = function () { $("rbModal").remove(); };
     $("rbPrintBtn").onclick = function () {
       var w = window.open("", "_blank"); if (!w) return;
-      w.document.write("<html><head><title>" + esc(rb.number) + '</title><style>body{font-family:Arial;padding:20px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ccc;padding:6px}</style></head><body>' + $("rbPrintArea").innerHTML + "</body></html>");
+      w.document.write("<html><head><title>" + esc(rb.number) + '</title><style>body{font-family:Arial;padding:20px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ccc;padding:6px;text-align:left}.flex{display:flex;justify-content:space-between}.text-right{text-align:right}h4{margin:0 0 4px}</style></head><body>' + $("rbPrintArea").innerHTML + "</body></html>");
       w.document.close(); w.print();
+    };
+    $("rbCsvBtn").onclick = function () {
+      var csv = "Description,Quantity,Unit Price,VAT,Total\n";
+      (rb.items || []).forEach(function (it) { csv += [String(it.desc || "").replace(/,/g, " "), it.qty, num(it.price), num(it.vat), num(it.subtotal) + num(it.vat)].join(",") + "\n"; });
+      csv += ",,Subtotal," + t.subtotal + "\n,,VAT," + t.vat + "\n,,Total," + t.total + "\n";
+      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "RecurringBill_" + rb.number + ".csv";
+      document.body.appendChild(a); a.click(); a.remove();
     };
   }
   function showBills(id) {
@@ -756,6 +788,7 @@ try{
     window.addEventListener("storage", function (e) { if (e && e.key === KEY) render(); });
   }
 
+  window.rbToggleForm = toggleForm;
   window.rbToggleRecurrence = toggleRecurrence;
   window.rbAddItem = addItem; window.rbEditItem = editItem; window.rbRemoveItem = removeItem;
   window.rbSave = save; window.rbEdit = edit; window.rbDelete = del; window.rbBulkDelete = bulkDelete;
@@ -767,4 +800,143 @@ try{
   window.rbPerPage = function (v) { perPage = parseInt(v, 10) || 25; page = 1; render(); };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
+
+/* ======================= recurring-invoices auto-run ======================= */
+/* Recurring Invoices (Customers > Recurring Invoices) used to keep ONE invoice per template.
+ * This adds the schedule: when a template's Next Run date arrives (daily / weekly / monthly /
+ * yearly / custom days) a NEW invoice is created from the template automatically, the same way
+ * Recurring Bills already does. Edit the template and the change applies to the next invoices.
+ * Runs when the app is opened, when the tab is focused, and every 30 minutes while it stays open. */
+(function () {
+  "use strict";
+  if (window.__acxRecurringInvoicesAuto) return;
+  window.__acxRecurringInvoicesAuto = true;
+
+  var MAX_CATCHUP = 24, running = false;
+  function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function num(x) { var n = parseFloat(x); return isNaN(n) ? 0 : n; }
+  function pad(n) { return String(n).padStart(2, "0"); }
+  function iso(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function today() { return iso(new Date()); }
+  function call(name) { try { if (typeof window[name] === "function") return window[name].apply(window, Array.prototype.slice.call(arguments, 1)); } catch (e) { console.warn("[recurringInvoices]", name, e); } }
+  function dp() { try { return window.__getDecimalPlaces ? window.__getDecimalPlaces() : 2; } catch (e) { return 2; } }
+
+  function addMonths(y, m, anchor, n) {
+    var t = m + n, ny = y + Math.floor(t / 12), nm = ((t % 12) + 12) % 12;
+    var last = new Date(ny, nm + 1, 0).getDate();
+    return iso(new Date(ny, nm, Math.min(anchor, last)));
+  }
+  function advance(ds, type, days, anchor) {
+    var p = String(ds).split("-"), y = +p[0], m = +p[1] - 1, d = +p[2];
+    switch (type) {
+      case "daily": return iso(new Date(y, m, d + 1));
+      case "weekly": return iso(new Date(y, m, d + 7));
+      case "monthly": return addMonths(y, m, anchor || d, 1);
+      case "quarterly": return addMonths(y, m, anchor || d, 3);
+      case "yearly": return addMonths(y, m, anchor || d, 12);
+      case "custom": var n = parseInt(days, 10); return n > 0 ? iso(new Date(y, m, d + n)) : null;
+      default: return null;
+    }
+  }
+  function isRecurring(rt) { return rt && rt.recurrenceType && rt.recurrenceType !== "none"; }
+  function runnable(rt) {
+    var s = String(rt.status || "").toLowerCase();
+    return isRecurring(rt) && s !== "draft" && s !== "paused" && s !== "completed" && s !== "cancelled";
+  }
+  function toast(msg) {
+    try {
+      var d = document.createElement("div"); d.textContent = msg;
+      d.style.cssText = "position:fixed;right:16px;bottom:16px;max-width:340px;background:#1e3a8a;color:#fff;padding:10px 14px;border-radius:8px;z-index:2147483000;font:13px/1.4 sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.3)";
+      document.body.appendChild(d); setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 7000);
+    } catch (e) {}
+  }
+
+  var seq = 0;
+  function makeInvoice(rt, runDate, invoices) {
+    var rate = Number(rt.exchangeRate) || 1, total = Number(rt.total) || 0, vat = Number(rt.vat) || 0;
+    var totalKES = Number(rt.totalKES) || total * rate;
+    var short = 0;
+    var items = (rt.items || []).map(function (it) {
+      var c = JSON.parse(JSON.stringify(it)); delete c.stk;
+      if (String(c.type || "").toLowerCase() === "product" && typeof window.findAndDeductStock === "function") {
+        var ok = false; try { ok = !!window.findAndDeductStock(c.desc || "", parseFloat(c.qty) || 0, c.sku || ""); } catch (e) { ok = false; }
+        c.stk = ok; if (!ok) short++;
+      }
+      return c;
+    });
+    var no = "";
+    try { no = typeof window.generateInvoiceNumber === "function" ? window.generateInvoiceNumber() : ""; } catch (e) { no = ""; }
+    if (!no) no = "INV-" + Date.now();
+    var inv = {
+      id: Date.now() + (++seq), invoiceNumber: no, fromRecurring: true, source: "Recurring Invoice",
+      recurringRef: rt.id, recurringRunNumber: rt.number, recurringRun: runDate,
+      date: runDate, customer: rt.customerName || rt.customer, customerId: rt.customerId,
+      netDays: rt.netDays || rt.recurrenceDays || "", terms: rt.terms || "", account: rt.accountCode || "",
+      items: items, total: total.toFixed(dp()), vat: vat.toFixed(dp()), vatKES: vat * rate,
+      currency: rt.currency || "KES", exchangeRate: rate, totalKES: totalKES,
+      amountPaid: 0, paid: false, status: "Unpaid"
+    };
+    invoices.push(inv);
+    try { if (typeof window.updateCustomerReceivables === "function") window.updateCustomerReceivables(inv.customer, totalKES); } catch (e) { console.warn("[recurringInvoices] receivables", e); }
+    try { if (typeof window.postToCOA === "function") window.postToCOA(rt.accountCode, totalKES, { date: runDate, ref: no, source: "Recurring Invoice" }); } catch (e) {}
+    inv.__short = short;
+    return inv;
+  }
+
+  function runAllDue(manual) {
+    if (running) return 0;
+    if (!localStorage.getItem("loggedInUser")) return 0;
+    running = true;
+    var made = 0, short = 0;
+    try {
+      var all = jget("recurringInvoices", []); if (!Array.isArray(all)) all = [];
+      var invoices = jget("invoices", []); if (!Array.isArray(invoices)) invoices = [];
+      var changed = false, t = today();
+      all.forEach(function (rt) {
+        if (!runnable(rt)) return;
+        var anchor = parseInt(String(rt.date || "").split("-")[2], 10) || undefined;
+        if (!rt.nextDate) {                       /* first invoice already exists for the start date */
+          var first = advance(rt.date, rt.recurrenceType, rt.recurrenceDays, anchor);
+          if (first) { rt.nextDate = first; changed = true; } else return;
+        }
+        var nd = rt.nextDate, guard = 0;
+        while (nd && nd <= t && guard < MAX_CATCHUP) {
+          guard++;
+          var dup = invoices.some(function (i) { return (String(i.recurringId) === String(rt.id) && i.date === nd) || (String(i.recurringRef) === String(rt.id) && i.recurringRun === nd); });
+          if (!dup) {
+            var inv = makeInvoice(rt, nd, invoices);
+            short += inv.__short || 0; delete inv.__short;
+            rt.generated = (rt.generated || 0) + 1; rt.lastGenerated = nd; rt.lastInvoice = inv.invoiceNumber;
+            made++;
+          }
+          nd = advance(nd, rt.recurrenceType, rt.recurrenceDays, anchor);
+          changed = true;
+        }
+        if (guard >= MAX_CATCHUP) { while (nd && nd <= t) nd = advance(nd, rt.recurrenceType, rt.recurrenceDays, anchor); }
+        rt.nextDate = nd || "";
+      });
+      if (changed) {
+        localStorage.setItem("recurringInvoices", JSON.stringify(all));
+        try { if (typeof recurringInvoices !== "undefined" && Array.isArray(recurringInvoices)) { recurringInvoices.length = 0; Array.prototype.push.apply(recurringInvoices, all); } } catch (e) {}
+      }
+      if (made) {
+        localStorage.setItem("invoices", JSON.stringify(invoices));
+        try { window.invoices = invoices; } catch (e) {}
+        ["renderInvoices", "renderRecurringInvoices", "renderRecurringInvoiceReport", "renderCustomers", "renderAccountsReceivable", "renderCustomerStatement", "updateDashboardTotals", "loadDashboard", "renderDebitControlPanel"].forEach(function (n) { call(n); });
+      } else if (changed) { call("renderRecurringInvoices"); }
+    } catch (e) { console.error("[recurringInvoices] run failed", e); }
+    running = false;
+    if (made) toast("Recurring Invoices: " + made + " invoice" + (made > 1 ? "s" : "") + " generated automatically." + (short ? " (" + short + " item(s) were short on stock.)" : ""));
+    else if (manual) toast("Recurring Invoices: nothing is due right now.");
+    return made;
+  }
+
+  window.rbiRunDue = function () { return runAllDue(true); };
+  function start() {
+    setTimeout(function () { runAllDue(false); }, 4000);
+    setInterval(function () { runAllDue(false); }, 30 * 60 * 1000);
+    window.addEventListener("focus", function () { runAllDue(false); });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
