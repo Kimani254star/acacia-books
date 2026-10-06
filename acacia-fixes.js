@@ -19,6 +19,8 @@
  *      permission check restored on deleteReceipt.
  *  P8  bulkDeleteProjectRevenue, bulkDeleteNonCurrentLiabilities, deleteRevenue get a safe fallback
  *      when the script that defines them is not loaded.
+ *  P9  Old recurring invoices (made before the recurring flags existed) are tagged and linked to their
+ *      template, so they leave Invoices and show under Recurring Invoices, like recurring bills.
  */
 (function () {
   "use strict";
@@ -488,6 +490,42 @@
     });
   }
 
+  /* ---------------- P9: old recurring invoices -> Recurring Invoices ---------------- */
+  /* Older versions saved generated invoices with no recurring flags, so Invoices still listed them.
+     Tag them (fromRecurring + recurringRef) so renderInvoices hides them and recurring-split.js lists them
+     under their template. Linked only when exactly one template matches (customer, then currency). */
+  function migrateOldRecurring() {
+    try {
+      var tpls = ls("recurringInvoices", []), invoices = ls("invoices", []);
+      if (!tpls.length || !invoices.length) return false;
+      var tnums = {}; tpls.forEach(function (t) { if (t) tnums[String(t.number)] = 1; });
+      var low = function (x) { return String(x == null ? "" : x).trim().toLowerCase(); }, changed = false;
+      invoices.forEach(function (i) {
+        if (!i || i.fromBulk || i.isBulk || i.source === "bulk") return;
+        if (i.recurringRef != null && i.recurringRef !== "") { if (!i.fromRecurring) { i.fromRecurring = true; changed = true; } return; }
+        var no = String(i.invoiceNumber || "");
+        var old = (/^RINV-/.test(no) && !tnums[no]) || i.source === "Recurring Invoice" || i.recurringRunNumber;
+        if (!old) return;
+        var c = tpls.filter(function (t) { return t && low(t.customerName || t.customer) === low(i.customer); });
+        if (c.length > 1) { var c2 = c.filter(function (t) { return (t.currency || "KES") === (i.currency || "KES"); }); if (c2.length) c = c2; }
+        if (c.length !== 1) return;
+        i.recurringRef = c[0].id; i.fromRecurring = true; changed = true;
+      });
+      if (changed) lsSet("invoices", invoices);
+      return changed;
+    } catch (e) { console.warn("[acacia-fixes] migrateOldRecurring", e); return false; }
+  }
+  function installRecurringMigration() {
+    var f = W.renderInvoices;
+    if (typeof f === "function" && !f.__acxRecMig) {
+      var w = function () { migrateOldRecurring(); return f.apply(this, arguments); };
+      Object.keys(f).forEach(function (k) { try { w[k] = f[k]; } catch (x) {} });
+      w.__acxRecMig = true;
+      W.renderInvoices = w;
+    }
+    if (migrateOldRecurring()) { call("renderInvoices"); call("renderRecurringInvoices"); }
+  }
+
   /* ---------------- install ---------------- */
   function install() {
     try {
@@ -498,6 +536,7 @@
       installClones();
       installBulk();
       installMissing();
+      installRecurringMigration();
       wrapAll();                 // afterChange around everything (outermost)
     } catch (e) { console.error("[acacia-fixes] install failed", e); }
   }
