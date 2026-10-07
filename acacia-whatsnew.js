@@ -80,8 +80,13 @@
   }
   async function register(id){
     var r = await fetch(CFG.url + '/rest/v1/acacia_webinar_registrations?on_conflict=webinar_id,login_id', { method: 'POST', headers: hd({ Prefer: 'resolution=ignore-duplicates,return=minimal' }), body: JSON.stringify({ webinar_id: id, login_id: String(CFG.loginId).toLowerCase(), user_name: CFG.userName || '', company_id: String(CFG.companyId || '') }) }).catch(function(){ return null; });
-    if (r && r.ok) { var l = jg(K('r')); l.push(id); js(K('r'), l); N[id] = (N[id] || 0) + 1; toast("You're registered. The join link opens 15 minutes before the start."); }
-    else { var t = r ? await r.text() : ''; toast(/full/i.test(t) ? 'Sorry, this session is full.' : 'Could not register. Please try again.'); }
+    if (r && r.ok) { var l = jg(K('r')); if (l.indexOf(id) < 0) l.push(id); js(K('r'), l); N[id] = (N[id] || 0) + 1; toast("You're registered. The join link opens 15 minutes before the start."); }
+    else {
+      var t = ''; try { t = r ? await r.text() : ''; } catch(e){}
+      var why = ''; try { var j = JSON.parse(t); why = j.message || j.hint || ''; } catch(e){ why = t; }
+      console.error('[AcaciaWhatsNew] register failed', r ? r.status : 'network error', t);
+      toast(/full/i.test(t) ? 'Sorry, this session is full.' : !r ? 'Could not reach the server. Check your internet and try again.' : 'Could not register (' + r.status + '): ' + String(why || 'unknown error').slice(0, 140));
+    }
     draw();
   }
   function ics(id){
@@ -101,7 +106,11 @@
     dot(); draw();
     if (!popped && unseen().a.length) { popped = true; tab = 'new'; setTimeout(function(){ toggle(true); }, 1200); }
     var reg = jg(K('r'));
-    W.forEach(function(x){ var d = new Date(x.starts_at) - Date.now(); if (reg.indexOf(x.id) > -1 && d > 0 && d < 30 * 60000 && !warned[x.id]) { warned[x.id] = 1; toast('Training "' + x.title + '" starts soon. Open the bell to join.'); } });
+    W.forEach(function(x){
+      var d = new Date(x.starts_at) - Date.now(); if (reg.indexOf(x.id) < 0 || d <= 0) return;
+      if (d < 30 * 60000) { if (!warned[x.id]) { warned[x.id] = 1; toast('Training "' + x.title + '" starts soon. Open the bell to join.'); } }
+      else if (d < 24 * 3600000) { var k24 = K('d') + '_' + x.id; if (!warned[k24] && !localStorage.getItem(k24)) { warned[k24] = 1; try { localStorage.setItem(k24, '1'); } catch(e){} toast('Reminder: training "' + x.title + '" is on ' + dt(x.starts_at) + '. Open the bell for details.'); } }
+    });
   }
   w.AcaciaWhatsNew = {
     init: function(o){
