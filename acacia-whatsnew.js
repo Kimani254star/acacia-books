@@ -1,4 +1,5 @@
 /* Acacia Books: "What's new" bell + Training (webinars). No dependencies.
+   Books only DISPLAYS announcements and webinars. They are written in the Support Hub (Releases / Webinars).
    Add <script src="acacia-whatsnew.js" defer></script>, then after login call:
    AcaciaWhatsNew.init({ loginId:'user@email', companyId:'COMPANY_ID', userName:'Jane', mount:'#topbar' }) */
 (function(w){
@@ -10,8 +11,9 @@
   var jg = function(k){ try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch(e){ return []; } };
   var js = function(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
   var hd = function(x){ return Object.assign({ apikey: CFG.key, Authorization: 'Bearer ' + CFG.key, 'Content-Type': 'application/json' }, x || {}); };
-  var get = function(p){ return fetch(CFG.url + '/rest/v1/' + p, { headers: hd() }).then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }); };
-  var mine = function(r){ return !r.company_ids || !r.company_ids.length || r.company_ids.indexOf(String(CFG.companyId)) > -1; };
+  var get = function(p){ return fetch(CFG.url + '/rest/v1/' + p, { headers: hd() }).then(function(r){ if (!r.ok) { r.text().then(function(t){ console.warn('[AcaciaWhatsNew] could not read ' + p.split('?')[0] + ' (' + r.status + '). Run acacia_webinars_fix.sql in Supabase.', t); }); return []; } return r.json(); }).catch(function(){ return []; });};
+  var norm = function(x){ return String(x == null ? '' : x).trim().toLowerCase(); };
+  var mine = function(r){ return !r.company_ids || !r.company_ids.length || r.company_ids.map(norm).indexOf(norm(CFG.companyId)) > -1; };
   var dt = function(d){ return new Date(d).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }); };
   var end = function(x){ return new Date(x.starts_at).getTime() + (x.duration_min || 60) * 60000; };
 
@@ -103,8 +105,13 @@
     A = r[0].filter(mine);
     W = r[1].filter(mine).sort(function(a, b){ var da = end(a) < Date.now(), db = end(b) < Date.now(); return da === db ? (da ? new Date(b.starts_at) - new Date(a.starts_at) : new Date(a.starts_at) - new Date(b.starts_at)) : da - db; });
     N = {}; (r[2] || []).forEach(function(c){ N[c.webinar_id] = Number(c.n); });
+    try {
+      var mr = await fetch(CFG.url + '/rest/v1/rpc/acx_my_webinars', { method: 'POST', headers: hd(), body: JSON.stringify({ p_login: String(CFG.loginId).toLowerCase() }) }).then(function(x){ return x.ok ? x.json() : null; }).catch(function(){ return null; });
+      if (Array.isArray(mr)) { var ids = mr.map(function(x){ return x && x.webinar_id ? x.webinar_id : x; }); var keep = jg(K('r')); ids.forEach(function(i){ if (keep.indexOf(i) < 0) keep.push(i); }); js(K('r'), keep); }
+    } catch(e){}
     dot(); draw();
-    if (!popped && unseen().a.length) { popped = true; tab = 'new'; setTimeout(function(){ toggle(true); }, 1200); }
+    var un = unseen();
+    if (!popped && (un.a.length || un.w.length)) { popped = true; tab = un.a.length ? 'new' : 'train'; setTimeout(function(){ toggle(true); }, 1200); }
     var reg = jg(K('r'));
     W.forEach(function(x){
       var d = new Date(x.starts_at) - Date.now(); if (reg.indexOf(x.id) < 0 || d <= 0) return;
@@ -112,26 +119,6 @@
       else if (d < 24 * 3600000) { var k24 = K('d') + '_' + x.id; if (!warned[k24] && !localStorage.getItem(k24)) { warned[k24] = 1; try { localStorage.setItem(k24, '1'); } catch(e){} toast('Reminder: training "' + x.title + '" is on ' + dt(x.starts_at) + '. Open the bell for details.'); } }
     });
   }
-  /* Change tracking: once every 6 hours per browser, tell Support which Books files have a new version (cheap HEAD requests, no file downloads) */
-  setTimeout(async function(){ try {
-    var TK = 'awn_track_t'; if (Date.now() - Number(localStorage.getItem(TK) || 0) < 6 * 3600000) return;
-    var base = (w.__SUPA_URL__ || 'https://xglsampckermarjpczdf.supabase.co'), key = (w.__SUPA_KEY__ || 'sb_publishable_x-dPR7pzhvJgag9soW0I8w_yfKTmi6A');
-    var urls = [location.href.split('#')[0].split('?')[0]].concat(Array.prototype.map.call(document.querySelectorAll('script[src],link[rel=stylesheet][href]'), function(e){ return e.src || e.href; }));
-    var seen = {}, files = [];
-    for (var i = 0; i < urls.length; i++) {
-      var u; try { u = new URL(urls[i], location.href); } catch(e){ continue; }
-      if (u.origin !== location.origin) continue;
-      var name = u.pathname.replace(/^\//, '') || 'index.html'; if (/\/$/.test(u.pathname)) name = (name + 'index.html').replace(/^\//, ''); if (seen[name]) continue; seen[name] = 1;
-      var r = await fetch(u.href.split('?')[0], { method: 'HEAD', cache: 'no-cache' }).catch(function(){ return null; });
-      if (!r || !r.ok) continue;
-      var len = r.headers.get('content-length') || '', lm = r.headers.get('last-modified') || '', et = (r.headers.get('etag') || '').replace(/^W\//, '');
-      var sig = (lm || et) ? (lm || et) + '|' + len : ''; if (!sig) continue;
-      files.push({ file: name, sig: sig, size: len });
-    }
-    if (!files.length) return;
-    var rr = await fetch(base + '/rest/v1/rpc/acx_books_report', { method: 'POST', headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: files }) }).catch(function(){ return null; });
-    if (rr && rr.ok) localStorage.setItem(TK, String(Date.now()));
-  } catch(e){} }, 15000);
   w.AcaciaWhatsNew = {
     init: function(o){
       if (!o || !o.loginId) return console.warn('[AcaciaWhatsNew] loginId is required');
@@ -146,14 +133,14 @@
     var last = '';
     setInterval(function(){
       var u = null; try { u = JSON.parse(localStorage.getItem('loggedInUser') || 'null'); } catch(e){}
-      var key = u && u.email && u.companyId ? String(u.email).toLowerCase() + '|' + u.companyId : '';
+      var lid = u && (u.email || u.username); var key = lid && u.companyId ? String(lid).toLowerCase() + '|' + u.companyId : '';
       var lay = document.getElementById('layout'); if (lay && lay.classList.contains('hidden')) key = '';
       if (key === last) return; last = key;
       var b = $('#awnBell'), p = $('#awnPanel');
       if (!key) { if (b) b.style.display = 'none'; if (p) p.classList.remove('open'); return; }
       if (b) b.style.display = '';
       A = []; W = []; popped = false;
-      w.AcaciaWhatsNew.init({ loginId: u.email, companyId: u.companyId, userName: u.fullName || u.name || '', mount: '#awnMount' });
+      w.AcaciaWhatsNew.init({ loginId: lid, companyId: u.companyId, userName: u.fullName || u.name || '', mount: '#awnMount' });
     }, 2000);
   }
 })(window);
