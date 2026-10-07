@@ -414,6 +414,8 @@ try{
   function nextNumber() {
     var max = 0;
     list().forEach(function (r) { var m = /(\d+)$/.exec(String(r.number || "")); if (m) max = Math.max(max, parseInt(m[1], 10)); });
+    /* generated bills share the RBIL series, so a new template never reuses a generated bill's number */
+    jget("bills", []).forEach(function (b) { var m = /^RBIL-(?:[A-Za-z]+\d*-)?(\d+)$/.exec(String((b && b.billNumber) || "")); if (m) max = Math.max(max, parseInt(m[1], 10)); });
     return "RBIL-" + pad(max + 1, 5);
   }
 
@@ -494,6 +496,8 @@ try{
     var used = {}; bills.forEach(function (b) { used[b.billNumber] = 1; });
     /* recurring bills use their own RBIL- series so they never mix with the normal BIL- / bulk BBIL- numbers */
     var rbMax = 0; bills.forEach(function (b) { var m = /^RBIL-(?:[A-Za-z]+\d*-)?(\d+)$/.exec(String(b.billNumber || "")); if (m) rbMax = Math.max(rbMax, parseInt(m[1], 10)); });
+    /* generated bills continue after the template numbers (RBIL-00001 template -> first bill RBIL-00002) */
+    list().forEach(function (r) { var m = /^RBIL-(?:[A-Za-z]+\d*-)?(\d+)$/.exec(String((r && r.number) || "")); if (m) rbMax = Math.max(rbMax, parseInt(m[1], 10)); });
     var no = "RBIL-" + pad(rbMax + 1, 5);
     while (used[no]) { rbMax++; no = "RBIL-" + pad(rbMax + 1, 5); }
     var rate = num(rb.currencyRate) || 1;
@@ -757,8 +761,7 @@ try{
     var frag = document.createDocumentFragment();
     mine.forEach(function (o) {
       var b = o.b, paid = num(b.paidAmount), tr = document.createElement("tr");
-      tr.style.background = "#f8fafc";
-      tr.innerHTML = "<td></td><td>&#8627; " + esc(b.billNumber) + "</td><td>" + esc(b.date) + "</td><td>" + esc(b.supplier) + "</td><td>Due " + esc(b.due || "-") + "</td><td>Paid " + fmt(paid) + "</td><td>" + fmt(b.total) + "</td><td>Bal " + fmt(num(b.total) - paid) + "</td><td>" + billStatus(b) + '</td><td style="white-space:nowrap">' + billBtns(o.i) + "</td>";
+      tr.innerHTML = "<td></td><td>" + esc(b.billNumber) + "</td><td>" + esc(b.date) + "</td><td>" + esc(b.supplier) + "</td><td>Due " + esc(b.due || "-") + "</td><td>Paid " + fmt(paid) + "</td><td>" + fmt(b.total) + "</td><td>Bal " + fmt(num(b.total) - paid) + "</td><td>" + billStatus(b) + '</td><td style="white-space:nowrap">' + billBtns(o.i) + "</td>";
       frag.appendChild(tr);
     });
     return frag;
@@ -814,6 +817,12 @@ try{
       tb.appendChild(tr);
       var br = billsRow(r, allBills); if (br) tb.appendChild(br);
     });
+    /* generated bills are their own RBIL- entries: list everything in number order instead of nesting under the template */
+    if (!sortKey) {
+      var flat = Array.prototype.slice.call(tb.children).map(function (tr, i) { var m = /(\d+)\s*$/.exec(tr.cells[1] ? tr.cells[1].textContent : ""); return { tr: tr, i: i, n: m ? parseInt(m[1], 10) : 1e12 }; });
+      flat.sort(function (x, y) { return x.n - y.n || x.i - y.i; });
+      flat.forEach(function (o) { tb.appendChild(o.tr); });
+    }
     var set = function (id, t) { var el = $(id); if (el) el.textContent = t; };
     set("rbTotalCount", n); set("rbPageInfo", n ? (s + 1) + " - " + Math.min(e, n) + " of " + n : "0 - 0");
     var p = $("rbPrevBtn"), nx = $("rbNextBtn"); if (p) p.disabled = page <= 1; if (nx) nx.disabled = page >= pages;
