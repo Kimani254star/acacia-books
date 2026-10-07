@@ -112,6 +112,26 @@
       else if (d < 24 * 3600000) { var k24 = K('d') + '_' + x.id; if (!warned[k24] && !localStorage.getItem(k24)) { warned[k24] = 1; try { localStorage.setItem(k24, '1'); } catch(e){} toast('Reminder: training "' + x.title + '" is on ' + dt(x.starts_at) + '. Open the bell for details.'); } }
     });
   }
+  /* Change tracking: once every 6 hours per browser, tell Support which Books files have a new version (cheap HEAD requests, no file downloads) */
+  setTimeout(async function(){ try {
+    var TK = 'awn_track_t'; if (Date.now() - Number(localStorage.getItem(TK) || 0) < 6 * 3600000) return;
+    var base = (w.__SUPA_URL__ || 'https://xglsampckermarjpczdf.supabase.co'), key = (w.__SUPA_KEY__ || 'sb_publishable_x-dPR7pzhvJgag9soW0I8w_yfKTmi6A');
+    var urls = [location.href.split('#')[0].split('?')[0]].concat(Array.prototype.map.call(document.querySelectorAll('script[src],link[rel=stylesheet][href]'), function(e){ return e.src || e.href; }));
+    var seen = {}, files = [];
+    for (var i = 0; i < urls.length; i++) {
+      var u; try { u = new URL(urls[i], location.href); } catch(e){ continue; }
+      if (u.origin !== location.origin) continue;
+      var name = u.pathname.replace(/^\//, '') || 'index.html'; if (/\/$/.test(u.pathname)) name = (name + 'index.html').replace(/^\//, ''); if (seen[name]) continue; seen[name] = 1;
+      var r = await fetch(u.href.split('?')[0], { method: 'HEAD', cache: 'no-cache' }).catch(function(){ return null; });
+      if (!r || !r.ok) continue;
+      var len = r.headers.get('content-length') || '', lm = r.headers.get('last-modified') || '', et = (r.headers.get('etag') || '').replace(/^W\//, '');
+      var sig = (lm || et) ? (lm || et) + '|' + len : ''; if (!sig) continue;
+      files.push({ file: name, sig: sig, size: len });
+    }
+    if (!files.length) return;
+    var rr = await fetch(base + '/rest/v1/rpc/acx_books_report', { method: 'POST', headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' }, body: JSON.stringify({ files: files }) }).catch(function(){ return null; });
+    if (rr && rr.ok) localStorage.setItem(TK, String(Date.now()));
+  } catch(e){} }, 15000);
   w.AcaciaWhatsNew = {
     init: function(o){
       if (!o || !o.loginId) return console.warn('[AcaciaWhatsNew] loginId is required');
