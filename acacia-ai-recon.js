@@ -136,8 +136,8 @@
     p = D.createElement("div"); p.id = "aiReconPanel"; p.className = "rc-card";
     p.innerHTML =
       '<div class="rc-head sm"><div><h4 class="rc-h4">✨ AI statement matching</h4>' +
-      '<p class="rc-sub">Upload a bank statement (CSV, Excel or PDF). AI matches money in to open invoices and money out to open bills. Confident matches are marked paid automatically; the rest are flagged for you.</p></div>' +
-      '<div class="rc-actions"><button type="button" class="rc-btn" id="aiReconUpload">Upload statement</button>' +
+      '<p class="rc-sub">Pick a bank statement from your Files (CSV, Excel or PDF), or upload one. AI matches money in to open invoices and money out to open bills. Confident matches are marked paid automatically; the rest are flagged for you.</p></div>' +
+      '<div class="rc-actions"><button type="button" class="rc-btn" id="aiReconUpload">📂 Pick statement from Files</button>' +
       '<button type="button" class="rc-btn ghost sm" id="aiReconSettings" title="AI service address">⚙</button></div></div>' +
       '<input type="file" id="aiReconFile" accept=".csv,.txt,.xlsx,.xls,.pdf" style="display:none">' +
       '<div id="aiReconStatus" class="rc-notice hidden" role="status"></div><div id="aiReconResult"></div>';
@@ -146,6 +146,7 @@
       var bank = (D.getElementById("reconcileBank") || {}).value;
       if (!bank) return status("Choose a bank account above first.", "warn");
       if (!serviceUrl()) { askUrl(); if (!serviceUrl()) return; }
+      if (W.AcaciaFundsPatch && typeof W.AcaciaFundsPatch.pickForAI === "function") { W.AcaciaFundsPatch.pickForAI(function (file) { run(file); }); return; }
       var f = D.getElementById("aiReconFile"); f.value = ""; f.click();
     };
     D.getElementById("aiReconSettings").onclick = askUrl;

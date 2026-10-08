@@ -1250,3 +1250,530 @@ try{
 })();
 
 }catch(e){console.error('[recycle-restore]',e)}
+;
+/* acacia-funds-patch.js
+ * 1. Funds > Bank List: tick boxes + "Delete selected" (bulk delete).
+ * 2. Funds > Bank List: "Merge duplicates" for bank accounts that share the same name.
+ * 3. Funds > Reconciliation: statements are picked from the File Manager store
+ *    (or uploaded from the device, which also saves a copy to the store), and a
+ *    statement can be attached to the reconciliation.
+ * Load AFTER app-2.js, app-3.js and acacia-ai-recon.js.
+ */
+(function () {
+  "use strict";
+  var W = window, D = document;
+  var FOLDER = "Bank Statements";
+  var STATEMENT_RE = /\.(csv|txt|xlsx|xls|pdf)$/i;
+
+  /* ---------- helpers ---------- */
+  function J(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function S(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function num(v) { var n = parseFloat(String(v == null ? "" : v).replace(/[^0-9.\-]/g, "")); return isNaN(n) ? 0 : n; }
+  function fmt(n) { var dp = W.__getDecimalPlaces ? W.__getDecimalPlaces() : 2; return Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: dp, maximumFractionDigits: dp }); }
+  function normName(s) { return String(s || "").replace(/\s+/g, " ").trim().toLowerCase(); }
+  function isSystemBank(b) { return !b || b.system || b.name === "Undeposited Funds" || b.name === "Petty Cash"; }
+  function allowed(action, label) {
+    try { if (typeof W.requirePermission === "function") return !!W.requirePermission("fundsTab", action, label); } catch (e) {}
+    return true;
+  }
+  function toast(msg, kind) {
+    var t = D.createElement("div");
+    t.className = "afp-toast afp-" + (kind || "ok"); t.textContent = msg;
+    D.body.appendChild(t);
+    setTimeout(function () { t.style.opacity = "0"; setTimeout(function () { t.remove(); }, 300); }, 3200);
+  }
+  function kes(amount, cur) { try { return typeof convertToKES === "function" ? convertToKES(amount, cur) : num(amount); } catch (e) { return num(amount); } }
+
+  /* ---------- styles ---------- */
+  (function css() {
+    var s = D.createElement("style");
+    s.textContent =
+      ".afp-pick{display:flex;align-items:center;gap:6px;font-size:.72rem;color:#6b7280;cursor:pointer}" +
+      ".afp-pick input{width:15px;height:15px;cursor:pointer}" +
+      ".afp-dup{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:.64rem;font-weight:700}" +
+      ".funds-bank-card.afp-selected{border-color:#1e3a8a;background:#eff6ff}" +
+      ".afp-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}" +
+      ".afp-bar button{border:none;border-radius:8px;padding:6px 12px;font-size:.78rem;font-weight:600;cursor:pointer;background:#1e3a8a;color:#fff}" +
+      ".afp-bar button.afp-danger{background:#b91c1c}" +
+      ".afp-bar button.afp-ghost{background:#fff;color:#1e3a8a;border:1px solid #c7d2fe}" +
+      ".afp-bar button[disabled]{opacity:.45;cursor:not-allowed}" +
+      ".afp-bar label{font-size:.78rem;display:flex;align-items:center;gap:6px;cursor:pointer}" +
+      ".afp-ov{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:100000;display:flex;align-items:center;justify-content:center;padding:14px}" +
+      ".afp-modal{background:#fff;color:#111827;border-radius:12px;max-width:620px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.3)}" +
+      ".afp-modal h3{margin:0;padding:14px 16px 4px;font-size:1rem;font-weight:700}" +
+      ".afp-modal .afp-sub{padding:0 16px 8px;font-size:.78rem;color:#6b7280}" +
+      ".afp-body{padding:4px 16px;overflow:auto;flex:1}" +
+      ".afp-foot{padding:12px 16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;border-top:1px solid #e5e7eb}" +
+      ".afp-btn{border:1px solid #1e3a8a;background:#1e3a8a;color:#fff;border-radius:8px;padding:7px 14px;font-size:.82rem;font-weight:600;cursor:pointer}" +
+      ".afp-btn.ghost{background:#fff;color:#1e3a8a}" +
+      ".afp-btn.danger{background:#b91c1c;border-color:#b91c1c}" +
+      ".afp-in{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;font-size:.84rem;margin:6px 0;background:#fff;color:#111827}" +
+      ".afp-file{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:9px 10px;border:1px solid #e5e7eb;border-radius:8px;margin:6px 0;cursor:pointer}" +
+      ".afp-file:hover{border-color:#93c5fd;background:#eff6ff}" +
+      ".afp-file b{font-size:.84rem;word-break:break-all}" +
+      ".afp-file small{display:block;color:#6b7280;font-size:.72rem}" +
+      ".afp-grp{border:1px solid #e5e7eb;border-radius:8px;padding:9px 10px;margin:8px 0;font-size:.82rem}" +
+      ".afp-grp small{display:block;color:#6b7280;margin-top:3px}" +
+      ".afp-empty{padding:18px 6px;text-align:center;color:#6b7280;font-size:.84rem}" +
+      ".afp-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid #c7d2fe;background:#eef2ff;border-radius:999px;padding:4px 6px 4px 12px;font-size:.78rem;max-width:100%}" +
+      ".afp-chip a,.afp-chip button{background:none;border:none;color:#1e3a8a;font-weight:700;cursor:pointer;font-size:.78rem;padding:2px 4px}" +
+      ".afp-attach{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}" +
+      ".afp-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:100001;padding:10px 16px;border-radius:8px;font-size:.84rem;color:#fff;background:#166534;box-shadow:0 6px 18px rgba(0,0,0,.25);transition:opacity .3s}" +
+      ".afp-toast.afp-warn{background:#b45309}.afp-toast.afp-err{background:#b91c1c}" +
+      "html.dark .afp-modal,[data-theme=dark] .afp-modal,[data-theme=amoled] .afp-modal,[data-theme=solar-dark] .afp-modal{background:#1f2937;color:#f3f4f6}" +
+      "html.dark .afp-in,[data-theme=dark] .afp-in,[data-theme=amoled] .afp-in,[data-theme=solar-dark] .afp-in{background:#111827;color:#f3f4f6;border-color:#374151}" +
+      "html.dark .afp-file,html.dark .afp-grp,[data-theme=dark] .afp-file,[data-theme=dark] .afp-grp{border-color:#374151}" +
+      "html.dark .afp-foot,[data-theme=dark] .afp-foot{border-color:#374151}" +
+      "html.dark .afp-btn.ghost,[data-theme=dark] .afp-btn.ghost{background:#111827;color:#93c5fd}";
+    D.head.appendChild(s);
+  })();
+
+  /* ---------- modal ---------- */
+  function modal(title, sub, bodyHTML, footHTML) {
+    close();
+    var ov = D.createElement("div"); ov.className = "afp-ov"; ov.id = "afpOverlay";
+    ov.innerHTML = '<div class="afp-modal" role="dialog" aria-modal="true"><h3>' + esc(title) + "</h3>" +
+      (sub ? '<div class="afp-sub">' + sub + "</div>" : "") + '<div class="afp-body">' + bodyHTML + '</div><div class="afp-foot">' + (footHTML || "") + "</div></div>";
+    ov.addEventListener("mousedown", function (e) { if (e.target === ov) close(); });
+    D.body.appendChild(ov);
+    return ov;
+  }
+  function close() { var o = D.getElementById("afpOverlay"); if (o) o.remove(); }
+  D.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+
+  /* =====================================================================
+   * PART 1 + 2: Bank list — bulk delete and merge same-name accounts
+   * ===================================================================== */
+  var selected = {}; // bank name+index key -> true
+
+  function getBanks() {
+    var list = J("banks", []);
+    try { if (typeof banks !== "undefined" && Array.isArray(banks)) { banks = list; } } catch (e) {}
+    return list;
+  }
+  function commitBanks(list) {
+    try { if (typeof banks !== "undefined") banks = list; } catch (e) {}
+    if (typeof saveBanks === "function") { try { saveBanks(); return; } catch (e) {} }
+    S("banks", list);
+    ["renderBankTable", "updateBankDropdowns"].forEach(function (n) { try { if (typeof W[n] === "function") W[n](); } catch (e) {} });
+  }
+  function afterBankChange() {
+    ["syncBankBalancesToCOA", "updateBalanceSheetFromChart", "renderBalanceSheet", "renderOpeningBalances", "renderAccounts", "updateBankSummary", "populateReconcileBankDropdown"].forEach(function (n) {
+      try { if (typeof W[n] === "function") W[n](); } catch (e) {}
+    });
+    try { if (W.FundsRecon) W.FundsRecon.refresh(); } catch (e) {}
+  }
+  /* Receipts keep a bankIndex; after accounts are removed the positions shift. */
+  function remapBankIndexes(oldList, newList) {
+    ["receipts", "customerPayments", "billPayments", "supplierPayments"].forEach(function (key) {
+      var arr = J(key, []), dirty = false;
+      arr.forEach(function (r) {
+        if (!r || r.bankIndex === undefined || r.bankIndex === "" || r.bankIndex === null) return;
+        var old = oldList[r.bankIndex]; if (!old) return;
+        var ni = newList.findIndex(function (b) { return b && normName(b.name) === normName(old.name); });
+        if (ni < 0) { if (!r.bankName) r.bankName = old.name; r.bankIndex = ""; dirty = true; }
+        else if (String(ni) !== String(r.bankIndex)) { r.bankIndex = ni; dirty = true; }
+      });
+      if (dirty) S(key, arr);
+    });
+  }
+  function adjustCOA(chartName, deltaKES) {
+    if (!chartName || !deltaKES) return;
+    var coa = J("chartOfAccounts", []);
+    var acc = coa.find(function (a) { return a && (a.name === chartName || a.code === chartName); });
+    if (acc) { acc.amount = (acc.amount || 0) + deltaKES; S("chartOfAccounts", coa); }
+  }
+
+  function bulkDelete() {
+    var list = getBanks();
+    var idxs = Object.keys(selected).map(Number).filter(function (i) { return list[i] && !isSystemBank(list[i]); }).sort(function (a, b) { return b - a; });
+    if (!idxs.length) return toast("Tick the accounts you want to delete first.", "warn");
+    if (!allowed("delete", "delete funds accounts")) return;
+    var names = idxs.slice().reverse().map(function (i) { return list[i].name; });
+    if (!confirm("Delete " + idxs.length + " bank account(s)?\n\n" + names.slice(0, 12).join("\n") + (names.length > 12 ? "\n…and " + (names.length - 12) + " more" : "") + "\n\nThey will be moved to the Recycle Bin.")) return;
+    var oldList = list.slice();
+    idxs.forEach(function (i) {
+      var b = list[i];
+      adjustCOA(b.chartAccount, -kes(b.balance, b.currency));
+      if (!b.id) { try { b.id = crypto.randomUUID(); } catch (e) { b.id = "bk-" + Date.now() + "-" + i; } }
+      try { if (typeof moveToRecycle === "function") moveToRecycle(b, "File", "Banks"); } catch (e) {}
+      list.splice(i, 1);
+    });
+    remapBankIndexes(oldList, list);
+    selected = {};
+    commitBanks(list);
+    afterBankChange();
+    toast(idxs.length + " bank account(s) moved to the Recycle Bin.");
+  }
+
+  function dupGroups() {
+    var list = getBanks(), map = {};
+    list.forEach(function (b, i) {
+      if (isSystemBank(b)) return;
+      var k = normName(b.name); if (!k) return;
+      (map[k] = map[k] || []).push(i);
+    });
+    return Object.keys(map).filter(function (k) { return map[k].length > 1; }).map(function (k) { return map[k]; });
+  }
+
+  function openMerge() {
+    var list = getBanks(), groups = dupGroups();
+    if (!groups.length) return toast("No bank accounts share the same name.", "info");
+    if (!allowed("edit", "merge funds accounts")) return;
+    var body = groups.map(function (g, gi) {
+      var first = list[g[0]];
+      var same = g.filter(function (i) { return (list[i].currency || "") === (first.currency || ""); });
+      var other = g.filter(function (i) { return same.indexOf(i) < 0; });
+      var total = same.reduce(function (s, i) { return s + num(list[i].balance); }, 0);
+      return '<label class="afp-grp" style="display:block;cursor:pointer"><input type="checkbox" data-afp-grp="' + gi + '" ' + (same.length > 1 ? "checked" : "disabled") + ' style="margin-right:8px">' +
+        "<b>" + esc(first.name) + "</b> — " + same.length + " accounts" +
+        "<small>" + same.map(function (i) { return esc((list[i].accountNumber || "no number") + " · " + (list[i].currency || "") + " " + fmt(num(list[i].balance))); }).join("<br>") + "</small>" +
+        "<small>Merged balance: <b>" + esc((first.currency || "") + " " + fmt(total)) + "</b> · kept as the first account" + (first.accountNumber ? " (" + esc(first.accountNumber) + ")" : "") + "</small>" +
+        (other.length ? '<small style="color:#b45309">' + other.length + " account(s) with a different currency stay separate.</small>" : "") + "</label>";
+    }).join("");
+    var ov = modal("Merge accounts with the same name",
+      "Balances are added together, transactions stay linked (they use the account name), and the extra accounts are removed. Merged copies are kept in <b>bankMergeLog</b> in case you need to check them.",
+      body, '<button class="afp-btn ghost" data-afp="close">Cancel</button><button class="afp-btn" data-afp="merge">Merge selected</button>');
+    ov.addEventListener("click", function (e) {
+      var a = e.target.getAttribute && e.target.getAttribute("data-afp");
+      if (a === "close") close();
+      if (a === "merge") {
+        var chosen = Array.prototype.map.call(ov.querySelectorAll("[data-afp-grp]:checked"), function (c) { return groups[+c.getAttribute("data-afp-grp")]; });
+        if (!chosen.length) return toast("Tick at least one group to merge.", "warn");
+        var n = mergeGroups(chosen); close();
+        toast(n + " duplicate account(s) merged.");
+      }
+    });
+  }
+
+  function mergeGroups(groups) {
+    var list = getBanks(), oldList = list.slice(), removed = {}, count = 0, log = J("bankMergeLog", []);
+    groups.forEach(function (g) {
+      var p = list[g[0]]; if (!p) return;
+      var dups = g.slice(1).filter(function (i) { return list[i] && (list[i].currency || "") === (p.currency || ""); });
+      if (!dups.length) return;
+      var extraNums = [];
+      dups.forEach(function (i) {
+        var d = list[i];
+        var dKES = kes(d.balance, d.currency);
+        if (d.chartAccount && d.chartAccount !== p.chartAccount) { adjustCOA(d.chartAccount, -dKES); adjustCOA(p.chartAccount, dKES); }
+        p.balance = num(p.balance) + num(d.balance);
+        if (d.accountNumber && d.accountNumber !== p.accountNumber) { if (!p.accountNumber) p.accountNumber = d.accountNumber; else extraNums.push(d.accountNumber); }
+        if (!p.chartAccount && d.chartAccount) p.chartAccount = d.chartAccount;
+        if (!p.link && d.link) p.link = d.link;
+        log.unshift({ at: new Date().toISOString(), mergedInto: p.name, account: d });
+        removed[i] = true; count++;
+      });
+      if (extraNums.length) p.mergedAccountNumbers = (p.mergedAccountNumbers || []).concat(extraNums);
+    });
+    var next = list.filter(function (_, i) { return !removed[i]; });
+    remapBankIndexes(oldList, next);
+    S("bankMergeLog", log.slice(0, 50));
+    selected = {};
+    commitBanks(next);
+    afterBankChange();
+    return count;
+  }
+
+  /* ---- decorate the bank list ---- */
+  function cardIndex(card) {
+    var btn = card.querySelector('button[onclick^="viewBank("]'); if (!btn) return -1;
+    var m = /viewBank\((\d+)\)/.exec(btn.getAttribute("onclick") || ""); return m ? +m[1] : -1;
+  }
+  function updateBar() {
+    var n = Object.keys(selected).length, del = D.getElementById("afpBulkDel"), mg = D.getElementById("afpMerge"), all = D.getElementById("afpSelAll");
+    if (del) { del.disabled = !n; del.textContent = "🗑 Delete selected" + (n ? " (" + n + ")" : ""); }
+    var g = dupGroups().length;
+    if (mg) { mg.style.display = g ? "" : "none"; mg.textContent = "🔗 Merge duplicates (" + g + ")"; }
+    if (all) {
+      var boxes = D.querySelectorAll("#bankTable .afp-pick input"), vis = Array.prototype.filter.call(boxes, function (b) { return b.closest(".funds-bank-card").style.display !== "none"; });
+      all.checked = vis.length > 0 && vis.every(function (b) { return b.checked; });
+    }
+  }
+  function decorate() {
+    var box = D.getElementById("bankTable"); if (!box) return;
+    var list = J("banks", []), counts = {};
+    list.forEach(function (b) { var k = normName(b && b.name); if (k && !isSystemBank(b)) counts[k] = (counts[k] || 0) + 1; });
+    Array.prototype.forEach.call(box.querySelectorAll(".funds-bank-card"), function (card) {
+      if (card.querySelector(".afp-pick")) return;
+      var i = cardIndex(card), b = list[i];
+      if (i < 0 || !b) return;
+      var nameEl = card.querySelector(".funds-bank-card-name");
+      if (counts[normName(b.name)] > 1 && nameEl && !nameEl.querySelector(".afp-dup")) nameEl.insertAdjacentHTML("beforeend", '<span class="afp-dup" title="Another account has the same name">Duplicate name</span>');
+      if (isSystemBank(b)) return;
+      var lab = D.createElement("label"); lab.className = "afp-pick";
+      lab.innerHTML = '<input type="checkbox"> Select';
+      var cb = lab.firstChild; cb.checked = !!selected[i];
+      card.classList.toggle("afp-selected", cb.checked);
+      cb.addEventListener("change", function () {
+        if (cb.checked) selected[i] = true; else delete selected[i];
+        card.classList.toggle("afp-selected", cb.checked); updateBar();
+      });
+      card.insertBefore(lab, card.firstChild);
+    });
+    ensureBar(); updateBar();
+  }
+  function ensureBar() {
+    if (D.getElementById("afpBar")) return;
+    var tools = D.querySelector("#bankListSection .funds-listtools"); if (!tools) return;
+    var bar = D.createElement("div"); bar.className = "afp-bar"; bar.id = "afpBar";
+    bar.innerHTML = '<label><input type="checkbox" id="afpSelAll"> Select all</label>' +
+      '<button type="button" class="afp-danger" id="afpBulkDel" disabled>🗑 Delete selected</button>' +
+      '<button type="button" class="afp-ghost" id="afpMerge" style="display:none">🔗 Merge duplicates</button>';
+    tools.parentNode.insertBefore(bar, tools.nextSibling);
+    D.getElementById("afpBulkDel").onclick = bulkDelete;
+    D.getElementById("afpMerge").onclick = openMerge;
+    D.getElementById("afpSelAll").onchange = function () {
+      var on = this.checked;
+      Array.prototype.forEach.call(D.querySelectorAll("#bankTable .funds-bank-card"), function (card) {
+        var cb = card.querySelector(".afp-pick input"); if (!cb || card.style.display === "none") return;
+        var i = cardIndex(card); cb.checked = on; card.classList.toggle("afp-selected", on);
+        if (on) selected[i] = true; else delete selected[i];
+      });
+      updateBar();
+    };
+  }
+  function hookBankList() {
+    if (typeof W.renderBankTable === "function" && !W.renderBankTable.__afp) {
+      var orig = W.renderBankTable;
+      W.renderBankTable = function () { var r = orig.apply(this, arguments); try { selected = pruneSelection(); decorate(); } catch (e) { console.error(e); } return r; };
+      W.renderBankTable.__afp = true;
+    }
+    if (typeof W.filterFundsBankList === "function" && !W.filterFundsBankList.__afp) {
+      var f = W.filterFundsBankList;
+      W.filterFundsBankList = function () { var r = f.apply(this, arguments); try { updateBar(); } catch (e) {} return r; };
+      W.filterFundsBankList.__afp = true;
+    }
+  }
+  function pruneSelection() {
+    var list = J("banks", []), out = {};
+    Object.keys(selected).forEach(function (i) { if (list[i] && !isSystemBank(list[i])) out[i] = true; });
+    return out;
+  }
+
+  /* =====================================================================
+   * PART 3: Reconciliation — pick statement from store / upload / attach
+   * ===================================================================== */
+  function fmStore() {
+    var s = J("fileManager", null);
+    if (!s || typeof s !== "object") s = { currentFolder: "Home", folders: [], files: [] };
+    if (!Array.isArray(s.files)) s.files = []; if (!Array.isArray(s.folders)) s.folders = [];
+    return s;
+  }
+  function storedStatements() {
+    return fmStore().files.filter(function (f) { return f && f.content && (STATEMENT_RE.test(f.name || "") || /csv|pdf|excel|spreadsheet/i.test(f.type || "")); })
+      .sort(function (a, b) { return (b.dateSort || 0) - (a.dateSort || 0); });
+  }
+  function dataUrlToFile(rec) {
+    return fetch(rec.content).then(function (r) { return r.blob(); }).then(function (blob) {
+      var type = rec.type && rec.type !== "file" ? rec.type : (/\.pdf$/i.test(rec.name) ? "application/pdf" : /\.csv$/i.test(rec.name) ? "text/csv" : blob.type);
+      return new File([blob], rec.name, { type: type });
+    });
+  }
+  function saveToStore(file) {
+    return new Promise(function (ok) {
+      var fr = new FileReader();
+      fr.onerror = function () { ok(null); };
+      fr.onload = function () {
+        var st = fmStore();
+        if (st.folders.indexOf(FOLDER) < 0) st.folders.push(FOLDER);
+        var rec = { id: "st" + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36), name: file.name, size: (file.size / 1024).toFixed(1) + " KB", bytes: file.size, type: file.type || "file", date: new Date().toLocaleString(), dateSort: Date.now(), folder: FOLDER, tags: ["bank-statement"], content: fr.result };
+        st.files.push(rec);
+        if (!S("fileManager", st)) { toast("Statement used, but there was not enough storage to keep a copy in Files.", "warn"); return ok(null); }
+        try { if (typeof W.renderFiles === "function") W.renderFiles(); } catch (e) {}
+        ok(rec);
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+
+  /* attachment reference per bank */
+  function attachKey() { return "reconStatementRef"; }
+  function currentBank() { var s = D.getElementById("reconcileBank"); return s ? s.value : ""; }
+  function getRef(bank) { return (J(attachKey(), {}))[bank] || null; }
+  function setRef(bank, ref) { var m = J(attachKey(), {}); if (ref) m[bank] = ref; else delete m[bank]; S(attachKey(), m); renderChip(); }
+  function openStored(ref) {
+    var rec = fmStore().files.find(function (f) { return f.id === ref.fileId; });
+    if (!rec) return toast("That statement is no longer in Files.", "warn");
+    fetch(rec.content).then(function (r) { return r.blob(); }).then(function (b) {
+      var url = URL.createObjectURL(b);
+      if (/pdf|image/i.test(b.type)) W.open(url, "_blank");
+      else { var a = D.createElement("a"); a.href = url; a.download = rec.name; a.click(); }
+    });
+  }
+  function renderChip() {
+    var host = D.getElementById("afpAttachRow"); if (!host) return;
+    var bank = currentBank(), ref = bank ? getRef(bank) : null;
+    host.innerHTML = '<button type="button" class="rc-btn ghost" id="afpAttachBtn">📎 ' + (ref ? "Replace statement" : "Attach statement") + "</button>" +
+      (ref ? '<span class="afp-chip">📄 ' + esc(ref.name) + ' <button type="button" id="afpChipOpen">Open</button><button type="button" id="afpChipX" title="Remove">✕</button></span>'
+        : '<span class="rc-sub" style="margin:0">Attach the bank statement you are reconciling against (kept in Files › ' + FOLDER + ").</span>");
+    D.getElementById("afpAttachBtn").onclick = function () {
+      if (!currentBank()) return toast("Choose a bank account first.", "warn");
+      pickStatement(null, { attachOnly: true });
+    };
+    var o = D.getElementById("afpChipOpen"); if (o) o.onclick = function () { openStored(ref); };
+    var x = D.getElementById("afpChipX"); if (x) x.onclick = function () { setRef(bank, null); };
+  }
+  function mountAttachRow() {
+    if (D.getElementById("afpAttachRow")) return true;
+    var setup = D.querySelector("#rcRoot .rc-setup"); if (!setup) return false;
+    var row = D.createElement("div"); row.className = "afp-attach"; row.id = "afpAttachRow";
+    setup.parentNode.insertBefore(row, setup.nextSibling);
+    var sel = D.getElementById("reconcileBank"); if (sel) sel.addEventListener("change", renderChip);
+    renderChip();
+    return true;
+  }
+
+  /* The picker. onPick(file, rec) receives a File ready to parse.  */
+  function pickStatement(onPick, opts) {
+    opts = opts || {};
+    var bank = currentBank();
+    var files = storedStatements();
+    var title = opts.attachOnly ? "Attach a statement" : "Choose a bank statement";
+    var sub = "Pick one from your Files, or upload a new one" + (bank ? " for <b>" + esc(bank) + "</b>" : "") + ".";
+    var ov = modal(title, sub,
+      '<input class="afp-in" id="afpSearch" placeholder="Search your files…">' +
+      '<div id="afpList"></div>',
+      '<label style="margin-right:auto;font-size:.78rem;display:flex;gap:6px;align-items:center"><input type="checkbox" id="afpKeep" checked> Save uploads to Files</label>' +
+      '<input type="file" id="afpDevice" accept=".csv,.txt,.xlsx,.xls,.pdf" style="display:none">' +
+      '<button class="afp-btn ghost" data-afp="close">Cancel</button><button class="afp-btn" data-afp="device">⬆ Upload from device</button>');
+    function draw() {
+      var q = (D.getElementById("afpSearch").value || "").trim().toLowerCase();
+      var rows = files.filter(function (f) { return !q || (f.name + " " + (f.folder || "") + " " + (f.tags || []).join(" ")).toLowerCase().indexOf(q) >= 0; });
+      D.getElementById("afpList").innerHTML = rows.length ? rows.map(function (f) {
+        return '<div class="afp-file" data-afp-file="' + esc(f.id) + '"><div><b>' + esc(f.name) + "</b><small>" + esc(f.folder || "Home") + " · " + esc(f.size || "") + " · " + esc(f.date || "") + '</small></div><span class="afp-btn" style="pointer-events:none">Use</span></div>';
+      }).join("") : '<div class="afp-empty">' + (files.length ? "No files match your search." : "No statements in Files yet. Upload one from your device and it will be saved here.") + "</div>";
+    }
+    draw();
+    D.getElementById("afpSearch").oninput = draw;
+    function finish(file, rec) {
+      close();
+      if (rec && bank) setRef(bank, { fileId: rec.id, name: rec.name, at: Date.now() });
+      if (opts.attachOnly) return toast("Statement attached.");
+      if (typeof onPick === "function") onPick(file, rec);
+    }
+    ov.addEventListener("click", function (e) {
+      var t = e.target, a = t.getAttribute && t.getAttribute("data-afp");
+      if (a === "close") return close();
+      if (a === "device") return D.getElementById("afpDevice").click();
+      var row = t.closest && t.closest("[data-afp-file]");
+      if (row) {
+        var rec = files.find(function (f) { return f.id === row.getAttribute("data-afp-file"); });
+        if (rec) dataUrlToFile(rec).then(function (file) { finish(file, rec); }).catch(function () { toast("Could not open that file.", "err"); });
+      }
+    });
+    D.getElementById("afpDevice").onchange = function () {
+      var f = this.files[0]; if (!f) return;
+      if (!STATEMENT_RE.test(f.name)) return toast("Use a CSV, Excel or PDF statement.", "warn");
+      if (D.getElementById("afpKeep").checked) saveToStore(f).then(function (rec) { finish(f, rec); });
+      else finish(f, null);
+    };
+  }
+
+  function hookRecon() {
+    mountAttachRow();
+    /* header "Import statement" -> picker -> existing importer */
+    if (W.FundsRecon && !W.FundsRecon.__afp) {
+      W.FundsRecon.__afp = true;
+      W.FundsRecon.pickStatement = function () {
+        if (!currentBank()) return toast("Choose a bank account first.", "warn");
+        if (!allowed("add", "import bank statements")) return;
+        pickStatement(function (file) {
+          var input = D.getElementById("rcStatementFile"); if (!input) return;
+          try { var dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; input.dispatchEvent(new Event("change", { bubbles: true })); }
+          catch (e) { toast("Could not hand the file to the importer.", "err"); }
+        });
+      };
+      var fin = W.FundsRecon.finish;
+      if (typeof fin === "function") W.FundsRecon.finish = wrapFinish(fin);
+    }
+    if (typeof W.reconcileBankAccount === "function" && !W.reconcileBankAccount.__afp) W.reconcileBankAccount = wrapFinish(W.reconcileBankAccount);
+    /* AI panel uses the same picker */
+    W.AcaciaFundsPatch.pickForAI = function (cb) { pickStatement(cb); };
+  }
+  function wrapFinish(fn) {
+    var w = function () {
+      var bank = currentBank(), ref = bank ? getRef(bank) : null, before = J("bankReconciliations", []).length;
+      var r = fn.apply(this, arguments);
+      try {
+        var after = J("bankReconciliations", []);
+        if (ref && after.length > before) {
+          for (var i = before; i < after.length; i++) after[i].statementFile = { fileId: ref.fileId, name: ref.name };
+          S("bankReconciliations", after); setRef(bank, null);
+        }
+      } catch (e) {}
+      return r;
+    };
+    w.__afp = true; return w;
+  }
+
+  /* ---------- boot ---------- */
+  W.AcaciaFundsPatch = W.AcaciaFundsPatch || {};
+  W.AcaciaFundsPatch.pickStatement = pickStatement;
+  W.AcaciaFundsPatch.mergeDuplicates = openMerge;
+  W.AcaciaFundsPatch.bulkDeleteBanks = bulkDelete;
+  W.AcaciaFundsPatch._mergeGroups = mergeGroups; W.AcaciaFundsPatch._dupGroups = dupGroups;
+
+  function boot(tries) {
+    hookBankList();
+    var box = D.getElementById("bankTable");
+    if (box && !box.__afpObs) {
+      box.__afpObs = true;
+      new MutationObserver(function () { if (!box.querySelector(".funds-bank-card .afp-pick") || !D.getElementById("afpBar")) decorate(); }).observe(box, { childList: true });
+      decorate();
+    }
+    var reconReady = !!(W.FundsRecon && D.querySelector("#rcRoot .rc-setup"));
+    if (reconReady) hookRecon();
+    if ((!box || !reconReady) && tries < 40) setTimeout(function () { boot(tries + 1); }, 600);
+  }
+  if (D.readyState === "loading") D.addEventListener("DOMContentLoaded", function () { boot(0); }); else boot(0);
+  W.addEventListener("load", function () { boot(0); });
+})();
+
+
+/* Funds: block bank accounts that share a name (add, draft, approve draft, rename). */
+;(function () {
+  "use strict";
+  var W = window, D = document, editIdx = -1;
+  function norm(s) { return String(s || "").replace(/\s+/g, " ").trim().toLowerCase(); }
+  function J(k) { try { return JSON.parse(localStorage.getItem(k) || "[]") || []; } catch (e) { return []; } }
+  function clash(name, skipIdx) {
+    var n = norm(name); if (!n) return false;
+    return J("banks").some(function (b, i) { return i !== skipIdx && b && norm(b.name) === n; });
+  }
+  function warn(name) { alert('A bank account named "' + String(name).trim() + '" already exists. Use a different name, or edit the existing account.'); }
+  function wrap(fn, check) {
+    var orig = W[fn]; if (typeof orig !== "function" || orig.__dupGuard) return;
+    var w = function () { if (check.apply(this, arguments)) return; return orig.apply(this, arguments); };
+    w.__dupGuard = true; W[fn] = w;
+  }
+  function install() {
+    wrap("addBank", function () {
+      var el = D.getElementById("bankName"), v = el ? el.value : "";
+      if (clash(v)) { warn(v); return true; } return false;
+    });
+    wrap("saveBankAsDraft", function () {
+      var el = D.getElementById("bankName"), v = el ? el.value : "";
+      if (clash(v)) { warn(v); return true; }
+      if (v && J("bankDrafts").some(function (d) { return d && norm(d.name) === norm(v); })) { alert('A draft named "' + v.trim() + '" already exists.'); return true; }
+      return false;
+    });
+    wrap("approveDraft", function (i) {
+      var d = J("bankDrafts")[i];
+      if (d && clash(d.name)) { warn(d.name); return true; } return false;
+    });
+    var eb = W.editBank;
+    if (typeof eb === "function" && !eb.__dupGuard) {
+      var w = function (i) { editIdx = +i; return eb.apply(this, arguments); };
+      w.__dupGuard = true; W.editBank = w;
+    }
+  }
+  D.addEventListener("click", function (e) {
+    var t = e.target && e.target.closest ? e.target.closest("#saveEditBank") : null; if (!t) return;
+    var el = D.getElementById("editBankName");
+    if (el && clash(el.value, editIdx)) { e.stopImmediatePropagation(); e.preventDefault(); warn(el.value); }
+  }, true);
+  install();
+  W.addEventListener("load", install);
+})();
