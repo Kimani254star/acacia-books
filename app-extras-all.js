@@ -1777,3 +1777,191 @@ try{
   install();
   W.addEventListener("load", install);
 })();
+
+/* Bulk Bills: working Preview (own popup) and a real Edit -> Save-updates flow. */
+;(function () {
+  "use strict";
+  var W = window, D = document;
+  function J(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function el(id) { return D.getElementById(id); }
+  function call(n) { try { if (typeof W[n] === "function") return W[n].apply(W, [].slice.call(arguments, 1)); } catch (e) { console.error(n, e); } }
+  function perm(a, label) { try { return typeof W.requirePermission === "function" ? !!W.requirePermission("bulkBillingTab", a, label) : true; } catch (e) { return true; } }
+  function dp() { return W.__getDecimalPlaces ? W.__getDecimalPlaces() : 2; }
+
+  /* ---- Preview: the shared bill popup lives in the hidden Supplier Bills tab ---- */
+  function showPreviewOverlay() {
+    var m = el("supplierBillPreviewModal"); if (!m) return;
+    if (m.getClientRects().length) return; // already visible, nothing to do
+    var old = el("afpBulkPrev"); if (old) old.remove();
+    var ov = D.createElement("div"); ov.id = "afpBulkPrev";
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:100000;overflow:auto;padding:20px;display:flex;justify-content:center;align-items:flex-start";
+    var card = D.createElement("div"); card.style.cssText = "background:#fff;border-radius:14px;max-width:900px;width:100%;margin:auto";
+    card.innerHTML = m.innerHTML;
+    Array.prototype.forEach.call(card.querySelectorAll("[id]"), function (n) { n.removeAttribute("id"); });
+    Array.prototype.forEach.call(card.querySelectorAll("[onclick]"), function (b) {
+      if (/close/i.test(b.getAttribute("onclick") || "")) b.setAttribute("onclick", "document.getElementById('afpBulkPrev').remove()");
+    });
+    var x = D.createElement("button"); x.type = "button"; x.textContent = "✕ Close";
+    x.style.cssText = "display:block;margin:12px 16px 0 auto;padding:6px 14px;border-radius:8px;background:#1e3a8a;color:#fff;border:none;font-weight:600;cursor:pointer";
+    x.onclick = function () { ov.remove(); };
+    card.insertBefore(x, card.firstChild);
+    ov.appendChild(card);
+    ov.addEventListener("mousedown", function (e) { if (e.target === ov) ov.remove(); });
+    D.body.appendChild(ov);
+    m.classList.add("hidden"); // keep the Supplier Bills tab popup closed
+  }
+  function wrapPreview() {
+    var o = W.previewBulkBill; if (typeof o !== "function" || o.__afp) return;
+    W.previewBulkBill = function () { var r = o.apply(this, arguments); try { showPreviewOverlay(); } catch (e) { console.error(e); } return r; };
+    W.previewBulkBill.__afp = true;
+  }
+
+  /* ---- Edit ---- */
+  function setBanner(on, no) {
+    var h = D.querySelector("#bulkBillingTab h2.text-sm.font-bold.mb-4:not(.text-left)") || Array.prototype.filter.call(D.querySelectorAll("#bulkBillingTab h2"), function (h) { return /bulk bill/i.test(h.textContent) && h.id !== "x"; }).pop();
+    var b = el("afpBulkEditBar");
+    if (!on) { if (b) b.remove(); if (h && h.getAttribute("data-afp-t")) { h.textContent = h.getAttribute("data-afp-t"); h.removeAttribute("data-afp-t"); } return; }
+    if (h) { if (!h.getAttribute("data-afp-t")) h.setAttribute("data-afp-t", h.textContent); h.textContent = "Edit Bulk Bill " + no; }
+    if (!b && h) {
+      b = D.createElement("div"); b.id = "afpBulkEditBar";
+      b.style.cssText = "background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:.85rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap";
+      b.innerHTML = "<span>Editing <b>" + no + "</b>. Change what you need, then press Save to update this bill.</span>";
+      var c = D.createElement("button"); c.type = "button"; c.textContent = "Cancel edit";
+      c.style.cssText = "margin-left:auto;padding:4px 12px;border-radius:6px;border:1px solid #1e3a8a;background:#fff;color:#1e3a8a;font-weight:600;cursor:pointer";
+      c.onclick = function () { resetEdit(); };
+      b.appendChild(c); h.parentNode.insertBefore(b, h.nextSibling);
+    }
+  }
+  function clearForm() {
+    ["bulkBillDate", "bulkBillTermDays", "bulkBillChartOfAccount"].forEach(function (id) { var e = el(id); if (e) e.value = ""; });
+    var s = el("bulkBillingSupplier"); if (s) { Array.prototype.forEach.call(s.options, function (o) { o.selected = false; }); }
+    call("axRefreshMultiSelect", "bulkBillingSupplier");
+    var r = el("bulkBillCurrencyRate"); if (r) r.value = "1";
+  }
+  function resetEdit() {
+    try { currentBulkEditingIndex = null; bulkBillItems = []; } catch (e) {}
+    call("renderBulkBillItems"); clearForm(); setBanner(false);
+    var n = el("bulkBillNumber"); if (n && typeof W.generateBulkBillNumber === "function") n.value = W.generateBulkBillNumber();
+  }
+  function editBulkBill(i) {
+    if (!perm("edit", "edit bulk bills")) return;
+    var b = J("bulkBills", [])[i]; if (!b) return alert("Bulk bill not found.");
+    try { currentBulkEditingIndex = i; bulkBillItems = (b.items || []).map(function (x) { return Object.assign({}, x); }); } catch (e) { console.error(e); }
+    call("renderBulkBillItems");
+    var sups = Array.isArray(b.suppliers) ? b.suppliers : [b.supplier].filter(Boolean);
+    var set = function (id, v) { var e = el(id); if (e && v != null) e.value = v; };
+    set("bulkBillNumber", b.billNumber); set("bulkBillDate", b.date);
+    var s = el("bulkBillingSupplier");
+    if (s) Array.prototype.forEach.call(s.options, function (o) { o.selected = sups.indexOf(o.value) >= 0; });
+    call("axRefreshMultiSelect", "bulkBillingSupplier");
+    set("bulkBillTermDays", b.termDays); set("bulkBillChartOfAccount", b.chartOfAccount);
+    set("bulkBillCurrency", b.currency); set("bulkBillCurrencyRate", b.currencyRate);
+    setBanner(true, b.billNumber);
+    var d = el("bulkBillDate"); if (d) { d.scrollIntoView({ behavior: "smooth", block: "center" }); }
+  }
+  function updateBulkBill() {
+    var idx = currentBulkEditingIndex;
+    if (!perm("edit", "edit bulk bills")) return;
+    var all = J("bulkBills", []), old = all[idx];
+    if (!old) { resetEdit(); return alert("That bulk bill no longer exists."); }
+    var date = el("bulkBillDate").value, sel = Array.prototype.map.call(el("bulkBillingSupplier").selectedOptions, function (o) { return o.value; });
+    var chart = el("bulkBillChartOfAccount").value, term = parseInt(el("bulkBillTermDays").value) || 0;
+    var cur = el("bulkBillCurrency").value, rate = parseFloat(el("bulkBillCurrencyRate").value) || 1;
+    if (!date || !sel.length || !chart || !bulkBillItems.length) return alert("Fill all fields and keep at least one item.");
+    if (sel.length > 1 && !confirm("A saved bill belongs to one supplier. Only " + sel[0] + " will be kept. Continue?")) return;
+    try { reverseBillFromLedger(old); removeMirroredBill(old.billNumber); } catch (e) { console.error(e); }
+    var sub = bulkBillItems.reduce(function (s, x) { return s + (parseFloat(x.subtotal) || 0); }, 0);
+    var vat = bulkBillItems.reduce(function (s, x) { return s + (parseFloat(x.vat) || 0); }, 0);
+    var nb = Object.assign({}, old, { date: date, supplier: sel[0], chartOfAccount: chart, termDays: term, items: bulkBillItems.map(function (x) { return Object.assign({}, x); }), subtotal: sub, vat: vat, total: (sub + vat) * rate, currency: cur, currencyRate: rate, paidAmount: old.paidAmount || 0, source: "bulk" });
+    delete nb.suppliers;
+    all[idx] = nb;
+    var bills = J("bills", []); bills.push(nb);
+    localStorage.setItem("bulkBills", JSON.stringify(all)); localStorage.setItem("bills", JSON.stringify(bills));
+    try { applyBillToLedger(nb); } catch (e) { console.error(e); }
+    resetEdit();
+    ["loadBulkBills", "loadSupplierBills", "renderSuppliers", "renderAccountsPayable", "renderInventorySummary", "renderInventoryTable"].forEach(function (n) { call(n); });
+    alert("Bulk bill " + nb.billNumber + " updated ✅");
+  }
+
+  D.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest ? e.target.closest("#saveBulkBillBtn") : null; if (!b) return;
+    var editing = false; try { editing = currentBulkEditingIndex !== null && currentBulkEditingIndex !== undefined; } catch (x) {}
+    if (!editing) return;
+    e.stopImmediatePropagation(); e.preventDefault(); updateBulkBill();
+  }, true);
+
+  function install() {
+    wrapPreview();
+    if (typeof W.editBulkBill === "function" && !W.editBulkBill.__afp) { W.editBulkBill = editBulkBill; W.editBulkBill.__afp = true; }
+  }
+  install(); W.addEventListener("load", install);
+})();
+
+/* Funds: reliable Edit Bank popup (editable fields, duplicate-name check, renames follow into transactions). */
+;(function () {
+  "use strict";
+  var W = window, D = document;
+  function J(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function S(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function norm(s) { return String(s || "").replace(/\s+/g, " ").trim().toLowerCase(); }
+  function kes(a, c) { try { return typeof convertToKES === "function" ? convertToKES(a, c) : parseFloat(a) || 0; } catch (e) { return parseFloat(a) || 0; } }
+  var RENAME_KEYS = ["transactions", "manualTransactions", "transfers", "customerPayments", "billPayments", "receipts", "bankStatementLines", "bankReconciliations", "supplierPayments"];
+  var RENAME_FIELDS = ["bank", "bankName", "fromBank", "toBank"];
+
+  function renameRefs(from, to) {
+    if (norm(from) === norm(to) && from === to) return;
+    RENAME_KEYS.forEach(function (k) {
+      var arr = J(k, null); if (!Array.isArray(arr)) return; var dirty = false;
+      arr.forEach(function (r) { if (!r || typeof r !== "object") return; RENAME_FIELDS.forEach(function (f) { if (r[f] === from) { r[f] = to; dirty = true; } }); });
+      if (dirty) S(k, arr);
+    });
+  }
+
+  function editBank(i) {
+    try { if (typeof W.requirePermission === "function" && !W.requirePermission("fundsTab", "edit", "edit funds accounts")) return; } catch (e) {}
+    var list = J("banks", []), b = list[i]; if (!b) return alert("Bank not found.");
+    var coa = J("chartOfAccounts", []);
+    var cur = ["KES", "USD", "EUR", "GBP", "CAD", "AUD", "UGX", "TZS", "ZAR", "NGN", "INR", "AED"];
+    if (b.currency && cur.indexOf(b.currency) < 0) cur.unshift(b.currency);
+    var old = D.getElementById("afpEditBank"); if (old) old.remove();
+    var ov = D.createElement("div"); ov.id = "afpEditBank"; ov.className = "afp-ov";
+    ov.innerHTML = '<div class="afp-modal" role="dialog" aria-modal="true" style="max-width:460px"><h3>Edit bank account</h3><div class="afp-body">' +
+      '<label class="afp-lbl">Bank name</label><input class="afp-in" id="afpEbName" value="' + esc(b.name) + '">' +
+      '<label class="afp-lbl">Account number</label><input class="afp-in" id="afpEbAcc" value="' + esc(b.accountNumber) + '">' +
+      '<label class="afp-lbl">Currency</label><select class="afp-in" id="afpEbCur">' + cur.map(function (c) { return '<option value="' + esc(c) + '"' + (c === b.currency ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") + "</select>" +
+      '<label class="afp-lbl">Balance</label><input class="afp-in" id="afpEbBal" type="number" step="any" value="' + esc(b.balance) + '">' +
+      '<label class="afp-lbl">Chart of account</label><select class="afp-in" id="afpEbChart">' + coa.map(function (a) { var sel = a.name === b.chartAccount || a.code === b.chartAccount; return '<option value="' + esc(a.name) + '"' + (sel ? " selected" : "") + ">" + esc(a.code ? a.name + " (" + a.code + ")" : a.name) + "</option>"; }).join("") + "</select>" +
+      '</div><div class="afp-foot"><button type="button" class="afp-btn ghost" id="afpEbCancel">Cancel</button><button type="button" class="afp-btn" id="afpEbSave">Save</button></div></div>';
+    D.body.appendChild(ov);
+    var lbl = D.createElement("style"); lbl.textContent = ".afp-lbl{display:block;font-size:.78rem;font-weight:600;margin-top:8px}"; ov.appendChild(lbl);
+    var nameEl = D.getElementById("afpEbName"); nameEl.focus(); nameEl.select();
+    function close() { ov.remove(); }
+    D.getElementById("afpEbCancel").onclick = close;
+    ov.addEventListener("mousedown", function (e) { if (e.target === ov) close(); });
+    D.getElementById("afpEbSave").onclick = function () {
+      var name = nameEl.value.trim(), acc = D.getElementById("afpEbAcc").value.trim(), c = D.getElementById("afpEbCur").value;
+      var bal = parseFloat(D.getElementById("afpEbBal").value), chart = D.getElementById("afpEbChart").value;
+      if (!name || !acc || !c || isNaN(bal) || !chart) return alert("Please fill all fields.");
+      var fresh = J("banks", []);
+      if (fresh.some(function (x, j) { return j !== i && x && norm(x.name) === norm(name); })) return alert('A bank account named "' + name + '" already exists. Use a different name.');
+      var oldName = b.name, oldKES = kes(b.balance, b.currency), oldChart = b.chartAccount;
+      var target = fresh[i]; if (!target) return close();
+      target.name = name; target.accountNumber = acc; target.currency = c; target.balance = bal; target.chartAccount = chart;
+      var coa2 = J("chartOfAccounts", []);
+      var o = coa2.find(function (a) { return a.name === oldChart || a.code === oldChart; });
+      var n = coa2.find(function (a) { return a.name === chart || a.code === chart; });
+      if (o) o.amount = (o.amount || 0) - oldKES;
+      if (n) n.amount = (n.amount || 0) + kes(bal, c);
+      S("chartOfAccounts", coa2);
+      try { banks = fresh; } catch (e) {}
+      renameRefs(oldName, name);
+      if (typeof saveBanks === "function") { try { saveBanks(); } catch (e) { S("banks", fresh); } } else S("banks", fresh);
+      ["syncBankBalancesToCOA", "renderBalanceSheet", "renderOpeningBalances", "renderAccounts", "updateBankSummary", "populateReconcileBankDropdown"].forEach(function (f) { try { if (typeof W[f] === "function") W[f](); } catch (e) {} });
+      close();
+    };
+    ov.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); if (e.key === "Enter" && e.target.tagName === "INPUT") D.getElementById("afpEbSave").click(); });
+  }
+  function install() { if (typeof W.editBank === "function" && !W.editBank.__afpNew) { W.editBank = editBank; W.editBank.__afpNew = true; } }
+  install(); W.addEventListener("load", install);
+})();
