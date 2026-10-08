@@ -3,6 +3,7 @@
  * 2. Bulk bills use their own BBIL- number series and show only in the Bulk Bills table
  * 3. Cash flow: Closing Cash = Opening Cash + Cash Inflows − Cash Outflows (report + dashboard card)
  * 4. Organization profile keeps every section's inputs after refresh (auto-save + no stale overwrite)
+ * 5. Reports: working Favorites list (star any report) + last-opened tracking
  */
 (function () {
   "use strict";
@@ -259,6 +260,170 @@
       if (syncBulkInvoiceMirrors()) refreshDashboard(); else updateCashCard();
       cashSummaryBox();
     }, 1200);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
+})();
+
+/* ---- 5. Reports: Favorites list + last opened ------------------------------------------ */
+(function () {
+  "use strict";
+  var W = window, FAV_KEY = "reportFavorites_v1", LAST_KEY = "reportLastOpened_v1", MODE_KEY = "reportsHomeMode_v1";
+  function J(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function S(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function favs() { var a = J(FAV_KEY, []); return Array.isArray(a) ? a : []; }
+  function lastMap() { var m = J(LAST_KEY, {}); return m && typeof m === "object" && !Array.isArray(m) ? m : {}; }
+  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+  function fmt(iso) {
+    if (!iso) return "—"; var d = new Date(iso); if (isNaN(d)) return "—";
+    return d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+  function catalog() {
+    var map = {}, order = [];
+    document.querySelectorAll('.reports-sidebar li[onclick*="showReport("]').forEach(function (li) {
+      var m = /showReport\(\s*['"]([^'"]+)['"]/.exec(li.getAttribute("onclick") || "");
+      if (!m || m[1] === "reportsHome" || map[m[1]]) return;
+      var cat = "Reports", ul = li.closest("ul.rep-cat-children");
+      if (ul) {
+        var h = document.querySelector('li.rep-cat-header[data-cat="' + ul.getAttribute("data-cat") + '"] .rep-cat-title');
+        if (h) cat = h.textContent.trim();
+      }
+      map[m[1]] = { id: m[1], name: (li.textContent || m[1]).replace(/^[^\w(]+/, "").trim(), cat: cat, li: li };
+      order.push(m[1]);
+    });
+    return { map: map, order: order };
+  }
+  function setFav(id, on) {
+    var a = favs().filter(function (x) { return x !== id; });
+    if (on) a.push(id);
+    S(FAV_KEY, a); refresh();
+  }
+  function openReport(id) {
+    var c = catalog().map[id];
+    if (typeof W.showReport === "function") W.showReport(id, c ? c.li : null);
+  }
+  function styles() {
+    if (document.getElementById("favReportsStyles")) return;
+    var st = document.createElement("style"); st.id = "favReportsStyles";
+    st.textContent =
+      ".reports-sidebar li .rep-star{float:right;cursor:pointer;color:#cbd5e1;font-size:14px;line-height:1.2;margin-left:6px;padding:0 3px}" +
+      ".reports-sidebar li .rep-star::before{content:'\\2606'}.reports-sidebar li .rep-star.on{color:#f59e0b}" +
+      ".reports-sidebar li .rep-star.on::before{content:'\\2605'}.reports-sidebar li .rep-star:hover{color:#f59e0b}" +
+      "#favReportsBox .fav-tabs{display:flex;gap:6px;margin-bottom:10px}" +
+      "#favReportsBox .fav-tabs button{border:1px solid #cbd5e1;background:#fff;border-radius:6px;padding:4px 12px;font-size:13px;cursor:pointer}" +
+      "#favReportsBox .fav-tabs button.on{background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:600}" +
+      "#favReportsBox .fav-last{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}" +
+      "#favReportsBox .fav-last button,#favReportsBox .fav-rm{border:1px solid #93c5fd;background:#fff;border-radius:5px;padding:2px 10px;font-size:12px;cursor:pointer}" +
+      "#favReportsBox tr.fav-row.is-last{background:#eff6ff}#favReportsBox tr.fav-row:hover{background:#f8fafc}";
+    document.head.appendChild(st);
+  }
+  function syncStars() {
+    var f = favs(), c = catalog();
+    c.order.forEach(function (id) {
+      var li = c.map[id].li, s = li.querySelector(".rep-star");
+      if (!s) { s = document.createElement("span"); s.className = "rep-star"; li.appendChild(s); }
+      s.setAttribute("data-id", id); s.title = f.indexOf(id) > -1 ? "Remove from favorites" : "Add to favorites";
+      s.classList.toggle("on", f.indexOf(id) > -1);
+    });
+  }
+  function homeTable() {
+    var home = document.getElementById("reportsHome"); if (!home) return null;
+    for (var i = 0; i < home.children.length; i++) if (home.children[i].tagName === "TABLE") return home.children[i];
+    return null;
+  }
+  function syncHomeTable() {
+    var t = homeTable(); if (!t) return;
+    var f = favs(), last = lastMap();
+    t.querySelectorAll("tbody tr").forEach(function (tr) {
+      var id = (tr.id || "").replace(/_homeRow$/, ""); if (!id) return;
+      var cb = tr.querySelector('input[type="checkbox"]'), nm = tr.querySelector(".report-name"), lv = tr.querySelector(".last-visited");
+      if (cb) cb.checked = f.indexOf(id) > -1;
+      if (nm) nm.classList.toggle("favorite", f.indexOf(id) > -1);
+      if (lv) lv.textContent = last[id] ? fmt(last[id]) : "-";
+    });
+  }
+  function renderBox() {
+    var home = document.getElementById("reportsHome"); if (!home) return;
+    var box = document.getElementById("favReportsBox");
+    if (!box) { box = document.createElement("div"); box.id = "favReportsBox"; home.insertBefore(box, home.firstChild); }
+    var mode = J(MODE_KEY, "favorites"), f = favs(), last = lastMap(), c = catalog(), t = homeTable();
+    var ids = f.filter(function (id) { var r = c.map[id]; return r && !r.li.classList.contains("hidden"); });
+    ids.sort(function (a, b) {
+      var x = last[a] || "", y = last[b] || "";
+      if (x !== y) return x < y ? 1 : -1;
+      return c.order.indexOf(a) - c.order.indexOf(b);
+    });
+    var lastId = null, lastT = "";
+    Object.keys(last).forEach(function (id) { if (c.map[id] && last[id] > lastT) { lastT = last[id]; lastId = id; } });
+    var h = '<div class="fav-tabs"><button type="button" data-fav-mode="favorites" class="' + (mode === "favorites" ? "on" : "") + '">\u2B50 Favorites (' + ids.length + ')</button>' +
+            '<button type="button" data-fav-mode="all" class="' + (mode === "all" ? "on" : "") + '">All reports</button></div>';
+    if (mode === "favorites") {
+      if (lastId) h += '<div class="fav-last"><span>Last opened: <b>' + esc(c.map[lastId].name) + '</b> &middot; ' + esc(fmt(lastT)) +
+                       '</span><button type="button" data-open="' + esc(lastId) + '">Open</button></div>';
+      if (!ids.length) {
+        h += '<p class="text-sm" style="color:#64748b;padding:8px 2px">No favorite reports yet. Click the \u2606 next to any report in the list on the left, ' +
+             'or open <b>All reports</b> and tick the box beside a report.</p>';
+      } else {
+        h += '<table class="w-full border text-sm"><thead class="bg-gray-100"><tr><th class="border px-2 py-1 text-left">Report Name</th>' +
+             '<th class="border px-2 py-1 text-left">Category</th><th class="border px-2 py-1 text-left">Last Opened</th><th class="border px-2 py-1"></th></tr></thead><tbody>';
+        ids.forEach(function (id) {
+          var r = c.map[id];
+          h += '<tr class="fav-row' + (id === lastId ? " is-last" : "") + '"><td class="border px-2 py-1"><span class="report-name cursor-pointer" data-open="' + esc(id) + '">\uD83D\uDCC1 ' + esc(r.name) + '</span>' +
+               (id === lastId ? ' <small style="color:#2563eb">(last opened)</small>' : "") + '</td><td class="border px-2 py-1">' + esc(r.cat) + '</td>' +
+               '<td class="border px-2 py-1">' + esc(fmt(last[id])) + '</td><td class="border px-2 py-1 text-center"><button type="button" class="fav-rm" data-unfav="' + esc(id) + '">\u2605 Remove</button></td></tr>';
+        });
+        h += "</tbody></table>";
+      }
+    }
+    box.innerHTML = h;
+    if (t) t.style.display = mode === "all" ? "" : "none";
+  }
+  function refresh() { try { styles(); syncStars(); syncHomeTable(); renderBox(); } catch (e) { console.warn("[fav-reports]", e); } }
+
+  W.toggleFavorite = function (cb) {
+    var tr = cb && cb.closest ? cb.closest("tr") : null, id = tr && tr.id ? tr.id.replace(/_homeRow$/, "") : "";
+    if (id) setFav(id, !!cb.checked);
+  };
+
+  var wrapped = false, inside = false;
+  function wrap() {
+    var cur = W.showReport; if (typeof cur !== "function" || cur.__favWrapped) return;
+    var w = function (id) {
+      var outer = !inside, r; inside = true;
+      try { r = cur.apply(this, arguments); } finally { inside = false; }
+      if (outer) {
+        try {
+          if (id === "reportsHome") { refresh(); }
+          else if (id) {
+            var p = document.getElementById(id);
+            if (p && !p.classList.contains("hidden") && p.style.display !== "none") {
+              var m = lastMap(); m[id] = new Date().toISOString(); S(LAST_KEY, m); refresh();
+            }
+          }
+        } catch (e) {}
+      }
+      return r;
+    };
+    for (var k in cur) { try { w[k] = cur[k]; } catch (e) {} }
+    w.__favWrapped = true; W.showReport = w;
+  }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target; if (!t || !t.closest) return;
+    var star = t.closest(".rep-star");
+    if (star) {
+      e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      var id = star.getAttribute("data-id"); setFav(id, favs().indexOf(id) < 0); return;
+    }
+    var box = t.closest("#favReportsBox"); if (!box) return;
+    var el;
+    if ((el = t.closest("[data-fav-mode]"))) { S(MODE_KEY, el.getAttribute("data-fav-mode")); renderBox(); }
+    else if ((el = t.closest("[data-unfav]"))) { setFav(el.getAttribute("data-unfav"), false); }
+    else if ((el = t.closest("[data-open]"))) { openReport(el.getAttribute("data-open")); }
+  }, true);
+
+  function boot() {
+    wrap(); refresh();
+    [800, 2000, 4500, 9000].forEach(function (ms) { setTimeout(function () { wrap(); refresh(); }, ms); });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();
