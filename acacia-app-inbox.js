@@ -80,6 +80,36 @@
     return false;                                                  /* refused (locked period, permission, missing field) */
   }
 
+
+  /* payroll run from the Payroll app: post every payslip through Books' own addGrossPay (Books works out PAYE/NSSF/SHIF itself) */
+  function postPayroll(item, bankName) {
+    var E = function (id) { return document.getElementById(id); };
+    if (!E('payrollEmpID') || !fn('addGrossPay')) return alert('Open the Gross Pay (payroll) tab in Books once, then try again.');
+    var done = Array.isArray(item.doneLines) ? item.doneLines.slice() : [], msgs = [], posted = 0, skipped = 0, failed = [];
+    var oa = w.alert; w.alert = function (m) { msgs.push(String(m)); };
+    try {
+      (item.lines || []).forEach(function (l) {
+        var key = l.empId + '|' + item.month;
+        if (done.indexOf(key) > -1) return;
+        var have = ls('payrollRecords', []).some(function (r) { return String(r.empID) === String(l.empId) && String(r.month) === String(item.month); });
+        if (have) { skipped++; done.push(key); return; }
+        E('payrollEmpID').value = l.empId; E('payrollMonth').value = item.month; E('payrollGross').value = l.gross;
+        if (E('payrollCountry')) E('payrollCountry').value = 'kenya';
+        if (E('payrollBank')) { var b = E('payrollBank'); if (!Array.prototype.some.call(b.options, function (o) { return o.value === bankName; })) { var o = document.createElement('option'); o.value = o.textContent = bankName; b.appendChild(o); } b.value = bankName; }
+        if (E('payrollAccount')) E('payrollAccount').value = '';
+        var before = ls('payrollRecords', []).length;
+        try { fn('addGrossPay')(); } catch (e) {}
+        if (ls('payrollRecords', []).length > before) { posted++; done.push(key); } else failed.push(l.name || l.empId);
+      });
+    } finally { w.alert = oa; }
+    var q = ls('appInbox', []);
+    q.forEach(function (x) { if (x && x.id === item.id) { x.doneLines = done; if (done.length >= (item.lines || []).length) { x.status = 'posted'; x.doneAt = new Date().toISOString(); } } });
+    sv('appInbox', q);
+    var booksNet = ls('payrollRecords', []).filter(function (r) { return String(r.month) === String(item.month) && (item.lines || []).some(function (l) { return String(l.empId) === String(r.empID); }); }).reduce(function (a, r) { return a + (Number(r.net) || 0); }, 0);
+    alert('Payroll ' + item.period + ': ' + posted + ' payslip(s) posted to Books' + (skipped ? ', ' + skipped + ' already in Books' : '') + (failed.length ? '. NOT posted (check permissions or the employee): ' + failed.join(', ') : '') + '.\n\nNet pay in the Payroll app: KES ' + money(item.net) + '\nNet pay Books calculated: KES ' + money(booksNet) + '\n(Each system applies its own deduction rules, so the totals can differ.)' + (msgs.length ? '' : ''));
+    return !failed.length;
+  }
+
   function render() {
     var list = pending(), btn = document.getElementById('acxInboxBtn');
     if (!btn) {
@@ -100,6 +130,9 @@
     var banks = ls('banks', []), bankOpts = banks.map(function (b, i) { return '<option value="' + i + '">' + esc((b && (b.name || b.bankName || b.accountName)) || ('Bank #' + (i + 1))) + '</option>'; }).join('');
     var pmEl = document.getElementById('paymentMode'), methods = pmEl ? Array.prototype.map.call(pmEl.options, function (o) { return o.value; }) : ['Cash', 'Bank Transfer', 'M-Pesa'];
     var rows = list.map(function (x, n) {
+      if (x.type === 'payroll') {
+        return '<div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px"><b>Payroll run from ' + esc(x.app) + '</b> — ' + esc(x.period) + ' (' + (x.lines || []).length + ' employees)<br>Gross KES ' + money(x.gross) + ' · Net in Payroll app KES ' + money(x.net) + '<br><span style="color:#6b7280">Books recalculates PAYE, NSSF, SHIF and housing levy from each gross pay, so its net can differ slightly.</span><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><select id="acxB' + n + '">' + (bankOpts || '<option value="">(no bank accounts)</option>') + '</select><button data-act="payroll" data-n="' + n + '" style="background:#0f766e;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer">Post payslips to Books</button><button data-act="skip" data-n="' + n + '" style="border:1px solid #d1d5db;background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer">Ignore</button></div></div>';
+      }
       if (x.type === 'payment') {
         var mo = methods.map(function (v) { return '<option' + (low(v) === low(x.method) ? ' selected' : '') + '>' + esc(v) + '</option>'; }).join('');
         return '<div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px"><b>Payment from ' + esc(x.app) + '</b> — ' + esc(x.customer) + '<br>Invoice ' + esc(x.invoiceNumber) + ' · ' + esc(x.date) + ' · <b>KES ' + money(x.amount) + '</b><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><select id="acxM' + n + '">' + mo + '</select><select id="acxB' + n + '">' + (bankOpts || '<option value="">(no bank accounts)</option>') + '</select><button data-act="pay" data-n="' + n + '" style="background:#0f766e;color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer">Post receipt</button><button data-act="skip" data-n="' + n + '" style="border:1px solid #d1d5db;background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer">Ignore</button></div></div>';
@@ -114,6 +147,7 @@
       var item = list[Number(b.getAttribute('data-n'))], act = b.getAttribute('data-act'); if (!item) return;
       if (act === 'skip') { setStatus(item.id, 'dismissed'); }
       else if (act === 'pay') { var bi = document.getElementById('acxB' + b.getAttribute('data-n')).value; if (bi === '') return alert('Choose a bank account first.'); postPayment(item, bi, document.getElementById('acxM' + b.getAttribute('data-n')).value); }
+      else if (act === 'payroll') { var sel = document.getElementById('acxB' + b.getAttribute('data-n')); if (!sel || sel.value === '') return alert('Choose a bank account first.'); postPayroll(item, sel.options[sel.selectedIndex].text); }
       else if (act === 'del') {
         if (!fn('deleteInvoice')) return alert('Open the Invoices tab once, then try again.');
         fn('deleteInvoice')(item.invoiceId);
