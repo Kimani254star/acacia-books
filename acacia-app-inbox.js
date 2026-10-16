@@ -157,6 +157,31 @@
     };
   }
 
+  /* Books project form: picking a plan fills department, priority, dates, description and the budget linked to that plan */
+  function budgetTotal(b) { return ((b && b.months) || []).reduce(function (s, m) { return s + (Number(m && m.amount) || 0); }, 0); }
+  document.addEventListener('change', function (e) {
+    try {
+      var t = e.target; if (!t || t.id !== 'projectTitle') return;
+      var plan = (ls('plans', []) || []).find(function (p) { return p && p.title === t.value; }); if (!plan) return;
+      var E = function (id) { return document.getElementById(id); };
+      var setIfEmpty = function (id, v) { var el = E(id); if (el && v != null && v !== '' && !String(el.value || '').trim()) el.value = v; };
+      var setPick = function (id, v) {
+        var el = E(id); if (!el || !v) return;
+        if (!el.options) return setIfEmpty(id, v);
+        var o = Array.prototype.find.call(el.options, function (x) { return low(x.value) === low(v) || low(x.text) === low(v); }); if (o) el.value = o.value;
+      };
+      setPick('projectDepartment', plan.department); setPick('projectPriority', plan.priority);
+      if (plan.startDate && E('projectStartDate')) E('projectStartDate').value = plan.startDate;
+      if (plan.endDate && E('projectEndDate')) E('projectEndDate').value = plan.endDate;
+      setIfEmpty('projectDescription', plan.description);
+      var lb = low(plan.linkedBudget);
+      if (lb) {
+        var bud = (ls('budgets', []) || []).find(function (b) { var a = low(b.account), d = low(b.department); return lb === a || lb === d || lb === a + ' - ' + d || (a && lb.indexOf(a) === 0); });
+        if (bud && E('projectBudget')) E('projectBudget').value = budgetTotal(bud);
+      }
+    } catch (err) { console.warn('[acacia-app-inbox] plan autofill', err); }
+  }, true);
+
   function tick() { try { if (!document.body || !(w.__companyNS ? w.__companyNS.activeCompany() : true)) return; reconcile(); render(); } catch (e) { console.warn('[acacia-app-inbox]', e); } }
   setInterval(tick, 8000); setTimeout(tick, 3000);
   w.AcaciaAppInbox = { tick: tick, reconcile: reconcile };
