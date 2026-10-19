@@ -17,10 +17,31 @@
     "#orgProfileTab .op-nav a.op-nav-active{color:#fff!important;background:#1e3a8a!important}" +
     "#orgProfileTab .op-savebtn{background:#1e3a8a!important;color:#fff!important}" +
     "#brandPreviewBtn,#brandPreviewBtn2{min-width:6rem}" +
+    "#dashboard{color:#1f2937}" +
+    "#dashboard h2,#dashboard h3,#dashboard h4{color:#0f172a!important}" +
+    "#dashboard p{color:#475569}" +
+    "#dashboard .bg-white,#dashboard .bg-white *{color:#1f2937}" +
+    "#dashboard .bg-white .text-slate-400,#dashboard .bg-white .text-slate-500{color:#64748b!important}" +
+    "#dashboard .text-green-600{color:#16a34a!important}#dashboard .text-red-600,#dashboard .text-red-500{color:#dc2626!important}" +
+    "#dashboard .text-2xl,#dashboard .text-xl{color:#0f172a!important}" +
     "html.dark #orgProfileTab .op-card,html.dark #orgProfileTab .op-nav{background:#1e293b!important;color:#e5e7eb!important;border-color:#334155!important}" +
     "html.dark #orgProfileTab .op-card-title{color:#f1f5f9!important}" +
     "html.dark #orgProfileTab .op-card-sub,html.dark #orgProfileTab .op-card label{color:#cbd5e1!important}" +
-    "html.dark #orgProfileTab .op-card input,html.dark #orgProfileTab .op-card select,html.dark #orgProfileTab .op-card textarea{background:#0f172a!important;color:#f1f5f9!important;border-color:#475569!important}";
+    "html.dark #orgProfileTab .op-card input,html.dark #orgProfileTab .op-card select,html.dark #orgProfileTab .op-card textarea{background:#0f172a!important;color:#f1f5f9!important;border-color:#475569!important}" +
+    /* Preferences submodule – section sidebar tabs follow the theme */
+    "#preferencesTab .pref-tab{color:#475569}" +
+    "#preferencesTab .pref-tab:hover{color:#1e3a8a}" +
+    "#preferencesTab .pref-tab.active,#preferencesTab .pref-tab.border-blue-900{color:#1e3a8a;border-color:#1e3a8a}" +
+    "#preferencesTab .pref-section label{color:#374151}" +
+    "html.dark #preferencesTab{color:#e5e7eb}" +
+    "html.dark #preferencesTab h2,html.dark #preferencesTab h3,html.dark #preferencesTab h4{color:#f1f5f9!important}" +
+    "html.dark #preferencesTab .pref-tab{color:#cbd5e1!important;background:transparent!important;border-color:transparent}" +
+    "html.dark #preferencesTab .pref-tab:hover{color:#93c5fd!important}" +
+    "html.dark #preferencesTab .pref-tab.active,html.dark #preferencesTab .pref-tab.border-blue-900{color:#93c5fd!important;border-color:#3b82f6!important}" +
+    "html.dark #preferencesTab .pref-section{color:#e5e7eb}" +
+    "html.dark #preferencesTab .pref-section label{color:#cbd5e1!important}" +
+    "html.dark #preferencesTab .pref-section input,html.dark #preferencesTab .pref-section select,html.dark #preferencesTab .pref-section textarea{background:#0f172a!important;color:#f1f5f9!important;border-color:#475569!important}" +
+    "html.dark #preferencesTab .bg-white{background:#1e293b!important;color:#e5e7eb!important;border-color:#334155!important}";
   var st = document.createElement("style");
   st.id = "acxContrastFixCss";
   st.textContent = css;
@@ -60,7 +81,7 @@
     return el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT";
   }
 
-  var SCOPES = ["#orgProfileTab", "#advCustomization", "#customizationTab", "[id$='Tab']:not(.hidden)", ".modal:not(.hidden)"];
+  var SCOPES = ["#dashboard", "#preferencesTab", "#orgProfileTab", "#advCustomization", "#customizationTab", "[id$='Tab']:not(.hidden)", ".modal:not(.hidden)", "[id$='Panel']:not(.hidden)", "main:not(.hidden)"];
   function scan() {
     var seen = [];
     SCOPES.forEach(function (sel) {
