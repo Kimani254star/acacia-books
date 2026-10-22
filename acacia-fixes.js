@@ -2050,3 +2050,36 @@ try{
   };
 })();
 }catch(e){console.error('[merged:inventory-import-export-fix]',e)}
+
+/* ---- Term days guard (Sales Hub + Purchase Hub): a saved term value must always render in its dropdown ---- */
+(function(){
+  var IDS=["invoiceNetDays","bulkInvoiceNetDays","orderNetDays","recurringInvoiceNetDays","quoteValidity","creditValidity","poValidity","billTermDays","bulkBillTermDays","rbTermDays"];
+  var nativeSet=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,"value");
+  function label(n){return n===0?"Due on Receipt":"On Receipt + "+n+" days"}
+  function ensure(sel,v){
+    if(v===null||v===undefined||v===""||v==="__add_new__")return;
+    var raw=String(v);
+    var has=function(x){return Array.prototype.some.call(sel.options,function(o){return o.value===x})};
+    if(has(raw))return;
+    var m=raw.match(/\d+/); if(!m)return;
+    var n=parseInt(m[0],10), val=String(n);
+    if(has(val))return;
+    var opt=document.createElement("option"); opt.value=val; opt.textContent=label(n);
+    var before=null;
+    Array.prototype.forEach.call(sel.options,function(o){ if(before||o.value===""||o.value==="__add_new__"){ if(!before&&o.value==="__add_new__")before=o; return; } if(parseInt(o.value,10)>n)before=o; });
+    before?sel.insertBefore(opt,before):sel.appendChild(opt);
+  }
+  function patch(sel){
+    if(!sel||sel.__acxTermGuard)return; sel.__acxTermGuard=1;
+    /* make sure "Due on Receipt" (0) exists everywhere */
+    ensure(sel,"0");
+    Object.defineProperty(sel,"value",{configurable:true,
+      get:function(){return nativeSet.get.call(sel)},
+      set:function(v){var raw=(v===null||v===undefined)?"":String(v); var m=raw.match(/\d+/); ensure(sel, raw!==""&&!/^\d+$/.test(raw)&&m?m[0]:v); nativeSet.set.call(sel, (raw!==""&&!/^\d+$/.test(raw)&&m)?String(parseInt(m[0],10)):v);}
+    });
+  }
+  function run(){IDS.forEach(function(id){document.querySelectorAll('[id="'+id+'"]').forEach(patch)})}
+  run();
+  if(document.readyState!=="complete")window.addEventListener("load",run);
+  try{ var tm=0; new MutationObserver(function(){ if(tm)return; tm=setTimeout(function(){tm=0;run()},400); }).observe(document.body,{childList:true,subtree:true}); }catch(e){}
+})();
