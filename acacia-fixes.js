@@ -1811,3 +1811,242 @@ try{
   }
 })();
 }catch(e){console.error('[merged:bulk-adjustment-edit]',e)}
+
+/* ===================== inventory-import-export-fix ===================== */
+try{
+/* Inventory > Export / Import now round-trips SKU and the Chart of Account fields.
+ *  EXPORT  fixed columns (always present, even when the first item has no SKU/account):
+ *          Name, SKU, Quantity, Buying Price, Selling Price, Buying VAT Rule, Selling VAT Rule,
+ *          Buying Account Code, Buying Account, Selling Account Code, Selling Account, Description, Active, Batches
+ *  IMPORT  headers are matched loosely (SKU / Item Code, Chart of Account / Buying Account / Inventory Account,
+ *          Selling Account / Income Account, Qty / Quantity ...). An account may be given as the code OR the
+ *          account name; it is stored as the Chart of Accounts code. Numbers typed as text are converted.
+ *          History / batches / active status of an item that already exists (same SKU or name) are kept.
+ */
+(function(){
+  "use strict";
+  if (window.__acxInvIO) return;
+  window.__acxInvIO = true;
+
+  function lsGet(k, d){ try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }
+  function wh(){ var s = document.getElementById("warehouseSelect"); return s ? s.value : ""; }
+  function coa(){ var a = lsGet("chartOfAccounts", []); return Array.isArray(a) ? a : []; }
+  function norm(h){ return String(h == null ? "" : h).toLowerCase().replace(/[^a-z0-9]/g, ""); }
+  function str(v){ return v == null ? "" : String(v).trim(); }
+  function num(v){
+    if (typeof v === "number") return isFinite(v) ? v : 0;
+    var n = parseFloat(String(v == null ? "" : v).replace(/[^0-9.\-]/g, ""));
+    return isFinite(n) ? n : 0;
+  }
+  function accByCode(code){ code = str(code); if (!code) return null; return coa().find(function(a){ return str(a.code) === code; }) || null; }
+  function accByName(name){ name = str(name).toLowerCase(); if (!name) return null; return coa().find(function(a){ return str(a.name).toLowerCase() === name; }) || null; }
+  function accName(code){ var a = accByCode(code); return a ? str(a.name) : ""; }
+
+  var COLS = [
+    ["name", "Name"], ["sku", "SKU"], ["qty", "Quantity"], ["buyPrice", "Buying Price"], ["sellPrice", "Selling Price"],
+    ["buyVat", "Buying VAT Rule"], ["sellVat", "Selling VAT Rule"],
+    ["buyingAccount", "Buying Account Code"], ["buyingAccountName", "Buying Account"],
+    ["sellingAccount", "Selling Account Code"], ["sellingAccountName", "Selling Account"],
+    ["sellDescription", "Description"], ["active", "Active"], ["batches", "Batches"]
+  ];
+  var ALIAS = {
+    name: "name item itemname product productname title",
+    sku: "sku skucode itemcode productcode partno partnumber stockcode itemsku productsku",
+    qty: "qty quantity stock onhand quantityonhand openingstock openingqty stockqty currentqty",
+    buyPrice: "buyprice buyingprice costprice cost purchaseprice unitcost buyingcost",
+    sellPrice: "sellprice sellingprice price saleprice unitprice retailprice salesprice",
+    buyVat: "buyvat buyingvat buyvatrule buyingvatrule purchasevat vatrule vat",
+    sellVat: "sellvat sellingvat sellvatrule sellingvatrule salesvat",
+    buyingAccount: "buyingaccount buyingaccountcode buyaccount buyaccountcode purchaseaccount inventoryaccount assetaccount chartofaccount chartofaccounts chartaccount chartofaccountcode account accountcode coa coaaccount coacode costaccount",
+    buyingAccountName: "buyingaccountname buyaccountname inventoryaccountname chartofaccountname accountname",
+    sellingAccount: "sellingaccount sellingaccountcode sellaccount sellaccountcode salesaccount salesaccountcode incomeaccount incomeaccountcode revenueaccount",
+    sellingAccountName: "sellingaccountname sellaccountname salesaccountname incomeaccountname",
+    sellDescription: "selldescription description desc sellingdescription salesdescription notes",
+    active: "active status isactive",
+    batches: "batches batchlist",
+    batchNo: "batchno batchnumber batch lotno lot",
+    mfgDate: "mfgdate manufacturedate manufacturingdate",
+    expiryDate: "expirydate expiry expdate expirationdate bestbefore"
+  };
+  var HMAP = {};
+  Object.keys(ALIAS).forEach(function(k){ ALIAS[k].split(" ").forEach(function(a){ if (!HMAP[a]) HMAP[a] = k; }); });
+
+  function batchesToStr(b){
+    if (!Array.isArray(b) || !b.length) return "";
+    return b.map(function(x){ return [x.batchNo || "", x.mfgDate || "", x.expiryDate || "", x.qty == null ? 0 : x.qty].join("|"); }).join("; ");
+  }
+  function strToBatches(s){
+    s = str(s); if (!s) return [];
+    return s.split(";").map(function(p){
+      var f = p.split("|").map(function(x){ return x.trim(); });
+      return { batchNo: f[0] || "", mfgDate: f[1] || "", expiryDate: f[2] || "", qty: num(f[3]) };
+    }).filter(function(b){ return b.batchNo || b.expiryDate || b.qty; });
+  }
+  function isOff(v){ return /^(false|no|n|0|inactive|disabled)$/i.test(str(v)); }
+
+  /* ---------------- export ---------------- */
+  window.exportInventoryExcel = function(){
+    var w = wh();
+    if (!w) return alert("Please select a warehouse first.");
+    var items = lsGet("inventory_" + w, []);
+    if (!Array.isArray(items) || !items.length) return alert("No items to export.");
+    var rows = items.map(function(it){
+      return {
+        name: it.name || "", sku: it.sku || "", qty: it.qty == null ? 0 : it.qty,
+        buyPrice: it.buyPrice == null ? 0 : it.buyPrice, sellPrice: it.sellPrice == null ? 0 : it.sellPrice,
+        buyVat: it.buyVat || "", sellVat: it.sellVat || "",
+        buyingAccount: it.buyingAccount || "", buyingAccountName: accName(it.buyingAccount),
+        sellingAccount: it.sellingAccount || "", sellingAccountName: accName(it.sellingAccount),
+        sellDescription: it.sellDescription || "", active: it.active === false ? "No" : "Yes", batches: batchesToStr(it.batches)
+      };
+    });
+    var head = COLS.map(function(c){ return c[1]; });
+    var matrix = rows.map(function(r){ return COLS.map(function(c){ return r[c[0]]; }); });
+    var stamp = new Date().toISOString().slice(0, 10);
+    var base = String(w).replace(/[^a-z0-9]+/gi, "_") + "_Inventory_" + stamp;
+    function doExport(kind){
+      if (kind === "excel") {
+        if (window.XLSX) {
+          var ws = XLSX.utils.aoa_to_sheet([head].concat(matrix)), wb = XLSX.utils.book_new();
+          ws["!cols"] = head.map(function(h){ return { wch: Math.max(12, h.length + 2) }; });
+          XLSX.utils.book_append_sheet(wb, ws, String(w).slice(0, 31));
+          XLSX.writeFile(wb, base + ".xlsx");
+          return;
+        }
+        kind = "excelFallback";
+      }
+      var t = window.__exportFormatTools;
+      if (!t) return alert("Export tools are still loading — please try again in a moment.");
+      if (kind === "pdf") t.downloadPDF(base, "Inventory — " + w, head, matrix);
+      else if (kind === "excelFallback") t.downloadExcel(base, head, matrix);
+      else t.downloadCSV(base, head, matrix);
+    }
+    if (window.__exportFormatTools && window.__exportFormatTools.askFormat) window.__exportFormatTools.askFormat(doExport);
+    else doExport("excel");
+  };
+
+  /* ---------------- import ---------------- */
+  function convert(rawRows, existing){
+    var present = {}, report = { rows: 0, skipped: 0, noSku: 0, noBuyAcc: 0, noSellAcc: 0, unknown: {} };
+    var out = [];
+    var byKey = {};
+    (existing || []).forEach(function(it){
+      if (!it) return;
+      if (str(it.sku)) byKey["s:" + str(it.sku).toLowerCase()] = it;
+      if (str(it.name)) byKey["n:" + str(it.name).toLowerCase()] = it;
+    });
+    rawRows.forEach(function(raw){
+      var f = {}, extra = {}, has = {};
+      Object.keys(raw).forEach(function(h){
+        var k = HMAP[norm(h)];
+        if (k && !has[k]) { f[k] = raw[h]; has[k] = true; present[k] = true; }
+        else if (!k) extra[String(h).trim()] = raw[h];
+      });
+      var name = str(f.name);
+      if (!name) { report.skipped++; return; }
+      var sku = str(f.sku);
+      var old = (sku && byKey["s:" + sku.toLowerCase()]) || byKey["n:" + name.toLowerCase()] || null;
+
+      function acct(codeVal, nameVal, oldVal, label){
+        var v = str(codeVal), a = null;
+        if (v) { a = accByCode(v) || accByName(v); }
+        if (!a && str(nameVal)) { a = accByName(nameVal) || accByCode(nameVal); if (!a && !v) v = str(nameVal); }
+        if (a) return str(a.code);
+        if (v) { report.unknown[v] = true; return v; }
+        return oldVal || "";
+      }
+      var buyAcc = acct(f.buyingAccount, f.buyingAccountName, old && old.buyingAccount);
+      var sellAcc = acct(f.sellingAccount, f.sellingAccountName, old && old.sellingAccount);
+
+      var batches = has.batches ? strToBatches(f.batches) : null;
+      if (!batches && (str(f.batchNo) || str(f.expiryDate) || str(f.mfgDate))) {
+        batches = [{ batchNo: str(f.batchNo), mfgDate: str(f.mfgDate), expiryDate: str(f.expiryDate), qty: num(f.qty) }];
+      }
+      if (!batches) batches = old && Array.isArray(old.batches) ? old.batches : [];
+      var qty = num(f.qty);
+      if (!has.qty && old) qty = num(old.qty);
+      if (batches.length && (has.batches || str(f.batchNo) || str(f.expiryDate))) {
+        var bs = batches.reduce(function(s, b){ return s + (parseFloat(b.qty) || 0); }, 0);
+        if (bs) qty = bs;
+      }
+      var it = Object.assign({}, extra, {
+        name: name, sku: sku || (old ? str(old.sku) : ""), qty: qty, batches: batches,
+        buyPrice: has.buyPrice ? num(f.buyPrice) : (old ? num(old.buyPrice) : 0),
+        sellPrice: has.sellPrice ? num(f.sellPrice) : (old ? num(old.sellPrice) : 0),
+        buyVat: has.buyVat ? str(f.buyVat) : (old ? old.buyVat || "" : ""),
+        sellVat: has.sellVat ? str(f.sellVat) : (old ? old.sellVat || "" : ""),
+        buyingAccount: buyAcc, sellingAccount: sellAcc,
+        sellDescription: has.sellDescription ? str(f.sellDescription) : (old ? old.sellDescription || "" : ""),
+        active: has.active && str(f.active) !== "" ? !isOff(f.active) : (old && old.active === false ? false : true),
+        history: old && Array.isArray(old.history) ? old.history : []
+      });
+      if (!it.sku) report.noSku++;
+      if (!it.buyingAccount) report.noBuyAcc++;
+      if (!it.sellingAccount) report.noSellAcc++;
+      out.push(it); report.rows++;
+    });
+    return { items: out, report: report };
+  }
+
+  window.importInventoryExcel = function(ev){
+    var input = ev.target, w = wh();
+    if (!w) { alert("Please select a warehouse first."); input.value = ""; return; }
+    var file = input.files && input.files[0];
+    if (!file) return;
+    var isCsv = /\.csv$/i.test(file.name || "");
+    if (!(isCsv || /\.(xlsx|xls|xlsm)$/i.test(file.name || ""))) {
+      alert('❌ Please choose a .xlsx, .xls or .csv file. "' + (file.name || "That file") + "\" doesn't look like a spreadsheet.");
+      input.value = ""; return;
+    }
+    function finish(rows){
+      try {
+        if (!Array.isArray(rows) || !rows.length) { alert("⚠️ No rows found in that file. Make sure the first sheet has a header row followed by data rows."); return; }
+        var existing = lsGet("inventory_" + w, []);
+        var res = convert(rows, Array.isArray(existing) ? existing : []);
+        if (!res.items.length) { alert("⚠️ No usable rows. Each row needs an item Name (headers such as Name, Item or Product)."); return; }
+        localStorage.setItem("inventory_" + w, JSON.stringify(res.items));
+        ["syncInventoryBalancesToCOA"].forEach(function(fn){ if (typeof window[fn] === "function") { try { window[fn](); } catch (e) {} } });
+        ["renderInventoryTable", "renderAccounts", "renderBalanceSheet", "renderInventorySummary", "renderStockValuation", "renderStockReports"].forEach(function(fn){
+          if (typeof window[fn] === "function") { try { window[fn](); } catch (e) {} }
+        });
+        var r = res.report, msg = "✅ Imported " + r.rows + " item(s) successfully!";
+        if (r.skipped) msg += "\n• " + r.skipped + " row(s) skipped (no item name).";
+        var unk = Object.keys(r.unknown);
+        if (unk.length) msg += "\n⚠️ Account not found in your Chart of Accounts: " + unk.slice(0, 6).join(", ") + (unk.length > 6 ? " …" : "") + " (add it under Chart of Accounts or fix the file).";
+        if (r.noBuyAcc) msg += "\n⚠️ " + r.noBuyAcc + " item(s) have no Buying / Chart of Account.";
+        if (r.noSellAcc) msg += "\n⚠️ " + r.noSellAcc + " item(s) have no Selling Account.";
+        if (r.noSku) msg += "\n• " + r.noSku + " item(s) have no SKU.";
+        alert(msg);
+      } catch (e) {
+        console.error("Inventory import failed:", e);
+        alert("❌ Error reading file: " + (e && e.message ? e.message : e));
+      } finally { input.value = ""; }
+    }
+    var fr = new FileReader();
+    fr.onerror = function(){ alert("❌ Could not read that file from disk. Please try picking it again."); input.value = ""; };
+    if (isCsv) {
+      fr.onload = function(e){
+        try { finish((window.__invParseCSV || function(){ return []; })(e.target.result)); }
+        catch (err) { console.error(err); alert("❌ Error reading CSV file: " + (err && err.message ? err.message : err)); input.value = ""; }
+      };
+      fr.readAsText(file); return;
+    }
+    fr.onload = function(e){
+      var buf = e.target.result;
+      var ensure = window.__ensureXLSXLib || function(ok){ ok(); };
+      ensure(function(){
+        try {
+          var wb = XLSX.read(new Uint8Array(buf), { type: "array" });
+          if (!wb || !wb.SheetNames || !wb.SheetNames.length) throw new Error("The file has no readable sheets.");
+          finish(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "", raw: true }));
+        } catch (err) {
+          console.error("Inventory Excel import failed:", err);
+          alert("❌ Error reading Excel file: " + (err && err.message ? err.message : err) + "\n\nTip: saving it as .csv also works.");
+          input.value = "";
+        }
+      }, function(err){ alert("❌ " + err.message); input.value = ""; });
+    };
+    fr.readAsArrayBuffer(file);
+  };
+})();
+}catch(e){console.error('[merged:inventory-import-export-fix]',e)}
