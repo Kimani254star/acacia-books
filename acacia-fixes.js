@@ -1601,3 +1601,213 @@ try{
   else start();
 })();
 }catch(e){console.error('[merged:acacia-contrast-fix.js]',e)}
+
+/* ===================== bulk-adjustment-edit ===================== */
+try{
+/* Bulk Adjustments > Bulk Adjustment Log: "Bulk Edit" button (next to Bulk Delete).
+ * Tick one or more log entries -> Bulk Edit -> change the Adjustment (+/-) and Reason of all of them in one
+ * window -> Save. Stock is corrected the same way the single Edit does it:
+ *   Applied entry : stock changes by (new adjustment - old adjustment); New Qty = Old Qty + adjustment.
+ *   Draft entry   : only the draft adjustment / reason change, stock is not touched.
+ */
+(function(){
+  "use strict";
+  if (window.__acxBulkAdjEdit) return;
+  window.__acxBulkAdjEdit = true;
+
+  function $(i){ return document.getElementById(i); }
+  function esc(v){ return String(v == null ? "" : v).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function lsGet(k, d){ try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }
+  function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+  function note(m, t){
+    if (typeof window.showNotification === "function") { try { window.showNotification(m, t || "success"); return; } catch (e) {} }
+    alert(m);
+  }
+  function chgOf(e){ return Number(e.change != null ? e.change : (e.adjustment || 0)) || 0; }
+  function findItem(items, en){
+    return items.find(function(x){ return String(x.id || x.sku || x.name) === String(en.itemId || en.sku || en.product); });
+  }
+  function locate(list, r){
+    if (list[r.idx] && list[r.idx].id === r.id) return r.idx;
+    for (var i = 0; i < list.length; i++) if (list[i] && list[i].id === r.id && list[i].product === r.product) return i;
+    return -1;
+  }
+
+  /* ---- selection + button visibility ---- */
+  function selected(){
+    var out = [];
+    document.querySelectorAll("#baLogBody .baLogCheckbox:checked").forEach(function(c){
+      out.push({ wh: c.getAttribute("data-wh"), idx: parseInt(c.getAttribute("data-idx"), 10) });
+    });
+    return out;
+  }
+  function syncBtn(){
+    var b = $("baLogBulkEditBtn"); if (!b) return;
+    var n = document.querySelectorAll("#baLogBody .baLogCheckbox:checked").length;
+    b.style.display = n > 0 ? "inline-block" : "none";
+    b.textContent = n > 1 ? "Bulk Edit (" + n + ")" : "Bulk Edit";
+  }
+  function later(){ setTimeout(syncBtn, 0); }
+  document.addEventListener("change", later, true);
+  document.addEventListener("click", later, true);
+  (function hookRender(tries){
+    if (typeof window.renderBulkAdjustmentLog === "function" && !window.renderBulkAdjustmentLog.__acxEdit) {
+      var orig = window.renderBulkAdjustmentLog;
+      window.renderBulkAdjustmentLog = function(){
+        var r = orig.apply(this, arguments);
+        try { syncBtn(); } catch (e) {}
+        return r;
+      };
+      window.renderBulkAdjustmentLog.__acxEdit = true;
+    } else if (tries < 40) setTimeout(function(){ hookRender(tries + 1); }, 500);
+  })(0);
+
+  /* ---- modal ---- */
+  var modal = null, rows = [];
+  function closeModal(){ if (modal && modal.parentNode) modal.parentNode.removeChild(modal); modal = null; rows = []; document.removeEventListener("keydown", onKey, true); }
+  function onKey(e){ if (e.key === "Escape") closeModal(); }
+
+  function recalc(tr){
+    var r = rows[+tr.getAttribute("data-k")];
+    var inp = tr.querySelector(".acxAdj"), cell = tr.querySelector(".acxNew");
+    var v = parseFloat(inp.value);
+    if (r.draft) { cell.textContent = "Draft"; return; }
+    cell.textContent = isNaN(v) ? "-" : String(Number(r.oldQty) + v);
+  }
+
+  window.bulkEditBAAdjLog = function(){
+    var picks = selected();
+    if (!picks.length) { note("Select adjustments first", "error"); return; }
+    closeModal();
+    rows = [];
+    picks.forEach(function(p){
+      var e = (lsGet("bulkAdjustments_" + p.wh, []) || [])[p.idx];
+      if (e) rows.push({ wh: p.wh, idx: p.idx, id: e.id, product: e.product, sku: e.sku || "", oldQty: Number(e.oldQty) || 0, change: chgOf(e), reason: e.reason || "", draft: e.status === "Draft" });
+    });
+    if (!rows.length) { note("Selected entries were not found", "error"); return; }
+    rows.sort(function(a, b){ return a.wh === b.wh ? a.idx - b.idx : (a.wh < b.wh ? -1 : 1); });
+
+    var inpCss = "border:1px solid #d1d5db;border-radius:6px;padding:4px 8px;font-size:13px;color:#111827;background:#fff;";
+    var body = rows.map(function(r, k){
+      return '<tr data-k="' + k + '" style="border-top:1px solid #e5e7eb">' +
+        '<td style="padding:8px">' + esc(r.wh) + '</td>' +
+        '<td style="padding:8px">' + esc(r.product || "") + (r.draft ? ' <span style="font-size:11px;padding:1px 6px;border-radius:4px;background:#fef3c7;color:#92400e">Draft</span>' : '') + '</td>' +
+        '<td style="padding:8px">' + esc(r.sku || "-") + '</td>' +
+        '<td style="padding:8px;text-align:right">' + esc(r.oldQty) + '</td>' +
+        '<td style="padding:8px"><input type="number" step="any" class="acxAdj" value="' + esc(r.change) + '" style="' + inpCss + 'width:100px;text-align:right"></td>' +
+        '<td class="acxNew" style="padding:8px;text-align:right"></td>' +
+        '<td style="padding:8px"><input type="text" class="acxReason" value="' + esc(r.reason) + '" style="' + inpCss + 'width:100%;min-width:160px"></td></tr>';
+    }).join("");
+
+    modal = document.createElement("div");
+    modal.id = "acxBulkAdjEditModal";
+    modal.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:99998;display:flex;align-items:center;justify-content:center;padding:16px";
+    modal.innerHTML =
+      '<div style="background:#fff;color:#111827;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.35);width:min(960px,100%);max-height:90vh;display:flex;flex-direction:column;font-family:inherit">' +
+        '<div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">' +
+          '<div><div style="font-weight:700;font-size:15px">Bulk Edit Adjustments (' + rows.length + ')</div>' +
+          '<div style="font-size:12px;color:#6b7280;margin-top:2px">Change the adjustment (+/-) and reason. Stock is corrected automatically for applied entries; drafts do not touch stock.</div></div>' +
+          '<button type="button" id="acxBAEClose" style="font-size:22px;line-height:1;color:#6b7280;background:none;border:0;cursor:pointer">&times;</button></div>' +
+        '<div style="padding:10px 18px;border-bottom:1px solid #f3f4f6;display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px">' +
+          '<span>Set for all:</span>' +
+          '<input type="text" id="acxBAEAllReason" placeholder="Reason" style="' + inpCss + 'width:220px">' +
+          '<button type="button" id="acxBAEAllReasonBtn" style="padding:4px 10px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;color:#111827;cursor:pointer">Apply reason</button>' +
+          '<input type="number" step="any" id="acxBAEAllAdj" placeholder="Adjustment" style="' + inpCss + 'width:120px">' +
+          '<button type="button" id="acxBAEAllAdjBtn" style="padding:4px 10px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;color:#111827;cursor:pointer">Apply adjustment</button></div>' +
+        '<div style="overflow:auto;padding:0 18px"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
+          '<thead><tr style="text-align:left;color:#6b7280;font-size:12px;text-transform:uppercase">' +
+          '<th style="padding:8px">Warehouse</th><th style="padding:8px">Product</th><th style="padding:8px">SKU</th><th style="padding:8px;text-align:right">Old Qty</th><th style="padding:8px">Adjustment (+/-)</th><th style="padding:8px;text-align:right">New Qty</th><th style="padding:8px">Reason</th></tr></thead>' +
+          '<tbody>' + body + '</tbody></table></div>' +
+        '<div style="padding:12px 18px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px">' +
+          '<button type="button" id="acxBAECancel" style="padding:7px 16px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;cursor:pointer;font-size:14px">Cancel</button>' +
+          '<button type="button" id="acxBAESave" style="padding:7px 16px;border:0;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer;font-size:14px;font-weight:600">Save Changes</button></div>' +
+      '</div>';
+    document.body.appendChild(modal);
+    document.addEventListener("keydown", onKey, true);
+
+    modal.querySelectorAll("tr[data-k]").forEach(function(tr){
+      recalc(tr);
+      tr.querySelector(".acxAdj").addEventListener("input", function(){ recalc(tr); });
+    });
+    modal.addEventListener("mousedown", function(e){ if (e.target === modal) closeModal(); });
+    $("acxBAEClose").onclick = closeModal;
+    $("acxBAECancel").onclick = closeModal;
+    $("acxBAESave").onclick = saveAll;
+    $("acxBAEAllReasonBtn").onclick = function(){
+      var v = $("acxBAEAllReason").value;
+      modal.querySelectorAll(".acxReason").forEach(function(i){ i.value = v; });
+    };
+    $("acxBAEAllAdjBtn").onclick = function(){
+      var v = $("acxBAEAllAdj").value;
+      if (v === "" || isNaN(parseFloat(v))) { note("Enter an adjustment number first", "error"); return; }
+      modal.querySelectorAll("tr[data-k]").forEach(function(tr){ tr.querySelector(".acxAdj").value = v; recalc(tr); });
+    };
+  };
+
+  /* ---- save ---- */
+  function saveAll(){
+    if (!modal) return;
+    var plan = [], bad = false;
+    modal.querySelectorAll("tr[data-k]").forEach(function(tr){
+      var r = rows[+tr.getAttribute("data-k")];
+      var a = tr.querySelector(".acxAdj"), v = parseFloat(a.value);
+      if (String(a.value).trim() === "" || isNaN(v)) { bad = true; a.style.borderColor = "#dc2626"; return; }
+      a.style.borderColor = "#d1d5db";
+      plan.push({ r: r, adj: v, reason: tr.querySelector(".acxReason").value });
+    });
+    if (bad) { note("Enter a valid adjustment in the highlighted rows", "error"); return; }
+
+    var byWh = {};
+    plan.forEach(function(p){ (byWh[p.r.wh] = byWh[p.r.wh] || []).push(p); });
+
+    var lists = {}, invs = {}, invDirty = {}, negatives = [], changed = 0, missing = 0, before = [], after = [];
+    Object.keys(byWh).forEach(function(wh){
+      var list = lsGet("bulkAdjustments_" + wh, []) || [];
+      var items = lsGet("inventory_" + wh, []) || [];
+      var listDirty = false;
+      byWh[wh].forEach(function(p){
+        var i = locate(list, p.r);
+        if (i < 0) { missing++; return; }
+        var en = list[i], oldChg = chgOf(en), draft = en.status === "Draft";
+        var sameAdj = oldChg === p.adj, sameReason = String(en.reason || "") === String(p.reason || "");
+        if (sameAdj && sameReason) return;
+        if (!sameAdj) {
+          var base = Number(en.oldQty) || 0;
+          en.change = p.adj; en.adjustment = p.adj;
+          if (!draft) {
+            en.newQty = base + p.adj;
+            var it = findItem(items, en);
+            if (it) {
+              it.qty = Number(it.qty || 0) + (p.adj - oldChg);
+              invDirty[wh] = true;
+              if (it.qty < 0) negatives.push((en.product || en.sku || "item") + " (" + wh + "): " + it.qty);
+            }
+          }
+        }
+        if (!sameReason) en.reason = p.reason;
+        en.editedAt = new Date().toISOString();
+        list[i] = en; listDirty = true; changed++;
+        before.push((en.product || en.sku) + ": " + oldChg);
+        after.push((en.product || en.sku) + ": " + p.adj);
+      });
+      if (listDirty) lists[wh] = list;
+      if (invDirty[wh]) invs[wh] = items;
+    });
+
+    if (!changed) { closeModal(); note(missing ? "Entries no longer exist" : "No changes to save", missing ? "error" : "info"); return; }
+    if (negatives.length && !confirm("These items would end up with negative stock:\n\n" + negatives.slice(0, 8).join("\n") + (negatives.length > 8 ? "\n…" : "") + "\n\nSave anyway?")) return;
+
+    Object.keys(invs).forEach(function(wh){ lsSet("inventory_" + wh, invs[wh]); });
+    Object.keys(lists).forEach(function(wh){ lsSet("bulkAdjustments_" + wh, lists[wh]); });
+
+    closeModal();
+    try { var th = document.querySelector('#BulkAdjustment #baLogBody'); th = th && th.closest("table"); var hc = th && th.querySelector('thead input[type="checkbox"]'); if (hc) hc.checked = false; } catch (e) {}
+    if (typeof window.renderBulkAdjustmentLog === "function") { try { window.renderBulkAdjustmentLog(); } catch (e) {} }
+    if (typeof window.renderBAProducts === "function") { try { window.renderBAProducts(); } catch (e) {} }
+    if (Object.keys(invs).length) ["renderInventoryTable", "renderBalanceSheet", "renderInventorySummary", "renderStockValuation"].forEach(function(fn){ if (typeof window[fn] === "function") { try { window[fn](); } catch (e) {} } });
+    try { if (typeof window.logActivity === "function") window.logActivity({ action: "Edited", module: "Bulk Adjustment", description: "Bulk edited " + changed + " adjustment log entr" + (changed === 1 ? "y" : "ies"), originalValue: before.join("; "), editedValue: after.join("; ") }); } catch (e) {}
+    syncBtn();
+    note(changed + " adjustment" + (changed === 1 ? "" : "s") + " updated" + (missing ? " (" + missing + " no longer existed)" : ""), "success");
+  }
+})();
+}catch(e){console.error('[merged:bulk-adjustment-edit]',e)}

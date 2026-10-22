@@ -2271,6 +2271,131 @@ try{
     w.renderEarnings();
   };
 
+  /* ---------- bulk edit (tick records -> Bulk Edit -> change month / amounts in one window) ---------- */
+  var BE_COLS = [['month', 'Month'], ['basicPay', 'Basic'], ['houseAllowance', 'House'], ['transportAllowance', 'Transport'], ['overtimePay', 'Overtime'],
+    ['bonusPay', 'Bonus'], ['otherBenefits', 'Other'], ['saccoLoan', 'Sacco Loan'], ['companyLoan', 'Company Loan'], ['helbLoan', 'HELB'], ['otherLoan', 'Other Loan']];
+  var beModal = null, beRows = [];
+  function beClose() { if (beModal && beModal.parentNode) beModal.parentNode.removeChild(beModal); beModal = null; beRows = []; document.removeEventListener('keydown', beKey, true); }
+  function beKey(e) { if (e.key === 'Escape') beClose(); }
+  function beTotals(tr) {
+    var r = {};
+    BE_COLS.forEach(function (c) { if (c[0] !== 'month') r[c[0]] = num(tr.querySelector('[data-f="' + c[0] + '"]').value); });
+    finish(r);
+    tr.querySelector('.be-gross').textContent = kes(r.grossPay);
+    tr.querySelector('.be-loans').textContent = kes(r.totalLoanDeductions);
+  }
+
+  w.bulkEditEarnings = function () {
+    if (!w.requirePermission('earningsTab', 'edit', 'edit earnings')) return;
+    var sel = document.querySelectorAll('.earnings-select:checked');
+    if (!sel.length) return alert('Please select at least one record.');
+    var list = ls('earnings', []); if (!Array.isArray(list)) list = [];
+    var emps = ls('employees', []), nm = {};
+    (Array.isArray(emps) ? emps : []).forEach(function (e) { if (e) nm[e.id] = e.name; });
+    beClose();
+    beRows = [];
+    Array.prototype.map.call(sel, function (c) { return Number(c.dataset.index); }).sort(function (a, b) { return a - b; }).forEach(function (i) {
+      var r = list[i]; if (r) beRows.push({ i: i, id: r.id, empID: r.empID, name: nm[r.empID] || '', month: r.month || '' });
+    });
+    if (!beRows.length) return alert('Selected records were not found.');
+
+    var inp = 'border:1px solid #d1d5db;border-radius:6px;padding:4px 6px;font-size:13px;color:#111827;background:#fff;';
+    var body = beRows.map(function (b, k) {
+      var r = list[b.i];
+      return '<tr data-k="' + k + '" style="border-top:1px solid #e5e7eb"><td style="padding:6px 8px;white-space:nowrap">' + esc(b.empID) + (b.name ? ' <span style="color:#6b7280">— ' + esc(b.name) + '</span>' : '') + '</td>' +
+        BE_COLS.map(function (c) {
+          if (c[0] === 'month') return '<td style="padding:6px 4px"><input type="month" data-f="month" value="' + esc(r.month || '') + '" style="' + inp + 'width:140px"></td>';
+          return '<td style="padding:6px 4px"><input type="number" min="0" step="any" data-f="' + c[0] + '" value="' + esc(r[c[0]] == null ? 0 : r[c[0]]) + '" style="' + inp + 'width:95px;text-align:right"></td>';
+        }).join('') +
+        '<td class="be-gross" style="padding:6px 8px;text-align:right;font-weight:700;white-space:nowrap"></td><td class="be-loans" style="padding:6px 8px;text-align:right;color:#c2410c;white-space:nowrap"></td></tr>';
+    }).join('');
+
+    beModal = document.createElement('div');
+    beModal.id = 'acxEarningsBulkEditModal';
+    beModal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:99998;display:flex;align-items:center;justify-content:center;padding:16px';
+    beModal.innerHTML =
+      '<div style="background:#fff;color:#111827;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.35);width:min(1250px,100%);max-height:90vh;display:flex;flex-direction:column">' +
+        '<div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center"><div>' +
+          '<div style="font-weight:700;font-size:15px">Bulk Edit Earnings &amp; Allowances (' + beRows.length + ')</div>' +
+          '<div style="font-size:12px;color:#6b7280;margin-top:2px">Gross and loan totals are recalculated automatically. There can be only one record per employee per month.</div></div>' +
+          '<button type="button" id="acxBEEClose" style="font-size:22px;line-height:1;color:#6b7280;background:none;border:0;cursor:pointer">&times;</button></div>' +
+        '<div style="padding:10px 18px;border-bottom:1px solid #f3f4f6;display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px"><span>Set for all:</span>' +
+          '<select id="acxBEEField" style="' + inp + '">' + BE_COLS.map(function (c) { return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join('') + '</select>' +
+          '<input id="acxBEEVal" type="month" style="' + inp + 'width:150px">' +
+          '<button type="button" id="acxBEEAll" style="padding:4px 10px;border:1px solid #d1d5db;border-radius:6px;background:#f9fafb;color:#111827;cursor:pointer">Apply to all</button></div>' +
+        '<div style="overflow:auto;padding:0 12px"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="text-align:left;color:#6b7280;font-size:12px;text-transform:uppercase"><th style="padding:8px">Employee</th>' +
+          BE_COLS.map(function (c) { return '<th style="padding:8px 4px">' + c[1] + '</th>'; }).join('') + '<th style="padding:8px;text-align:right">Gross</th><th style="padding:8px;text-align:right">Loans</th></tr></thead><tbody>' + body + '</tbody></table></div>' +
+        '<div style="padding:12px 18px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px">' +
+          '<button type="button" id="acxBEECancel" style="padding:7px 16px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;cursor:pointer;font-size:14px">Cancel</button>' +
+          '<button type="button" id="acxBEESave" style="padding:7px 16px;border:0;border-radius:8px;background:#1e3a8a;color:#fff;cursor:pointer;font-size:14px;font-weight:600">Save Changes</button></div></div>';
+    document.body.appendChild(beModal);
+    document.addEventListener('keydown', beKey, true);
+
+    beModal.querySelectorAll('tr[data-k]').forEach(function (tr) {
+      beTotals(tr);
+      tr.addEventListener('input', function () { beTotals(tr); });
+    });
+    beModal.addEventListener('mousedown', function (e) { if (e.target === beModal) beClose(); });
+    $('acxBEEClose').onclick = beClose; $('acxBEECancel').onclick = beClose;
+    $('acxBEEField').onchange = function () {
+      var v = $('acxBEEVal'); v.type = this.value === 'month' ? 'month' : 'number'; v.value = '';
+    };
+    $('acxBEEAll').onclick = function () {
+      var f = $('acxBEEField').value, v = $('acxBEEVal').value;
+      if (v === '') return alert('Enter a value first.');
+      beModal.querySelectorAll('tr[data-k]').forEach(function (tr) { tr.querySelector('[data-f="' + f + '"]').value = v; beTotals(tr); });
+    };
+    $('acxBEESave').onclick = beSave;
+  };
+
+  function beSave() {
+    if (!beModal) return;
+    var list = ls('earnings', []); if (!Array.isArray(list)) list = [];
+    var bad = false, edits = [];
+    beModal.querySelectorAll('tr[data-k]').forEach(function (tr) {
+      var b = beRows[+tr.getAttribute('data-k')], vals = {};
+      BE_COLS.forEach(function (c) {
+        var el = tr.querySelector('[data-f="' + c[0] + '"]');
+        el.style.borderColor = '#d1d5db';
+        if (c[0] === 'month') { vals.month = el.value || ''; return; }
+        var n = parseFloat(el.value);
+        if (el.value !== '' && (isNaN(n) || n < 0)) { bad = true; el.style.borderColor = '#dc2626'; }
+        vals[c[0]] = el.value === '' || isNaN(n) ? 0 : n;
+      });
+      edits.push({ b: b, vals: vals });
+    });
+    if (bad) return alert('⚠️ Amounts must be numbers of 0 or more. Check the highlighted fields.');
+
+    var changed = 0, missing = 0, before = [], after = [], next = list.slice();
+    edits.forEach(function (x) {
+      var i = (list[x.b.i] && list[x.b.i].id === x.b.id) ? x.b.i : list.findIndex(function (r) { return r && r.id === x.b.id; });
+      if (i < 0) { missing++; return; }
+      var old = list[i], rec = finish(Object.assign({}, old, x.vals));
+      var same = BE_COLS.every(function (c) { return c[0] === 'month' ? (old.month || '') === rec.month : num(old[c[0]]) === num(rec[c[0]]); });
+      if (same) return;
+      next[i] = rec; changed++;
+      before.push(old.empID + ' ' + mLabel(old.month) + ': ' + num(old.grossPay).toFixed(dp()));
+      after.push(rec.empID + ' ' + mLabel(rec.month) + ': ' + num(rec.grossPay).toFixed(dp()));
+    });
+    if (!changed) { beClose(); return alert(missing ? 'Those records no longer exist.' : 'No changes to save.'); }
+
+    /* one record per employee per month */
+    var seen = {}, clash = [];
+    next.forEach(function (r) {
+      if (!r || status(r) !== 'approved') return;
+      var key = r.empID + '|' + (r.month || '');
+      if (seen[key]) clash.push(r.empID + ' — ' + mLabel(r.month)); else seen[key] = 1;
+    });
+    if (clash.length) return alert('⚠️ Two records would have the same employee and month:\n\n' + clash.slice(0, 8).join('\n') + '\n\nChange the month or the employee records and try again.');
+
+    put('earnings', next);
+    beClose();
+    var hc = document.querySelector('#earningsTab thead input[type="checkbox"]'); if (hc) hc.checked = false;
+    w.renderEarnings();
+    try { if (typeof w.logActivity === 'function') w.logActivity({ action: 'Edited', module: 'Earnings & Allowances', description: 'Bulk edited ' + changed + ' earnings record(s)', originalValue: before.join('; '), editedValue: after.join('; ') }); } catch (e) { /* optional */ }
+    alert('✅ ' + changed + ' earnings record' + (changed === 1 ? '' : 's') + ' updated' + (missing ? ' (' + missing + ' no longer existed)' : '') + '.');
+  }
+
   /* ---------- history / preview ---------- */
   w.viewHistory = function (empID) {
     var a = (ls('earnings', []) || []).filter(function (r) { return r && r.empID === empID && status(r) === 'approved'; })
