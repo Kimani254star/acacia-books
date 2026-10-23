@@ -14,7 +14,7 @@
   var fn = function (n) { return typeof w[n] === 'function' ? w[n] : null; };
   var low = function (v) { return String(v == null ? '' : v).trim().toLowerCase(); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var money = function (n) { return (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  var money = function (n) { return (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits:(window.__getDecimalPlaces?window.__getDecimalPlaces():2),maximumFractionDigits:(window.__getDecimalPlaces?window.__getDecimalPlaces():2) }); };
 
   function defaultAccount() {
     var coa = ls('chartOfAccounts', []); if (!Array.isArray(coa)) return '';
