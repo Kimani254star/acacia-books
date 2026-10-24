@@ -2469,3 +2469,536 @@ try{
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else setTimeout(init, 0);
 })(window);
 }catch(e){console.error('[merged:payroll-months.js]',e)}
+
+/* ===== merged: acacia-companyid.js ===== */
+try{
+/* ACACIA BOOKS - Company ID guard (acacia-companyid.js)
+   Load AFTER app-3.js (last script in index.html).
+
+   Why this exists
+   - The Company ID (ACC-000123) is what your other apps are linked to, so it must never change.
+   - The old counter ("lastCompanyId") was stored PER COMPANY, so every new company / fresh browser
+     started again at ACC-000001 and a company with an empty field could be given a new ID.
+
+   What it does
+   1. Pins every company's ID in a GLOBAL key (__acxOrgIds) that company switching can't hide.
+   2. Uses a GLOBAL counter (__acxOrgIdMax) = highest ID ever seen on this browser, so IDs never repeat.
+   3. "Generate ID" never creates a new ID if the company already has one anywhere
+      (field, orgInfo, pin, Supabase). It just puts the existing one back.
+   4. Mirrors the ID to Supabase (acacia_company_status.org_code) so a cleared browser / new device
+      gets the SAME ID back automatically. Needs supabase/company_org_code.sql (one time).
+   5. Never silently replaces an existing ID. If this device and the server disagree you get a warning,
+      and "Restore previous ID" is how you choose the right one (that choice is pushed to the server). */
+(function () {
+  "use strict";
+  if (window.__acxCidGuard) return;
+  window.__acxCidGuard = true;
+
+  var RE = /^ACC-\d{6}$/;
+  var MAP = "__acxOrgIds", MAX = "__acxOrgIdMax", FRESH = "__acxOrgIdFresh_", WARN = "__acxOrgIdWarned_";
+  var ls = window.localStorage;
+  var noColumnLogged = false;
+
+  function J(k, d) { try { var v = JSON.parse(ls.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function S(k, v) { try { ls.setItem(k, typeof v === "string" ? v : JSON.stringify(v)); } catch (e) {} }
+  function real() { return (window.__companyNS && window.__companyNS.real) || ls; }
+  function rawJ(k) { try { return JSON.parse(real().getItem(k) || "null"); } catch (e) { return null; } }
+  function cur() { var u = J("loggedInUser", null); return u && u.companyId ? String(u.companyId) : ""; }
+  function numOf(id) { return RE.test(String(id || "")) ? parseInt(String(id).slice(4), 10) : 0; }
+  function fmt(n) { return "ACC-" + String(n).padStart(6, "0"); }
+  function ok(id) { return RE.test(String(id || "")); }
+  function toast(msg) {
+    try { if (typeof window.showToast === "function") return window.showToast(msg); } catch (e) {}
+    try { alert(msg); } catch (e) {}
+  }
+
+  /* ---------- supabase (same anon access the app already uses) ---------- */
+  function sb() {
+    var u = window.__SUPA_URL__, k = window.__SUPA_KEY__;
+    if (!u || !k) return null;
+    return { url: u, h: { apikey: k, Authorization: "Bearer " + k, "Content-Type": "application/json" } };
+  }
+  function rowFor(c) { var r = window.__acxCompanyRow; return r && String(r.company_id) === String(c) ? r : null; }
+
+  function serverId(c) {
+    var r = rowFor(c);
+    if (r && ok(r.org_code)) return Promise.resolve(r.org_code);
+    var s = sb(); if (!s || !c || !navigator.onLine) return Promise.resolve(null);
+    return fetch(s.url + "/rest/v1/acacia_company_status?select=org_code&company_id=eq." + encodeURIComponent(c), { headers: s.h })
+      .then(function (x) { return x.ok ? x.json() : []; })
+      .then(function (a) { var v = a && a[0] && a[0].org_code; return ok(v) ? v : null; })
+      .catch(function () { return null; });
+  }
+  function serverMax() {
+    var s = sb(); if (!s || !navigator.onLine) return Promise.resolve(0);
+    return fetch(s.url + "/rest/v1/acacia_company_status?select=org_code&org_code=not.is.null&order=org_code.desc&limit=1", { headers: s.h })
+      .then(function (x) { return x.ok ? x.json() : []; })
+      .then(function (a) { return numOf(a && a[0] && a[0].org_code); })
+      .catch(function () { return 0; });
+  }
+
+  /* ---------- where an ID can already live on this device ---------- */
+  function localId(c) {
+    if (!c) return null;
+    var map = J(MAP, {});
+    if (ok(map[c])) return map[c];
+    var a = rawJ("orgInfo_" + c + "::" + c); if (a && ok(a.companyId)) return a.companyId;
+    var b = rawJ("orgInfo::" + c);           if (b && ok(b.companyId)) return b.companyId;
+    var cs = J("companies", []);
+    if (Array.isArray(cs)) for (var i = 0; i < cs.length; i++)
+      if (cs[i] && String(cs[i].companyId) === c && ok(cs[i].orgCode)) return cs[i].orgCode;
+    return null;
+  }
+  function scanMax() {
+    var m = Number(J(MAX, 0)) || 0, map = J(MAP, {}), r = real(), i, k;
+    Object.keys(map).forEach(function (x) { m = Math.max(m, numOf(map[x])); });
+    try {
+      for (i = 0; i < r.length; i++) {
+        k = r.key(i); if (!k) continue;
+        if (k.indexOf("lastCompanyId") === 0) m = Math.max(m, numOf(r.getItem(k)));
+        else if (k.indexOf("orgInfo") === 0) { var o = rawJ(k); if (o && o.companyId) m = Math.max(m, numOf(o.companyId)); }
+        else if (k.indexOf("companyIdHistory_") === 0) { (rawJ(k) || []).forEach(function (x) { m = Math.max(m, numOf(x)); }); }
+      }
+    } catch (e) {}
+    return m;
+  }
+
+  /* ---------- write the ID everywhere it must be ---------- */
+  function pin(c, id, push) {
+    if (!c || !ok(id)) return;
+    var map = J(MAP, {}); map[c] = id; S(MAP, map);
+    S(MAX, String(Math.max(Number(J(MAX, 0)) || 0, numOf(id))));
+    try {
+      var cs = J("companies", []);
+      if (Array.isArray(cs)) { var ch = false; cs.forEach(function (x) { if (x && String(x.companyId) === c && x.orgCode !== id) { x.orgCode = id; ch = true; } }); if (ch) S("companies", cs); }
+    } catch (e) {}
+    if (cur() === c) {               /* scoped keys only make sense for the active company */
+      ["orgInfo", "orgInfo_" + c].forEach(function (k) {
+        var o = J(k, null) || {};
+        if (o.companyId !== id) { o.companyId = id; S(k, o); }
+      });
+      var el = document.getElementById("companyId"); if (el && el.value !== id) el.value = id;
+      var sm = document.getElementById("orgSummaryCompanyId"); if (sm && sm.textContent !== id) sm.textContent = id;
+    }
+    if (push) mirror(c, id, push === "force");
+  }
+
+  function mirror(c, id, force) {
+    var s = sb(); if (!s || !navigator.onLine) return;
+    var q = s.url + "/rest/v1/acacia_company_status?company_id=eq." + encodeURIComponent(c) + (force ? "" : "&org_code=is.null");
+    fetch(q, { method: "PATCH", keepalive: true, headers: Object.assign({ Prefer: "return=minimal" }, s.h), body: JSON.stringify({ org_code: id }) })
+      .then(function (x) {
+        if (x.ok) { var r = rowFor(c); if (r && (force || !r.org_code)) r.org_code = id; return; }
+        return x.text().then(function (t) {
+          if (x.status === 409 || /23505|duplicate/i.test(t)) return onConflict(c, id);
+          if (!noColumnLogged) { noColumnLogged = true; console.info("[companyId] not mirrored to Supabase (run supabase/company_org_code.sql once):", x.status); }
+        });
+      }).catch(function () {});
+  }
+
+  /* another company already owns this number on the server */
+  function onConflict(c, id) {
+    if (ls.getItem(FRESH + c) === "1") {          /* brand new ID nobody is linked to yet: safe to move up */
+      serverMax().then(function (sm) {
+        var n = Math.max(sm, scanMax()) + 1, nid = fmt(n);
+        try { ls.removeItem(FRESH + c); } catch (e) {}
+        pin(c, nid, "force");
+        alert("Company ID " + id + " was already taken by another company, so this company was given " + nid + ".");
+      });
+    } else {
+      toast("Company ID " + id + " is also registered to another company on the server. Contact support before linking more apps.");
+    }
+  }
+
+  function bestKnown(c) { return localId(c); }
+
+  /* ---------- 1. counter that never goes backwards or repeats ---------- */
+  window.acxNextCompanyId = function () {
+    var id = fmt(scanMax() + 1);
+    S(MAX, String(numOf(id)));
+    try { ls.setItem("lastCompanyId", id); } catch (e) {}
+    return id;
+  };
+
+  /* ---------- 2. issuing at sign-up / add company: reuse before create ---------- */
+  var origIssue = window.acxIssueCompanyId;
+  window.acxIssueCompanyId = function (c, info) {
+    c = String(c || cur());
+    var have = bestKnown(c);
+    if (have) { pin(c, have, true); return have; }
+    var id = typeof origIssue === "function" ? origIssue.apply(this, arguments) : window.acxNextCompanyId();
+    if (ok(id)) { try { ls.setItem(FRESH + c, "1"); } catch (e) {} pin(c, id, true); }
+    return id;
+  };
+
+  /* ---------- 3. Generate button: never replaces, restores instead ---------- */
+  var origGen = window.generateCompanyId;
+  window.generateCompanyId = function () {
+    var c = cur(); if (!c) { alert("Sign in first."); return; }
+    var el = document.getElementById("companyId");
+    var have = (el && ok(el.value) && el.value) || bestKnown(c);
+    var self = this, args = arguments;
+    var done = function (id, fromServer) {
+      pin(c, id, fromServer ? false : true);
+      alert((fromServer ? "Found this company's Company ID on the server: " : "This company already has the Company ID ") + id +
+        ".\n\nOther apps are linked to it, so it is never replaced. If it was changed by mistake, use \"Restore previous ID\".");
+    };
+    if (have) return done(have, false);
+    serverId(c).then(function (sid) {
+      if (sid) return done(sid, true);
+      if (typeof origGen === "function") origGen.apply(self, args);
+      var v = document.getElementById("companyId");
+      if (v && ok(v.value)) { try { ls.setItem(FRESH + c, "1"); } catch (e) {} pin(c, v.value, true); }
+    });
+  };
+
+  /* ---------- 4. Restore previous ID: your choice always wins and is pushed ---------- */
+  var origRestore = window.restoreCompanyId;
+  if (typeof origRestore === "function") {
+    window.restoreCompanyId = function () {
+      var el = document.getElementById("companyId"), before = el ? el.value : "";
+      var out = origRestore.apply(this, arguments);
+      var c = cur(), after = el ? el.value : "";
+      if (c && ok(after) && after !== before) { try { ls.removeItem(FRESH + c); } catch (e) {} pin(c, after, "force"); }
+      return out;
+    };
+  }
+
+  /* ---------- 5. keep field + stored copies correct on load / save / server row ---------- */
+  function ensure() {
+    var c = cur(); if (!c) return;
+    var have = bestKnown(c);
+    if (have) { pin(c, have, false); return; }
+    var el = document.getElementById("companyId");
+    if (el && ok(el.value)) pin(c, el.value, true);
+  }
+  ["loadOrgInfo", "saveOrgInfo"].forEach(function (fn) {
+    var o = window[fn];
+    if (typeof o === "function") window[fn] = function () { var r = o.apply(this, arguments); try { ensure(); } catch (e) {} return r; };
+  });
+
+  function onRow() {
+    var c = cur(); if (!c) return;
+    var r = rowFor(c), loc = bestKnown(c), srv = r && ok(r.org_code) ? r.org_code : null;
+    if (srv && !loc) { pin(c, srv, false); return; }                         /* new device / cleared browser: get it back */
+    if (!srv && loc) { pin(c, loc, true); return; }                          /* first time: server learns this device's ID */
+    if (srv && loc && srv !== loc && ls.getItem(WARN + c) !== srv + "|" + loc) { /* disagree: change nothing, tell the user */
+      try { ls.setItem(WARN + c, srv + "|" + loc); } catch (e) {}
+      alert("Company ID mismatch\n\nThis device has " + loc + " but the server has " + srv + ".\n\nNothing was changed. Open Organization Profile and use \"Restore previous ID\" to pick the one your other apps use; that choice is saved for every device.");
+    }
+  }
+  window.addEventListener("acx-company-row", function () { try { onRow(); } catch (e) {} });
+  document.addEventListener("DOMContentLoaded", function () { setTimeout(function () { try { ensure(); onRow(); } catch (e) {} }, 1500); });
+  setTimeout(function () { try { ensure(); onRow(); } catch (e) {} }, 2500);
+
+  window.acxCompanyIdInfo = function () { var c = cur(); return { company: c, local: localId(c), server: rowFor(c) && rowFor(c).org_code || null, highest: scanMax() }; };
+})();
+}catch(e){console.error('[merged:acacia-companyid.js]',e)}
+
+/* ===== merged: acacia-orgprofile.js ===== */
+try{
+/* ACACIA BOOKS - Organization Profile fixes (acacia-orgprofile.js)
+   Load AFTER app-3.js and acacia-fixes.js (last script in index.html).
+
+   1. Profile "empty after refresh": the form is filled once at page load. If the company data
+      arrives a moment later (login, cloud sync) the form stayed blank, and a later autosave could
+      even save that blank form over your real data. Now:
+        - the form is refilled whenever the stored profile changes (unless you are typing),
+        - a save that would replace a filled profile with a blank form is blocked
+          (the Save button click is always honoured).
+   2. Bank accounts added in Funds also appear under Organization Profile > Bank Account
+      (Undeposited Funds / Petty Cash are system accounts and are skipped). Existing rows and
+      anything you typed are kept; matching is by bank name + account number. */
+(function () {
+  "use strict";
+  if (window.__acxOrgFix) return;
+  window.__acxOrgFix = true;
+
+  var W = window, ls = W.localStorage;
+  var touched = false, lastRaw = null, explicitAt = 0;
+
+  function J(k, d) { try { var v = JSON.parse(ls.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function cid() { var u = J("loggedInUser", null); return u && u.companyId ? String(u.companyId) : ""; }
+  function orgKey() { var c = cid(); return c ? "orgInfo_" + c : null; }
+  function currentRaw() { var k = orgKey(); return (k && ls.getItem(k)) || ls.getItem("orgInfo") || ""; }
+  function readOrg() {
+    var k = orgKey(), a = k ? J(k, null) : null, b = J("orgInfo", null);
+    if (a && b) return (Date.parse(b.updatedAt || 0) || 0) > (Date.parse(a.updatedAt || 0) || 0) ? b : a;
+    return a || b || null;
+  }
+  function val(id) { var el = document.getElementById(id); return el ? String(el.value || "").trim() : ""; }
+  var CORE_FIELDS = [["orgName", "name"], ["orgPIN", "pin"], ["orgPhone", "phone"], ["orgEmail", "email"], ["orgAddress", "address"]];
+  function formBlank() { return CORE_FIELDS.every(function (f) { return !val(f[0]); }); }
+  function storedHasCore() { var o = readOrg(); return !!o && CORE_FIELDS.some(function (f) { return o[f[1]]; }); }
+
+  /* ---------- Funds banks -> Organization Profile > Bank Account ---------- */
+  function keyOf(n, a) { return String(n || "").trim().toLowerCase() + "|" + String(a || "").trim(); }
+  function fundsBanks() {
+    var a = J("banks", []);
+    if (!Array.isArray(a)) return [];
+    return a.filter(function (b) {
+      return b && b.name && !b.system && b.name !== "Undeposited Funds" && b.name !== "Petty Cash";
+    });
+  }
+  function rowVal(row, cls) { var e = row.querySelector("." + cls); return e ? String(e.value || "").trim() : ""; }
+
+  function mergeBanks() {
+    try {
+      if (!cid()) return;
+      var fb = fundsBanks(); if (!fb.length) return;
+
+      /* a) the stored profile (only when one already exists, so we never invent a half-empty profile) */
+      var org = readOrg();
+      if (org) {
+        var list = Array.isArray(org.banks) ? org.banks.slice() : [], have = {}, add = [];
+        list.forEach(function (x) { have[keyOf(x.bankName, x.accountNumber)] = 1; });
+        fb.forEach(function (b) {
+          var k = keyOf(b.name, b.accountNumber); if (have[k]) return; have[k] = 1;
+          add.push({ bankName: b.name, accountName: "", accountNumber: b.accountNumber || "", branch: "", swift: "" });
+        });
+        if (add.length) {
+          org.banks = list.concat(add);
+          if (!org.bankName) { org.bankName = add[0].bankName; org.bankAccountNumber = add[0].accountNumber; }
+          var s = JSON.stringify(org), k2 = orgKey();
+          ls.setItem("orgInfo", s); if (k2) ls.setItem(k2, s);
+          lastRaw = currentRaw();       /* our own write: no need to reload the form */
+        }
+      }
+
+      /* b) the form on screen: append only the missing rows, never rebuild (keeps what is being typed) */
+      var cont = document.getElementById("orgBanksContainer");
+      if (cont && typeof W.addOrgBankRow === "function") {
+        var rows = Array.prototype.slice.call(cont.querySelectorAll(".org-bank-row")), onForm = {};
+        rows.forEach(function (r) { onForm[keyOf(rowVal(r, "org-bank-name"), rowVal(r, "org-bank-accnum"))] = 1; });
+        var missing = fb.filter(function (b) { return !onForm[keyOf(b.name, b.accountNumber)]; });
+        if (missing.length) {
+          rows.forEach(function (r) {         /* drop the empty placeholder row */
+            var blank = ["org-bank-name", "org-bank-accname", "org-bank-accnum", "org-bank-branch", "org-bank-swift"].every(function (c) { return !rowVal(r, c); });
+            if (blank) r.remove();
+          });
+          missing.forEach(function (b) {
+            W.addOrgBankRow({ bankName: b.name, accountName: "", accountNumber: b.accountNumber || "", branch: "", swift: "" });
+          });
+        }
+      }
+    } catch (e) { console.warn("[orgprofile] bank merge", e); }
+  }
+
+  /* ---------- refill the form when the stored profile changes ---------- */
+  function refresh(force) {
+    if (typeof W.loadOrgInfo !== "function") return;
+    if (touched && !force) return;
+    var raw = currentRaw();
+    if (!force && raw === lastRaw) { mergeBanks(); return; }
+    try { W.loadOrgInfo(); } catch (e) {}          /* the wrapper below records lastRaw and merges banks */
+  }
+
+  var origLoad = W.loadOrgInfo;
+  if (typeof origLoad === "function") {
+    W.loadOrgInfo = function () {
+      var r = origLoad.apply(this, arguments);
+      touched = false; lastRaw = currentRaw();
+      mergeBanks();
+      return r;
+    };
+  }
+
+  var origSave = W.saveOrgInfo;
+  if (typeof origSave === "function") {
+    W.saveOrgInfo = function () {
+      var byButton = Date.now() - explicitAt < 5000;
+      if (!byButton && formBlank() && storedHasCore()) {   /* would wipe a filled profile with an empty form */
+        console.warn("[orgprofile] blocked saving a blank form over a filled profile; reloading it instead");
+        refresh(true);
+        return;
+      }
+      var r = origSave.apply(this, arguments);
+      lastRaw = currentRaw(); touched = false;
+      return r;
+    };
+  }
+
+  var origRender = W.renderBankTable;
+  if (typeof origRender === "function") {
+    W.renderBankTable = function () {
+      var r = origRender.apply(this, arguments);
+      setTimeout(mergeBanks, 0);
+      return r;
+    };
+  }
+  var origTab = W.showTab;
+  if (typeof origTab === "function") {
+    W.showTab = function () {
+      var r = origTab.apply(this, arguments);
+      setTimeout(function () { refresh(false); }, 50);
+      return r;
+    };
+  }
+
+  /* what counts as "the user is editing" and "the user pressed Save" */
+  document.addEventListener("input", mark, true);
+  document.addEventListener("change", mark, true);
+  function mark(e) {
+    if (!e || !e.isTrusted || !e.target || !e.target.closest) return;
+    if (e.target.closest("#orgProfileTab")) touched = true;
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest && e.target.closest("button");
+    if (b && /saveOrgInfo/.test(b.getAttribute("onclick") || "")) explicitAt = Date.now();
+  }, true);
+
+  W.addEventListener("acx-company-row", function () { refresh(false); });
+  W.addEventListener("storage", function () { refresh(false); });
+  setInterval(function () { refresh(false); }, 3000);
+  setTimeout(function () { refresh(false); }, 1500);
+})();
+}catch(e){console.error('[merged:acacia-orgprofile.js]',e)}
+
+/* ===== merged: acacia-funds-inactive.js ===== */
+try{
+/* ACACIA BOOKS - Inactive bank accounts in Funds (acacia-funds-inactive.js)
+   Load AFTER app-3.js (last script in index.html).
+
+   - Every bank account card in Funds gets a "Mark inactive" / "Reactivate" button
+     (Undeposited Funds and Petty Cash are system accounts and cannot be made inactive).
+   - An inactive account is hidden from the Funds bank list and removed from the bank dropdowns,
+     so nothing new gets posted to it. Its balance, transactions and history are kept.
+   - "Show inactive" (next to the list search) shows them again, greyed out with an Inactive tag,
+     in the list and in the dropdowns, so you can view history or reactivate.
+   - The flag is stored on the account itself (banks[].inactive), so it syncs like the rest of Funds. */
+(function () {
+  "use strict";
+  if (window.__acxInactiveBanks) return;
+  window.__acxInactiveBanks = true;
+
+  var W = window, ls = W.localStorage, SHOW = "__acxShowInactiveBanks";
+
+  function J(k, d) { try { var v = JSON.parse(ls.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function getBanks() { var a = J("banks", []); return Array.isArray(a) ? a : []; }
+  function showInactive() { return ls.getItem(SHOW) === "1"; }
+  function isInactive(b) { return !!(b && b.inactive && !b.system && b.name !== "Undeposited Funds" && b.name !== "Petty Cash"); }
+
+  var css = document.createElement("style");
+  css.textContent =
+    ".acx-inactive-hidden{display:none !important}" +
+    ".funds-bank-card.acx-inactive{opacity:.62}" +
+    ".acx-inactive-tag{margin-left:8px;padding:1px 8px;border-radius:999px;background:#e5e7eb;color:#374151;font-size:11px;font-weight:600}" +
+    ".acx-show-inactive{display:inline-flex;align-items:center;gap:6px;font-size:12px;margin-left:10px;white-space:nowrap}";
+  (document.head || document.documentElement).appendChild(css);
+
+  /* ---------- toggle ---------- */
+  function setInactive(idx, flag) {
+    try { if (typeof W.requirePermission === "function" && !W.requirePermission("fundsTab", "edit", "edit funds accounts")) return; } catch (e) {}
+    var arr = getBanks(), b = arr[idx];
+    if (!b || b.system) return;
+    if (flag && !confirm("Mark \"" + b.name + "\" as inactive?\n\nIt will be hidden from Funds and from bank dropdowns so nothing new is posted to it. Its balance and history are kept, and you can reactivate it any time.")) return;
+    if (flag) b.inactive = true; else delete b.inactive;
+    ls.setItem("banks", JSON.stringify(arr));
+    try { if (typeof banks !== "undefined" && Array.isArray(banks)) { banks.length = 0; arr.forEach(function (x) { banks.push(x); }); } } catch (e) {}
+    refreshAll();
+  }
+  function refreshAll() {
+    try { if (typeof W.renderBankTable === "function") W.renderBankTable(); } catch (e) {}
+    try { if (typeof W.updateBankDropdowns === "function") W.updateBankDropdowns(); } catch (e) {}
+    strip();
+  }
+
+  /* ---------- the Funds bank list ---------- */
+  function ensureShowBox() {
+    var tools = document.querySelector("#bankListSection .funds-listtools");
+    if (!tools || document.getElementById("acxShowInactiveBox")) return;
+    var lab = document.createElement("label");
+    lab.id = "acxShowInactiveBox"; lab.className = "acx-show-inactive";
+    lab.innerHTML = '<input type="checkbox" id="acxShowInactive"> Show inactive';
+    var cb = lab.firstChild; cb.checked = showInactive();
+    cb.addEventListener("change", function () {
+      try { ls.setItem(SHOW, cb.checked ? "1" : "0"); } catch (e) {}
+      refreshAll();
+    });
+    tools.appendChild(lab);
+  }
+
+  function decorate() {
+    var host = document.getElementById("bankTable"); if (!host) return;
+    var all = getBanks(), show = showInactive();
+    ensureShowBox();
+    var cb = document.getElementById("acxShowInactive"); if (cb) cb.checked = show;
+    host.querySelectorAll(".funds-bank-card").forEach(function (card) {
+      if (card.getAttribute("data-acx-done")) return;
+      var vb = card.querySelector('button[onclick^="viewBank("]');
+      var m = vb && /viewBank\((\d+)\)/.exec(vb.getAttribute("onclick") || "");
+      if (!m) return;
+      var idx = parseInt(m[1], 10), b = all[idx];
+      if (!b) return;
+      card.setAttribute("data-acx-done", "1");
+      if (b.system) return;
+      var acts = card.querySelector(".funds-bank-card-actions");
+      if (acts) {
+        var tb = document.createElement("button");
+        tb.type = "button"; tb.className = "acx-toggle-active";
+        tb.textContent = isInactive(b) ? "Reactivate" : "Mark inactive";
+        tb.addEventListener("click", function () { setInactive(idx, !isInactive(b)); });
+        acts.insertBefore(tb, acts.querySelector("a") || null);
+      }
+      if (isInactive(b)) {
+        card.classList.add("acx-inactive");
+        var nm = card.querySelector(".funds-bank-card-name");
+        if (nm) { var tag = document.createElement("span"); tag.className = "acx-inactive-tag"; tag.textContent = "Inactive"; nm.appendChild(tag); }
+        if (!show) card.classList.add("acx-inactive-hidden");
+      }
+    });
+  }
+
+  /* ---------- bank dropdowns everywhere ---------- */
+  function hiddenLabels() {
+    var set = {};
+    getBanks().forEach(function (b) {
+      if (!isInactive(b)) return;
+      var n = String(b.name || "").trim(), a = String(b.accountNumber || "").trim();
+      set[n] = 1;
+      if (a) { set[n + " - " + a] = 1; set[n + " (" + a + ")"] = 1; set[n + " \u00b7 " + a] = 1; }
+    });
+    return set;
+  }
+  function strip() {
+    if (showInactive()) return;
+    var set = hiddenLabels(); if (!Object.keys(set).length) return;
+    var sels = document.querySelectorAll("select");
+    for (var i = 0; i < sels.length; i++) {
+      var sel = sels[i], opts = Array.prototype.slice.call(sel.options);
+      for (var j = 0; j < opts.length; j++) {
+        var o = opts[j], t = o.textContent.trim(), v = o.value;
+        if (!(set[t] || set[v])) continue;
+        if (o.selected && v !== "") continue;      /* never pull the option out from under a record being viewed or edited */
+        o.remove();
+      }
+    }
+  }
+
+  /* ---------- hook the existing functions ---------- */
+  function after(name, fn) {
+    var o = W[name]; if (typeof o !== "function" || o.__acxInact) return;
+    var w = function () { var r = o.apply(this, arguments); try { fn(); } catch (e) {} return r; };
+    w.__acxInact = true; W[name] = w;
+  }
+  after("renderBankTable", function () { decorate(); strip(); });
+  ["updateBankDropdowns", "populateOverviewTxBankSelect", "populateBankDropdowns", "populateTransferAccounts", "populateReconcileBankDropdown"]
+    .forEach(function (n) { after(n, strip); });
+
+  /* dropdowns built later (payment forms, modals) */
+  var t = null;
+  if (W.MutationObserver) {
+    new MutationObserver(function (muts) {
+      for (var i = 0; i < muts.length; i++) {
+        var m = muts[i], n = m.target;
+        if (n && (n.tagName === "SELECT" || n.tagName === "OPTION" || (m.addedNodes && m.addedNodes.length))) {
+          clearTimeout(t); t = setTimeout(strip, 150); return;
+        }
+      }
+    }).observe(document.body || document.documentElement, { childList: true, subtree: true });
+  }
+
+  setTimeout(function () { try { decorate(); strip(); } catch (e) {} }, 1500);
+  W.acxToggleBankInactive = setInactive;
+})();
+}catch(e){console.error('[merged:acacia-funds-inactive.js]',e)}
