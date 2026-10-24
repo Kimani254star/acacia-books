@@ -2631,38 +2631,9 @@ try{
     return id;
   };
 
-  /* ---------- 3. Generate button: never replaces, restores instead ---------- */
-  var origGen = window.generateCompanyId;
-  window.generateCompanyId = function () {
-    var c = cur(); if (!c) { alert("Sign in first."); return; }
-    var el = document.getElementById("companyId");
-    var have = (el && ok(el.value) && el.value) || bestKnown(c);
-    var self = this, args = arguments;
-    var done = function (id, fromServer) {
-      pin(c, id, fromServer ? false : true);
-      alert((fromServer ? "Found this company's Company ID on the server: " : "This company already has the Company ID ") + id +
-        ".\n\nOther apps are linked to it, so it is never replaced. If it was changed by mistake, use \"Restore previous ID\".");
-    };
-    if (have) return done(have, false);
-    serverId(c).then(function (sid) {
-      if (sid) return done(sid, true);
-      if (typeof origGen === "function") origGen.apply(self, args);
-      var v = document.getElementById("companyId");
-      if (v && ok(v.value)) { try { ls.setItem(FRESH + c, "1"); } catch (e) {} pin(c, v.value, true); }
-    });
-  };
-
-  /* ---------- 4. Restore previous ID: your choice always wins and is pushed ---------- */
-  var origRestore = window.restoreCompanyId;
-  if (typeof origRestore === "function") {
-    window.restoreCompanyId = function () {
-      var el = document.getElementById("companyId"), before = el ? el.value : "";
-      var out = origRestore.apply(this, arguments);
-      var c = cur(), after = el ? el.value : "";
-      if (c && ok(after) && after !== before) { try { ls.removeItem(FRESH + c); } catch (e) {} pin(c, after, "force"); }
-      return out;
-    };
-  }
+  /* ---------- 3/4. Generate + Restore are disabled: the ID made at sign-up is final ---------- */
+  window.generateCompanyId = function () { alert("The Company ID " + (cur() && bestKnown(cur()) || "") + " was created with your account. It is fixed and cannot be regenerated or changed."); };
+  window.restoreCompanyId = function () { alert("The Company ID is fixed when the account is created and cannot be changed."); };
 
   /* ---------- 5. keep field + stored copies correct on load / save / server row ---------- */
   function ensure() {
@@ -2682,14 +2653,13 @@ try{
     var r = rowFor(c), loc = bestKnown(c), srv = r && ok(r.org_code) ? r.org_code : null;
     if (srv && !loc) { pin(c, srv, false); return; }                         /* new device / cleared browser: get it back */
     if (!srv && loc) { pin(c, loc, true); return; }                          /* first time: server learns this device's ID */
-    if (srv && loc && srv !== loc && ls.getItem(WARN + c) !== srv + "|" + loc) { /* disagree: change nothing, tell the user */
-      try { ls.setItem(WARN + c, srv + "|" + loc); } catch (e) {}
-      alert("Company ID mismatch\n\nThis device has " + loc + " but the server has " + srv + ".\n\nNothing was changed. Open Organization Profile and use \"Restore previous ID\" to pick the one your other apps use; that choice is saved for every device.");
-    }
+    if (srv && loc && srv !== loc) { pin(c, srv, false); return; }           /* the ID saved when the account was created always wins */
   }
   window.addEventListener("acx-company-row", function () { try { onRow(); } catch (e) {} });
   document.addEventListener("DOMContentLoaded", function () { setTimeout(function () { try { ensure(); onRow(); } catch (e) {} }, 1500); });
   setTimeout(function () { try { ensure(); onRow(); } catch (e) {} }, 2500);
+  /* sign-up: the company row is created a moment after the ID, so push the ID again until the server has it */
+  [6000, 15000, 40000].forEach(function (ms) { setTimeout(function () { try { var c = cur(), id = c && bestKnown(c); if (id) mirror(c, id, false); } catch (e) {} }, ms); });
 
   window.acxCompanyIdInfo = function () { var c = cur(); return { company: c, local: localId(c), server: rowFor(c) && rowFor(c).org_code || null, highest: scanMax() }; };
 })();
