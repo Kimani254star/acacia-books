@@ -2567,6 +2567,11 @@ try{
   function pin(c, id, push) {
     if (!c || !ok(id)) return;
     var map = J(MAP, {}); map[c] = id; S(MAP, map);
+    /* also stamp the ID on this company's user accounts so it syncs to Supabase with them and Support can read it */
+    try {
+      var us = J("users", []);
+      if (Array.isArray(us)) { var uch = false; us.forEach(function (x) { if (x && String(x.companyId) === c && x.orgCode !== id) { x.orgCode = id; uch = true; } }); if (uch) { S("users", us); try { if (window.__acxPushAccounts) window.__acxPushAccounts(); } catch (e2) {} } }
+    } catch (e) {}
     S(MAX, String(Math.max(Number(J(MAX, 0)) || 0, numOf(id))));
     try {
       var cs = J("companies", []);
