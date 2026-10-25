@@ -2005,6 +2005,9 @@ try{
         var res = convert(rows, Array.isArray(existing) ? existing : []);
         if (!res.items.length) { alert("⚠️ No usable rows. Each row needs an item Name (headers such as Name, Item or Product)."); return; }
         localStorage.setItem("inventory_" + w, JSON.stringify(res.items));
+        /* push to the cloud right away so the Inventory app (same company) sees the import */
+        try { if (window.__companyNS && window.__companyNS.touch) window.__companyNS.touch("inventory_" + w); } catch (e) {}
+        try { if (window.__companySync && window.__companySync.pushDirty) window.__companySync.pushDirty(); } catch (e) {}
         ["syncInventoryBalancesToCOA"].forEach(function(fn){ if (typeof window[fn] === "function") { try { window[fn](); } catch (e) {} } });
         ["renderInventoryTable", "renderAccounts", "renderBalanceSheet", "renderInventorySummary", "renderStockValuation", "renderStockReports"].forEach(function(fn){
           if (typeof window[fn] === "function") { try { window[fn](); } catch (e) {} }

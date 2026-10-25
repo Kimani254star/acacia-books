@@ -2717,47 +2717,96 @@ try{
   }
   function rowVal(row, cls) { var e = row.querySelector("." + cls); return e ? String(e.value || "").trim() : ""; }
 
+  var bootAt = Date.now();
+  function allBlankRow(r) { return ["org-bank-name", "org-bank-accname", "org-bank-accnum", "org-bank-branch", "org-bank-swift"].every(function (c) { return !rowVal(r, c); }); }
+
+  /* The Bank Account list in the Organization Profile mirrors the Funds module exactly:
+       - every bank account in Funds is listed here (with the account name / branch / SWIFT typed here, if any)
+       - an account deleted in Funds is removed from here and from the stored profile (invoices / Pay Now stop showing it)
+       - details typed for a removed account are kept aside and restored if the account is ever added to Funds again */
   function mergeBanks() {
     try {
       if (!cid()) return;
-      var fb = fundsBanks(); if (!fb.length) return;
+      if (ls.getItem("banks") === null) return;                 /* Funds not loaded yet - never guess */
+      var fb = fundsBanks();
+      if (!fb.length && Date.now() - bootAt < 8000) return;    /* an empty list is only trusted once cloud data had time to arrive */
+      var fkeys = {}; fb.forEach(function (b) { fkeys[keyOf(b.name, b.accountNumber)] = b; });
 
       /* a) the stored profile (only when one already exists, so we never invent a half-empty profile) */
       var org = readOrg();
       if (org) {
-        var list = Array.isArray(org.banks) ? org.banks.slice() : [], have = {}, add = [];
-        list.forEach(function (x) { have[keyOf(x.bankName, x.accountNumber)] = 1; });
+        var cur = Array.isArray(org.banks) ? org.banks : [], arch = Array.isArray(org.bankArchive) ? org.bankArchive : [], known = {};
+        arch.forEach(function (x) { if (x) known[keyOf(x.bankName, x.accountNumber)] = x; });
+        cur.forEach(function (x) { if (x) known[keyOf(x.bankName, x.accountNumber)] = x; });
+        var next = [], nextKeys = {};
         fb.forEach(function (b) {
-          var k = keyOf(b.name, b.accountNumber); if (have[k]) return; have[k] = 1;
-          add.push({ bankName: b.name, accountName: "", accountNumber: b.accountNumber || "", branch: "", swift: "" });
+          var k = keyOf(b.name, b.accountNumber); if (nextKeys[k]) return; nextKeys[k] = 1;
+          var old = known[k] || {};
+          next.push({ bankName: b.name, accountName: old.accountName || "", accountNumber: b.accountNumber || "", branch: old.branch || "", swift: old.swift || "" });
         });
-        if (add.length) {
-          org.banks = list.concat(add);
-          if (!org.bankName) { org.bankName = add[0].bankName; org.bankAccountNumber = add[0].accountNumber; }
+        var keep = [];
+        Object.keys(known).forEach(function (k) {
+          var x = known[k];
+          if (!nextKeys[k] && (x.accountName || x.branch || x.swift)) keep.push(x);
+        });
+        keep = keep.slice(-50);
+        if (JSON.stringify(cur) !== JSON.stringify(next) || JSON.stringify(arch) !== JSON.stringify(keep)) {
+          org.banks = next; org.bankArchive = keep;
+          var f = next[0] || {};
+          org.bankName = f.bankName || ""; org.bankAccountName = f.accountName || ""; org.bankAccountNumber = f.accountNumber || "";
+          org.bankBranch = f.branch || ""; org.bankSwift = f.swift || "";
+          org.updatedAt = new Date().toISOString();
           var s = JSON.stringify(org), k2 = orgKey();
           ls.setItem("orgInfo", s); if (k2) ls.setItem(k2, s);
           lastRaw = currentRaw();       /* our own write: no need to reload the form */
         }
       }
 
-      /* b) the form on screen: append only the missing rows, never rebuild (keeps what is being typed) */
+      /* b) the form on screen: drop rows deleted in Funds, append missing ones (keeps what is being typed) */
       var cont = document.getElementById("orgBanksContainer");
       if (cont && typeof W.addOrgBankRow === "function") {
         var rows = Array.prototype.slice.call(cont.querySelectorAll(".org-bank-row")), onForm = {};
-        rows.forEach(function (r) { onForm[keyOf(rowVal(r, "org-bank-name"), rowVal(r, "org-bank-accnum"))] = 1; });
-        var missing = fb.filter(function (b) { return !onForm[keyOf(b.name, b.accountNumber)]; });
-        if (missing.length) {
-          rows.forEach(function (r) {         /* drop the empty placeholder row */
-            var blank = ["org-bank-name", "org-bank-accname", "org-bank-accnum", "org-bank-branch", "org-bank-swift"].every(function (c) { return !rowVal(r, c); });
-            if (blank) r.remove();
-          });
-          missing.forEach(function (b) {
-            W.addOrgBankRow({ bankName: b.name, accountName: "", accountNumber: b.accountNumber || "", branch: "", swift: "" });
-          });
-        }
+        rows.forEach(function (r) {
+          if (allBlankRow(r)) return;
+          var k = keyOf(rowVal(r, "org-bank-name"), rowVal(r, "org-bank-accnum"));
+          if ((!fkeys[k] && !r.dataset.acxEdited) || onForm[k]) { r.remove(); return; }   /* deleted in Funds (or duplicate) */
+          onForm[k] = 1;
+        });
+        var details = {}; ((org && org.banks) || []).forEach(function (x) { details[keyOf(x.bankName, x.accountNumber)] = x; });
+        var added = false;
+        fb.forEach(function (b) {
+          var k = keyOf(b.name, b.accountNumber); if (onForm[k]) return; onForm[k] = 1; added = true;
+          W.addOrgBankRow(details[k] || { bankName: b.name, accountName: "", accountNumber: b.accountNumber || "", branch: "", swift: "" });
+        });
+        var left = Array.prototype.slice.call(cont.querySelectorAll(".org-bank-row"));
+        if (added || left.length > 1) left.forEach(function (r) { if (allBlankRow(r) && cont.querySelectorAll(".org-bank-row").length > 1) r.remove(); });
+        if (!cont.querySelector(".org-bank-row")) W.addOrgBankRow();
       }
     } catch (e) { console.warn("[orgprofile] bank merge", e); }
   }
+
+  /* typed-in rows are never removed by the Funds mirror; rows linked to Funds can only be removed in Funds */
+  document.addEventListener("input", function (e) {
+    var r = e && e.target && e.target.closest && e.target.closest(".org-bank-row");
+    if (r && e.isTrusted) r.dataset.acxEdited = "1";
+  }, true);
+  var origRemoveRow = W.removeOrgBankRow;
+  if (typeof origRemoveRow === "function") {
+    W.removeOrgBankRow = function (btn) {
+      var row = btn && btn.closest && btn.closest(".org-bank-row");
+      if (row) {
+        var k = keyOf(rowVal(row, "org-bank-name"), rowVal(row, "org-bank-accnum"));
+        if (fundsBanks().some(function (b) { return keyOf(b.name, b.accountNumber) === k; })) {
+          alert("This bank account comes from the Funds module.\nDelete it in Funds and it will disappear from here too.");
+          return;
+        }
+      }
+      return origRemoveRow.apply(this, arguments);
+    };
+  }
+  try {
+    if (W.__companyNS && W.__companyNS.onSetItem) W.__companyNS.onSetItem(function (k) { if (k === "banks") setTimeout(mergeBanks, 50); });
+  } catch (e) {}
 
   /* ---------- refill the form when the stored profile changes ---------- */
   function refresh(force) {
