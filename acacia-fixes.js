@@ -2004,15 +2004,33 @@ try{
         var existing = lsGet("inventory_" + w, []);
         var res = convert(rows, Array.isArray(existing) ? existing : []);
         if (!res.items.length) { alert("⚠️ No usable rows. Each row needs an item Name (headers such as Name, Item or Product)."); return; }
-        localStorage.setItem("inventory_" + w, JSON.stringify(res.items));
-        /* push to the cloud right away so the Inventory app (same company) sees the import */
-        try { if (window.__companyNS && window.__companyNS.touch) window.__companyNS.touch("inventory_" + w); } catch (e) {}
-        try { if (window.__companySync && window.__companySync.pushDirty) window.__companySync.pushDirty(); } catch (e) {}
+        /* MERGE (not replace): update items that match by SKU / name, add new ones, keep everything else already in the warehouse */
+        var base = Array.isArray(existing) ? existing.slice() : [];
+        var idxS = {}, idxN = {};
+        base.forEach(function(it, i){
+          if (!it) return;
+          if (str(it.sku)) idxS[str(it.sku).toLowerCase()] = i;
+          if (str(it.name)) idxN[str(it.name).toLowerCase()] = i;
+        });
+        var added = 0, updated = 0;
+        res.items.forEach(function(it){
+          var k = str(it.sku).toLowerCase(), n = str(it.name).toLowerCase();
+          var at = (k && idxS[k] !== undefined) ? idxS[k] : (n && idxN[n] !== undefined ? idxN[n] : -1);
+          if (at >= 0) { base[at] = it; updated++; }
+          else {
+            base.push(it); added++;
+            var ni = base.length - 1;
+            if (k) idxS[k] = ni;
+            if (n) idxN[n] = ni;
+          }
+        });
+        res.report.added = added; res.report.updated = updated;
+        localStorage.setItem("inventory_" + w, JSON.stringify(base));
         ["syncInventoryBalancesToCOA"].forEach(function(fn){ if (typeof window[fn] === "function") { try { window[fn](); } catch (e) {} } });
         ["renderInventoryTable", "renderAccounts", "renderBalanceSheet", "renderInventorySummary", "renderStockValuation", "renderStockReports"].forEach(function(fn){
           if (typeof window[fn] === "function") { try { window[fn](); } catch (e) {} }
         });
-        var r = res.report, msg = "✅ Imported " + r.rows + " item(s) successfully!";
+        var r = res.report, msg = "✅ Imported " + r.rows + " item(s): " + r.added + " added, " + r.updated + " updated. Existing items not in the file were kept.";
         if (r.skipped) msg += "\n• " + r.skipped + " row(s) skipped (no item name).";
         var unk = Object.keys(r.unknown);
         if (unk.length) msg += "\n⚠️ Account not found in your Chart of Accounts: " + unk.slice(0, 6).join(", ") + (unk.length > 6 ? " …" : "") + " (add it under Chart of Accounts or fix the file).";
