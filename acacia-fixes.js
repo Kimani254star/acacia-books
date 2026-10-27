@@ -1494,10 +1494,7 @@ try{
   window.__acxContrastFix = true;
 
   var css =
-    "#orgProfileTab .op-hero,#warehousesTab .wh-hero{background:linear-gradient(135deg,#0f2557 0,#1e3a8a 55%,#1d4ed8 100%)!important;color:#fff!important}" +
-    "#orgProfileTab .op-hero *{color:#fff}" +
-    "#orgProfileTab .op-hero .text-blue-100{color:#dbeafe!important}" +
-    "#orgProfileTab .op-card,#orgProfileTab .op-nav{color:#1f2937}" +
+                "#orgProfileTab .op-card,#orgProfileTab .op-nav{color:#1f2937}" +
     "#orgProfileTab .op-card input,#orgProfileTab .op-card select,#orgProfileTab .op-card textarea{background:#fff!important;color:#111827!important;border:1px solid #d1d5db}" +
     "#orgProfileTab .op-card label{color:#374151}" +
     "#orgProfileTab .op-nav a{color:#1e3a8a!important;background:#fff!important}" +

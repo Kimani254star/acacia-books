@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Acacia Docs</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="acaciabooks-logo.png">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:#f3f4f8;color:#1f2340}
+.top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#312e81;color:#fff;flex-wrap:wrap}
+.top img{height:28px}.top b{font-size:17px}.top a.back{margin-left:auto;color:#c7d2fe;text-decoration:none;font-size:14px}
+.top input.title{background:#4338ca;border:0;color:#fff;border-radius:8px;padding:6px 10px;font-size:15px;min-width:200px}
+button,.btn{cursor:pointer;border:0;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;background:#6d28d9;color:#fff}
+button:hover,.btn:hover{background:#7c3aed}button.g{background:#e5e7f5;color:#1f2340}button.g:hover{background:#d4d7ee}button.d{background:#dc2626}
+.bar{display:flex;gap:6px;padding:8px 16px;background:#fff;border-bottom:1px solid #dcdff0;flex-wrap:wrap;align-items:center}
+select{padding:6px;border-radius:8px;border:1px solid #c9cde6}
+.side{width:230px;background:#fff;border-right:1px solid #dcdff0;overflow:auto;padding:10px}
+.side .it{padding:8px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;justify-content:space-between;gap:6px}
+.side .it:hover,.side .it.on{background:#eef0ff}
+.wrap{display:flex;height:calc(100vh - 100px)}.main{flex:1;overflow:auto}
+@media(max-width:700px){.side{width:130px}}
+</style></head><body>
+<div class="top"><img src="acaciabooks-logo.png" alt=""><b>Acacia Docs</b><input id="title" class="title" placeholder="Untitled document"><a class="back" href="index.html">← Back to Acacia Books</a></div>
+
+<div class="bar">
+<button class="g" onclick="newDoc()">＋ New</button>
+<select onchange="fmt('formatBlock',this.value);this.value=''"><option value="">Style</option><option value="P">Normal</option><option value="H1">Heading 1</option><option value="H2">Heading 2</option><option value="H3">Heading 3</option></select>
+<button class="g" onclick="fmt('bold')"><b>B</b></button><button class="g" onclick="fmt('italic')"><i>I</i></button><button class="g" onclick="fmt('underline')"><u>U</u></button>
+<button class="g" onclick="fmt('insertUnorderedList')">• List</button><button class="g" onclick="fmt('insertOrderedList')">1. List</button>
+<button class="g" onclick="fmt('justifyLeft')">⬅</button><button class="g" onclick="fmt('justifyCenter')">⬌</button><button class="g" onclick="fmt('justifyRight')">➡</button>
+<button class="g" onclick="addLink()">🔗</button><button class="g" onclick="addTable()">▦ Table</button>
+<input type="color" onchange="fmt('foreColor',this.value)" title="Text colour">
+<span style="margin-left:auto"></span>
+<label class="btn">⬆ Open Word (.docx)<input type="file" accept=".docx" hidden onchange="importDocx(this.files[0])"></label>
+<button onclick="exportWord()">⬇ Download for Word</button><button class="g" onclick="window.print()">🖨 PDF / Print</button><button class="d" onclick="delDoc()">🗑</button>
+<span id="st" style="font-size:12px;color:#6b7099"></span></div>
+<div class="wrap"><div class="side" id="list"></div>
+<div class="main" style="padding:24px"><div id="ed" contenteditable="true" style="max-width:820px;min-height:1000px;margin:auto;background:#fff;padding:60px 70px;box-shadow:0 2px 12px #0002;outline:0;line-height:1.6;font-size:15px"></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<script>
+var K="acaciaDocs",docs=JSON.parse(localStorage.getItem(K)||"[]"),cur=null,$=function(i){return document.getElementById(i)};
+function save(){localStorage.setItem(K,JSON.stringify(docs))}
+function fmt(c,v){$("ed").focus();document.execCommand(c,false,v||null)}
+function addLink(){var u=prompt("Link address (https://...)");if(u)fmt("createLink",u)}
+function addTable(){var r=+prompt("Rows",3),c=+prompt("Columns",3);if(!r||!c)return;var h="<table border=1 style='border-collapse:collapse;width:100%'>";for(var i=0;i<r;i++){h+="<tr>";for(var j=0;j<c;j++)h+="<td style='padding:6px'>&nbsp;</td>";h+="</tr>"}fmt("insertHTML",h+"</table><p></p>")}
+function newDoc(){commit();cur={id:Date.now(),title:"",html:"<p><br></p>",t:Date.now()};docs.unshift(cur);save();show()}
+function commit(){if(!cur)return;cur.title=$("title").value;cur.html=$("ed").innerHTML;cur.t=Date.now();save();$("st").textContent="Saved "+new Date().toLocaleTimeString();render()}
+function show(){$("title").value=cur.title;$("ed").innerHTML=cur.html;render()}
+function render(){$("list").innerHTML=docs.map(function(d){return '<div class="it'+(d===cur?' on':'')+'" onclick="openDoc('+d.id+')">📝 '+(d.title||"Untitled document").replace(/</g,"&lt;")+'</div>'}).join("")}
+function openDoc(id){commit();cur=docs.filter(function(d){return d.id==id})[0];show()}
+function delDoc(){if(!cur||!confirm("Delete this document?"))return;docs=docs.filter(function(d){return d!==cur});cur=docs[0]||null;save();if(!cur)newDoc();else show()}
+function exportWord(){commit();var h='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>'+cur.title+'</title></head><body>'+cur.html+'</body></html>';
+ var a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+h],{type:"application/msword"}));a.download=(cur.title||"document")+".doc";a.click()}
+function importDocx(f){if(!f)return;var r=new FileReader();r.onload=function(){mammoth.convertToHtml({arrayBuffer:r.result}).then(function(o){commit();cur={id:Date.now(),title:f.name.replace(/\.docx$/i,""),html:o.value,t:Date.now()};docs.unshift(cur);save();show()})};r.readAsArrayBuffer(f)}
+$("ed").addEventListener("input",function(){clearTimeout(window._t);window._t=setTimeout(commit,800)});$("title").addEventListener("input",function(){clearTimeout(window._t);window._t=setTimeout(commit,800)});
+if(!docs.length)newDoc();else{cur=docs[0];show()}
+</script></body></html>

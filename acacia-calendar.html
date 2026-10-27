@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Acacia Calendar</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="acaciabooks-logo.png">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:#f3f4f8;color:#1f2340}
+.top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#312e81;color:#fff;flex-wrap:wrap}
+.top img{height:28px}.top b{font-size:17px}.top a.back{margin-left:auto;color:#c7d2fe;text-decoration:none;font-size:14px}
+.top input.title{background:#4338ca;border:0;color:#fff;border-radius:8px;padding:6px 10px;font-size:15px;min-width:200px}
+button,.btn{cursor:pointer;border:0;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;background:#6d28d9;color:#fff}
+button:hover,.btn:hover{background:#7c3aed}button.g{background:#e5e7f5;color:#1f2340}button.g:hover{background:#d4d7ee}button.d{background:#dc2626}
+.bar{display:flex;gap:6px;padding:8px 16px;background:#fff;border-bottom:1px solid #dcdff0;flex-wrap:wrap;align-items:center}
+select{padding:6px;border-radius:8px;border:1px solid #c9cde6}
+.side{width:230px;background:#fff;border-right:1px solid #dcdff0;overflow:auto;padding:10px}
+.side .it{padding:8px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;justify-content:space-between;gap:6px}
+.side .it:hover,.side .it.on{background:#eef0ff}
+.wrap{display:flex;height:calc(100vh - 100px)}.main{flex:1;overflow:auto}
+@media(max-width:700px){.side{width:130px}}
+</style></head><body>
+<div class="top"><img src="acaciabooks-logo.png" alt=""><b>Acacia Calendar</b><a class="back" href="index.html">← Back to Acacia Books</a></div>
+
+<div class="bar"><button class="g" onclick="mv(-1)">◀</button><b id="mt" style="min-width:150px;text-align:center"></b><button class="g" onclick="mv(1)">▶</button><button class="g" onclick="today()">Today</button>
+<span style="margin-left:auto"></span><button onclick="addEv(sel||ds(new Date()))">＋ New event</button><button class="g" onclick="ics()">⬇ Export (.ics)</button></div>
+<div style="display:flex;flex-wrap:wrap"><div style="flex:3;min-width:320px;padding:12px"><div id="cal" style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#d5d8ec;border:1px solid #d5d8ec"></div></div>
+<div style="flex:1;min-width:260px;padding:12px"><h3 style="margin:4px 0 10px">Events <span id="sd" style="font-weight:400;font-size:13px;color:#6b7099"></span></h3><div id="ev"></div></div></div>
+<div id="dlg" style="display:none;position:fixed;inset:0;background:#0006;z-index:9;align-items:center;justify-content:center"><div style="background:#fff;border-radius:14px;padding:20px;width:340px;max-width:92vw">
+<h3 style="margin-top:0">New event</h3><input id="et" placeholder="Title" style="width:100%;padding:9px;margin-bottom:8px;border:1px solid #c9cde6;border-radius:8px">
+<input id="ed" type="date" style="width:100%;padding:9px;margin-bottom:8px;border:1px solid #c9cde6;border-radius:8px"><input id="eti" type="time" style="width:100%;padding:9px;margin-bottom:8px;border:1px solid #c9cde6;border-radius:8px">
+<label style="font-size:14px"><input id="em" type="checkbox"> 🎥 Add an Acacia Meet link</label><div style="display:flex;gap:8px;margin-top:14px"><button onclick="saveEv()">Save</button><button class="g" onclick="$('dlg').style.display='none'">Cancel</button></div></div></div>
+<script>
+var $=function(i){return document.getElementById(i)},K="acaciaCal",evs=JSON.parse(localStorage.getItem(K)||"[]"),y,m,sel=null;
+var d0=new Date();y=d0.getFullYear();m=d0.getMonth();
+function ds(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function save(){localStorage.setItem(K,JSON.stringify(evs))}
+function mv(n){m+=n;if(m<0){m=11;y--}if(m>11){m=0;y++}draw()}function today(){var t=new Date();y=t.getFullYear();m=t.getMonth();sel=ds(t);draw()}
+function draw(){$("mt").textContent=new Date(y,m,1).toLocaleDateString(undefined,{month:"long",year:"numeric"});var h="";
+ "Sun Mon Tue Wed Thu Fri Sat".split(" ").forEach(function(d){h+='<div style="background:#eef0ff;padding:6px;text-align:center;font-size:12px;font-weight:600">'+d+'</div>'});
+ var first=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate(),t=ds(new Date());for(var i=0;i<first;i++)h+='<div style="background:#f8f9ff;min-height:84px"></div>';
+ for(var d=1;d<=n;d++){var k=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"),es=evs.filter(function(e){return e.date===k});
+  h+='<div onclick="sel=\''+k+'\';draw()" ondblclick="addEv(\''+k+'\')" style="background:'+(k===sel?'#ede9fe':'#fff')+';min-height:84px;padding:4px;cursor:pointer"><div style="font-size:12px;'+(k===t?'background:#6d28d9;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px':'')+'">'+d+'</div>'+
+  es.slice(0,3).map(function(e){return '<div style="font-size:11px;background:#6d28d9;color:#fff;border-radius:4px;padding:1px 4px;margin-top:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+(e.time?e.time+" ":"")+e.title.replace(/</g,"&lt;")+'</div>'}).join("")+(es.length>3?'<div style="font-size:11px">+'+(es.length-3)+' more</div>':'')+'</div>'}
+ $("cal").innerHTML=h;list()}
+function list(){var s=sel,es=(s?evs.filter(function(e){return e.date===s}):evs.filter(function(e){return e.date>=ds(new Date())}).sort(function(a,b){return (a.date+a.time)<(b.date+b.time)?-1:1}).slice(0,15));
+ $("sd").textContent=s?"on "+s:"(upcoming)";$("ev").innerHTML=es.length?es.map(function(e){return '<div style="background:#fff;border-radius:10px;padding:10px;margin-bottom:8px;box-shadow:0 1px 4px #0001"><b>'+e.title.replace(/</g,"&lt;")+'</b><div style="font-size:12px;color:#6b7099">'+e.date+(e.time?" · "+e.time:"")+'</div>'+(e.meet?'<a href="'+e.meet+'" target="_blank" class="btn" style="display:inline-block;margin-top:6px;text-decoration:none">🎥 Join Acacia Meet</a> ':'')+'<button class="g" style="margin-top:6px" onclick="rm('+e.id+')">Delete</button></div>'}).join(""):'<p style="color:#6b7099;font-size:14px">No events. Double‑click a day to add one.</p>'}
+function addEv(d){$("et").value="";$("ed").value=d;$("eti").value="";$("em").checked=false;$("dlg").style.display="flex"}
+function saveEv(){var t=$("et").value.trim();if(!t)return alert("Enter a title");var e={id:Date.now(),title:t,date:$("ed").value,time:$("eti").value};
+ if($("em").checked){var base=location.href.replace(/[^\/]*$/,"");e.meet=base+"meet.html?room=acacia-"+Math.floor(1000+Math.random()*9000)}
+ evs.push(e);save();$("dlg").style.display="none";sel=e.date;var p=e.date.split("-");y=+p[0];m=+p[1]-1;draw()}
+function rm(id){evs=evs.filter(function(e){return e.id!==id});save();draw()}
+function ics(){var L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Acacia//Calendar//EN"];evs.forEach(function(e){var d=e.date.replace(/-/g,""),t=e.time?"T"+e.time.replace(":","")+"00":"";
+ L.push("BEGIN:VEVENT","UID:"+e.id+"@acacia","DTSTAMP:"+new Date().toISOString().replace(/[-:]|\.\d+/g,""),e.time?"DTSTART:"+d+t:"DTSTART;VALUE=DATE:"+d,"SUMMARY:"+e.title+(e.meet?"\nURL:"+e.meet:""),"END:VEVENT")});L.push("END:VCALENDAR");
+ var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([L.join("\r\n")],{type:"text/calendar"}));a.download="acacia-calendar.ics";a.click()}
+draw();
+</script></body></html>
