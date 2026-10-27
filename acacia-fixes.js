@@ -1,4 +1,4 @@
-/* acacia-fixes.js — merged: acacia-fixes.js, -2, -3, -4 and acacia-contrast-fix.js = ALL Acacia fixes + contrast in ONE file */
+/* acacia-fixes.js — merged: acacia-fixes.js, -2, -3, -4, acacia-contrast-fix.js, acacia-persist-fix.js and acacia-supplier-ids.js = ALL Acacia fixes in ONE file */
 /* ===================== acacia-fixes.js ===================== */
 try{
 /*!
@@ -2104,3 +2104,265 @@ try{
   if(document.readyState!=="complete")window.addEventListener("load",run);
   try{ var tm=0; new MutationObserver(function(){ if(tm)return; tm=setTimeout(function(){tm=0;run()},400); }).observe(document.body,{childList:true,subtree:true}); }catch(e){}
 })();
+
+/* ===================== merged: acacia-persist-fix.js ===================== */
+try{
+/* acacia-persist-fix.js - keeps the Organization Profile permanent and removes duplicate
+ * Units of Measurement / VAT Rules.  Load LAST in index.html (after acacia-live-sync.js).
+ *
+ * 1) Organization Profile
+ *    - every real Save also writes a private safety copy on this device (not part of cloud sync);
+ *    - if the profile is later wiped or loses fields (a stale/blank cloud copy, another app's smaller
+ *      copy, a refresh race) the empty fields are refilled from the safety copy and pushed back to the cloud;
+ *    - if a save cannot reach the cloud within ~12 s a notice says so (instead of silently losing it).
+ *    Bank accounts are NOT touched: they keep mirroring Funds.
+ * 2) Duplicates: Units of Measurement (acx_unitsOfMeasurement) and VAT Rules (vatRules) are de-duplicated
+ *    deterministically (same result in every browser, so the cloud merge converges) after load and after
+ *    every cloud pull.
+ */
+(function (W) {
+  "use strict";
+  if (W.__acxPersistFix) return;
+  W.__acxPersistFix = true;
+
+  var LS = W.localStorage;
+  var NS = function () { return W.__companyNS || null; };
+  var CORE = ["name", "pin", "phone", "email", "address"];
+  var SKIP = { banks: 1, bankName: 1, bankAccountName: 1, bankAccountNumber: 1, bankBranch: 1, bankSwift: 1, updatedAt: 1 };
+  var lastSaveAt = 0, healing = false;
+
+  function J(k, d) { try { var v = JSON.parse(LS.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function cid() { var u = J("loggedInUser", null); return u && u.companyId && !u.demo ? String(u.companyId) : ""; }
+  function orgKey() { var c = cid(); return c ? "orgInfo_" + c : null; }
+  function safeKey() { var c = cid(); return c ? "acx_orgSafe_" + c : null; }
+  function ts(o) { return (o && Date.parse(o.updatedAt || 0)) || 0; }
+  function readOrg() {
+    var k = orgKey(), a = k ? J(k, null) : null, b = J("orgInfo", null);
+    if (a && b) return ts(b) > ts(a) ? b : a;
+    return a || b || null;
+  }
+  function empty(v) {
+    return v == null || v === "" || (Array.isArray(v) && !v.length) ||
+      (typeof v === "object" && !Array.isArray(v) && !Object.keys(v).length);
+  }
+  function hasCore(o) { return !!o && CORE.some(function (f) { return !empty(o[f]); }); }
+
+  /* raw (un-namespaced, never synced) storage for the safety copy */
+  function rawSet(k, v) {
+    var ns = NS(), real = ns && ns.real ? ns.real : null;
+    if (real) Storage.prototype.setItem.call(real, k, v); else LS.setItem(k, v);
+  }
+  function rawGet(k) {
+    var ns = NS(), real = ns && ns.real ? ns.real : null;
+    return real ? Storage.prototype.getItem.call(real, k) : LS.getItem(k);
+  }
+
+  function toast(msg) {
+    try {
+      if (typeof W.showNotification === "function") { W.showNotification(msg, "error"); return; }
+      var d = document.createElement("div");
+      d.textContent = msg;
+      d.style.cssText = "position:fixed;right:16px;bottom:16px;max-width:380px;background:#b45309;color:#fff;padding:10px 14px;border-radius:8px;z-index:2147483647;font:13px/1.4 sans-serif";
+      document.body.appendChild(d);
+      setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 9000);
+    } catch (e) {}
+  }
+
+  /* ---------- 1. Organization Profile ---------- */
+  function snapshot() {
+    var k = safeKey(), o = readOrg();
+    if (!k || !hasCore(o)) return;                 /* never replace a good copy with a blank profile */
+    var s = JSON.stringify(o);
+    try { rawSet(k, s); }
+    catch (e) { try { var c = Object.assign({}, o); delete c.logo; rawSet(k, JSON.stringify(c)); } catch (e2) {} }
+  }
+
+  function userIsTyping() {
+    var a = document.activeElement;
+    return !!(a && a.closest && a.closest("#orgProfileTab") && /INPUT|TEXTAREA|SELECT/.test(a.tagName));
+  }
+
+  function heal() {
+    if (healing || !cid() || Date.now() - lastSaveAt < 4000) return;
+    var k = safeKey(), raw = k && rawGet(k);
+    if (!raw) return;
+    var snap; try { snap = JSON.parse(raw); } catch (e) { return; }
+    if (!hasCore(snap)) return;
+    var cur = readOrg(), merged = cur ? Object.assign({}, cur) : {}, changed = false;
+    Object.keys(snap).forEach(function (f) {
+      if (SKIP[f]) return;
+      if (empty(merged[f]) && !empty(snap[f])) { merged[f] = snap[f]; changed = true; }
+    });
+    if (!changed) return;
+    healing = true;
+    try {
+      merged.updatedAt = new Date().toISOString();  /* newer than any stale cloud copy, so it wins */
+      var s = JSON.stringify(merged), ok = orgKey();
+      LS.setItem("orgInfo", s);
+      if (ok) LS.setItem(ok, s);
+      if (!userIsTyping() && typeof W.loadOrgInfo === "function") { try { W.loadOrgInfo(); } catch (e) {} }
+      console.info("[persist-fix] Organization Profile restored from the safety copy");
+      pushSoon();
+    } finally { healing = false; }
+  }
+
+  function pushSoon() {
+    setTimeout(function () {
+      try { W.__companySync && W.__companySync.pushDirty && W.__companySync.pushDirty(); } catch (e) {}
+    }, 300);
+  }
+
+  function watchCloud() {
+    setTimeout(function () {
+      var ns = NS(), d = ns && ns.dirty ? ns.dirty : null;
+      if (d && Object.keys(d).some(function (k) { return /^orgInfo/.test(k); })) {
+        toast("Organization Profile is saved on this device but has not reached the cloud yet. Keep the app open - it will keep retrying.");
+      }
+    }, 12000);
+  }
+
+  var origSave = W.saveOrgInfo;
+  if (typeof origSave === "function") {
+    W.saveOrgInfo = function () {
+      var t0 = new Date().toISOString();
+      lastSaveAt = Date.now();
+      var r = origSave.apply(this, arguments);
+      setTimeout(function () {                       /* logo uploads finish asynchronously */
+        var o = readOrg();
+        if (o && String(o.updatedAt || "") >= t0) { snapshot(); pushSoon(); watchCloud(); }
+      }, 1500);
+      return r;
+    };
+  }
+
+  /* ---------- 2. Duplicate clean-up ---------- */
+  function idOf(r) { return String(r && (r.id != null ? r.id : r.__id != null ? r.__id : "")); }
+  function pickMin(group) {
+    return group.reduce(function (a, b) { return idOf(b) < idOf(a) ? b : a; });
+  }
+
+  function dedupe(rows, keyFn, fill) {
+    var groups = Object.create(null), order = [], out = [];
+    rows.forEach(function (r) {
+      if (!r || typeof r !== "object" || r.deleted) { order.push({ raw: r }); return; }
+      var ks = keyFn(r), k = ks.filter(Boolean)[0];
+      if (!k) { order.push({ raw: r }); return; }
+      var g = groups[k];
+      if (!g) { g = groups[k] = { rows: [] }; order.push({ g: g }); }
+      g.rows.push(r);
+    });
+    var removed = 0;
+    order.forEach(function (x) {
+      if (x.raw !== undefined || !x.g) { out.push(x.raw); return; }
+      var keep = pickMin(x.g.rows);
+      if (fill) x.g.rows.forEach(function (o) {
+        if (o !== keep) Object.keys(o).forEach(function (f) {
+          if (f !== "__id" && f !== "id" && empty(keep[f]) && !empty(o[f])) keep[f] = o[f];
+        });
+      });
+      removed += x.g.rows.length - 1;
+      out.push(keep);
+    });
+    return removed ? out : null;
+  }
+
+  function cleanKey(key, keyFn, fill) {
+    var raw = LS.getItem(key), rows;
+    if (!raw) return false;
+    try { rows = JSON.parse(raw); } catch (e) { return false; }
+    if (!Array.isArray(rows) || rows.length < 2) return false;
+    var out = dedupe(rows, keyFn, fill);
+    if (!out) return false;
+    LS.setItem(key, JSON.stringify(out));
+    return true;
+  }
+
+  function cleanDupes() {
+    var vat = cleanKey("vatRules", function (r) {
+      return [String(r.name || "").trim().toLowerCase() + "|" + (Number(r.percent) || 0) + "|" + (r.appliesTo || "both")];
+    }, false);
+    var uom = cleanKey("acx_unitsOfMeasurement", function (r) {
+      var n = String(r.name || "").trim().toLowerCase(), s = String(r.sku || "").trim().toUpperCase();
+      return [n ? "n:" + n : "", s ? "s:" + s : ""];
+    }, true);
+    if (uom) {                                        /* the settings list keeps its own copy: let it rebuild */
+      var el = document.getElementById("acxUom");
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+      try { if (typeof W.acxRenderSettingsLists === "function") W.acxRenderSettingsLists(); } catch (e) {}
+    }
+    if (vat) {
+      try {
+        var pane = document.getElementById("taxPane-rates");
+        if (pane && !pane.classList.contains("hidden") && W.TaxEngine && W.TaxEngine.showPane) W.TaxEngine.showPane("rates");
+      } catch (e) {}
+    }
+    if (vat || uom) pushSoon();
+  }
+
+  /* ---------- schedule ---------- */
+  var lastSig = "";
+  function tick() {
+    try {
+      heal();
+      var sig = (LS.getItem("vatRules") || "").length + ":" + (LS.getItem("acx_unitsOfMeasurement") || "").length;
+      if (sig !== lastSig) { cleanDupes(); lastSig = (LS.getItem("vatRules") || "").length + ":" + (LS.getItem("acx_unitsOfMeasurement") || "").length; }
+    } catch (e) { console.warn("[persist-fix]", e); }
+  }
+  W.addEventListener("acx-company-row", function () { setTimeout(tick, 200); });
+  W.addEventListener("storage", function () { setTimeout(tick, 200); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) setTimeout(tick, 200); });
+  setTimeout(function () { var k = safeKey(); if (k && !rawGet(k)) snapshot(); tick(); }, 2500);   /* first run: make a safety copy only if none exists yet */
+  setInterval(tick, 5000);
+})(window);
+}catch(e){console.error('[merged:acacia-persist-fix.js]',e)}
+
+/* ===================== merged: acacia-supplier-ids.js ===================== */
+try{
+/* acacia-supplier-ids.js - gives every Books supplier an "id".
+ *
+ * Why: Books saved suppliers without an id (customers always had one). The other Acacia apps (Expenses, ...) match records by id,
+ * so suppliers could not be linked and never showed up there. New suppliers now get an id when they are saved (app-2.js / app-3.js);
+ * this script adds one to the suppliers that already exist, once, on load and whenever the supplier list is saved.
+ * The id rule (bks-<hash of the name>, -2, -3 for same-name suppliers) is the same one acacia-bridge.js uses, so both sides agree.
+ * Load LAST in index.html. */
+(function (W) {
+  'use strict';
+  if (W.__acxSupplierIds) return;
+  W.__acxSupplierIds = true;
+  var busy = false, t = null;
+  var low = function (v) { return String(v == null ? '' : v).trim().toLowerCase(); };
+  function hx(s) { var o = '', k; for (k = 1; k <= 4; k++) { var x = 5381 * k, i; for (i = 0; i < s.length; i++) x = ((x << 5) + x + s.charCodeAt(i) * k) | 0; o += ('00000000' + (x >>> 0).toString(16)).slice(-8); } return o; }
+  function user() { try { return JSON.parse(localStorage.getItem('loggedInUser') || 'null'); } catch (e) { return null; } }
+
+  function stamp() {
+    if (busy || !user()) return;
+    var raw, arr;
+    try { raw = localStorage.getItem('suppliers'); if (!raw) return; arr = JSON.parse(raw); } catch (e) { return; }
+    if (!Array.isArray(arr)) return;
+    var used = {}, changed = 0, i, x;
+    for (i = 0; i < arr.length; i++) { x = arr[i]; if (x && x.id != null && x.id !== '') used[String(x.id)] = 1; }
+    for (i = 0; i < arr.length; i++) {
+      x = arr[i];
+      if (!x || typeof x !== 'object' || (x.id != null && x.id !== '') || !String(x.name || '').trim()) continue;
+      var base = 'bks-' + hx(low(x.name)).slice(0, 10), id = base, n = 1;
+      while (used[id]) { n++; id = base + '-' + n; }
+      used[id] = 1; x.id = id; changed++;
+    }
+    if (!changed) return;
+    busy = true;
+    try { localStorage.setItem('suppliers', JSON.stringify(arr)); } catch (e) { console.warn('[supplier-ids]', e); }
+    finally { busy = false; }
+    try { if (typeof W.renderSuppliers === 'function') W.renderSuppliers(); } catch (e) {}
+  }
+  function soon() { clearTimeout(t); t = setTimeout(stamp, 400); }
+
+  function hook() {
+    var ns = W.__companyNS;
+    if (ns && ns.onSetItem) { ns.onSetItem(function (k) { if (!busy && String(k) === 'suppliers') soon(); }); return true; }
+    return false;
+  }
+  var tries = 0, h = setInterval(function () { if (hook() || ++tries > 40) clearInterval(h); }, 500);
+  setInterval(function () { if (!document.hidden) stamp(); }, 15000);   /* also catches suppliers that arrive from the cloud */
+  setTimeout(stamp, 2500); setTimeout(stamp, 8000);
+})(window);
+}catch(e){console.error('[merged:acacia-supplier-ids.js]',e)}
