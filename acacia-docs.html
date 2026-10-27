@@ -48,5 +48,5 @@ function exportWord(){commit();var h='<html xmlns:o="urn:schemas-microsoft-com:o
  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+h],{type:"application/msword"}));a.download=(cur.title||"document")+".doc";a.click()}
 function importDocx(f){if(!f)return;var r=new FileReader();r.onload=function(){mammoth.convertToHtml({arrayBuffer:r.result}).then(function(o){commit();cur={id:Date.now(),title:f.name.replace(/\.docx$/i,""),html:o.value,t:Date.now()};docs.unshift(cur);save();show()})};r.readAsArrayBuffer(f)}
 $("ed").addEventListener("input",function(){clearTimeout(window._t);window._t=setTimeout(commit,800)});$("title").addEventListener("input",function(){clearTimeout(window._t);window._t=setTimeout(commit,800)});
-if(!docs.length)newDoc();else{cur=docs[0];show()}
+if(/[?&]new=1/.test(location.search)||!docs.length)newDoc();else{cur=docs[0];show()}
 </script></body></html>
