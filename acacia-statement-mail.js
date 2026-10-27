@@ -11,10 +11,12 @@
   "use strict";
   if (W.__acxStmtMail) return; W.__acxStmtMail = true;
 
-  var LS = W.localStorage;
-  function J(k, d) { try { var v = JSON.parse(LS.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  /* Always go through the live window.localStorage: the app replaces it with a per-company layer
+   * (invoices/receipts/customers live in the company store, e.g. invoices::c1), so never cache a reference. */
+  function store() { return W.localStorage; }
+  function J(k, d) { try { var v = JSON.parse(store().getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
   function cfg() { return Object.assign({ auto: false, send: false }, J("acxStmtMail", {})); }
-  function setCfg(c) { LS.setItem("acxStmtMail", JSON.stringify(c)); }
+  function setCfg(c) { try { store().setItem("acxStmtMail", JSON.stringify(c)); } catch (e) {} }
   function dp() { return W.__getDecimalPlaces ? W.__getDecimalPlaces() : 2; }
   function fm(n) { return (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: dp(), maximumFractionDigits: dp() }); }
   function pad(n) { return String(n).padStart(2, "0"); }
@@ -64,7 +66,7 @@
                 slug: String(d).toLowerCase().replace(/[^a-z0-9]/g, ""), fromName: c.name || c.companyName || s.fullName || s.username || "Acacia Books",
                 fromEmail: c.email || s.email || "", to: to, cc: "", bcc: "", subject: subject, body: body, time: Date.now(), autoSend: !!autoSend };
       var ns = W.__companyNS, g = (ns && ns.nGet) || Storage.prototype.getItem, st = (ns && ns.nSet) || Storage.prototype.setItem,
-          real = (ns && ns.real) || LS, q = [];
+          real = (ns && ns.real) || W.localStorage, q = [];
       try { q = JSON.parse(g.call(real, "acacia_books_to_mail") || "[]") || []; } catch (e) { q = []; }
       q.push(u); st.call(real, "acacia_books_to_mail", JSON.stringify(q.slice(-200)));
       try { var bc = new BroadcastChannel("acacia_books_mail"); bc.postMessage("new"); bc.close(); } catch (e) {}
@@ -129,7 +131,7 @@
       if (s.count || s.close) { if (queueDraft(to, org + " statement of account - " + r.label, bodyFor(cu, org, s, r.label), c.send)) made++; }
       cu.lastStatementStamp = stamp; cu.lastStatementSentAt = now.toISOString(); changed = true;
     });
-    if (changed) { LS.setItem("customers", JSON.stringify(list)); if (typeof W.renderCustomers === "function") W.renderCustomers(); }
+    if (changed) { store().setItem("customers", JSON.stringify(list)); if (typeof W.renderCustomers === "function") W.renderCustomers(); }
   };
 
   /* ---------- 3) panel on the Customer Statement screen ---------- */
@@ -157,5 +159,10 @@
     };
   }
   document.addEventListener("click", function () { setTimeout(panel, 50); }, true);
-  setTimeout(panel, 1500); setInterval(panel, 4000);
+  /* The app freezes setTimeout/setInterval (window.blockRender) for the first ~1.5s after load and silently drops
+   * anything scheduled then, so wait until it lifts before starting the panel timer. */
+  (function boot() {
+    if (W.blockRender) { return W.requestAnimationFrame ? W.requestAnimationFrame(boot) : void 0; }
+    panel(); setTimeout(panel, 1500); setInterval(panel, 4000);
+  })();
 })(window);
