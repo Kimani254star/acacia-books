@@ -1020,3 +1020,26 @@
   var n = 0, iv = setInterval(function () { run(); if (++n > 20) clearInterval(iv); }, 1500);
   document.addEventListener("acx:data-changed", run);
 })();
+
+/* ######## dashboard refresh after credit / debit note applications ######## */
+(function () {
+  "use strict";
+  if (window.__acxCnDashRefresh) return;
+  window.__acxCnDashRefresh = true;
+  var timer = null;
+  function refresh() {
+    ["loadDashboard", "updateDashboardTotals", "renderAccountsReceivable", "renderAccountsPayable"].forEach(function (fn) {
+      try { if (typeof window[fn] === "function") window[fn](); } catch (e) {}
+    });
+  }
+  try {
+    var origSet = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k) {
+      var r = origSet.apply(this, arguments);
+      try {
+        if (/(credit|debit)NoteApplications$/.test(String(k))) { clearTimeout(timer); timer = setTimeout(refresh, 150); }
+      } catch (e) {}
+      return r;
+    };
+  } catch (e) {}
+})();
