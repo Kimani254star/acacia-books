@@ -2237,26 +2237,63 @@ try{
     return !!(d && Object.keys(d).some(function (k) { return /^orgInfo/.test(k); }));
   }
 
+  /* Direct save of the Organization Profile rows (last write wins). Used when the normal
+     versioned push is not confirmed. Returns "" on success, otherwise a readable reason. */
+  async function forcePushOrg() {
+    var ns = NS(), c = cid();
+    if (!ns || !c || !W.__SUPA_URL__ || !W.__SUPA_KEY__) return "no cloud connection / company id on this device";
+    var keys = Object.keys(ns.dirty || {}).filter(function (k) { return /^orgInfo/.test(k); });
+    if (!keys.length) return "";
+    var rows = keys.map(function (k) {
+      var v = ns.nGet.call(ns.real, k + ns.SEP + c);
+      return { company_id: c, key: k, value: v, updated_at: new Date().toISOString() };
+    });
+    var res;
+    try {
+      res = await fetch(W.__SUPA_URL__ + "/rest/v1/company_state?on_conflict=company_id,key", {
+        method: "POST",
+        headers: {
+          apikey: W.__SUPA_KEY__, Authorization: "Bearer " + W.__SUPA_KEY__,
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates,return=representation"
+        },
+        body: JSON.stringify(rows)
+      });
+    } catch (e) { return "network error: " + (e && e.message || e); }
+    var txt = ""; try { txt = await res.text(); } catch (e) {}
+    if (!res.ok) {
+      var m = txt; try { var j = JSON.parse(txt); m = (j.code ? "[" + j.code + "] " : "") + (j.message || j.details || j.hint || txt); } catch (e) {}
+      return "HTTP " + res.status + " " + String(m).slice(0, 300);
+    }
+    var back = []; try { back = JSON.parse(txt) || []; } catch (e) {}
+    if (!back.length) return "HTTP " + res.status + " but Supabase returned no row (a permission rule on company_state is blocking the save)";
+    /* tell the sync engine these keys are now up to date */
+    try {
+      var ver = W.__companySync && W.__companySync.ver ? W.__companySync.ver() : null;
+      back.forEach(function (r) { if (ver) ver[r.key] = r.updated_at; delete ns.dirty[r.key]; });
+    } catch (e) {}
+    return "";
+  }
+
   var watchTimer = null, doneTimer = null;
   function watchCloud() {
     clearTimeout(watchTimer); clearTimeout(doneTimer);
     lastPushErr = "";
     watchTimer = setTimeout(function () {
       if (!orgDirty()) return;                       /* reached the cloud - nothing to say */
-      pushSoon();                                    /* one more immediate attempt before warning */
-      watchTimer = setTimeout(function () {
+      pushSoon();                                    /* normal push once more */
+      watchTimer = setTimeout(async function () {
         if (!orgDirty()) return;
-        var why = lastPushErr
-          ? "Cloud says: " + lastPushErr + "."
-          : "The cloud gave no confirmation (usually a permission rule or duplicate rows on the company_state table - run the cloud SQL fix).";
-        toast("Organization Profile is saved on this device but has not reached the cloud yet. " + why + " The app will keep retrying.");
+        var why = await forcePushOrg();              /* direct save, and the cloud's real answer */
+        if (!why) { toast("Organization Profile has now reached the cloud.", "success"); return; }
+        toast("Organization Profile is saved on this device but has not reached the cloud yet. Cloud says: " + why + ". The app will keep retrying.");
         var n = 0;
         (function waitSynced() {
           if (!orgDirty()) { toast("Organization Profile has now reached the cloud.", "success"); return; }
           if (++n > 45) return;                      /* stop watching after ~3 min */
           doneTimer = setTimeout(waitSynced, 4000);
         })();
-      }, 8000);
+      }, 6000);
     }, 12000);
   }
 
