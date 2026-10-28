@@ -1715,3 +1715,22 @@ html:not(.dark):not([data-theme=dark]):not([data-theme=amoled]):not([data-theme=
 html:not(.dark):not([data-theme=dark]):not([data-theme=amoled]):not([data-theme=solar-dark]) tbody th{color:var(--app-fg,#111827)}
 html:not(.dark):not([data-theme=dark]):not([data-theme=amoled]):not([data-theme=solar-dark]) tbody tr:nth-child(odd){background-color:var(--app-surface,#fff)}
 html:not(.dark):not([data-theme=dark]):not([data-theme=amoled]):not([data-theme=solar-dark]) tbody td a{color:var(--app-accent,#2563eb)}
+
+/* --- pricing polish (CSS only, no extra requests) --- */
+.acx-sticky{position:sticky;top:0;z-index:20;background:#d1d5db;padding:.6rem 0;margin-top:0}
+.acx-from{font-weight:500;opacity:.85;font-size:.8rem}
+.acx-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem 1.25rem;font-size:.85rem;color:#374151;margin:0 auto 1rem;padding:0 1rem}
+.acx-trust span{white-space:nowrap}
+.pc-card{transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.pc-card:hover{transform:translateY(-4px)}
+.pc-card.pc-popular{box-shadow:0 10px 28px rgba(37,99,235,.14)}
+details.acx-faq{background:#fff;border-radius:.6rem;box-shadow:0 1px 3px rgba(0,0,0,.08);margin:0 0 .6rem;text-align:left}
+details.acx-faq summary{cursor:pointer;padding:.85rem 1rem;font-weight:600;font-size:.9rem;color:#1e3a8a;list-style:none}
+details.acx-faq summary::-webkit-details-marker{display:none}
+details.acx-faq summary::after{content:"+";float:right;font-weight:700}
+details.acx-faq[open] summary::after{content:"–"}
+details.acx-faq p{padding:0 1rem 1rem;margin:0;font-size:.875rem;color:#4b5563}
+.acx-reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
+.acx-reveal.acx-in{opacity:1;transform:none}
+.pc-card.acx-reveal.acx-in:hover{transform:translateY(-4px)}
+@media (prefers-reduced-motion:reduce){.acx-reveal{opacity:1;transform:none;transition:none}.pc-card,.pc-card:hover{transform:none;transition:none}}
