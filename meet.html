@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Acacia Meet</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="acaciabooks-logo.png">
+<style>
+:root{--bg:#0f1226;--card:#1a1f3d;--ink:#fff;--mute:#a9b0d6;--brand:#6d28d9;--brand2:#7c3aed;--ok:#16a34a}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+header{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid #2a3060}
+header img{height:30px}header b{font-size:18px}header a{margin-left:auto;color:var(--mute);text-decoration:none;font-size:14px}
+#lobby{max-width:880px;margin:40px auto;padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){#lobby{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:16px;padding:22px}
+h2{margin:0 0 6px;font-size:20px}p.s{margin:0 0 16px;color:var(--mute);font-size:14px}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
+input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #394083;background:#0f1226;color:#fff;font-size:15px}
+button{cursor:pointer;border:0;border-radius:10px;padding:11px 16px;font-size:15px;font-weight:600;color:#fff;background:var(--brand);width:100%;margin-top:14px}
+button:hover{background:var(--brand2)}button.alt{background:#2b3170}
+.opts{display:flex;gap:16px;margin-top:12px;font-size:14px;color:var(--mute)}.opts label{display:flex;gap:6px;align-items:center;margin:0}.opts input{width:auto}
+#link{margin-top:12px;font-size:13px;color:var(--mute);word-break:break-all}
+#room{display:none;position:fixed;inset:0;top:55px;background:#000;flex-direction:column}
+#bar{display:flex;gap:8px;align-items:center;padding:8px 14px;background:#12162f;font-size:14px}
+#bar span{color:var(--mute)}#bar button{width:auto;margin:0;padding:7px 12px;font-size:13px}
+#jitsi{flex:1}
+</style>
+</head>
+<body>
+<header><img src="acaciabooks-logo.png" alt=""><b>Acacia Meet</b><a href="index.html">← Back to Acacia Books</a></header>
+
+<div id="lobby">
+  <div class="card">
+    <h2>🎥 Start a meeting</h2>
+    <p class="s">Video, audio, screen sharing (present), chat and hand‑raise. Share the link or code to invite people.</p>
+    <label>Your name</label><input id="name" placeholder="e.g. Joseph Mwangi">
+    <label>Meeting title (optional)</label><input id="title" placeholder="e.g. Weekly finance review">
+    <div class="opts"><label><input type="checkbox" id="mic" checked> Mic on</label><label><input type="checkbox" id="cam" checked> Camera on</label></div>
+    <button onclick="startMeeting()">Start new meeting</button>
+    <div id="link"></div>
+  </div>
+  <div class="card">
+    <h2>🔗 Join a meeting</h2>
+    <p class="s">Paste a meeting code or an Acacia Meet link.</p>
+    <label>Meeting code or link</label><input id="code" placeholder="e.g. acacia-4821-weekly">
+    <button class="alt" onclick="joinMeeting()">Join meeting</button>
+  </div>
+</div>
+
+<div id="room">
+  <div id="bar"><b id="rtitle"></b><span id="rcode"></span>
+    <button class="alt" onclick="copyLink()">Copy invite link</button>
+    <button class="alt" style="margin-left:auto" onclick="leave()">Leave</button></div>
+  <div id="jitsi"></div>
+</div>
+
+<script>
+// ---- Settings ----
+// Public meet.jit.si works for testing but limits embedded meetings. For real use, set this to your
+// own Jitsi server or an 8x8.vc (JaaS) domain.
+var MEET_DOMAIN = "meet.jit.si";
+var api=null,current="";
+
+function $(i){return document.getElementById(i)}
+function slug(s){return (s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,30)}
+function roomFromInput(v){
+  v=(v||"").trim();
+  try{var u=new URL(v);var r=u.searchParams.get("room")||u.hash.replace("#","");if(r)v=r}catch(e){}
+  return v.replace(/[^A-Za-z0-9\-_]/g,"");
+}
+function inviteLink(code){return location.origin+location.pathname+"?room="+encodeURIComponent(code)}
+function loadScript(cb){
+  if(window.JitsiMeetExternalAPI)return cb();
+  var s=document.createElement("script");s.src="https://"+MEET_DOMAIN+"/external_api.js";
+  s.onload=cb;s.onerror=function(){alert("Could not load the meeting service. Check your internet connection.")};
+  document.head.appendChild(s);
+}
+var SUPA_URL="https://xglsampckermarjpczdf.supabase.co",SUPA_KEY="sb_publishable_x-dPR7pzhvJgag9soW0I8w_yfKTmi6A";
+function me(){try{return JSON.parse(localStorage.getItem("loggedInUser")||"null")||{}}catch(e){return {}}}
+function isAdmin(){var u=me();return !!(u.companyId||u.company_id)&&/^(admin|owner|administrator)$/i.test(String(u.role||""))||u.isAdmin===true}
+function rpc(fn,args){return fetch(SUPA_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"Content-Type":"application/json",apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY},body:JSON.stringify(args)}).then(function(r){return r.ok?r.json():r.json().then(function(e){throw new Error(e.message||"Request failed")})})}
+function who(){var u=me();return {c:String(u.companyId||u.company_id||""),l:String(u.loginId||u.login_id||u.username||u.email||"")}}
+function startMeeting(){
+  if(!isAdmin()){alert("Only an admin can start a meeting. Ask your admin for a meeting code or link, then use Join.");return}
+  var t=slug($("title").value),w=who();
+  var code="acacia-"+Math.floor(1000+Math.random()*9000)+(t?"-"+t:"");
+  var title=$("title").value.trim()||"Acacia Meeting";
+  rpc("acx_meet_start",{p_company:w.c,p_login:w.l,p_title:title,p_room:code}).then(function(){open_(code,title)},function(e){alert("Could not start the meeting: "+e.message)});
+}
+function joinMeeting(){
+  var code=roomFromInput($("code").value);
+  if(!code){alert("Enter a meeting code or link.");return}
+  open_(code,"Acacia Meeting");
+}
+function open_(code,title){
+  var name=$("name").value.trim()||"Guest";
+  localStorage.setItem("acaciaMeetName",name);
+  current=code;
+  $("lobby").style.display="none";$("room").style.display="flex";
+  $("rtitle").textContent=title;$("rcode").textContent="Code: "+code;
+  history.replaceState(null,"","?room="+encodeURIComponent(code));
+  loadScript(function(){
+    api=new JitsiMeetExternalAPI(MEET_DOMAIN,{
+      roomName:code,parentNode:$("jitsi"),width:"100%",height:"100%",
+      userInfo:{displayName:name},
+      configOverwrite:{
+        startWithAudioMuted:!$("mic").checked,startWithVideoMuted:!$("cam").checked,
+        prejoinPageEnabled:false,fileRecordingsEnabled:isAdmin(),liveStreamingEnabled:false,subject:title,disableDeepLinking:true
+      },
+      interfaceConfigOverwrite:{
+        SHOW_JITSI_WATERMARK:false,SHOW_WATERMARK_FOR_GUESTS:false,SHOW_BRAND_WATERMARK:false,
+        APP_NAME:"Acacia Meet",NATIVE_APP_NAME:"Acacia Meet",DEFAULT_REMOTE_DISPLAY_NAME:"Participant",
+        TOOLBAR_BUTTONS:["microphone","camera","desktop","chat","raisehand","participants-pane","tileview","fullscreen","hangup","settings"].concat(isAdmin()?["recording"]:[]).concat(["select-background","invite"])
+      }
+    });
+    api.addListener("readyToClose",leave);
+    api.addListener("recordingStatusChanged",function(e){if(!isAdmin())return;var w=who();rpc("acx_meet_record",{p_company:w.c,p_login:w.l,p_room:code,p_on:!!e.on}).catch(function(){})});
+  });
+}
+function copyLink(){
+  var l=inviteLink(current);
+  (navigator.clipboard?navigator.clipboard.writeText(l):Promise.reject()).then(function(){alert("Invite link copied:\n"+l)},function(){prompt("Copy this invite link:",l)});
+}
+function leave(){
+  if(isAdmin()&&current){var w=who();rpc("acx_meet_end",{p_company:w.c,p_login:w.l,p_room:current}).catch(function(){})}
+  if(api){api.dispose();api=null}
+  $("jitsi").innerHTML="";$("room").style.display="none";$("lobby").style.display="grid";
+  history.replaceState(null,"",location.pathname);
+}
+if(!isAdmin()){var sc=document.querySelector("#lobby .card");sc.innerHTML="<h2>🎥 Start a meeting</h2><p class=\"s\">Only admins can start and record meetings. Use the code or link your admin shared with you and join on the right.</p>"}
+// Prefill + auto-join from invite link
+$("name").value=localStorage.getItem("acaciaMeetName")||"";
+var q=new URLSearchParams(location.search).get("room");
+if(q){$("code").value=q;$("link").textContent="You were invited to: "+q+" — enter your name and press Join."}
+</script>
+</body>
+</html>
