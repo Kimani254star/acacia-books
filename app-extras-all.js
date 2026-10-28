@@ -993,9 +993,9 @@ try{
     var totalKES = Number(rt.totalKES) || total * rate;
     var short = 0;
     var items = (rt.items || []).map(function (it) {
-      var c = JSON.parse(JSON.stringify(it)); delete c.stk;
+      var c = JSON.parse(JSON.stringify(it)); delete c.stk; delete c.batchAlloc;
       if (window.__acxLineStock(c) && typeof window.findAndDeductStock === "function") {
-        var ok = false; try { ok = !!window.findAndDeductStock(c.desc || "", parseFloat(c.qty) || 0, c.sku || ""); } catch (e) { ok = false; }
+        var ok = false; try { ok = !!window.findAndDeductStock(c.desc || "", parseFloat(c.qty) || 0, c.sku || "", c.batch, c); } catch (e) { ok = false; }
         c.stk = ok; if (!ok) short++;
       }
       return c;
