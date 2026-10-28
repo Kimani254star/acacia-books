@@ -930,6 +930,7 @@ try{
 
   /* ---------------- 2. Bulk bills: own BBIL- series, own table ---------------- */
   function nextBBIL(extra) {
+    try { var cn = W.acxDocNo && W.acxDocNo("bulkBills", { offset: extra || 0 }); if (cn) return cn; } catch (e) {}
     var max = 0;
     J("bulkBills", []).concat(J("bills", [])).forEach(function (b) {
       var m = /^BBIL-(\d+)/.exec(String((b && (b.billNumber || b.billNo)) || ""));

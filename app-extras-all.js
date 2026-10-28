@@ -416,6 +416,7 @@ try{
     list().forEach(function (r) { var m = /(\d+)$/.exec(String(r.number || "")); if (m) max = Math.max(max, parseInt(m[1], 10)); });
     /* generated bills share the RBIL series, so a new template never reuses a generated bill's number */
     jget("bills", []).forEach(function (b) { var m = /^RBIL-(?:[A-Za-z]+\d*-)?(\d+)$/.exec(String((b && b.billNumber) || "")); if (m) max = Math.max(max, parseInt(m[1], 10)); });
+    try { var cn = window.acxDocNo && window.acxDocNo("recurringBills"); if (cn) return cn; } catch (e) {}
     return "RBIL-" + pad(max + 1, 5);
   }
 
@@ -499,6 +500,7 @@ try{
     /* generated bills continue after the template numbers (RBIL-00001 template -> first bill RBIL-00002) */
     list().forEach(function (r) { var m = /^RBIL-(?:[A-Za-z]+\d*-)?(\d+)$/.exec(String((r && r.number) || "")); if (m) rbMax = Math.max(rbMax, parseInt(m[1], 10)); });
     var no = "RBIL-" + pad(rbMax + 1, 5);
+    try { var cn2 = window.acxDocNo && window.acxDocNo("recurringBills", { extra: list().concat(bills) }); if (cn2) no = cn2; } catch (e) {}
     while (used[no]) { rbMax++; no = "RBIL-" + pad(rbMax + 1, 5); }
     var rate = num(rb.currencyRate) || 1;
     var its = (rb.items || []).map(function (it) { var c = calc(it); return Object.assign({}, it, { subtotal: c.subtotal, vat: c.vat }); });
