@@ -2977,3 +2977,121 @@ try{
   W.acxToggleBankInactive = setInactive;
 })();
 }catch(e){console.error('[merged:acacia-funds-inactive.js]',e)}
+;
+
+/* acacia-cancel.js — adds a Cancel button next to every Save button that doesn't already have one. */
+(function () {
+  "use strict";
+  var MARK = "data-acx-cancel";
+  var SAVE_RE = /^(save\b|submit (transaction|adjustment)\b|add bank$)/i;
+  var CANCEL_RE = /^(cancel|close|back|discard)\b/i;
+  var CLS = "bg-gray-500 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-600";
+
+  function label(b) {
+    return (b.textContent || "").replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+  }
+  function isSave(b) { return b.tagName === "BUTTON" && !b.hasAttribute(MARK) && SAVE_RE.test(label(b)); }
+  function hasCancel(scope) {
+    var bs = scope.querySelectorAll("button,a");
+    for (var i = 0; i < bs.length; i++) if (CANCEL_RE.test(label(bs[i]))) return true;
+    return false;
+  }
+  function fields(root) {
+    return Array.prototype.slice.call(root.querySelectorAll("input,select,textarea")).filter(function (f) {
+      return !/^(hidden|button|submit|reset)$/i.test(f.type);
+    });
+  }
+  function dirty(root) {
+    return fields(root).some(function (f) {
+      if (f.type === "checkbox" || f.type === "radio") return f.checked !== f.defaultChecked;
+      if (f.tagName === "SELECT") return f.selectedIndex > 0;
+      return String(f.value || "") !== "" && f.value !== f.defaultValue;
+    });
+  }
+  function reset(root) {
+    fields(root).forEach(function (f) {
+      try {
+        if (f.type === "checkbox" || f.type === "radio") f.checked = false;
+        else if (f.tagName === "SELECT") f.selectedIndex = 0;
+        else if (f.type === "file") f.value = "";
+        else f.value = "";
+        f.dispatchEvent(new Event("input", { bubbles: true }));
+        f.dispatchEvent(new Event("change", { bubbles: true }));
+      } catch (e) {}
+    });
+  }
+  function hide(el) { el.classList.add("hidden"); if (el.style && el.style.display) el.style.display = "none"; }
+
+  function findCancelFn(btn) {
+    var oc = btn.getAttribute("onclick") || "";
+    var m = oc.match(/^\s*(?:window\.)?(save|add|submit)([A-Z]\w*)\(/);
+    if (!m) return null;
+    var base = m[2];
+    var names = [base, base.replace(/(As)?Draft$/, ""), base.replace(/Changes$/, "")];
+    for (var i = 0; i < names.length; i++) {
+      var fn = window["cancel" + names[i]];
+      if (names[i] && typeof fn === "function") return fn;
+    }
+    return null;
+  }
+
+  function doCancel(btn) {
+    var modal = btn.closest(".fixed.inset-0,[role=dialog],[id$='Modal'],[id$='modal']");
+    var root = modal || null;
+    if (!root) {
+      var el = btn.parentElement, up = 0;
+      while (el && el !== document.body && up < 8) {
+        if (fields(el).length >= 2) { root = el; if (fields(el).length > 40) break; }
+        el = el.parentElement; up++;
+        if (root && fields(el || root).length > 40) break;
+      }
+    }
+    if (root && dirty(root) && !confirm("Discard your changes?")) return;
+    var fn = findCancelFn(btn);
+    if (fn) { try { fn(); return; } catch (e) { console.warn("[acacia-cancel]", e); } }
+    if (root) reset(root);
+    if (modal) { hide(modal); return; }
+    var sec = btn.closest("[id$='FormSection'],[id$='formSection']");
+    if (sec) {
+      hide(sec);
+      var list = document.getElementById(sec.id.replace(/Form(Section)$/i, "List$1"));
+      if (list) list.classList.remove("hidden");
+    }
+  }
+
+  function scan() {
+    var all = document.querySelectorAll("button");
+    var rows = new Set();
+    for (var i = 0; i < all.length; i++) {
+      var b = all[i];
+      if (!isSave(b) || !b.parentElement) continue;
+      rows.add(b.parentElement);
+    }
+    rows.forEach(function (row) {
+      if (row.hasAttribute(MARK + "-row")) return;
+      var saves = Array.prototype.filter.call(row.children, function (c) { return isSave(c); });
+      if (!saves.length) return;
+      var gp = row.parentElement;
+      if (hasCancel(row) || (gp && gp.querySelectorAll("button").length <= 8 && hasCancel(gp))) {
+        row.setAttribute(MARK + "-row", "1"); return;
+      }
+      var last = saves[saves.length - 1];
+      var c = document.createElement("button");
+      c.type = "button"; c.className = CLS; c.textContent = "Cancel";
+      c.setAttribute(MARK, "1");
+      if (last.classList.contains("w-full")) c.classList.add("w-full", "mt-2");
+      else c.style.marginLeft = "6px";
+      c.addEventListener("click", function (ev) { ev.preventDefault(); ev.stopPropagation(); doCancel(last); });
+      last.parentNode.insertBefore(c, last.nextSibling);
+      row.setAttribute(MARK + "-row", "1");
+    });
+  }
+
+  var t = null;
+  function soon() { clearTimeout(t); t = setTimeout(scan, 300); }
+  function start() {
+    scan(); setTimeout(scan, 1500);
+    try { new MutationObserver(soon).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+})();
