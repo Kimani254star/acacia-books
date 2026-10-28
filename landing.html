@@ -20,4 +20,22 @@ document.addEventListener("click",function(e){var a=e.target.closest&&e.target.c
  try{var h=a.closest(".pricing-card").querySelector("h3"),name=(h?h.textContent:"Free").trim(),tk=(typeof currentActiveModule!=="undefined"&&currentActiveModule==="all")?"all":"books";
   parent.localStorage.setItem("selectedTrack",tk);var P=parent.ACX_PRICING;parent.choosePlan(name,P?P.price(name,tk):0)}
  catch(x){try{parent.openLogin();parent.showRegisterForm()}catch(y){}}},!0);
-})();</script></body></html>
+})();</script><style id="acx-header-fit">
+@media (max-width:1100px){
+ header{height:auto;min-height:64px;flex-wrap:wrap;row-gap:4px;padding:8px 4%}
+ header .logo{order:1;min-width:0}
+ header .actions{order:2;margin-left:auto;gap:10px}
+ header nav{order:3;width:100%}
+ header nav ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(74px,1fr));gap:2px 4px;text-align:center}
+ header nav a{display:block;padding:6px 2px;font-size:13px;border-radius:6px}
+ header nav a.active{background:#eff6ff}
+ body{padding-top:var(--hx,0px)}
+}
+@media (max-width:700px){
+ header{position:absolute}
+ .logo img{width:36px;height:36px}
+ .logoText h2{font-size:16px;line-height:1.1}
+ .logoText span{display:none}
+}
+</style><script>(function(){function hx(){var h=document.querySelector("header");if(!h)return;document.documentElement.style.setProperty("--hx",Math.max(0,h.offsetHeight-80)+"px")}
+window.addEventListener("load",hx);window.addEventListener("resize",hx);hx();setTimeout(hx,400);setTimeout(hx,1500);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(hx)})();</script></body></html>
