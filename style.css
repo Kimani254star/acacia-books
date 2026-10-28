@@ -1734,3 +1734,6 @@ details.acx-faq p{padding:0 1rem 1rem;margin:0;font-size:.875rem;color:#4b5563}
 .acx-reveal.acx-in{opacity:1;transform:none}
 .pc-card.acx-reveal.acx-in:hover{transform:translateY(-4px)}
 @media (prefers-reduced-motion:reduce){.acx-reveal{opacity:1;transform:none;transition:none}.pc-card,.pc-card:hover{transform:none;transition:none}}
+
+.acx-why{font-size:12.5px;line-height:1.45;color:#334155;background:#f1f5f9;border-left:3px solid #2563eb;border-radius:6px;padding:8px 10px;margin:0 0 12px;text-align:left}
+.pc-card.pc-popular .acx-why{background:#eff6ff}
