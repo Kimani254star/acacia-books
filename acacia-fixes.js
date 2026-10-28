@@ -2155,14 +2155,16 @@ try{
     return real ? Storage.prototype.getItem.call(real, k) : LS.getItem(k);
   }
 
-  function toast(msg) {
+  function toast(msg, type) {
     try {
-      if (typeof W.showNotification === "function") { W.showNotification(msg, "error"); return; }
+      if (type === "success" && typeof W.showNotification === "function") { W.showNotification(msg, "success"); return; }
+      /* long messages: showNotification disappears after 3 s - too fast to read the cloud error */
       var d = document.createElement("div");
-      d.textContent = msg;
-      d.style.cssText = "position:fixed;right:16px;bottom:16px;max-width:380px;background:#b45309;color:#fff;padding:10px 14px;border-radius:8px;z-index:2147483647;font:13px/1.4 sans-serif";
+      d.textContent = msg + "  (click to dismiss)";
+      d.style.cssText = "position:fixed;right:16px;top:16px;max-width:460px;cursor:pointer;background:#b91c1c;color:#fff;padding:10px 14px;border-radius:8px;z-index:2147483647;font:13px/1.45 sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.3)";
+      d.onclick = function () { if (d.parentNode) d.parentNode.removeChild(d); };
       document.body.appendChild(d);
-      setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 9000);
+      setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 30000);
     } catch (e) {}
   }
 
@@ -2210,12 +2212,51 @@ try{
     }, 300);
   }
 
+  /* remember the last real error the cloud sync reported, so the notice can say what is wrong */
+  var lastPushErr = "";
+  (function hookPushErrors() {
+    if (console.__acxPushHook) return;
+    var ow = console.warn;
+    console.warn = function () {
+      try {
+        var a = arguments;
+        if (String(a[0] || "").indexOf("[companySync] push") === 0) {
+          var e = a[1];
+          if (e && typeof e === "object") {
+            lastPushErr = (e.code ? "[" + e.code + "] " : "") + String(e.message || e.details || e.hint || "");
+          } else if (e) { lastPushErr = String(e); }
+        }
+      } catch (x) {}
+      return ow.apply(this, arguments);
+    };
+    console.__acxPushHook = true;
+  })();
+
+  function orgDirty() {
+    var ns = NS(), d = ns && ns.dirty ? ns.dirty : null;
+    return !!(d && Object.keys(d).some(function (k) { return /^orgInfo/.test(k); }));
+  }
+
+  var watchTimer = null, doneTimer = null;
   function watchCloud() {
-    setTimeout(function () {
-      var ns = NS(), d = ns && ns.dirty ? ns.dirty : null;
-      if (d && Object.keys(d).some(function (k) { return /^orgInfo/.test(k); })) {
-        toast("Organization Profile is saved on this device but has not reached the cloud yet. Keep the app open - it will keep retrying.");
-      }
+    clearTimeout(watchTimer); clearTimeout(doneTimer);
+    lastPushErr = "";
+    watchTimer = setTimeout(function () {
+      if (!orgDirty()) return;                       /* reached the cloud - nothing to say */
+      pushSoon();                                    /* one more immediate attempt before warning */
+      watchTimer = setTimeout(function () {
+        if (!orgDirty()) return;
+        var why = lastPushErr
+          ? "Cloud says: " + lastPushErr + "."
+          : "The cloud gave no confirmation (usually a permission rule or duplicate rows on the company_state table - run the cloud SQL fix).";
+        toast("Organization Profile is saved on this device but has not reached the cloud yet. " + why + " The app will keep retrying.");
+        var n = 0;
+        (function waitSynced() {
+          if (!orgDirty()) { toast("Organization Profile has now reached the cloud.", "success"); return; }
+          if (++n > 45) return;                      /* stop watching after ~3 min */
+          doneTimer = setTimeout(waitSynced, 4000);
+        })();
+      }, 8000);
     }, 12000);
   }
 
