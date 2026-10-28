@@ -435,7 +435,7 @@ try{
     var disc = parseFloat($("rbItemDiscount").value) || 0;
     if (isNaN(qty) || qty <= 0) return alert("Enter a valid quantity");
     if (isNaN(price) || price < 0) return alert("Enter a valid price");
-    var it = { desc: p.name || "", sku: p.sku || "", warehouse: p.warehouse || "", qty: qty, price: price, discount: disc, taxRate: $("rbItemTax").value, type: type };
+    var it = { desc: window.__acxStripBatch(p.name || ""), batch: p.batch || null, sku: p.sku || "", warehouse: p.warehouse || "", qty: qty, price: price, discount: disc, taxRate: $("rbItemTax").value, type: type };
     var c = calc(it); it.subtotal = c.subtotal; it.vat = c.vat;
     if (editItemIdx !== null) { items[editItemIdx] = it; editItemIdx = null; } else items.push(it);
     renderItems();
@@ -994,7 +994,7 @@ try{
     var short = 0;
     var items = (rt.items || []).map(function (it) {
       var c = JSON.parse(JSON.stringify(it)); delete c.stk;
-      if (String(c.type || "").toLowerCase() === "product" && typeof window.findAndDeductStock === "function") {
+      if (window.__acxLineStock(c) && typeof window.findAndDeductStock === "function") {
         var ok = false; try { ok = !!window.findAndDeductStock(c.desc || "", parseFloat(c.qty) || 0, c.sku || ""); } catch (e) { ok = false; }
         c.stk = ok; if (!ok) short++;
       }
