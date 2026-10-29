@@ -94,12 +94,14 @@
   }
 
   function init() {
-    var rs = document.getElementById("rightSidebar");
-    if (!rs || document.getElementById("acxReferToggle")) return;
-    var anchor = document.getElementById("orgDetailsToggle");
+    var anchor = document.getElementById("quickCreateBtn");
+    if (!anchor || document.getElementById("acxReferToggle")) return;
     function mk(id, html, fn) {
       var x = document.createElement("button");
-      x.id = id; x.type = "button"; x.className = BTN_CLASS; x.innerHTML = html;
+      x.id = id; x.type = "button";
+      x.className = "rounded-full hover:bg-gray-700 transition text-white text-sm leading-none";
+      x.style.cssText = "padding:4px 8px;white-space:nowrap";
+      x.innerHTML = html;
       x.onclick = function (e) { e.stopPropagation(); fn(); };
       return x;
     }
@@ -109,10 +111,8 @@
     var referBtn = mk("acxReferToggle", "🎁 Refer &amp; Earn", function () {
       if (referP && referP.style.display === "block") referP.style.display = "none"; else openRefer();
     });
-    if (anchor && anchor.nextSibling) {
-      rs.insertBefore(settingsBtn, anchor.nextSibling);
-      rs.insertBefore(referBtn, settingsBtn.nextSibling);
-    } else { rs.appendChild(settingsBtn); rs.appendChild(referBtn); }
+    anchor.parentNode.insertBefore(settingsBtn, anchor);
+    anchor.parentNode.insertBefore(referBtn, anchor);
     document.addEventListener("click", function (e) {
       ["acxReferPanel", "acxQuickSettings"].forEach(function (id) {
         var el = document.getElementById(id);
