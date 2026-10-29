@@ -23,7 +23,35 @@ button:hover{background:var(--brand2)}button.alt{background:#2b3170}
 #room{display:none;position:fixed;inset:0;top:55px;background:#000;flex-direction:column}
 #bar{display:flex;gap:8px;align-items:center;padding:8px 14px;background:#12162f;font-size:14px}
 #bar span{color:var(--mute)}#bar button{width:auto;margin:0;padding:7px 12px;font-size:13px}
-#jitsi{flex:1}
+#stage{flex:1;display:flex;min-height:0}
+#grid{flex:1;display:grid;gap:8px;padding:8px;min-width:0;min-height:0;grid-template-columns:repeat(var(--cols,1),minmax(0,1fr));grid-auto-rows:minmax(0,1fr)}
+#grid.spot{display:flex;flex-wrap:wrap;align-content:flex-start;overflow:auto}
+#grid.spot .tile{flex:0 0 180px;height:110px}
+#grid.spot .tile.main{flex:1 1 100%;height:calc(100% - 126px);min-height:200px}
+.tile{position:relative;background:#14183a;border-radius:12px;overflow:hidden;border:2px solid transparent;min-height:0}
+.tile.speaking{border-color:#22c55e}
+.tile video{width:100%;height:100%;object-fit:cover;background:#000;display:block}
+.tile.share video{object-fit:contain}
+.tile.mine video{transform:scaleX(-1)}.tile.mine.share video{transform:none}
+.tile .av{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#1c2150}
+.tile.nocam .av{display:flex}
+.tile .av i{width:25%;max-width:96px;min-width:44px;aspect-ratio:1;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:28px;font-weight:700}
+.tile .nm{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.6);padding:3px 9px;border-radius:8px;font-size:13px;max-width:85%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .st{position:absolute;right:8px;top:8px;display:flex;gap:4px;font-size:15px}
+.tile .st span{background:rgba(0,0,0,.6);border-radius:8px;padding:2px 6px}
+#side{width:320px;max-width:100%;background:#12162f;border-left:1px solid #2a3060;display:none;flex-direction:column;min-height:0}
+#side.open{display:flex}
+@media(max-width:700px){#side.open{position:absolute;right:0;top:0;bottom:62px;width:100%;z-index:5}}
+.ph{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #2a3060;font-weight:700}.ph button{margin:0 0 0 auto;width:auto;padding:2px 10px;background:none;font-size:18px}
+#msgs{flex:1;overflow:auto;padding:10px 14px;font-size:14px}
+.m{margin-bottom:10px}.m b{font-size:12px;color:var(--mute);display:block}.m span{word-break:break-word}.m.me b{color:#c4b5fd}
+#cform{display:flex;gap:6px;padding:10px;border-top:1px solid #2a3060}#cform input{flex:1}#cform button{width:auto;margin:0;padding:8px 14px}
+#plist{flex:1;overflow:auto;padding:6px 14px;font-size:14px}#plist div{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #20254d}#plist div em{margin-left:auto;font-style:normal;letter-spacing:4px}
+#ctl{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;padding:10px;background:#12162f;border-top:1px solid #2a3060}
+#ctl button{width:auto;margin:0;padding:10px 14px;font-size:14px;background:#2b3170;position:relative}
+#ctl button.off{background:#b91c1c}#ctl button.on{background:var(--brand)}#ctl button.leave{background:#dc2626}
+#ctl button .bd{position:absolute;top:-6px;right:-6px;background:#ef4444;border-radius:10px;font-size:11px;padding:1px 6px;display:none}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#1f2547;border:1px solid #394083;padding:8px 16px;border-radius:10px;font-size:14px;display:none;z-index:50}
 </style>
 </head>
 <body>
@@ -31,12 +59,12 @@ button:hover{background:var(--brand2)}button.alt{background:#2b3170}
 
 <div id="lobby">
   <div class="card">
-    <h2>🎥 Start a meeting</h2>
-    <p class="s">Video, audio, screen sharing (present), chat and hand‑raise. Share the link or code to invite people.</p>
+    <h2 id="cardTitle">🎥 Start a meeting</h2>
+    <p class="s" id="cardSub">Video, audio, screen sharing (present), chat and hand‑raise — built into Acacia. Share the link or code to invite people.</p>
     <label>Your name</label><input id="name" placeholder="e.g. Joseph Mwangi">
-    <label>Meeting title (optional)</label><input id="title" placeholder="e.g. Weekly finance review">
+    <div id="titleBox"><label>Meeting title (optional)</label><input id="title" placeholder="e.g. Weekly finance review"></div>
     <div class="opts"><label><input type="checkbox" id="mic" checked> Mic on</label><label><input type="checkbox" id="cam" checked> Camera on</label></div>
-    <button onclick="startMeeting()">Start new meeting</button>
+    <button id="startBtn" onclick="startMeeting()">Start new meeting</button>
     <div id="link"></div>
   </div>
   <div class="card">
@@ -49,17 +77,40 @@ button:hover{background:var(--brand2)}button.alt{background:#2b3170}
 
 <div id="room">
   <div id="bar"><b id="rtitle"></b><span id="rcode"></span>
-    <button class="alt" onclick="copyLink()">Copy invite link</button>
-    <button class="alt" style="margin-left:auto" onclick="leave()">Leave</button></div>
-  <div id="jitsi"></div>
+    <button class="alt" onclick="copyLink()">Copy invite link</button><span id="rec" style="display:none;color:#f87171;margin-left:auto">● Recording</span></div>
+  <div id="stage">
+    <div id="grid"></div>
+    <aside id="side">
+      <div id="pChat" style="display:none;flex-direction:column;flex:1;min-height:0"><div class="ph">Chat<button onclick="panel('')">×</button></div><div id="msgs"></div>
+        <form id="cform" onsubmit="return sendChat(event)"><input id="ctext" placeholder="Message everyone" autocomplete="off"><button type="submit">Send</button></form></div>
+      <div id="pPeople" style="display:none;flex-direction:column;flex:1;min-height:0"><div class="ph">Participants<button onclick="panel('')">×</button></div><div id="plist"></div></div>
+    </aside>
+  </div>
+  <div id="ctl">
+    <button id="bMic" onclick="toggleMic()">🎤 Mic</button>
+    <button id="bCam" onclick="toggleCam()">📷 Camera</button>
+    <button id="bShare" onclick="toggleShare()">🖥 Present</button>
+    <button id="bHand" onclick="toggleHand()">✋ Raise hand</button>
+    <button id="bChat" onclick="panel('Chat')">💬 Chat<span class="bd" id="unread">0</span></button>
+    <button id="bPeople" onclick="panel('People')">👥 <span id="pcount">1</span></button>
+    <button id="bView" onclick="toggleView()">▦ Tile view</button>
+    <button onclick="fs()">⛶</button>
+    <button id="bRec" onclick="toggleRec()" style="display:none">⏺ Record</button>
+    <button class="leave" onclick="leave()">Leave</button>
+  </div>
 </div>
+<div id="toast"></div>
 
 <script>
 // ---- Settings ----
-// Public meet.jit.si works for testing but limits embedded meetings. For real use, set this to your
-// own Jitsi server or an 8x8.vc (JaaS) domain.
-var MEET_DOMAIN = "meet.jit.si";
-var api=null,current="";
+// Acacia Meet is built in: browser-to-browser WebRTC video, signalling over your Supabase Realtime.
+// STUN works for most networks. Add a TURN server below for people behind strict firewalls / corporate networks.
+var ICE={iceServers:[
+  {urls:["stun:stun.l.google.com:19302","stun:stun1.l.google.com:19302"]}
+  // ,{urls:"turn:turn.yourdomain.com:3478",username:"user",credential:"pass"}
+]};
+var SUPA_URL="https://xglsampckermarjpczdf.supabase.co",SUPA_KEY="sb_publishable_x-dPR7pzhvJgag9soW0I8w_yfKTmi6A";
+var current="",title0="Acacia Meeting";
 
 function $(i){return document.getElementById(i)}
 function slug(s){return (s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,30)}
@@ -69,17 +120,14 @@ function roomFromInput(v){
   return v.replace(/[^A-Za-z0-9\-_]/g,"");
 }
 function inviteLink(code){return location.origin+location.pathname+"?room="+encodeURIComponent(code)}
-function loadScript(cb){
-  if(window.JitsiMeetExternalAPI)return cb();
-  var s=document.createElement("script");s.src="https://"+MEET_DOMAIN+"/external_api.js";
-  s.onload=cb;s.onerror=function(){alert("Could not load the meeting service. Check your internet connection.")};
-  document.head.appendChild(s);
-}
-var SUPA_URL="https://xglsampckermarjpczdf.supabase.co",SUPA_KEY="sb_publishable_x-dPR7pzhvJgag9soW0I8w_yfKTmi6A";
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function me(){try{return JSON.parse(localStorage.getItem("loggedInUser")||"null")||{}}catch(e){return {}}}
 function isAdmin(){var u=me();return !!(u.companyId||u.company_id)&&/^(admin|owner|administrator)$/i.test(String(u.role||""))||u.isAdmin===true}
 function rpc(fn,args){return fetch(SUPA_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"Content-Type":"application/json",apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY},body:JSON.stringify(args)}).then(function(r){return r.ok?r.json():r.json().then(function(e){throw new Error(e.message||"Request failed")})})}
 function who(){var u=me();return {c:String(u.companyId||u.company_id||""),l:String(u.loginId||u.login_id||u.username||u.email||"")}}
+var tT=null;function toast(m){var t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(tT);tT=setTimeout(function(){t.style.display="none"},3500)}
+
+/* ================= lobby actions (unchanged behaviour) ================= */
 function startMeeting(){
   if(!isAdmin()){alert("Only an admin can start a meeting. Ask your admin for a meeting code or link, then use Join.");return}
   var t=slug($("title").value),w=who();
@@ -92,42 +140,340 @@ function joinMeeting(){
   if(!code){alert("Enter a meeting code or link.");return}
   open_(code,"Acacia Meeting");
 }
-function open_(code,title){
-  var name=$("name").value.trim()||"Guest";
-  localStorage.setItem("acaciaMeetName",name);
-  current=code;
-  $("lobby").style.display="none";$("room").style.display="flex";
-  $("rtitle").textContent=title;$("rcode").textContent="Code: "+code;
-  history.replaceState(null,"","?room="+encodeURIComponent(code));
-  loadScript(function(){
-    api=new JitsiMeetExternalAPI(MEET_DOMAIN,{
-      roomName:code,parentNode:$("jitsi"),width:"100%",height:"100%",
-      userInfo:{displayName:name},
-      configOverwrite:{
-        startWithAudioMuted:!$("mic").checked,startWithVideoMuted:!$("cam").checked,
-        prejoinPageEnabled:false,fileRecordingsEnabled:isAdmin(),liveStreamingEnabled:false,subject:title,disableDeepLinking:true
-      },
-      interfaceConfigOverwrite:{
-        SHOW_JITSI_WATERMARK:false,SHOW_WATERMARK_FOR_GUESTS:false,SHOW_BRAND_WATERMARK:false,
-        APP_NAME:"Acacia Meet",NATIVE_APP_NAME:"Acacia Meet",DEFAULT_REMOTE_DISPLAY_NAME:"Participant",
-        TOOLBAR_BUTTONS:["microphone","camera","desktop","chat","raisehand","participants-pane","tileview","fullscreen","hangup","settings"].concat(isAdmin()?["recording"]:[]).concat(["select-background","invite"])
-      }
-    });
-    api.addListener("readyToClose",leave);
-    api.addListener("recordingStatusChanged",function(e){if(!isAdmin())return;var w=who();rpc("acx_meet_record",{p_company:w.c,p_login:w.l,p_room:code,p_on:!!e.on}).catch(function(){})});
-  });
-}
 function copyLink(){
   var l=inviteLink(current);
-  (navigator.clipboard?navigator.clipboard.writeText(l):Promise.reject()).then(function(){alert("Invite link copied:\n"+l)},function(){prompt("Copy this invite link:",l)});
+  (navigator.clipboard?navigator.clipboard.writeText(l):Promise.reject()).then(function(){toast("Invite link copied")},function(){prompt("Copy this invite link:",l)});
 }
+
+/* ================= meeting engine ================= */
+var ME={id:"u"+Date.now().toString(36)+Math.random().toString(36).slice(2,8),name:"Guest",mic:false,cam:false,hand:false,share:false};
+var sb=null,chan=null,peers={},tiles={};
+var micTrack=null,camTrack=null,screenTrack=null,screenStream=null;
+var forceGrid=false,unread=0,panelOpen="",joined=false;
+var actx=null,speakTimer=null,rec=null;
+
+function loadSupabase(cb){
+  if(window.supabase&&window.supabase.createClient)return cb();
+  var s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js";
+  s.onload=cb;s.onerror=function(){alert("Could not load the meeting service. Check your internet connection.")};
+  document.head.appendChild(s);
+}
+function meta(){return {name:ME.name,mic:ME.mic,cam:ME.cam,hand:ME.hand,share:ME.share}}
+function pushMeta(){if(chan&&joined)chan.track(meta()); render()}
+
+async function getMedia(wantMic,wantCam){
+  var out={a:null,v:null};
+  try{var s=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});out.a=s.getAudioTracks()[0]}catch(e){}
+  if(wantCam){try{var v=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:24}}});out.v=v.getVideoTracks()[0]}catch(e){}}
+  return out;
+}
+
+function open_(code,title){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert("Your browser can't access the camera/microphone here. Open this page over https:// in an up-to-date browser.");return}
+  var name=$("name").value.trim()||"Guest";
+  localStorage.setItem("acaciaMeetName",name);
+  current=code;title0=title;ME.name=name;
+  var wantMic=$("mic").checked,wantCam=$("cam").checked;
+  getMedia(wantMic,wantCam).then(function(m){
+    micTrack=m.a;camTrack=m.v;
+    if(micTrack)micTrack.enabled=wantMic;
+    ME.mic=!!(micTrack&&micTrack.enabled);ME.cam=!!camTrack;
+    if(!micTrack)toast("No microphone found or permission denied — you can still listen and chat.");
+    $("lobby").style.display="none";$("room").style.display="flex";
+    $("rtitle").textContent=title;$("rcode").textContent="Code: "+current;
+    $("bRec").style.display=isAdmin()?"":"none";
+    history.replaceState(null,"","?room="+encodeURIComponent(current));
+    unread=0;$("msgs").innerHTML="";
+    render();
+    loadSupabase(connect);
+  });
+}
+
+function connect(){
+  sb=sb||window.supabase.createClient(SUPA_URL,SUPA_KEY,{realtime:{params:{eventsPerSecond:20}}});
+  chan=sb.channel("acx-meet-"+current,{config:{broadcast:{self:false},presence:{key:ME.id}}});
+  chan.on("broadcast",{event:"sig"},function(m){onSig(m.payload)});
+  chan.on("broadcast",{event:"chat"},function(m){onChat(m.payload)});
+  chan.on("presence",{event:"sync"},syncPeople);
+  chan.subscribe(function(status){
+    if(status==="SUBSCRIBED"){joined=true;chan.track(meta());render()}
+    else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"){toast("Could not reach the meeting service. Check your connection.")}
+  });
+  startSpeakerWatch();
+}
+
+/* ---- participants (presence) ---- */
+function syncPeople(){
+  var st=chan.presenceState(),seen={};
+  Object.keys(st).forEach(function(id){
+    if(id===ME.id)return;
+    var m=(st[id]&&st[id][st[id].length-1])||{};seen[id]=1;
+    var p=peers[id]||makePeer(id);
+    var prevHand=p.meta&&p.meta.hand;
+    p.meta=m;
+    if(m.hand&&!prevHand)toast("✋ "+(m.name||"Someone")+" raised a hand");
+  });
+  Object.keys(peers).forEach(function(id){if(!seen[id])dropPeer(id)});
+  render();
+}
+
+/* ---- WebRTC (perfect negotiation) ---- */
+function makePeer(id){
+  var pc=new RTCPeerConnection(ICE);
+  var p={id:id,pc:pc,meta:{},stream:new MediaStream(),makingOffer:false,ignoreOffer:false,polite:ME.id>id,pend:[]};
+  peers[id]=p;
+  pc.ontrack=function(e){
+    p.stream.addTrack(e.track);
+    if(e.track.kind==="audio"){watchAudio(id,p.stream);if(rec)recAddStream(p.stream)}
+    render();
+  };
+  pc.onicecandidate=function(e){if(e.candidate)sendSig(id,{cand:e.candidate.toJSON()})};
+  pc.onnegotiationneeded=async function(){
+    try{p.makingOffer=true;await pc.setLocalDescription();sendSig(id,{desc:plainDesc(pc.localDescription)})}
+    catch(e){console.warn(e)}finally{p.makingOffer=false}
+  };
+  pc.onconnectionstatechange=function(){
+    if(pc.connectionState==="failed"){try{pc.restartIce()}catch(e){}}
+    if(pc.connectionState==="connected"||pc.connectionState==="failed")render();
+  };
+  if(ME.id<id){                                   // the lower id opens the call; the other side answers
+    var ta=pc.addTransceiver("audio",{direction:"sendrecv"}),tv=pc.addTransceiver("video",{direction:"sendrecv"});
+    ta.sender.replaceTrack(micTrack||null).catch(function(){});
+    tv.sender.replaceTrack(outVideo()||null).catch(function(){});
+  }
+  return p;
+}
+function plainDesc(d){return {type:d.type,sdp:d.sdp}}
+function outVideo(){return screenTrack||camTrack}
+function attachLocal(p){
+  p.pc.getTransceivers().forEach(function(t){
+    var k=t.receiver&&t.receiver.track&&t.receiver.track.kind;
+    if(k==="audio"){t.direction="sendrecv";t.sender.replaceTrack(micTrack||null).catch(function(){})}
+    else if(k==="video"){t.direction="sendrecv";t.sender.replaceTrack(outVideo()||null).catch(function(){})}
+  });
+}
+function setOutVideo(track){
+  Object.keys(peers).forEach(function(id){
+    peers[id].pc.getTransceivers().forEach(function(t){
+      if(t.receiver&&t.receiver.track&&t.receiver.track.kind==="video"&&t.direction==="sendrecv")t.sender.replaceTrack(track||null).catch(function(){});
+    });
+  });
+}
+function sendSig(to,body){body.from=ME.id;body.to=to;if(chan)chan.send({type:"broadcast",event:"sig",payload:body})}
+async function onSig(m){
+  if(!m||m.to!==ME.id)return;
+  var p=peers[m.from]||makePeer(m.from),pc=p.pc;
+  try{
+    if(m.desc){
+      var collision=m.desc.type==="offer"&&(p.makingOffer||pc.signalingState!=="stable");
+      p.ignoreOffer=!p.polite&&collision;
+      if(p.ignoreOffer)return;
+      await pc.setRemoteDescription(m.desc);
+      while(p.pend.length){try{await pc.addIceCandidate(p.pend.shift())}catch(e){}}
+      if(m.desc.type==="offer"){attachLocal(p);await pc.setLocalDescription();sendSig(m.from,{desc:plainDesc(pc.localDescription)})}
+    }else if(m.cand){
+      if(!pc.remoteDescription){p.pend.push(m.cand);return}
+      try{await pc.addIceCandidate(m.cand)}catch(e){if(!p.ignoreOffer)console.warn(e)}
+    }
+  }catch(e){console.warn("signal error",e)}
+}
+function dropPeer(id){
+  var p=peers[id];if(!p)return;
+  try{p.pc.close()}catch(e){}
+  delete peers[id];
+  if(tiles[id]){tiles[id].el.remove();delete tiles[id]}
+  if(tiles[id+":a"]){delete tiles[id+":a"]}
+}
+
+/* ---- controls ---- */
+function toggleMic(){
+  if(!micTrack){toast("No microphone available");return}
+  micTrack.enabled=!micTrack.enabled;ME.mic=micTrack.enabled;pushMeta();
+}
+async function toggleCam(){
+  if(ME.cam){
+    if(camTrack){camTrack.stop();camTrack=null}
+    ME.cam=false;if(!screenTrack)setOutVideo(null);
+  }else{
+    try{
+      var s=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:24}}});
+      camTrack=s.getVideoTracks()[0];ME.cam=true;if(!screenTrack)setOutVideo(camTrack);
+    }catch(e){toast("Could not start the camera — check permissions.");return}
+  }
+  pushMeta();
+}
+async function toggleShare(){
+  if(ME.share){stopShare();return}
+  if(!navigator.mediaDevices.getDisplayMedia){toast("Screen sharing isn't supported on this device/browser.");return}
+  try{
+    screenStream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:{ideal:15}},audio:false});
+    screenTrack=screenStream.getVideoTracks()[0];
+    screenTrack.onended=stopShare;
+    ME.share=true;setOutVideo(screenTrack);pushMeta();
+  }catch(e){}
+}
+function stopShare(){
+  if(screenTrack){try{screenTrack.stop()}catch(e){}}
+  screenTrack=null;screenStream=null;ME.share=false;
+  setOutVideo(camTrack||null);pushMeta();
+}
+function toggleHand(){ME.hand=!ME.hand;pushMeta()}
+function toggleView(){forceGrid=!forceGrid;render()}
+function fs(){var el=$("room");if(document.fullscreenElement)document.exitFullscreen();else if(el.requestFullscreen)el.requestFullscreen()}
+function panel(name){
+  panelOpen=(panelOpen===name?"":name);
+  $("side").className=panelOpen?"open":"";
+  $("pChat").style.display=panelOpen==="Chat"?"flex":"none";
+  $("pPeople").style.display=panelOpen==="People"?"flex":"none";
+  if(panelOpen==="Chat"){unread=0;$("unread").style.display="none";setTimeout(function(){$("ctext").focus()},50)}
+  render();
+}
+
+/* ---- chat ---- */
+function addMsg(name,text,mine){
+  var d=document.createElement("div");d.className="m"+(mine?" me":"");
+  d.innerHTML="<b>"+esc(mine?"You":name)+"</b><span>"+esc(text)+"</span>";
+  var box=$("msgs");box.appendChild(d);box.scrollTop=box.scrollHeight;
+}
+function sendChat(e){
+  e.preventDefault();var t=$("ctext").value.trim();if(!t||!chan)return false;
+  chan.send({type:"broadcast",event:"chat",payload:{from:ME.id,name:ME.name,text:t.slice(0,1000)}});
+  addMsg(ME.name,t,true);$("ctext").value="";return false;
+}
+function onChat(m){
+  if(!m||!m.text)return;addMsg(m.name||"Guest",m.text,false);
+  if(panelOpen!=="Chat"){unread++;var b=$("unread");b.textContent=unread;b.style.display="inline"}
+}
+
+/* ---- rendering ---- */
+function initials(n){n=(n||"?").trim().split(/\s+/);return ((n[0]||"?")[0]+((n[1]||"")[0]||"")).toUpperCase()}
+function tileFor(id){
+  if(tiles[id])return tiles[id];
+  var el=document.createElement("div");el.className="tile";
+  el.innerHTML='<video autoplay playsinline></video><div class="av"><i></i></div><div class="nm"></div><div class="st"></div>';
+  var t={el:el,v:el.querySelector("video"),av:el.querySelector(".av i"),nm:el.querySelector(".nm"),st:el.querySelector(".st")};
+  tiles[id]=t;$("grid").appendChild(el);return t;
+}
+function render(){
+  if(!$("grid"))return;
+  var ids=[ME.id].concat(Object.keys(peers)),grid=$("grid");
+  var sharer=null;
+  ids.forEach(function(id){var m=id===ME.id?meta():peers[id].meta;if(m&&m.share&&!sharer)sharer=id});
+  var spot=!!sharer&&!forceGrid;
+  grid.className=spot?"spot":"";
+  grid.style.setProperty("--cols",Math.min(ids.length,innerWidth<700?(ids.length>2?2:1):Math.ceil(Math.sqrt(ids.length))));
+  ids.forEach(function(id){
+    var mine=id===ME.id,m=mine?meta():(peers[id].meta||{}),t=tileFor(id);
+    var stream=mine?localView():peers[id].stream;
+    if(t.v.srcObject!==stream)t.v.srcObject=stream;
+    t.v.muted=mine;
+    var hasVid=mine?!!(ME.share?screenTrack:camTrack):(!!m.cam||!!m.share);
+    t.el.className="tile"+(mine?" mine":"")+(m.share?" share":"")+(hasVid?"":" nocam")+(spot&&id===sharer?" main":"")+(t.el.classList.contains("speaking")?" speaking":"");
+    t.av.textContent=initials(m.name||(mine?ME.name:"Guest"));
+    t.nm.textContent=(m.name||"Guest")+(mine?" (You)":"");
+    t.st.innerHTML=(m.hand?"<span>✋</span>":"")+(m.share?"<span>🖥</span>":"")+(m.mic?"":"<span>🔇</span>");
+    if(t.v.paused){var pr=t.v.play();if(pr&&pr.catch)pr.catch(function(){})}
+  });
+  Object.keys(tiles).forEach(function(id){if(id.indexOf(":")<0&&id!==ME.id&&!peers[id]){tiles[id].el.remove();delete tiles[id]}});
+  $("bMic").className=ME.mic?"on":"off";$("bMic").textContent=ME.mic?"🎤 Mic":"🔇 Unmute";
+  $("bCam").className=ME.cam?"on":"off";$("bCam").textContent=ME.cam?"📷 Camera":"🚫 Start camera";
+  $("bShare").className=ME.share?"on":"";$("bShare").textContent=ME.share?"⏹ Stop presenting":"🖥 Present";
+  $("bHand").className=ME.hand?"on":"";$("bHand").textContent=ME.hand?"✋ Lower hand":"✋ Raise hand";
+  $("bView").textContent=forceGrid?"◧ Speaker view":"▦ Tile view";
+  $("pcount").textContent=ids.length;
+  if(panelOpen==="People"){
+    $("plist").innerHTML=ids.map(function(id){var m=id===ME.id?meta():(peers[id].meta||{});
+      return "<div><b>"+esc(m.name||"Guest")+(id===ME.id?" (You)":"")+"</b><em>"+(m.hand?"✋":"")+(m.mic?"🎤":"🔇")+(m.cam?"📷":"")+(m.share?"🖥":"")+"</em></div>"}).join("");
+  }
+}
+var lv=null;
+function localView(){
+  var tr=ME.share?screenTrack:camTrack;
+  if(!lv)lv=new MediaStream();
+  var cur=lv.getVideoTracks()[0];
+  if(cur!==tr){if(cur)lv.removeTrack(cur);if(tr)lv.addTrack(tr)}
+  return lv;
+}
+
+/* ---- active speaker highlight ---- */
+var analysers={};
+function ac(){if(!actx){var C=window.AudioContext||window.webkitAudioContext;if(C)actx=new C()}if(actx&&actx.state==="suspended")actx.resume();return actx}
+function watchAudio(id,stream){
+  var c=ac();if(!c||!stream.getAudioTracks().length)return;
+  try{var src=c.createMediaStreamSource(new MediaStream(stream.getAudioTracks())),an=c.createAnalyser();an.fftSize=512;src.connect(an);analysers[id]={an:an,buf:new Uint8Array(an.fftSize)}}catch(e){}
+}
+function startSpeakerWatch(){
+  clearInterval(speakTimer);
+  if(micTrack)watchAudio(ME.id,new MediaStream([micTrack]));
+  speakTimer=setInterval(function(){
+    var best=null,bl=14;
+    Object.keys(analysers).forEach(function(id){
+      var a=analysers[id];if(id===ME.id&&!ME.mic)return;
+      a.an.getByteTimeDomainData(a.buf);var s=0;for(var i=0;i<a.buf.length;i++){var v=a.buf[i]-128;s+=v*v}
+      var l=Math.sqrt(s/a.buf.length);if(l>bl){bl=l;best=id}
+    });
+    Object.keys(tiles).forEach(function(id){tiles[id].el.classList.toggle("speaking",id===best)});
+  },300);
+}
+
+/* ---- recording (admins): composite of the meeting grid + mixed audio, saved as .webm ---- */
+function recAddStream(st){try{if(rec&&st.getAudioTracks().length)actx.createMediaStreamSource(new MediaStream(st.getAudioTracks())).connect(rec.dest)}catch(e){}}
+function toggleRec(){rec?stopRec():startRec()}
+function startRec(){
+  if(!window.MediaRecorder){toast("Recording isn't supported in this browser.");return}
+  var c=ac();if(!c)return;
+  var cv=document.createElement("canvas");cv.width=1280;cv.height=720;var cx=cv.getContext("2d");
+  var dest=c.createMediaStreamDestination();
+  if(micTrack)c.createMediaStreamSource(new MediaStream([micTrack])).connect(dest);
+  var out=cv.captureStream(10);dest.stream.getAudioTracks().forEach(function(t){out.addTrack(t)});
+  var mt=["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"].filter(function(t){return MediaRecorder.isTypeSupported(t)})[0]||"";
+  var mr=new MediaRecorder(out,mt?{mimeType:mt}:{}),chunks=[];
+  mr.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data)};
+  mr.onstop=function(){
+    var b=new Blob(chunks,{type:"video/webm"}),a=document.createElement("a");a.href=URL.createObjectURL(b);
+    a.download=current+"-"+new Date().toISOString().slice(0,16).replace(/[:T]/g,"-")+".webm";document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(a.href)},2000);
+  };
+  rec={mr:mr,dest:dest,cv:cv,timer:setInterval(function(){
+    var vids=[].slice.call($("grid").querySelectorAll(".tile")),n=vids.length||1,cols=Math.ceil(Math.sqrt(n)),rows=Math.ceil(n/cols),w=1280/cols,h=720/rows;
+    cx.fillStyle="#0f1226";cx.fillRect(0,0,1280,720);
+    vids.forEach(function(t,i){
+      var x=(i%cols)*w,y=Math.floor(i/cols)*h,v=t.querySelector("video");
+      if(!t.classList.contains("nocam")&&v.videoWidth){
+        var r=Math.min(w/v.videoWidth,h/v.videoHeight),dw=v.videoWidth*r,dh=v.videoHeight*r;cx.drawImage(v,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+      }else{cx.fillStyle="#1c2150";cx.fillRect(x+2,y+2,w-4,h-4)}
+      cx.fillStyle="#fff";cx.font="18px sans-serif";cx.fillText(t.querySelector(".nm").textContent,x+12,y+h-14);
+    });
+  },100)};
+  Object.keys(peers).forEach(function(id){recAddStream(peers[id].stream)});
+  mr.start(2000);
+  $("rec").style.display="inline";$("bRec").textContent="⏹ Stop recording";$("bRec").className="off";
+  var w=who();rpc("acx_meet_record",{p_company:w.c,p_login:w.l,p_room:current,p_on:true}).catch(function(){});
+}
+function stopRec(){
+  if(!rec)return;clearInterval(rec.timer);try{rec.mr.stop()}catch(e){}rec=null;
+  $("rec").style.display="none";$("bRec").textContent="⏺ Record";$("bRec").className="";
+  var w=who();rpc("acx_meet_record",{p_company:w.c,p_login:w.l,p_room:current,p_on:false}).catch(function(){});
+}
+
+/* ---- leave ---- */
 function leave(){
+  if(rec)stopRec();
   if(isAdmin()&&current){var w=who();rpc("acx_meet_end",{p_company:w.c,p_login:w.l,p_room:current}).catch(function(){})}
-  if(api){api.dispose();api=null}
-  $("jitsi").innerHTML="";$("room").style.display="none";$("lobby").style.display="grid";
+  clearInterval(speakTimer);
+  Object.keys(peers).forEach(dropPeer);
+  [micTrack,camTrack,screenTrack].forEach(function(t){if(t){try{t.stop()}catch(e){}}});
+  micTrack=camTrack=screenTrack=screenStream=null;lv=null;analysers={};
+  ME.mic=ME.cam=ME.hand=ME.share=false;joined=false;
+  if(chan){try{chan.untrack();}catch(e){}try{sb.removeChannel(chan)}catch(e){}chan=null}
+  Object.keys(tiles).forEach(function(id){tiles[id].el.remove()});tiles={};
+  panelOpen="";$("side").className="";
+  $("room").style.display="none";$("lobby").style.display="grid";
   history.replaceState(null,"",location.pathname);
 }
-if(!isAdmin()){var sc=document.querySelector("#lobby .card");sc.innerHTML="<h2>🎥 Start a meeting</h2><p class=\"s\">Only admins can start and record meetings. Use the code or link your admin shared with you and join on the right.</p>"}
+window.addEventListener("beforeunload",function(){if(joined){try{chan.untrack()}catch(e){}}});
+window.addEventListener("resize",function(){if(joined)render()});
+
+if(!isAdmin()){$("cardTitle").textContent="🎥 Your details";$("cardSub").textContent="Only admins can start and record meetings. Enter your name, choose your mic/camera, then use the code or link your admin shared with you and join on the right.";$("titleBox").style.display="none";$("startBtn").style.display="none"}
 // Prefill + auto-join from invite link
 $("name").value=localStorage.getItem("acaciaMeetName")||"";
 var q=new URLSearchParams(location.search).get("room");

@@ -1532,9 +1532,22 @@ try{
   st.textContent = css;
   (document.head || document.documentElement).appendChild(st);
 
+  /* ---------- colour helpers ---------- */
+  var cvs = null, parseCache = {};
   function rgb(s) {
-    var m = s && s.match(/rgba?\(([^)]+)\)/);
-    if (!m) return null;
+    if (!s) return null;
+    var m = s.match(/^rgba?\(([^)]+)\)$/);
+    if (!m) {                                   // color(srgb ..), oklch(), lab() ... -> let the browser convert it
+      if (parseCache[s] !== undefined) return parseCache[s];
+      var out = null;
+      try {
+        cvs = cvs || document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+        cvs.canvas.width = cvs.canvas.height = 1;
+        cvs.clearRect(0, 0, 1, 1); cvs.fillStyle = "#000"; cvs.fillStyle = s; cvs.fillRect(0, 0, 1, 1);
+        var d = cvs.getImageData(0, 0, 1, 1).data; out = { r: d[0], g: d[1], b: d[2], a: d[3] / 255 };
+      } catch (e) {}
+      return (parseCache[s] = out);
+    }
     var p = m[1].split(/[ ,\/]+/).filter(Boolean).map(parseFloat);
     return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
   }
@@ -1542,58 +1555,124 @@ try{
     function ch(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
     return 0.2126 * ch(c.r) + 0.7152 * ch(c.g) + 0.0722 * ch(c.b);
   }
-  function ratio(a, b) {
-    var x = lum(a), y = lum(b);
-    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
-  }
-  function bgOf(el) {
-    while (el && el.nodeType === 1) {
-      var cs = getComputedStyle(el);
-      if (cs.backgroundImage && cs.backgroundImage !== "none") {
-        var g = rgb(cs.backgroundImage); // first colour of a gradient
-        if (g) return g;
-        return null; // picture background – leave alone
-      }
-      var c = rgb(cs.backgroundColor);
-      if (c && c.a > 0.5) return c;
-      el = el.parentElement;
-    }
-    return { r: 255, g: 255, b: 255, a: 1 };
-  }
-  function hasText(el) {
-    for (var n = el.firstChild; n; n = n.nextSibling)
-      if (n.nodeType === 3 && n.textContent.trim()) return true;
-    return el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT";
+  function ratio(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  function over(top, base) {                      // composite a translucent colour on top of base
+    var a = top.a; return { r: top.r * a + base.r * (1 - a), g: top.g * a + base.g * (1 - a), b: top.b * a + base.b * (1 - a), a: 1 };
   }
 
-  var SCOPES = ["#dashboard", "#preferencesTab", "#orgProfileTab", "#advCustomization", "#customizationTab", "[id$='Tab']:not(.hidden)", ".modal:not(.hidden)", "[id$='Panel']:not(.hidden)", "main:not(.hidden)"];
-  function scan() {
-    var seen = [];
-    SCOPES.forEach(function (sel) {
-      try { document.querySelectorAll(sel).forEach(function (r) { if (seen.indexOf(r) < 0 && r.offsetParent !== null) seen.push(r); }); } catch (e) {}
-    });
-    seen.forEach(function (root) {
-      var els = root.querySelectorAll("*");
-      for (var i = 0; i < els.length; i++) {
-        var el = els[i];
-        if (!el.offsetParent || !hasText(el)) continue;
-        if (el.__acxFixed) continue;
-        var fg = rgb(getComputedStyle(el).color), bg = bgOf(el);
-        if (!fg || !bg) continue;
-        if (ratio(fg, bg) < 3) {
-          el.style.setProperty("color", lum(bg) > 0.4 ? "#111827" : "#ffffff", "important");
-          el.__acxFixed = true;
+  /* background actually painted behind an element (walks up through transparent parents) */
+  function bgOf(el, memo) {
+    if (memo.has(el)) return memo.get(el);
+    var res = null;
+    if (!el || el.nodeType !== 1) res = { r: 255, g: 255, b: 255, a: 1 };
+    else {
+      var cs = getComputedStyle(el), bi = cs.backgroundImage;
+      if (bi && bi !== "none") {
+        var g = bi.match(/rgba?\([^)]+\)/);
+        res = g ? rgb(g[0]) : null;               // url() picture -> unknown, leave alone
+        if (res && res.a < 1) { var below = el.parentElement ? bgOf(el.parentElement, memo) : { r: 255, g: 255, b: 255, a: 1 }; res = below ? over(res, below) : null; }
+      } else {
+        var c = rgb(cs.backgroundColor);
+        if (c && c.a >= 0.98) res = c;
+        else {
+          var up = el.parentElement ? bgOf(el.parentElement, memo) : { r: 255, g: 255, b: 255, a: 1 };
+          res = (c && c.a > 0.02 && up) ? over(c, up) : up;
         }
       }
-    });
+    }
+    memo.set(el, res);
+    return res;
   }
 
-  var t = null;
-  function later() { clearTimeout(t); t = setTimeout(scan, 250); }
+  var SKIP_TAG = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, IMG: 1, CANVAS: 1, SVG: 1, PATH: 1, OPTION: 1, OPTGROUP: 1, LINK: 1, META: 1, BR: 1, HR: 1, VIDEO: 1, AUDIO: 1, IFRAME: 1, HEAD: 1, TITLE: 1 };
+  var SKIP_INPUT = { checkbox: 1, radio: 1, hidden: 1, color: 1, range: 1, file: 1, image: 1 };
+  function hasText(el) {
+    var t = el.tagName;
+    if (t === "INPUT") return !SKIP_INPUT[(el.type || "").toLowerCase()];
+    if (t === "TEXTAREA" || t === "SELECT") return true;
+    for (var n = el.firstChild; n; n = n.nextSibling) if (n.nodeType === 3 && n.nodeValue.trim()) return true;
+    return false;
+  }
+
+  /* ---------- the guard ---------- */
+  var MIN_RATIO = 2.2;          // below this the text is effectively invisible on its background
+  var fixedMap = new WeakMap(); // element -> original inline colour we replaced {v, p}
+  var running = false, again = false, timer = null, slow = 0;
+
+  function collect() {
+    var list = [], all = document.body ? document.body.getElementsByTagName("*") : [];
+    for (var i = 0; i < all.length; i++) { var el = all[i]; if (!SKIP_TAG[el.tagName.toUpperCase()] && !(el instanceof SVGElement) && hasText(el)) list.push(el); }
+    return list;
+  }
+
+  function run() {
+    if (running) { again = true; return; }
+    running = true; again = false;
+    var t0 = Date.now(), list, pos = 0;
+    try { list = collect(); } catch (e) { running = false; return; }
+    (function chunk() {
+      var end = Math.min(pos + 1200, list.length), batch = list.slice(pos, end), writes = [], memo = new Map();
+      pos = end;
+      pauseObs();
+      /* 1) undo our earlier override on this batch so we judge the colour the page really wants (same task => no flicker) */
+      batch.forEach(function (el) {
+        var rec = fixedMap.get(el);
+        if (rec) { try { if (rec.v) el.style.setProperty("color", rec.v, rec.p); else el.style.removeProperty("color"); } catch (e) {} fixedMap.delete(el); }
+      });
+      /* 2) read */
+      batch.forEach(function (el) {
+        if (!el.isConnected || el.getClientRects().length === 0) return;
+        var cs = getComputedStyle(el);
+        if (cs.visibility === "hidden" || parseFloat(cs.fontSize) === 0) return;
+        if ((cs.webkitBackgroundClip || cs.backgroundClip) === "text") return;
+        var fg = rgb(cs.color), bg = bgOf(el, memo);
+        if (!fg || !bg || fg.a < 0.1) return;
+        if (fg.a < 1) fg = over(fg, bg);
+        if (ratio(fg, bg) < MIN_RATIO) {
+          var dark = ratio({ r: 17, g: 24, b: 39 }, bg) >= ratio({ r: 255, g: 255, b: 255 }, bg);
+          writes.push([el, dark ? "#111827" : "#ffffff"]);
+        }
+      });
+      /* 3) write */
+      writes.forEach(function (w) {
+        fixedMap.set(w[0], { v: w[0].style.getPropertyValue("color"), p: w[0].style.getPropertyPriority("color") });
+        w[0].style.setProperty("color", w[1], "important");
+      });
+      resumeObs();
+      if (pos < list.length) setTimeout(chunk, 0);
+      else { running = false; slow = Date.now() - t0; if (again) later(); }
+    })();
+  }
+
+  function later() { clearTimeout(timer); timer = setTimeout(run, Math.max(200, slow * 3)); }
+  window.acxContrastRescan = later;
+
+  /* observers: DOM changes, theme/class changes on <html>, and <style> changes in <head> (branding writes there) */
+  var bodyObs = null, headObs = null, htmlObs = null;
+  function pauseObs() { if (bodyObs) bodyObs.takeRecords(), bodyObs.disconnect(); if (headObs) headObs.takeRecords(), headObs.disconnect(); if (htmlObs) htmlObs.takeRecords(), htmlObs.disconnect(); }
+  function resumeObs() {
+    if (bodyObs) bodyObs.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style", "hidden"] });
+    if (headObs) headObs.observe(document.head, { subtree: true, childList: true, characterData: true });
+    if (htmlObs) htmlObs.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "data-theme", "style"] });
+  }
+  function hookBranding() {                     // re-judge immediately after every branding change
+    var f = window.acxApplyBrandingLive;
+    if (typeof f === "function" && !f.__acxG) {
+      var w = function () { var r = f.apply(this, arguments); later(); return r; };
+      w.__acxG = true; window.acxApplyBrandingLive = w;
+    }
+  }
+
   function start() {
-    scan();
-    new MutationObserver(later).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style"] });
-    document.addEventListener("click", later, true);
+    bodyObs = new MutationObserver(later);
+    headObs = new MutationObserver(later);
+    htmlObs = new MutationObserver(later);
+    resumeObs();
+    window.addEventListener("hashchange", later);
+    window.addEventListener("storage", later);
+    hookBranding(); setTimeout(hookBranding, 1500); setTimeout(hookBranding, 4000);
+    run();
+    setTimeout(run, 1500); setTimeout(run, 4000);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
   else start();
