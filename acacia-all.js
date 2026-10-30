@@ -1043,3 +1043,157 @@
     };
   } catch (e) {}
 })();
+
+/* ######## acacia-hr-payroll-report.js ########
+ * Reports > Human Resource Reports > Payroll (#payrollPanel) was blank:
+ *  - showReport("payrollPanel") had no render hook
+ *  - renderPayroll() (used by every filter control) was only an alias to renderGrossPayroll
+ *  - clearPayrollFilter / compare / columns / settings handlers did not exist
+ * This renders the panel from payrollPayments and wires all its controls.
+ */
+(function () {
+  "use strict";
+  if (window.__acxHrPayrollReport) return;
+  window.__acxHrPayrollReport = true;
+
+  var S = { compare: null, columns: { 1: true, 2: true, 3: true, 4: true }, filter: "all", showMonth: false };
+
+  function ls(k) { try { var v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function num(v) { v = parseFloat(v); return isFinite(v) ? v : 0; }
+  function el(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function dp() { return window.__getDecimalPlaces ? window.__getDecimalPlaces() : 2; }
+  function money(v) { return "KES " + num(v).toLocaleString(void 0, { minimumFractionDigits: dp(), maximumFractionDigits: dp() }); }
+  function monthOf(r) {
+    if (r && /^\d{4}-\d{2}$/.test(String(r.month || ""))) return r.month;
+    var d = r && (r.date || r.payDate); return d && /^\d{4}-\d{2}/.test(String(d)) ? String(d).slice(0, 7) : "";
+  }
+  function shiftMonth(m, delta) { var p = m.split("-"), d = new Date(+p[0], +p[1] - 1 + delta, 1); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); }
+  function curMonth() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); }
+
+  function inPeriod(rec) {
+    var month = (el("payrollMonth") || {}).value || "", start = (el("payrollStart") || {}).value || "", end = (el("payrollEnd") || {}).value || "";
+    var m = monthOf(rec);
+    if (month) return m === month;
+    if ((start || end) && m) {
+      var ms = new Date(m + "-01T00:00:00"), me = new Date(+m.slice(0, 4), +m.slice(5, 7), 0, 23, 59, 59);
+      if (start && me < new Date(start + "T00:00:00")) return false;
+      if (end && ms > new Date(end + "T23:59:59")) return false;
+    }
+    return true;
+  }
+  function key(r) { return String(r.empID || r.name || "").toLowerCase(); }
+
+  function previousMonths() {
+    if (!S.compare || !S.compare.type) return null;
+    var month = (el("payrollMonth") || {}).value || curMonth();
+    return S.compare.type === "previousYear" ? shiftMonth(month, -12 * (parseInt(S.compare.years, 10) || 1)) : shiftMonth(month, -1);
+  }
+
+  function applyColumnVisibility() {
+    var panel = el("payrollPanel"); if (!panel) return;
+    var t = panel.querySelector("table"); if (!t) return;
+    Array.prototype.forEach.call(t.rows, function (row) {
+      Array.prototype.forEach.call(row.cells, function (c, i) {
+        if (i >= 1 && i <= 4 && S.columns[i] === false) c.style.display = "none"; else if (i >= 1 && i <= 4) c.style.display = "";
+      });
+    });
+  }
+
+  function render() {
+    var body = el("payrollSummary"); if (!body) return;
+    var thead = body.parentNode.tHead, prevM = previousMonths();
+    var all = ls("payrollPayments"), rows;
+
+    if (S.filter === "unpaid") {
+      var month = (el("payrollMonth") || {}).value || curMonth();
+      var paid = {}; all.forEach(function (r) { if (monthOf(r) === month) paid[key(r)] = 1; });
+      rows = ls("employees").filter(function (e) { return e && !paid[String(e.empID || e.id || e.name || "").toLowerCase()] && !paid[String(e.name || "").toLowerCase()]; })
+        .map(function (e) { return { name: e.name || e.empID || "-", gross: 0, deductions: 0, net: 0, month: month, unpaid: true }; });
+    } else {
+      rows = all.filter(inPeriod);
+    }
+
+    var prevNet = {};
+    if (prevM) all.forEach(function (r) { if (monthOf(r) === prevM) prevNet[key(r)] = (prevNet[key(r)] || 0) + num(r.net != null ? r.net : r.total); });
+
+    if (thead && thead.rows[0]) {
+      var last = thead.rows[0].lastElementChild;
+      var old = thead.rows[0].querySelector("[data-prev-col]"); if (old) old.remove();
+      if (prevM) { var th = document.createElement("th"); th.className = "border px-2 py-1 text-right"; th.setAttribute("data-prev-col", "1"); th.textContent = "Net Pay (" + prevM + ")"; thead.rows[0].appendChild(th); }
+    }
+
+    var run = 0, html = "";
+    rows.forEach(function (r) {
+      var net = num(r.net != null ? r.net : (r.total != null ? r.total : num(r.gross) - num(r.deductions)));
+      run += net;
+      var label = esc(r.name || r.empID || "-") + (S.showMonth && monthOf(r) ? ' <span style="color:#94a3b8;font-size:11px">· ' + esc(monthOf(r)) + "</span>" : "") + (r.unpaid ? ' <span style="color:#dc2626;font-size:11px">(unpaid)</span>' : "");
+      html += '<tr><td class="border px-2 py-1">' + label + '</td>' +
+        '<td class="border px-2 py-1 text-right">' + money(r.gross) + '</td>' +
+        '<td class="border px-2 py-1 text-right">' + money(r.deductions) + '</td>' +
+        '<td class="border px-2 py-1 font-bold text-right">' + money(net) + '</td>' +
+        '<td class="border px-2 py-1 text-right">' + money(run) + '</td>' +
+        (prevM ? '<td class="border px-2 py-1 text-right">' + money(prevNet[key(r)] || 0) + '</td>' : "") + '</tr>';
+    });
+    body.innerHTML = html || '<tr><td colspan="' + (prevM ? 6 : 5) + '" class="border px-2 py-3 text-center text-gray-500">No payroll records for the selected period.</td></tr>';
+    var gt = el("payrollGrandTotal"); if (gt) gt.textContent = money(run);
+    applyColumnVisibility();
+  }
+
+  function closeDropdowns(except) {
+    ["payrollCompareDropdown", "payrollColumnCustomizer", "payrollSettingsDropdown"].forEach(function (id) {
+      var d = el(id); if (d && id !== except) d.classList.add("hidden");
+    });
+  }
+  function toggleDD(id) { var d = el(id); if (!d) return; var open = !d.classList.contains("hidden"); closeDropdowns(); if (!open) d.classList.remove("hidden"); }
+
+  window.renderPayroll = window.renderPayrollSummary = render;
+  window.clearPayrollFilter = function () { ["payrollMonth", "payrollStart", "payrollEnd"].forEach(function (id) { var i = el(id); if (i) i.value = ""; }); };
+  window.togglePayrollSubAccounts = function () { S.showMonth = !S.showMonth; render(); };
+  window.togglePayrollCompareDropdown = function () { toggleDD("payrollCompareDropdown"); };
+  window.togglePayrollCompareOptions = function () { var t = el("payrollCompareType"), c = el("payrollYearsContainer"); if (t && c) c.style.display = t.value === "previousYear" ? "block" : "none"; };
+  window.applyPayrollComparison = function () { var t = el("payrollCompareType"), y = el("payrollCompareYears"); S.compare = t && t.value ? { type: t.value, years: y ? y.value : "1" } : null; render(); closeDropdowns(); };
+  window.clearPayrollComparison = function () { var t = el("payrollCompareType"), y = el("payrollCompareYears"); if (t) t.value = ""; if (y) y.value = "1"; S.compare = null; window.togglePayrollCompareOptions(); render(); closeDropdowns(); };
+  window.togglePayrollColumnCustomizer = function () { toggleDD("payrollColumnCustomizer"); };
+  window.togglePayrollColumn = function (i, cb) { S.columns[i] = !!(cb && cb.checked); render(); };
+  window.togglePayrollSettingsDropdown = function () { toggleDD("payrollSettingsDropdown"); };
+  window.applyPayrollSettings = function () { var f = el("payrollFilter"); S.filter = f ? f.value : "all"; render(); closeDropdowns(); };
+  window.clearPayrollSettings = function () { var f = el("payrollFilter"); if (f) f.value = "all"; S.filter = "all"; render(); closeDropdowns(); };
+
+  /* render whenever the Payroll report is opened */
+  function hook() {
+    var orig = window.showReport;
+    if (typeof orig !== "function") { setTimeout(hook, 200); return; }
+    if (orig.__acxPayroll) return;
+    var w = function (id) {
+      var r = orig.apply(this, arguments);
+      if (id === "payrollPanel") { try { render(); } catch (e) { console.warn("[payroll report]", e); } }
+      return r;
+    };
+    w.__acxPayroll = true;
+    window.showReport = w;
+  }
+  hook();
+  /* other wrappers may replace showReport after us, so re-assert once things settle */
+  setTimeout(hook, 1500);
+  document.addEventListener("click", function (e) {
+    var t = e.target && e.target.closest ? e.target.closest("[onclick*='payrollPanel']") : null;
+    if (t) setTimeout(function () { var p = el("payrollPanel"); if (p && !p.classList.contains("hidden")) render(); }, 60);
+  }, true);
+  /* refresh when payroll data changes while the report is open */
+  try {
+    var origSet = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k) {
+      var r = origSet.apply(this, arguments);
+      try { if (/payrollPayments$/.test(String(k))) setTimeout(function () { var p = el("payrollPanel"); if (p && p.offsetParent !== null) render(); }, 100); } catch (e) {}
+      return r;
+    };
+  } catch (e) {}
+
+  /* one-time dashboard refresh in case loadDashboard ran before the P&L engine (FR) was ready */
+  window.addEventListener("load", function () {
+    setTimeout(function () {
+      try { if (window.FR && window.FR.pnl && el("dashYearlyProfitKPI") && typeof window.loadDashboard === "function") window.loadDashboard(); } catch (e) {}
+    }, 1500);
+  });
+})();
