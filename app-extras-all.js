@@ -3550,3 +3550,362 @@ try{
     if (p && !p.classList.contains("hidden") && (!e.key || e.key.indexOf("inventory_") === 0 || e.key === "bills")) window.renderBatchTracking();
   });
 })();
+
+
+/* ===== Stock > History panel (customer-view style) ===== */
+/* Acacia Books - Stock > History, shown like Customer > View.
+   A card with the item name, tabs (Overview / Transactions), a list of transaction
+   types on the left and the matching rows on the right.
+   Payments and Receipts are not part of stock, so they are not listed.
+   Load AFTER app-extras-all.js (it replaces window.toggleHistoryRow). */
+(function () {
+  "use strict";
+  if (window.__acxStockHistory) return;
+  window.__acxStockHistory = true;
+
+  var TYPES = [
+    { key: "invoices",       label: "Invoices",        keys: ["invoices"],                      who: "Customer", ref: ["invoiceNumber", "number", "id"] },
+    { key: "quotes",         label: "Quotes",          keys: ["quotes"],                        who: "Customer", ref: ["quoteNumber", "number", "id"] },
+    { key: "creditNotes",    label: "Credit Notes",    keys: ["creditNotes"],                   who: "Customer", ref: ["number", "creditNoteNumber", "invoiceNumber", "id"] },
+    { key: "salesReturns",   label: "Sales Return",    keys: ["salesReturns"],                  who: "Customer", ref: ["returnNumber", "invoiceId", "invoiceNumber", "id"] },
+    { key: "deliveries",     label: "Delivery",        keys: ["deliveries"],                    who: "Customer", ref: ["dnNumber", "deliveryNumber", "number", "trackNumber", "id"] },
+    { key: "bills",          label: "Bills",           keys: ["bills"],                         who: "Supplier", ref: ["billNumber", "number", "id"] },
+    { key: "debitNotes",     label: "Debit Notes",     keys: ["supplierDebitNotes", "debitNotes"], who: "Supplier", ref: ["reference", "number", "debitNoteNumber", "id"] },
+    { key: "purchaseOrders", label: "Purchase Orders", keys: ["purchaseOrders"],                who: "Supplier", ref: ["poNumber", "number", "id"] },
+    { key: "batches",        label: "Batches" },
+    { key: "adjustments",    label: "Adjustments" },
+    { key: "openingBalance", label: "Opening Balance" }
+  ];
+
+  /* item.history "type" values that belong to a document tab */
+  var HIST_TO_TAB = {
+    "invoice": "invoices", "quote": "quotes", "credit note": "creditNotes", "sales return": "salesReturns",
+    "delivery": "deliveries", "bill": "bills", "debit note": "debitNotes", "purchase order": "purchaseOrders"
+  };
+
+  function esc(v) {
+    return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function norm(v) { return String(v == null ? "" : v).trim().toLowerCase(); }
+  function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  function LS(k) {
+    try { var v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+  }
+  function money(v) {
+    if (typeof window.formatCurrency === "function") { try { return window.formatCurrency(v); } catch (e) {} }
+    return num(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function qtyStr(v) { var n = num(v); return String(Math.round(n * 1000) / 1000); }
+  function dayStr(d) {
+    if (!d) return "-";
+    var t = new Date(d);
+    if (isNaN(t.getTime())) return String(d);
+    return t.toISOString().slice(0, 10);
+  }
+  function time(d) { var t = new Date(d); return isNaN(t.getTime()) ? 0 : t.getTime(); }
+  function first(o, names) {
+    for (var i = 0; i < names.length; i++) { var v = o && o[names[i]]; if (v != null && v !== "") return v; }
+    return "";
+  }
+  function inventory(wh) {
+    try { return typeof window.getInventory === "function" ? window.getInventory(wh) : LS("inventory_" + wh); } catch (e) { return []; }
+  }
+
+  /* ---------- matching a document line to the stock item ---------- */
+  function lineName(l) { return l && (l.name || l.desc || l.description || l.item || l.product || l.itemName); }
+  function matcher(item) {
+    var sku = norm(item.sku), name = norm(item.name);
+    return function (line) {
+      if (!line) return false;
+      var ls = norm(line.sku);
+      if (sku && ls) return ls === sku;
+      return !!name && norm(lineName(line)) === name;
+    };
+  }
+  function warehouseOk(doc, line, wh) {
+    var w = (line && line.warehouse) || (doc && doc.warehouse);
+    return !w || norm(w) === norm(wh);
+  }
+  function batchNo(l) {
+    var b = l && l.batch;
+    if (b && typeof b === "object") return String(b.batchNo || b.batch || "").trim();
+    if (typeof b === "string") return b.trim();
+    return String((l && (l.batchNo || l.batchNumber)) || "").trim();
+  }
+
+  /* ---------- collect rows for every tab ---------- */
+  function collect(item, wh) {
+    var match = matcher(item), out = {}, seen = {};
+    TYPES.forEach(function (t) { out[t.key] = []; });
+
+    function put(tab, row) {
+      var k = tab + "|" + norm(row.ref.replace(/\s*\(Batch [^)]*\)\s*$/i, "")) + "|" + num(row.qty);
+      if (row.ref !== "-" && seen[k]) {
+        var f = seen[k];
+        if (row.ref.length > f.ref.length) f.ref = row.ref;
+        if ((!f.who || f.who === "-") && row.who && row.who !== "-") f.who = row.who;
+        if (!f.rate && row.rate) f.rate = row.rate;
+        if (!f.amount && row.amount) f.amount = row.amount;
+        return;
+      }
+      if (row.ref !== "-") seen[k] = row;
+      out[tab].push(row);
+    }
+
+    /* documents */
+    TYPES.forEach(function (t) {
+      if (!t.keys) return;
+      t.keys.forEach(function (key) {
+        LS(key).forEach(function (doc) {
+          if (!doc) return;
+          (Array.isArray(doc.items) ? doc.items : []).forEach(function (ln) {
+            if (!match(ln) || !warehouseOk(doc, ln, wh)) return;
+            var q = ln.qty != null ? ln.qty : ln.quantity;
+            var rate = first(ln, ["price", "rate", "unitPrice", "buyPrice", "sellPrice"]);
+            var amt = first(ln, ["total", "amount", "lineTotal"]);
+            if (amt === "" && rate !== "") amt = num(q) * num(rate);
+            var bn = batchNo(ln), ref = String(first(doc, t.ref) || "-");
+            put(t.key, {
+              date: doc.date || doc.invoiceDate || doc.deliveryDate || "",
+              ref: bn ? ref + " (Batch " + bn + ")" : ref,
+              who: String(doc.customer || doc.customerName || doc.supplier || doc.supplierName || "-"),
+              qty: q, rate: rate === "" ? 0 : num(rate), amount: amt === "" ? 0 : num(amt)
+            });
+          });
+        });
+      });
+    });
+
+    /* the item's own log: Opening Balance, adjustments, and any document entries not already found */
+    var adj = [];
+    (Array.isArray(item.history) ? item.history : []).forEach(function (h) {
+      if (!h) return;
+      var ty = norm(h.type || "Stock Adjustment");
+      if (ty === "opening balance") return;
+      var tab = HIST_TO_TAB[ty];
+      if (tab) {
+        var t = TYPES.filter(function (x) { return x.key === tab; })[0];
+        put(tab, { date: h.date || "", ref: String(h.ref || h.refInvoice || "-"), who: String(h.user || "-"),
+                   qty: h.qty, rate: num(h.buyPrice || h.price), amount: 0 });
+      } else {
+        adj.push({ date: h.date || "", type: h.type || "Stock Adjustment", qty: h.qty, reason: h.ref || h.reason || "-", user: h.user || "-" });
+      }
+    });
+
+    /* Stock Adjustment screen log */
+    var amendKey = typeof window.AMENDMENTS_KEY !== "undefined" ? window.AMENDMENTS_KEY : "amendments";
+    var skuN = norm(item.sku), nameN = norm(item.name);
+    LS(amendKey).forEach(function (a) {
+      if (!a || (a.warehouse && norm(a.warehouse) !== norm(wh))) return;
+      var same = skuN && norm(a.sku) ? norm(a.sku) === skuN : (nameN && norm(a.item || a.name) === nameN);
+      if (!same) return;
+      adj.push({ date: a.date || "", type: a.adjustmentType || "Adjustment", qty: a.quantity != null ? a.quantity : a.qty,
+                 reason: a.reason || a.source || "-", user: a.user || a.postedBy || "-" });
+    });
+    out.adjustments = adj;
+
+    /* batches on the item */
+    out.batches = (Array.isArray(item.batches) ? item.batches : []).filter(function (b) {
+      return b && (String(b.batchNo || b.batch || "").trim() || b.expiryDate || b.expiry || num(b.qty));
+    }).map(function (b) {
+      return { no: String(b.batchNo || b.batch || "-").trim() || "-", mfg: b.mfgDate || b.mfg || "", exp: b.expiryDate || b.expiry || "", qty: num(b.qty) };
+    });
+
+    return out;
+  }
+
+  /* ---------- UI ---------- */
+  var S = { wh: null, idx: null, type: "invoices", tab: "transactions" };
+
+  function ensureStyle() {
+    if (document.getElementById("acxShStyle")) return;
+    var st = document.createElement("style");
+    st.id = "acxShStyle";
+    st.textContent =
+      "#acxShOverlay{position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:9000;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}" +
+      "#acxShCard{background:#fff;color:#111827;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.25);width:100%;max-width:820px;position:relative}" +
+      "#acxShCard .sh-head{display:flex;align-items:center;justify-content:space-between;padding:16px 50px 12px 20px;border-bottom:1px solid #e5e7eb}" +
+      "#acxShCard .sh-head h2{margin:0;font-size:20px;font-weight:700;color:#111827}" +
+      "#acxShCard .sh-x{position:absolute;top:14px;right:16px;background:transparent;border:none;color:#6b7280;cursor:pointer;font-size:18px;line-height:1}" +
+      "#acxShCard .sh-x:hover{color:#111827}" +
+      "#acxShCard .sh-tabs{display:flex;gap:24px;padding:0 20px;border-bottom:1px solid #e5e7eb}" +
+      "#acxShCard .sh-tab{background:none;border:none;border-bottom:2px solid transparent;padding:10px 2px;cursor:pointer;font-size:14px;font-weight:600;color:#6b7280}" +
+      "#acxShCard .sh-tab.on{color:#1e3a8a;border-bottom-color:#1e3a8a}" +
+      "#acxShCard .sh-body{padding:20px;max-height:70vh;overflow:auto}" +
+      "#acxShCard .sh-split{display:flex;min-height:300px}" +
+      "#acxShCard .sh-list{flex:0 0 200px;border-right:1px solid #e5e7eb;padding-right:12px}" +
+      "#acxShCard .sh-li{padding:8px;cursor:pointer;border-radius:5px;font-size:14px;display:flex;justify-content:space-between;gap:6px}" +
+      "#acxShCard .sh-li:hover{background:#f3f4f6}" +
+      "#acxShCard .sh-li.on{background:#e6f0ff;color:#0b57d0;font-weight:bold}" +
+      "#acxShCard .sh-li small{color:#9ca3af;font-weight:400}" +
+      "#acxShCard .sh-box{flex:1;padding-left:16px;overflow:auto;min-width:0}" +
+      "#acxShCard table.sh-t{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}" +
+      "#acxShCard table.sh-t th{background:#f3f4f6;padding:8px;border:1px solid #ddd;text-align:left}" +
+      "#acxShCard table.sh-t td{padding:8px;border:1px solid #ddd}" +
+      "#acxShCard .sh-muted{color:#888}" +
+      "#acxShCard .sh-in{width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px;box-sizing:border-box}" +
+      "#acxShCard .sh-btn{margin-top:14px;background:#1e3a8a;color:#fff;padding:8px 14px;border:none;border-radius:6px;cursor:pointer}" +
+      "#acxShCard table.sh-t td:nth-child(2){white-space:nowrap}" +
+      "#acxShCard.inline{border:none;border-radius:10px;box-shadow:none;max-width:none}" +
+      "#acxShCard.inline .sh-list{flex:0 0 150px}#acxShCard.inline .sh-box{padding-left:12px}#acxShCard.inline table.sh-t{font-size:12px}#acxShCard.inline table.sh-t th,#acxShCard.inline table.sh-t td{padding:6px}" +
+      "@media(max-width:600px){#acxShCard .sh-split{flex-direction:column}#acxShCard .sh-list{flex:none;border-right:none;border-bottom:1px solid #e5e7eb;padding:0 0 8px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:4px}#acxShCard .sh-box{padding-left:0}}";
+    document.head.appendChild(st);
+  }
+
+  function host() { return document.getElementById("inventoryDetailsSection"); }
+  function close() {
+    var h = host();
+    if (h && h.getAttribute("data-acx-sh")) { h.removeAttribute("data-acx-sh"); h.classList.add("hidden"); h.innerHTML = ""; }
+    var o = document.getElementById("acxShOverlay");
+    if (o) o.remove();
+    document.removeEventListener("keydown", onKey);
+    S.idx = null;
+  }
+  function onKey(e) { if (e.key === "Escape") close(); }
+
+  function overviewHtml(item, wh) {
+    var q = num(item.qty), bp = num(item.buyPrice), sp = num(item.sellPrice);
+    function row(k, v) { return '<tr><td style="padding:3px 14px 3px 0;color:#6b7280;">' + k + "</td><td>" + v + "</td></tr>"; }
+    return '<div style="display:flex;flex-wrap:wrap;gap:30px;">' +
+      '<table style="font-size:13px;color:#374151;">' +
+        row("SKU", esc(item.sku || "-")) + row("Warehouse", esc(wh || "-")) + row("Type", esc(item.type || item.itemType || "-")) +
+        row("Buy VAT", esc(item.buyVat || "-")) +
+      "</table>" +
+      '<table style="font-size:13px;color:#374151;">' +
+        row("Quantity in stock", "<b>" + esc(qtyStr(q)) + "</b>") + row("Buy price", esc(money(bp))) +
+        row("Sell price", esc(money(sp))) + row("Stock value", "<b>" + esc(money(q * bp)) + "</b>") +
+      "</table></div>" +
+      '<button type="button" id="acxShObLink" style="margin-top:14px;background:none;border:none;color:#2563eb;cursor:pointer;font-size:13px;padding:0;">Enter Opening Balance</button>';
+  }
+
+  function docTable(t, rows) {
+    if (!rows.length) return '<p class="sh-muted">No records found</p>';
+    rows = rows.slice().sort(function (a, b) { return time(b.date) - time(a.date); });
+    return '<table class="sh-t"><thead><tr><th>' + esc(t.label.replace(/s$/, "")) + "</th><th>Date</th><th>" + t.who +
+      '</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        return "<tr><td>" + esc(r.ref) + "</td><td>" + esc(dayStr(r.date)) + "</td><td>" + esc(r.who) + "</td><td>" + esc(qtyStr(r.qty)) +
+          "</td><td>" + (r.rate ? esc(money(r.rate)) : "-") + '</td><td style="font-weight:bold;">' + (r.amount ? esc(money(r.amount)) : "-") + "</td></tr>";
+      }).join("") + "</tbody></table>";
+  }
+
+  function batchTable(rows) {
+    if (!rows.length) return '<p class="sh-muted">No records found</p>';
+    var today = new Date();
+    return '<table class="sh-t"><thead><tr><th>Batch No.</th><th>Mfg Date</th><th>Expiry Date</th><th>Qty</th><th>Status</th></tr></thead><tbody>' +
+      rows.map(function (b) {
+        var st = "Active";
+        if (b.qty <= 0) st = "Sold Out";
+        else if (b.exp) {
+          var d = new Date(b.exp);
+          if (!isNaN(d.getTime())) { d.setHours(23, 59, 59, 999); if (d < today) st = "Expired"; else if ((d - today) / 864e5 <= 30) st = "Expiring soon"; }
+        }
+        return "<tr><td>" + esc(b.no) + "</td><td>" + esc(dayStr(b.mfg)) + "</td><td>" + esc(dayStr(b.exp)) + "</td><td>" + esc(qtyStr(b.qty)) + "</td><td>" + st + "</td></tr>";
+      }).join("") + "</tbody></table>";
+  }
+
+  function adjTable(rows) {
+    if (!rows.length) return '<p class="sh-muted">No records found</p>';
+    rows = rows.slice().sort(function (a, b) { return time(b.date) - time(a.date); });
+    return '<table class="sh-t"><thead><tr><th>Date</th><th>Type</th><th>Qty</th><th>Reason</th><th>User</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        return "<tr><td>" + esc(dayStr(r.date)) + "</td><td>" + esc(r.type) + "</td><td>" + esc(r.qty == null ? "" : qtyStr(r.qty)) +
+          "</td><td>" + esc(r.reason) + "</td><td>" + esc(r.user) + "</td></tr>";
+      }).join("") + "</tbody></table>";
+  }
+
+  function obHtml(item, wh, idx) {
+    var ob = item.openingBalance || {};
+    return "<h3>Opening Balance</h3>" +
+      '<p class="sh-muted" style="font-size:13px;max-width:420px;">The stock quantity and buying price this item already had before you started using this system. ' +
+      "Saving a new value will adjust the current quantity by the difference.</p>" +
+      '<div style="max-width:360px;margin-top:12px;">' +
+        '<label style="display:block;font-weight:600;margin-bottom:4px;">Opening Qty</label>' +
+        '<input class="sh-in" id="stockOBQty-' + esc(wh) + "-" + idx + '" type="number" step="any" value="' + (ob.qty != null ? esc(ob.qty) : "") + '">' +
+        '<label style="display:block;font-weight:600;margin:10px 0 4px;">Buy Price</label>' +
+        '<input class="sh-in" id="stockOBPrice-' + esc(wh) + "-" + idx + '" type="number" step="0.01" value="' + (ob.buyPrice != null ? esc(ob.buyPrice) : esc(item.buyPrice || "")) + '">' +
+        '<label style="display:block;font-weight:600;margin:10px 0 4px;">As of Date</label>' +
+        '<input class="sh-in" id="stockOBDate-' + esc(wh) + "-" + idx + '" type="date" value="' + esc(ob.date || "") + '">' +
+        '<button type="button" class="sh-btn" id="acxShObSave">' + (item.openingBalance ? "Update Opening Balance" : "Add Opening Balance") + "</button>" +
+        '<p style="margin-top:14px;color:#555;font-size:13px;">Current Stock: <b>' + esc(qtyStr(item.qty)) + "</b></p>" +
+      "</div>";
+  }
+
+  function render() {
+    var item = inventory(S.wh)[S.idx];
+    if (!item) { close(); return; }
+    ensureStyle();
+    var data = collect(item, S.wh);
+
+    var h = host(), overlay;
+    if (h) {
+      overlay = h;
+      h.classList.remove("hidden");
+      delete h.dataset.openIndex;
+      h.setAttribute("data-acx-sh", "1");
+      Object.assign(h.style, { background: "#fff", position: "relative" });
+      if (!document.getElementById("acxShKeyOn")) { document.addEventListener("keydown", onKey); }
+    } else overlay = document.getElementById("acxShOverlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "acxShOverlay";
+      overlay.addEventListener("mousedown", function (e) { if (e.target === overlay) close(); });
+      document.body.appendChild(overlay);
+      document.addEventListener("keydown", onKey);
+    }
+
+    var tabs = [{ k: "overview", l: "Overview" }, { k: "transactions", l: "Transactions" }];
+    var listHtml = TYPES.map(function (t) {
+      var n = t.key === "openingBalance" ? 0 : (data[t.key] || []).length;
+      return '<div class="sh-li' + (S.type === t.key ? " on" : "") + '" data-type="' + t.key + '"><span>' + t.label + "</span>" + (n ? "<small>" + n + "</small>" : "") + "</div>";
+    }).join("");
+
+    var content;
+    var cur = TYPES.filter(function (t) { return t.key === S.type; })[0] || TYPES[0];
+    if (cur.key === "openingBalance") content = obHtml(item, S.wh, S.idx);
+    else {
+      content = "<h3>" + cur.label + "</h3>" +
+        (cur.key === "batches" ? batchTable(data.batches) : cur.key === "adjustments" ? adjTable(data.adjustments) : docTable(cur, data[cur.key]));
+    }
+
+    overlay.innerHTML =
+      '<div id="acxShCard"' + (h ? ' class="inline"' : "") + ">" +
+        '<div class="sh-head"><h2>' + esc(item.name || item.sku || "Item") + "</h2></div>" +
+        '<button class="sh-x" type="button" id="acxShClose" aria-label="Close">✕</button>' +
+        '<div class="sh-tabs">' + tabs.map(function (t) { return '<button type="button" class="sh-tab' + (S.tab === t.k ? " on" : "") + '" data-tab="' + t.k + '">' + t.l + "</button>"; }).join("") + "</div>" +
+        '<div class="sh-body">' +
+          (S.tab === "overview" ? overviewHtml(item, S.wh)
+            : '<div class="sh-split"><div class="sh-list">' + listHtml + '</div><div class="sh-box">' + content + "</div></div>") +
+        "</div>" +
+      "</div>";
+
+    overlay.querySelector("#acxShClose").onclick = close;
+    Array.prototype.forEach.call(overlay.querySelectorAll(".sh-tab"), function (b) {
+      b.onclick = function () { S.tab = b.getAttribute("data-tab"); render(); };
+    });
+    Array.prototype.forEach.call(overlay.querySelectorAll(".sh-li"), function (li) {
+      li.onclick = function () { S.type = li.getAttribute("data-type"); render(); };
+    });
+    var ob = overlay.querySelector("#acxShObLink");
+    if (ob) ob.onclick = function () { S.tab = "transactions"; S.type = "openingBalance"; render(); };
+    var save = overlay.querySelector("#acxShObSave");
+    if (save) save.onclick = function () {
+      S.type = "openingBalance"; S.refresh = true;
+      setTimeout(function () { S.refresh = false; }, 500);
+      if (typeof window.saveStockOpeningBalance === "function") window.saveStockOpeningBalance(S.wh, S.idx);
+      setTimeout(function () { if (S.idx != null) render(); }, 60);
+    };
+  }
+
+  /* the History button in Inventory calls this */
+  window.toggleHistoryRow = function (idx, wh) {
+    Array.prototype.forEach.call(document.querySelectorAll(".history-row"), function (r) { r.style.display = "none"; });
+    var h = host();
+    var open = S.idx === idx && S.wh === wh && (h ? h.getAttribute("data-acx-sh") : document.getElementById("acxShOverlay"));
+    if (open && h && !S.refresh) { close(); return; }      /* 2nd click on History closes it, like Customer > View */
+    if (!open) { S.type = "invoices"; S.tab = "transactions"; }
+    S.wh = wh; S.idx = idx;
+    render();
+  };
+  window.closeStockHistory = close;
+})();
