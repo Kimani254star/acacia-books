@@ -1741,3 +1741,17 @@ details.acx-faq p{padding:0 1rem 1rem;margin:0;font-size:.875rem;color:#4b5563}
 /* Top bar follows the Customization primary colour (stays black until a colour is set) */
 #layout>div:first-child{background-color:var(--acx-primary,#000)!important}
 #layout>div:first-child #welcomeUser,#layout>div:first-child #orgNameHeader{color:var(--acx-sidebar-text,#fff)!important}
+
+/* ===== Split list + inline preview (same look as Invoices) for Quotes, Orders, Bulk Invoicing, Credit Notes, Sales Returns ===== */
+.split-preview-layout{display:flex;align-items:flex-start;gap:16px}
+.split-preview-layout .split-list-box{flex:1 1 50%;min-width:0;flex-shrink:1}
+.split-preview-layout .split-list-box>div.bg-white{max-height:80vh;overflow-y:auto}
+.split-preview-layout .split-list-box thead{position:sticky;top:0;z-index:1;background:#f3f4f6}
+.split-preview-layout .split-details-box{flex:1 1 600px;min-width:400px;max-width:820px;flex-shrink:0;position:sticky;top:12px;max-height:90vh;overflow-y:auto}
+.split-preview-layout .split-details-box:has(>.hidden){display:none}
+#salesReturnPreviewContent table td{border:1px solid #d1d5db;padding:.5rem}
+@media(max-width:1000px){
+.split-preview-layout{flex-direction:column}
+.split-preview-layout .split-list-box{width:100%;flex:none}
+.split-preview-layout .split-details-box{max-width:none;min-width:0;width:100%;position:static;max-height:none}
+}
