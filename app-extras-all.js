@@ -3097,3 +3097,456 @@ try{
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
+;
+
+/* ######## Batch Tracking report + Stock History fix ######## */
+/* ============================================================================
+   acacia-batch-history-fix.js     (load AFTER acacia-all.js)
+
+   1) Reports > Inventory > Batch Tracking
+        - lists every batch on every stock item in every warehouse
+          (batches typed on the Stock item form AND batches added through
+          Bills / Bulk Bills / Recurring Bills)
+        - also shows batches that were received on a bill but are missing from
+          the stock record, flagged "Not in stock record" so nothing is hidden
+        - 7 columns now line up with the table header
+          (Batch No | Item | Quantity | Warehouse | Expiry Date | Status | Actions)
+        - Warehouse + Status filters work, Adjust Stock is back
+
+   2) Stock > (item row) > History
+        Now shows: Invoices, Bills, Purchase Orders, Sales Returns,
+        Debit Notes, Credit Notes, Batches and Stock Adjustments
+        (plus the item's own history such as Opening Balance).
+   ========================================================================== */
+(function () {
+  "use strict";
+  if (window.__acxBatchHistoryFix) return;
+  window.__acxBatchHistoryFix = true;
+
+  /* ------------------------------ helpers ------------------------------ */
+  function LS(k) {
+    try { var v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; }
+    catch (e) { return []; }
+  }
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function norm(s) { return String(s == null ? "" : s).trim().toLowerCase(); }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function toDate(v) {
+    if (!v) return null;
+    var d = new Date(v);
+    if (!isNaN(d.getTime())) return d;
+    var m = String(v).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);          // dd/mm/yyyy[, time]
+    if (m) { d = new Date(+m[3], +m[2] - 1, +m[1]); if (!isNaN(d.getTime())) return d; }
+    return null;
+  }
+  function dayStr(v) {                                                   // local yyyy-mm-dd, no timezone drift
+    if (!v) return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(v))) return String(v);
+    var d = toDate(v);
+    return d ? d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) : String(v);
+  }
+  function fmtQty(n) { n = num(n); return Math.abs(n % 1) < 1e-9 ? String(Math.round(n)) : n.toFixed(2); }
+  function currentUser() {
+    try { var u = JSON.parse(localStorage.getItem("loggedInUser") || "null"); if (u && u.username) return u.username; } catch (e) {}
+    return "-";
+  }
+  function inventoryKeys() {
+    var keys = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf("inventory_") === 0) keys.push(k);
+    }
+    return keys;
+  }
+  function amendKey() { return typeof AMENDMENTS_KEY !== "undefined" ? AMENDMENTS_KEY : "amendments"; }
+  function lineName(l) { return l && (l.name || l.desc || l.description || l.item || l.product || l.itemName); }
+  function lineBatchNo(l) {
+    if (!l) return "";
+    var b = l.batch;
+    if (b && typeof b === "object") return String(b.batchNo || b.batch || "").trim();
+    if (typeof b === "string") return b.trim();
+    return String(l.batchNo || l.batchNumber || "").trim();
+  }
+  function lineBatchObj(l) {
+    var b = l && l.batch;
+    if (b && typeof b === "object") return { no: String(b.batchNo || b.batch || "").trim(), exp: b.expiry || b.expiryDate || "", mfg: b.mfg || b.mfgDate || "" };
+    var no = lineBatchNo(l);
+    return no ? { no: no, exp: l.expiryDate || "", mfg: l.mfgDate || "" } : null;
+  }
+  /* decide by SKU when both sides have one, otherwise by name */
+  function matcher(item) {
+    var sku = norm(item.sku), name = norm(item.name);
+    return function (line) {
+      if (!line) return false;
+      var ls = norm(line.sku);
+      if (sku && ls) return ls === sku;
+      return !!name && norm(lineName(line)) === name;
+    };
+  }
+  function warehouseOk(doc, line, wh) {
+    var w = (line && line.warehouse) || (doc && doc.warehouse);
+    return !w || norm(w) === norm(wh);
+  }
+
+  /* =======================================================================
+     2) STOCK HISTORY
+     ======================================================================= */
+  function buildHistory(item, wh) {
+    var match = matcher(item), rows = [];
+
+    function add(date, type, qty, ref, user) {
+      rows.push({ date: date || "", type: type, qty: qty, ref: ref || "-", user: user || "-" });
+    }
+    function eachLine(list, type, refFn, userFn, dateFn) {
+      list.forEach(function (doc) {
+        if (!doc) return;
+        (Array.isArray(doc.items) ? doc.items : []).forEach(function (ln) {
+          if (!match(ln) || !warehouseOk(doc, ln, wh)) return;
+          var ref = refFn(doc, ln), bn = lineBatchNo(ln);
+          add(dateFn ? dateFn(doc) : (doc.date || doc.invoiceDate), type, ln.qty != null ? ln.qty : ln.quantity,
+              bn ? ref + " (Batch " + bn + ")" : ref, userFn(doc, ln));
+        });
+      });
+    }
+
+    /* the item's own history (Opening Balance, Stock Adjustment, Bill, ...) */
+    (Array.isArray(item.history) ? item.history : []).forEach(function (h) {
+      add(h.date, h.type || "Stock Adjustment", h.qty, h.ref, h.user);
+    });
+
+    eachLine(LS("invoices"), "Invoice",
+      function (d) { return d.invoiceNumber || d.number || d.id || "-"; },
+      function (d) { return d.salesPerson || d.customer; });
+
+    eachLine(LS("bills"), "Bill",
+      function (d) { return d.billNumber || d.number || d.id || "-"; },
+      function (d) { return d.supplier; });
+
+    eachLine(LS("purchaseOrders"), "Purchase Order",
+      function (d) { return d.poNumber || d.number || "-"; },
+      function (d) { return d.supplier; });
+
+    eachLine(LS("salesReturns"), "Sales Return",
+      function (d) { return d.invoiceId || d.invoiceNumber || d.returnNumber || d.id || "-"; },
+      function (d) { return d.customer; });
+
+    eachLine(LS("creditNotes"), "Credit Note",
+      function (d) { return d.number || d.invoiceNumber || d.id || "-"; },
+      function (d) { return d.customer; });
+
+    /* Debit notes: the Supplier > Debit Notes screen saves to "supplierDebitNotes" */
+    eachLine(LS("supplierDebitNotes").concat(LS("debitNotes")), "Debit Note",
+      function (d) { return d.reference || d.number || d.debitNoteNumber || d.id || "-"; },
+      function (d) { return d.supplier; });
+
+    /* batches currently on this item */
+    (Array.isArray(item.batches) ? item.batches : []).forEach(function (b) {
+      var no = String(b.batchNo || b.batch || "").trim();
+      if (!no && !b.expiryDate && !b.expiry && !num(b.qty)) return;
+      var exp = b.expiryDate || b.expiry || "";
+      add(b.mfgDate || b.mfg || "", "Batch", num(b.qty),
+          "Batch " + (no || "-") + (exp ? " (Exp " + dayStr(exp) + ")" : ""), "-");
+    });
+
+    /* Stock Adjustment screen log */
+    var skuN = norm(item.sku), nameN = norm(item.name);
+    LS(amendKey()).forEach(function (a) {
+      if (!a || (a.warehouse && norm(a.warehouse) !== norm(wh))) return;
+      var same = skuN && norm(a.sku) ? norm(a.sku) === skuN : (nameN && norm(a.item || a.name) === nameN);
+      if (!same) return;
+      add(a.date, "Adjustment", a.quantity != null ? a.quantity : a.qty,
+          (a.adjustmentType ? a.adjustmentType + ": " : "") + (a.reason || a.source || "-"), a.user || a.postedBy);
+    });
+
+    /* remove exact duplicates (same event written to item.history AND its document) */
+    var seen = {}, out = [];
+    function bare(ref) { return norm(String(ref).replace(/\s*\(Batch [^)]*\)\s*$/i, "")); }
+    rows.forEach(function (r) {
+      /* the item's own log stores a locale date string, its document an ISO date, so match on type + reference + qty */
+      var k = [norm(r.type), bare(r.ref), num(r.qty)].join("|");
+      var dupable = r.type !== "Adjustment" && r.type !== "Batch" && r.ref !== "-";
+      if (dupable && seen[k]) {
+        var first = seen[k];                                   // keep one row, but keep the richer reference / user
+        if (String(r.ref).length > String(first.ref).length) first.ref = r.ref;
+        if ((!first.user || first.user === "-") && r.user && r.user !== "-") first.user = r.user;
+        return;
+      }
+      if (dupable) seen[k] = r;
+      out.push(r);
+    });
+    return out;
+  }
+
+  window.toggleHistoryRow = function (idx, wh) {
+    var allRows = document.querySelectorAll(".history-row");
+    var row = document.getElementById("historyRow-" + wh + "-" + idx);
+    if (!row) return;
+    var wasHidden = row.style.display === "none";
+    allRows.forEach(function (r) { r.style.display = "none"; });
+    if (!wasHidden) return;                       // second click closes it
+    row.style.display = "table-row";
+
+    var item = getInventory(wh)[idx];
+    if (!item) return;
+
+    var rows = buildHistory(item, wh);
+    var ob = item.openingBalance || {};
+    var obHtml =
+      '<div class="p-2 mb-2 border rounded bg-gray-50">' +
+        '<button type="button" onclick="toggleStockOpeningBalanceForm(\'' + wh + '\', ' + idx + ')" class="bg-blue-900 text-white px-2 py-1 rounded text-sm hover:bg-blue-800">' +
+          '➕ ' + (item.openingBalance ? "Update Opening Balance" : "Add Opening Balance") +
+        '</button>' +
+        '<div id="stockOBForm-' + wh + '-' + idx + '" class="hidden mt-2">' +
+          '<p class="text-sm text-gray-500 mb-2" style="max-width:460px;">The stock quantity and buying price this item already had before you started using this system. Saving will adjust the current quantity by the difference from the previous opening balance.</p>' +
+          '<div class="grid grid-cols-3 gap-2" style="max-width:520px;">' +
+            '<div><label class="block text-sm font-semibold mb-1">Opening Qty</label><input id="stockOBQty-' + wh + '-' + idx + '" type="number" step="any" value="' + (ob.qty != null ? ob.qty : "") + '" class="border p-1 rounded w-full text-sm"></div>' +
+            '<div><label class="block text-sm font-semibold mb-1">Buy Price</label><input id="stockOBPrice-' + wh + '-' + idx + '" type="number" step="0.01" value="' + (ob.buyPrice != null ? ob.buyPrice : (item.buyPrice || "")) + '" class="border p-1 rounded w-full text-sm"></div>' +
+            '<div><label class="block text-sm font-semibold mb-1">As of Date</label><input id="stockOBDate-' + wh + '-' + idx + '" type="date" value="' + (ob.date || "") + '" class="border p-1 rounded w-full text-sm"></div>' +
+          '</div>' +
+          '<button type="button" onclick="saveStockOpeningBalance(\'' + wh + '\', ' + idx + ')" class="bg-blue-900 text-white px-2 py-1 rounded text-sm mt-2 hover:bg-blue-800">Save Opening Balance</button>' +
+        '</div>' +
+      '</div>';
+
+    var cell = row.querySelector("td");
+    if (!rows.length) {
+      cell.innerHTML = obHtml + '<p class="text-center p-2 text-gray-500">No history found.</p>';
+      return;
+    }
+
+    var order = ["Invoice", "Bill", "Purchase Order", "Sales Return", "Debit Note", "Credit Note", "Batch", "Adjustment"];
+    var types = {};
+    rows.forEach(function (r) { types[r.type] = 1; });
+    var typeList = order.filter(function (t) { return types[t]; })
+      .concat(Object.keys(types).filter(function (t) { return order.indexOf(t) < 0; }));
+
+    cell.innerHTML = obHtml +
+      '<div class="p-2"><select id="historyFilter-' + wh + '-' + idx + '" class="border px-2 py-1 mb-2">' +
+        ["All"].concat(typeList).map(function (t) { return '<option value="' + esc(t) + '">' + esc(t) + '</option>'; }).join("") +
+      '</select>' +
+      '<table class="w-full border-collapse" id="historyTable-' + wh + '-' + idx + '"><thead><tr class="border-b bg-gray-200">' +
+        '<th class="p-2">Date</th><th class="p-2">Type</th><th class="p-2">Qty</th><th class="p-2">Reference</th><th class="p-2">User</th>' +
+      '</tr></thead><tbody></tbody></table></div>';
+
+    var body = cell.querySelector("tbody"), filter = cell.querySelector("select");
+    function draw(type) {
+      body.innerHTML = rows
+        .filter(function (r) { return type === "All" || r.type === type; })
+        .sort(function (a, b) {
+          var da = toDate(a.date), db = toDate(b.date);
+          return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
+        })
+        .map(function (r) {
+          return '<tr class="border-b"><td class="p-2">' + esc(dayStr(r.date) || "-") + '</td><td class="p-2">' + esc(r.type) +
+                 '</td><td class="p-2">' + esc(r.qty == null ? "" : fmtQty(r.qty)) + '</td><td class="p-2">' + esc(r.ref || "-") +
+                 '</td><td class="p-2">' + esc(r.user || "-") + '</td></tr>';
+        }).join("");
+    }
+    draw("All");
+    filter.addEventListener("change", function (e) { draw(e.target.value); });
+  };
+
+  /* =======================================================================
+     1) BATCH TRACKING REPORT
+     ======================================================================= */
+  function gatherBatchRows() {
+    var rows = [], seen = {};
+
+    /* (a) batches on stock items, every warehouse */
+    inventoryKeys().forEach(function (key) {
+      var keyWh = key.slice(10), list = [];
+      try { list = JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) {}
+      if (!Array.isArray(list)) return;
+      list.forEach(function (it) {
+        if (!it || typeof it !== "object") return;
+        var wh = it.warehouse || keyWh, name = it.name || it.sku || "-";
+        var batches = Array.isArray(it.batches) && it.batches.length ? it.batches
+          : (it.batchNo || it.batchNumber || it.expiryDate)
+            ? [{ batchNo: it.batchNo || it.batchNumber, expiryDate: it.expiryDate, qty: it.qty }] : [];
+        batches.forEach(function (b) {
+          if (!b) return;
+          var no = String(b.batchNo || b.batchNumber || b.batch || "").trim();
+          var exp = b.expiryDate || b.expiry || "";
+          if (!no && !exp && !num(b.qty)) return;
+          seen[norm(name) + "|" + norm(no) + "|" + norm(wh)] = 1;
+          rows.push({ batchNo: no || "-", item: name, sku: it.sku || "", qty: num(b.qty), warehouse: wh, expiry: exp, source: "stock" });
+        });
+      });
+    });
+
+    /* (b) batch lines received on bills that never reached a stock record */
+    LS("bills").forEach(function (bill) {
+      (bill && Array.isArray(bill.items) ? bill.items : []).forEach(function (ln) {
+        var b = lineBatchObj(ln);
+        if (!b || !b.no) return;
+        var name = lineName(ln) || ln.sku || "-", wh = ln.warehouse || (bill && bill.warehouse) || "";
+        if (seen[norm(name) + "|" + norm(b.no) + "|" + norm(wh)]) return;
+        /* the batch may sit under a different warehouse spelling – look by item+batch only */
+        var already = rows.some(function (r) { return norm(r.item) === norm(name) && norm(r.batchNo) === norm(b.no); });
+        if (already) return;
+        seen[norm(name) + "|" + norm(b.no) + "|" + norm(wh)] = 1;
+        rows.push({ batchNo: b.no, item: name, sku: ln.sku || "", qty: num(ln.qty), warehouse: wh || "-", expiry: b.exp,
+                    source: "bill", ref: bill.billNumber || "" });
+      });
+    });
+
+    /* (c) records saved by the older version of this report */
+    LS("batchTracking").forEach(function (r) {
+      if (!r) return;
+      var k = norm(r.item) + "|" + norm(r.batchNumber) + "|" + norm(r.warehouse);
+      if (seen[k]) return;
+      seen[k] = 1;
+      rows.push({ batchNo: r.batchNumber || "-", item: r.item || "-", sku: "", qty: num(r.quantity), warehouse: r.warehouse || "-",
+                  expiry: r.expiryDate || "", source: "legacy", id: r.id, adjusted: !!r.adjusted, legacyStatus: r.status });
+    });
+    return rows;
+  }
+
+  function batchStatus(r, today) {
+    if (r.source === "bill") return "Not in stock record";
+    if (r.adjusted) return "Adjusted";
+    if (r.qty <= 0) return "Sold Out";
+    var d = toDate(r.expiry);
+    if (d) {
+      d.setHours(23, 59, 59, 999);
+      if (d < today) return "Expired";
+      if ((d - today) / 864e5 <= 30) return "Expiring soon";
+    }
+    return "Active";
+  }
+
+  function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+  function val(id) { var el = document.getElementById(id); return el ? String(el.value || "").trim() : ""; }
+
+  function fillWarehouseFilter(rows) {
+    var sel = document.getElementById("batchTrackingWarehouse");
+    if (!sel) return;
+    var keep = sel.value, names = {};
+    rows.forEach(function (r) { if (r.warehouse && r.warehouse !== "-") names[r.warehouse] = 1; });
+    sel.innerHTML = '<option value="">All warehouses</option>' +
+      Object.keys(names).sort().map(function (w) { return '<option value="' + esc(w) + '">' + esc(w) + '</option>'; }).join("");
+    sel.value = names[keep] ? keep : "";
+  }
+
+  window.renderBatchTracking = function () {
+    var body = document.getElementById("batchTrackingBody");
+    if (!body) return;
+    var fNo = norm(val("batchTrackingNumber")), fItem = norm(val("batchTrackingItem")),
+        fStart = val("batchTrackingStart"), fEnd = val("batchTrackingEnd"),
+        today = new Date(), all = gatherBatchRows();
+
+    fillWarehouseFilter(all);
+    var fWh = val("batchTrackingWarehouse"), fStatus = val("batchTrackingStatus");
+
+    var shown = all.filter(function (r) {
+      if (fNo && norm(r.batchNo).indexOf(fNo) < 0) return false;
+      if (fItem && norm(r.item).indexOf(fItem) < 0) return false;
+      if (fWh && norm(r.warehouse) !== norm(fWh)) return false;
+      if (fStart || fEnd) {
+        var d = toDate(r.expiry);
+        if (!d) return false;
+        if (fStart && d < new Date(fStart)) return false;
+        if (fEnd) { var e = new Date(fEnd); e.setHours(23, 59, 59, 999); if (d > e) return false; }
+      }
+      r.status = batchStatus(r, new Date(today));
+      if (fStatus && fStatus !== "All") {
+        var want = fStatus.toLowerCase();
+        if (want === "active") return r.status === "Active" || r.status === "Expiring soon";
+        if (want === "expired") return r.status === "Expired";
+        if (want === "sold out") return r.status === "Sold Out";
+      }
+      return true;
+    });
+
+    shown.sort(function (a, b) {
+      var da = toDate(a.expiry), db = toDate(b.expiry);
+      if (da && db) return da - db;
+      return da ? -1 : db ? 1 : String(a.item).localeCompare(String(b.item));
+    });
+
+    var active = 0, expired = 0, soldOut = 0, qty = 0, whs = {}, items = {};
+    shown.forEach(function (r) {
+      if (r.status === "Sold Out") soldOut++; else if (r.status === "Expired") expired++; else if (r.status === "Active" || r.status === "Expiring soon") active++;
+      qty += r.qty;
+      if (r.warehouse && r.warehouse !== "-") whs[r.warehouse] = 1;
+      items[r.item] = 1;
+    });
+
+    if (!shown.length) {
+      body.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-gray-500">No batches found. Add batch numbers and expiry dates on a Stock item, or pick a batch on a Bill line.</td></tr>';
+    } else {
+      body.innerHTML = shown.map(function (r) {
+        var action = "—";
+        if (r.source === "legacy" && !r.adjusted) {
+          action = '<button onclick="adjustBatchTrackingRow(\'' + esc(r.id) + '\')" class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">Adjust Stock</button>';
+        } else if (r.source === "stock" && r.qty > 0 && (r.status === "Expired")) {
+          action = '<button data-wh="' + esc(r.warehouse) + '" data-item="' + esc(r.item) + '" data-sku="' + esc(r.sku) + '" data-batch="' + esc(r.batchNo) +
+                   '" onclick="__acxAdjustBatch(this)" class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">Adjust Stock</button>';
+        } else if (r.adjusted) {
+          action = '<span class="text-xs text-gray-500">Adjusted</span>';
+        }
+        var exp = r.expiry ? dayStr(r.expiry) : "-";
+        var st = r.status + (r.source === "bill" && r.ref ? " (" + r.ref + ")" : "");
+        return '<tr class="border-t"><td class="p-2">' + esc(r.batchNo) + '</td><td class="p-2">' + esc(r.item) +
+               '</td><td class="p-2">' + esc(fmtQty(r.qty)) + '</td><td class="p-2">' + esc(r.warehouse) +
+               '</td><td class="p-2">' + esc(exp) + '</td><td class="p-2">' + esc(st) + '</td><td class="p-2">' + action + '</td></tr>';
+      }).join("");
+    }
+
+    setText("batchTrackingActive", active);
+    setText("batchTrackingExpired", expired);
+    setText("batchTrackingSoldOut", soldOut);
+    setText("batchTrackingTotalQty", fmtQty(qty));
+    setText("batchTrackingWarehouses", Object.keys(whs).length);
+    setText("batchTrackingTrackedItems", Object.keys(items).length);
+  };
+
+  /* Adjust Stock: write an expired batch off the item and log it */
+  window.__acxAdjustBatch = function (btn) {
+    var wh = btn.getAttribute("data-wh"), name = btn.getAttribute("data-item"),
+        sku = btn.getAttribute("data-sku"), no = btn.getAttribute("data-batch");
+    var inv = getInventory(wh);
+    var it = inv.find(function (x) { return sku && norm(x.sku) === norm(sku) && norm(x.name) === norm(name); }) ||
+             inv.find(function (x) { return norm(x.name) === norm(name); });
+    if (!it) return alert('"' + name + '" was not found in the "' + wh + '" stock list.');
+    var b = (it.batches || []).find(function (x) { return norm(x.batchNo || x.batch) === norm(no); });
+    if (!b || num(b.qty) <= 0) return alert("This batch has no quantity left to adjust.");
+    var q = num(b.qty);
+    if (!confirm('Remove ' + fmtQty(q) + ' unit(s) of "' + name + '" (batch ' + no + ') from ' + wh +
+                 '?\n\nThis reduces Stock and logs a Stock Adjustment entry.')) return;
+    b.qty = 0;
+    it.qty = Math.max(0, num(it.qty) - q);
+    it.history = Array.isArray(it.history) ? it.history : [];
+    it.history.push({ date: new Date().toISOString(), type: "Stock Adjustment", qty: -q, ref: "Batch " + no + " write-off", user: currentUser() });
+    saveInventory(wh, inv);
+    try {
+      var am = LS(amendKey());
+      am.unshift({ warehouse: wh, sku: it.sku || "", item: it.name, adjustmentType: "Remove", quantity: -q,
+                   reason: "Batch " + no + " (expired)", date: new Date().toISOString(), source: "Batch tracking adjustment" });
+      localStorage.setItem(amendKey(), JSON.stringify(am));
+    } catch (e) {}
+    if (typeof renderAmendmentsTable === "function") try { renderAmendmentsTable(); } catch (e) {}
+    if (typeof renderInventoryTable === "function") try { renderInventoryTable(); } catch (e) {}
+    window.renderBatchTracking();
+    alert("Batch " + no + " written off (" + fmtQty(q) + " unit(s)).");
+  };
+
+  /* the filters panel buttons were never wired – make them work */
+  window.applyBatchTrackingFilters = function () { window.renderBatchTracking(); };
+  window.clearBatchTrackingFilters = function () {
+    ["batchTrackingNumber", "batchTrackingItem", "batchTrackingStart", "batchTrackingEnd", "batchTrackingWarehouse", "batchTrackingStatus"]
+      .forEach(function (id) { var el = document.getElementById(id); if (el) el.value = ""; });
+    window.renderBatchTracking();
+  };
+  window.resetBatchTrackingMoreFilters = window.clearBatchTrackingFilters;
+
+  /* refresh the open report when stock changes elsewhere */
+  window.addEventListener("storage", function (e) {
+    var p = document.getElementById("batchTrackingPanel");
+    if (p && !p.classList.contains("hidden") && (!e.key || e.key.indexOf("inventory_") === 0 || e.key === "bills")) window.renderBatchTracking();
+  });
+})();
