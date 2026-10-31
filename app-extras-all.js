@@ -758,6 +758,7 @@ try{
   function billsRow(r, bills) {
     /* generated bills show as their own rows right under their template, inside Recurring Bills only */
     var mine = []; bills.forEach(function (b, i) { if (b && b.recurringId === r.id) mine.push({ b: b, i: i }); });
+    return null; /* generated bills are normal bills, listed in Bills */
     if (!mine.length || collapsed[r.id]) return null;
     mine.sort(function (x, y) { return String(x.b.billNumber || "").localeCompare(String(y.b.billNumber || ""), undefined, { numeric: true }); });
     var frag = document.createDocumentFragment();
