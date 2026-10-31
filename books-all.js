@@ -468,9 +468,9 @@ try{
           var o = parseInt(cb.getAttribute("data-index"), 10), rt = tpls[o]; if (!rt) return;
           var cells = tr.children; if (cells.length) cells[cells.length - 1].innerHTML = tplActions(o, esc(rt.id));
           var after = tr;
-          [].forEach(function (i) {
+          generatedFor(rt, invoices).forEach(function (i) {
             var row = document.createElement("tr"), cur = i.currency || rt.currency;
-            row.innerHTML = "<td></td><td>" + esc(i.invoiceNumber) + "</td><td>" + esc(i.date) + "</td><td>" + esc(i.customer || rt.customerName) + "</td><td>" + esc(rt.recurrenceType) + "</td><td>Paid " + money(num(i.amountPaid) / (num(i.exchangeRate) || 1), cur) + "</td><td>" + money(i.total, cur) + "</td><td>" + (window.acxDueLabel ? window.acxDueLabel(invStatus(i), i.dueDate || window.acxDocDue(i.date, i.netDays), Math.max((num(i.totalKES) || num(i.total)) - num(i.amountPaid), 0)) : invStatus(i)) + '</td><td style="white-space:nowrap">' + invActions(Number(i.id)) + "</td>";
+            row.innerHTML = "<td></td><td>" + esc(i.invoiceNumber) + "</td><td>" + esc(i.date) + "</td><td>" + esc(i.customer || rt.customerName) + "</td><td>" + esc(rt.recurrenceType) + "</td><td>-</td><td>" + money(i.total, cur) + "</td><td>" + (window.acxDueLabel ? window.acxDueLabel(invStatus(i), i.dueDate || window.acxDocDue(i.date, i.netDays), Math.max((num(i.totalKES) || num(i.total)) - num(i.amountPaid), 0)) : invStatus(i)) + '</td><td style="white-space:nowrap">' + invActions(Number(i.id)) + "</td>";
             after.parentNode.insertBefore(row, after.nextSibling); after = row;
           });
         });
@@ -485,7 +485,7 @@ try{
 
   /* ---------- Bills table: generated recurring bills stay in Recurring Bills ---------- */
   var _lsb = window.loadSupplierBills;
-  if (false && typeof _lsb === "function") {
+  if (typeof _lsb === "function") {
     var wrapped = function () {
       var r = _lsb.apply(this, arguments);
       try {

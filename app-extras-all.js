@@ -758,13 +758,12 @@ try{
   function billsRow(r, bills) {
     /* generated bills show as their own rows right under their template, inside Recurring Bills only */
     var mine = []; bills.forEach(function (b, i) { if (b && b.recurringId === r.id) mine.push({ b: b, i: i }); });
-    return null; /* generated bills are normal bills, listed in Bills */
     if (!mine.length || collapsed[r.id]) return null;
     mine.sort(function (x, y) { return String(x.b.billNumber || "").localeCompare(String(y.b.billNumber || ""), undefined, { numeric: true }); });
     var frag = document.createDocumentFragment();
     mine.forEach(function (o) {
       var b = o.b, paid = num(b.paidAmount), tr = document.createElement("tr");
-      tr.innerHTML = "<td></td><td>" + esc(b.billNumber) + "</td><td>" + esc(b.date) + "</td><td>" + esc(b.supplier) + "</td><td>Due " + esc(b.due || "-") + "</td><td>Paid " + fmt(paid) + "</td><td>" + fmt(b.total) + "</td><td>Bal " + fmt(num(b.total) - paid) + "</td><td>" + billStatus(b) + '</td><td style="white-space:nowrap">' + billBtns(o.i) + "</td>";
+      tr.innerHTML = "<td></td><td>" + esc(b.billNumber) + "</td><td>" + esc(b.date) + "</td><td>" + esc(b.supplier) + "</td><td>-</td><td>" + esc(b.due || "-") + "</td><td>" + fmt(b.total) + "</td><td>" + fmt(num(b.total) - paid) + "</td><td>" + billStatus(b) + '</td><td style="white-space:nowrap">' + billBtns(o.i) + "</td>";
       frag.appendChild(tr);
     });
     return frag;
