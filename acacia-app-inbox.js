@@ -27,6 +27,7 @@
   /* ---------- 1) ledger + stock for invoices that came from other apps ---------- */
   function reconcile() {
     if (!fn('postToCOA')) return;
+    try { if (w.__acxPosRenumber) w.__acxPosRenumber(); } catch (e) {}   /* POS sales get the next Books invoice number BEFORE posting */
     var invs = ls('invoices', []); if (!Array.isArray(invs) || !invs.length) return;
     var acct = defaultAccount(), postings = fn('getCOAPostings') ? fn('getCOAPostings')() : ls('coaPostings', []), changed = false;
     invs.forEach(function (inv) {
@@ -407,6 +408,27 @@
     if (add) { sv('customers', cs); ['populateCustomerDropdowns', 'loadCustomersToDropdown', 'renderCustomers'].forEach(function (n) { try { if (typeof w[n] === 'function') w[n](); } catch (e) {} }); }
   }
 
+  /* POS sales arrive numbered POST1-00001. Give each the next Books invoice number (INV-xxxx), keep the POS number in posRef,
+   * and make the terms "Due" (due on the sale date). Only invoices not yet posted to the ledger are renumbered. */
+  function renumber() {
+    var gen = w.generateInvoiceNumber; if (typeof gen !== 'function') return;
+    var invs = ls('invoices', []); if (!Array.isArray(invs)) return;
+    var map = {}, changed = false;
+    invs.forEach(function (i) {
+      if (!i || i.source !== 'POS' || i.posRef || i.acx) return;
+      var old = String(i.invoiceNumber || ''), nn;
+      try { nn = gen(); } catch (e) { return; }
+      if (!nn || nn === old) return;
+      i.posRef = old; i.invoiceNumber = nn; i.netDays = 0; i.dueDate = i.date;
+      map[String(i.id)] = nn; changed = true;
+    });
+    if (!changed) return;
+    sv('invoices', invs);
+    var pp = ls('posPayments', []);
+    if (Array.isArray(pp)) { pp.forEach(function (x) { if (x && map[String(x.invoiceId)]) x.invoiceNumber = map[String(x.invoiceId)]; }); sv('posPayments', pp); }
+  }
+  w.__acxPosRenumber = renumber;
+
   function setStatus(id, st, extra) {
     var q = ls('posPayments', []); q.forEach(function (x) { if (x && x.id === id) { x.status = st; if (extra) Object.keys(extra).forEach(function (k) { x[k] = extra[k]; }); } }); sv('posPayments', q);
   }
@@ -438,6 +460,7 @@
     if (busy) return; busy = true;
     try {
       if (!document.body || !(w.__companyNS ? w.__companyNS.activeCompany() : true)) return;
+      renumber();
       if (w.AcaciaAppInbox && w.AcaciaAppInbox.reconcile) w.AcaciaAppInbox.reconcile();
       ensureCustomers();
       var q = ls('posPayments', []); if (!Array.isArray(q)) return; unmatched = 0;
