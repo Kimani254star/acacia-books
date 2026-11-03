@@ -30,7 +30,7 @@
     var invs = ls('invoices', []); if (!Array.isArray(invs) || !invs.length) return;
     var acct = defaultAccount(), postings = fn('getCOAPostings') ? fn('getCOAPostings')() : ls('coaPostings', []), changed = false;
     invs.forEach(function (inv) {
-      if (!inv || (inv.source !== 'Sell' && inv.source !== 'CRM')) return;
+      if (!inv || (inv.source !== 'Sell' && inv.source !== 'CRM' && inv.source !== 'POS')) return;
       var items = (inv.items || []).filter(function (i) { return !i.type || i.type === 'product'; });
       var cur = { total: Number(inv.totalKES || inv.total) || 0, items: items.map(function (i) { return { d: i.desc || '', s: i.sku || '', q: Number(i.qty) || 0 }; }) };
       var old = inv.acx;
@@ -381,4 +381,90 @@
   function tick() { try { if (!document.body || !(w.__companyNS ? w.__companyNS.activeCompany() : true)) return; reconcile(); render(); } catch (e) { console.warn('[acacia-app-inbox]', e); } }
   setInterval(tick, 8000); setTimeout(tick, 3000);
   w.AcaciaAppInbox = { tick: tick, reconcile: reconcile };
+})(window);
+
+/* ===== Acacia POS bridge (merged from acacia-pos-bridge.js) ===== */
+/* acacia-pos-bridge.js - Books side of Acacia POS. Load AFTER acacia-app-inbox.js.
+ * Invoices from POS (source:'POS') are posted to the ledger and stock by acacia-app-inbox.js (same as Sell/CRM).
+ * This file then (1) makes sure the walk-in / POS customers exist and (2) posts each POS payment as a real
+ * Books receipt into the fund the cashier mapped in POS Settings (no prompts). */
+(function (w) {
+  'use strict';
+  var ls = function (k, d) { try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
+  var sv = function (k, v) { localStorage.setItem(k, JSON.stringify(v)); };
+  var low = function (v) { return String(v == null ? '' : v).trim().toLowerCase(); };
+  var busy = false, unmatched = 0;
+
+  function ensureCustomers() {
+    var invs = ls('invoices', []), cs = ls('customers', []); if (!Array.isArray(invs) || !Array.isArray(cs)) return;
+    var have = {}; cs.forEach(function (c) { have[low(c && c.name)] = 1; });
+    var add = false;
+    invs.forEach(function (i) {
+      if (!i || i.source !== 'POS' || !i.customer || have[low(i.customer)]) return;
+      have[low(i.customer)] = 1; add = true;
+      cs.push({ id: (w.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'c' + Date.now(), salutation: '', name: i.customer, primaryEmail: '', secondaryEmail: '', phone: '', billingAddress: '', shippingAddress: '', kraPin: '', creditLimit: '', currency: 'KES', statementDate: new Date().toISOString().slice(0, 10), receivables: 0, createdAt: new Date().toISOString() });
+    });
+    if (add) { sv('customers', cs); ['populateCustomerDropdowns', 'loadCustomersToDropdown', 'renderCustomers'].forEach(function (n) { try { if (typeof w[n] === 'function') w[n](); } catch (e) {} }); }
+  }
+
+  function setStatus(id, st, extra) {
+    var q = ls('posPayments', []); q.forEach(function (x) { if (x && x.id === id) { x.status = st; if (extra) Object.keys(extra).forEach(function (k) { x[k] = extra[k]; }); } }); sv('posPayments', q);
+  }
+
+  function post(item) {
+    var E = function (id) { return document.getElementById(id); };
+    var inv = ls('invoices', []).find(function (i) { return String(i.id) === String(item.invoiceId); });
+    if (!inv || !inv.acx) return 'wait';                                    /* invoice not here / not posted to ledger yet */
+    var banks = ls('banks', []), bi = -1;
+    banks.forEach(function (b, i) { if (bi < 0 && low(b && (b.name || b.bankName || b.accountName)) === low(item.bank)) bi = i; });
+    if (bi < 0) return 'nofund';
+    if (!E('receiptCustomer') || typeof w.addReceipt !== 'function') return 'wait';
+    var cs = E('receiptCustomer');
+    if (!Array.prototype.some.call(cs.options, function (o) { return o.value === inv.customer; })) { var o = document.createElement('option'); o.value = o.textContent = inv.customer; cs.appendChild(o); }
+    cs.value = inv.customer;
+    if (typeof w.populateReceiptInvoiceDropdown === 'function') w.populateReceiptInvoiceDropdown(inv.customer);
+    E('receiptInvoice').value = String(inv.id);
+    E('receiptDate').value = item.date; E('receiptAmount').value = item.amount;
+    var pm = E('paymentMode'); pm.value = item.method; if (pm.value !== item.method) pm.value = 'Cash';
+    if (typeof w.populateBankSelect === 'function') w.populateBankSelect(E('receiptBank'));
+    E('receiptBank').value = String(bi);
+    E('receiptReference').value = (item.reference || '') + ' (POS)';
+    var before = ls('receipts', []).length, oa = w.alert, msgs = []; w.alert = function (m) { msgs.push(m); };
+    try { w.addReceipt(); } catch (e) {} finally { w.alert = oa; }
+    return ls('receipts', []).length > before ? 'ok' : 'fail';
+  }
+
+  var tick = function () {
+    if (busy) return; busy = true;
+    try {
+      if (!document.body || !(w.__companyNS ? w.__companyNS.activeCompany() : true)) return;
+      if (w.AcaciaAppInbox && w.AcaciaAppInbox.reconcile) w.AcaciaAppInbox.reconcile();
+      ensureCustomers();
+      var q = ls('posPayments', []); if (!Array.isArray(q)) return; unmatched = 0;
+      q.filter(function (x) { return x && x.status === 'pending'; }).forEach(function (x) {
+        setStatus(x.id, 'posting');
+        var r = post(x);
+        if (r === 'ok') setStatus(x.id, 'posted', { postedAt: new Date().toISOString() });
+        else { setStatus(x.id, 'pending'); if (r === 'nofund') unmatched++; }
+      });
+      badge();
+    } catch (e) { console.warn('[acacia-pos-bridge]', e); } finally { busy = false; }
+  };
+
+  function badge() {
+    var b = document.getElementById('acxPosBadge');
+    if (!unmatched) { if (b) b.remove(); return; }
+    if (!b) { b = document.createElement('button'); b.id = 'acxPosBadge'; b.type = 'button';
+      b.style.cssText = 'position:fixed;right:18px;bottom:62px;z-index:99998;background:#b45309;color:#fff;border:0;border-radius:999px;padding:10px 16px;font:600 13px system-ui,sans-serif;cursor:pointer';
+      b.onclick = function () { alert('POS payments are waiting because the fund chosen in POS Settings does not match a fund name in Books. Open POS > Settings and pick the fund for each payment method, or add the fund in Books.'); };
+      document.body.appendChild(b); }
+    b.textContent = '⚠ ' + unmatched + ' POS payment(s) need a fund';
+  }
+
+  function posActive() { var a = (ls('appAddons', {}) || {}).pos, t = new Date().toISOString().slice(0, 10); return !!(a && a.active && (!a.until || a.until >= t)); }
+  function gate() { var on = posActive(); ['posLink', 'posLauncher'].forEach(function (id) { var e = document.getElementById(id); if (e) e.style.display = on ? '' : 'none'; }); return on; }
+  var _tick = tick; tick = function () { if (!gate()) return; _tick(); };
+  setInterval(gate, 5000); setTimeout(gate, 1500);
+  setInterval(tick, 9000); setTimeout(tick, 4000);
+  w.AcaciaPosBridge = { tick: tick };
 })(window);
