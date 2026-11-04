@@ -357,31 +357,8 @@
           ['Transit No.', 'Date', 'Item', 'SKU', 'From', 'To', 'Quantity', 'Dispatched By', 'Received By', 'Status'].map(function (h) { return '<th class="border p-2 text-left">' + h + '</th>'; }).join('') +
           '<th class="border p-2 text-center">Actions</th></tr></thead><tbody id="movementTableBody"></tbody></table></div>' +
         '<div id="paginationControls" class="flex items-center justify-between mt-4 px-2 text-sm text-gray-600"><div>Total Count: <span id="totalCount">0</span></div><div>Show <select id="itemsPerPageSelect" class="border rounded px-2 py-1 mx-1"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select> per page</div><div class="space-x-1"><button id="prevPageBtn" class="px-2 py-1 border rounded disabled:opacity-50" disabled="disabled">Prev</button> <span id="pageInfo" class="px-2">1 - 0</span> <button id="nextPageBtn" class="px-2 py-1 border rounded disabled:opacity-50" disabled="disabled">Next</button></div></div>' +
-      '</div>' +
-
-      '<div class="bg-white p-4 rounded shadow mb-6"><div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-3"><h3 class="text-sm font-semibold">Stock Activity</h3><div class="flex flex-wrap gap-2">' +
-        '<input id="saSearch" placeholder="Search item, warehouse, reference" class="border rounded-md px-3 py-1.5 text-sm w-60" oninput="trRenderActivity()">' +
-        '<select id="saCat" class="border rounded-md px-2 py-1.5 text-sm" onchange="trRenderActivity()"><option value="">All activity</option><option>Sale</option><option>Purchase</option><option>Sales Return</option><option>Purchase Return</option><option>Transfer</option><option>Adjustment</option><option>Opening Stock</option><option>Pending</option><option>No movement</option></select></div></div>' +
-        '<p class="text-xs text-gray-600 mb-2">Read-only. Filled automatically from invoices, bills, returns, adjustments, transfers and opening stock. Quotations, sales orders and purchase orders do not move stock; they show as Pending or No movement.</p>' +
-        '<div class="overflow-x-auto"><table class="w-full border-collapse border border-gray-300 text-sm"><thead class="bg-gray-100"><tr>' +
-        ['Date', 'Item', 'Warehouse', 'Activity', 'Reference', 'In', 'Out'].map(function (h, i) { return '<th class="border p-2 text-' + (i > 4 ? 'right' : 'left') + '">' + h + '</th>'; }).join('') +
-        '</tr></thead><tbody id="trActBody"></tbody></table></div><div id="saCount" class="text-xs text-gray-500 mt-2"></div></div>';
+      '</div>';
   }
-
-  /* ---------- Stock Activity table ---------- */
-  w.trRenderActivity = function () {
-    var ab = $('trActBody'); if (!ab) return;
-    var all = []; try { all = typeof w.acxStockActivity === 'function' ? w.acxStockActivity() : []; } catch (e) { console.error('[stock-activity]', e); }
-    var q = low(($('saSearch') || {}).value), c = ($('saCat') || {}).value;
-    var rows = all.filter(function (r) { return (!c || r.c === c) && (!q || [r.item, r.wh, r.a, r.ref, r.note].join(' ').toLowerCase().indexOf(q) > -1); });
-    var td = 'border p-2', shownRows = rows.slice(0, 300);
-    ab.innerHTML = shownRows.length ? shownRows.map(function (r) {
-      var np = r.c === 'Pending' || r.c === 'No movement';
-      return '<tr' + (np ? ' class="text-gray-500"' : '') + '><td class="' + td + '">' + esc(r.date) + '</td><td class="' + td + '">' + esc(r.item) + '</td><td class="' + td + '">' + esc(r.wh) + '</td><td class="' + td + '">' + esc(r.a) + (np && r.note ? ' <span class="text-xs">(' + esc(r.note) + ')</span>' : '') + '</td><td class="' + td + '">' + esc(r.ref) + '</td>' +
-        '<td class="' + td + ' text-right">' + (np ? '' : esc(r.qin || 0)) + '</td><td class="' + td + ' text-right">' + (np ? '' : esc(r.qout || 0)) + '</td></tr>';
-    }).join('') : '<tr><td colspan="7" class="text-center p-4 text-gray-500">No stock activity found.</td></tr>';
-    if ($('saCount')) $('saCount').textContent = rows.length > 300 ? 'Showing the latest 300 of ' + rows.length + '. Use the filters, or open Reports > Inventory Reports > Stock History for the full list and CSV.' : rows.length + ' line(s)';
-  };
 
   /* ---------- dropdowns ---------- */
   function fillSelect(el, names, keep) {
@@ -525,7 +502,6 @@
           : '<button class="bg-red-700 text-white px-2 py-1 rounded text-sm hover:bg-red-600" onclick="deleteMovement(' + r.i + ')">Delete</button>') + '</td></tr>';
     }).join('') : '<tr><td colspan="11" class="text-center p-4 text-gray-500">No stock transits recorded.</td></tr>';
     if ($('totalCount')) $('totalCount').textContent = rows.length;
-    w.trRenderActivity();
   };
 
   w.searchMovement = function () { w.renderMovementTable(); };
