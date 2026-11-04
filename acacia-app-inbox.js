@@ -408,24 +408,36 @@
     if (add) { sv('customers', cs); ['populateCustomerDropdowns', 'loadCustomersToDropdown', 'renderCustomers'].forEach(function (n) { try { if (typeof w[n] === 'function') w[n](); } catch (e) {} }); }
   }
 
-  /* POS sales arrive numbered POST1-00001. Give each the next Books invoice number (INV-xxxx), keep the POS number in posRef,
-   * and make the terms "Due" (due on the sale date). Only invoices not yet posted to the ledger are renumbered. */
+  /* POS sales arrive with a provisional till number (POST1-00001). Give each the next number in the Books invoice series
+   * (Settings > Customization > Numbering), keep the till number in posRef, and move any ledger postings made under the till number.
+   * Each invoice is numbered and SAVED before the next one is asked for, so a batch never gets the same number twice.
+   * Terms / due date are left exactly as POS set them (cash sale = due on receipt, credit sale = the terms picked in POS). */
   function renumber() {
     var gen = w.generateInvoiceNumber; if (typeof gen !== 'function') return;
     var invs = ls('invoices', []); if (!Array.isArray(invs)) return;
-    var map = {}, changed = false;
-    invs.forEach(function (i) {
-      if (!i || i.source !== 'POS' || i.posRef || i.acx) return;
-      var old = String(i.invoiceNumber || ''), nn;
-      try { nn = gen(); } catch (e) { return; }
-      if (!nn || nn === old) return;
-      i.posRef = old; i.invoiceNumber = nn; i.netDays = 0; i.dueDate = i.date;
-      map[String(i.id)] = nn; changed = true;
-    });
+    var todo = invs.filter(function (i) { return i && i.source === 'POS' && !i.posRef; });
+    if (!todo.length) return;
+    todo.sort(function (a, b) { return String((a.pos && a.pos.at) || a.date || '').localeCompare(String((b.pos && b.pos.at) || b.date || '')); });
+    var map = {}, refs = {}, changed = false;
+    for (var k = 0; k < todo.length; k++) {
+      var i = todo[k], old = String(i.invoiceNumber || ''), nn = null;
+      try { nn = gen(); } catch (e) { nn = null; }
+      if (!nn || nn === old) break;                       /* numbering not ready yet: try again on the next tick */
+      i.posRef = old; i.invoiceNumber = nn;
+      if (i.netDays == null) i.netDays = 0;
+      if (!i.dueDate) i.dueDate = i.date;
+      map[String(i.id)] = nn; refs[old] = nn; changed = true;
+      sv('invoices', invs);                                /* so the next number sees this one as used */
+    }
     if (!changed) return;
-    sv('invoices', invs);
+    var cp = ls('coaPostings', []);
+    if (Array.isArray(cp)) { var cc = false; cp.forEach(function (p) { if (p && p.source === 'Invoice' && refs[p.ref]) { p.ref = refs[p.ref]; cc = true; } }); if (cc) sv('coaPostings', cp); }
     var pp = ls('posPayments', []);
-    if (Array.isArray(pp)) { pp.forEach(function (x) { if (x && map[String(x.invoiceId)]) x.invoiceNumber = map[String(x.invoiceId)]; }); sv('posPayments', pp); }
+    if (Array.isArray(pp)) {
+      pp.forEach(function (x) { if (!x || !map[String(x.invoiceId)]) return; var o = x.invoiceNumber; x.invoiceNumber = map[String(x.invoiceId)]; if (x.reference && o) x.reference = String(x.reference).split(o).join(x.invoiceNumber); });
+      sv('posPayments', pp);
+    }
+    ['renderInvoices', 'renderAccountsReceivable', 'updateDashboardTotals'].forEach(function (n) { try { if (typeof w[n] === 'function') w[n](); } catch (e) {} });
   }
   w.__acxPosRenumber = renumber;
 
@@ -433,27 +445,40 @@
     var q = ls('posPayments', []); q.forEach(function (x) { if (x && x.id === id) { x.status = st; if (extra) Object.keys(extra).forEach(function (k) { x[k] = extra[k]; }); } }); sv('posPayments', q);
   }
 
+  /* Posts one POS payment as a real Books receipt into the fund chosen in POS. Works straight on the data (no receipt form, no
+   * permission pop-ups), does exactly what Receipts > Save does: receipt, bank balance, bank transaction, customer payment,
+   * and the invoice becomes Paid / Partial. A payment is never posted twice (receipt.posPaymentId). */
   function post(item) {
-    var E = function (id) { return document.getElementById(id); };
-    var inv = ls('invoices', []).find(function (i) { return String(i.id) === String(item.invoiceId); });
+    var invs = ls('invoices', []), inv = Array.isArray(invs) ? invs.filter(function (i) { return i && String(i.id) === String(item.invoiceId); })[0] : null;
     if (!inv || !inv.acx) return 'wait';                                    /* invoice not here / not posted to ledger yet */
+    var receipts = ls('receipts', []); if (!Array.isArray(receipts)) receipts = [];
+    if (receipts.some(function (r) { return r && String(r.posPaymentId) === String(item.id); })) return 'ok';
+    var amt = Number(item.amount) || 0; if (amt <= 0) return 'ok';
     var banks = ls('banks', []), bi = -1;
     banks.forEach(function (b, i) { if (bi < 0 && low(b && (b.name || b.bankName || b.accountName)) === low(item.bank)) bi = i; });
     if (bi < 0) return 'nofund';
-    if (!E('receiptCustomer') || typeof w.addReceipt !== 'function') return 'wait';
-    var cs = E('receiptCustomer');
-    if (!Array.prototype.some.call(cs.options, function (o) { return o.value === inv.customer; })) { var o = document.createElement('option'); o.value = o.textContent = inv.customer; cs.appendChild(o); }
-    cs.value = inv.customer;
-    if (typeof w.populateReceiptInvoiceDropdown === 'function') w.populateReceiptInvoiceDropdown(inv.customer);
-    E('receiptInvoice').value = String(inv.id);
-    E('receiptDate').value = item.date; E('receiptAmount').value = item.amount;
-    var pm = E('paymentMode'); pm.value = item.method; if (pm.value !== item.method) pm.value = 'Cash';
-    if (typeof w.populateBankSelect === 'function') w.populateBankSelect(E('receiptBank'));
-    E('receiptBank').value = String(bi);
-    E('receiptReference').value = (item.reference || '') + ' (POS)';
-    var before = ls('receipts', []).length, oa = w.alert, msgs = []; w.alert = function (m) { msgs.push(m); };
-    try { w.addReceipt(); } catch (e) {} finally { w.alert = oa; }
-    return ls('receipts', []).length > before ? 'ok' : 'fail';
+    var bname = banks[bi].name || banks[bi].bankName || banks[bi].accountName || ('Bank #' + (bi + 1));
+    var d = item.date || inv.date || new Date().toISOString().slice(0, 10), cust = inv.customer, meth = item.method || 'Cash';
+    var rid = Date.now() * 1000 + Math.floor(Math.random() * 1000);
+    receipts.push({ id: rid, date: d, customer: cust, customerName: cust, invoiceId: inv.id, amount: amt, method: meth, bankIndex: bi, bank: bname, reference: (item.reference || '') + ' (POS)', posPaymentId: item.id, source: 'POS' });
+    sv('receipts', receipts);
+    banks[bi].balance = (Number(banks[bi].balance) || 0) + amt; sv('banks', banks);
+    var tx = ls('transactions', []); if (!Array.isArray(tx)) tx = [];
+    tx.push({ id: 'TXN-' + rid, date: d, bank: bname, type: 'Deposit', amount: amt, ref: 'Receipt from ' + cust + ' via ' + meth, receiptId: rid }); sv('transactions', tx);
+    var cpay = ls('customerPayments', []); if (!Array.isArray(cpay)) cpay = [];
+    cpay.push({ id: 'PAY-' + rid, date: d, customer: cust, customerName: cust, invoiceId: inv.id, amount: amt, method: meth, bank: bname, bankIndex: bi, receiptId: rid }); sv('customerPayments', cpay);
+    try { if (typeof w.upsertManualTransaction === 'function') w.upsertManualTransaction({ date: d, type: 'Receipt', direction: 'IN', amount: amt, bank: bname, customer: cust, reference: 'Receipt from ' + cust + ' via ' + meth, source: 'receipt', sourceId: rid }); } catch (e) {}
+    /* invoice paid status = everything received against it */
+    var all = ls('invoices', []), cur = all.filter(function (i) { return i && String(i.id) === String(inv.id); })[0];
+    if (cur) {
+      var got = ls('receipts', []).filter(function (r) { return r && String(r.invoiceId) === String(cur.id); }).reduce(function (s, r) { return s + (Number(r.amount) || 0); }, 0);
+      var tot = Number(cur.totalKES || cur.total) || 0;
+      cur.amountPaid = Math.round(got * 100) / 100; cur.balance = Math.max(0, Math.round((tot - got) * 100) / 100);
+      cur.status = cur.balance <= 0 ? 'Paid' : (got > 0 ? 'Partial' : 'Unpaid'); cur.paid = cur.status === 'Paid';
+      sv('invoices', all);
+    }
+    ['recalculateCustomerReceivables', 'renderInvoices', 'renderReceipts', 'renderAccountsReceivable', 'loadBanks', 'renderBankList', 'loadTransactions', 'updateDashboardTotals', 'refreshDashboardCards'].forEach(function (n) { try { if (typeof w[n] === 'function') w[n](); } catch (e) {} });
+    return 'ok';
   }
 
   var tick = function () {
