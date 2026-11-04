@@ -45,7 +45,7 @@
       var delta = Math.round((cur.total - (old ? old.total : 0)) * 100) / 100;
       if (delta) fn('postToCOA')(inv.account, delta, { date: inv.date, ref: inv.invoiceNumber, source: 'Invoice' });
       var om = {}, nm = {}, names = {};
-      (old ? old.items : []).forEach(function (i) { var k = stockKey({ sku: i.s, desc: i.d }); om[k] = (om[k] || 0) + i.q; names[k] = i; });
+      (old ? old.items : (inv.stockDone ? cur.items : [])).forEach(function (i) { var k = stockKey({ sku: i.s, desc: i.d }); om[k] = (om[k] || 0) + i.q; names[k] = i; });   /* stockDone: POS already took this sale off the stock */
       cur.items.forEach(function (i) { var k = stockKey({ sku: i.s, desc: i.d }); nm[k] = (nm[k] || 0) + i.q; names[k] = i; });
       Object.keys(names).forEach(function (k) {
         var d = (nm[k] || 0) - (om[k] || 0), it = names[k];
@@ -481,6 +481,38 @@
     return 'ok';
   }
 
+  /* POS sales are pushed to eTIMS by Books itself, the same way the "Push to ETIMS" button does it (TaxEngine.pushDocument),
+   * once the sale has its Books invoice number. The fiscal data (control unit, fiscal no, signature, QR text) is saved on the
+   * invoice (invoice.etims), POS picks it up on its next sync and prints the QR on the receipt. Only recent POS sales are pushed
+   * automatically (AUTO_DAYS) so old sales are never sent to KRA by surprise; use the invoice's Push to ETIMS button for those. */
+  var AUTO_DAYS = 3, fiscTried = {};
+  function fiscalise() {
+    var TE = w.TaxEngine; if (!TE || typeof TE.getProfile !== 'function' || typeof TE.pushDocument !== 'function') return;
+    var pr; try { pr = TE.getProfile() || {}; } catch (e) { return; }
+    if (!pr.country) return;                                           /* Tax & e-Invoicing profile not set up yet */
+    if (pr.mode !== 'offline' && !pr.connected) return;                /* sandbox / live but not connected: do not push, do not jump tabs */
+    var invs = ls('invoices', []); if (!Array.isArray(invs)) return;
+    var num = function (v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; };
+    var cut = new Date(Date.now() - AUTO_DAYS * 864e5).toISOString().slice(0, 10), changed = false;
+    invs.forEach(function (o, idx) {
+      if (!o || o.source !== 'POS' || o.etims || !o.posRef) return;    /* wait until it has its Books number */
+      if (String(o.date || '') < cut || fiscTried[o.id]) return;
+      fiscTried[o.id] = 1;                                              /* one automatic attempt per page load; retry from the invoice button */
+      var tot = num(o.totalKES || o.total), vat = num(o.vat), sub = Math.round((tot - vat) * 100) / 100;
+      var cust = (ls('customers', []) || []).filter(function (c) { return c && c.name === o.customer; })[0];
+      var c; try {
+        c = TE.pushDocument({ module: 'Invoices', docType: 'invoice', id: o.id, number: o.invoiceNumber, date: o.date || new Date().toISOString(),
+          party: o.customer || '', partyTin: (cust && (cust.kraPin || cust.taxId)) || '', currency: o.currency || pr.currency || 'KES',
+          subtotal: sub, taxTotal: vat, total: tot, itemCount: (o.items || []).length, docCode: 'INV' });
+      } catch (e) { c = null; }
+      if (!c) return;
+      o.etims = { scuDate: c.scuDate, controlUnitNo: c.controlUnitNo, invoiceNo: c.fiscalNo, internalData: c.internalData, receiptSignature: c.signature, irn: c.irn, qrText: c.qrText };
+      o.etimsStatus = c.status; o.qrText = c.qrText; invs[idx] = o; changed = true;
+    });
+    if (changed) { sv('invoices', invs); try { if (typeof w.renderInvoices === 'function') w.renderInvoices(); } catch (e) {} }
+  }
+  w.__acxPosFiscalise = fiscalise;
+
   var tick = function () {
     if (busy) return; busy = true;
     try {
@@ -488,6 +520,7 @@
       renumber();
       if (w.AcaciaAppInbox && w.AcaciaAppInbox.reconcile) w.AcaciaAppInbox.reconcile();
       ensureCustomers();
+      fiscalise();
       var q = ls('posPayments', []); if (!Array.isArray(q)) return; unmatched = 0;
       q.filter(function (x) { return x && x.status === 'pending'; }).forEach(function (x) {
         setStatus(x.id, 'posting');
