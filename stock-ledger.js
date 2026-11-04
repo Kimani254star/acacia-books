@@ -319,15 +319,14 @@
   var BTN = 'bg-blue-900 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-800';
   var INP = 'border p-2 rounded w-full text-sm';
   function tabHtml() {
-    return '<h2 class="text-sm font-bold mb-1">Stock Transit</h2>' +
-      '<p class="text-xs text-gray-600 mb-3">Move stock between warehouses. Dispatched stock leaves the sending warehouse at once and only reaches the receiving warehouse when it is received. Sales, bills, returns and adjustments are listed in Reports &gt; Inventory Reports &gt; Stock History.</p>' +
+    return '<h2 class="text-sm font-bold mb-1">Transits</h2>' +
       '<div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">' +
         '<div class="flex flex-wrap items-center gap-2">' +
           '<input id="movementSearch" placeholder="Search transit no., item, warehouse" class="border rounded-md px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-400" oninput="searchMovement()">' +
           '<select id="trStatus" class="border rounded-md px-2 py-1.5 text-sm" onchange="renderMovementTable()"><option value="">All statuses</option><option>In Transit</option><option>Received</option><option>Cancelled</option></select>' +
         '</div>' +
         '<div class="flex items-center gap-2">' +
-          '<button id="trAddBtn" class="' + BTN + ' font-semibold" onclick="trToggleForm()">+ Add Stock Activity</button>' +
+          '<button id="trAddBtn" class="' + BTN + ' font-semibold" onclick="trToggleForm()">New</button>' +
           '<div id="movementExpertSection" class="relative inline-block text-left"><button id="movementExpertBtn" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-1.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">Options</button>' +
           '<div id="movementDropdown" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50"><div class="py-1">' +
             '<button onclick="trExport()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Export transit list (CSV)</button>' +
@@ -352,7 +351,7 @@
         '<div class="text-right space-x-2 border-t pt-4"><button id="trSave" onclick="saveTransfer()" class="' + BTN + ' font-semibold">Dispatch to Transit</button> <button onclick="cancelTransfer()" class="bg-gray-500 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-600">Cancel</button></div>' +
       '</div>' +
 
-      '<div class="bg-white p-4 rounded shadow mb-6"><div class="flex justify-between items-center mb-4"><h3 class="text-sm font-semibold">Stock Transit</h3></div>' +
+      '<div class="bg-white p-4 rounded shadow mb-6"><div class="flex justify-between items-center mb-4"><h3 class="text-sm font-semibold">Transits</h3></div>' +
         '<div class="overflow-x-auto"><table class="w-full border-collapse border border-gray-300 text-sm"><thead class="bg-gray-100"><tr>' +
           ['Transit No.', 'Date', 'Item', 'SKU', 'From', 'To', 'Quantity', 'Dispatched By', 'Received By', 'Status'].map(function (h) { return '<th class="border p-2 text-left">' + h + '</th>'; }).join('') +
           '<th class="border p-2 text-center">Actions</th></tr></thead><tbody id="movementTableBody"></tbody></table></div>' +
@@ -385,7 +384,7 @@
   w.trActChange = function () {
     var t = $('actType').value, tr = t === 'transfer';
     $('trWhOne').classList.toggle('hidden', tr); $('trWhFrom').classList.toggle('hidden', !tr); $('trWhTo').classList.toggle('hidden', !tr);
-    $('trSave').textContent = tr ? 'Dispatch to Transit' : 'Save Stock Activity';
+    $('trSave').textContent = tr ? (w.__trEdit != null ? 'Update Transit' : 'Dispatch to Transit') : 'Save Stock Activity';
     w.populateMovementItems();
   };
   w.trToggleForm = function (show) {
@@ -407,14 +406,30 @@
       var from = $('fromLocation').value, to = $('toLocation').value;
       if (!from || !to) return alert('Please choose the sending and the receiving warehouse.');
       if (from === to) return alert('From and To warehouses cannot be the same.');
+      var listE = mv(), ed = (w.__trEdit != null) ? listE[w.__trEdit] : null;
+      if (ed && statusOf(ed) !== 'In Transit') ed = null;
+      var inv0 = w.getInventory(from), it0 = findIn(inv0, key);
+      var back = (ed && ed.from === from && same(it0, ed)) ? num(ed.quantity) : 0;    /* the old dispatch is given back first */
+      if (!it0 || num(it0.qty) + back < qty) return alert('Insufficient quantity in source warehouse.');
+      if (ed) {                                                                       /* put the old quantity back in the old sending warehouse */
+        var oldInv = w.getInventory(ed.from) || [], oh = oldInv.filter(function (x) { return same(x, ed); })[0];
+        if (oh) oh.qty = num(oh.qty) + num(ed.quantity); else oldInv.push(clean(templateFor(ed.sku || ed.item) || { name: ed.item, sku: ed.sku || '' }, num(ed.quantity)));
+        w.saveInventory(ed.from, oldInv);
+      }
       var inv = w.getInventory(from), it = findIn(inv, key);
-      if (!it || num(it.qty) < qty) return alert('Insufficient quantity in source warehouse.');
       it.qty = num(it.qty) - qty; w.saveInventory(from, inv);                        /* leaves the sender now; destination waits for Receive */
       var list = mv();
+      if (ed) {
+        var e2 = list[w.__trEdit];
+        e2.item = it.name; e2.sku = it.sku || ''; e2.from = from; e2.to = to; e2.quantity = qty; e2.date = date; e2.reference = ref; e2.reason = note;
+        w.__trEdit = null; setMv(list);
+        alert('Transit updated.');
+      } else {
       list.push({ id: 'TR' + Date.now(), transitNo: nextNo(list, 'TRN-', 'transitNo'), item: it.name, sku: it.sku || '', from: from, to: to, quantity: qty, date: date,
         status: 'In Transit', dispatchedBy: who(), receivedBy: '', receivedDate: '', reference: ref, reason: note });
       setMv(list);
       alert('Stock dispatched. It is now In Transit and will be added to ' + to + ' when it is received.');
+      }
     } else {
       var wh = $('actWarehouse').value; if (!wh) return alert('Please choose the warehouse.');
       var inc = (t === 'in' || t === 'inc'), invW = w.getInventory(wh) || [], itW = findIn(invW, key);
@@ -430,6 +445,7 @@
     w.cancelTransfer(); w.trToggleForm(false); refresh();
   };
   w.cancelTransfer = function () {
+    w.__trEdit = null; if ($('actType')) $('actType').disabled = false;
     ['transferItem', 'fromLocation', 'toLocation', 'actWarehouse', 'transferQuantity', 'transferDate', 'actRef', 'actNotes'].forEach(function (id) { var e = $(id); if (e) e.value = ''; });
     if ($('actType')) { $('actType').value = 'transfer'; w.trActChange(); }
     w.trToggleForm(false);
@@ -486,6 +502,115 @@
     });
     return out.reverse();
   }
+  /* ---------- row actions: Edit, Delete, Preview, Email, More (Download, Print) ---------- */
+  var AB = 'px-2 py-1 rounded text-sm text-white mr-1 ';
+  function actions(r) {
+    var i = r.i;
+    return '<button class="' + AB + 'bg-blue-900 hover:bg-blue-800" onclick="trEdit(' + i + ')">Edit</button>' +
+      '<button class="' + AB + 'bg-red-700 hover:bg-red-600" onclick="deleteMovement(' + i + ')">Delete</button>' +
+      '<button class="' + AB + 'bg-gray-600 hover:bg-gray-500" onclick="trPreview(' + i + ')">Preview</button>' +
+      '<button class="' + AB + 'bg-gray-600 hover:bg-gray-500" onclick="trEmail(' + i + ')">Email</button>' +
+      '<button class="px-2 py-1 rounded text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50" onclick="trMore(' + i + ', this, event)">More &#9662;</button>';
+  }
+  function rec(i) {
+    var m = mv()[i]; if (!m) return null;
+    return { m: m, no: m.transitNo || ('TRN-' + pad(i + 1, 4)), s: statusOf(m) };
+  }
+  function org() { try { return (JSON.parse(localStorage.getItem('orgInfo') || '{}') || {}).name || ''; } catch (e) { return ''; } }
+  function docRows(r) {
+    var m = r.m;
+    return [['Transit No.', r.no], ['Status', r.s], ['Date', m.date], ['Item', m.item], ['SKU', m.sku || ''], ['From warehouse', m.from], ['To warehouse', m.to], ['Quantity', m.quantity],
+      ['Dispatched by', m.dispatchedBy || ''], ['Received by', m.receivedBy || ''], ['Date received', m.receivedDate || ''], ['Reference', m.reference || ''], ['Notes', m.reason || '']];
+  }
+  function docHtml(r) {
+    var rows = docRows(r).filter(function (x) { return x[1] !== '' && x[1] != null; }).map(function (x) {
+      return '<tr><th style="text-align:left;background:#f3f4f6;border:1px solid #ccc;padding:8px;width:35%">' + esc(x[0]) + '</th><td style="border:1px solid #ccc;padding:8px">' + esc(x[1]) + '</td></tr>';
+    }).join('');
+    return '<div style="font-family:Arial,sans-serif;color:#333;padding:20px"><h2 style="color:#1e3a8a;margin:0 0 4px">Transit ' + esc(r.no) + '</h2>' +
+      (org() ? '<div style="color:#666;margin-bottom:12px">' + esc(org()) + '</div>' : '') +
+      '<table style="width:100%;border-collapse:collapse">' + rows + '</table>' +
+      '<div style="margin-top:24px;font-size:12px;color:gray">Generated on ' + esc(new Date().toLocaleString()) + '</div></div>';
+  }
+  function closeMenu() { var o = $('trMoreMenu'); if (o) o.remove(); }
+  document.addEventListener('click', closeMenu);
+
+  w.trEdit = function (i) {
+    var r = rec(i); if (!r) return;
+    if (r.s !== 'In Transit') return alert('Only a transit that is still In Transit can be edited.');
+    w.__trEdit = i;
+    w.trToggleForm(true);
+    $('actType').value = 'transfer'; $('actType').disabled = true; w.trActChange();
+    $('fromLocation').value = r.m.from; w.populateMovementItems();
+    $('toLocation').value = r.m.to;
+    var sel = $('transferItem'), key = r.m.sku || r.m.item;
+    if (!Array.prototype.some.call(sel.options, function (o) { return o.value === key; })) { var o = document.createElement('option'); o.value = key; o.textContent = r.m.item + ' (' + (r.m.sku || 'No SKU') + ')'; sel.appendChild(o); }
+    sel.value = key;
+    $('transferQuantity').value = r.m.quantity; $('transferDate').value = r.m.date || today();
+    $('actRef').value = r.m.reference || ''; $('actNotes').value = r.m.reason || '';
+    $('trSave').textContent = 'Update Transit';
+    var f = $('trForm'); if (f && f.scrollIntoView) f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  w.trPreview = function (i) {
+    var r = rec(i); if (!r) return;
+    var old = $('trPrev'); if (old) old.remove();
+    var box = document.createElement('div'); box.id = 'trPrev';
+    box.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:12px';
+    box.innerHTML = '<div class="bg-white rounded shadow-lg w-full" style="max-width:560px;max-height:90vh;overflow:auto">' + docHtml(r) +
+      '<div class="text-right space-x-2 border-t p-3"><button id="trPvEmail" class="' + BTN + '">Email</button><button id="trPvDl" class="' + BTN + '">Download</button><button id="trPvPrint" class="' + BTN + '">Print</button><button id="trPvClose" class="bg-gray-500 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-600">Close</button></div></div>';
+    document.body.appendChild(box);
+    $('trPvClose').onclick = function () { box.remove(); };
+    $('trPvPrint').onclick = function () { w.trPrint(i); };
+    $('trPvDl').onclick = function () { w.trDownload(i); };
+    $('trPvEmail').onclick = function () { w.trEmail(i); };
+    box.addEventListener('click', function (e) { if (e.target === box) box.remove(); });
+  };
+
+  w.trEmail = function (i) {
+    var r = rec(i); if (!r) return; var m = r.m;
+    var subject = 'Transit ' + r.no + (org() ? ' - ' + org() : '');
+    var body = 'Hello,\n\nTransit details:\n\n' + docRows(r).filter(function (x) { return x[1] !== '' && x[1] != null; }).map(function (x) { return x[0] + ': ' + x[1]; }).join('\n') + '\n\n' + org();
+    var url = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    try { if (typeof w.__logMail === 'function') url = w.__logMail(url); } catch (e) {}
+    w.location.href = url;
+  };
+
+  w.trPrint = function (i) {
+    var r = rec(i); if (!r) return;
+    var pw = window.open('', '', 'width=900,height=700'); if (!pw) return alert('Allow pop-ups to print.');
+    pw.document.write('<html><head><title>Transit ' + esc(r.no) + '</title></head><body>' + docHtml(r) + '</body></html>');
+    pw.document.close(); pw.focus(); setTimeout(function () { pw.print(); }, 300);
+  };
+
+  function withPdfLib(cb) {
+    if (w.html2pdf) return cb(true);
+    var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    s.onload = function () { cb(!!w.html2pdf); }; s.onerror = function () { cb(false); }; document.head.appendChild(s);
+  }
+  w.trDownload = function (i) {
+    var r = rec(i); if (!r) return;
+    withPdfLib(function (ok) {
+      if (!ok) return w.trPrint(i);                                    /* offline: the print window can save as PDF */
+      var holder = document.createElement('div'); holder.style.cssText = 'position:fixed;left:-9999px;top:0;width:700px;background:#fff'; holder.innerHTML = docHtml(r); document.body.appendChild(holder);
+      w.html2pdf().set({ margin: 0.5, filename: r.no + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }).from(holder).save()
+        .then(function () { holder.remove(); }, function () { holder.remove(); });
+    });
+  };
+
+  w.trMore = function (i, btn, ev) {
+    if (ev) ev.stopPropagation();
+    var had = $('trMoreMenu'); closeMenu(); if (had && had.getAttribute('data-i') === String(i)) return;
+    var r = rec(i); if (!r) return;
+    var menu = document.createElement('div'); menu.id = 'trMoreMenu'; menu.setAttribute('data-i', i);
+    var rc = btn.getBoundingClientRect();
+    menu.style.cssText = 'position:fixed;z-index:100001;min-width:170px;background:#fff;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.25);border:1px solid #e5e7eb;top:' + Math.min(rc.bottom + 4, window.innerHeight - 190) + 'px;left:' + Math.max(8, rc.right - 170) + 'px';
+    var item = function (label, fn) { return '<button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-fn="' + fn + '">' + label + '</button>'; };
+    menu.innerHTML = item('Download', 'trDownload') + item('Print', 'trPrint') +
+      (r.s === 'In Transit' ? '<div style="border-top:1px solid #e5e7eb"></div>' + item('Receive', 'trReceive') + item('Cancel transit', 'trCancelTransit') : '');
+    menu.addEventListener('click', function (e) { var b = e.target.closest('button[data-fn]'); if (!b) return; e.stopPropagation(); closeMenu(); w[b.getAttribute('data-fn')](i); });
+    document.body.appendChild(menu);
+  };
+
   w.renderMovementTable = function () {
     var body = $('movementTableBody'); if (!body) return;
     var rows = shown(), all = mv(), transitUnits = 0, transitCount = 0;
@@ -497,10 +622,8 @@
         '<td class="' + td + '">' + esc(m.from) + '</td><td class="' + td + '">' + esc(m.to) + '</td><td class="' + td + '">' + esc(m.quantity) + '</td>' +
         '<td class="' + td + '">' + esc(m.dispatchedBy || '') + '</td><td class="' + td + '">' + esc(m.receivedBy || '') + '</td>' +
         '<td class="' + td + '"><span class="px-2 py-0.5 rounded text-xs ' + BADGE[r.s] + '">' + r.s + '</span></td>' +
-        '<td class="' + td + ' text-center whitespace-nowrap"><button class="' + BTN.replace('px-3 py-1.5', 'px-2 py-1') + ' mr-1" onclick="previewMovement(' + r.i + ')">View</button>' +
-        (r.s === 'In Transit' ? '<button class="bg-green-700 text-white px-2 py-1 rounded text-sm hover:bg-green-600 mr-1" onclick="trReceive(' + r.i + ')">Receive</button><button class="bg-gray-600 text-white px-2 py-1 rounded text-sm hover:bg-gray-500" onclick="trCancelTransit(' + r.i + ')">Cancel</button>'
-          : '<button class="bg-red-700 text-white px-2 py-1 rounded text-sm hover:bg-red-600" onclick="deleteMovement(' + r.i + ')">Delete</button>') + '</td></tr>';
-    }).join('') : '<tr><td colspan="11" class="text-center p-4 text-gray-500">No stock transits recorded.</td></tr>';
+        '<td class="' + td + ' text-center whitespace-nowrap">' + actions(r) + '</td></tr>';
+    }).join('') : '<tr><td colspan="11" class="text-center p-4 text-gray-500">No transits recorded.</td></tr>';
     if ($('totalCount')) $('totalCount').textContent = rows.length;
   };
 
@@ -521,7 +644,7 @@
       var dd = $('movementExpertBtn'); if (dd) dd.addEventListener('click', function () { $('movementDropdown').classList.toggle('hidden'); });
     }
     var btn = document.querySelector('button[onclick*="movementTab"]');
-    if (btn && btn.textContent.trim() !== 'Stock Transit') btn.textContent = 'Stock Transit';
+    if (btn && btn.textContent.trim() !== 'Transits') btn.textContent = 'Transits';
     return true;
   }
   var tries = 0; (function go() { if (!mount() && tries++ < 40) setTimeout(go, 500); })();
