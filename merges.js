@@ -693,8 +693,12 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
  *   1. Stock Take Register  - one row per counting session, summary cards, New Stock Take form.
  *   2. Working Sheet        - item-by-item count: system qty, physical qty, variance, value, reason.
  * Workflow: Draft -> Counting -> Submitted -> Approved -> Posted.
- * Inventory balances change ONLY when a count is Posted. Posting writes one Adjustment per variance
- * line to "stockActivities", so it shows in Reports > Inventory Reports > Stock History.
+ * Inventory balances change ONLY when a count is Posted OR its variance is applied in Inventory > Bulk Adjustment.
+ * Posting writes one Adjustment per variance line to "stockActivities", so it shows in Reports > Inventory
+ * Reports > Stock History.
+ * CSV: Export Stock Sheet (from the Stock module, physical + variance blank) -> count -> Import Count (CSV)
+ * fills the physical quantities, the system works out the variance and opens the Variance Report.
+ * Bulk Adjustment then shows the variance for the chosen warehouse with the adjustment quantity pre-filled.
  * Data: localStorage "stockTakes". */
 (function (w) {
   'use strict';
@@ -779,7 +783,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       var k = totals(t), anyCount = k.counted > 0;
       return '<tr class="hover:bg-gray-50"><td class="' + td + ' font-semibold">' + esc(t.no) + '</td><td class="' + td + '">' + esc(fmtDate(t.date)) + '</td><td class="' + td + '">' + esc(t.warehouse) + (t.category ? ' <span class="text-xs text-gray-500">(' + esc(t.category) + ')</span>' : '') + '</td>' +
         '<td class="' + td + ' text-right">' + k.total + '</td><td class="' + td + ' text-right">' + (anyCount ? (k.diffLines ? '<span class="text-red-600 font-semibold">' + k.diffLines + '</span>' : '0') : '-') + '</td>' +
-        '<td class="' + td + '"><span class="px-2 py-0.5 rounded text-xs ' + BADGE[t.status] + '">' + esc(t.status) + '</span></td>' +
+        '<td class="' + td + '"><span class="px-2 py-0.5 rounded text-xs ' + BADGE[t.status] + '">' + esc(t.status) + '</span>' + (readyForBulk(t) ? ' <span class="px-2 py-0.5 rounded text-xs bg-purple-100 text-purple-800" title="Variance report is ready - apply it in Inventory > Bulk Adjustment">Variance ready</span>' : '') + '</td>' +
         '<td class="' + td + ' text-center whitespace-nowrap"><button class="' + BTN.replace('px-3 py-1.5', 'px-2 py-1') + ' mr-1" onclick="stOpen(\'' + esc(t.id) + '\')">Open</button>' +
         (t.status === 'Draft' || t.status === 'Counting' ? '<button class="bg-red-700 text-white px-2 py-1 rounded text-sm hover:bg-red-600" onclick="stDelete(\'' + esc(t.id) + '\')">Delete</button>' : '') + '</td></tr>';
     }).join('') : '<tr><td colspan="7" class="text-center p-4 text-gray-500">No stock takes found.</td></tr>';
@@ -788,6 +792,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       '<div class="flex flex-col md:flex-row md:items-end justify-between gap-2 mb-3"><div><h2 class="text-sm font-bold">Stock Take Register</h2><div class="text-xs text-gray-500">Inventory Control</div></div>' +
       '<div class="flex flex-wrap items-center gap-2"><input id="stSearch" placeholder="Search count no., warehouse, status" class="border rounded-md px-3 py-1.5 text-sm w-64" value="' + esc(($('stSearch') || {}).value || '') + '" oninput="stRenderRegister()">' +
       '<select id="stStatus" class="border rounded-md px-2 py-1.5 text-sm" onchange="stRenderRegister()"><option value="">All statuses</option>' + ['Draft', 'Counting', 'Submitted', 'Approved', 'Posted'].map(function (s) { return '<option' + (s === st ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
+      '<button class="' + BTN2 + '" onclick="stExportStock()">Export Stock Sheet (CSV)</button><button class="' + BTN2 + '" onclick="stImportAny()">Import Count (CSV)</button>' +
       '<button class="' + BTN + ' font-semibold" onclick="stToggleForm()">New Stock Take</button></div></div>' +
       '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">' + card('Total Stock Takes', cards.total) + card('Pending Approval', cards.pend, 'text-yellow-700') + card('Completed', cards.done, 'text-green-700') + card('With Variances', cards.diff, 'text-red-600') + '</div>' +
       formHtml(keepForm) +
@@ -901,7 +906,10 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     if (t.status === 'Counting') out.push(b('Submit for Review', 'stSubmit'));
     if (t.status === 'Submitted') { out.push(b('Approve', 'stApprove')); out.push(b('Send Back for Recount', 'stReject', BTN2)); }
     if (t.status === 'Approved') out.push(b('Post Adjustments', 'stPost'));
-    out.push('<button class="' + BTN2 + '" onclick="stExport(\'' + esc(t.id) + '\')">Export (Excel)</button>');
+    var kk = totals(t);
+    if (t.status === 'Draft' || t.status === 'Counting') out.push('<button class="' + BTN2 + '" onclick="stImport(\'' + esc(t.id) + '\')">Import Count (CSV)</button>');
+    if (kk.counted > 0 && !(blindNow(t) && !canApprove())) out.push(b(t.status === 'Draft' || t.status === 'Counting' ? 'Generate Variance Report' : 'Variance Report', 'stVariance'));
+    out.push('<button class="' + BTN2 + '" onclick="stExport(\'' + esc(t.id) + '\')">Export (CSV)</button>');
     out.push('<button class="' + BTN2 + '" onclick="stPrint(\'' + esc(t.id) + '\')">Print Count Sheet</button>');
     return out.join(' ');
   }
@@ -929,10 +937,10 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
         : (t.status === 'Draft' ? '<div class="text-xs text-gray-600 mb-3">Items are loaded. Click <b>Start Counting</b> to begin entering physical quantities.</div>' : '')) +
       '<div class="bg-white p-4 rounded shadow mb-6"><div class="overflow-x-auto"><table class="w-full border-collapse border border-gray-300 text-sm"><thead class="bg-gray-100"><tr>' + hdrs + '</tr></thead><tbody id="stBody">' +
       t.lines.map(function (l, i) { return rowHtml(t, l, i); }).join('') + '</tbody></table></div>' +
-      (t.status === 'Posted' ? '<div class="text-xs text-gray-600 mt-2">Posted. Adjustments were added to Stock Activity under reference ' + esc(t.no) + '.</div>' : '') + '</div>';
+      (t.status === 'Posted' ? '<div class="text-xs text-gray-600 mt-2">' + (t.postedVia === 'Bulk Adjustment' ? 'Adjusted through Inventory &gt; Bulk Adjustment' + (t.postedDate ? ' on ' + esc(fmtDate(t.postedDate)) : '') + '. See the Bulk Adjustment log.' : 'Posted. Adjustments were added to Stock Activity under reference ' + esc(t.no) + '.') + '</div>' : '') + '</div>';
     var sc = $('stScan'); if (sc) sc.focus();
   }
-  function render() { if (state.view === 'sheet') renderSheet(); else renderRegister(); }
+  function render() { if (state.view === 'sheet') renderSheet(); else if (state.view === 'report') renderReport(); else renderRegister(); }
 
   /* ---------- editing the sheet (events on the whole page) ---------- */
   function persistSoon(t) { clearTimeout(saveTimer); saveTimer = setTimeout(function () { put(t); }, 250); }
@@ -1011,14 +1019,14 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   w.stPost = function (id) {
     var t = byId(id); if (!t || t.status !== 'Approved') return;
     if (!canApprove()) return alert('Only an authorised person (Admin or Accounts) can post adjustments.');
-    var diff = t.lines.filter(function (l) { return calc(l).v !== 0; }), k = totals(t);
+    var diff = t.lines.filter(function (l) { return calc(l).v !== 0 && !l.adjusted; }), k = totals(t);
     if (!confirm('Post ' + t.no + '? ' + diff.length + ' adjustment(s) will change the balances in ' + t.warehouse + ' and appear in Stock Activity. This cannot be undone.')) return;
     var inv = w.getInventory(t.warehouse) || [], acts = rd('stockActivities'), now = today();
     diff.forEach(function (l, n) {
       var v = calc(l).v, hit = inv.filter(function (x) { return x && ((l.sku && x.sku && low(x.sku) === low(l.sku)) || low(x.name) === low(l.name)); })[0];
       if (!hit) { if (v < 0) return; hit = { name: l.name, sku: l.sku, category: l.category, qty: 0 }; inv.push(hit); }
       var before = num(hit.qty), after = Math.max(0, r4(before + v)), applied = r4(after - before);
-      hit.qty = after; l.postedQty = applied;
+      hit.qty = after; l.postedQty = applied; l.adjusted = true; l.adjustedVia = 'Stock take post';
       if (!applied) return;
       acts.push({ id: 'SA' + Date.now() + '_' + n, no: nextNo(acts, 'ACT-', 'no', 4), type: applied > 0 ? 'Adjustment (increase)' : 'Adjustment (decrease)', item: l.name, sku: l.sku || '', warehouse: t.warehouse,
         qin: applied > 0 ? applied : 0, qout: applied < 0 ? -applied : 0, date: now, reference: t.no, reason: 'Stock take' + (l.reason ? ': ' + l.reason : '') + (l.remarks ? ' - ' + l.remarks : ''), by: who() });
@@ -1041,12 +1049,289 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     });
     return [head].concat(rows);
   }
-  w.stExport = function (id) {
-    var t = byId(id); if (!t) return;
-    var csv = sheetRows(t).map(function (r) { return r.map(function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }).join(','); }).join('\r\n');
-    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })); a.download = t.no + '-count-sheet.csv';
+  /* ---------- CSV export / import ---------- */
+  /* One column layout for every sheet. Blind counts leave out the system columns (indexes 6, 8, 9, 10). */
+  var CSV_HEAD = ['Stock Take No.', 'Warehouse', 'Item Name', 'SKU', 'Barcode', 'Category', 'System Qty', 'Physical Qty', 'Variance', 'Unit Cost', 'Variance Value', 'Reason for Variance', 'Remarks'];
+  var SYS_COLS = [6, 8, 9, 10];
+  function pick(arr, withSys) { return withSys ? arr : arr.filter(function (v, i) { return SYS_COLS.indexOf(i) < 0; }); }
+  function lineRow(no, l) {
+    var k = calc(l);
+    return [no || '', l.warehouse, l.name, l.sku || '', l.barcode || '', l.category || '', num(l.systemQty), k.counted ? l.physicalQty : '', k.v == null ? '' : k.v, num(l.unitCost), k.val == null ? '' : k.val, l.reason || '', l.remarks || ''];
+  }
+  function saveCsv(name, rows) {
+    var csv = rows.map(function (r) { return r.map(function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }).join(','); }).join('\r\n');
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' })); a.download = name;
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function safeName(s) { return String(s || '').replace(/[^\w\-]+/g, '-').replace(/^-+|-+$/g, '') || 'stock'; }
+
+  /* Export of one stock take (open on the working sheet) */
+  w.stExport = function (id) {
+    var t = byId(id); if (!t) return; var sys = !blindNow(t);
+    saveCsv(t.no + '-count-sheet.csv', [pick(CSV_HEAD, sys)].concat(t.lines.map(function (l) { return pick(lineRow(t.no, l), sys); })));
   };
+
+  /* Export straight from the Stock module: physical qty and variance stay blank until the count is imported */
+  function stockSheet(wh, cat) {
+    var open = takes().filter(function (t) { return t.warehouse === wh && (t.status === 'Draft' || t.status === 'Counting') && (!cat || !t.category || t.category === cat); })[0];
+    if (open) {
+      open = byId(open.id) || open; var sys = !blindNow(open);
+      var ls = open.lines.filter(function (l) { return !cat || l.category === cat; });
+      return { count: ls.length, rows: [pick(CSV_HEAD, sys)].concat(ls.map(function (l) { return pick(lineRow(open.no, l), sys); })) };
+    }
+    var seen = {}, lines = [];
+    invOf(wh).forEach(function (it) {
+      if (cat && catOf(it) !== cat) return;
+      var key = low(it.sku || it.name); if (seen[key]) return; seen[key] = 1;
+      lines.push({ warehouse: wh, name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '' });
+    });
+    return { count: lines.length, rows: [CSV_HEAD].concat(lines.map(function (l) { return lineRow('', l); })) };
+  }
+  w.stExportStock = function () {
+    var old = $('stExpModal'); if (old) old.remove();
+    var whs = warehouses(); if (!whs.length) return alert('No warehouses were found. Add a warehouse first.');
+    var o = document.createElement('div'); o.id = 'stExpModal';
+    o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:12px';
+    o.innerHTML = '<div style="background:#fff;border-radius:10px;max-width:420px;width:100%;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.3)">' +
+      '<div style="font-weight:700;font-size:15px">Export Stock Sheet (CSV)</div>' +
+      '<div style="font-size:12px;color:#6b7280;margin:4px 0 12px">Takes the current stock from the Stock module. Physical Qty and Variance are left blank: fill in Physical Qty while counting, then use Import Count (CSV).</div>' +
+      '<label class="block text-sm font-semibold mb-1">Warehouse <span class="text-red-500">*</span></label><select id="stExpWh" class="' + INP + ' mb-3"><option value="">Select Warehouse</option>' + whs.map(function (n) { return '<option>' + esc(n) + '</option>'; }).join('') + '</select>' +
+      '<label class="block text-sm font-semibold mb-1">Category <span class="text-xs font-normal text-gray-500">(optional)</span></label><select id="stExpCat" class="' + INP + ' mb-4"><option value="">All categories</option></select>' +
+      '<div class="text-right space-x-2"><button class="' + BTN + ' font-semibold" id="stExpGo">Download CSV</button><button class="bg-gray-500 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-600" id="stExpX">Cancel</button></div></div>';
+    document.body.appendChild(o);
+    o.addEventListener('mousedown', function (e) { if (e.target === o) o.remove(); });
+    $('stExpX').onclick = function () { o.remove(); };
+    $('stExpWh').onchange = function () {
+      var cats = {}; invOf(this.value).forEach(function (it) { var c = catOf(it); if (c) cats[c] = 1; });
+      $('stExpCat').innerHTML = '<option value="">All categories</option>' + Object.keys(cats).sort().map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('');
+    };
+    $('stExpGo').onclick = function () {
+      var wh = $('stExpWh').value, cat = $('stExpCat').value; if (!wh) return alert('Please choose the warehouse.');
+      var sh = stockSheet(wh, cat); if (!sh.count) return alert('No items were found in this warehouse' + (cat ? ' and category' : '') + '.');
+      saveCsv('stock-count-' + safeName(wh) + '-' + today() + '.csv', sh.rows); o.remove();
+    };
+  };
+
+  /* ---- reading a CSV (or Excel, when the Excel library is loaded) ---- */
+  function parseCsv(text) {
+    text = String(text || '').replace(/^\ufeff/, '');
+    var first = text.split(/\r?\n/)[0] || '', best = ',', bc = -1;
+    [',', ';', '\t'].forEach(function (d) { var c = 0, q = false; for (var i = 0; i < first.length; i++) { var ch = first.charAt(i); if (ch === '"') q = !q; else if (!q && ch === d) c++; } if (c > bc) { bc = c; best = d; } });
+    var rows = [], row = [], cur = '', q = false, i, ch;
+    for (i = 0; i < text.length; i++) {
+      ch = text.charAt(i);
+      if (q) { if (ch === '"') { if (text.charAt(i + 1) === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === best) { row.push(cur); cur = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text.charAt(i + 1) === '\n') i++; row.push(cur); cur = ''; rows.push(row); row = []; }
+      else cur += ch;
+    }
+    if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (c) { return String(c).trim() !== ''; }); });
+  }
+  var HMAP = {
+    no: ['stocktakeno', 'stocktake', 'countno', 'takeno', 'reference', 'ref'], wh: ['warehouse', 'location'],
+    name: ['itemname', 'item', 'product', 'productname', 'name'], sku: ['sku', 'itemcode', 'productcode', 'code'], barcode: ['barcode'],
+    phys: ['physicalqty', 'physicalquantity', 'physical', 'countedqty', 'counted', 'countqty', 'count', 'actualqty', 'actual', 'qtycounted'],
+    reason: ['reasonforvariance', 'reason'], remarks: ['remarks', 'remark', 'notes', 'note']
+  };
+  function hk(s) { return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]/g, ''); }
+  function findHeader(rows) {
+    for (var i = 0; i < rows.length && i < 15; i++) {
+      var c = {}; rows[i].forEach(function (h, ci) { var k = hk(h); Object.keys(HMAP).forEach(function (f) { if (c[f] == null && HMAP[f].indexOf(k) > -1) c[f] = ci; }); });
+      if (c.phys != null && (c.sku != null || c.name != null || c.barcode != null)) return { h: i, c: c };
+    }
+    return null;
+  }
+  function parseQty(v) {
+    var s = String(v == null ? '' : v).replace(/\s/g, ''); if (s === '') return null;
+    if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) s = s.replace(/,/g, ''); else if (/^-?\d+,\d+$/.test(s)) s = s.replace(',', '.');
+    if (!/^-?\d*\.?\d+$/.test(s)) return NaN; return parseFloat(s);
+  }
+  function readTable(file, cb) {
+    var isX = /\.xlsx?$/i.test(file.name), fr = new FileReader();
+    fr.onerror = function () { alert('Could not read the file.'); };
+    fr.onload = function () {
+      try {
+        var text;
+        if (isX) { if (!w.XLSX) return alert('Excel files cannot be read here. Save the sheet as CSV and import that.'); var wb = w.XLSX.read(fr.result, { type: 'array' }); text = w.XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]); }
+        else text = fr.result;
+        var rows = parseCsv(text), hd = findHeader(rows);
+        if (!hd) return alert('The columns were not recognised. The file needs a "Physical Qty" column and an "Item Name" or "SKU" column. Use the sheet from Export Stock Sheet.');
+        cb({ rows: rows, h: hd.h, c: hd.c });
+      } catch (e) { console.error('[stock take import]', e); alert('Could not read that file: ' + e.message); }
+    };
+    if (isX) fr.readAsArrayBuffer(file); else fr.readAsText(file);
+  }
+  function pickFile(cb) {
+    var inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.csv,.txt,text/csv' + (w.XLSX ? ',.xlsx,.xls' : ''); inp.style.display = 'none';
+    inp.onchange = function () { var f = inp.files && inp.files[0]; inp.remove(); if (f) readTable(f, cb); };
+    document.body.appendChild(inp); inp.click();
+  }
+
+  /* put the file's physical quantities on the stock take lines (matching on SKU, then barcode, then name) */
+  function applyImport(t, tbl) {
+    var c = tbl.c, idx = { sku: {}, bc: {}, name: {} }, touched = {}, res = { set: 0, blank: 0, unmatched: [], invalid: [], otherWh: 0, dup: 0 };
+    t.lines.forEach(function (l, i) {
+      if (l.sku && idx.sku[low(l.sku)] == null) idx.sku[low(l.sku)] = i;
+      if (l.barcode && idx.bc[low(l.barcode)] == null) idx.bc[low(l.barcode)] = i;
+      if (idx.name[low(l.name)] == null) idx.name[low(l.name)] = i;
+    });
+    tbl.rows.slice(tbl.h + 1).forEach(function (r) {
+      var g = function (k) { return c[k] == null ? '' : String(r[c[k]] == null ? '' : r[c[k]]).trim(); };
+      var name = g('name'), sku = g('sku'), bc = g('barcode'); if (!name && !sku && !bc) return;
+      var wh = g('wh'); if (wh && low(wh) !== low(t.warehouse)) { res.otherWh++; return; }
+      var i = sku && idx.sku[low(sku)] != null ? idx.sku[low(sku)] : bc && idx.bc[low(bc)] != null ? idx.bc[low(bc)] : name && idx.name[low(name)] != null ? idx.name[low(name)] : -1;
+      if (i < 0) { res.unmatched.push(sku || name || bc); return; }
+      var q = parseQty(g('phys'));
+      if (q === null) { res.blank++; return; }
+      if (isNaN(q) || q < 0) { res.invalid.push(t.lines[i].name + ' (' + g('phys') + ')'); return; }
+      var l = t.lines[i]; if (touched[i]) res.dup++; touched[i] = 1;
+      l.physicalQty = q; l.countedBy = who(); l.countedAt = new Date().toISOString();
+      var rs = g('reason'), rm = g('remarks');
+      if (rs) { var hit = REASONS.filter(function (x) { return low(x) === low(rs); })[0]; if (hit) l.reason = hit; else { l.reason = 'Other'; if (!rm) rm = rs; } }
+      if (rm) l.remarks = rm;
+      res.set++;
+    });
+    if (res.set && !t.countedBy) t.countedBy = who();
+    return res;
+  }
+  function importNote(res) {
+    var m = res.set + ' physical count(s) imported.';
+    if (res.blank) m += '\n' + res.blank + ' row(s) had no Physical Qty and were left uncounted.';
+    if (res.unmatched.length) m += '\n' + res.unmatched.length + ' row(s) were not found in this stock take and were ignored: ' + res.unmatched.slice(0, 5).join(', ') + (res.unmatched.length > 5 ? ', ...' : '');
+    if (res.invalid.length) m += '\n' + res.invalid.length + ' row(s) had an invalid quantity and were skipped: ' + res.invalid.slice(0, 5).join(', ') + (res.invalid.length > 5 ? ', ...' : '');
+    if (res.otherWh) m += '\n' + res.otherWh + ' row(s) belong to another warehouse and were skipped.';
+    if (res.dup) m += '\n' + res.dup + ' item(s) appeared more than once; the last row was used.';
+    return m;
+  }
+  function finishImport(t) {
+    if (blindNow(t) && !canApprove()) { state = { view: 'sheet', id: t.id, t: null }; render(); return; }
+    genVariance(t);
+  }
+  w.stImport = function (id) {
+    var t0 = byId(id); if (!t0) return;
+    if (t0.status !== 'Draft' && t0.status !== 'Counting') return alert('Counts can only be imported while the stock take is Draft or Counting.');
+    pickFile(function (tbl) {
+      var t = byId(id); if (!t) return;
+      var res = applyImport(t, tbl);
+      if (!res.set) return alert(importNote(res) + '\n\nNothing was changed.');
+      if (t.status === 'Draft') { t.status = 'Counting'; t.countStartedAt = new Date().toISOString(); }
+      put(t); alert(importNote(res)); finishImport(t);
+    });
+  };
+  /* Import from the register: finds the stock take from the Stock Take No. / Warehouse columns, or starts a new one */
+  w.stImportAny = function () {
+    pickFile(function (tbl) {
+      var c = tbl.c, noV = '', whs = {}, list = takes(), t = null, created = false;
+      tbl.rows.slice(tbl.h + 1).forEach(function (r) {
+        if (c.no != null && !noV) { var v = String(r[c.no] == null ? '' : r[c.no]).trim(); if (v) noV = v; }
+        if (c.wh != null) { var x = String(r[c.wh] == null ? '' : r[c.wh]).trim(); if (x) whs[x] = 1; }
+      });
+      if (noV) {
+        t = list.filter(function (x) { return low(x.no) === low(noV); })[0];
+        if (!t) return alert('Stock take ' + noV + ' was not found.');
+      } else {
+        var names = Object.keys(whs);
+        if (names.length !== 1) return alert(names.length ? 'The file contains more than one warehouse. Import one warehouse per file.' : 'Cannot tell which warehouse this file is for. Use the sheet from Export Stock Sheet (it has the Warehouse column), or open a stock take and use Import Count inside it.');
+        var wh = warehouses().filter(function (n) { return low(n) === low(names[0]); })[0];
+        if (!wh) return alert('Warehouse "' + names[0] + '" was not found.');
+        t = list.filter(function (x) { return x.warehouse === wh && x.status !== 'Posted'; })[0];
+        if (!t) {
+          var seen = {}, lines = [];
+          invOf(wh).forEach(function (it) {
+            var key = low(it.sku || it.name); if (seen[key]) return; seen[key] = 1;
+            lines.push({ key: key, name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: wh, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
+          });
+          if (!lines.length) return alert('No items were found in ' + wh + ' to count.');
+          t = { id: 'STK' + Date.now(), no: nextNo(list, 'ST-', 'no', 3), date: today(), warehouse: wh, category: '', method: 'Full Count', assignedTo: who(), notes: 'Created from an imported count file', blind: false, status: 'Counting', countStartedAt: new Date().toISOString(),
+            createdBy: who(), createdAt: new Date().toISOString(), countedBy: '', submittedBy: '', approvedBy: '', postedBy: '', lines: lines };
+          created = true;
+        }
+      }
+      t = byId(t.id) || t;
+      if (t.status !== 'Draft' && t.status !== 'Counting') return alert('Stock take ' + t.no + ' is ' + t.status + ' and can no longer take a new count. ' + (t.status === 'Posted' ? 'Start a new stock take instead.' : 'Finish or post it first.'));
+      var res = applyImport(t, tbl);
+      if (!res.set) return alert(importNote(res) + '\n\nNothing was changed.');
+      if (t.status === 'Draft') { t.status = 'Counting'; t.countStartedAt = new Date().toISOString(); }
+      put(t);
+      alert(importNote(res) + '\n\n' + (created ? 'A new stock take ' + t.no + ' was created for ' + t.warehouse + '.' : 'Counts were added to stock take ' + t.no + ' (' + t.warehouse + ').'));
+      finishImport(t);
+    });
+  };
+
+  /* ---------- variance report ---------- */
+  function genVariance(t) {
+    var k = totals(t);
+    if (!k.counted) { alert('Enter or import at least one physical count first.'); return false; }
+    if (blindNow(t) && !canApprove()) { alert('This is a blind count. Variances stay hidden until it is submitted.'); return false; }
+    t.varianceAt = new Date().toISOString(); t.varianceBy = who(); put(t);
+    state = { view: 'report', id: t.id, t: null }; render(); return true;
+  }
+  w.stVariance = function (id) {
+    var t = byId(id); if (!t) return;
+    if (t.status === 'Draft' || t.status === 'Counting') { flush(t); genVariance(t); }
+    else { state = { view: 'report', id: id, t: null }; render(); }
+  };
+  function varLines(t) { var out = []; t.lines.forEach(function (l) { var k = calc(l); if (k.counted && k.v !== 0) out.push({ l: l, k: k }); }); return out; }
+  function renderReport() {
+    var root = rootEl(); if (!root) return;
+    state.t = null; var t = byId(state.id); state.t = t || null;
+    if (!t) { state = { view: 'register', id: null, t: null }; return renderRegister(); }
+    var rows = varLines(t), k = totals(t), shortU = 0, shortV = 0, surU = 0, surV = 0, pending = 0;
+    rows.forEach(function (x) { if (x.k.v < 0) { shortU += -x.k.v; shortV += x.k.val; } else { surU += x.k.v; surV += x.k.val; } if (!x.l.adjusted) pending++; });
+    var card = function (l, v, cls) { return '<div class="bg-white rounded shadow p-3"><div class="text-xs text-gray-500">' + l + '</div><div class="text-lg font-bold ' + (cls || 'text-blue-900') + '">' + v + '</div></div>'; };
+    var td = 'border p-2', tdr = td + ' text-right';
+    var body = rows.length ? rows.map(function (x) {
+      var l = x.l, v = x.k.v, cls = v < 0 ? 'text-red-600 font-semibold' : 'text-green-700 font-semibold';
+      return '<tr><td class="' + td + '">' + esc(l.name) + '</td><td class="' + td + '">' + esc(l.sku) + '</td><td class="' + td + '">' + esc(l.category) + '</td><td class="' + tdr + '">' + esc(l.systemQty) + '</td><td class="' + tdr + '">' + esc(l.physicalQty) + '</td>' +
+        '<td class="' + tdr + ' ' + cls + '">' + signed(v) + '</td><td class="' + tdr + '">' + money(num(l.unitCost)) + '</td><td class="' + tdr + ' ' + cls + '">' + money(x.k.val) + '</td><td class="' + td + '">' + esc(l.reason || '') + '</td>' +
+        '<td class="' + td + '">' + (l.adjusted ? '<span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800">Adjusted</span>' : '<span class="px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-800">Pending</span>') + '</td></tr>';
+    }).join('') : '<tr><td colspan="10" class="text-center p-4 text-gray-500">No variances. Every counted item matches the system quantity.</td></tr>';
+    var canGo = t.status !== 'Posted' && pending > 0;
+    var tid = esc(t.id);
+    root.innerHTML =
+      '<div class="mb-2"><button class="text-sm text-blue-900 underline" onclick="stOpen(\'' + tid + '\')">&larr; Back to count sheet</button> <span class="text-gray-300 mx-1">|</span> <button class="text-sm text-blue-900 underline" onclick="stBack()">Stock Take Register</button></div>' +
+      '<div class="flex flex-col md:flex-row md:items-start justify-between gap-3 mb-3"><div><h2 class="text-sm font-bold">Variance Report: ' + esc(t.no) + ' <span class="ml-2 px-2 py-0.5 rounded text-xs ' + BADGE[t.status] + '">' + esc(t.status) + '</span></h2>' +
+      '<div class="text-sm text-gray-700 mt-1">Warehouse: ' + esc(t.warehouse) + ' &nbsp;|&nbsp; Count date: ' + esc(fmtDate(t.date)) + (t.category ? ' &nbsp;|&nbsp; Category: ' + esc(t.category) : '') + '</div></div>' +
+      '<div class="flex flex-wrap gap-2"><button class="' + BTN2 + '" onclick="stExportVar(\'' + tid + '\')">Export Variance (CSV)</button><button class="' + BTN2 + '" onclick="stPrintVar(\'' + tid + '\')">Print</button>' +
+      (canGo ? '<button class="' + BTN + ' font-semibold" onclick="stGoBulk(\'' + tid + '\')">Go to Bulk Adjustment</button>' : '') + '</div></div>' +
+      flowHtml(t) +
+      '<div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">' + card('Counted', k.counted + ' of ' + k.total) + card('Items with variance', rows.length, rows.length ? 'text-red-600' : 'text-blue-900') + card('Shortage', '-' + r4(shortU) + ' (' + money(shortV) + ')', 'text-red-600') + card('Surplus', '+' + r4(surU) + ' (' + money(surV) + ')', 'text-green-700') + card('Net variance value', money(k.val), k.val < 0 ? 'text-red-600' : k.val > 0 ? 'text-green-700' : 'text-blue-900') + '</div>' +
+      (k.total > k.counted ? '<div class="text-xs text-yellow-700 mb-2">' + (k.total - k.counted) + ' item(s) have not been counted. They are left out of this report and will not be adjusted.</div>' : '') +
+      '<div class="bg-white p-4 rounded shadow mb-6"><div class="overflow-x-auto"><table class="w-full border-collapse border border-gray-300 text-sm"><thead class="bg-gray-100"><tr>' +
+      ['Item Name', 'SKU', 'Category', 'System Qty', 'Physical Qty', 'Variance', 'Unit Cost', 'Variance Value', 'Reason', 'Adjustment'].map(function (h, i) { return '<th class="border p-2 text-' + (i > 2 && i < 8 ? 'right' : 'left') + ' whitespace-nowrap">' + h + '</th>'; }).join('') + '</tr></thead><tbody>' + body + '</tbody></table></div>' +
+      '<div class="text-xs text-gray-600 mt-2">' + (t.status === 'Posted' ? 'All variances in this count have been adjusted.' : canGo ? 'Next: open <b>Bulk Adjustment</b>, pick <b>' + esc(t.warehouse) + '</b> and the adjustment quantities are already filled in from this report. Review them and click Apply Adjustments.' : '') + '</div></div>';
+  }
+  w.stExportVar = function (id) {
+    var t = byId(id); if (!t) return;
+    var head = ['Stock Take No.', 'Warehouse', 'Item Name', 'SKU', 'Category', 'System Qty', 'Physical Qty', 'Variance', 'Unit Cost', 'Variance Value', 'Reason for Variance', 'Remarks', 'Adjustment'];
+    saveCsv(t.no + '-variance-report.csv', [head].concat(varLines(t).map(function (x) { var l = x.l; return [t.no, l.warehouse, l.name, l.sku || '', l.category || '', num(l.systemQty), l.physicalQty, x.k.v, num(l.unitCost), x.k.val, l.reason || '', l.remarks || '', l.adjusted ? 'Adjusted' : 'Pending']; })));
+  };
+  w.stPrintVar = function (id) {
+    var t = byId(id); if (!t) return;
+    var pw = window.open('', '', 'width=1000,height=700'); if (!pw) return alert('Allow pop-ups to print.');
+    var head = ['Item Name', 'SKU', 'Category', 'System Qty', 'Physical Qty', 'Variance', 'Unit Cost', 'Variance Value', 'Reason'], k = totals(t);
+    var cell = 'border:1px solid #ccc;padding:6px;text-align:left;';
+    var tbl = '<table style="width:100%;border-collapse:collapse;font-size:12px"><tr>' + head.map(function (h) { return '<th style="background:#1e3a8a;color:#fff;' + cell + '">' + h + '</th>'; }).join('') + '</tr>' +
+      varLines(t).map(function (x) { var l = x.l; return '<tr>' + [l.name, l.sku, l.category, l.systemQty, l.physicalQty, signed(x.k.v), money(num(l.unitCost)), money(x.k.val), l.reason || ''].map(function (v) { return '<td style="' + cell + '">' + esc(v) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>';
+    pw.document.write('<html><head><title>' + esc(t.no) + ' variance</title></head><body style="font-family:Arial,sans-serif;padding:16px;color:#333"><h2 style="color:#1e3a8a;margin:0">Stock Take Variance Report ' + esc(t.no) + '</h2>' +
+      '<div style="margin:6px 0 12px;font-size:13px">Warehouse: ' + esc(t.warehouse) + ' &nbsp;|&nbsp; Date: ' + esc(fmtDate(t.date)) + ' &nbsp;|&nbsp; Net variance: ' + signed(k.net) + ' unit(s), ' + esc(money(k.val)) + '</div>' + tbl +
+      '<div style="margin-top:30px;font-size:12px">Prepared by: ________________ &nbsp;&nbsp; Approved by: ________________ &nbsp;&nbsp; Date: ____________</div></body></html>');
+    pw.document.close(); pw.focus(); setTimeout(function () { pw.print(); }, 300);
+  };
+  w.stGoBulk = function (id) {
+    var t = byId(id); if (!t) return;
+    if (typeof w.showTab !== 'function') return alert('Open Inventory > Bulk Adjustment and choose ' + t.warehouse + '.');
+    w.showTab('BulkAdjustment');
+    var tries = 0;
+    (function pickWh() {
+      var sel = $('baWarehouseSelect');
+      if (sel && Array.prototype.some.call(sel.options, function (o) { return o.value === t.warehouse; })) { sel.value = t.warehouse; sel.dispatchEvent(new Event('change', { bubbles: true })); return; }
+      if (tries++ < 20) setTimeout(pickWh, 150); else alert('Choose ' + t.warehouse + ' in the Warehouse list on the Bulk Adjustment page.');
+    })();
+  };
+
   w.stPrint = function (id) {
     var t = byId(id); if (!t) return;
     var rows = sheetRows(t), pw = window.open('', '', 'width=1000,height=700'); if (!pw) return alert('Allow pop-ups to print.');
@@ -1062,6 +1347,114 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       '<div style="margin-top:30px;font-size:12px">Counted by: ________________ &nbsp;&nbsp; Approved by: ________________ &nbsp;&nbsp; Date: ____________</div></body></html>');
     pw.document.close(); pw.focus(); setTimeout(function () { pw.print(); }, 300);
   };
+
+  /* ---------- Variance feed for Inventory > Bulk Adjustment ---------- */
+  /* A count is "ready" once its variance report has been generated (or it has been submitted/approved) and it is not posted yet.
+   * Bulk Adjustment then shows the variance for that warehouse and pre-fills the adjustment quantity. After the adjustment is
+   * applied the lines are marked adjusted, and the stock take becomes Posted when every variance line is done. */
+  function allTakes() { return takes().map(function (t) { return state.t && state.t.id === t.id ? state.t : t; }); }
+  function readyForBulk(t) { return !!t && t.status !== 'Posted' && t.status !== 'Draft' && (!!t.varianceAt || t.status === 'Submitted' || t.status === 'Approved'); }
+  function lineKey(l) { return l.key || low(l.sku || l.name); }
+  w.acxStockTakeVariance = function (wh) {
+    var res = { map: {}, takes: [], items: 0, net: 0 };
+    allTakes().forEach(function (t) {
+      if (t.warehouse !== wh || !readyForBulk(t)) return;
+      var n = 0, net = 0;
+      t.lines.forEach(function (l) {
+        if (l.adjusted) return; var k = calc(l); if (!k.counted || !k.v) return;
+        res.map[lineKey(l)] = { v: k.v, sys: num(l.systemQty), phys: k.p, no: t.no, reason: 'Stock take ' + t.no + (l.reason ? ': ' + l.reason : '') };
+        n++; net += k.v;
+      });
+      res.takes.push({ no: t.no, date: t.date, items: n, net: r4(net) }); res.items += n; res.net = r4(res.net + net);
+    });
+    return res;
+  };
+  w.acxStockTakeMarkAdjusted = function (wh, items) {
+    var now = new Date().toISOString(), changed = false;
+    allTakes().forEach(function (t) {
+      if (t.warehouse !== wh || !readyForBulk(t)) return;
+      var hit = false;
+      items.forEach(function (it) {
+        t.lines.forEach(function (l) {
+          if (lineKey(l) === it.key && !l.adjusted && calc(l).v) { l.adjusted = true; l.adjustedQty = it.applied; l.adjustedAt = now; l.adjustedBy = who(); l.adjustedVia = 'Bulk Adjustment'; hit = true; }
+        });
+      });
+      if (!hit) return;
+      var left = t.lines.filter(function (l) { var k = calc(l); return k.counted && k.v !== 0 && !l.adjusted; });
+      if (!left.length) { t.status = 'Posted'; t.postedVia = 'Bulk Adjustment'; t.postedBy = who(); t.postedAt = now; t.postedDate = today(); }
+      put(t); changed = true;
+    });
+    if (changed) { try { if (typeof w.renderBAProducts === 'function') w.renderBAProducts(); } catch (e) {} }
+  };
+
+  /* ---- Bulk Adjustment page: variance column, banner, pre-filled quantities ---- */
+  function baHeader() {
+    var body = $('baProductBody'); if (!body) return; var table = body.closest('table'); if (!table) return;
+    var tr = table.querySelector('thead tr'); if (!tr || tr.querySelector('[data-ba-var]')) return;
+    var th = document.createElement('th'); th.className = 'p-3.5'; th.setAttribute('data-ba-var', '1'); th.textContent = 'Stock Take Variance';
+    var ref = tr.children[2]; tr.insertBefore(th, ref ? ref.nextSibling : null);
+  }
+  function baBanner() {
+    var b = $('baVarBanner'); if (b) return b;
+    var sel = $('baWarehouseSelect'); if (!sel || !sel.parentNode || !sel.parentNode.parentNode) return null;
+    b = document.createElement('div'); b.id = 'baVarBanner'; sel.parentNode.parentNode.insertBefore(b, sel.parentNode.nextSibling); return b;
+  }
+  function baFill(tr, force) {
+    var v = tr.getAttribute('data-ba-v'); if (v == null) return;
+    var inp = tr.querySelector('.baAdjInput'), rs = tr.querySelector('.baReasonInput');
+    if (inp && (force || !inp.value)) inp.value = v;
+    if (rs && (force || !rs.value)) rs.value = tr.getAttribute('data-ba-reason') || '';
+  }
+  function baDecorate() {
+    var body = $('baProductBody'); if (!body) return;
+    baHeader();
+    var sel = $('baWarehouseSelect'), wh = sel ? sel.value : '';
+    var V = wh ? w.acxStockTakeVariance(wh) : { map: {}, takes: [], items: 0, net: 0 };
+    Array.prototype.forEach.call(body.querySelectorAll('tr'), function (tr) {
+      if (!tr.hasAttribute('data-id')) { var c1 = tr.querySelector('td[colspan="5"]'); if (c1) c1.setAttribute('colspan', '6'); return; }
+      if (tr.getAttribute('data-ba-done')) return; tr.setAttribute('data-ba-done', '1');
+      var tds = tr.children, name = (tds[0].textContent || '').trim(), sku = (tds[1].textContent || '').trim(); if (sku === '-') sku = '';
+      var key = low(sku || name), e = V.map[key], ref = tds[3] || null, cell = document.createElement('td'); cell.className = 'p-3.5';
+      if (e) {
+        var cur = parseFloat((tds[2].textContent || '').trim()) || 0, moved = Math.abs(cur - e.sys) > 0.00001;
+        cell.innerHTML = '<span class="font-semibold ' + (e.v < 0 ? 'text-red-600' : 'text-green-700') + '">' + signed(e.v) + '</span> <span class="text-xs text-gray-500">' + esc(e.no) + '</span>' +
+          (moved ? ' <span class="text-amber-600" title="The system quantity was ' + esc(e.sys) + ' when this was counted and is ' + esc(cur) + ' now. Check the quantity before applying.">&#9888;</span>' : '');
+        tr.setAttribute('data-ba-v', e.v); tr.setAttribute('data-ba-key', key); tr.setAttribute('data-ba-reason', e.reason); tr.style.background = '#fefce8';
+        baFill(tr, false);
+      } else cell.innerHTML = '<span class="text-gray-300">-</span>';
+      tr.insertBefore(cell, ref);
+    });
+    var b = baBanner(); if (!b) return;
+    if (wh && V.items) {
+      var names = V.takes.filter(function (x) { return x.items; }).map(function (x) { return esc(x.no) + (x.date ? ' (' + esc(fmtDate(x.date)) + ')' : ''); }).join(', ');
+      b.className = 'mx-4 mt-3 p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-900 flex flex-wrap items-center gap-2';
+      b.innerHTML = '<span><b>Stock take variance loaded</b> from ' + names + ': ' + V.items + ' item(s) with variance, net ' + signed(V.net) + '. The Adjustment quantities are filled in from the count. Review them, then click Apply Adjustments.</span>' +
+        '<button type="button" id="baVarRefill" class="ml-auto px-3 py-1 bg-white border border-amber-300 rounded-lg text-xs font-medium hover:bg-amber-100">Re-fill from stock take</button>';
+    } else { b.className = 'hidden'; b.innerHTML = ''; }
+  }
+  function baWatch() {
+    var body = $('baProductBody'); if (!body || body.__baObs) return !!body;
+    body.__baObs = true; new MutationObserver(function () { try { baDecorate(); } catch (e) { console.error('[bulk adjustment variance]', e); } }).observe(body, { childList: true });
+    try { baDecorate(); } catch (e) {} return true;
+  }
+  var baTries = 0; (function baGo() { if (!baWatch() && baTries++ < 40) setTimeout(baGo, 500); })();
+  setTimeout(function () { try { baDecorate(); } catch (e) {} }, 1500);
+  document.addEventListener('change', function (e) { if (e.target && e.target.id === 'baWarehouseSelect') setTimeout(function () { try { baDecorate(); } catch (x) {} }, 0); });
+  function baLogLen(wh) { try { return (JSON.parse(localStorage.getItem('bulkAdjustments_' + wh) || '[]') || []).length; } catch (e) { return 0; } }
+  document.addEventListener('click', function (e) {
+    var t = e.target; if (!t || !t.closest) return;
+    if (t.closest('#baVarRefill')) { Array.prototype.forEach.call(document.querySelectorAll('#baProductBody tr[data-ba-v]'), function (tr) { baFill(tr, true); }); return; }
+    if (!t.closest('#applyBAAdjustmentsBtn')) return;
+    /* capture phase: this runs before Bulk Adjustment applies, so remember which variance rows are about to be adjusted */
+    var sel = $('baWarehouseSelect'); if (!sel || !sel.value) return; var wh = sel.value, snap = [];
+    Array.prototype.forEach.call(document.querySelectorAll('#baProductBody tr[data-ba-v]'), function (tr) {
+      var inp = tr.querySelector('.baAdjInput'), n = parseFloat(inp && inp.value || 0); if (n) snap.push({ key: tr.getAttribute('data-ba-key'), applied: n });
+    });
+    if (!snap.length) return;
+    var before = baLogLen(wh), tries = 0;
+    (function check() { if (baLogLen(wh) > before) w.acxStockTakeMarkAdjusted(wh, snap); else if (tries++ < 5) setTimeout(check, 150); })();
+  }, true);
+
 
   /* ---------- mount ---------- */
   setTimeout(function () { var t = $(TAB); if (t && !t.classList.contains('hidden')) render(); }, 800);
