@@ -1253,6 +1253,233 @@ try{
 
 }catch(e){console.error('[recycle-restore]',e)}
 ;
+;try{
+/* ===== merged from acacia-ai-recon.js ===== */
+/* acacia-ai-recon.js — AI bank statement matching inside Funds > Reconciliation.
+ * Upload a CSV / Excel / PDF statement; AI matches each line to an open invoice
+ * (money in) or bill (money out). High-confidence matches are marked paid
+ * automatically; everything else is flagged as unmatched for review.
+ */
+(function () {
+  "use strict";
+  var W = window, D = document;
+  var AUTO_PAY_CONFIDENCE = 0.85;
+  var URL_KEY = "aiReconServiceUrl";
+  var DEFAULT_URL = W.ACACIA_AI_RECON_URL || "";
+  function J(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function S(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+  function num(v) { var n = parseFloat(String(v == null ? "" : v).replace(/[^0-9.\-]/g, "")); return isNaN(n) ? 0 : n; }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function fmt(n) { var dp = W.__getDecimalPlaces ? W.__getDecimalPlaces() : 2; return Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: dp, maximumFractionDigits: dp }); }
+  function serviceUrl() { return (localStorage.getItem(URL_KEY) || DEFAULT_URL || "").replace(/\/+$/, ""); }
+  function loadScript(src) { return new Promise(function (ok, no) { var s = D.createElement("script"); s.src = src; s.onload = ok; s.onerror = function () { no(new Error("Could not load " + src)); }; D.head.appendChild(s); }); }
+
+  /* ---------- statement parsing ---------- */
+  function parseCSV(text) {
+    var rows = [], row = [], cur = "", q = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (q) { if (c === '"' && text[i + 1] === '"') { cur += '"'; i++; } else if (c === '"') q = false; else cur += c; }
+      else if (c === '"') q = true;
+      else if (c === "," || c === ";" || c === "\t") { row.push(cur); cur = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; }
+      else cur += c;
+    }
+    if (cur || row.length) { row.push(cur); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (x) { return String(x).trim(); }); });
+  }
+  function toISO(v) {
+    if (v instanceof Date) return v.toISOString().slice(0, 10);
+    if (typeof v === "number" && v > 20000 && v < 80000) return new Date(Math.round((v - 25569) * 864e5)).toISOString().slice(0, 10);
+    var s = String(v || "").trim(), m;
+    if ((m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/))) return m[1] + "-" + ("0" + m[2]).slice(-2) + "-" + ("0" + m[3]).slice(-2);
+    if ((m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/))) { var y = m[3].length === 2 ? "20" + m[3] : m[3]; return y + "-" + ("0" + m[2]).slice(-2) + "-" + ("0" + m[1]).slice(-2); }
+    var d = new Date(s); return isNaN(d) ? s : d.toISOString().slice(0, 10);
+  }
+  function rowsToLines(rows) {
+    var hi = rows.findIndex(function (r) { return r.some(function (c) { return /date/i.test(c); }); });
+    if (hi < 0) hi = 0;
+    var h = rows[hi].map(function (c) { return String(c).toLowerCase().trim(); });
+    function col(re) { return h.findIndex(function (c) { return re.test(c); }); }
+    var cDate = col(/date/), cDesc = col(/desc|narr|detail|particular|memo|reference|payee/),
+      cIn = col(/credit|deposit|money in|paid in|receipt/), cOut = col(/debit|withdraw|money out|paid out|payment/),
+      cAmt = col(/^amount|amount$|value/);
+    var lines = [];
+    rows.slice(hi + 1).forEach(function (r) {
+      var amt = 0;
+      if (cIn >= 0 || cOut >= 0) amt = num(cIn >= 0 ? r[cIn] : 0) - Math.abs(num(cOut >= 0 ? r[cOut] : 0));
+      else if (cAmt >= 0) amt = num(r[cAmt]);
+      if (!amt) return;
+      var desc = cDesc >= 0 ? r[cDesc] : r.filter(function (_, i) { return i !== cDate; }).join(" ");
+      lines.push({ line: lines.length, date: toISO(cDate >= 0 ? r[cDate] : ""), description: String(desc || "").trim().slice(0, 200), amount: amt });
+    });
+    return lines;
+  }
+  function readFile(file) {
+    var name = file.name.toLowerCase();
+    if (name.endsWith(".pdf")) {
+      return new Promise(function (ok, no) {
+        var fr = new FileReader();
+        fr.onload = function () { ok({ pdfBase64: String(fr.result).split(",")[1] }); };
+        fr.onerror = no; fr.readAsDataURL(file);
+      });
+    }
+    if (/\.(xlsx|xls)$/.test(name)) {
+      return (W.XLSX ? Promise.resolve() : loadScript("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js")).then(function () {
+        return file.arrayBuffer();
+      }).then(function (buf) {
+        var wb = W.XLSX.read(buf, { type: "array", cellDates: true });
+        var rows = W.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: "" });
+        return { lines: rowsToLines(rows) };
+      });
+    }
+    return file.text().then(function (t) { return { lines: rowsToLines(parseCSV(t)) }; });
+  }
+
+  /* ---------- open documents ---------- */
+  function openInvoices() {
+    return J("invoices", []).filter(function (x) { return x && String(x.status || "").toLowerCase() !== "paid" && String(x.status || "").toLowerCase() !== "void"; })
+      .map(function (x) {
+        var t = num(x.totalKES != null ? x.totalKES : x.total), bal = x.balance != null ? num(x.balance) : t - num(x.amountPaid);
+        return { id: String(x.id), no: x.invoiceNumber || "", customer: x.customer || "", balance: +bal.toFixed(2), date: x.date || "", due: x.dueDate || "" };
+      }).filter(function (x) { return x.balance > 0; });
+  }
+  function openBills() {
+    return J("bills", []).map(function (x, i) {
+      if (!x || String(x.status || "").toLowerCase() === "paid") return null;
+      var bal = x.balance != null ? num(x.balance) : num(x.total) - num(x.paidAmount);
+      return bal > 0 ? { id: String(i), no: x.billNumber || "", supplier: x.supplier || x.vendor || "", balance: +bal.toFixed(2), date: x.date || "", due: x.dueDate || "" } : null;
+    }).filter(Boolean);
+  }
+
+  /* ---------- auto-mark paid ---------- */
+  function payInvoice(row, bank) {
+    var inv = J("invoices", []), rec = J("receipts", []), cp = J("customerPayments", []);
+    var c = inv.find(function (x) { return String(x.id) === row.docId; }); if (!c) return null;
+    var total = num(c.totalKES != null ? c.totalKES : c.total), paid = num(c.amountPaid);
+    var amt = Math.min(Math.abs(row.amount), Math.max(total - paid, 0)); if (amt <= 0) return null;
+    c.amountPaid = paid + amt; c.balance = Math.max(total - c.amountPaid, 0);
+    c.status = c.balance <= 0.005 ? "Paid" : "Partial"; if (c.status === "Paid") { c.balance = 0; c.paid = true; }
+    var id = Date.now() + Math.floor(Math.random() * 1e3), bi = J("banks", []).findIndex(function (b) { return b.name === bank; });
+    var ref = "Invoice " + (c.invoiceNumber || c.id) + " — AI bank match: " + row.description;
+    rec.push({ id: id, date: row.date, customer: c.customer, invoiceId: c.id, amount: amt, method: "Bank", bankIndex: bi, reference: ref, source: "aiBankMatch" });
+    cp.push({ id: "PAY-" + id, date: row.date, customer: c.customer, invoiceId: c.id, amount: amt, method: "Bank", bank: bank, receiptId: id, source: "aiBankMatch" });
+    S("invoices", inv); S("receipts", rec); S("customerPayments", cp);
+    return { label: "Invoice " + (c.invoiceNumber || c.id), status: c.status };
+  }
+  function payBill(row, bank) {
+    var bills = J("bills", []), bp = J("billPayments", []), i = parseInt(row.docId, 10), b = bills[i]; if (!b) return null;
+    var total = num(b.total), paid = num(b.paidAmount != null ? b.paidAmount : b.amountPaid);
+    var amt = Math.min(Math.abs(row.amount), Math.max(total - paid, 0)); if (amt <= 0) return null;
+    b.paidAmount = paid + amt; b.amountPaid = b.paidAmount; b.balance = Math.max(total - b.paidAmount, 0);
+    b.status = b.balance <= 0.005 ? "Paid" : "Partial"; if (b.status === "Paid") b.balance = 0;
+    bp.push({ id: Date.now() + Math.floor(Math.random() * 1e3), billNumber: b.billNumber, date: row.date, supplier: b.supplier, amount: amt, mode: "Bank", bank: bank, billIndex: i, source: "aiBankMatch" });
+    S("bills", bills); S("billPayments", bp);
+    return { label: "Bill " + (b.billNumber || "#" + i), status: b.status };
+  }
+  function refreshScreens() {
+    ["renderInvoices", "renderReceipts", "renderAccountsReceivable", "loadSupplierBills", "renderSupplierPayments", "recalculateCustomerReceivables", "renderDashboard", "updateDashboard", "renderReceivablesAging"].forEach(function (n) {
+      try { if (typeof W[n] === "function") W[n](); } catch (e) {}
+    });
+    try { W.FundsRecon && W.FundsRecon.refresh(); } catch (e) {}
+  }
+
+  /* ---------- UI ---------- */
+  var state = { rows: [], bank: "", file: "" };
+  function panel() {
+    var p = D.getElementById("aiReconPanel");
+    if (p) return p;
+    var root = D.getElementById("rcRoot"); if (!root) return null;
+    p = D.createElement("div"); p.id = "aiReconPanel"; p.className = "rc-card";
+    p.innerHTML =
+      '<div class="rc-head sm"><div><h4 class="rc-h4">✨ AI statement matching</h4>' +
+      '<p class="rc-sub">Pick a bank statement from your Files (CSV, Excel or PDF), or upload one. AI matches money in to open invoices and money out to open bills. Confident matches are marked paid automatically; the rest are flagged for you.</p></div>' +
+      '<div class="rc-actions"><button type="button" class="rc-btn" id="aiReconUpload">📂 Pick statement from Files</button>' +
+      '<button type="button" class="rc-btn ghost sm" id="aiReconSettings" title="AI service address">⚙</button></div></div>' +
+      '<input type="file" id="aiReconFile" accept=".csv,.txt,.xlsx,.xls,.pdf" style="display:none">' +
+      '<div id="aiReconStatus" class="rc-notice hidden" role="status"></div><div id="aiReconResult"></div>';
+    root.insertBefore(p, root.children[1] || null);
+    D.getElementById("aiReconUpload").onclick = function () {
+      var bank = (D.getElementById("reconcileBank") || {}).value;
+      if (!bank) return status("Choose a bank account above first.", "warn");
+      if (!serviceUrl()) { askUrl(); if (!serviceUrl()) return; }
+      if (W.AcaciaFundsPatch && typeof W.AcaciaFundsPatch.pickForAI === "function") { W.AcaciaFundsPatch.pickForAI(function (file) { run(file); }); return; }
+      var f = D.getElementById("aiReconFile"); f.value = ""; f.click();
+    };
+    D.getElementById("aiReconSettings").onclick = askUrl;
+    D.getElementById("aiReconFile").onchange = function (e) { var f = e.target.files[0]; if (f) run(f); };
+    return p;
+  }
+  function askUrl() {
+    var v = prompt("AI matching service address (https://your-app.lovable.app):", serviceUrl());
+    if (v != null) localStorage.setItem(URL_KEY, v.trim().replace(/\/+$/, ""));
+  }
+  function status(msg, kind) {
+    var s = D.getElementById("aiReconStatus"); if (!s) return;
+    s.className = "rc-notice " + (kind || "info") + (msg ? "" : " hidden"); s.innerHTML = msg || "";
+  }
+  function run(file) {
+    var bank = D.getElementById("reconcileBank").value;
+    state = { rows: [], bank: bank, file: file.name };
+    D.getElementById("aiReconResult").innerHTML = "";
+    status("Reading " + esc(file.name) + "…");
+    readFile(file).then(function (payload) {
+      if (payload.lines && !payload.lines.length) throw new Error("No transactions found. Check the file has Date, Description and Amount (or Debit/Credit) columns.");
+      payload.invoices = openInvoices(); payload.bills = openBills();
+      status("AI is matching " + (payload.lines ? payload.lines.length + " transactions" : "the PDF statement") + " to " + payload.invoices.length + " open invoices and " + payload.bills.length + " open bills… this can take up to a minute.");
+      return fetch(serviceUrl() + "/api/public/bank-match", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || "AI matching failed (" + r.status + ")."); return j; }); });
+    }).then(function (res) {
+      var used = {};
+      state.rows = (res.rows || []).map(function (r) {
+        r.amount = num(r.amount); r.confidence = num(r.confidence);
+        var key = r.kind + ":" + r.docId;
+        if (r.kind !== "none" && used[key]) { r.kind = "none"; r.reason = "Document already matched to another line."; }
+        if (r.kind === "invoice" && r.amount <= 0 || r.kind === "bill" && r.amount >= 0) { r.kind = "none"; r.reason = "Direction does not fit the document."; }
+        if (r.kind !== "none") used[key] = 1;
+        r.result = null;
+        if (r.kind !== "none" && r.confidence >= AUTO_PAY_CONFIDENCE) r.result = r.kind === "invoice" ? payInvoice(r, bank) : payBill(r, bank);
+        return r;
+      });
+      var log = J("aiReconLog", []); log.unshift({ at: new Date().toISOString(), bank: bank, file: file.name, rows: state.rows }); S("aiReconLog", log.slice(0, 20));
+      refreshScreens(); render();
+    }).catch(function (e) { status("⚠️ " + esc(e.message || e), "warn"); });
+  }
+  function docLabel(r) {
+    if (r.kind === "invoice") { var i = J("invoices", []).find(function (x) { return String(x.id) === r.docId; }); return i ? "Invoice " + esc(i.invoiceNumber || i.id) + " · " + esc(i.customer) : "Invoice"; }
+    if (r.kind === "bill") { var b = J("bills", [])[parseInt(r.docId, 10)]; return b ? "Bill " + esc(b.billNumber || "") + " · " + esc(b.supplier || "") : "Bill"; }
+    return "";
+  }
+  function render() {
+    var paid = state.rows.filter(function (r) { return r.result; }), review = state.rows.filter(function (r) { return !r.result && r.kind !== "none"; }), un = state.rows.filter(function (r) { return r.kind === "none"; });
+    status("✅ " + paid.length + " marked paid · 🟡 " + review.length + " suggested (needs your OK) · 🔴 " + un.length + " unmatched", "ok");
+    var h = '<div style="overflow-x:auto"><table class="rc-table" style="width:100%"><thead><tr><th>Date</th><th>Description</th><th class="num">Amount</th><th>Matched to</th><th>Confidence</th><th>Result</th></tr></thead><tbody>';
+    state.rows.forEach(function (r, i) {
+      var res = r.result ? '<span style="color:#15803d;font-weight:600">✅ Marked ' + esc(r.result.status) + "</span>"
+        : r.kind !== "none" ? '<button type="button" class="rc-btn sm" data-ai-accept="' + i + '">Accept & mark paid</button>'
+        : '<span style="color:#b91c1c;font-weight:600">🔴 Unmatched</span>';
+      h += "<tr" + (r.kind === "none" ? ' style="background:rgba(220,38,38,.06)"' : "") + "><td>" + esc(r.date) + "</td><td>" + esc(r.description) + '<div class="rc-sub" style="font-size:11px">' + esc(r.reason) + '</div></td><td class="num">' + fmt(r.amount) + "</td><td>" + (docLabel(r) || "—") + "</td><td>" + (r.kind === "none" ? "—" : Math.round(r.confidence * 100) + "%") + "</td><td>" + res + "</td></tr>";
+    });
+    h += '</tbody></table></div><div class="rc-actions" style="margin-top:8px"><button type="button" class="rc-btn ghost sm" id="aiReconCsv">Download unmatched (CSV)</button></div>';
+    var box = D.getElementById("aiReconResult"); box.innerHTML = h;
+    box.querySelectorAll("[data-ai-accept]").forEach(function (b) {
+      b.onclick = function () {
+        var r = state.rows[+b.getAttribute("data-ai-accept")];
+        r.result = r.kind === "invoice" ? payInvoice(r, state.bank) : payBill(r, state.bank);
+        if (!r.result) alert("This document is already fully paid.");
+        refreshScreens(); render();
+      };
+    });
+    D.getElementById("aiReconCsv").onclick = function () {
+      var csv = "Date,Description,Amount,Reason\n" + un.map(function (r) { return [r.date, r.description, r.amount, r.reason].map(function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(","); }).join("\n");
+      var a = D.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "unmatched_bank_lines.csv"; a.click();
+    };
+  }
+  function init() { if (!panel()) setTimeout(init, 800); }
+  if (D.readyState === "loading") D.addEventListener("DOMContentLoaded", init); else init();
+  W.AcaciaAIRecon = { run: run, setServiceUrl: function (u) { localStorage.setItem(URL_KEY, u); } };
+})();
+}catch(e){console.error("[acacia-ai-recon.js]",e)}
 /* acacia-funds-patch.js
  * 1. Funds > Bank List: tick boxes + "Delete selected" (bulk delete).
  * 2. Funds > Bank List: "Merge duplicates" for bank accounts that share the same name.
@@ -4760,3 +4987,534 @@ try{
   setTimeout(boot, 1200);
   setTimeout(boot, 3500);
 })();
+;try{
+/* ===== merged from acacia-doc-preview.js ===== */
+/* acacia-doc-preview.js
+ * Invoice-style document previews for Acacia Books.
+ *
+ * Rebuilds the preview output for Stock Movement, Price List, Amendments /
+ * Stock Adjustments, Bundle Items, Packages, Shipments, Delivery Notes and
+ * Bulk Adjustments so every one of them renders in the same branded document
+ * style used by the invoice preview (logo, company block, recipient block,
+ * bordered tables, totals) and gains a "Share File" button that shares the
+ * document as a standalone .html file (Web Share API on mobile, download
+ * fallback on desktop).
+ *
+ * Loaded as the LAST script in index.html so it overrides the earlier
+ * preview implementations.
+ */
+(function () {
+  "use strict";
+  var W = window;
+
+  /* ------------------------------------------------------------------ */
+  /* helpers                                                             */
+  /* ------------------------------------------------------------------ */
+
+  function esc(v) {
+    return v == null ? "" : String(v)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function dp() {
+    try { return W.__getDecimalPlaces ? W.__getDecimalPlaces() : 2; } catch (e) { return 2; }
+  }
+
+  function money(v) {
+    var n = Number(v || 0);
+    try { if (typeof W.formatCurrency === "function") return W.formatCurrency(n); } catch (e) {}
+    return "KES " + n.toFixed(dp());
+  }
+
+  function fdate(v) {
+    if (!v) return "-";
+    try {
+      var d = new Date(v);
+      return isNaN(d.getTime()) ? String(v) : d.toLocaleDateString("en-GB");
+    } catch (e) { return String(v); }
+  }
+
+  function org() {
+    try { return JSON.parse(localStorage.getItem("orgInfo") || "{}") || {}; } catch (e) { return {}; }
+  }
+
+  function js(key) {
+    try { return JSON.parse(localStorage.getItem(key) || "[]") || []; } catch (e) { return []; }
+  }
+
+  function today() { return fdate(new Date().toISOString()); }
+
+  /* ------------------------------------------------------------------ */
+  /* document CSS (shared by in-app modal + shared file + popup)         */
+  /* ------------------------------------------------------------------ */
+
+  var CSS =
+    ".acx-doc{background:#fff;color:#111827;font-size:13.5px;line-height:1.55;padding:24px;border-radius:12px;font-family:inherit}" +
+    ".acx-doc .acx-toprow{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;margin-bottom:20px}" +
+    ".acx-doc .acx-doctitle{font-weight:800;font-size:15px;letter-spacing:.02em;color:#1e3a8a;text-align:center}" +
+    ".acx-doc .acx-logowrap{text-align:center;margin-bottom:20px}" +
+    ".acx-doc .acx-logo{max-width:260px;max-height:90px;object-fit:contain}" +
+    ".acx-doc .acx-cols{display:flex;justify-content:space-between;gap:24px;margin-bottom:8px}" +
+    ".acx-doc .acx-col-left{text-align:left;max-width:55%}" +
+    ".acx-doc .acx-col-right{text-align:right;max-width:45%}" +
+    ".acx-doc .acx-cols h4{font-weight:700;margin:0 0 8px;font-size:13px;color:#111827}" +
+    ".acx-doc .acx-cols p{margin:0 0 2px;color:#374151;font-size:12.5px}" +
+    ".acx-doc .acx-strong{font-weight:700;color:#111827;font-size:13.5px}" +
+    ".acx-doc table.acx-meta{width:100%;border-collapse:collapse;margin-top:16px}" +
+    ".acx-doc table.acx-meta th{text-align:left;padding:8px 12px;border:1px solid #e5e7eb;background:#f9fafb;color:#6b7280;font-weight:600;width:190px;font-size:12.5px;white-space:nowrap}" +
+    ".acx-doc table.acx-meta td{padding:8px 12px;border:1px solid #e5e7eb;color:#111827}" +
+    ".acx-doc table.acx-data{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px}" +
+    ".acx-doc table.acx-data th{background:#f3f4f6;border:1px solid #e5e7eb;padding:8px;text-align:left;font-weight:600;color:#374151}" +
+    ".acx-doc table.acx-data td{border:1px solid #e5e7eb;padding:8px}" +
+    ".acx-doc table.acx-data td.num{text-align:right}" +
+    ".acx-doc .acx-totals{margin-top:18px;text-align:right;font-weight:600;font-size:13px}" +
+    ".acx-doc .acx-totals div{margin:2px 0}" +
+    ".acx-doc .acx-footer{margin-top:24px;border-top:1px solid #e5e7eb;padding-top:8px;color:#6b7280;font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}" +
+    ".acx-docbar{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb}" +
+    ".acx-docbar button{background:#1e3a8a;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600}" +
+    ".acx-docbar button.acx-secondary{background:#e5e7eb;color:#111827}" +
+    ".acx-docbar button:hover{filter:brightness(1.08)}" +
+    "@media print{.acx-docbar{display:none!important}.acx-doc{padding:0;border-radius:0}}";
+
+  function ensureStyle() {
+    if (!document.getElementById("acx-invdoc-style")) {
+      var s = document.createElement("style");
+      s.id = "acx-invdoc-style";
+      s.textContent = CSS;
+      document.head.appendChild(s);
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* document builder                                                    */
+  /* ------------------------------------------------------------------ */
+
+  /* cfg: {
+   *   title, ref, date,
+   *   recipient: {heading, name, lines: []},
+   *   meta: [[label, value]],
+   *   table: {head: [], rows: [[]], rightCols: [idx]},
+   *   totals: [[label, value]],
+   *   company: {} (defaults to orgInfo)
+   * } */
+  function docHtml(cfg) {
+    cfg = cfg || {};
+    var o = cfg.company || org();
+    var h = '<div class="acx-doc">';
+
+    h += '<div class="acx-toprow"><div>' +
+      (cfg.ref ? "<strong>Ref No:</strong> " + esc(cfg.ref) : "") +
+      '</div><div class="acx-doctitle">' + esc(cfg.title || "Document") + "</div><div>" +
+      (cfg.date ? "<strong>Date:</strong> " + esc(fdate(cfg.date)) : "") +
+      "</div></div>";
+
+    if (o.logo) h += '<div class="acx-logowrap"><img class="acx-logo" src="' + esc(o.logo) + '" alt="Company logo"></div>';
+
+    h += '<div class="acx-cols">';
+    var left = "";
+    if (cfg.recipient && (cfg.recipient.name || (cfg.recipient.lines || []).length)) {
+      left += "<h4>" + esc(cfg.recipient.heading || "Customer") + "</h4>";
+      if (cfg.recipient.name) left += '<p class="acx-strong">' + esc(cfg.recipient.name) + "</p>";
+      (cfg.recipient.lines || []).forEach(function (l) {
+        if (l) left += "<p>" + esc(l) + "</p>";
+      });
+    }
+    h += '<div class="acx-col-left">' + left + "</div>";
+
+    var right = "<h4>Company</h4>";
+    right += '<p class="acx-strong">' + esc(o.name || "My Company Ltd") + "</p>";
+    if (o.address) right += "<p>" + esc(o.address) + "</p>";
+    var contact = [o.email, o.phone].filter(Boolean).join(" | ");
+    if (contact) right += "<p>" + esc(contact) + "</p>";
+    if (o.pin) right += "<p>PIN: " + esc(o.pin) + "</p>";
+    h += '<div class="acx-col-right">' + right + "</div></div>";
+
+    if (cfg.meta && cfg.meta.length) {
+      h += '<table class="acx-meta">' + cfg.meta.map(function (r) {
+        return "<tr><th>" + esc(r[0]) + "</th><td>" + esc(r[1]) + "</td></tr>";
+      }).join("") + "</table>";
+    }
+
+    if (cfg.table && cfg.table.head) {
+      var rightCols = cfg.table.rightCols || [];
+      h += '<table class="acx-data"><thead><tr>' +
+        cfg.table.head.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") +
+        "</tr></thead><tbody>" +
+        (cfg.table.rows || []).map(function (r) {
+          return "<tr>" + r.map(function (c, i) {
+            return "<td" + (rightCols.indexOf(i) >= 0 ? ' class="num"' : "") + ">" + esc(c) + "</td>";
+          }).join("") + "</tr>";
+        }).join("") + "</tbody></table>";
+    }
+
+    if (cfg.totals && cfg.totals.length) {
+      h += '<div class="acx-totals">' + cfg.totals.map(function (r) {
+        return "<div>" + esc(r[0]) + ": " + esc(r[1]) + "</div>";
+      }).join("") + "</div>";
+    }
+
+    h += '<div class="acx-footer"><span>Generated on ' + esc(new Date().toLocaleString()) + "</span>" +
+      (o.name ? "<span>" + esc(o.name) + "</span>" : "") + "</div>";
+
+    h += "</div>";
+    return h;
+  }
+
+  /* Standalone HTML file for the Share File button. */
+  function docFileHtml(cfg) {
+    return '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+      '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+      "<title>" + esc(cfg.title || "Document") + "</title>" +
+      "<style>" + CSS +
+      "body{background:#f1f5f9;padding:24px;margin:0;font-family:Arial,Helvetica,sans-serif}" +
+      ".acx-doc{max-width:820px;margin:0 auto;box-shadow:0 10px 30px -12px rgba(15,23,42,.25)}" +
+      "@media print{body{background:#fff;padding:0}.acx-doc{box-shadow:none;max-width:none}}</style>" +
+      "</head><body>" + docHtml(cfg) + "</body></html>";
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* share / print                                                       */
+  /* ------------------------------------------------------------------ */
+
+  function safeName(cfg) {
+    var base = (cfg.title || "Document") + (cfg.ref ? "_" + cfg.ref : "");
+    return base.replace(/[^\w.-]+/g, "_").replace(/^_+|_+$/g, "") + ".html";
+  }
+
+  function shareHtmlFile(filename, html) {
+    var file = null;
+    try {
+      file = new File([html], filename, { type: "text/html" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: filename.replace(/\.html$/, "") }).catch(function () {});
+        return;
+      }
+    } catch (e) {}
+    var blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { a.remove(); }, 0);
+    /* Inside an embedded preview frame downloads are often silently
+     * blocked — also open the document in a new tab so something
+     * always happens. The tab has its own Save button. */
+    try {
+      if (window.top !== window.self) {
+        var w = window.open(url, "_blank");
+        if (w) {
+          setTimeout(function () {
+            try {
+              var bar = w.document.createElement("div");
+              bar.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:9999;background:#1e3a8a;color:#fff;padding:10px 16px;font:14px Arial,sans-serif;text-align:center";
+              bar.innerHTML = 'Opening <b>' + esc(filename) + '</b> in a new tab — if it did not download, use the button below.';
+              var save = w.document.createElement("button");
+              save.textContent = "⬇ Save File";
+              save.style.cssText = "margin-left:12px;background:#fff;color:#1e3a8a;border:0;border-radius:4px;padding:6px 14px;font-weight:bold;cursor:pointer";
+              save.onclick = function () {
+                var a2 = w.document.createElement("a");
+                a2.href = url; a2.download = filename;
+                w.document.body.appendChild(a2); a2.click(); a2.remove();
+              };
+              bar.appendChild(save);
+              w.document.body.appendChild(bar);
+            } catch (e) {}
+          }, 600);
+        }
+      }
+    } catch (e) {}
+  }
+
+  function printModal(modal) {
+    document.body.classList.add("uts-printing-doc");
+    if (modal) modal.classList.add("uts-print-target");
+    window.print();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* modal plumbing                                                      */
+  /* ------------------------------------------------------------------ */
+
+  function attachShareToUtsFooter(modal, cfg) {
+    var footer = modal.querySelector('[data-role="utsDocModalPrint"]') &&
+      modal.querySelector('[data-role="utsDocModalPrint"]').parentElement;
+    if (!footer) return null;
+    var old = footer.querySelector("[data-acx-sharebtn]");
+    if (old) old.remove();
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.setAttribute("data-acx-sharebtn", "1");
+    btn.className = "bg-blue-900 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-800";
+    btn.textContent = "📤 Share File";
+    btn.addEventListener("click", function () {
+      shareHtmlFile(safeName(cfg), docFileHtml(cfg));
+    });
+    footer.insertBefore(btn, footer.lastElementChild);
+    return btn;
+  }
+
+  function attachBarToWrapper(wrapper, modal, cfg) {
+    var old = wrapper.querySelector(":scope > .acx-docbar");
+    if (old) old.remove();
+    var bar = document.createElement("div");
+    bar.className = "acx-docbar";
+    var mk = function (label, cls, fn) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      if (cls) b.className = cls;
+      b.addEventListener("click", fn);
+      return b;
+    };
+    bar.appendChild(mk("🖨 Print", "", function () { printModal(modal); }));
+    bar.appendChild(mk("📤 Share File", "", function () {
+      shareHtmlFile(safeName(cfg), docFileHtml(cfg));
+    }));
+    bar.appendChild(mk("✖ Close", "acx-secondary", function () {
+      if (modal.id === "shipmentPreviewModal" && typeof W.closeShipmentPreview === "function") W.closeShipmentPreview();
+      else if (modal.id === "deliveryPreviewModal" && typeof W.closeDeliveryPreview === "function") W.closeDeliveryPreview();
+      else modal.classList.add("hidden");
+    }));
+    wrapper.appendChild(bar);
+    return bar;
+  }
+
+  /* Open cfg as an invoice-style document inside modalId/wrapperId.
+   * Falls back to a popup window when the modal does not exist. */
+  function openIn(modalId, wrapperId, cfg, opts) {
+    opts = opts || {};
+    ensureStyle();
+    var modal = document.getElementById(modalId);
+    var wrapper = document.getElementById(wrapperId);
+    if (!modal || !wrapper) {
+      var w = window.open("", "_blank", "width=900,height=760");
+      if (!w) { alert("Please allow pop-ups for this site to preview documents."); return; }
+      var file = docFileHtml(cfg);
+      var bar = '<div class="acx-docbar" style="max-width:820px;margin:16px auto 0">' +
+        '<button onclick="window.print()">🖨 Print PDF</button>' +
+        '<button id="acxShareBtn">📤 Share File</button>' +
+        '<button class="acx-secondary" onclick="window.close()">✖ Close</button></div>' +
+        "<script>document.getElementById('acxShareBtn').onclick=function(){" +
+        "var html=document.querySelector('.acx-doc').parentElement.innerHTML;" +
+        "var full='<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>" + esc(cfg.title || "Document") + "</title></head><body style=\"font-family:Arial,sans-serif\">'+html+'</body></html>';" +
+        "try{var f=new File([full],'" + safeName(cfg) + "',{type:'text/html'});" +
+        "if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f]});return;}}catch(e){}" +
+        "var b=new Blob([full],{type:'text/html'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='" + safeName(cfg) + "';document.body.appendChild(a);a.click();a.remove();};<\/script>";
+      w.document.write(file.replace("</body></html>", bar + "</body></html>"));
+      w.document.close();
+      if (opts.autoPrint) setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 350);
+      return;
+    }
+    wrapper.innerHTML = docHtml(cfg);
+    if (!attachShareToUtsFooter(modal, cfg)) attachBarToWrapper(wrapper, modal, cfg);
+    modal.classList.remove("hidden");
+    if (opts.autoPrint) setTimeout(function () { printModal(modal); }, 200);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* public API                                                          */
+  /* ------------------------------------------------------------------ */
+
+  W.acaciaDocPreview = {
+    open: openIn,
+    docHtml: docHtml,
+    docFileHtml: docFileHtml,
+    shareHtmlFile: shareHtmlFile,
+    helpers: { esc: esc, money: money, fdate: fdate, js: js, org: org, today: today }
+  };
+
+  /* ------------------------------------------------------------------ */
+  /* module previews, all in invoice style                               */
+  /* ------------------------------------------------------------------ */
+
+  /* 1. Stock Movement */
+  W.previewMovement = function (i) {
+    var n = js("movements")[i];
+    if (!n) return;
+    openIn("movementPreviewModal", "movementTemplateWrapper", {
+      title: "Stock Movement",
+      date: n.date,
+      meta: [["Item", n.item], ["From Warehouse", n.from], ["To Warehouse", n.to], ["Quantity", n.quantity]]
+    });
+  };
+
+  /* 2. Price List */
+  W.previewPrice = function (i, warehouse) {
+    var o = js("priceList").filter(function (r) { return r.warehouse === warehouse; })[i];
+    if (!o) { alert("Price list record not found!"); return; }
+    openIn("pricelistPreviewModal", "pricelistTemplateWrapper", {
+      title: "Price List",
+      meta: [
+        ["Warehouse", o.warehouse],
+        ["Item", o.item],
+        ["Selling Price", money(o.sellingPrice)],
+        ["Cost Price", money(o.costPrice)],
+        ["Margin", money(Number(o.sellingPrice || 0) - Number(o.costPrice || 0))],
+        ["Effective Date", o.effectiveDate ? fdate(o.effectiveDate) : "-"]
+      ]
+    });
+  };
+
+  /* 3. Amendments / stock adjustment documents (preview + auto print) */
+  W.previewStockAdjustmentDoc = function (e, t) {
+    t = t || {};
+    e = e || {};
+    var rows = (e.rows || []).map(function (r) {
+      return [r.product, r.sku || "-", r.oldQty != null ? r.oldQty : "-",
+        r.newQty != null ? r.newQty : "-", r.change != null ? r.change : "-",
+        r.reason || "-", r.status || "-"];
+    });
+    openIn("valueadjustmentPreviewModal", "valueadjustmentTemplateWrapper", {
+      title: e.docTitle || "Stock Adjustment",
+      ref: e.refNo,
+      date: e.date,
+      meta: [["Warehouse", e.warehouse || "-"]],
+      table: {
+        head: ["Product", "SKU", "Old Qty", "New Qty", "Change", "Reason", "Status"],
+        rows: rows,
+        rightCols: [2, 3, 4]
+      }
+    }, { autoPrint: t.autoPrint });
+  };
+
+  /* 4. Packages */
+  W.viewPackage = function (id) {
+    var a = js("orders").find(function (x) { return String(x.id) === String(id); });
+    if (!a) { alert("Package not found"); return; }
+    openIn("packagePreviewModal", "packageTemplateWrapper", {
+      title: "Package Slip",
+      ref: a.orderNo || a.packageNo || "",
+      date: a.date,
+      recipient: { heading: "Customer", name: a.customerName },
+      meta: [["Status", a.packageStatus || "Not Shipped"]],
+      table: {
+        head: ["Item", "Qty", "Amount"],
+        rows: (a.items || []).map(function (x) {
+          return [x.desc || "-", x.qty != null ? x.qty : 0, (x.currency || "KES") + " " + (x.amount != null ? x.amount : 0)];
+        }),
+        rightCols: [2]
+      },
+      totals: a.total != null ? [["Total", a.total]] : []
+    });
+  };
+
+  /* 5. Bundle Items */
+  W.previewBundle = function (i) {
+    var b;
+    try { b = (typeof W.getBundles === "function" ? W.getBundles() : js("bundles"))[i]; } catch (e) { b = js("bundles")[i]; }
+    if (!b) { alert("Bundle not found"); return; }
+    var rows = (b.items || []).map(function (it) {
+      var inv = null;
+      try {
+        if (typeof W.getInventory === "function") {
+          inv = (W.getInventory(it.warehouse || "Unknown") || []).find(function (x) {
+            return x.sku === it.item || x.name === it.item;
+          });
+        }
+      } catch (e) {}
+      return [it.item, it.qtyUsed != null ? it.qtyUsed : (it.qty != null ? it.qty : "-"),
+        it.warehouse || "Unknown", inv && inv.qty != null ? inv.qty : "N/A"];
+    });
+    openIn("bundleitemPreviewModal", "bundleitemTemplateWrapper", {
+      title: "Bundle / Composite Item",
+      date: b.date,
+      meta: [
+        ["Name", b.name],
+        ["Bundle Quantity", b.qty != null ? b.qty : 0],
+        ["Destination Warehouse", b.toWarehouse || "-"]
+      ],
+      table: { head: ["Item", "Qty Used", "Source Warehouse", "Stock Qty"], rows: rows, rightCols: [1, 3] },
+      totals: [
+        ["Buy Cost", money(b.buyPrice)],
+        ["Sell Price", money(b.sellPrice)],
+        ["Margin", money(Number(b.sellPrice || 0) - Number(b.buyPrice || 0))]
+      ]
+    });
+  };
+
+  /* 6. Shipments */
+  W.previewShipment = function (i) {
+    var n = js("shipments")[i];
+    if (!n) return;
+    var c = js("customers").find(function (x) { return x.name === n.customer; }) || {};
+    openIn("shipmentPreviewModal", "shipmentPreviewContentWrapper", {
+      title: "Shipment Note",
+      ref: n.shipmentNo,
+      date: n.date,
+      recipient: {
+        heading: "Customer",
+        name: c.name || n.customer,
+        lines: [c.email, c.phone, c.address]
+      },
+      meta: [
+        ["Item", n.item],
+        ["Origin", n.origin || "-"],
+        ["Destination", n.destination || "-"],
+        ["Carrier", n.carrier || "-"],
+        ["Tracking No.", n.trackingNo || "-"]
+      ]
+    });
+  };
+
+  /* 7. Delivery Notes */
+  W.previewDelivery = function (i) {
+    var n = js("deliveries")[i];
+    if (!n) return;
+    var c = js("customers").find(function (x) { return x.name === n.customer; }) || {};
+    openIn("deliveryPreviewModal", "deliveryPreviewContentWrapper", {
+      title: "Delivery Note",
+      ref: n.dn,
+      date: n.date,
+      recipient: {
+        heading: "Customer",
+        name: c.name || n.customer,
+        lines: [c.email, c.phone, c.address]
+      },
+      meta: [
+        ["Location", n.location || "-"],
+        ["Truck No.", n.truckNumber || "-"],
+        ["Driver", n.driver || "-"],
+        ["Tracking No.", n.trackNumber || "-"]
+      ],
+      table: {
+        head: ["Item", "Qty"],
+        rows: (n.items || []).map(function (x) { return [x.desc, x.qty != null ? x.qty : ""]; }),
+        rightCols: [1]
+      }
+    });
+  };
+
+  /* 8. Bulk Adjustments — the log table becomes a proper document */
+  W.exportBulkAdjustmentsPDF = function () {
+    var body = document.getElementById("baLogBody");
+    var rows = [];
+    if (body) {
+      Array.prototype.forEach.call(body.querySelectorAll("tr"), function (tr) {
+        var tds = tr.querySelectorAll("td");
+        if (tds.length < 7) return;
+        var first = (tds[1].textContent || "").trim();
+        if (/no adjustments/i.test(first)) return;
+        rows.push([tds[1].textContent.trim(), tds[2].textContent.trim(), tds[3].textContent.trim(),
+          tds[4].textContent.trim(), tds[5].textContent.trim(), tds[6].textContent.trim(),
+          tds[7] ? tds[7].textContent.trim() : "-"]);
+      });
+    }
+    if (!rows.length) { alert("No adjustments recorded yet to preview."); return; }
+    var wh = "";
+    try { wh = (document.getElementById("baWarehouseSelect") || {}).value || ""; } catch (e) {}
+    openIn("valueadjustmentPreviewModal", "valueadjustmentTemplateWrapper", {
+      title: "Bulk Adjustments",
+      date: today(),
+      meta: wh ? [["Warehouse", wh], ["Entries", rows.length]] : [["Entries", rows.length]],
+      table: {
+        head: ["Date", "Warehouse", "Product", "SKU", "Old Qty", "New Qty", "Change"],
+        rows: rows,
+        rightCols: [4, 5, 6]
+      }
+    });
+  };
+})();
+}catch(e){console.error("[acacia-doc-preview.js]",e)}

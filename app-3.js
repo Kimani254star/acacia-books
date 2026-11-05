@@ -616,18 +616,21 @@ try{
   }
 
   /* ------------------------------------------------------------------ recipe form */
-  function blankRecipe() { return { id: uid('RCP'), name: '', sku: '', toWarehouse: '', sellPrice: '', buyVat: '', sellVat: '', buyDesc: '', sellDesc: '', markup: 35, components: [{ sku: '', name: '', unit: '', qty: 1 }], extras: [] }; }
+  function blankRecipe() { return { id: uid('RCP'), name: '', sku: '', toWarehouse: '', sellPrice: '', buyVat: '', sellVat: '', buyDesc: '', sellDesc: '', markup: 35, priceAuto: true, components: [{ sku: '', name: '', unit: '', qty: 1 }], extras: [] }; }
 
   function drawRecipeForm() {
     var r = R, whs = warehouses();
+    if (r.priceAuto === true) { var c0 = recipeCost(r, INV); r.sellPrice = c0 > 0 ? +(c0 * (1 + num(r.markup) / 100)).toFixed(dp()) : ''; }
     var h = '<div class="ac-card"><h3>' + (recipes().some(function (x) { return x.id === r.id; }) ? 'Edit recipe' : 'New recipe') + '</h3><div id="acxErr"></div>' +
       '<div class="ac-row"><label>Bundle item name <span class="req">*</span></label><div><input data-r="name" value="' + esc(r.name) + '" placeholder="Absorber Coarse Granules (100G)"></div></div>' +
       '<div class="ac-row"><label>SKU</label><div><input data-r="sku" value="' + esc(r.sku) + '" placeholder="Leave empty to generate one"><div class="ac-hint">This is the item that is created in stock the first time you assemble it.</div></div></div>' +
       '<div class="ac-row"><label>Default location</label><div><select data-r="toWarehouse">' + opts(whs, r.toWarehouse, 'Select location') + '</select></div></div>' +
-      '<div class="ac-row"><label>Selling price</label><div><input type="number" step="any" min="0" data-r="sellPrice" value="' + esc(r.sellPrice) + '" placeholder="0.00"></div></div>' +
+      '<div class="ac-row"><label>Cost</label><div><input id="acxRcpCost" type="text" readonly value="' + money(recipeCost(r, INV)) + '" style="background:#f3f4f6;font-weight:600"><div class="ac-hint">Total of the items you pick below (quantity x inventory cost) plus extra costs, for 1 unit. It updates as you pick items.</div></div></div>' +
+      '<div class="ac-row"><label>Markup %</label><div><input type="number" step="any" min="0" data-r="markup" value="' + esc(r.markup) + '"></div></div>' +
+      '<div class="ac-row"><label>Selling price</label><div><input type="number" step="any" min="0" data-r="sellPrice" value="' + esc(r.sellPrice) + '" placeholder="0.00"><div class="ac-hint">Cost + markup. You can also type your own price.</div></div></div>' +
       '<div class="ac-row"><label>Buy VAT rule</label><div><select data-r="buyVat">' + opts(VATS, r.buyVat, 'Select VAT') + '</select></div></div>' +
       '<div class="ac-row"><label>Sell VAT rule</label><div><select data-r="sellVat">' + opts(VATS, r.sellVat, 'Select VAT') + '</select></div></div>' +
-      '<h3 style="margin-top:18px">Components (for 1 unit)</h3><div style="overflow:auto"><table><thead><tr><th>Item</th><th style="width:150px">Quantity</th><th style="width:90px">Unit</th><th class="r" style="width:120px">Cost price</th><th style="width:44px"></th></tr></thead><tbody id="acxRcpRows">' + recipeRowsHtml() + '</tbody></table></div>' +
+      '<h3 style="margin-top:18px">Components (for 1 unit)</h3><div style="overflow:auto"><table><thead><tr><th>Item</th><th style="width:150px">Quantity</th><th style="width:90px">Unit</th><th class="r" style="width:120px">Inventory cost</th><th class="r" style="width:120px">Line cost</th><th style="width:44px"></th></tr></thead><tbody id="acxRcpRows">' + recipeRowsHtml() + '</tbody></table></div>' +
       '<button class="ac-link" style="margin-top:8px;font-size:13px" data-act="addRcpRow">+ Add new row</button>' +
       '<h3 style="margin-top:18px">Default extra costs (per unit)</h3><div class="ac-hint" style="margin:-4px 0 8px">Labour, rent, scrap. These pre-fill every assembly of this recipe.</div><table><thead><tr><th>Description</th><th class="r" style="width:160px">Amount per unit</th><th style="width:44px"></th></tr></thead><tbody id="acxRcpExtras">' + recipeExtrasHtml() + '</tbody></table>' +
       '<button class="ac-link" style="margin-top:8px;font-size:13px" data-act="addRcpExtra">+ Add service / extra cost</button>' +
@@ -636,13 +639,47 @@ try{
       '<div style="text-align:right;border-top:1px solid #e5e7eb;padding-top:12px"><button class="ac-btn" data-act="saveRecipe">Save recipe</button> <button class="ac-btn gray" data-act="cancelForm">Cancel</button></div></div>';
     body().innerHTML = h;
   }
+  function rcpItemCost(c) {
+    if (!c || !(c.sku || c.name)) return null;
+    for (var k = 0, w = warehouses(); k < w.length; k++) { var it = findIn(INV(w[k]), c.sku, c.name); if (it) return itemCost(it); }
+    return null;
+  }
+  function rcpExtraTotal() { return (R.extras || []).reduce(function (s, x) { return s + num(x.amount); }, 0); }
   function recipeRowsHtml() {
-    return R.components.map(function (c, i) {
-      var cost = ''; if (c.sku || c.name) { for (var k = 0, w = warehouses(); k < w.length; k++) { var it = findIn(INV(w[k]), c.sku, c.name); if (it) { cost = money(itemCost(it)); break; } } }
-      return '<tr><td><input class="ac-pick" data-pick="r" data-i="' + i + '" value="' + esc(c.name) + '" placeholder="Search item by name or SKU" autocomplete="off"><div class="ac-muted">' + (c.sku ? 'SKU: ' + esc(c.sku) : '') + '</div></td>' +
-        '<td><input type="number" step="any" min="0" data-rc="qty" data-i="' + i + '" value="' + esc(c.qty) + '"></td><td><input data-rc="unit" data-i="' + i + '" value="' + esc(c.unit) + '" placeholder="kg, pcs"></td><td class="r">' + cost + '</td>' +
+    var comp = 0;
+    var rows = R.components.map(function (c, i) {
+      var uc = rcpItemCost(c), lt = uc == null ? 0 : num(c.qty) * uc; comp += lt;
+      return '<tr><td><input class="ac-pick" data-pick="r" data-i="' + i + '" value="' + esc(c.name) + '" placeholder="Select item from stock" autocomplete="off"><div class="ac-muted">' + (c.sku ? 'SKU: ' + esc(c.sku) : '') + '</div></td>' +
+        '<td><input type="number" step="any" min="0" data-rc="qty" data-i="' + i + '" value="' + esc(c.qty) + '"></td><td><input data-rc="unit" data-i="' + i + '" value="' + esc(c.unit) + '" placeholder="kg, pcs"></td>' +
+        '<td class="r" data-rcost="' + i + '">' + (uc == null ? '' : money(uc)) + '</td><td class="r" data-lt="' + i + '">' + (uc == null ? '' : money(lt)) + '</td>' +
         '<td style="text-align:center"><button class="ac-link" style="font-size:18px" data-act="delRcpRow" data-i="' + i + '" title="Remove">&times;</button></td></tr>';
     }).join('');
+    var ex = rcpExtraTotal();
+    return rows + '<tr><td colspan="4" class="r">Extra costs</td><td class="r" id="acxRcpExTot">' + money(ex) + '</td><td></td></tr>' +
+      '<tr style="font-weight:700;border-top:2px solid #1e3a8a"><td colspan="4" class="r">Total bundle cost</td><td class="r" id="acxRcpTot">' + money(comp + ex) + '</td><td></td></tr>';
+  }
+  /* refresh the numbers (line costs, total, Cost field, auto selling price) without redrawing the inputs */
+  function rcpTotals() {
+    if (!R || !$('acxRcpRows')) return;
+    var comp = 0, set = function (sel, txt) { var e = body().querySelector(sel); if (e) e.textContent = txt; };
+    R.components.forEach(function (c, i) {
+      var uc = rcpItemCost(c), lt = uc == null ? 0 : num(c.qty) * uc; comp += lt;
+      set('[data-rcost="' + i + '"]', uc == null ? '' : money(uc)); set('[data-lt="' + i + '"]', uc == null ? '' : money(lt));
+    });
+    var ex = rcpExtraTotal(), cost = comp + ex;
+    set('#acxRcpExTot', money(ex)); set('#acxRcpTot', money(cost));
+    var ci = $('acxRcpCost'); if (ci) ci.value = money(cost);
+    if (R.priceAuto === true) {
+      R.sellPrice = cost > 0 ? +(cost * (1 + num(R.markup) / 100)).toFixed(dp()) : '';
+      var sp = body().querySelector('[data-r="sellPrice"]'); if (sp && D.activeElement !== sp) sp.value = R.sellPrice;
+    }
+  }
+  function rcpField(f) {
+    if (f === 'markup') { R.priceAuto = true; rcpTotals(); }
+    else if (f === 'sellPrice') {
+      R.priceAuto = false; var cost = recipeCost(R, INV);
+      if (cost > 0 && num(R.sellPrice) > 0) { R.markup = +((num(R.sellPrice) / cost - 1) * 100).toFixed(2); var mk = body().querySelector('[data-r="markup"]'); if (mk) mk.value = R.markup; }
+    }
   }
   function recipeExtrasHtml() {
     return R.extras.map(function (x, i) {
@@ -695,19 +732,19 @@ try{
     });
     if (errs.length) return showErr(errs);
     r.components = comps; r.extras = r.extras.filter(function (x) { return x.desc || num(x.amount); });
-    r.sellPrice = num(r.sellPrice); r.updatedAt = new Date().toISOString(); if (!r.createdAt) r.createdAt = r.updatedAt;
+    r.sellPrice = num(r.sellPrice); r.markup = num(r.markup); r.updatedAt = new Date().toISOString(); if (!r.createdAt) r.createdAt = r.updatedAt;
     var i = all.findIndex(function (x) { return x.id === r.id; }); if (i > -1) all[i] = r; else all.push(r);
     saveRecipes(all); ensureStockItem(r); refreshApp(); toast('Bundle item saved - it now shows in Stock'); V.mode = 'list'; V.tab = 'recipes'; R = null; render();
   }
 
   /* ------------------------------------------------------------------ assembly form */
   function blankAsm(rec) {
-    var a = { id: uid('ASM'), no: nextAsmNo(), recipeId: '', name: '', sku: '', desc: '', date: today(), qty: 1, warehouse: '', outBatch: { no: '', expiry: '' }, sellPrice: '', sellVat: '', buyVat: '', sellDesc: '', markup: 35, lines: [], extras: [], status: 'Draft', createdAt: new Date().toISOString() };
+    var a = { id: uid('ASM'), no: nextAsmNo(), recipeId: '', name: '', sku: '', desc: '', date: today(), qty: 1, warehouse: '', outBatch: { no: '', expiry: '' }, sellPrice: '', sellVat: '', buyVat: '', sellDesc: '', markup: 35, priceAuto: true, lines: [], extras: [], status: 'Draft', createdAt: new Date().toISOString() };
     if (rec) applyRecipe(a, rec);
     return a;
   }
   function applyRecipe(a, rec) {
-    a.recipeId = rec.id; a.name = rec.name; a.sku = rec.sku; a.sellPrice = rec.sellPrice || ''; a.sellVat = rec.sellVat || ''; a.buyVat = rec.buyVat || ''; a.sellDesc = rec.sellDesc || ''; a.markup = rec.markup || 35;
+    a.recipeId = rec.id; a.name = rec.name; a.sku = rec.sku; a.sellPrice = rec.sellPrice || ''; a.sellVat = rec.sellVat || ''; a.buyVat = rec.buyVat || ''; a.sellDesc = rec.sellDesc || ''; a.markup = rec.markup || 35; a.priceAuto = rec.priceAuto === true;
     if (!a.warehouse && rec.toWarehouse) a.warehouse = rec.toWarehouse;
     a.lines = (rec.components || []).map(function (c) { return { sku: c.sku, name: c.name, unit: c.unit || '', qtyPer: num(c.qty), warehouse: '', desc: '', tag: '', pick: null }; });
     a.extras = (rec.extras || []).map(function (x) { return { desc: x.desc, perUnit: num(x.amount), amount: r6(num(x.amount) * num(a.qty)), manual: false }; });
@@ -748,7 +785,7 @@ try{
         (ro ? (ln.desc ? '<div class="ac-muted">' + esc(ln.desc) + '</div>' : '') : '<input data-al="desc" data-i="' + i + '" value="' + esc(ln.desc) + '" placeholder="Add a description to your item" style="margin-top:6px;font-size:13px">') +
         (ro ? '' : '<div style="display:flex;gap:6px;margin-top:6px;align-items:center"><span class="ac-muted">Source:</span><select data-al="warehouse" data-i="' + i + '" style="font-size:12px;padding:3px 6px">' + opts(whs, ln.warehouse, 'Location (default)') + '</select></div>' +
           (tags.length ? '<select data-al="tag" data-i="' + i + '" style="margin-top:6px;font-size:12px;padding:3px 6px">' + opts(tags, ln.tag, 'Reporting tags') + '</select>' : '')) +
-        '<div class="ac-muted" style="margin-top:6px">Cost price: <b data-cost="' + i + '">' + money(x.cost) + '</b></div></td>' +
+        '<div class="ac-muted" style="margin-top:6px">Cost price: <b data-cost="' + i + '">' + money(x.cost) + '</b> &middot; Line cost: <b data-lc="' + i + '">' + money(x.total) + '</b></div></td>' +
         '<td class="r">' + (ro ? fq(ln.qtyPer) : '<input type="number" step="any" min="0" data-al="qtyPer" data-i="' + i + '" value="' + esc(ln.qtyPer) + '" style="text-align:right">') +
         '<div class="ac-muted">' + (unit ? esc(unit) + ' ' : '') + 'x <span data-qty-asm>' + fq(a.qty) + '</span> assemblies</div>' +
         (hasB ? '<div style="margin-top:4px"><button class="ac-link" data-act="pickBatch" data-i="' + i + '">' + (ln.pick ? 'Batches picked' : 'Select batches') + '</button><div class="ac-muted" data-batchtxt="' + i + '">' + esc(bTxt) + '</div></div>' : '') + '</td>' +
@@ -769,10 +806,14 @@ try{
   function recalc() {
     var a = A; if (!a || !$('acxLines')) return;
     var ro = a.status !== 'Draft', c = compute(a, INV), set = function (sel, txt) { var e = body().querySelector(sel); if (e) e.textContent = txt; };
+    if (!ro && a.priceAuto === true) {      /* selling price follows cost per unit + markup until the user types their own price */
+      var np = c.unit > 0 ? +(c.unit * (1 + num(a.markup) / 100)).toFixed(dp()) : '';
+      if (String(a.sellPrice) !== String(np)) { a.sellPrice = np; var spi = body().querySelector('[data-a="sellPrice"]'); if (spi && D.activeElement !== spi) spi.value = np; c = compute(a, INV); }
+    }
     a.lines.forEach(function (ln, i) {
       var x = c.lines[i], tr = body().querySelector('tr[data-line="' + i + '"]'); if (!tr) return;
       var unit = ln.unit || itemUnit(x.it);
-      set('[data-need="' + i + '"]', fq(x.need)); if (!ro) set('[data-avail="' + i + '"]', fq(x.avail) + ' ' + (unit || 'pcs')); set('[data-cost="' + i + '"]', money(x.cost));
+      set('[data-need="' + i + '"]', fq(x.need)); if (!ro) set('[data-avail="' + i + '"]', fq(x.avail) + ' ' + (unit || 'pcs')); set('[data-cost="' + i + '"]', money(x.cost)); set('[data-lc="' + i + '"]', money(x.total));
       tr.className = x.short || x.missing ? 'ac-short' : '';
       var w = tr.querySelector('[data-warn="' + i + '"]');
       if (w) w.innerHTML = !ro && (a.warehouse && x.missing) ? '<span class="ac-warn" title="Not in this location">&#9888; not in ' + esc(lineWh(a, ln)) + '</span>' : (!ro && x.short ? '<span class="ac-warn" title="Not enough stock">&#9888; short by ' + fq(x.need - x.avail) + '</span>' : '');
@@ -806,9 +847,11 @@ try{
   function showDD(input) {
     CAT = CAT.length ? CAT : catalog(INV);
     var q = low(input.value), kind = input.getAttribute('data-pick'), used = {};
+    var curRow = (kind === 'a' ? A.lines : R.components)[+input.getAttribute('data-i')];
+    if (curRow && curRow.name && low(curRow.name) === q) q = '';   /* an item is already picked: show the whole list again */
     (kind === 'a' ? A.lines : R.components).forEach(function (c, i) { if (i !== +input.getAttribute('data-i')) used[low(c.sku) || low(c.name)] = 1; });
     var self = kind === 'a' ? A : R, selfKeys = [low(self.sku), low(self.name)];
-    var list = CAT.filter(function (c) { return !used[c.key] && selfKeys.indexOf(low(c.sku)) < 0 && selfKeys.indexOf(low(c.name)) < 0 && (!q || low(c.name).indexOf(q) > -1 || low(c.sku).indexOf(q) > -1); }).slice(0, 60);
+    var list = CAT.filter(function (c) { return !used[c.key] && selfKeys.indexOf(low(c.sku)) < 0 && selfKeys.indexOf(low(c.name)) < 0 && (!q || low(c.name).indexOf(q) > -1 || low(c.sku).indexOf(q) > -1); }).slice(0, 500);
     closeDD(); dd = D.createElement('div'); dd.className = 'ac-dd'; ddTarget = input;
     dd.innerHTML = list.map(function (c) {
       var here = kind === 'a' && A.warehouse ? num(c.byWh[A.warehouse]) : c.total;
@@ -820,7 +863,7 @@ try{
       var c = CAT.filter(function (x) { return x.key === d.getAttribute('data-key'); })[0], i = +ddTarget.getAttribute('data-i'); if (!c) return;
       var k = ddTarget.getAttribute('data-pick'); closeDD();
       if (k === 'a') { var ln = A.lines[i]; ln.sku = c.sku; ln.name = c.name; ln.unit = c.unit; ln.pick = null; drawLines(); recalc(); }
-      else { var rc = R.components[i]; rc.sku = c.sku; rc.name = c.name; rc.unit = c.unit; var rows = $('acxRcpRows'); if (rows) rows.innerHTML = recipeRowsHtml(); }
+      else { var rc = R.components[i]; rc.sku = c.sku; rc.name = c.name; rc.unit = c.unit; var rows = $('acxRcpRows'); if (rows) rows.innerHTML = recipeRowsHtml(); rcpTotals(); }
     });
     D.body.appendChild(dd);
   }
@@ -948,13 +991,13 @@ try{
       case 'delAsm': delAsm(id); break;
       case 'printAsm': var pa = assemblies().filter(function (x) { return x.id === id; })[0]; if (pa) printHtml(asmDoc(pa), true); break;
       case 'newRecipe': INV = makeInv(); CAT = []; R = blankRecipe(); V.tab = 'recipes'; V.mode = 'form'; render(); break;
-      case 'editRecipe': INV = makeInv(); CAT = []; R = clone(recipes().filter(function (x) { return x.id === id; })[0]); if (R) { R.extras = R.extras || []; R.components = R.components || []; V.mode = 'form'; render(); } break;
+      case 'editRecipe': INV = makeInv(); CAT = []; R = clone(recipes().filter(function (x) { return x.id === id; })[0]); if (R) { R.extras = R.extras || []; R.components = R.components || []; R.markup = R.markup || 35; R.priceAuto = !(num(R.sellPrice) > 0) || Math.abs(num(R.sellPrice) - recipeCost(R, INV) * (1 + num(R.markup) / 100)) < 0.01; V.mode = 'form'; render(); } break;
       case 'cloneRecipe': var src = recipes().filter(function (x) { return x.id === id; })[0]; if (src) { var cp = clone(src); cp.id = uid('RCP'); cp.name = src.name + ' Copy'; cp.sku = makeSku(cp.name, recipes().map(function (x) { return low(x.sku); })); delete cp.imported; var all = recipes(); all.push(cp); saveRecipes(all); toast('Recipe cloned'); render(); } break;
       case 'delRecipe': if (!canDo('delete', 'delete recipes')) break; if (confirm('Delete this recipe? Past assemblies are kept.')) { saveRecipes(recipes().filter(function (x) { return x.id !== id; })); render(); } break;
-      case 'addRcpRow': R.components.push({ sku: '', name: '', unit: '', qty: 1 }); $('acxRcpRows').innerHTML = recipeRowsHtml(); break;
-      case 'delRcpRow': R.components.splice(i, 1); if (!R.components.length) R.components.push({ sku: '', name: '', unit: '', qty: 1 }); $('acxRcpRows').innerHTML = recipeRowsHtml(); break;
+      case 'addRcpRow': R.components.push({ sku: '', name: '', unit: '', qty: 1 }); $('acxRcpRows').innerHTML = recipeRowsHtml(); rcpTotals(); break;
+      case 'delRcpRow': R.components.splice(i, 1); if (!R.components.length) R.components.push({ sku: '', name: '', unit: '', qty: 1 }); $('acxRcpRows').innerHTML = recipeRowsHtml(); rcpTotals(); break;
       case 'addRcpExtra': R.extras.push({ desc: '', amount: '' }); $('acxRcpExtras').innerHTML = recipeExtrasHtml(); break;
-      case 'delRcpExtra': R.extras.splice(i, 1); $('acxRcpExtras').innerHTML = recipeExtrasHtml(); break;
+      case 'delRcpExtra': R.extras.splice(i, 1); $('acxRcpExtras').innerHTML = recipeExtrasHtml(); rcpTotals(); break;
       case 'saveRecipe': saveRecipe(); break;
       case 'cancelForm': V.mode = 'list'; A = null; R = null; render(); break;
       case 'addAsmRow': A.lines.push({ sku: '', name: '', unit: '', qtyPer: 1, warehouse: '', desc: '', tag: '', pick: null }); drawLines(); recalc(); break;
@@ -962,7 +1005,7 @@ try{
       case 'addAsmExtra': A.extras.push({ desc: '', amount: '', perUnit: null, manual: true }); drawExtras(); break;
       case 'delAsmExtra': A.extras.splice(i, 1); drawExtras(); recalc(); break;
       case 'pickBatch': pickBatches(i); break;
-      case 'useSuggested': var cc = compute(A, INV); if (cc.unit > 0) { A.sellPrice = +(cc.unit * (1 + num(A.markup) / 100)).toFixed(dp()); var sp = body().querySelector('[data-a="sellPrice"]'); if (sp) sp.value = A.sellPrice; recalc(); } break;
+      case 'useSuggested': var cc = compute(A, INV); if (cc.unit > 0) { A.priceAuto = true; A.sellPrice = +(cc.unit * (1 + num(A.markup) / 100)).toFixed(dp()); var sp = body().querySelector('[data-a="sellPrice"]'); if (sp) sp.value = A.sellPrice; recalc(); } break;
       case 'saveDraft': saveDraft(); break;
       case 'doAssemble': doAssemble(); break;
       case 'regCsv': csvDownload('assembly-register.csv', [['Date', 'Assembly#', 'Item', 'SKU', 'Location', 'Qty', 'Components cost', 'Extra costs', 'Total cost', 'Cost per unit', 'Status']].concat(regRows().map(function (a) { return [a.date, a.no, a.name, a.sku, a.warehouse, a.qty, a.compCost, a.extraCost, a.totalCost, a.unitCost, a.status]; }))); break;
@@ -973,15 +1016,17 @@ try{
     var t = e.target;
     if (t.hasAttribute('data-q')) { V.q = t.value; var pos = t.selectionStart; (V.tab === 'recipes' ? drawRecipes : drawAssemblies)(); var n = body().querySelector('[data-q]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (x) { } } return; }
     if (t.hasAttribute('data-pick')) { showDD(t); return; }
-    if (t.hasAttribute('data-r') && R) { R[t.getAttribute('data-r')] = t.value; return; }
-    if (t.hasAttribute('data-rc')) { R.components[+t.getAttribute('data-i')][t.getAttribute('data-rc')] = t.value; return; }
-    if (t.hasAttribute('data-re')) { R.extras[+t.getAttribute('data-i')][t.getAttribute('data-re')] = t.value; return; }
+    if (t.hasAttribute('data-r') && R) { R[t.getAttribute('data-r')] = t.value; rcpField(t.getAttribute('data-r')); return; }
+    if (t.hasAttribute('data-rc')) { R.components[+t.getAttribute('data-i')][t.getAttribute('data-rc')] = t.value; rcpTotals(); return; }
+    if (t.hasAttribute('data-re')) { R.extras[+t.getAttribute('data-i')][t.getAttribute('data-re')] = t.value; rcpTotals(); return; }
     if (!A) return;
     var f = t.getAttribute('data-a');
     if (f) {
       if (f === 'outNo') A.outBatch.no = t.value; else if (f === 'outExp') A.outBatch.expiry = t.value;
       else if (f === 'recipeId' || f === 'warehouse') return;      /* handled on change */
       else A[f] = t.value;
+      if (f === 'sellPrice') { A.priceAuto = false; var cu = compute(A, INV).unit; if (cu > 0 && num(A.sellPrice) > 0) { A.markup = +((num(A.sellPrice) / cu - 1) * 100).toFixed(2); var mki = body().querySelector('[data-a="markup"]'); if (mki) mki.value = A.markup; } }
+      else if (f === 'markup') A.priceAuto = true;
       if (f === 'qty') { rescaleExtras(); drawExtras(); }
       recalc(); return;
     }
