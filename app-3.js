@@ -651,6 +651,35 @@ try{
   }
   function showErr(list) { var e = $('acxErr'); if (!e) return; e.innerHTML = list && list.length ? '<div class="ac-err"><b>Please fix:</b><br>' + list.map(esc).join('<br>') + '</div>' : ''; if (list && list.length) e.scrollIntoView({ block: 'nearest' }); }
 
+  /* A saved bundle item must show in Stock straight away (qty 0 until an assembly adds units) */
+  function ensureStockItem(r) {
+    try {
+      var wh = r.toWarehouse || warehouses()[0]; if (!wh || !r.name) return false;
+      var list = readInv(wh), it = findIn(list, r.sku, r.name), changed = false;
+      if (!it) {
+        var first = null;
+        for (var i = 0; i < (r.components || []).length && !first; i++) {
+          var c = r.components[i], w = warehouses();
+          for (var k = 0; k < w.length && !first; k++) first = findIn(readInv(w[k]), c.sku, c.name);
+        }
+        list.push(newFinishedItem({ name: r.name, sku: r.sku, sellPrice: r.sellPrice, buyVat: r.buyVat, sellVat: r.sellVat, sellDesc: r.sellDesc }, first));
+        changed = true;
+      } else {
+        if (!it.isBundle) { it.isBundle = true; changed = true; }
+        if (it.name !== r.name) { it.name = r.name; changed = true; }
+        if (num(r.sellPrice) > 0 && num(it.sellPrice) !== num(r.sellPrice)) { it.sellPrice = num(r.sellPrice); changed = true; }
+      }
+      if (changed) writeInv(wh, list);
+      return changed;
+    } catch (e) { console.warn('[bundle] stock item', e); return false; }
+  }
+  function syncRecipesToStock() {
+    var any = false;
+    recipes().forEach(function (r) { if (ensureStockItem(r)) any = true; });
+    if (any) refreshApp();
+  }
+  setTimeout(syncRecipesToStock, 2500);
+
   function saveRecipe() {
     var r = R, all = recipes(), errs = [], taken = all.filter(function (x) { return x.id !== r.id; }).map(function (x) { return low(x.sku); });
     r.name = String(r.name || '').trim(); if (!r.name) errs.push('Enter the bundle item name.');
@@ -668,7 +697,7 @@ try{
     r.components = comps; r.extras = r.extras.filter(function (x) { return x.desc || num(x.amount); });
     r.sellPrice = num(r.sellPrice); r.updatedAt = new Date().toISOString(); if (!r.createdAt) r.createdAt = r.updatedAt;
     var i = all.findIndex(function (x) { return x.id === r.id; }); if (i > -1) all[i] = r; else all.push(r);
-    saveRecipes(all); toast('Recipe saved'); V.mode = 'list'; V.tab = 'recipes'; R = null; render();
+    saveRecipes(all); ensureStockItem(r); refreshApp(); toast('Bundle item saved - it now shows in Stock'); V.mode = 'list'; V.tab = 'recipes'; R = null; render();
   }
 
   /* ------------------------------------------------------------------ assembly form */
