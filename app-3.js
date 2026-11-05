@@ -211,9 +211,23 @@ try{
 
   /* an inventory reader that caches while a form is open (the site's inventories can be large) */
   function makeInv() {
-    var cache = {};
+    var cache = {}, idx = null;
     var f = function (wh) { if (!(wh in cache)) cache[wh] = readInv(wh); return cache[wh]; };
-    f.reset = function () { cache = {}; };
+    f.reset = function () { cache = {}; idx = null; };
+    /* O(1) item lookup by SKU (then name) across all warehouses; the index is built once per open form */
+    f.find = function (sku, name) {
+      if (!idx) {
+        idx = { s: Object.create(null), n: Object.create(null) };
+        warehouses().forEach(function (wh) {
+          f(wh).forEach(function (x) {
+            if (!x) return; var a = low(x.sku), b = low(x.name);
+            if (a && !(a in idx.s)) idx.s[a] = x; if (b && !(b in idx.n)) idx.n[b] = x;
+          });
+        });
+      }
+      var s1 = low(sku), n1 = low(name);
+      return (s1 && idx.s[s1]) || (n1 && idx.n[n1]) || null;
+    };
     return f;
   }
 
@@ -225,7 +239,7 @@ try{
         if (!it || !it.name || it.active === false) return;
         var key = low(it.sku) || low(it.name);
         var c = map[key];
-        if (!c) { c = map[key] = { key: key, name: it.name, sku: it.sku || '', unit: itemUnit(it), cost: itemCost(it), total: 0, byWh: {}, isBundle: !!it.isBundle }; order.push(key); }
+        if (!c) { c = map[key] = { key: key, lname: low(it.name), lsku: low(it.sku), name: it.name, sku: it.sku || '', unit: itemUnit(it), cost: itemCost(it), total: 0, byWh: {}, isBundle: !!it.isBundle }; order.push(key); }
         c.total = r6(c.total + num(it.qty)); c.byWh[wh] = r6(num(c.byWh[wh]) + num(it.qty));
         if (!c.unit) c.unit = itemUnit(it);
       });
@@ -578,7 +592,7 @@ try{
 
   function recipeCost(r, inv) {
     var t = 0; (r.components || []).forEach(function (c) {
-      for (var i = 0, whs = warehouses(); i < whs.length; i++) { var it = findIn(inv(whs[i]), c.sku, c.name); if (it) { t += num(c.qty) * itemCost(it); break; } }
+      var it = inv.find(c.sku, c.name); if (it) t += num(c.qty) * itemCost(it);
     });
     return t + (r.extras || []).reduce(function (s, x) { return s + num(x.amount); }, 0);
   }
@@ -642,8 +656,7 @@ try{
   }
   function rcpItemCost(c) {
     if (!c || !(c.sku || c.name)) return null;
-    for (var k = 0, w = warehouses(); k < w.length; k++) { var it = findIn(INV(w[k]), c.sku, c.name); if (it) return itemCost(it); }
-    return null;
+    var it = INV.find(c.sku, c.name); return it ? itemCost(it) : null;
   }
   function rcpExtraTotal() { return (R.extras || []).reduce(function (s, x) { return s + num(x.amount); }, 0); }
   function recipeRowsHtml() {
@@ -690,16 +703,14 @@ try{
   function showErr(list) { var e = $('acxErr'); if (!e) return; e.innerHTML = list && list.length ? '<div class="ac-err"><b>Please fix:</b><br>' + list.map(esc).join('<br>') + '</div>' : ''; if (list && list.length) e.scrollIntoView({ block: 'nearest' }); }
 
   /* A saved bundle item must show in Stock straight away (qty 0 until an assembly adds units) */
-  function ensureStockItem(r) {
+  function ensureStockItem(r, inv) {
     try {
+      inv = inv || makeInv();
       var wh = r.toWarehouse || warehouses()[0]; if (!wh || !r.name) return false;
-      var list = readInv(wh), it = findIn(list, r.sku, r.name), changed = false;
+      var list = inv(wh), it = findIn(list, r.sku, r.name), changed = false;
       if (!it) {
         var first = null;
-        for (var i = 0; i < (r.components || []).length && !first; i++) {
-          var c = r.components[i], w = warehouses();
-          for (var k = 0; k < w.length && !first; k++) first = findIn(readInv(w[k]), c.sku, c.name);
-        }
+        for (var i = 0; i < (r.components || []).length && !first; i++) first = inv.find(r.components[i].sku, r.components[i].name);
         list.push(newFinishedItem({ name: r.name, sku: r.sku, sellPrice: r.sellPrice, buyVat: r.buyVat, sellVat: r.sellVat, sellDesc: r.sellDesc }, first));
         changed = true;
       } else {
@@ -707,13 +718,13 @@ try{
         if (it.name !== r.name) { it.name = r.name; changed = true; }
         if (num(r.sellPrice) > 0 && num(it.sellPrice) !== num(r.sellPrice)) { it.sellPrice = num(r.sellPrice); changed = true; }
       }
-      if (changed) writeInv(wh, list);
+      if (changed) { writeInv(wh, list); inv.reset(); }
       return changed;
     } catch (e) { console.warn('[bundle] stock item', e); return false; }
   }
   function syncRecipesToStock() {
     var any = false;
-    recipes().forEach(function (r) { if (ensureStockItem(r)) any = true; });
+    var inv = makeInv(); recipes().forEach(function (r) { if (ensureStockItem(r, inv)) any = true; });
     if (any) refreshApp();
   }
   setTimeout(syncRecipesToStock, 2500);
@@ -851,13 +862,21 @@ try{
     var curRow = kind === 'b' ? R : (kind === 'a' ? A.lines : R.components)[+input.getAttribute('data-i')];
     if (curRow && curRow.name && low(curRow.name) === q) q = '';   /* an item is already picked: show the whole list again */
     (kind === 'a' ? A.lines : R.components).forEach(function (c, i) { if (kind === 'b' || i !== +input.getAttribute('data-i')) used[low(c.sku) || low(c.name)] = 1; });
-    var self = kind === 'a' ? A : R, selfKeys = kind === 'b' ? [] : [low(self.sku), low(self.name)];
-    var list = CAT.filter(function (c) { return !used[c.key] && selfKeys.indexOf(low(c.sku)) < 0 && selfKeys.indexOf(low(c.name)) < 0 && (!q || low(c.name).indexOf(q) > -1 || low(c.sku).indexOf(q) > -1); }).slice(0, 500);
+    var self = kind === 'a' ? A : R, selfKeys = kind === 'b' ? [] : [low(self.sku), low(self.name)].filter(Boolean);   /* empty keys must not hide items that have no SKU */
+    var list = CAT.filter(function (c) { return !used[c.key] && selfKeys.indexOf(c.lsku) < 0 && selfKeys.indexOf(c.lname) < 0 && (!q || c.lname.indexOf(q) > -1 || c.lsku.indexOf(q) > -1); });
     closeDD(); dd = D.createElement('div'); dd.className = 'ac-dd'; ddTarget = input;
-    dd.innerHTML = list.map(function (c) {
+    var me = dd, shown = 0, CHUNK = 60;
+    var rowHtml = function (c) {
       var here = kind === 'a' && A.warehouse ? num(c.byWh[A.warehouse]) : c.total;
       return '<div data-key="' + esc(c.key) + '"><b>' + esc(c.name) + '</b><small>SKU: ' + esc(c.sku || '-') + ' &middot; on hand: ' + fq(here) + (kind === 'a' && A.warehouse ? ' in ' + esc(A.warehouse) : ' (all locations)') + (c.unit ? ' ' + esc(c.unit) : '') + '</small></div>';
-    }).join('') || '<div class="none">No matching items (already picked items and the bundle itself are hidden)</div>';
+    };
+    var more = function () {                                   /* every matching item is reachable: the next batch loads as you scroll */
+      var end = Math.min(list.length, shown + CHUNK); if (end <= shown) return;
+      var h = ''; for (var i = shown; i < end; i++) h += rowHtml(list[i]);
+      shown = end; me.insertAdjacentHTML('beforeend', h);
+    };
+    if (list.length) { more(); me.addEventListener('scroll', function () { if (me.scrollTop + me.clientHeight >= me.scrollHeight - 60) more(); }); }
+    else me.innerHTML = '<div class="none">No matching items (already picked items and the bundle itself are hidden)</div>';
     var b = input.getBoundingClientRect(); dd.style.left = b.left + 'px'; dd.style.top = (b.bottom + 2) + 'px'; dd.style.width = Math.max(b.width, 280) + 'px';
     dd.addEventListener('mousedown', function (e) {
       var d = e.target.closest('[data-key]'); if (!d) return; e.preventDefault();
