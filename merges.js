@@ -298,7 +298,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     if (!list.querySelector('[data-stock-history]')) {
       var li = document.createElement('li'); li.setAttribute('data-stock-history', '1'); li.textContent = '📁 Stock History';
       li.onclick = function () { w.showReport(TAB, li); };
-      var after = list.querySelector('li[onclick*="simpleWarehouseMovementPanel"]');
+      var after = list.querySelector('li[onclick*="stockAssessmentReportPanel"]');
       after ? after.parentNode.insertBefore(li, after.nextSibling) : list.appendChild(li);
       var head = document.querySelector('.rep-cat-header[data-cat="cat_inventoryReports"] .rep-cat-count');
       if (head) { var n = parseInt(String(head.textContent).replace(/\D/g, ''), 10); if (n >= 0) head.textContent = '(' + (n + 1) + ')'; }
@@ -698,7 +698,15 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
  * Data: localStorage "stockTakes". */
 (function (w) {
   'use strict';
-  var KEY = 'stockTakes', TAB = 'assessmentTab';
+  var KEY = 'stockTakes', TAB = 'assessmentTab', RPT = 'stockAssessmentReportPanel';
+  /* The same screens draw in Inventory > Assessment AND in Reports > Inventory Reports > Stock Assessment.
+   * Only one is drawn at a time (the other is emptied) so the field ids never repeat. */
+  function rootEl() {
+    var r = $(RPT), t = $(TAB), useRpt = !!(r && r.offsetParent !== null);
+    var on = useRpt ? r : t, off = useRpt ? t : r;
+    if (off && off.innerHTML) off.innerHTML = '';
+    return on;
+  }
   var $ = function (id) { return document.getElementById(id); };
   var num = function (v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; };
   var low = function (v) { return String(v == null ? '' : v).trim().toLowerCase(); };
@@ -757,7 +765,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
 
   /* ---------- register ---------- */
   function renderRegister() {
-    var root = $(TAB); if (!root) return;
+    var root = rootEl(); if (!root) return;
     var all = takes(), q = low(($('stSearch') || {}).value), st = ($('stStatus') || {}).value || '';
     var cards = { total: all.length, pend: 0, done: 0, diff: 0 };
     all.forEach(function (t) { var k = totals(t); if (t.status === 'Submitted') cards.pend++; if (t.status === 'Posted') cards.done++; if (k.diffLines > 0) cards.diff++; });
@@ -904,7 +912,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     }).join('') + '</div>';
   }
   function renderSheet() {
-    var root = $(TAB); if (!root) return;
+    var root = rootEl(); if (!root) return;
     state.t = null; var t = byId(state.id); state.t = t || null;
     if (!t) { state = { view: 'register', id: null, t: null }; return renderRegister(); }
     var meta = function (l, v) { return v ? '<div><span class="text-gray-500">' + l + ':</span> ' + esc(v) + '</div>' : ''; };
@@ -1057,6 +1065,18 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
 
   /* ---------- mount ---------- */
   setTimeout(function () { var t = $(TAB); if (t && !t.classList.contains('hidden')) render(); }, 800);
+  /* Reports > Stock Assessment opens on the register every time */
+  var rtries = 0;
+  (function hook() {
+    if (w.__saRptHooked) return;
+    if (typeof w.showReport !== 'function') { if (rtries++ < 40) setTimeout(hook, 500); return; }
+    w.__saRptHooked = true; var orig = w.showReport;
+    w.showReport = function (id) {
+      var r = orig.apply(this, arguments);
+      if (id === RPT) { try { state = { view: 'register', id: null, t: null }; render(); } catch (e) { console.error('[stock-assessment report]', e); } }
+      return r;
+    };
+  })();
 })(window);
   }
   if (document.readyState === 'complete') acxStockModulesInit(); else window.addEventListener('load', acxStockModulesInit);

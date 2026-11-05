@@ -3909,3 +3909,639 @@ try{
   };
   window.closeStockHistory = close;
 })();
+
+
+/* ######## Inventory reports: Stock Aging, Dead/Slow/Fast Moving, Overstock, Understock, Negative,
+   Damaged, Expired (Batch Tracking is handled above) ########
+   Rules
+     Stock Aging ........ days since the item was last received (bills, stock history, batches, opening)
+     Dead Stock ......... stock on hand, no sale (invoices) in the last 180 days
+     Slow Moving ........ stock on hand, sold in the last 180 days but less than 25% of on-hand sold in the period
+     Fast Moving ........ top 50 items by quantity sold (invoices) in the period (default last 90 days)
+     Overstock .......... quantity on hand ABOVE 100 (per warehouse)
+     Understock ......... quantity on hand BELOW 3 but above zero (per warehouse)
+     Negative Stock ..... quantity on hand zero or below (per warehouse)
+     Damaged Stock ...... every negative stock adjustment (Stock Adjustments + Bulk Adjustments)
+     Expired Stock ...... stock batches whose expiry date has passed and still have quantity
+   ========================================================================== */
+(function () {
+  "use strict";
+  if (window.__acxInvReports) return;
+  window.__acxInvReports = true;
+
+  var OVERSTOCK_ABOVE = 100, UNDERSTOCK_BELOW = 3, DEAD_DAYS = 180, VELOCITY_DAYS = 90, SLOW_RATIO = 0.25;
+
+  function LS(k) { try { var v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function num(v) { v = parseFloat(v); return isFinite(v) ? v : 0; }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function key(s) { return String(s == null ? "" : s).trim().toLowerCase(); }
+  function dp() { try { return window.__getDecimalPlaces ? window.__getDecimalPlaces() : 2; } catch (e) { return 2; } }
+  function money(v) {
+    try { if (typeof window.__fmtBase === "function") return window.__fmtBase(num(v)); } catch (e) {}
+    return num(v).toLocaleString(undefined, { minimumFractionDigits: dp(), maximumFractionDigits: dp() });
+  }
+  function qtyFmt(v) { v = num(v); return v % 1 === 0 ? String(v) : v.toLocaleString(undefined, { maximumFractionDigits: 3 }); }
+  function toDate(v) { if (!v) return null; var d = new Date(v); return isNaN(d.getTime()) ? null : d; }
+  function dayStr(d) { return d ? d.toISOString().slice(0, 10) : "—"; }
+  function daysAgo(d, now) { return Math.floor((now - d) / 864e5); }
+
+  /* ---------------- stock rows: one per item per warehouse ---------------- */
+  function stockRows() {
+    var rows = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (!k || k.indexOf("inventory_") !== 0) continue;
+      var list = LS(k), wh = k.slice(10);
+      list.forEach(function (it) {
+        if (!it || typeof it !== "object") return;
+        var cost = num(it.buyPrice != null ? it.buyPrice : it.costPrice != null ? it.costPrice : it.unitCost != null ? it.unitCost :
+                        it.costPerUnit != null ? it.costPerUnit : it.cost != null ? it.cost : it.purchasePrice);
+        var q = num(it.qty != null ? it.qty : it.quantity != null ? it.quantity : it.stock);
+        rows.push({ raw: it, name: it.name || it.sku || "-", sku: it.sku || "", wh: it.warehouse || wh, qty: q, cost: cost, value: q * cost });
+      });
+    }
+    return rows;
+  }
+  function prodKey(r) { return key(r.sku) || key(r.name); }
+
+  /* ---------------- sales (invoices) ---------------- */
+  function salesIndex() {
+    var idx = {};
+    LS("invoices").forEach(function (inv) {
+      if (!inv || /void|cancel|draft/i.test(String(inv.status || ""))) return;
+      var d = toDate(inv.date || inv.invoiceDate || inv.createdAt);
+      if (!d) return;
+      (Array.isArray(inv.items) ? inv.items : []).forEach(function (ln) {
+        if (!ln) return;
+        var q = num(ln.qty != null ? ln.qty : ln.quantity);
+        if (q <= 0) return;
+        var keys = [key(ln.sku || ln.code), key(ln.desc || ln.description || ln.name || ln.item || ln.product)];
+        var seen = {};
+        keys.forEach(function (kk) {
+          if (!kk || seen[kk]) return; seen[kk] = 1;
+          (idx[kk] = idx[kk] || []).push({ d: d, q: q });
+        });
+      });
+    });
+    return idx;
+  }
+  function soldStats(idx, r, from, to) {
+    var seen = [], list = [];
+    [key(r.sku), key(r.name)].forEach(function (kk) {
+      if (kk && seen.indexOf(kk) < 0 && idx[kk]) { seen.push(kk); list = list.concat(idx[kk]); }
+    });
+    var s = { period: 0, d180: 0, last: null };
+    var now = new Date(), t180 = new Date(now - DEAD_DAYS * 864e5);
+    list.forEach(function (x) {
+      if (x.d >= from && x.d <= to) s.period += x.q;
+      if (x.d >= t180) s.d180 += x.q;
+      if (!s.last || x.d > s.last) s.last = x.d;
+    });
+    return s;
+  }
+  /* one line per product (stock summed over warehouses) */
+  function productRows() {
+    var map = {}, out = [];
+    stockRows().forEach(function (r) {
+      var k = prodKey(r);
+      if (!map[k]) { map[k] = { name: r.name, sku: r.sku, qty: 0, value: 0, cost: r.cost, raws: [], whs: [] }; out.push(map[k]); }
+      map[k].qty += r.qty; map[k].value += r.value; map[k].raws.push(r.raw); map[k].whs.push(r.wh);
+    });
+    return out;
+  }
+
+  /* ---------------- last received date (stock aging) ---------------- */
+  function receivedIndex() {
+    var idx = {};
+    function add(kk, d) { if (!kk || !d) return; if (!idx[kk] || d > idx[kk]) idx[kk] = d; }
+    LS("bills").forEach(function (b) {
+      if (!b || /void|cancel|draft/i.test(String(b.status || ""))) return;
+      var d = toDate(b.date || b.billDate || b.invoiceDate || b.createdAt);
+      (Array.isArray(b.items) ? b.items : []).forEach(function (ln) {
+        if (!ln) return;
+        add(key(ln.sku || ln.code), d);
+        add(key(ln.desc || ln.description || ln.name || ln.item || ln.product), d);
+      });
+    });
+    LS("movements").forEach(function (m) {
+      if (!m) return;
+      var t = String(m.type || m.movementType || "").toLowerCase();
+      if (["in", "purchase", "receipt", "grn", "opening", "transfer-in"].indexOf(t) < 0) return;
+      add(key(m.item || m.itemName || m.product || m.sku || m.code), toDate(m.date || m.createdAt || m.timestamp));
+    });
+    return idx;
+  }
+  function lastReceived(p, ridx) {
+    var best = null;
+    function take(d) { if (d && (!best || d > best)) best = d; }
+    take(ridx[key(p.sku)]); take(ridx[key(p.name)]);
+    p.raws.forEach(function (it) {
+      (Array.isArray(it.history) ? it.history : []).forEach(function (h) {
+        if (h && num(h.qty) > 0) take(toDate(h.date));
+      });
+      (Array.isArray(it.batches) ? it.batches : []).forEach(function (b) {
+        if (b) take(toDate(b.receivedDate || b.dateReceived || b.date || b.createdAt));
+      });
+      take(toDate(it.createdAt || it.dateAdded || it.date));
+    });
+    return best;
+  }
+  function bucket(d) { return d <= 30 ? "0-30 days" : d <= 60 ? "31-60 days" : d <= 90 ? "61-90 days" : d <= 180 ? "91-180 days" : d <= 365 ? "181-365 days" : "365+ days"; }
+  var BUCKETS = ["0-30 days", "31-60 days", "61-90 days", "91-180 days", "181-365 days", "365+ days", "Unknown"];
+
+  /* ---------------- panel shell for the inventory_* views ---------------- */
+  function shell(id, title, sub, cols, withDates) {
+    var p = document.getElementById(id);
+    if (!p) return null;
+    var from = (p.querySelector(".rep-from") || {}).value || "", to = (p.querySelector(".rep-to") || {}).value || "";
+    var btn = "padding:4px 10px;border-radius:4px;font-size:12px;";
+    var inp = "border:1px solid #d1d5db;border-radius:4px;padding:2px 6px;font-size:12px";
+    p.innerHTML =
+      '<div class="rep-panel-header" style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb;padding:8px 4px;margin-bottom:10px">' +
+      '<div><h2 style="font-size:18px;font-weight:700;color:#1e3a8a;margin:0">' + esc(title) + '</h2>' +
+      '<div style="font-size:11px;color:#64748b">' + esc(sub) + '</div></div>' +
+      '<div class="rep-actions" style="display:flex;gap:6px;align-items:center">' +
+      (withDates ? '<input type="date" class="rep-from" style="' + inp + '" value="' + esc(from) + '"><input type="date" class="rep-to" style="' + inp + '" value="' + esc(to) + '">' : "") +
+      '<button onclick="repRefresh(this)" style="background:#1e3a8a;color:#fff;' + btn + '">Refresh</button>' +
+      '<button onclick="repPrint(this)" style="background:#e5e7eb;' + btn + '">Print</button>' +
+      '<button onclick="repCsv(this)" style="background:#e5e7eb;' + btn + '">CSV</button>' +
+      '<button onclick="repPdf(this)" style="background:#e5e7eb;' + btn + '">PDF</button></div></div>' +
+      '<div class="rep-summary" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"></div>' +
+      '<div class="rep-body"><table class="w-full border text-sm rep-table"><thead class="bg-gray-100"><tr>' +
+      cols.map(function (c) { return '<th class="border px-2 py-1 ' + (c.r ? "text-right" : "text-left") + '">' + esc(c.t) + '</th>'; }).join("") +
+      '</tr></thead><tbody></tbody><tfoot></tfoot></table></div>';
+    return { panel: p, from: from ? new Date(from + "T00:00:00") : null, to: to ? new Date(to + "T23:59:59") : null, ncols: cols.length, cols: cols };
+  }
+  function cards(sh, list) {
+    sh.panel.querySelector(".rep-summary").innerHTML = list.map(function (c) {
+      return '<div style="border:1px solid #e5e7eb;border-radius:6px;padding:6px 12px;background:#f8fafc"><div style="font-size:11px;color:#64748b">' +
+        esc(c[0]) + '</div><div style="font-weight:700;font-size:14px">' + esc(c[1]) + '</div></div>';
+    }).join("");
+  }
+  function fill(sh, rows, emptyMsg, totalRow) {
+    var tb = sh.panel.querySelector("tbody"), tf = sh.panel.querySelector("tfoot");
+    tb.innerHTML = rows.length ? rows.map(function (r) {
+      return "<tr>" + r.map(function (c, i) {
+        var cell = (c && c.html != null) ? c.html : esc(c);
+        return '<td class="border px-2 py-1' + (sh.cols[i].r ? " text-right" : "") + '">' + cell + "</td>";
+      }).join("") + "</tr>";
+    }).join("") : '<tr class="rep-empty"><td colspan="' + sh.ncols + '" style="padding:24px;text-align:center;color:#6b7280">' + esc(emptyMsg) + "</td></tr>";
+    tf.innerHTML = rows.length && totalRow ? '<tr class="font-bold bg-gray-50">' + totalRow.map(function (c, i) {
+      return '<th class="border px-2 py-1 ' + (sh.cols[i].r ? "text-right" : "text-left") + '"' + (c && c.span ? ' colspan="' + c.span + '"' : "") + ">" + esc(c && c.t != null ? c.t : c) + "</th>";
+    }).join("") + "</tr>" : "";
+  }
+  var C = function (t, r) { return { t: t, r: !!r }; };
+
+  /* ---------------- Stock Aging ---------------- */
+  window.renderStockAging = function () {
+    var sh = shell("inventory_stockAging", "Stock Aging", "Inventory Reports — age measured from the last time the item was received", [
+      C("Item"), C("SKU"), C("Qty", 1), C("Value", 1), C("Last Received"), C("Days Old", 1), C("Age Bucket")], false);
+    if (!sh) return;
+    var now = new Date(), ridx = receivedIndex(), tot = {}, totV = {}, all = 0;
+    var rows = productRows().filter(function (p) { return p.qty > 0; }).map(function (p) {
+      var d = lastReceived(p, ridx), age = d ? Math.max(0, daysAgo(d, now)) : null, b = age == null ? "Unknown" : bucket(age);
+      tot[b] = (tot[b] || 0) + 1; totV[b] = (totV[b] || 0) + p.value; all += p.value;
+      return { age: age, row: [p.name, p.sku, qtyFmt(p.qty), money(p.value), dayStr(d), age == null ? "—" : age, b] };
+    }).sort(function (a, b) { return (b.age == null ? -1 : b.age) - (a.age == null ? -1 : a.age); });
+    cards(sh, BUCKETS.filter(function (b) { return tot[b]; }).map(function (b) { return [b, tot[b] + " item(s) · " + money(totV[b])]; }));
+    fill(sh, rows.map(function (r) { return r.row; }), "No stock on hand to age.", [{ t: "Total stock value", span: 3 }, money(all), { t: "", span: 3 }]);
+  };
+
+  /* ---------------- Dead Stock ---------------- */
+  window.renderDeadStock = function () {
+    var sh = shell("inventory_deadStock", "Dead Stock", "Inventory Reports — stock on hand with no sale in " + DEAD_DAYS + "+ days", [
+      C("Item"), C("SKU"), C("Qty", 1), C("Value", 1), C("Last Sale"), C("Days Since Sale", 1)], false);
+    if (!sh) return;
+    var now = new Date(), sidx = salesIndex(), ridx = receivedIndex(), tv = 0;
+    var rows = productRows().filter(function (p) { return p.qty > 0; }).map(function (p) {
+      var s = soldStats(sidx, p, new Date(0), now), since = s.last ? daysAgo(s.last, now) : null;
+      if (since == null) { var rc = lastReceived(p, ridx); since = rc ? daysAgo(rc, now) : 9999; }
+      return { p: p, s: s, since: since };
+    }).filter(function (x) { return x.since >= DEAD_DAYS; }).sort(function (a, b) { return b.p.value - a.p.value; });
+    rows.forEach(function (x) { tv += x.p.value; });
+    cards(sh, [["Dead items", rows.length], ["Value tied up", money(tv)]]);
+    fill(sh, rows.map(function (x) {
+      return [x.p.name, x.p.sku, qtyFmt(x.p.qty), money(x.p.value), x.s.last ? dayStr(x.s.last) : "Never sold", x.since >= 9999 ? "—" : x.since];
+    }), "No dead stock — every item on hand has sold in the last " + DEAD_DAYS + " days.", [{ t: "Total", span: 3 }, money(tv), { t: "", span: 2 }]);
+  };
+
+  /* ---------------- Slow / Fast moving ---------------- */
+  function period(sh) {
+    var now = new Date(), to = sh.to || now, from = sh.from || new Date(to - VELOCITY_DAYS * 864e5);
+    return { from: from, to: to, days: Math.max(1, Math.round((to - from) / 864e5)) };
+  }
+  window.renderSlowMovingStock = function () {
+    var sh = shell("inventory_slowMovingStock", "Slow Moving Stock", "Inventory Reports — from invoices: sold less than " + (SLOW_RATIO * 100) + "% of on-hand in the period (default last " + VELOCITY_DAYS + " days)", [
+      C("Item"), C("SKU"), C("On Hand", 1), C("Sold in Period", 1), C("% of On Hand Sold", 1), C("Value", 1), C("Last Sale")], true);
+    if (!sh) return;
+    var pr = period(sh), sidx = salesIndex(), tv = 0;
+    var rows = productRows().filter(function (p) { return p.qty > 0; }).map(function (p) { return { p: p, s: soldStats(sidx, p, pr.from, pr.to) }; })
+      .filter(function (x) { return x.s.d180 > 0 && x.s.period < Math.max(1, SLOW_RATIO * x.p.qty); })
+      .sort(function (a, b) { return a.s.period - b.s.period; });
+    rows.forEach(function (x) { tv += x.p.value; });
+    cards(sh, [["Slow-moving items", rows.length], ["Value tied up", money(tv)], ["Period", dayStr(pr.from) + " → " + dayStr(pr.to)]]);
+    fill(sh, rows.map(function (x) {
+      return [x.p.name, x.p.sku, qtyFmt(x.p.qty), qtyFmt(x.s.period), (x.s.period / x.p.qty * 100).toFixed(1) + "%", money(x.p.value), dayStr(x.s.last)];
+    }), "No slow-moving items in this period.", [{ t: "Total", span: 5 }, money(tv), ""]);
+  };
+  window.renderFastMovingStock = function () {
+    var sh = shell("inventory_fastMovingStock", "Fast Moving Stock", "Inventory Reports — top 50 sellers from invoices (default last " + VELOCITY_DAYS + " days)", [
+      C("Item"), C("SKU"), C("Sold in Period", 1), C("Avg Sold / Day", 1), C("On Hand", 1), C("Value", 1), C("Last Sale")], true);
+    if (!sh) return;
+    var pr = period(sh), sidx = salesIndex();
+    var rows = productRows().map(function (p) { return { p: p, s: soldStats(sidx, p, pr.from, pr.to) }; })
+      .filter(function (x) { return x.s.period > 0; }).sort(function (a, b) { return b.s.period - a.s.period; }).slice(0, 50);
+    cards(sh, [["Items shown", rows.length], ["Period", dayStr(pr.from) + " → " + dayStr(pr.to)]]);
+    fill(sh, rows.map(function (x) {
+      return [x.p.name, x.p.sku, qtyFmt(x.s.period), (x.s.period / pr.days).toFixed(2), qtyFmt(x.p.qty), money(x.p.value), dayStr(x.s.last)];
+    }), "No sales recorded in this period.");
+  };
+
+  /* ---------------- Overstock ---------------- */
+  window.renderOverstockReport = function () {
+    var sh = shell("inventory_overstockReport", "Overstock Report", "Inventory Reports — quantity on hand above " + OVERSTOCK_ABOVE, [
+      C("Item"), C("SKU"), C("Warehouse"), C("On Hand", 1), C("Excess Over " + OVERSTOCK_ABOVE, 1), C("Value", 1)], false);
+    if (!sh) return;
+    var tv = 0, ex = 0;
+    var rows = stockRows().filter(function (r) { return r.qty > OVERSTOCK_ABOVE; }).sort(function (a, b) { return b.qty - a.qty; });
+    rows.forEach(function (r) { tv += r.value; ex += r.qty - OVERSTOCK_ABOVE; });
+    cards(sh, [["Overstocked lines", rows.length], ["Excess units", qtyFmt(ex)], ["Value", money(tv)]]);
+    fill(sh, rows.map(function (r) { return [r.name, r.sku, r.wh, qtyFmt(r.qty), qtyFmt(r.qty - OVERSTOCK_ABOVE), money(r.value)]; }),
+      "No item has more than " + OVERSTOCK_ABOVE + " units on hand.", [{ t: "Total", span: 4 }, qtyFmt(ex), money(tv)]);
+  };
+
+  /* ---------------- Understock + Negative Stock (existing panels) ---------------- */
+  var lowRendering = false;
+  function fillWarehouseSelect(id, rows) {
+    var sel = document.getElementById(id); if (!sel) return;
+    var keep = sel.value, names = {};
+    rows.forEach(function (r) { if (r.wh) names[r.wh] = 1; });
+    sel.innerHTML = '<option value="">All Warehouses</option>' + Object.keys(names).sort().map(function (w) { return '<option value="' + esc(w) + '">' + esc(w) + "</option>"; }).join("");
+    sel.value = names[keep] ? keep : "";
+  }
+  function levelTable(panelId, bodyId, whId, groupId, test, statusFn, emptyMsg, rowClass) {
+    var panel = document.getElementById(panelId), body = document.getElementById(bodyId);
+    if (!panel || !body) return;
+    var all = stockRows();
+    fillWarehouseSelect(whId, all);
+    var wh = (document.getElementById(whId) || {}).value || "", grp = (document.getElementById(groupId) || {}).value || "item";
+    var rows = all.filter(function (r) { return test(r.qty) && (!wh || r.wh === wh); });
+    rows.sort(function (a, b) { return grp === "warehouse" ? (String(a.wh).localeCompare(String(b.wh)) || String(a.name).localeCompare(String(b.name))) : (String(a.name).localeCompare(String(b.name)) || String(a.wh).localeCompare(String(b.wh))); });
+    var th = panel.querySelector("thead tr");
+    if (th) th.innerHTML = ["Item", "SKU", "Warehouse", "Stock on Hand", "Reorder Level", "Status"].map(function (t, i) { return '<th class="border px-2 py-1 ' + (i === 3 || i === 4 ? "text-right" : "text-left") + '">' + t + "</th>"; }).join("");
+    lowRendering = true;
+    body.innerHTML = rows.length ? rows.map(function (r) {
+      return '<tr class="border-b ' + rowClass(r.qty) + '"><td class="p-2">' + esc(r.name) + '</td><td class="p-2">' + esc(r.sku) + '</td><td class="p-2">' + esc(r.wh) +
+        '</td><td class="p-2 text-right font-semibold">' + qtyFmt(r.qty) + '</td><td class="p-2 text-right">' + UNDERSTOCK_BELOW + '</td><td class="p-2">' + esc(statusFn(r.qty)) + "</td></tr>";
+    }).join("") : '<tr><td colspan="6" class="text-center p-3 text-gray-500">' + esc(emptyMsg) + "</td></tr>";
+    setTimeout(function () { lowRendering = false; }, 0);
+  }
+  window.renderLowStockReport = function () {
+    var h = document.querySelector("#lowStockPanel > h2"); if (h) h.textContent = "📦 Understock Report (below " + UNDERSTOCK_BELOW + " units)";
+    levelTable("lowStockPanel", "lowStockBody", "lowStockWarehouseFilter", "lowStockGroupBy",
+      function (q) { return q > 0 && q < UNDERSTOCK_BELOW; }, function () { return "Understock"; },
+      "No items are below " + UNDERSTOCK_BELOW + " units.", function () { return "bg-yellow-100 text-yellow-700"; });
+  };
+  window.renderNegativeStockReport = function () {
+    var h = document.querySelector("#negativeStockPanel > h2"); if (h) h.textContent = "📦 Negative Stock (zero or below)";
+    levelTable("negativeStockPanel", "negativeStockBody", "negativeStockWarehouseFilter", "negativeStockGroupBy",
+      function (q) { return q <= 0; }, function (q) { return q < 0 ? "Negative" : "Zero stock"; },
+      "No items are at zero or negative stock.", function (q) { return q < 0 ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"; });
+  };
+  window.applyLowStockFilter = window.renderLowStockReport;
+  window.applyNegativeStockFilter = window.renderNegativeStockReport;
+  window.clearLowStockFilter = function () { var s = document.getElementById("lowStockWarehouseFilter"); if (s) s.value = ""; window.renderLowStockReport(); };
+  window.clearNegativeStockFilter = function () { var s = document.getElementById("negativeStockWarehouseFilter"); if (s) s.value = ""; window.renderNegativeStockReport(); };
+  window.exportStockReportToCSV = function (which) {
+    var body = document.getElementById(which === "lowStock" ? "lowStockBody" : which === "negativeStock" ? "negativeStockBody" : "");
+    if (!body || !body.querySelector("td.font-semibold")) return alert("No data to export.");
+    var csv = "Item,SKU,Warehouse,Stock on Hand,Reorder Level,Status\n";
+    Array.prototype.forEach.call(body.rows, function (tr) {
+      csv += Array.prototype.map.call(tr.cells, function (c) { return '"' + c.innerText.replace(/"/g, '""') + '"'; }).join(",") + "\n";
+    });
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+    a.download = which + "_report.csv"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  };
+  /* older code (dashboard / stock refresh) rewrites these two tables with its own rows – redraw ours right after */
+  function watchLevelBodies() {
+    [["lowStockBody", "renderLowStockReport"], ["negativeStockBody", "renderNegativeStockReport"]].forEach(function (p) {
+      var b = document.getElementById(p[0]);
+      if (!b || b.__acxWatch) return; b.__acxWatch = 1;
+      try {
+        new MutationObserver(function () {
+          if (lowRendering) return;
+          if (b.querySelector("td:nth-child(6)") || (b.rows.length === 1 && b.rows[0].cells.length === 6)) return;
+          setTimeout(window[p[1]], 0);
+        }).observe(b, { childList: true });
+      } catch (e) {}
+    });
+  }
+
+  /* ---------------- Damaged Stock: every negative adjustment ---------------- */
+  function bodyRows(id, rows, cols, emptyMsg) {
+    var b = document.getElementById(id); if (!b) return;
+    b.innerHTML = rows.length ? rows.map(function (r) {
+      return '<tr class="border-t">' + r.map(function (c) { return '<td class="p-2 border px-2 py-1' + (c && c.r ? " text-right" : "") + '">' + (c && c.html != null ? c.html : c && c.t != null ? esc(c.t) : esc(c)) + "</td>"; }).join("") + "</tr>";
+    }).join("") : '<tr><td colspan="' + cols + '" class="p-3 text-center text-gray-500">' + esc(emptyMsg) + "</td></tr>";
+  }
+  function inputVal(id) { var e = document.getElementById(id); return e ? String(e.value || "").trim() : ""; }
+  function inRange(d, s, e) {
+    if (!s && !e) return true; if (!d) return false;
+    if (s && d < new Date(s + "T00:00:00")) return false;
+    if (e && d > new Date(e + "T23:59:59")) return false;
+    return true;
+  }
+  window.renderDamagedStock = function () {
+    var f = key(inputVal("damagedStockItem")), s = inputVal("damagedStockStart"), e = inputVal("damagedStockEnd");
+    var stock = stockRows(), costOf = function (name, sku) {
+      var r = stock.filter(function (x) { return (sku && key(x.sku) === key(sku)) || key(x.name) === key(name); })[0]; return r ? r.cost : 0;
+    };
+    var out = [], seen = {}, totalLoss = 0;
+    function add(item, sku, wh, q, reason, date) {
+      q = Math.abs(num(q)); if (!q) return;
+      var d = toDate(date);
+      if (f && key(item).indexOf(f) < 0 && key(sku).indexOf(f) < 0) return;
+      if (!inRange(d, s, e)) return;
+      var k = [key(item), key(wh), String(date), q].join("|"); if (seen[k]) return; seen[k] = 1;
+      var loss = q * costOf(item, sku); totalLoss += loss;
+      out.push({ d: d, row: [item || sku || "-", wh || "-", { t: qtyFmt(q), r: 1 }, reason || "Negative adjustment", dayStr(d), { t: money(loss), r: 1 }, '<span class="text-xs text-gray-500">Deducted from stock</span>'] });
+    }
+    LS("amendments").forEach(function (a) {
+      if (!a || !(num(a.quantity) < 0)) return;
+      add(a.item, a.sku, a.warehouse, a.quantity, (a.reason || a.adjustmentType || "Negative adjustment") + (a.source ? " — " + a.source : ""), a.date);
+    });
+    LS("baLog").forEach(function (a) {
+      if (!a || !(num(a.change) < 0)) return;
+      add(a.product, a.sku, a.warehouse, a.change, "Bulk adjustment", a.date);
+    });
+    out.sort(function (a, b) { return (b.d ? b.d.getTime() : 0) - (a.d ? a.d.getTime() : 0); });
+    out.forEach(function (o) { o.row[6] = { html: o.row[6] }; });
+    bodyRows("damagedStockBody", out.map(function (o) { return o.row; }), 7, "No damaged or written-off stock. Negative adjustments made in Stock Adjustment / Bulk Adjustment appear here.");
+    var t = document.getElementById("damagedStockTotal"); if (t) t.textContent = money(totalLoss);
+  };
+
+  /* ---------------- Expired Stock: expired stock batches ---------------- */
+  window.renderExpiredItems = function () {
+    var f = key(inputVal("expiredItemsItem")), s = inputVal("expiredItemsStart"), e = inputVal("expiredItemsEnd");
+    var now = new Date(), end = new Date(now); end.setHours(23, 59, 59, 999), rows = [], total = 0;
+    stockRows().forEach(function (r) {
+      var it = r.raw, batches = Array.isArray(it.batches) && it.batches.length ? it.batches
+        : (it.expiryDate || it.expiry) ? [{ batchNo: it.batchNo || it.batchNumber || "", expiryDate: it.expiryDate || it.expiry, qty: r.qty, __item: true }] : [];
+      if (f && key(r.name).indexOf(f) < 0 && key(r.sku).indexOf(f) < 0) return;
+      batches.forEach(function (b) {
+        if (!b) return;
+        var d = toDate(b.expiryDate || b.expiry), q = num(b.qty);
+        if (!d || q <= 0) return;
+        var dd = new Date(d); dd.setHours(23, 59, 59, 999);
+        if (dd >= now || !inRange(d, s, e)) return;
+        var loss = q * r.cost; total += loss;
+        var no = String(b.batchNo || b.batch || "");
+        var act = (!b.__item && no && typeof window.__acxAdjustBatch === "function")
+          ? '<button data-wh="' + esc(r.wh) + '" data-item="' + esc(r.name) + '" data-sku="' + esc(r.sku) + '" data-batch="' + esc(no) + '" onclick="__acxExpiredWriteOff(this)" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700">Write Off</button>'
+          : "—";
+        rows.push({ d: d, row: [r.name, r.wh, { t: qtyFmt(q), r: 1 }, dayStr(d),
+          "Expired " + daysAgo(d, now) + " day(s) ago" + (no ? " — batch " + no : ""), { t: money(loss), r: 1 }, { html: act }] });
+      });
+    });
+    rows.sort(function (a, b) { return b.d - a.d; });
+    bodyRows("expiredItemsBody", rows.map(function (x) { return x.row; }), 7, "No expired stock. Expiry dates are read from the batches on each stock item.");
+    var t = document.getElementById("expiredItemsTotal"); if (t) t.textContent = money(total);
+  };
+  window.__acxExpiredWriteOff = function (btn) { window.__acxAdjustBatch(btn); window.renderExpiredItems(); };
+  ["applyExpiredItemsFilters", "applyExpiredItemsFilter"].forEach(function (n) { window[n] = window.renderExpiredItems; });
+  window.applyDamagedStockFilters = window.renderDamagedStock;
+
+  /* ---------------- wiring ---------------- */
+  var PANELS = {
+    inventory_stockAging: "renderStockAging", inventory_deadStock: "renderDeadStock", inventory_slowMovingStock: "renderSlowMovingStock",
+    inventory_fastMovingStock: "renderFastMovingStock", inventory_overstockReport: "renderOverstockReport",
+    lowStockPanel: "renderLowStockReport", negativeStockPanel: "renderNegativeStockReport",
+    damagedStockPanel: "renderDamagedStock", expiredItemsPanel: "renderExpiredItems", batchTrackingPanel: "renderBatchTracking"
+  };
+  function run(id) { var fn = PANELS[id]; if (fn && typeof window[fn] === "function") { try { window[fn](); } catch (e) { console.error("[inventory reports] " + fn + " failed:", e); } } }
+
+  function hookShowReport() {
+    var cur = window.showReport;
+    if (typeof cur !== "function" || cur.__acxInv) return;
+    var w = function (id) { var r = cur.apply(this, arguments); run(id); watchLevelBodies(); return r; };
+    w.__acxInv = true; window.showReport = w;
+  }
+  function hookRefresh() {
+    var cur = window.repRefresh;
+    if (typeof cur !== "function" || cur.__acxInv) return;
+    var w = function (btn) {
+      var p = btn && btn.closest ? btn.closest(".report-view") : null;
+      if (p && PANELS[p.id]) return run(p.id);
+      return cur.apply(this, arguments);
+    };
+    w.__acxInv = true; window.repRefresh = w;
+  }
+  function install() { hookShowReport(); hookRefresh(); watchLevelBodies(); }
+  install();
+  window.addEventListener("load", function () { install(); setTimeout(install, 1200); setTimeout(install, 3500); });
+  window.addEventListener("storage", function (e) {
+    if (e.key && e.key.indexOf("inventory_") !== 0 && ["invoices", "bills", "amendments", "baLog"].indexOf(e.key) < 0) return;
+    Object.keys(PANELS).forEach(function (id) { var p = document.getElementById(id); if (p && !p.classList.contains("hidden") && p.style.display !== "none") run(id); });
+  });
+})();
+
+
+/* ######## KRA eTIMS OSCU: Connect panel + real invoice push ########
+   Setup: eTIMS / ETR Control Centre (VAT tab) -> enter KRA PIN, Branch ID, Device serial -> pick Sandbox/Production -> Connect.
+   Connect calls KRA /selectInitOsdcInfo through /api/etims and keeps the returned communication key (cmcKey).
+   "Push to ETIMS" on a single invoice then registers the items (/saveItems) and sends the sale (/saveTrnsSalesOsdc).
+   ========================================================================== */
+(function () {
+  "use strict";
+  if (window.__acxOscu) return;
+  window.__acxOscu = true;
+
+  function J(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function num(v) { v = parseFloat(v); return isFinite(v) ? v : 0; }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function r2(v) { return Math.round((v + Number.EPSILON) * 100) / 100; }
+  function pad(n, l) { return String(n).padStart(l || 2, "0"); }
+  function stamp(d, withTime) { return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + (withTime ? pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds()) : ""); }
+
+  function cfg() { var c = J("etimsConfig", {}) || {}; return { pin: String(c.kraPin || "").trim().toUpperCase(), bhf: String(c.branchId || "").trim(), serial: String(c.deviceSerial || "").trim() }; }
+  function conn() { return J("etimsOscu", {}) || {}; }
+  function saveConn(o) { localStorage.setItem("etimsOscu", JSON.stringify(o)); }
+
+  function kra(path, body, withKey) {
+    var c = cfg(), k = conn();
+    return fetch("/api/etims", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ env: k.env || "sandbox", path: path, tin: c.pin, bhfId: c.bhf, cmcKey: withKey ? k.cmcKey : undefined, body: body })
+    }).then(function (r) {
+      if (r.status === 404) throw new Error("/api/etims was not found. Deploy the new 'api' folder with the app (Vercel).");
+      return r.json();
+    });
+  }
+  function ok(r) { return r && String(r.resultCd) === "000"; }
+  function msg(r) { return (r && (r.resultMsg || r.message)) ? r.resultMsg || r.message : "Unknown response"; }
+  function findKey(r) {
+    var d = r && r.data, i = d && d.info;
+    return (i && i.cmcKey) || (d && d.cmcKey) || (r && r.cmcKey) || "";
+  }
+
+  /* ---------------- Connect panel ---------------- */
+  function status() {
+    var k = conn(), el = document.getElementById("oscuStatus"); if (!el) return;
+    el.innerHTML = k.cmcKey
+      ? '<span class="text-green-700">● Connected (' + esc(k.env || "sandbox") + ') — device ' + esc(k.sdcId || cfg().serial) + (k.at ? ", since " + esc(new Date(k.at).toLocaleString()) : "") + "</span>"
+      : '<span class="text-gray-600">● Not connected</span>';
+  }
+  function inject() {
+    var panel = document.getElementById("etimsPanel");
+    if (!panel || document.getElementById("oscuBox")) return;
+    var k = conn(), o = J("etimsOscuOpts", {}) || {};
+    var box = document.createElement("div");
+    box.id = "oscuBox"; box.className = "border rounded p-4 mb-4 bg-blue-50";
+    box.innerHTML =
+      '<h4 class="text-sm font-semibold mb-2">KRA OSCU connection</h4>' +
+      '<div class="text-xs text-gray-600 mb-3">Fill KRA PIN, Branch ID and ETR device serial below (as registered with KRA), choose the environment and click Connect.</div>' +
+      '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">' +
+      '<div><label class="block text-sm mb-1">Environment</label><select id="oscuEnv" class="border p-2 rounded w-full"><option value="sandbox"' + (k.env !== "production" ? " selected" : "") + '>Sandbox (testing)</option><option value="production"' + (k.env === "production" ? " selected" : "") + '>Production (live)</option></select></div>' +
+      '<div><label class="block text-sm mb-1">Default item class code (itemClsCd)</label><input id="oscuCls" class="border p-2 rounded w-full" placeholder="e.g. 5059690800" value="' + esc(o.cls || "") + '"></div>' +
+      '<div><label class="block text-sm mb-1">Payment type code</label><select id="oscuPmt" class="border p-2 rounded w-full"><option value="01">01 Cash</option><option value="02">02 Credit</option><option value="03">03 Cash/Credit</option><option value="04">04 Bank check</option><option value="05">05 Debit&amp;Credit card</option><option value="06">06 Mobile money</option><option value="07">07 Other</option></select></div></div>' +
+      '<div class="flex flex-wrap items-center gap-3"><button id="oscuConnect" type="button" class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">Save &amp; Connect</button>' +
+      '<button id="oscuDisconnect" type="button" class="border px-3 py-2 rounded bg-white hover:bg-gray-100">Disconnect</button><span id="oscuStatus" class="text-sm"></span></div>' +
+      '<div id="oscuMsg" class="text-sm mt-2"></div>';
+    var h = panel.querySelector("h3"); (h && h.nextSibling) ? panel.insertBefore(box, h.nextSibling) : panel.appendChild(box);
+    document.getElementById("oscuPmt").value = o.pmt || "01";
+    status();
+    document.getElementById("oscuConnect").onclick = connect;
+    document.getElementById("oscuDisconnect").onclick = function () { saveConn({ env: document.getElementById("oscuEnv").value }); status(); say("Disconnected.", "gray"); };
+  }
+  function say(t, c) { var m = document.getElementById("oscuMsg"); if (m) m.innerHTML = '<span class="text-' + (c === "red" ? "red-700" : c === "green" ? "green-700" : "gray-600") + '">' + esc(t) + "</span>"; }
+  function readInputs() {
+    // the existing Control Centre fields (et_kraPin, et_branchId, et_deviceSerial): persist them before connecting
+    var c = J("etimsConfig", {}) || {};
+    [["kraPin", "et_kraPin"], ["branchId", "et_branchId"], ["deviceSerial", "et_deviceSerial"]].forEach(function (p) {
+      var el = document.getElementById(p[1]); if (el && el.value != null) c[p[0]] = el.value.trim();
+    });
+    localStorage.setItem("etimsConfig", JSON.stringify(c));
+    localStorage.setItem("etimsOscuOpts", JSON.stringify({ cls: document.getElementById("oscuCls").value.trim(), pmt: document.getElementById("oscuPmt").value }));
+  }
+  function connect() {
+    readInputs();
+    var c = cfg(), env = document.getElementById("oscuEnv").value;
+    if (!/^[AP]\d{9}[A-Z]$/.test(c.pin)) return say("Enter a valid KRA PIN (e.g. P051234567X).", "red");
+    if (!c.bhf) return say("Enter the Branch ID (e.g. 00).", "red");
+    if (!c.serial) return say("Enter the ETR device serial number registered with KRA.", "red");
+    saveConn({ env: env });
+    say("Connecting to KRA " + env + "…", "gray");
+    kra("/selectInitOsdcInfo", { tin: c.pin, bhfId: c.bhf, dvcSrlNo: c.serial }, false).then(function (r) {
+      var key = findKey(r);
+      if (!ok(r) && !key) return say("KRA said: " + msg(r) + (r && r.resultCd ? " (code " + r.resultCd + ")" : ""), "red");
+      if (!key) return say("KRA accepted the device but returned no communication key. Response code " + (r && r.resultCd) + ".", "red");
+      var i = (r.data && r.data.info) || {};
+      saveConn({ env: env, cmcKey: key, sdcId: i.sdcId || "", mrcNo: i.mrcNo || "", dvcId: i.dvcId || "", bhfNm: i.bhfNm || "", taxpayer: i.taxprNm || "", at: new Date().toISOString() });
+      status(); say("Connected" + (i.taxprNm ? " as " + i.taxprNm : "") + ". You can now Push invoices to ETIMS.", "green");
+    }).catch(function (e) { say(e.message || String(e), "red"); });
+  }
+  try { new MutationObserver(inject).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+  document.addEventListener("DOMContentLoaded", inject); inject();
+
+  /* ---------------- real invoice push ---------------- */
+  function seqNext() {
+    var key = "etims_oscu_seq", n = parseInt(localStorage.getItem(key) || "0", 10) || 0;
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf("etims_counter_") === 0) { var v = parseInt(localStorage.getItem(k) || "0", 10) || 0; if (v > n) n = v; }
+    }
+    n += 1; localStorage.setItem(key, n); return n;
+  }
+  var TAX = { B: 16, E: 8, C: 0, A: 0, D: 0 };
+  function taxCode(it) {
+    var cat = String(it.category || ""), rate = num(it.vatRate);
+    if (cat === "Exempt") return "A";
+    if (cat === "Zero") return "C";
+    if (cat === "Other") return "E";
+    if (cat === "General") return rate === 8 ? "E" : "B";
+    return rate >= 15 ? "B" : rate >= 7 ? "E" : rate > 0 ? "B" : "C";
+  }
+  function custTin(name) {
+    var c = (J("customers", []) || []).filter(function (x) { return x && x.name === name; })[0] || {};
+    return String(c.kraPin || c.pin || c.taxPin || c.tin || c.taxId || "").trim().toUpperCase() || null;
+  }
+  function buildSale(inv, no, now, o, c) {
+    var org = J("orgInfo", {}) || {}, user = ""; try { user = (window.currentUser && window.currentUser.username) || (J("currentUser", {}) || {}).username || "Acacia"; } catch (e) {}
+    var tot = { A: 0, B: 0, C: 0, D: 0, E: 0 }, tax = { A: 0, B: 0, C: 0, D: 0, E: 0 }, total = 0, list = [];
+    (inv.items || []).forEach(function (it, idx) {
+      var qty = num(it.qty), price = num(it.price), dc = num(it.discount); if (qty <= 0) return;
+      var t = taxCode(it), rate = t === "B" ? 16 : t === "E" ? 8 : 0;
+      var prc = r2(price * (1 + rate / 100)), supply = r2(prc * qty), dcAmt = r2(supply * dc / 100), gross = r2(supply - dcAmt);
+      var base = r2(gross / (1 + rate / 100)), vat = r2(gross - base);
+      tot[t] += base; tax[t] += vat; total += gross;
+      list.push({ itemSeq: idx + 1, itemCd: String(it.sku || it.code || it.desc || "ITEM").replace(/[^A-Za-z0-9]/g, "").slice(0, 20).toUpperCase() || "ITEM" + (idx + 1),
+        itemClsCd: it.itemClsCd || o.cls, itemNm: String(it.desc || it.name || "Item").slice(0, 200), bcd: null, pkgUnitCd: "NT", pkg: 1, qtyUnitCd: "U", qty: qty,
+        prc: prc, splyAmt: supply, dcRt: dc, dcAmt: dcAmt, isrccCd: null, isrccNm: null, isrcRt: null, isrcAmt: null,
+        taxTyCd: t, taxblAmt: base, taxAmt: vat, totAmt: gross });
+    });
+    var d = new Date(inv.date || now); if (isNaN(d)) d = now;
+    return {
+      tin: c.pin, bhfId: c.bhf, invcNo: no, orgInvcNo: 0, custTin: custTin(inv.customer), custNm: inv.customer || null, salesTyCd: "N", rcptTyCd: "S", pmtTyCd: o.pmt || "01", salesSttsCd: "02",
+      cfmDt: stamp(now, true), salesDt: stamp(d, false), stockRlsDt: null, cnclReqDt: null, cnclDt: null, rfdDt: null, rfdRsnCd: null, totItemCnt: list.length,
+      taxblAmtA: r2(tot.A), taxblAmtB: r2(tot.B), taxblAmtC: r2(tot.C), taxblAmtD: r2(tot.D), taxblAmtE: r2(tot.E),
+      taxRtA: 0, taxRtB: 16, taxRtC: 0, taxRtD: 0, taxRtE: 8,
+      taxAmtA: r2(tax.A), taxAmtB: r2(tax.B), taxAmtC: r2(tax.C), taxAmtD: r2(tax.D), taxAmtE: r2(tax.E),
+      totTaxblAmt: r2(tot.A + tot.B + tot.C + tot.D + tot.E), totTaxAmt: r2(tax.A + tax.B + tax.C + tax.D + tax.E), totAmt: r2(total),
+      prchrAcptcYn: "N", remark: null, regrId: user, regrNm: user, modrId: user, modrNm: user,
+      receipt: { custTin: custTin(inv.customer), custMblNo: null, rptNo: no, trdeNm: org.name || org.companyName || "", adrs: org.address || org.location || "", topMsg: null, btmMsg: "Thank you", prchrAcptcYn: "N" },
+      itemList: list
+    };
+  }
+  function saveItemsBody(list, c, o) {
+    return list.map(function (it) {
+      return { tin: c.pin, bhfId: c.bhf, itemCd: it.itemCd, itemClsCd: it.itemClsCd, itemTyCd: "2", itemNm: it.itemNm, itemStdNm: null, orgnNatCd: "KE", pkgUnitCd: it.pkgUnitCd, qtyUnitCd: it.qtyUnitCd,
+        taxTyCd: it.taxTyCd, btchNo: null, bcd: null, dftPrc: it.prc, grpPrcL1: null, grpPrcL2: null, grpPrcL3: null, grpPrcL4: null, grpPrcL5: null, addInfo: null, sftyQty: null, isrcAplcbYn: "N", useYn: "Y",
+        regrNm: "Acacia", regrId: "Acacia", modrNm: "Acacia", modrId: "Acacia" };
+    });
+  }
+  function fmtScu(s) {
+    s = String(s || ""); if (s.length < 14) return s;
+    return s.slice(6, 8) + "/" + s.slice(4, 6) + "/" + s.slice(0, 4) + " " + s.slice(8, 10) + ":" + s.slice(10, 12) + ":" + s.slice(12, 14);
+  }
+
+  window.pushInvoiceToETIMS = function (id) {
+    var all = J("invoices", []), ix = all.findIndex(function (x) { return x.id === id; });
+    if (ix < 0) return alert("Invoice not found.");
+    var inv = all[ix];
+    if (inv.etims && inv.etims.rcptNo != null) return alert("This invoice is already submitted to KRA (receipt " + inv.etims.rcptNo + ").");
+    var c = cfg(), k = conn(), o = J("etimsOscuOpts", {}) || {};
+    if (!k.cmcKey) return alert("Not connected to KRA. Open Tax & eTIMS → eTIMS / ETR Control Centre, enter your PIN, branch and device serial, then click Save & Connect.");
+    if (!o.cls) return alert("Set the Default item class code (itemClsCd) in the eTIMS connection panel first. KRA requires a classification code for every item.");
+    if (inv.currency && inv.currency !== "KES") return alert("KRA only accepts KES invoices. Convert this invoice to KES first.");
+    var now = new Date(), no = inv.etimsInvcNo || seqNext(), sale = buildSale(inv, no, now, o, c);
+    if (!sale.itemList.length) return alert("This invoice has no valid items to send.");
+    if (!sale.itemList.every(function (i) { return i.itemClsCd; })) return alert("An item has no classification code.");
+    inv.etimsInvcNo = no; all[ix] = inv; localStorage.setItem("invoices", JSON.stringify(all));
+    var btn = document.activeElement; if (btn && btn.tagName === "BUTTON") { btn.disabled = true; btn.__t = btn.textContent; btn.textContent = "Sending…"; }
+    function done() { if (btn && btn.tagName === "BUTTON") { btn.disabled = false; btn.textContent = btn.__t || "Push to ETIMS"; } }
+
+    var items = saveItemsBody(sale.itemList, c, o), warn = [];
+    items.reduce(function (p, body) {
+      return p.then(function () { return kra("/saveItems", body, true).then(function (r) { if (!ok(r) && String(r.resultCd) !== "892") warn.push(body.itemNm + ": " + msg(r)); }); });
+    }, Promise.resolve()).then(function () {
+      return kra("/saveTrnsSalesOsdc", sale, true);
+    }).then(function (r) {
+      done();
+      if (!ok(r)) {
+        var detail = "KRA rejected the invoice: " + msg(r) + (r && r.resultCd ? " (code " + r.resultCd + ")" : "");
+        if (warn.length) detail += "\n\nItem registration notes:\n" + warn.slice(0, 5).join("\n");
+        return alert(detail);
+      }
+      var d = r.data || {}, fresh = J("invoices", []), j = fresh.findIndex(function (x) { return x.id === id; });
+      if (j < 0) return;
+      var sdc = d.sdcId || k.sdcId || "";
+      fresh[j].etims = { scuDate: fmtScu(d.vsdcRcptPbctDate) || fmtScu(stamp(now, true)), controlUnitNo: sdc, invoiceNo: sdc + " / " + d.rcptNo, internalData: d.intrlData || "", receiptSignature: d.rcptSign || "",
+        rcptNo: d.rcptNo, totRcptNo: d.totRcptNo, mrcNo: d.mrcNo || k.mrcNo || "", env: k.env || "sandbox" };
+      fresh[j].etimsStatus = "SUBMITTED";
+      localStorage.setItem("invoices", JSON.stringify(fresh));
+      alert("Invoice " + (fresh[j].invoiceNumber || fresh[j].id) + " submitted to KRA (" + (k.env || "sandbox") + "). Receipt no. " + d.rcptNo + "." + (warn.length ? "\n\nNote: " + warn[0] : ""));
+      try { if (typeof renderInvoices === "function") renderInvoices(); } catch (e) {}
+      try { generateETIMSQRCode(fresh[j]); populateETIMSFields(fresh[j]); } catch (e) {}
+    }).catch(function (e) { done(); alert("Could not reach KRA: " + (e.message || e)); });
+  };
+})();
