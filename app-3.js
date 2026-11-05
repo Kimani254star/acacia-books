@@ -119,3 +119,887 @@ function bodyObs(){if(window.__acxBodyObs||!document.body)return;window.__acxBod
 document.addEventListener("click",function(ev){var b=ev.target&&ev.target.closest&&ev.target.closest("button[onclick]");if(!b)return;var k=b.getAttribute("onclick")||"";if(!/^\s*previewSalesReturn\(/.test(k))return;var m=document.getElementById("salesReturnPreviewModal"),open=m&&!m.classList.contains("hidden");if(open&&window.__acxSrKey===k){ev.stopImmediatePropagation();ev.preventDefault();window.__acxSrKey=null;"function"==typeof window.closeSalesReturnPreview&&window.closeSalesReturnPreview();return}window.__acxSrKey=k},!0);
 document.addEventListener("keydown",function(ev){if("Escape"!==ev.key)return;var m=document.getElementById("salesReturnPreviewModal");if(m&&!m.classList.contains("hidden")&&"function"==typeof window.closeSalesReturnPreview){window.__acxSrKey=null;window.closeSalesReturnPreview()}},!0);
 })();
+
+/* ----- BUNDLE ITEMS: RECIPES + ASSEMBLIES ----- */
+try{
+/* acacia-assembly.js - Inventory > Bundle Items, rebuilt as Recipes + Assemblies.
+ *
+ * WHAT CHANGED
+ *  1) Recipe vs assembly: a bundle is saved once as a RECIPE (composite item + SKU + components). Every production run is an
+ *     ASSEMBLY (ASM-00001, date, notes, quantity, location) with a status: Draft -> Assembled -> Disassembled.
+ *     Disassemble reverses the stock. Deleting an assembled run reverses the stock first.
+ *  2) Stock check before saving: Quantity Required, Total Required (required x assemblies) and Quantity Available per component,
+ *     a red warning when short, "You can assemble N unit(s)" from the scarcest component, and the Assemble button is blocked
+ *     when a component is short (stock never goes below zero).
+ *  3) Decimal quantities (0.04 kg) with the unit of measure next to the quantity.
+ *  4) Extra costs (labour, rent, scrap) -> cost per finished unit = (components + extra costs) / quantity, margin against the
+ *     selling price, and a suggested price from a markup %.
+ *  5) Batches: components are taken oldest/first-expiring first by default (or pick batches by hand); the finished item can get a batch.
+ *  6) One Location per assembly (components come from it; per-row source override is available).
+ *  7) Audit trail: every assembly writes component-out and finished-in rows to "stockActivities" (Stock Activity / Stock History),
+ *     and the Assembly Register tab lists every run (CSV / print).
+ *  8) Safer picker: searchable, shows SKU and quantity on hand, no duplicates, a composite cannot contain itself.
+ *
+ * DATA (localStorage, synced like the rest of Books)
+ *   "bundleRecipes"  recipes          "assemblies"  assembly runs
+ *   Older "bundles" records are copied into recipes once (stock is not touched; the old screen had already moved it).
+ * Load LAST in index.html (after acacia-all.js). */
+(function (W) {
+  'use strict';
+  if (W.__acxAssemblyLoaded) return;
+  W.__acxAssemblyLoaded = true;
+
+  var D = W.document;
+  var RK = 'bundleRecipes', AK = 'assemblies', EPS = 1e-9;
+
+  /* ------------------------------------------------------------------ helpers */
+  var num = function (v) { var n = parseFloat(String(v == null ? '' : v).replace(/,/g, '')); return isNaN(n) ? 0 : n; };
+  var r6 = function (n) { return Math.round((n + (n < 0 ? -EPS : EPS)) * 1e6) / 1e6; };
+  var low = function (v) { return String(v == null ? '' : v).trim().toLowerCase(); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var pad = function (n, l) { return String(n).padStart(l, '0'); };
+  var today = function () { return new Date().toISOString().slice(0, 10); };
+  var dp = function () { try { return W.__getDecimalPlaces ? W.__getDecimalPlaces() : 2; } catch (e) { return 2; } };
+  var money = function (v) { return Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: dp(), maximumFractionDigits: dp() }); };
+  var fq = function (v) { return String(+num(v).toFixed(4)); };               /* quantity: up to 4 decimals, no trailing zeros */
+  var ls = function (k, d) { try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
+  var put = function (k, v) { localStorage.setItem(k, JSON.stringify(v)); };
+  var uid = function (p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); };
+  var clone = function (o) { return JSON.parse(JSON.stringify(o)); };
+  function who() { try { var u = JSON.parse(localStorage.getItem('loggedInUser') || 'null') || {}; return u.name || u.fullName || u.username || u.email || ''; } catch (e) { return ''; } }
+  function toast(msg, bad) {
+    try {
+      var t = D.createElement('div'); t.textContent = msg;
+      t.style.cssText = 'position:fixed;right:16px;bottom:16px;max-width:380px;background:' + (bad ? '#b91c1c' : '#166534') + ';color:#fff;padding:10px 14px;border-radius:8px;z-index:2147483647;font:13px/1.4 sans-serif;box-shadow:0 4px 12px rgba(0,0,0,.3)';
+      D.body.appendChild(t); setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, bad ? 6000 : 3000);
+    } catch (e) { alert(msg); }
+  }
+
+  /* ------------------------------------------------------------------ data access */
+  function warehouses() {
+    var w = [];
+    try { w = typeof W.getWarehouses === 'function' ? W.getWarehouses() : ls('warehouses', []); } catch (e) { w = ls('warehouses', []); }
+    return (Array.isArray(w) ? w : []).filter(Boolean).map(function (x) { return typeof x === 'string' ? x : (x.name || x.id || ''); }).filter(Boolean);
+  }
+  function readInv(wh) {
+    try { var a = typeof W.getInventory === 'function' ? W.getInventory(wh) : ls('inventory_' + wh, []); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+  }
+  function writeInv(wh, list) {
+    if (typeof W.saveInventory === 'function') W.saveInventory(wh, list); else put('inventory_' + wh, list);
+  }
+  var recipes = function () { var a = ls(RK, []); return Array.isArray(a) ? a : []; };
+  var saveRecipes = function (a) { put(RK, a); };
+  var assemblies = function () { var a = ls(AK, []); return Array.isArray(a) ? a : []; };
+  var saveAssemblies = function (a) { put(AK, a); };
+
+  var itemUnit = function (it) { return (it && (it.unit || it.uom || it.unitOfMeasure || it.measure || it.unitName)) || ''; };
+  var itemCost = function (it) {
+    if (!it) return 0;
+    var v = it.buyPrice != null ? it.buyPrice : it.costPrice != null ? it.costPrice : it.cost != null ? it.cost : it.unitCost != null ? it.unitCost : 0;
+    return num(v);
+  };
+  function findIn(list, sku, name) {
+    for (var i = 0; i < list.length; i++) {
+      var x = list[i]; if (!x) continue;
+      if (sku && x.sku && low(x.sku) === low(sku)) return x;
+    }
+    for (var j = 0; j < list.length; j++) {
+      var y = list[j]; if (y && name && low(y.name) === low(name)) return y;
+    }
+    return null;
+  }
+
+  /* an inventory reader that caches while a form is open (the site's inventories can be large) */
+  function makeInv() {
+    var cache = {};
+    var f = function (wh) { if (!(wh in cache)) cache[wh] = readInv(wh); return cache[wh]; };
+    f.reset = function () { cache = {}; };
+    return f;
+  }
+
+  /* all stock items across warehouses, merged by SKU (or name) for the picker */
+  function catalog(inv) {
+    var map = {}, order = [];
+    warehouses().forEach(function (wh) {
+      inv(wh).forEach(function (it) {
+        if (!it || !it.name || it.active === false) return;
+        var key = low(it.sku) || low(it.name);
+        var c = map[key];
+        if (!c) { c = map[key] = { key: key, name: it.name, sku: it.sku || '', unit: itemUnit(it), cost: itemCost(it), total: 0, byWh: {}, isBundle: !!it.isBundle }; order.push(key); }
+        c.total = r6(c.total + num(it.qty)); c.byWh[wh] = r6(num(c.byWh[wh]) + num(it.qty));
+        if (!c.unit) c.unit = itemUnit(it);
+      });
+    });
+    return order.map(function (k) { return map[k]; });
+  }
+
+  /* ------------------------------------------------------------------ numbering */
+  function nextAsmNo() {
+    var max = 0;
+    assemblies().forEach(function (a) { var d = parseInt(String(a && a.no || '').replace(/\D/g, ''), 10); if (d > max) max = d; });
+    return 'ASM-' + pad(max + 1, 5);
+  }
+  function nextActNo(list) {
+    var max = list.length;
+    list.forEach(function (r) { var d = parseInt(String(r && r.no || '').replace(/\D/g, ''), 10); if (d > max) max = d; });
+    return function () { max++; return 'ACT-' + pad(max, 4); };
+  }
+  function makeSku(name, taken) {
+    var base = 'CMP-' + String(name || 'ITEM').toUpperCase().replace(/[^A-Z0-9]+/g, '').slice(0, 10), sku = base, n = 1;
+    while (taken.indexOf(low(sku)) > -1) { n++; sku = base + '-' + n; }
+    return sku;
+  }
+
+  /* ------------------------------------------------------------------ batches */
+  function expiryTs(b) { var t = new Date(b && (b.expiryDate || b.expiry)).getTime(); return isNaN(t) ? Infinity : t; }
+  /* take `need` from an item's batches: first-expiring first, then oldest (list order). `pick` = manual [{batchNo, qty}] */
+  function allocate(item, need, pick) {
+    var out = [];
+    if (!item || !Array.isArray(item.batches) || !item.batches.length || need <= 0) return out;
+    if (Array.isArray(pick) && pick.length) {
+      pick.forEach(function (p) {
+        var b = item.batches.filter(function (x) { return String(x.batchNo || x.batchNumber || '') === String(p.batchNo); })[0];
+        if (b && num(p.qty) > 0) out.push({ batchNo: String(p.batchNo), expiryDate: b.expiryDate || b.expiry || '', qty: r6(num(p.qty)) });
+      });
+      return out;
+    }
+    var rows = item.batches.map(function (b, i) { return { b: b, i: i }; }).filter(function (r) { return num(r.b.qty) > 0; });
+    rows.sort(function (x, y) { var a = expiryTs(x.b), b = expiryTs(y.b); return a === b ? x.i - y.i : a - b; });
+    var left = need;
+    for (var k = 0; k < rows.length && left > EPS; k++) {
+      var take = Math.min(left, num(rows[k].b.qty));
+      out.push({ batchNo: String(rows[k].b.batchNo || rows[k].b.batchNumber || ''), expiryDate: rows[k].b.expiryDate || rows[k].b.expiry || '', qty: r6(take) });
+      left = r6(left - take);
+    }
+    return out;
+  }
+
+  /* ------------------------------------------------------------------ calculations */
+  function lineWh(asm, ln) { return ln.warehouse || asm.warehouse || ''; }
+  function lineItem(asm, ln, inv) { var wh = lineWh(asm, ln); return wh ? findIn(inv(wh), ln.sku, ln.name) : null; }
+  function lineNeed(asm, ln) { return r6(num(ln.qtyPer) * num(asm.qty)); }
+
+  function compute(asm, inv) {
+    var frozen = asm.status === 'Assembled' || asm.status === 'Disassembled';
+    var comp = 0, lines = (asm.lines || []).map(function (ln) {
+      var it = frozen ? null : lineItem(asm, ln, inv), need = lineNeed(asm, ln);
+      var avail = frozen ? null : num(it && it.qty);
+      var cost = frozen ? num(ln.unitCost) : itemCost(it);
+      var total = r6(need * cost); comp += total;
+      return { need: need, avail: avail, cost: cost, total: total, short: !frozen && !!asm.warehouse && need > avail + EPS, missing: !frozen && !it, it: it };
+    });
+    var extra = (asm.extras || []).reduce(function (s, x) { return s + num(x.amount); }, 0);
+    var total = comp + extra, q = num(asm.qty), unit = q > 0 ? total / q : 0, sell = num(asm.sellPrice);
+    return { lines: lines, comp: comp, extra: extra, total: total, unit: unit, margin: sell > 0 ? (sell - unit) / sell * 100 : null, profit: sell - unit };
+  }
+  /* "You can assemble N units": from the scarcest component */
+  function maxAssemble(asm, inv) {
+    if (!asm.warehouse || !(asm.lines || []).length) return 0;
+    var best = Infinity;
+    asm.lines.forEach(function (ln) {
+      var per = num(ln.qtyPer); if (per <= 0) return;
+      var it = lineItem(asm, ln, inv), a = num(it && it.qty);
+      best = Math.min(best, Math.floor(a / per + 1e-9));
+    });
+    return best === Infinity ? 0 : Math.max(0, best);
+  }
+
+  /* checks that must pass before anything is saved or stock moves */
+  function validate(asm, inv, forStock) {
+    var errs = [], seen = {};
+    if (!asm.sku && !asm.name) errs.push('Pick the composite item.');
+    if (!(num(asm.qty) > 0)) errs.push('Quantity to assemble must be more than 0.');
+    if (!(asm.lines || []).length) errs.push('Add at least one component.');
+    if (forStock && !asm.warehouse) errs.push('Choose a Location.');
+    (asm.lines || []).forEach(function (ln, i) {
+      var label = ln.name || ('row ' + (i + 1)), key = low(ln.sku) || low(ln.name);
+      if (!key) { errs.push('Row ' + (i + 1) + ': pick an item.'); return; }
+      if (!(num(ln.qtyPer) > 0)) errs.push(label + ': quantity required must be more than 0.');
+      if (seen[key + '|' + low(ln.warehouse)]) errs.push(label + ' is picked twice.');
+      seen[key + '|' + low(ln.warehouse)] = 1;
+      if ((asm.sku && low(ln.sku) === low(asm.sku)) || (!asm.sku && low(ln.name) === low(asm.name)) || low(ln.name) === low(asm.name)) errs.push(label + ' cannot be a component of itself.');
+    });
+    if (forStock && !errs.length) {
+      var c = compute(asm, inv);
+      (asm.lines || []).forEach(function (ln, i) {
+        var x = c.lines[i];
+        if (x.missing) errs.push(ln.name + ' is not in ' + lineWh(asm, ln) + '.');
+        else if (x.short) errs.push(ln.name + ': need ' + fq(x.need) + (itemUnit(x.it) ? ' ' + itemUnit(x.it) : '') + ', only ' + fq(x.avail) + ' in ' + lineWh(asm, ln) + '.');
+        else if (Array.isArray(ln.pick) && ln.pick.length) {
+          var sum = ln.pick.reduce(function (s, p) { return s + num(p.qty); }, 0);
+          if (Math.abs(sum - x.need) > 1e-6) errs.push(ln.name + ': the batches you picked add up to ' + fq(sum) + ' but ' + fq(x.need) + ' is needed.');
+        }
+      });
+    }
+    return errs;
+  }
+
+  /* ------------------------------------------------------------------ stock movement */
+  var REFRESH = ['renderInventoryTable', 'renderInventorySummary', 'renderStockValuation', 'renderStockReports', 'renderMovementTable', 'renderStockTransfer', 'renderPriceListTable'];
+  function refreshApp() {
+    try { if (typeof W.syncInventoryBalancesToCOA === 'function') W.syncInventoryBalancesToCOA(); } catch (e) { console.warn('[assembly] COA sync', e); }
+    REFRESH.forEach(function (f) { try { if (typeof W[f] === 'function') W[f](); } catch (e) { } });
+  }
+
+  function newFinishedItem(asm, firstComp) {
+    return {
+      name: asm.name, sku: asm.sku, qty: 0, batches: [], buyPrice: 0, sellPrice: num(asm.sellPrice), buyVat: asm.buyVat || '', sellVat: asm.sellVat || '',
+      buyingAccount: firstComp && firstComp.buyingAccount || '', sellingAccount: firstComp && firstComp.sellingAccount || '',
+      sellDescription: asm.sellDesc || '', active: true, history: [], isBundle: true
+    };
+  }
+
+  /* Apply a Draft: take the components out, put the finished item in, log everything. Returns {ok, errors} */
+  function assemble(asm) {
+    var inv = function (wh) { return readInv(wh); }, cache = {};
+    var get = function (wh) { if (!(wh in cache)) cache[wh] = readInv(wh); return cache[wh]; };
+    asm.status = 'Draft';
+    var errs = validate(asm, get, true);
+    if (errs.length) return { ok: false, errors: errs };
+
+    var acts = ls('stockActivities', []); if (!Array.isArray(acts)) acts = [];
+    var nextNo = nextActNo(acts), by = who(), iso = new Date().toISOString(), firstComp = null, ids = [];
+    var c = compute(asm, get);
+
+    /* components out */
+    asm.lines.forEach(function (ln, i) {
+      var wh = lineWh(asm, ln), it = findIn(get(wh), ln.sku, ln.name), need = c.lines[i].need;
+      var used = allocate(it, need, ln.pick);
+      it.qty = r6(num(it.qty) - need);
+      used.forEach(function (u) {
+        var b = (it.batches || []).filter(function (x) { return String(x.batchNo || x.batchNumber || '') === u.batchNo; })[0];
+        if (b) b.qty = r6(Math.max(0, num(b.qty) - u.qty));
+      });
+      (it.history = it.history || []).push({ type: 'Assembly', qty: -need, ref: asm.no, date: asm.date, isoDate: iso, user: by });
+      ln.unitCost = itemCost(it); ln.used = used; ln.takenFrom = wh; ln.name = it.name; ln.sku = it.sku || ln.sku; ln.unit = ln.unit || itemUnit(it);
+      if (!firstComp) firstComp = it;
+      var a = { id: uid('SA'), no: nextNo(), type: 'Assembly - component used', item: it.name, sku: it.sku || '', warehouse: wh, qin: 0, qout: need, date: asm.date, reference: asm.no, reason: 'Used to assemble ' + fq(asm.qty) + ' x ' + asm.name, by: by };
+      acts.push(a); ids.push(a.id);
+    });
+
+    /* finished item in */
+    var tw = asm.warehouse, fl = get(tw), fin = findIn(fl, asm.sku, asm.name);
+    if (!fin) { fin = newFinishedItem(asm, firstComp); fl.push(fin); }
+    var oldQty = Math.max(0, num(fin.qty)), oldCost = itemCost(fin), q = num(asm.qty), unit = c.unit;
+    asm.prevCost = oldCost; asm.prevQty = oldQty;
+    fin.buyPrice = oldQty > 0 ? r6((oldQty * oldCost + q * unit) / (oldQty + q)) : r6(unit);
+    fin.qty = r6(num(fin.qty) + q); fin.isBundle = true;
+    if (num(asm.sellPrice) > 0) fin.sellPrice = num(asm.sellPrice);
+    if (asm.sellVat) fin.sellVat = asm.sellVat;
+    if (asm.buyVat && !fin.buyVat) fin.buyVat = asm.buyVat;
+    if (asm.outBatch && asm.outBatch.no) {
+      fin.batches = Array.isArray(fin.batches) ? fin.batches : [];
+      var fb = fin.batches.filter(function (x) { return String(x.batchNo || x.batchNumber || '') === String(asm.outBatch.no); })[0];
+      if (fb) { fb.qty = r6(num(fb.qty) + q); if (asm.outBatch.expiry && !fb.expiryDate) fb.expiryDate = asm.outBatch.expiry; }
+      else fin.batches.push({ batchNo: String(asm.outBatch.no), expiryDate: asm.outBatch.expiry || '', qty: q });
+    }
+    (fin.history = fin.history || []).push({ type: 'Assembly', qty: q, ref: asm.no, date: asm.date, isoDate: iso, user: by });
+    var fa = { id: uid('SA'), no: nextNo(), type: 'Assembly - finished item', item: asm.name, sku: asm.sku || fin.sku || '', warehouse: tw, qin: q, qout: 0, date: asm.date, reference: asm.no, reason: 'Assembled from ' + asm.lines.length + ' component(s)', by: by };
+    acts.push(fa); ids.push(fa.id);
+
+    /* write everything */
+    Object.keys(cache).forEach(function (wh) { writeInv(wh, cache[wh]); });
+    put('stockActivities', acts);
+    asm.finishedSku = fin.sku || asm.sku; asm.compCost = c.comp; asm.extraCost = c.extra; asm.totalCost = c.total; asm.unitCost = c.unit;
+    asm.status = 'Assembled'; asm.assembledAt = iso; asm.assembledBy = by; asm.activityIds = ids;
+    return { ok: true };
+  }
+
+  /* Reverse an Assembled run: finished item out, components back (same batches) */
+  function disassemble(asm) {
+    if (asm.status !== 'Assembled') return { ok: false, errors: ['Only an assembled run can be disassembled.'] };
+    var cache = {}, get = function (wh) { if (!(wh in cache)) cache[wh] = readInv(wh); return cache[wh]; };
+    var fin = findIn(get(asm.warehouse), asm.finishedSku || asm.sku, asm.name), q = num(asm.qty);
+    if (!fin || num(fin.qty) + EPS < q) return { ok: false, errors: ['Only ' + fq(fin ? fin.qty : 0) + ' of ' + asm.name + ' is left in ' + asm.warehouse + ' (' + fq(q) + ' needed). Some of it has been sold or moved, so this run cannot be reversed.'] };
+
+    var acts = ls('stockActivities', []); if (!Array.isArray(acts)) acts = [];
+    var nextNo = nextActNo(acts), by = who(), iso = new Date().toISOString(), day = today(), ids = [];
+    fin.qty = r6(num(fin.qty) - q);
+    if (asm.outBatch && asm.outBatch.no && Array.isArray(fin.batches)) {
+      var fb = fin.batches.filter(function (x) { return String(x.batchNo || x.batchNumber || '') === String(asm.outBatch.no); })[0];
+      if (fb) fb.qty = r6(Math.max(0, num(fb.qty) - q));
+    }
+    (fin.history = fin.history || []).push({ type: 'Assembly reversed', qty: -q, ref: asm.no, date: day, isoDate: iso, user: by });
+    var fa = { id: uid('SA'), no: nextNo(), type: 'Assembly reversed - finished item removed', item: asm.name, sku: asm.sku || '', warehouse: asm.warehouse, qin: 0, qout: q, date: day, reference: asm.no, reason: 'Disassembled', by: by };
+    acts.push(fa); ids.push(fa.id);
+
+    asm.lines.forEach(function (ln) {
+      var wh = ln.takenFrom || lineWh(asm, ln), list = get(wh), it = findIn(list, ln.sku, ln.name), need = lineNeed(asm, ln);
+      if (!it) { it = { name: ln.name, sku: ln.sku, qty: 0, batches: [], buyPrice: num(ln.unitCost), sellPrice: 0, active: true, history: [] }; list.push(it); }
+      it.qty = r6(num(it.qty) + need);
+      (ln.used || []).forEach(function (u) {
+        it.batches = Array.isArray(it.batches) ? it.batches : [];
+        var b = it.batches.filter(function (x) { return String(x.batchNo || x.batchNumber || '') === u.batchNo; })[0];
+        if (b) b.qty = r6(num(b.qty) + u.qty); else it.batches.push({ batchNo: u.batchNo, expiryDate: u.expiryDate || '', qty: u.qty });
+      });
+      (it.history = it.history || []).push({ type: 'Assembly reversed', qty: need, ref: asm.no, date: day, isoDate: iso, user: by });
+      var a = { id: uid('SA'), no: nextNo(), type: 'Assembly reversed - component returned', item: ln.name, sku: ln.sku || '', warehouse: wh, qin: need, qout: 0, date: day, reference: asm.no, reason: 'Disassembled ' + fq(q) + ' x ' + asm.name, by: by };
+      acts.push(a); ids.push(a.id);
+    });
+    Object.keys(cache).forEach(function (wh) { writeInv(wh, cache[wh]); });
+    put('stockActivities', acts);
+    asm.status = 'Disassembled'; asm.disassembledAt = iso; asm.disassembledBy = by; asm.reverseActivityIds = ids;
+    return { ok: true };
+  }
+
+  /* ------------------------------------------------------------------ one-time copy of the old bundles into recipes */
+  function migrateLegacy() {
+    if (localStorage.getItem('bundleRecipesMigrated') === '1') return;
+    var old = ls('bundles', []), out = recipes(), taken = out.map(function (r) { return low(r.sku); });
+    if (Array.isArray(old) && old.length) {
+      old.forEach(function (b) {
+        if (!b || !b.name || out.some(function (r) { return low(r.name) === low(b.name); })) return;
+        var comps = [];
+        (b.items || []).forEach(function (x) {                            /* older shape */
+          var it = findIn(readInv(x.warehouse), x.item, x.item);
+          comps.push({ sku: it && it.sku || x.item, name: it && it.name || x.item, unit: itemUnit(it), qty: num(x.qtyUsed) || 1 });
+        });
+        (b.components || []).forEach(function (x) {                       /* newer shape */
+          var it = findIn(readInv(x.warehouse), x.itemValue, x.item);
+          comps.push({ sku: it && it.sku || x.itemValue || '', name: it && it.name || x.item, unit: itemUnit(it), qty: num(x.qty) || 1 });
+        });
+        var seen = {}; comps = comps.filter(function (c) { var k = low(c.sku) || low(c.name); if (!k || seen[k]) return false; seen[k] = 1; return true; });
+        if (!comps.length) return;
+        var wh = b.toWarehouse || b.destinationWarehouse || '', fin = wh ? findIn(readInv(wh), '', b.name) : null;
+        var sku = fin && fin.sku ? fin.sku : makeSku(b.name, taken); taken.push(low(sku));
+        out.push({ id: uid('RCP'), name: b.name, sku: sku, toWarehouse: wh, sellPrice: num(b.sellPrice), buyVat: b.buyVAT || '', sellVat: b.sellVAT || '', buyDesc: b.buyDesc || '', sellDesc: b.sellDesc || '', markup: 35, components: comps, extras: [], createdAt: b.date || b.createdAt || new Date().toISOString(), imported: true });
+      });
+      if (out.length) saveRecipes(out);
+    }
+    localStorage.setItem('bundleRecipesMigrated', '1');
+  }
+
+  /* expose the logic (also used by the self-test) */
+  W.AcaciaAssembly = { compute: compute, maxAssemble: maxAssemble, validate: validate, assemble: assemble, disassemble: disassemble, allocate: allocate, recipes: recipes, assemblies: assemblies, migrateLegacy: migrateLegacy, makeInv: makeInv };
+
+  /* ================================================================== UI ================================================================== */
+  if (!D || typeof D.createElement !== 'function') return;
+
+  var CSS = '' +
+    '.acx-asm{font-size:14px;color:#1f2937}.acx-asm *{box-sizing:border-box}' +
+    '.acx-asm h2{font-size:14px;font-weight:700;margin:0}.acx-asm h3{font-size:14px;font-weight:700;margin:0 0 8px}' +
+    '.acx-asm .ac-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0 14px}' +
+    '.acx-asm .ac-tabs{display:flex;gap:4px;border-bottom:1px solid #d1d5db;margin-top:10px}' +
+    '.acx-asm .ac-tab{padding:7px 14px;border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;background:transparent;cursor:pointer;color:#4b5563;font-size:14px}' +
+    '.acx-asm .ac-tab.on{background:#fff;border-color:#d1d5db;color:#1e3a8a;font-weight:700;margin-bottom:-1px}' +
+    '.acx-asm .ac-card{background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.12);padding:18px;margin-bottom:16px}' +
+    '.acx-asm .ac-btn{padding:6px 12px;border-radius:5px;border:1px solid #1e3a8a;background:#1e3a8a;color:#fff;cursor:pointer;font-size:13px}' +
+    '.acx-asm .ac-btn:hover{background:#1e40af}.acx-asm .ac-btn.alt{background:#fff;color:#1e3a8a}.acx-asm .ac-btn.alt:hover{background:#eff6ff}' +
+    '.acx-asm .ac-btn.gray{background:#e5e7eb;border-color:#d1d5db;color:#1f2937}.acx-asm .ac-btn.red{background:#fff;border-color:#dc2626;color:#dc2626}.acx-asm .ac-btn.red:hover{background:#fef2f2}' +
+    '.acx-asm .ac-btn[disabled]{opacity:.45;cursor:not-allowed}.acx-asm .ac-sm{padding:3px 8px;font-size:12px}' +
+    '.acx-asm input,.acx-asm select,.acx-asm textarea{border:1px solid #cbd5e1;border-radius:5px;padding:6px 8px;font-size:14px;background:#fff;color:#111827;width:100%}' +
+    '.acx-asm input[type=checkbox]{width:auto}.acx-asm input[disabled],.acx-asm select[disabled],.acx-asm textarea[disabled]{background:#f3f4f6;color:#6b7280}' +
+    '.acx-asm input:focus,.acx-asm select:focus,.acx-asm textarea:focus{outline:2px solid #93c5fd;border-color:#60a5fa}' +
+    '.acx-asm table{width:100%;border-collapse:collapse}.acx-asm th,.acx-asm td{border:1px solid #e5e7eb;padding:8px;text-align:left;vertical-align:top}' +
+    '.acx-asm td{background:#fff}.acx-asm .ac-short td{background:#fef2f2}.acx-asm th{background:#f3f4f6;font-weight:600;font-size:13px}.acx-asm td.r,.acx-asm th.r{text-align:right}' +
+    '.acx-asm .ac-row{display:grid;grid-template-columns:190px minmax(0,420px);gap:10px 16px;align-items:start;margin-bottom:14px}' +
+    '.acx-asm .ac-row>label{padding-top:7px;font-size:13px}.acx-asm .req{color:#dc2626}.acx-asm .ac-hint{font-size:12px;color:#6b7280;margin-top:4px}' +
+    '.acx-asm .ac-warn{color:#dc2626}.acx-asm .ac-ok{color:#166534}.acx-asm .ac-link{color:#2563eb;cursor:pointer;background:none;border:none;padding:0;font-size:12px;width:auto}' +
+    '.acx-asm .ac-link:hover{text-decoration:underline}.acx-asm .ac-muted{color:#6b7280;font-size:12px}' +
+    '.acx-asm .ac-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}' +
+    '.acx-asm .p-Draft{background:#e5e7eb;color:#374151}.acx-asm .p-Assembled{background:#dcfce7;color:#166534}.acx-asm .p-Disassembled{background:#fee2e2;color:#991b1b}' +
+    '.acx-asm .ac-short td{background:#fef2f2}.acx-asm .ac-note{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 12px;font-size:13px;margin-bottom:12px}' +
+    '.acx-asm .ac-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:6px;padding:10px 12px;font-size:13px;margin-bottom:12px}' +
+    '.acx-asm .ac-sum{max-width:420px;margin-left:auto}.acx-asm .ac-sum div{display:flex;justify-content:space-between;padding:4px 0}.acx-asm .ac-sum .big{border-top:2px solid #1e3a8a;font-weight:700;margin-top:4px;padding-top:8px}' +
+    '.acx-asm .ac-acts{white-space:nowrap}.acx-asm .ac-acts button{margin:0 2px 2px 0}' +
+    '.ac-dd{position:fixed;z-index:2147483000;background:#fff;border:1px solid #cbd5e1;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.18);max-height:260px;overflow:auto;font:13px/1.35 sans-serif;color:#111827}' +
+    '.ac-dd div{padding:7px 10px;cursor:pointer;border-bottom:1px solid #f1f5f9}.ac-dd div:hover,.ac-dd div.on{background:#eff6ff}.ac-dd small{color:#6b7280;display:block}.ac-dd .none{color:#6b7280;cursor:default}' +
+    '.ac-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2147482000;display:flex;align-items:center;justify-content:center}' +
+    '.ac-modal>div{background:#fff;border-radius:8px;padding:18px;width:min(620px,94vw);max-height:88vh;overflow:auto;color:#111827;font:14px/1.4 sans-serif}' +
+    '.ac-modal input{border:1px solid #cbd5e1;border-radius:5px;padding:5px 8px;width:100%}.ac-modal table{width:100%;border-collapse:collapse;margin:10px 0}.ac-modal th,.ac-modal td{border:1px solid #e5e7eb;padding:6px 8px;text-align:left}.ac-modal th{background:#f3f4f6}' +
+    '.dark .acx-asm,.dark-mode .acx-asm{color:#e5e7eb}.dark .acx-asm .ac-card,.dark-mode .acx-asm .ac-card{background:#1f2937}.dark .acx-asm td,.dark-mode .acx-asm td{background:#1f2937}' +
+    '.dark .acx-asm input,.dark .acx-asm select,.dark .acx-asm textarea,.dark-mode .acx-asm input,.dark-mode .acx-asm select,.dark-mode .acx-asm textarea{background:#111827;color:#f3f4f6;border-color:#4b5563}' +
+    '.dark .acx-asm th,.dark-mode .acx-asm th{background:#374151;color:#f3f4f6}.dark .acx-asm th,.dark .acx-asm td,.dark-mode .acx-asm th,.dark-mode .acx-asm td{border-color:#4b5563}' +
+    '.dark .acx-asm .ac-tab.on,.dark-mode .acx-asm .ac-tab.on{background:#1f2937;color:#93c5fd}.dark .acx-asm .ac-short td,.dark-mode .acx-asm .ac-short td{background:#450a0a}' +
+    '@media(max-width:720px){.acx-asm .ac-row{grid-template-columns:1fr}}';
+
+  var V = { tab: 'assemblies', mode: 'list', q: '', regFrom: '', regTo: '', regStatus: '' };
+  var A = null, R = null, INV = makeInv(), CAT = [];     /* A = assembly being edited, R = recipe being edited */
+  var built = false, dd = null, ddTarget = null;
+
+  function $(id) { return D.getElementById(id); }
+  function root() { return $('BundleItems'); }
+  function body() { return $('acxAsmBody'); }
+  function opts(list, sel, ph) { return '<option value="">' + esc(ph || 'Select') + '</option>' + list.map(function (x) { return '<option value="' + esc(x) + '"' + (x === sel ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join(''); }
+  var VATS = ['0%', '8%', '16%', 'Exempt'];
+  function reportingTags() {
+    var out = []; (ls('reportingTags', []) || []).forEach(function (t) {
+      if (!t || t.active === false || !t.tag) return;
+      String(t.options || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean).forEach(function (o) { out.push(t.tag + ': ' + o); });
+    }); return out;
+  }
+  var canDo = function (action, label) { try { return typeof W.requirePermission === 'function' ? W.requirePermission('BundleItems', action, label) !== false : true; } catch (e) { return true; } };
+
+  function ensureUI() {
+    var r = root(); if (!r) return false;
+    if (!D.getElementById('acxAsmCss')) { var st = D.createElement('style'); st.id = 'acxAsmCss'; st.textContent = CSS; D.head.appendChild(st); }
+    if (built && $('acxAsmBody')) return true;
+    r.innerHTML = '<div class="acx-asm"><h2>Bundle / Composite Items</h2>' +
+      '<div class="ac-tabs" id="acxAsmTabs"></div><div id="acxAsmBody" style="margin-top:14px"></div></div>';
+    if (!r.__acxAsmBound) {
+      r.__acxAsmBound = true;
+      r.addEventListener('click', onClick); r.addEventListener('input', onInput); r.addEventListener('change', onChange);
+      r.addEventListener('focusin', onFocusIn); r.addEventListener('keydown', onKey);
+    }
+    built = true; return true;
+  }
+
+  function open() {
+    if (!ensureUI()) return;
+    migrateLegacy(); INV = makeInv(); render();
+  }
+
+  function render() {
+    var tabs = $('acxAsmTabs'); if (!tabs) return;
+    tabs.innerHTML = [['assemblies', 'Assemblies'], ['recipes', 'Recipes'], ['register', 'Assembly Register']].map(function (t) {
+      return '<button class="ac-tab' + (V.tab === t[0] ? ' on' : '') + '" data-act="tab" data-v="' + t[0] + '">' + t[1] + '</button>';
+    }).join('');
+    if (V.mode === 'form') { V.tab === 'recipes' ? drawRecipeForm() : drawAsmForm(); return; }
+    if (V.tab === 'recipes') drawRecipes(); else if (V.tab === 'register') drawRegister(); else drawAssemblies();
+  }
+
+  /* ------------------------------------------------------------------ lists */
+  function drawAssemblies() {
+    var q = low(V.q), list = assemblies().slice().reverse().filter(function (a) { return !q || [a.no, a.name, a.sku, a.status, a.warehouse, a.desc].some(function (x) { return low(x).indexOf(q) > -1; }); });
+    var h = '<div class="ac-bar"><button class="ac-btn" data-act="newAsm">+ New Assembly</button>' +
+      '<input placeholder="Search assemblies..." value="' + esc(V.q) + '" data-q="1" style="max-width:260px"></div>' +
+      '<div class="ac-card" style="padding:0;overflow:auto"><table><thead><tr><th>Assembly#</th><th>Date</th><th>Composite item</th><th>Location</th><th class="r">Qty</th><th class="r">Cost / unit</th><th class="r">Total cost</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+    if (!list.length) h += '<tr><td colspan="9" style="text-align:center;color:#6b7280;padding:22px">No assemblies yet. Create a recipe, then click + New Assembly.</td></tr>';
+    list.forEach(function (a) {
+      h += '<tr><td><b>' + esc(a.no) + '</b></td><td>' + esc(a.date || '') + '</td><td>' + esc(a.name) + '<div class="ac-muted">' + esc(a.sku || '') + '</div></td><td>' + esc(a.warehouse || '-') + '</td>' +
+        '<td class="r">' + fq(a.qty) + '</td><td class="r">' + money(a.unitCost) + '</td><td class="r">' + money(a.totalCost) + '</td><td><span class="ac-pill p-' + esc(a.status) + '">' + esc(a.status) + '</span></td><td class="ac-acts">' +
+        (a.status === 'Draft' ? '<button class="ac-btn ac-sm" data-act="openAsm" data-id="' + esc(a.id) + '">Edit</button><button class="ac-btn ac-sm" data-act="assembleRow" data-id="' + esc(a.id) + '">Assemble</button>' : '<button class="ac-btn alt ac-sm" data-act="openAsm" data-id="' + esc(a.id) + '">View</button>') +
+        (a.status === 'Assembled' ? '<button class="ac-btn alt ac-sm" data-act="disasm" data-id="' + esc(a.id) + '">Disassemble</button>' : '') +
+        '<button class="ac-btn alt ac-sm" data-act="printAsm" data-id="' + esc(a.id) + '">Print</button><button class="ac-btn red ac-sm" data-act="delAsm" data-id="' + esc(a.id) + '">Delete</button></td></tr>';
+    });
+    body().innerHTML = h + '</tbody></table></div>';
+  }
+
+  function recipeCost(r, inv) {
+    var t = 0; (r.components || []).forEach(function (c) {
+      for (var i = 0, whs = warehouses(); i < whs.length; i++) { var it = findIn(inv(whs[i]), c.sku, c.name); if (it) { t += num(c.qty) * itemCost(it); break; } }
+    });
+    return t + (r.extras || []).reduce(function (s, x) { return s + num(x.amount); }, 0);
+  }
+  function drawRecipes() {
+    var q = low(V.q), list = recipes().filter(function (r) { return !q || [r.name, r.sku].some(function (x) { return low(x).indexOf(q) > -1; }); });
+    var h = '<div class="ac-bar"><button class="ac-btn" data-act="newRecipe">+ New Recipe</button>' +
+      '<input placeholder="Search recipes..." value="' + esc(V.q) + '" data-q="1" style="max-width:260px"></div>' +
+      '<div class="ac-card" style="padding:0;overflow:auto"><table><thead><tr><th>Composite item</th><th>SKU</th><th>Components</th><th class="r">Est. cost / unit</th><th class="r">Selling price</th><th class="r">Margin</th><th>Actions</th></tr></thead><tbody>';
+    if (!list.length) h += '<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:22px">No recipes yet. A recipe is the list of components that make one unit of a composite item.</td></tr>';
+    list.forEach(function (r) {
+      var cost = recipeCost(r, INV), sell = num(r.sellPrice), mg = sell > 0 ? (sell - cost) / sell * 100 : null;
+      h += '<tr><td><b>' + esc(r.name) + '</b>' + (r.imported ? ' <span class="ac-muted">(from old bundle)</span>' : '') + '</td><td>' + esc(r.sku) + '</td><td>' + esc((r.components || []).map(function (c) { return c.name + ' (' + fq(c.qty) + (c.unit ? ' ' + c.unit : '') + ')'; }).join(', ')) + '</td>' +
+        '<td class="r">' + money(cost) + '</td><td class="r">' + money(sell) + '</td><td class="r">' + (mg == null ? '-' : mg.toFixed(1) + '%') + '</td><td class="ac-acts">' +
+        '<button class="ac-btn ac-sm" data-act="asmFromRecipe" data-id="' + esc(r.id) + '">Assemble</button><button class="ac-btn alt ac-sm" data-act="editRecipe" data-id="' + esc(r.id) + '">Edit</button><button class="ac-btn alt ac-sm" data-act="cloneRecipe" data-id="' + esc(r.id) + '">Clone</button><button class="ac-btn red ac-sm" data-act="delRecipe" data-id="' + esc(r.id) + '">Delete</button></td></tr>';
+    });
+    body().innerHTML = h + '</tbody></table></div>';
+  }
+
+  function regRows() {
+    return assemblies().filter(function (a) { return a.status !== 'Draft'; }).filter(function (a) {
+      return (!V.regStatus || a.status === V.regStatus) && (!V.regFrom || a.date >= V.regFrom) && (!V.regTo || a.date <= V.regTo);
+    }).sort(function (x, y) { return String(y.date).localeCompare(String(x.date)) || String(y.no).localeCompare(String(x.no)); });
+  }
+  function drawRegister() {
+    var rows = regRows(), tq = 0, tc = 0;
+    var h = '<div class="ac-bar"><label>From <input type="date" data-reg="regFrom" value="' + esc(V.regFrom) + '" style="width:auto"></label><label>To <input type="date" data-reg="regTo" value="' + esc(V.regTo) + '" style="width:auto"></label>' +
+      '<select data-reg="regStatus" style="width:auto"><option value="">All statuses</option><option' + (V.regStatus === 'Assembled' ? ' selected' : '') + '>Assembled</option><option' + (V.regStatus === 'Disassembled' ? ' selected' : '') + '>Disassembled</option></select>' +
+      '<button class="ac-btn alt" data-act="regCsv">Export CSV</button><button class="ac-btn alt" data-act="regPrint">Print</button></div>' +
+      '<div class="ac-card" style="padding:0;overflow:auto"><table><thead><tr><th>Date</th><th>Assembly#</th><th>Composite item</th><th>Location</th><th class="r">Qty</th><th class="r">Components</th><th class="r">Extra costs</th><th class="r">Total cost</th><th class="r">Cost / unit</th><th>Status</th></tr></thead><tbody>';
+    if (!rows.length) h += '<tr><td colspan="10" style="text-align:center;color:#6b7280;padding:22px">No assembled runs match.</td></tr>';
+    rows.forEach(function (a) {
+      if (a.status === 'Assembled') { tq += num(a.qty); tc += num(a.totalCost); }
+      h += '<tr><td>' + esc(a.date) + '</td><td>' + esc(a.no) + '</td><td>' + esc(a.name) + ' <span class="ac-muted">' + esc(a.sku || '') + '</span></td><td>' + esc(a.warehouse) + '</td><td class="r">' + fq(a.qty) + '</td><td class="r">' + money(a.compCost) + '</td><td class="r">' + money(a.extraCost) + '</td><td class="r">' + money(a.totalCost) + '</td><td class="r">' + money(a.unitCost) + '</td><td><span class="ac-pill p-' + esc(a.status) + '">' + esc(a.status) + '</span></td></tr>';
+    });
+    body().innerHTML = h + '</tbody>' + (rows.length ? '<tfoot><tr><th colspan="4">Assembled total</th><th class="r">' + fq(tq) + '</th><th></th><th></th><th class="r">' + money(tc) + '</th><th></th><th></th></tr></tfoot>' : '') + '</table></div>';
+  }
+
+  /* ------------------------------------------------------------------ recipe form */
+  function blankRecipe() { return { id: uid('RCP'), name: '', sku: '', toWarehouse: '', sellPrice: '', buyVat: '', sellVat: '', buyDesc: '', sellDesc: '', markup: 35, components: [{ sku: '', name: '', unit: '', qty: 1 }], extras: [] }; }
+
+  function drawRecipeForm() {
+    var r = R, whs = warehouses();
+    var h = '<div class="ac-card"><h3>' + (recipes().some(function (x) { return x.id === r.id; }) ? 'Edit recipe' : 'New recipe') + '</h3><div id="acxErr"></div>' +
+      '<div class="ac-row"><label>Composite item name <span class="req">*</span></label><div><input data-r="name" value="' + esc(r.name) + '" placeholder="e.g. Absorber Coarse Granules (100G)"></div></div>' +
+      '<div class="ac-row"><label>SKU</label><div><input data-r="sku" value="' + esc(r.sku) + '" placeholder="Leave empty to generate one"><div class="ac-hint">This is the item that is created in stock the first time you assemble it.</div></div></div>' +
+      '<div class="ac-row"><label>Default location</label><div><select data-r="toWarehouse">' + opts(whs, r.toWarehouse, 'Select location') + '</select></div></div>' +
+      '<div class="ac-row"><label>Selling price</label><div><input type="number" step="any" min="0" data-r="sellPrice" value="' + esc(r.sellPrice) + '" placeholder="0.00"></div></div>' +
+      '<div class="ac-row"><label>Buy VAT rule</label><div><select data-r="buyVat">' + opts(VATS, r.buyVat, 'Select VAT') + '</select></div></div>' +
+      '<div class="ac-row"><label>Sell VAT rule</label><div><select data-r="sellVat">' + opts(VATS, r.sellVat, 'Select VAT') + '</select></div></div>' +
+      '<h3 style="margin-top:18px">Components (for 1 unit)</h3><div style="overflow:auto"><table><thead><tr><th>Item</th><th style="width:150px">Quantity</th><th style="width:90px">Unit</th><th class="r" style="width:120px">Cost price</th><th style="width:44px"></th></tr></thead><tbody id="acxRcpRows">' + recipeRowsHtml() + '</tbody></table></div>' +
+      '<button class="ac-link" style="margin-top:8px;font-size:13px" data-act="addRcpRow">+ Add new row</button>' +
+      '<h3 style="margin-top:18px">Default extra costs (per unit)</h3><div class="ac-hint" style="margin:-4px 0 8px">Labour, rent, scrap. These pre-fill every assembly of this recipe.</div><table><thead><tr><th>Description</th><th class="r" style="width:160px">Amount per unit</th><th style="width:44px"></th></tr></thead><tbody id="acxRcpExtras">' + recipeExtrasHtml() + '</tbody></table>' +
+      '<button class="ac-link" style="margin-top:8px;font-size:13px" data-act="addRcpExtra">+ Add service / extra cost</button>' +
+      '<div class="ac-row" style="margin-top:18px"><label>Buying / costing notes</label><div><textarea rows="2" data-r="buyDesc">' + esc(r.buyDesc) + '</textarea></div></div>' +
+      '<div class="ac-row"><label>Selling description</label><div><textarea rows="2" data-r="sellDesc">' + esc(r.sellDesc) + '</textarea></div></div>' +
+      '<div style="text-align:right;border-top:1px solid #e5e7eb;padding-top:12px"><button class="ac-btn" data-act="saveRecipe">Save recipe</button> <button class="ac-btn gray" data-act="cancelForm">Cancel</button></div></div>';
+    body().innerHTML = h;
+  }
+  function recipeRowsHtml() {
+    return R.components.map(function (c, i) {
+      var cost = ''; if (c.sku || c.name) { for (var k = 0, w = warehouses(); k < w.length; k++) { var it = findIn(INV(w[k]), c.sku, c.name); if (it) { cost = money(itemCost(it)); break; } } }
+      return '<tr><td><input class="ac-pick" data-pick="r" data-i="' + i + '" value="' + esc(c.name) + '" placeholder="Search item by name or SKU" autocomplete="off"><div class="ac-muted">' + (c.sku ? 'SKU: ' + esc(c.sku) : '') + '</div></td>' +
+        '<td><input type="number" step="any" min="0" data-rc="qty" data-i="' + i + '" value="' + esc(c.qty) + '"></td><td><input data-rc="unit" data-i="' + i + '" value="' + esc(c.unit) + '" placeholder="kg, pcs"></td><td class="r">' + cost + '</td>' +
+        '<td style="text-align:center"><button class="ac-link" style="font-size:18px" data-act="delRcpRow" data-i="' + i + '" title="Remove">&times;</button></td></tr>';
+    }).join('');
+  }
+  function recipeExtrasHtml() {
+    return R.extras.map(function (x, i) {
+      return '<tr><td><input data-re="desc" data-i="' + i + '" value="' + esc(x.desc) + '" placeholder="Labour / Rent / Scrap"></td><td><input type="number" step="any" min="0" data-re="amount" data-i="' + i + '" value="' + esc(x.amount) + '"></td><td style="text-align:center"><button class="ac-link" style="font-size:18px" data-act="delRcpExtra" data-i="' + i + '">&times;</button></td></tr>';
+    }).join('') || '<tr><td colspan="3" class="ac-muted">None</td></tr>';
+  }
+  function showErr(list) { var e = $('acxErr'); if (!e) return; e.innerHTML = list && list.length ? '<div class="ac-err"><b>Please fix:</b><br>' + list.map(esc).join('<br>') + '</div>' : ''; if (list && list.length) e.scrollIntoView({ block: 'nearest' }); }
+
+  function saveRecipe() {
+    var r = R, all = recipes(), errs = [], taken = all.filter(function (x) { return x.id !== r.id; }).map(function (x) { return low(x.sku); });
+    r.name = String(r.name || '').trim(); if (!r.name) errs.push('Enter the composite item name.');
+    if (!r.sku) r.sku = makeSku(r.name, taken);
+    if (taken.indexOf(low(r.sku)) > -1) errs.push('Another recipe already uses the SKU ' + r.sku + '.');
+    var comps = r.components.filter(function (c) { return c.sku || c.name; }), seen = {};
+    if (!comps.length) errs.push('Add at least one component.');
+    comps.forEach(function (c) {
+      var k = low(c.sku) || low(c.name);
+      if (seen[k]) errs.push(c.name + ' is picked twice.'); seen[k] = 1;
+      if (low(c.sku) === low(r.sku) || low(c.name) === low(r.name)) errs.push(c.name + ' cannot be a component of itself.');
+      if (!(num(c.qty) > 0)) errs.push(c.name + ': quantity must be more than 0.');
+    });
+    if (errs.length) return showErr(errs);
+    r.components = comps; r.extras = r.extras.filter(function (x) { return x.desc || num(x.amount); });
+    r.sellPrice = num(r.sellPrice); r.updatedAt = new Date().toISOString(); if (!r.createdAt) r.createdAt = r.updatedAt;
+    var i = all.findIndex(function (x) { return x.id === r.id; }); if (i > -1) all[i] = r; else all.push(r);
+    saveRecipes(all); toast('Recipe saved'); V.mode = 'list'; V.tab = 'recipes'; R = null; render();
+  }
+
+  /* ------------------------------------------------------------------ assembly form */
+  function blankAsm(rec) {
+    var a = { id: uid('ASM'), no: nextAsmNo(), recipeId: '', name: '', sku: '', desc: '', date: today(), qty: 1, warehouse: '', outBatch: { no: '', expiry: '' }, sellPrice: '', sellVat: '', buyVat: '', sellDesc: '', markup: 35, lines: [], extras: [], status: 'Draft', createdAt: new Date().toISOString() };
+    if (rec) applyRecipe(a, rec);
+    return a;
+  }
+  function applyRecipe(a, rec) {
+    a.recipeId = rec.id; a.name = rec.name; a.sku = rec.sku; a.sellPrice = rec.sellPrice || ''; a.sellVat = rec.sellVat || ''; a.buyVat = rec.buyVat || ''; a.sellDesc = rec.sellDesc || ''; a.markup = rec.markup || 35;
+    if (!a.warehouse && rec.toWarehouse) a.warehouse = rec.toWarehouse;
+    a.lines = (rec.components || []).map(function (c) { return { sku: c.sku, name: c.name, unit: c.unit || '', qtyPer: num(c.qty), warehouse: '', desc: '', tag: '', pick: null }; });
+    a.extras = (rec.extras || []).map(function (x) { return { desc: x.desc, perUnit: num(x.amount), amount: r6(num(x.amount) * num(a.qty)), manual: false }; });
+  }
+
+  function drawAsmForm() {
+    var a = A, ro = a.status !== 'Draft', whs = warehouses(), recs = recipes();
+    var recOpts = '<option value="">Select composite item</option>' + recs.map(function (r) { return '<option value="' + esc(r.id) + '"' + (r.id === a.recipeId ? ' selected' : '') + '>' + esc(r.name) + ' - ' + esc(r.sku) + '</option>'; }).join('');
+    var h = '<div class="ac-card"><div id="acxErr"></div>' + (ro ? '<div class="ac-note"><b>' + esc(a.status) + '</b> - this run is locked. ' + (a.status === 'Assembled' ? 'Use Disassemble in the list to reverse the stock.' : '') + '</div>' : '') +
+      '<div class="ac-row"><label class="req">Composite item *</label><div><select data-a="recipeId"' + (ro ? ' disabled' : '') + '>' + recOpts + '</select><div class="ac-hint">SKU: <span id="acxSku">' + esc(a.sku || '-') + '</span>' + (recs.length ? '' : ' &middot; create a recipe first (Recipes tab)') + '</div></div></div>' +
+      '<div class="ac-row"><label class="req">Assembly# *</label><div><input value="' + esc(a.no) + '" disabled></div></div>' +
+      '<div class="ac-row"><label>Description</label><div><textarea rows="2" data-a="desc"' + (ro ? ' disabled' : '') + '>' + esc(a.desc) + '</textarea></div></div>' +
+      '<div class="ac-row"><label class="req">Assembled date *</label><div><input type="date" data-a="date" value="' + esc(a.date) + '"' + (ro ? ' disabled' : '') + '></div></div>' +
+      '<div class="ac-row"><label class="req">Quantity to assemble *</label><div><input type="number" step="any" min="0" data-a="qty" value="' + esc(a.qty) + '"' + (ro ? ' disabled' : '') + '><div class="ac-hint" id="acxCan"></div></div></div>' +
+      '<div class="ac-row"><label class="req">Location *</label><div><select data-a="warehouse"' + (ro ? ' disabled' : '') + '>' + opts(whs, a.warehouse, 'Add Location') + '</select><div class="ac-hint">Components are taken from here and the finished item is added here.</div></div></div>' +
+      '<div class="ac-row"><label>Finished batch (optional)</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input data-a="outNo" value="' + esc(a.outBatch && a.outBatch.no) + '" placeholder="Batch no."' + (ro ? ' disabled' : '') + '><input type="date" data-a="outExp" value="' + esc(a.outBatch && a.outBatch.expiry) + '" title="Expiry date"' + (ro ? ' disabled' : '') + '></div></div>' +
+      '<h3 style="margin-top:20px">Associated items *</h3><div class="ac-note">If you incurred an extra cost while assembling this item, such as rent, labour or scrap, add it as a <b>service / extra cost</b> below to include it in the cost of the item.</div>' +
+      '<div style="overflow:auto"><table><thead><tr><th>Item details</th><th class="r" style="width:190px">Quantity required</th><th class="r" style="width:130px">Total qty required</th><th class="r" style="width:130px">Quantity available</th>' + (ro ? '' : '<th style="width:36px;border:none;background:transparent"></th>') + '</tr></thead><tbody id="acxLines"></tbody></table></div>' +
+      (ro ? '' : '<div style="margin-top:8px"><button class="ac-link" style="font-size:13px" data-act="addAsmRow">+ Add new row</button> &nbsp;|&nbsp; <button class="ac-link" style="font-size:13px" data-act="addAsmExtra">+ Add services / extra cost</button></div>') +
+      '<h3 style="margin-top:18px">Extra costs (labour, rent, scrap)</h3><table><thead><tr><th>Description</th><th class="r" style="width:180px">Amount (whole run)</th>' + (ro ? '' : '<th style="width:44px"></th>') + '</tr></thead><tbody id="acxExtras"></tbody></table>' +
+      '<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:20px;margin-top:18px"><div>' +
+      '<div class="ac-row" style="grid-template-columns:140px 1fr"><label>Selling price</label><div><input type="number" step="any" min="0" data-a="sellPrice" value="' + esc(a.sellPrice) + '"' + (ro ? ' disabled' : '') + '></div></div>' +
+      '<div class="ac-row" style="grid-template-columns:140px 1fr"><label>Sell VAT rule</label><div><select data-a="sellVat"' + (ro ? ' disabled' : '') + '>' + opts(VATS, a.sellVat, 'Select VAT') + '</select><div class="ac-hint" id="acxInc"></div></div></div>' +
+      '<div class="ac-row" style="grid-template-columns:140px 1fr"><label>Markup %</label><div style="display:flex;gap:8px"><input type="number" step="any" min="0" data-a="markup" value="' + esc(a.markup) + '"' + (ro ? ' disabled' : '') + '>' + (ro ? '' : '<button class="ac-btn alt" style="white-space:nowrap" data-act="useSuggested">Use suggested</button>') + '</div><div class="ac-hint" id="acxSug" style="grid-column:2"></div></div></div>' +
+      '<div class="ac-sum" id="acxSum"></div></div>' +
+      '<div style="text-align:right;border-top:1px solid #e5e7eb;margin-top:14px;padding-top:12px">' + (ro ? '' : '<button class="ac-btn gray" data-act="saveDraft">Save as draft</button> <button class="ac-btn" id="acxAsmBtn" data-act="doAssemble">Assemble</button> ') + '<button class="ac-btn gray" data-act="cancelForm">' + (ro ? 'Close' : 'Cancel') + '</button></div></div>';
+    body().innerHTML = h; drawLines(); drawExtras(); recalc();
+  }
+
+  function drawLines() {
+    var a = A, ro = a.status !== 'Draft', c = compute(a, INV), tags = reportingTags(), whs = warehouses(), t = $('acxLines'); if (!t) return;
+    t.innerHTML = a.lines.map(function (ln, i) {
+      var x = c.lines[i], it = x.it, unit = ln.unit || itemUnit(it), hasB = !ro && it && Array.isArray(it.batches) && it.batches.some(function (b) { return num(b.qty) > 0; });
+      var alloc = hasB ? allocate(it, x.need, ln.pick) : [], bTxt = alloc.length ? alloc.map(function (u) { return u.batchNo + ' x ' + fq(u.qty); }).join(', ') : '';
+      return '<tr data-line="' + i + '"' + (x.short || x.missing ? ' class="ac-short"' : '') + '><td>' +
+        (ro ? '<b>' + esc(ln.name) + '</b>' : '<input class="ac-pick" data-pick="a" data-i="' + i + '" value="' + esc(ln.name) + '" placeholder="Search item by name or SKU" autocomplete="off">') +
+        '<div class="ac-muted">SKU: ' + esc(ln.sku || '-') + '</div>' +
+        (ro ? (ln.desc ? '<div class="ac-muted">' + esc(ln.desc) + '</div>' : '') : '<input data-al="desc" data-i="' + i + '" value="' + esc(ln.desc) + '" placeholder="Add a description to your item" style="margin-top:6px;font-size:13px">') +
+        (ro ? '' : '<div style="display:flex;gap:6px;margin-top:6px;align-items:center"><span class="ac-muted">Source:</span><select data-al="warehouse" data-i="' + i + '" style="font-size:12px;padding:3px 6px">' + opts(whs, ln.warehouse, 'Location (default)') + '</select></div>' +
+          (tags.length ? '<select data-al="tag" data-i="' + i + '" style="margin-top:6px;font-size:12px;padding:3px 6px">' + opts(tags, ln.tag, 'Reporting tags') + '</select>' : '')) +
+        '<div class="ac-muted" style="margin-top:6px">Cost price: <b data-cost="' + i + '">' + money(x.cost) + '</b></div></td>' +
+        '<td class="r">' + (ro ? fq(ln.qtyPer) : '<input type="number" step="any" min="0" data-al="qtyPer" data-i="' + i + '" value="' + esc(ln.qtyPer) + '" style="text-align:right">') +
+        '<div class="ac-muted">' + (unit ? esc(unit) + ' ' : '') + 'x <span data-qty-asm>' + fq(a.qty) + '</span> assemblies</div>' +
+        (hasB ? '<div style="margin-top:4px"><button class="ac-link" data-act="pickBatch" data-i="' + i + '">' + (ln.pick ? 'Batches picked' : 'Select batches') + '</button><div class="ac-muted" data-batchtxt="' + i + '">' + esc(bTxt) + '</div></div>' : '') + '</td>' +
+        '<td class="r"><span data-need="' + i + '">' + fq(x.need) + '</span> ' + esc(unit) + '<div data-warn="' + i + '"></div></td>' +
+        '<td class="r"><span data-avail="' + i + '">' + (ro ? '-' : fq(x.avail) + ' ' + esc(unit || 'pcs')) + '</span></td>' +
+        (ro ? '' : '<td style="width:36px;text-align:center;border:none;background:transparent"><button class="ac-link" style="font-size:18px" data-act="delAsmRow" data-i="' + i + '" title="Remove">&times;</button></td>') + '</tr>';
+    }).join('') || '<tr><td colspan="4" class="ac-muted" style="text-align:center;padding:16px">Pick a composite item to load its components, or add rows.</td></tr>';
+  }
+  function drawExtras() {
+    var a = A, ro = a.status !== 'Draft', t = $('acxExtras'); if (!t) return;
+    t.innerHTML = a.extras.map(function (x, i) {
+      return '<tr><td>' + (ro ? esc(x.desc) : '<input data-ae="desc" data-i="' + i + '" value="' + esc(x.desc) + '" placeholder="Labour / Rent / Scrap">') + '</td><td class="r">' + (ro ? money(x.amount) : '<input type="number" step="any" min="0" data-ae="amount" data-i="' + i + '" value="' + esc(x.amount) + '" style="text-align:right">') + '</td>' +
+        (ro ? '' : '<td style="text-align:center"><button class="ac-link" style="font-size:18px" data-act="delAsmExtra" data-i="' + i + '">&times;</button></td>') + '</tr>';
+    }).join('') || '<tr><td colspan="3" class="ac-muted">None</td></tr>';
+  }
+
+  /* update the numbers on screen without redrawing the inputs (so typing is never interrupted) */
+  function recalc() {
+    var a = A; if (!a || !$('acxLines')) return;
+    var ro = a.status !== 'Draft', c = compute(a, INV), set = function (sel, txt) { var e = body().querySelector(sel); if (e) e.textContent = txt; };
+    a.lines.forEach(function (ln, i) {
+      var x = c.lines[i], tr = body().querySelector('tr[data-line="' + i + '"]'); if (!tr) return;
+      var unit = ln.unit || itemUnit(x.it);
+      set('[data-need="' + i + '"]', fq(x.need)); if (!ro) set('[data-avail="' + i + '"]', fq(x.avail) + ' ' + (unit || 'pcs')); set('[data-cost="' + i + '"]', money(x.cost));
+      tr.className = x.short || x.missing ? 'ac-short' : '';
+      var w = tr.querySelector('[data-warn="' + i + '"]');
+      if (w) w.innerHTML = !ro && (a.warehouse && x.missing) ? '<span class="ac-warn" title="Not in this location">&#9888; not in ' + esc(lineWh(a, ln)) + '</span>' : (!ro && x.short ? '<span class="ac-warn" title="Not enough stock">&#9888; short by ' + fq(x.need - x.avail) + '</span>' : '');
+      var bt = tr.querySelector('[data-batchtxt="' + i + '"]');
+      if (bt && x.it) bt.textContent = allocate(x.it, x.need, ln.pick).map(function (u) { return u.batchNo + ' x ' + fq(u.qty); }).join(', ');
+    });
+    body().querySelectorAll('[data-qty-asm]').forEach(function (e) { e.textContent = fq(a.qty); });
+    var can = $('acxCan');
+    if (can) {
+      if (ro) can.textContent = '';
+      else if (!a.warehouse) can.innerHTML = 'Choose a Location to see how many you can assemble.';
+      else { var m = maxAssemble(a, INV), enough = num(a.qty) <= m; can.innerHTML = 'You can assemble <b class="' + (enough ? 'ac-ok' : 'ac-warn') + '">' + m + '</b> unit' + (m === 1 ? '' : 's') + ' from the available stock.' + (enough || !a.lines.length ? '' : ' <span class="ac-warn">Reduce the quantity or add stock.</span>'); }
+    }
+    var sum = $('acxSum');
+    if (sum) {
+      var mg = c.margin;
+      sum.innerHTML = '<div><span>Components cost</span><span>' + money(c.comp) + '</span></div><div><span>Extra costs</span><span>' + money(c.extra) + '</span></div>' +
+        '<div class="big"><span>Total cost</span><span>' + money(c.total) + '</span></div><div><span>Cost per finished unit</span><b>' + money(c.unit) + '</b></div>' +
+        (num(a.sellPrice) > 0 ? '<div><span>Selling price</span><span>' + money(a.sellPrice) + '</span></div><div><span>Margin</span><b class="' + (c.profit < 0 ? 'ac-warn' : 'ac-ok') + '">' + money(c.profit) + ' (' + (mg == null ? '-' : mg.toFixed(1)) + '%)</b></div>' : '');
+    }
+    var sug = $('acxSug'); if (sug) sug.innerHTML = c.unit > 0 ? 'Suggested price: <b>' + money(c.unit * (1 + num(a.markup) / 100)) + '</b> (cost + ' + fq(a.markup) + '%)' : '';
+    var inc = $('acxInc'), vr = a.sellVat && a.sellVat !== 'Exempt' ? num(a.sellVat) : 0;
+    if (inc) inc.innerHTML = num(a.sellPrice) > 0 && vr ? 'Price incl. VAT: <b>' + money(num(a.sellPrice) * (1 + vr / 100)) + '</b>' : '';
+    var btn = $('acxAsmBtn'); if (btn) { var bad = !a.warehouse || c.lines.some(function (x) { return x.short || x.missing; }); btn.disabled = false; btn.title = bad ? 'Some components are short - the stock check will stop it' : ''; btn.style.opacity = bad ? '.6' : ''; }
+    var sk = $('acxSku'); if (sk) sk.textContent = a.sku || '-';
+  }
+  function rescaleExtras() { A.extras.forEach(function (x) { if (!x.manual && x.perUnit != null) x.amount = r6(num(x.perUnit) * num(A.qty)); }); }
+
+  /* ------------------------------------------------------------------ picker dropdown */
+  function closeDD() { if (dd && dd.parentNode) dd.parentNode.removeChild(dd); dd = null; ddTarget = null; }
+  function showDD(input) {
+    CAT = CAT.length ? CAT : catalog(INV);
+    var q = low(input.value), kind = input.getAttribute('data-pick'), used = {};
+    (kind === 'a' ? A.lines : R.components).forEach(function (c, i) { if (i !== +input.getAttribute('data-i')) used[low(c.sku) || low(c.name)] = 1; });
+    var self = kind === 'a' ? A : R, selfKeys = [low(self.sku), low(self.name)];
+    var list = CAT.filter(function (c) { return !used[c.key] && selfKeys.indexOf(low(c.sku)) < 0 && selfKeys.indexOf(low(c.name)) < 0 && (!q || low(c.name).indexOf(q) > -1 || low(c.sku).indexOf(q) > -1); }).slice(0, 60);
+    closeDD(); dd = D.createElement('div'); dd.className = 'ac-dd'; ddTarget = input;
+    dd.innerHTML = list.map(function (c) {
+      var here = kind === 'a' && A.warehouse ? num(c.byWh[A.warehouse]) : c.total;
+      return '<div data-key="' + esc(c.key) + '"><b>' + esc(c.name) + '</b><small>SKU: ' + esc(c.sku || '-') + ' &middot; on hand: ' + fq(here) + (kind === 'a' && A.warehouse ? ' in ' + esc(A.warehouse) : ' (all locations)') + (c.unit ? ' ' + esc(c.unit) : '') + '</small></div>';
+    }).join('') || '<div class="none">No matching items (already picked items and the composite itself are hidden)</div>';
+    var b = input.getBoundingClientRect(); dd.style.left = b.left + 'px'; dd.style.top = (b.bottom + 2) + 'px'; dd.style.width = Math.max(b.width, 280) + 'px';
+    dd.addEventListener('mousedown', function (e) {
+      var d = e.target.closest('[data-key]'); if (!d) return; e.preventDefault();
+      var c = CAT.filter(function (x) { return x.key === d.getAttribute('data-key'); })[0], i = +ddTarget.getAttribute('data-i'); if (!c) return;
+      var k = ddTarget.getAttribute('data-pick'); closeDD();
+      if (k === 'a') { var ln = A.lines[i]; ln.sku = c.sku; ln.name = c.name; ln.unit = c.unit; ln.pick = null; drawLines(); recalc(); }
+      else { var rc = R.components[i]; rc.sku = c.sku; rc.name = c.name; rc.unit = c.unit; var rows = $('acxRcpRows'); if (rows) rows.innerHTML = recipeRowsHtml(); }
+    });
+    D.body.appendChild(dd);
+  }
+
+  /* ------------------------------------------------------------------ batch picker modal */
+  function pickBatches(i) {
+    var ln = A.lines[i], it = lineItem(A, ln, INV), need = lineNeed(A, ln); if (!it) return;
+    var batches = (it.batches || []).filter(function (b) { return num(b.qty) > 0; }), cur = {};
+    allocate(it, need, ln.pick).forEach(function (u) { cur[u.batchNo] = u.qty; });
+    var m = D.createElement('div'); m.className = 'ac-modal';
+    m.innerHTML = '<div><h3 style="margin:0 0 4px">Select batches - ' + esc(ln.name) + '</h3><div class="ac-muted">Need <b>' + fq(need) + '</b> ' + esc(ln.unit || '') + '. Oldest / first-expiring batches are used by default.</div>' +
+      '<table><thead><tr><th>Batch</th><th>Expiry</th><th>On hand</th><th style="width:130px">Take</th></tr></thead><tbody>' +
+      batches.map(function (b) { var no = String(b.batchNo || b.batchNumber || ''); return '<tr><td>' + esc(no) + '</td><td>' + esc(b.expiryDate || b.expiry || '-') + '</td><td>' + fq(b.qty) + '</td><td><input type="number" step="any" min="0" max="' + esc(b.qty) + '" data-bn="' + esc(no) + '" value="' + (cur[no] != null ? esc(cur[no]) : '') + '"></td></tr>'; }).join('') +
+      '</tbody></table><div id="acxBErr" class="ac-warn" style="min-height:18px"></div><div style="text-align:right"><button class="ac-btn alt" data-m="auto">Use oldest / first-expiring</button> <button class="ac-btn" data-m="ok">Apply</button> <button class="ac-btn gray" data-m="x">Cancel</button></div></div>';
+    m.addEventListener('click', function (e) {
+      var a = e.target.getAttribute('data-m'); if (!a) return;
+      if (a === 'x') return m.remove();
+      if (a === 'auto') { ln.pick = null; m.remove(); recalc(); drawLines(); return; }
+      var pick = [], sum = 0, bad = '';
+      m.querySelectorAll('input[data-bn]').forEach(function (inp) {
+        var q = num(inp.value); if (q <= 0) return; var b = batches.filter(function (x) { return String(x.batchNo || x.batchNumber || '') === inp.getAttribute('data-bn'); })[0];
+        if (b && q > num(b.qty) + EPS) bad = 'Batch ' + inp.getAttribute('data-bn') + ' only has ' + fq(b.qty) + '.';
+        pick.push({ batchNo: inp.getAttribute('data-bn'), qty: q }); sum += q;
+      });
+      if (!bad && Math.abs(sum - need) > 1e-6) bad = 'The batches add up to ' + fq(sum) + ' but ' + fq(need) + ' is needed.';
+      if (bad) { m.querySelector('#acxBErr').textContent = bad; return; }
+      ln.pick = pick; m.remove(); drawLines(); recalc();
+    });
+    D.body.appendChild(m);
+  }
+
+  /* ------------------------------------------------------------------ actions */
+  function openAsm(id, recipeId) {
+    INV = makeInv(); CAT = [];
+    if (id) { A = clone(assemblies().filter(function (x) { return x.id === id; })[0] || null); if (!A) return; }
+    else { var rec = recipeId ? recipes().filter(function (r) { return r.id === recipeId; })[0] : null; A = blankAsm(rec); }
+    if (!A.outBatch) A.outBatch = { no: '', expiry: '' };
+    V.tab = 'assemblies'; V.mode = 'form'; render();
+  }
+  function persistAsm(a) {
+    var all = assemblies(), i = all.findIndex(function (x) { return x.id === a.id; });
+    if (i > -1) all[i] = a; else all.push(a);
+    saveAssemblies(all);
+  }
+  function snapshotForSave() {
+    A.qty = num(A.qty); A.outBatch = { no: String(A.outBatch && A.outBatch.no || '').trim(), expiry: A.outBatch && A.outBatch.expiry || '' };
+    A.lines = A.lines.filter(function (l) { return l.sku || l.name; });
+    A.extras = A.extras.filter(function (x) { return x.desc || num(x.amount); });
+    var c = compute(A, INV); A.compCost = c.comp; A.extraCost = c.extra; A.totalCost = c.total; A.unitCost = c.unit;
+  }
+  function saveDraft() {
+    var errs = validate(A, INV, false); if (errs.length) return showErr(errs);
+    snapshotForSave();
+    if (!assemblies().some(function (x) { return x.id === A.id; })) A.no = nextAsmNo();
+    A.updatedAt = new Date().toISOString(); persistAsm(A); toast('Draft ' + A.no + ' saved'); V.mode = 'list'; A = null; render();
+  }
+  function doAssemble(fromList) {
+    var errs = validate(A, INV, true); if (errs.length) return showErr(errs);
+    snapshotForSave();
+    if (!assemblies().some(function (x) { return x.id === A.id; })) A.no = nextAsmNo();
+    var copy = clone(A), res = assemble(copy);
+    if (!res.ok) { showErr(res.errors); return; }
+    persistAsm(copy); refreshApp(); toast(copy.no + ' assembled: ' + fq(copy.qty) + ' x ' + copy.name + ' added to ' + copy.warehouse);
+    V.mode = 'list'; A = null; INV = makeInv(); render();
+  }
+  function assembleRow(id) {
+    var a = assemblies().filter(function (x) { return x.id === id; })[0]; if (!a) return;
+    if (!confirm('Assemble ' + a.no + '? Components will be taken out of ' + (a.warehouse || 'the location') + ' and ' + fq(a.qty) + ' x ' + a.name + ' added.')) return;
+    var res = assemble(a);
+    if (!res.ok) { alert('Cannot assemble ' + a.no + ':\n\n- ' + res.errors.join('\n- ')); return; }
+    persistAsm(a); refreshApp(); toast(a.no + ' assembled'); INV = makeInv(); render();
+  }
+  function disasmRow(id) {
+    var a = assemblies().filter(function (x) { return x.id === id; })[0]; if (!a) return;
+    if (!canDo('edit', 'reverse assemblies')) return;
+    if (!confirm('Disassemble ' + a.no + '? ' + fq(a.qty) + ' x ' + a.name + ' will be taken out of ' + a.warehouse + ' and the components returned to stock.')) return;
+    var res = disassemble(a);
+    if (!res.ok) { alert(res.errors.join('\n')); return; }
+    persistAsm(a); refreshApp(); toast(a.no + ' disassembled - stock reversed'); INV = makeInv(); render();
+  }
+  function delAsm(id) {
+    var a = assemblies().filter(function (x) { return x.id === id; })[0]; if (!a) return;
+    if (!canDo('delete', 'delete assemblies')) return;
+    if (a.status === 'Assembled') {
+      if (!confirm('Delete ' + a.no + '? Its stock is reversed first (' + fq(a.qty) + ' x ' + a.name + ' removed, components returned).')) return;
+      var res = disassemble(a); if (!res.ok) { alert(res.errors.join('\n')); return; }
+      refreshApp();
+    } else if (!confirm('Delete ' + a.no + '?')) return;
+    saveAssemblies(assemblies().filter(function (x) { return x.id !== id; })); toast(a.no + ' deleted'); INV = makeInv(); render();
+  }
+
+  function asmDoc(a) {
+    var org = ls('orgInfo', {}) || {}, c = compute(a, makeInv()), rows = a.lines.map(function (ln, i) {
+      var need = lineNeed(a, ln), cost = num(ln.unitCost) || c.lines[i].cost;
+      return '<tr><td>' + esc(ln.name) + '<br><small>' + esc(ln.sku || '') + '</small></td><td class="n">' + fq(ln.qtyPer) + ' ' + esc(ln.unit || '') + '</td><td class="n">' + fq(need) + '</td><td class="n">' + money(cost) + '</td><td class="n">' + money(need * cost) + '</td></tr>';
+    }).join('');
+    var ex = (a.extras || []).map(function (x) { return '<tr><td colspan="4">' + esc(x.desc) + '</td><td class="n">' + money(x.amount) + '</td></tr>'; }).join('');
+    return '<html><head><title>' + esc(a.no) + '</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{font-size:20px;color:#1e3a8a;margin:0}table{width:100%;border-collapse:collapse;margin-top:14px}th,td{border:1px solid #ddd;padding:7px;font-size:13px;text-align:left}th{background:#1e3a8a;color:#fff}.n{text-align:right}.meta{display:flex;gap:24px;flex-wrap:wrap;font-size:13px;margin:10px 0}.tot{margin-top:12px;text-align:right;font-size:14px}.tot div{margin:3px 0}@media print{.noprint{display:none}}</style></head><body>' +
+      '<h1>' + esc(org.name || 'Assembly') + '</h1><div style="color:#555;font-size:12px">' + esc(org.address || '') + '</div><h2 style="margin:16px 0 4px;font-size:16px">Assembly ' + esc(a.no) + ' <small>(' + esc(a.status) + ')</small></h2>' +
+      '<div class="meta"><div><b>Item:</b> ' + esc(a.name) + ' (' + esc(a.sku || '') + ')</div><div><b>Date:</b> ' + esc(a.date) + '</div><div><b>Location:</b> ' + esc(a.warehouse || '-') + '</div><div><b>Quantity:</b> ' + fq(a.qty) + '</div>' + (a.outBatch && a.outBatch.no ? '<div><b>Batch:</b> ' + esc(a.outBatch.no) + '</div>' : '') + '</div>' + (a.desc ? '<div style="font-size:13px">' + esc(a.desc) + '</div>' : '') +
+      '<table><thead><tr><th>Component</th><th class="n">Per assembly</th><th class="n">Total used</th><th class="n">Unit cost</th><th class="n">Line cost</th></tr></thead><tbody>' + rows + ex + '</tbody></table>' +
+      '<div class="tot"><div>Components: <b>' + money(c.comp) + '</b></div><div>Extra costs: <b>' + money(c.extra) + '</b></div><div>Total cost: <b>' + money(c.total) + '</b></div><div>Cost per unit: <b>' + money(c.unit) + '</b></div></div>' +
+      '<p class="noprint"><button onclick="window.print()">Print</button></p></body></html>';
+  }
+  function printHtml(html, auto) {
+    var w = W.open('', '_blank', 'width=950,height=750'); if (!w) return alert('Allow pop-ups to print.');
+    w.document.write(html + (auto ? '<script>window.onload=function(){window.print()}<\/script>' : '')); w.document.close();
+  }
+  function csvDownload(name, rows) {
+    var csv = rows.map(function (r) { return r.map(function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
+    var a = D.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = name; D.body.appendChild(a); a.click(); D.body.removeChild(a);
+  }
+
+  /* ------------------------------------------------------------------ events */
+  function onClick(e) {
+    var t = e.target.closest('[data-act]'); if (!t) { if (!e.target.closest('.ac-dd')) closeDD(); return; }
+    var act = t.getAttribute('data-act'), id = t.getAttribute('data-id'), i = +t.getAttribute('data-i');
+    switch (act) {
+      case 'tab': V.tab = t.getAttribute('data-v'); V.mode = 'list'; V.q = ''; A = null; R = null; render(); break;
+      case 'newAsm': openAsm(); break;
+      case 'openAsm': openAsm(id); break;
+      case 'asmFromRecipe': openAsm(null, id); break;
+      case 'assembleRow': assembleRow(id); break;
+      case 'disasm': disasmRow(id); break;
+      case 'delAsm': delAsm(id); break;
+      case 'printAsm': var pa = assemblies().filter(function (x) { return x.id === id; })[0]; if (pa) printHtml(asmDoc(pa), true); break;
+      case 'newRecipe': INV = makeInv(); CAT = []; R = blankRecipe(); V.tab = 'recipes'; V.mode = 'form'; render(); break;
+      case 'editRecipe': INV = makeInv(); CAT = []; R = clone(recipes().filter(function (x) { return x.id === id; })[0]); if (R) { R.extras = R.extras || []; R.components = R.components || []; V.mode = 'form'; render(); } break;
+      case 'cloneRecipe': var src = recipes().filter(function (x) { return x.id === id; })[0]; if (src) { var cp = clone(src); cp.id = uid('RCP'); cp.name = src.name + ' Copy'; cp.sku = makeSku(cp.name, recipes().map(function (x) { return low(x.sku); })); delete cp.imported; var all = recipes(); all.push(cp); saveRecipes(all); toast('Recipe cloned'); render(); } break;
+      case 'delRecipe': if (!canDo('delete', 'delete recipes')) break; if (confirm('Delete this recipe? Past assemblies are kept.')) { saveRecipes(recipes().filter(function (x) { return x.id !== id; })); render(); } break;
+      case 'addRcpRow': R.components.push({ sku: '', name: '', unit: '', qty: 1 }); $('acxRcpRows').innerHTML = recipeRowsHtml(); break;
+      case 'delRcpRow': R.components.splice(i, 1); if (!R.components.length) R.components.push({ sku: '', name: '', unit: '', qty: 1 }); $('acxRcpRows').innerHTML = recipeRowsHtml(); break;
+      case 'addRcpExtra': R.extras.push({ desc: '', amount: '' }); $('acxRcpExtras').innerHTML = recipeExtrasHtml(); break;
+      case 'delRcpExtra': R.extras.splice(i, 1); $('acxRcpExtras').innerHTML = recipeExtrasHtml(); break;
+      case 'saveRecipe': saveRecipe(); break;
+      case 'cancelForm': V.mode = 'list'; A = null; R = null; render(); break;
+      case 'addAsmRow': A.lines.push({ sku: '', name: '', unit: '', qtyPer: 1, warehouse: '', desc: '', tag: '', pick: null }); drawLines(); recalc(); break;
+      case 'delAsmRow': A.lines.splice(i, 1); drawLines(); recalc(); break;
+      case 'addAsmExtra': A.extras.push({ desc: '', amount: '', perUnit: null, manual: true }); drawExtras(); break;
+      case 'delAsmExtra': A.extras.splice(i, 1); drawExtras(); recalc(); break;
+      case 'pickBatch': pickBatches(i); break;
+      case 'useSuggested': var cc = compute(A, INV); if (cc.unit > 0) { A.sellPrice = +(cc.unit * (1 + num(A.markup) / 100)).toFixed(dp()); var sp = body().querySelector('[data-a="sellPrice"]'); if (sp) sp.value = A.sellPrice; recalc(); } break;
+      case 'saveDraft': saveDraft(); break;
+      case 'doAssemble': doAssemble(); break;
+      case 'regCsv': csvDownload('assembly-register.csv', [['Date', 'Assembly#', 'Item', 'SKU', 'Location', 'Qty', 'Components cost', 'Extra costs', 'Total cost', 'Cost per unit', 'Status']].concat(regRows().map(function (a) { return [a.date, a.no, a.name, a.sku, a.warehouse, a.qty, a.compCost, a.extraCost, a.totalCost, a.unitCost, a.status]; }))); break;
+      case 'regPrint': printHtml('<html><head><title>Assembly Register</title><style>body{font-family:Arial;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:6px;font-size:12px;text-align:left}th{background:#1e3a8a;color:#fff}</style></head><body><h2>Assembly Register</h2><table><thead><tr><th>Date</th><th>Assembly#</th><th>Item</th><th>Location</th><th>Qty</th><th>Total cost</th><th>Cost/unit</th><th>Status</th></tr></thead><tbody>' + regRows().map(function (a) { return '<tr><td>' + esc(a.date) + '</td><td>' + esc(a.no) + '</td><td>' + esc(a.name) + '</td><td>' + esc(a.warehouse) + '</td><td>' + fq(a.qty) + '</td><td>' + money(a.totalCost) + '</td><td>' + money(a.unitCost) + '</td><td>' + esc(a.status) + '</td></tr>'; }).join('') + '</tbody></table></body></html>', true); break;
+    }
+  }
+  function onInput(e) {
+    var t = e.target;
+    if (t.hasAttribute('data-q')) { V.q = t.value; var pos = t.selectionStart; (V.tab === 'recipes' ? drawRecipes : drawAssemblies)(); var n = body().querySelector('[data-q]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (x) { } } return; }
+    if (t.hasAttribute('data-pick')) { showDD(t); return; }
+    if (t.hasAttribute('data-r') && R) { R[t.getAttribute('data-r')] = t.value; return; }
+    if (t.hasAttribute('data-rc')) { R.components[+t.getAttribute('data-i')][t.getAttribute('data-rc')] = t.value; return; }
+    if (t.hasAttribute('data-re')) { R.extras[+t.getAttribute('data-i')][t.getAttribute('data-re')] = t.value; return; }
+    if (!A) return;
+    var f = t.getAttribute('data-a');
+    if (f) {
+      if (f === 'outNo') A.outBatch.no = t.value; else if (f === 'outExp') A.outBatch.expiry = t.value;
+      else if (f === 'recipeId' || f === 'warehouse') return;      /* handled on change */
+      else A[f] = t.value;
+      if (f === 'qty') { rescaleExtras(); drawExtras(); }
+      recalc(); return;
+    }
+    var l = t.getAttribute('data-al');
+    if (l) { var ln = A.lines[+t.getAttribute('data-i')]; ln[l] = t.value; if (l === 'qtyPer') ln.pick = null; recalc(); return; }
+    var x = t.getAttribute('data-ae');
+    if (x) { var ex = A.extras[+t.getAttribute('data-i')]; ex[x] = t.value; if (x === 'amount') ex.manual = true; recalc(); }
+  }
+  function onChange(e) {
+    var t = e.target;
+    if (t.hasAttribute('data-reg')) { V[t.getAttribute('data-reg')] = t.value; drawRegister(); return; }
+    if (t.hasAttribute('data-r') && R) { R[t.getAttribute('data-r')] = t.value; return; }
+    if (!A) return;
+    var f = t.getAttribute('data-a');
+    if (f === 'recipeId') {
+      var rec = recipes().filter(function (r) { return r.id === t.value; })[0];
+      if (!rec) { A.recipeId = ''; A.name = ''; A.sku = ''; A.lines = []; A.extras = []; drawLines(); drawExtras(); recalc(); return; }
+      if (A.lines.some(function (l) { return l.sku || l.name; }) && A.recipeId !== rec.id && !confirm('Replace the components with this recipe?')) { t.value = A.recipeId; return; }
+      applyRecipe(A, rec); var sp = body().querySelector('[data-a="sellPrice"]'); if (sp) sp.value = A.sellPrice; var sv = body().querySelector('[data-a="sellVat"]'); if (sv) sv.value = A.sellVat;
+      var mk = body().querySelector('[data-a="markup"]'); if (mk) mk.value = A.markup; var wh = body().querySelector('[data-a="warehouse"]'); if (wh) wh.value = A.warehouse || '';
+      drawLines(); drawExtras(); recalc(); return;
+    }
+    if (f === 'warehouse') { A.warehouse = t.value; INV = makeInv(); CAT = []; drawLines(); recalc(); return; }
+    var l = t.getAttribute('data-al');
+    if (l === 'warehouse') { A.lines[+t.getAttribute('data-i')].warehouse = t.value; A.lines[+t.getAttribute('data-i')].pick = null; drawLines(); recalc(); return; }
+    if (l === 'tag') { A.lines[+t.getAttribute('data-i')].tag = t.value; return; }
+    if (f) { if (f === 'sellVat' || f === 'sellPrice') { A[f] = t.value; recalc(); } }
+  }
+  function onFocusIn(e) { if (e.target.hasAttribute && e.target.hasAttribute('data-pick')) showDD(e.target); }
+  function onKey(e) {
+    if (e.key === 'Escape') closeDD();
+    if (e.key === 'Enter' && dd && e.target.hasAttribute && e.target.hasAttribute('data-pick')) { var first = dd.querySelector('[data-key]'); if (first) { e.preventDefault(); first.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })); } }
+  }
+  D.addEventListener('click', function (e) { if (dd && !e.target.closest('.ac-dd') && e.target !== ddTarget) closeDD(); });
+
+  /* ------------------------------------------------------------------ hook into the sidebar tab */
+  function hook() {
+    var o = W.showTab; if (typeof o !== 'function') return false; if (o.__acxAsm) return true;
+    var n = function (tab) { var res = o.apply(this, arguments); if (tab === 'BundleItems') { try { open(); } catch (x) { console.error('[assembly]', x); } } return res; };
+    n.__acxAsm = true; W.showTab = n; return true;
+  }
+  function boot() {
+    hook(); var r = root(); if (r && !r.classList.contains('hidden')) { try { open(); } catch (x) { console.error('[assembly]', x); } }
+  }
+  W.acxAssemblyOpen = open;
+  if (D.readyState === 'complete') boot(); else W.addEventListener('load', boot);
+  setTimeout(hook, 1500);
+})(window);
+
+}catch(e){console.error("[bundle assembly]",e)}
