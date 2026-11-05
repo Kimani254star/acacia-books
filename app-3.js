@@ -622,7 +622,7 @@ try{
     var r = R, whs = warehouses();
     if (r.priceAuto === true) { var c0 = recipeCost(r, INV); r.sellPrice = c0 > 0 ? +(c0 * (1 + num(r.markup) / 100)).toFixed(dp()) : ''; }
     var h = '<div class="ac-card"><h3>' + (recipes().some(function (x) { return x.id === r.id; }) ? 'Edit recipe' : 'New recipe') + '</h3><div id="acxErr"></div>' +
-      '<div class="ac-row"><label>Bundle item name <span class="req">*</span></label><div><input data-r="name" value="' + esc(r.name) + '" placeholder="Absorber Coarse Granules (100G)"></div></div>' +
+      '<div class="ac-row"><label>Bundle item name <span class="req">*</span></label><div><input class="ac-pick" data-pick="b" value="' + esc(r.name) + '" placeholder="Select item from stock" autocomplete="off"><div class="ac-hint">Pick the bundle item from your stock list. Its SKU and location are filled in for you.</div></div></div>' +
       '<div class="ac-row"><label>SKU</label><div><input data-r="sku" value="' + esc(r.sku) + '" placeholder="Leave empty to generate one"><div class="ac-hint">This is the item that is created in stock the first time you assemble it.</div></div></div>' +
       '<div class="ac-row"><label>Default location</label><div><select data-r="toWarehouse">' + opts(whs, r.toWarehouse, 'Select location') + '</select></div></div>' +
       '<div class="ac-row"><label>Cost</label><div><input id="acxRcpCost" type="text" readonly value="' + money(recipeCost(r, INV)) + '" style="background:#f3f4f6;font-weight:600"><div class="ac-hint">Total of the items you pick below (quantity x inventory cost) plus extra costs, for 1 unit. It updates as you pick items.</div></div></div>' +
@@ -847,10 +847,10 @@ try{
   function showDD(input) {
     CAT = CAT.length ? CAT : catalog(INV);
     var q = low(input.value), kind = input.getAttribute('data-pick'), used = {};
-    var curRow = (kind === 'a' ? A.lines : R.components)[+input.getAttribute('data-i')];
+    var curRow = kind === 'b' ? R : (kind === 'a' ? A.lines : R.components)[+input.getAttribute('data-i')];
     if (curRow && curRow.name && low(curRow.name) === q) q = '';   /* an item is already picked: show the whole list again */
-    (kind === 'a' ? A.lines : R.components).forEach(function (c, i) { if (i !== +input.getAttribute('data-i')) used[low(c.sku) || low(c.name)] = 1; });
-    var self = kind === 'a' ? A : R, selfKeys = [low(self.sku), low(self.name)];
+    (kind === 'a' ? A.lines : R.components).forEach(function (c, i) { if (kind === 'b' || i !== +input.getAttribute('data-i')) used[low(c.sku) || low(c.name)] = 1; });
+    var self = kind === 'a' ? A : R, selfKeys = kind === 'b' ? [] : [low(self.sku), low(self.name)];
     var list = CAT.filter(function (c) { return !used[c.key] && selfKeys.indexOf(low(c.sku)) < 0 && selfKeys.indexOf(low(c.name)) < 0 && (!q || low(c.name).indexOf(q) > -1 || low(c.sku).indexOf(q) > -1); }).slice(0, 500);
     closeDD(); dd = D.createElement('div'); dd.className = 'ac-dd'; ddTarget = input;
     dd.innerHTML = list.map(function (c) {
@@ -862,7 +862,14 @@ try{
       var d = e.target.closest('[data-key]'); if (!d) return; e.preventDefault();
       var c = CAT.filter(function (x) { return x.key === d.getAttribute('data-key'); })[0], i = +ddTarget.getAttribute('data-i'); if (!c) return;
       var k = ddTarget.getAttribute('data-pick'); closeDD();
-      if (k === 'a') { var ln = A.lines[i]; ln.sku = c.sku; ln.name = c.name; ln.unit = c.unit; ln.pick = null; drawLines(); recalc(); }
+      if (k === 'b') {
+        R.name = c.name; R.sku = c.sku || '';
+        if (!R.toWarehouse) { var whs0 = Object.keys(c.byWh || {}); if (whs0.length) R.toWarehouse = whs0[0]; }
+        var q1 = function (f) { return body().querySelector('[data-r="' + f + '"]'); };
+        if (q1('sku')) q1('sku').value = R.sku; if (q1('toWarehouse')) q1('toWarehouse').value = R.toWarehouse || '';
+        var nm = body().querySelector('[data-pick="b"]'); if (nm) nm.value = R.name;
+      }
+      else if (k === 'a') { var ln = A.lines[i]; ln.sku = c.sku; ln.name = c.name; ln.unit = c.unit; ln.pick = null; drawLines(); recalc(); }
       else { var rc = R.components[i]; rc.sku = c.sku; rc.name = c.name; rc.unit = c.unit; var rows = $('acxRcpRows'); if (rows) rows.innerHTML = recipeRowsHtml(); rcpTotals(); }
     });
     D.body.appendChild(dd);
@@ -1015,7 +1022,10 @@ try{
   function onInput(e) {
     var t = e.target;
     if (t.hasAttribute('data-q')) { V.q = t.value; var pos = t.selectionStart; (V.tab === 'recipes' ? drawRecipes : drawAssemblies)(); var n = body().querySelector('[data-q]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (x) { } } return; }
-    if (t.hasAttribute('data-pick')) { showDD(t); return; }
+    if (t.hasAttribute('data-pick')) {
+      if (t.getAttribute('data-pick') === 'b' && R) { R.name = t.value; R.sku = ''; var sk0 = body().querySelector('[data-r="sku"]'); if (sk0) sk0.value = ''; }
+      showDD(t); return;
+    }
     if (t.hasAttribute('data-r') && R) { R[t.getAttribute('data-r')] = t.value; rcpField(t.getAttribute('data-r')); return; }
     if (t.hasAttribute('data-rc')) { R.components[+t.getAttribute('data-i')][t.getAttribute('data-rc')] = t.value; rcpTotals(); return; }
     if (t.hasAttribute('data-re')) { R.extras[+t.getAttribute('data-i')][t.getAttribute('data-re')] = t.value; rcpTotals(); return; }
