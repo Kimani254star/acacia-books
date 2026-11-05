@@ -2521,3 +2521,134 @@ try{
   setTimeout(stamp, 2500); setTimeout(stamp, 8000);
 })(window);
 }catch(e){console.error('[merged:acacia-supplier-ids.js]',e)}
+
+/* ===================================================================================
+ * Reports > Inventory Reports > Stock Adjustment
+ * Every adjustment now renders here, whichever screen it was made on:
+ *   - Inventory > Adjustments (Amendments)   -> "amendments" and "amendments_<warehouse>" (drafts are left out)
+ *   - Inventory > Bulk Adjustment            -> "bulkAdjustments_<warehouse>" (applied entries; drafts are left out) and the old "baLog"
+ *   - Stock take postings / Add Stock Activity -> "stockActivities" entries of type Adjustment
+ * The report refreshes every time it is opened. Month filter fixed (it never matched before).
+ * =================================================================================== */
+try{(function(W){
+  'use strict';
+  var D=W.document;
+  var LS=function(k){try{var v=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}};
+  var num=function(v){var n=parseFloat(v);return isNaN(n)?0:n};
+  var low=function(v){return String(v==null?'':v).trim().toLowerCase()};
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+  var ts=function(d){var t=new Date(d).getTime();return isNaN(t)?0:t};
+  var keysOf=function(p){try{return Object.keys(localStorage).filter(function(k){return k.indexOf(p)===0})}catch(e){return[]}};
+  var hidden={};   /* column index -> true when hidden from "Customize Report Columns" */
+
+  function collect(){
+    var out=[];
+    /* 1. Amendments (older single list) */
+    LS('amendments').forEach(function(a){
+      if(!a||a.status==='Draft')return;
+      var q=num(a.quantity!=null?a.quantity:a.qty);if(!q)return;
+      out.push({date:a.date||a.createdAt,item:a.item||a.itemName||a.sku||'',sku:a.sku||'',warehouse:a.warehouse||'',type:a.adjustmentType||a.type||(q>0?'Increase':'Decrease'),qty:q,reason:a.reason||'',user:a.user||'',source:'Amendment'});
+    });
+    /* 2. Amendments saved per warehouse (new screen). A submitted one is also in the older list, so skip the repeat. */
+    keysOf('amendments_').forEach(function(k){
+      var wh=k.slice('amendments_'.length);
+      LS(k).forEach(function(a){
+        if(!a||a.status==='Draft')return;
+        var q=num(a.qty!=null?a.qty:a.quantity);if(!q)return;
+        var w2=a.warehouse||wh,t=ts(a.createdAt||a.date);
+        var dup=out.some(function(o){
+          return o.source==='Amendment'&&low(o.warehouse)===low(w2)&&o.qty===q&&Math.abs(ts(o.date)-t)<10000&&
+            (low(o.item)===low(a.item)||low(o.item)===low(a.itemValue)||(o.sku&&low(o.sku)===low(a.itemValue)));
+        });
+        if(dup)return;
+        out.push({date:a.createdAt||a.date,item:a.item||a.itemValue||'',sku:'',warehouse:w2,type:a.type||a.adjustmentType||(q>0?'Increase':'Decrease'),qty:q,reason:a.reason||'',user:a.user||'',source:'Amendment'});
+      });
+    });
+    /* 3. Bulk Adjustment (applied only) */
+    keysOf('bulkAdjustments_').forEach(function(k){
+      var wh=k.slice('bulkAdjustments_'.length);
+      LS(k).forEach(function(a){
+        if(!a||a.status==='Draft')return;
+        var q=num(a.change!=null?a.change:a.adjustment);if(!q)return;
+        out.push({date:a.createdAt||a.date,item:a.product||a.item||a.itemId||'',sku:a.sku||'',warehouse:a.warehouse||wh,type:q>0?'Increase':'Decrease',qty:q,reason:a.reason||'Bulk Adjustment',user:a.user||'',source:'Bulk Adjustment'});
+      });
+    });
+    /* 4. Old global bulk log */
+    LS('baLog').forEach(function(a){
+      if(!a)return;var q=num(a.change);if(!q)return;
+      out.push({date:a.date,item:a.product||a.sku||'',sku:a.sku||'',warehouse:a.warehouse||'',type:q>0?'Increase':'Decrease',qty:q,reason:'Bulk Adjustment',user:a.user||'',source:'Bulk Adjustment'});
+    });
+    /* 5. Stock take postings and manual Adjustment activities */
+    LS('stockActivities').forEach(function(a){
+      if(!a||!/^adjustment/i.test(String(a.type||'')))return;
+      var q=num(a.qin)-num(a.qout);if(!q)return;
+      out.push({date:a.date,item:a.item||a.sku||'',sku:a.sku||'',warehouse:a.warehouse||'',type:q>0?'Increase':'Decrease',qty:q,reason:a.reason||'',user:a.by||'',source:/^ST-/i.test(String(a.reference||''))?'Stock Take':'Stock Activity'});
+    });
+    return out;
+  }
+
+  function ensureSourceColumn(){
+    var tbl=D.getElementById('stockAdjustmentTable');if(!tbl)return;
+    var hr=tbl.querySelector('thead tr');
+    if(hr&&!hr.querySelector('[data-sa-src]')){var th=D.createElement('th');th.className='border px-2 py-1';th.setAttribute('data-sa-src','1');th.textContent='🔖 Source';hr.appendChild(th);}
+    var fr=tbl.querySelector('tfoot tr');
+    if(fr&&!fr.getAttribute('data-sa-src')){fr.setAttribute('data-sa-src','1');var last=fr.lastElementChild;if(last&&last.getAttribute('colspan'))last.setAttribute('colspan',String(num(last.getAttribute('colspan'))+1));}
+    var box=D.querySelector('#stockAdjustmentColumnCustomizer .space-y-2');
+    if(box&&!box.querySelector('[data-sa-src]')){var lb=D.createElement('label');lb.className='flex items-center gap-2';lb.setAttribute('data-sa-src','1');lb.innerHTML='<input type="checkbox" checked="checked" onchange="toggleStockAdjustmentColumn(7,this)"> Source';box.appendChild(lb);}
+  }
+  function applyHidden(){
+    var tbl=D.getElementById('stockAdjustmentTable');if(!tbl)return;
+    Array.prototype.forEach.call(tbl.querySelectorAll('thead tr, tbody tr'),function(tr){
+      Array.prototype.forEach.call(tr.children,function(c,i){if(c.hasAttribute('colspan'))return;c.style.display=hidden[i]?'none':'';});
+    });
+  }
+
+  W.renderAmendedWarehouseMovement=function(){
+    var body=D.getElementById('currentAccount');if(!body)return;
+    ensureSourceColumn();
+    var val=function(id){var e=D.getElementById(id);return e?e.value:''};
+    var month=val('amendedWarehouseMovementMonth'),from=val('amendedWarehouseMovementStartDate'),to=val('amendedWarehouseMovementEndDate'),
+        nm=low(val('filterAWMItemName')),wh=low(val('filterAWMWarehouse')),qMin=parseFloat(val('filterAWMQtyMin')),qMax=parseFloat(val('filterAWMQtyMax')),
+        view=val('stockAdjustmentFilter')||'all';
+    var rows=collect().filter(function(r){
+      var d=new Date(r.date);
+      if(month){var p=month.split('-');if(isNaN(d)||d.getFullYear()!==parseInt(p[0],10)||d.getMonth()+1!==parseInt(p[1],10))return false;}
+      if(from){var f=new Date(from);if(isNaN(d)||d<f)return false;}
+      if(to){var t=new Date(to);t.setHours(23,59,59,999);if(isNaN(d)||d>t)return false;}
+      if(nm&&low(r.item).indexOf(nm)<0&&low(r.sku).indexOf(nm)<0)return false;
+      if(wh&&low(r.warehouse).indexOf(wh)<0)return false;
+      if(!isNaN(qMin)&&r.qty<qMin)return false;
+      if(!isNaN(qMax)&&r.qty>qMax)return false;
+      if(view==='positive'&&r.qty<=0)return false;
+      if(view==='negative'&&r.qty>=0)return false;
+      return true;
+    }).sort(function(a,b){return ts(b.date)-ts(a.date)});
+    var total=0,td='border px-2 py-1';
+    body.innerHTML=rows.length?rows.map(function(r){
+      total+=r.qty;
+      var when='';try{when=new Date(r.date).toLocaleString()}catch(e){when=String(r.date||'')}
+      return '<tr><td class="'+td+'">'+esc(when)+'</td><td class="'+td+'">'+esc(r.item)+'</td><td class="'+td+'">'+esc(r.warehouse)+'</td><td class="'+td+'">'+esc(r.type)+'</td>'+
+        '<td class="'+td+' text-right '+(r.qty<0?'text-red-600':'text-green-700')+'">'+(r.qty>0?'+':'')+Math.round(r.qty*10000)/10000+'</td><td class="'+td+'">'+esc(r.reason)+'</td><td class="'+td+'">'+esc(r.user||'N/A')+'</td><td class="'+td+'">'+esc(r.source)+'</td></tr>';
+    }).join(''):'<tr><td colspan="8" class="text-center p-4 text-gray-500">No adjustments found for selected filters.</td></tr>';
+    var tot=D.getElementById('totalAdjustment');if(tot)tot.innerText=Math.round(total*10000)/10000;
+    applyHidden();
+  };
+  /* the old buttons on this panel had no code behind them */
+  var tg=function(id){return function(){var e=D.getElementById(id);if(e)e.classList.toggle('hidden')}};
+  if(typeof W.toggleStockAdjustmentColumnCustomizer!=='function')W.toggleStockAdjustmentColumnCustomizer=tg('stockAdjustmentColumnCustomizer');
+  if(typeof W.toggleStockAdjustmentSettingsDropdown!=='function')W.toggleStockAdjustmentSettingsDropdown=tg('stockAdjustmentSettingsDropdown');
+  if(typeof W.toggleStockAdjustmentColumn!=='function')W.toggleStockAdjustmentColumn=function(i,cb){hidden[i]=!cb.checked;applyHidden();};
+  if(typeof W.applyStockAdjustmentSettings!=='function')W.applyStockAdjustmentSettings=function(){W.renderAmendedWarehouseMovement();var e=D.getElementById('stockAdjustmentSettingsDropdown');if(e)e.classList.add('hidden');};
+  if(typeof W.clearStockAdjustmentSettings!=='function')W.clearStockAdjustmentSettings=function(){var s=D.getElementById('stockAdjustmentFilter');if(s)s.value='all';W.applyStockAdjustmentSettings();};
+
+  /* refresh whenever the report is opened */
+  var tries=0;
+  (function hook(){
+    if(W.__acxSaRptHooked)return;
+    if(typeof W.showReport!=='function'){if(tries++<60)setTimeout(hook,500);return;}
+    W.__acxSaRptHooked=true;var orig=W.showReport;
+    W.showReport=function(id){var r=orig.apply(this,arguments);if(id==='stockAdjustmentPanel'){try{W.renderAmendedWarehouseMovement();}catch(e){console.error('[stock adjustment report]',e);}}return r;};
+  })();
+  setTimeout(function(){try{W.renderAmendedWarehouseMovement();}catch(e){}},1200);
+})(window);
+}catch(e){console.error('[merged:stock-adjustment-report]',e)}
