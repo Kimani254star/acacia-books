@@ -502,6 +502,7 @@ try{
     '.acx-asm .ac-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:6px;padding:10px 12px;font-size:13px;margin-bottom:12px}' +
     '.acx-asm .ac-sum{max-width:420px;margin-left:auto}.acx-asm .ac-sum div{display:flex;justify-content:space-between;padding:4px 0}.acx-asm .ac-sum .big{border-top:2px solid #1e3a8a;font-weight:700;margin-top:4px;padding-top:8px}' +
     '.acx-asm .ac-acts{white-space:nowrap}.acx-asm .ac-acts button{margin:0 2px 2px 0}' +
+    '.acx-asm input.ac-pick{-webkit-appearance:none;appearance:none;cursor:pointer;padding-right:32px;background:#fff url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%277%27 viewBox=%270 0 12 7%27%3E%3Cpath d=%27M1 1l5 5 5-5%27 fill=%27none%27 stroke=%27%23111827%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E") no-repeat right 12px center}' +
     '.ac-dd{position:fixed;z-index:2147483000;background:#fff;border:1px solid #cbd5e1;border-radius:6px;box-shadow:0 6px 18px rgba(0,0,0,.18);max-height:260px;overflow:auto;font:13px/1.35 sans-serif;color:#111827}' +
     '.ac-dd div{padding:7px 10px;cursor:pointer;border-bottom:1px solid #f1f5f9}.ac-dd div:hover,.ac-dd div.on{background:#eff6ff}.ac-dd small{color:#6b7280;display:block}.ac-dd .none{color:#6b7280;cursor:default}' +
     '.ac-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2147482000;display:flex;align-items:center;justify-content:center}' +
