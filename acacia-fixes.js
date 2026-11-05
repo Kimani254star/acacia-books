@@ -238,7 +238,7 @@ try{
           var arr = cfg.get() || [];
           var idx = -1;
           arr.some(function (x, k) { if (sameRec(x, rec)) { idx = k; return true; } });
-          if (idx < 0) { done++; return; } // already gone (e.g. cascaded)
+          if (idx < 0) { done++; return; } // already gone (cascaded)
 
           var args = typeof cfg.arg === "function" ? cfg.arg(arr[idx], arr) : [cfg.arg === "id" ? arr[idx].id : idx];
           if (cfg.view) W[cfg.view] = null; // single delete then uses the full-array index directly
@@ -1487,7 +1487,7 @@ try{
 /* ===================== acacia-contrast-fix.js ===================== */
 try{
 /* Acacia Books – readability guard.
-   Fixes text that ends up the same colour as its background (e.g. white text on a
+   Fixes text that ends up the same colour as its background (white text on a
    white card in Organization Profile / Branding, or after a theme/brand colour change). */
 (function () {
   "use strict";

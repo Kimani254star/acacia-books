@@ -154,7 +154,7 @@
     return p;
   }
   function askUrl() {
-    var v = prompt("AI matching service address (e.g. https://your-app.lovable.app):", serviceUrl());
+    var v = prompt("AI matching service address (https://your-app.lovable.app):", serviceUrl());
     if (v != null) localStorage.setItem(URL_KEY, v.trim().replace(/\/+$/, ""));
   }
   function status(msg, kind) {

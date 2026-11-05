@@ -493,7 +493,7 @@
     nb.className = "mb-4 hidden";
     nb.innerHTML =
       '<div class="flex flex-wrap gap-2 items-end">' +
-      '<div><label class="block text-sm font-semibold mb-1">New batch no.</label><input id="' + cfg.sel + '_nbNo" type="text" class="border p-2 rounded" placeholder="e.g. B-2026-001"></div>' +
+      '<div><label class="block text-sm font-semibold mb-1">New batch no.</label><input id="' + cfg.sel + '_nbNo" type="text" class="border p-2 rounded" placeholder="B-2026-001"></div>' +
       '<div><label class="block text-sm font-semibold mb-1">Mfg date (optional)</label><input id="' + cfg.sel + '_nbMfg" type="date" class="border p-2 rounded"></div>' +
       '<div><label class="block text-sm font-semibold mb-1">Expiry (optional)</label><input id="' + cfg.sel + '_nbExp" type="date" class="border p-2 rounded"></div>' +
       "</div>";
