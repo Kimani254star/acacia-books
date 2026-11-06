@@ -3791,23 +3791,51 @@ try{
   window.__acxStockHistory = true;
 
   var TYPES = [
-    { key: "invoices",       label: "Invoices",        keys: ["invoices"],                      who: "Customer", ref: ["invoiceNumber", "number", "id"] },
-    { key: "quotes",         label: "Quotes",          keys: ["quotes"],                        who: "Customer", ref: ["quoteNumber", "number", "id"] },
-    { key: "creditNotes",    label: "Credit Notes",    keys: ["creditNotes"],                   who: "Customer", ref: ["number", "creditNoteNumber", "invoiceNumber", "id"] },
-    { key: "salesReturns",   label: "Sales Return",    keys: ["salesReturns"],                  who: "Customer", ref: ["returnNumber", "invoiceId", "invoiceNumber", "id"] },
-    { key: "deliveries",     label: "Delivery",        keys: ["deliveries"],                    who: "Customer", ref: ["dnNumber", "deliveryNumber", "number", "trackNumber", "id"] },
-    { key: "bills",          label: "Bills",           keys: ["bills"],                         who: "Supplier", ref: ["billNumber", "number", "id"] },
-    { key: "debitNotes",     label: "Debit Notes",     keys: ["supplierDebitNotes", "debitNotes"], who: "Supplier", ref: ["reference", "number", "debitNoteNumber", "id"] },
-    { key: "purchaseOrders", label: "Purchase Orders", keys: ["purchaseOrders"],                who: "Supplier", ref: ["poNumber", "number", "id"] },
-    { key: "batches",        label: "Batches" },
-    { key: "adjustments",    label: "Adjustments" },
-    { key: "openingBalance", label: "Opening Balance" }
+    { key: "invoices",          label: "Invoices",           who: "Customer", ref: ["invoiceNumber", "number", "id"] },
+    { key: "bulkInvoices",      label: "Bulk Invoices",      who: "Customer", ref: ["invoiceNo", "invoiceNumber", "number", "id"] },
+    { key: "recurringInvoices", label: "Recurring Invoices", who: "Customer", ref: ["number", "invoiceNumber", "id"] },
+    { key: "quotes",            label: "Quotes",             who: "Customer", ref: ["quoteNumber", "number", "id"] },
+    { key: "orders",            label: "Orders",             who: "Customer", ref: ["number", "orderNumber", "id"] },
+    { key: "creditNotes",       label: "Credit Notes",       who: "Customer", ref: ["number", "creditNoteNumber", "invoiceNumber", "id"] },
+    { key: "salesReturns",      label: "Sales Return",       who: "Customer", ref: ["returnNumber", "invoiceId", "invoiceNumber", "id"] },
+    { key: "deliveries",        label: "Delivery",           who: "Customer", ref: ["dnNumber", "deliveryNumber", "number", "trackNumber", "id"] },
+    { key: "bills",             label: "Bills",              who: "Supplier", ref: ["billNumber", "number", "id"] },
+    { key: "bulkBills",         label: "Bulk Bills",         who: "Supplier", ref: ["billNumber", "number", "id"] },
+    { key: "recurringBills",    label: "Recurring Bills",    who: "Supplier", ref: ["billNumber", "number", "id"] },
+    { key: "purchaseOrders",    label: "Purchase Orders",    who: "Supplier", ref: ["poNumber", "number", "id"] },
+    { key: "debitNotes",        label: "Debit Notes",        who: "Supplier", ref: ["reference", "number", "debitNoteNumber", "id"] },
+    { key: "batches",           label: "Batches" },
+    { key: "adjustments",       label: "Adjustments" },
+    { key: "openingBalance",    label: "Opening Balance" }
+  ];
+
+  /* which store feeds which tab. "invoices" and "bills" also hold the bulk / recurring documents, so those are sorted by source:
+     every document appears under exactly one tab. */
+  var isRecurringDoc = function (d) { return !!(d.fromRecurring || d.recurringId || String(d.source || "").toLowerCase() === "recurring"); };
+  var isBulkDoc = function (d) { return String(d.source || "").toLowerCase() === "bulk"; };
+  var STORES = [
+    { store: "invoices",       fam: "i", tab: function (d) { return isBulkDoc(d) ? "bulkInvoices" : isRecurringDoc(d) ? "recurringInvoices" : "invoices"; } },
+    { store: "bulkInvoices",   fam: "i", tab: "bulkInvoices" },
+    { store: "recurringInvoices", fam: "i", tab: "recurringInvoices" },
+    { store: "quotes",         tab: "quotes" },
+    { store: "orders",         tab: "orders" },
+    { store: "creditNotes",    tab: "creditNotes" },
+    { store: "salesReturns",   tab: "salesReturns" },
+    { store: "deliveries",     tab: "deliveries" },
+    { store: "bills",          fam: "b", tab: function (d) { return isBulkDoc(d) ? "bulkBills" : isRecurringDoc(d) ? "recurringBills" : "bills"; } },
+    { store: "bulkBills",      fam: "b", tab: "bulkBills" },
+    { store: "recurringBills", fam: "b", tab: "recurringBills" },
+    { store: "purchaseOrders", tab: "purchaseOrders" },
+    { store: "supplierDebitNotes", tab: "debitNotes" },
+    { store: "debitNotes",     tab: "debitNotes" }
   ];
 
   /* item.history "type" values that belong to a document tab */
   var HIST_TO_TAB = {
-    "invoice": "invoices", "quote": "quotes", "credit note": "creditNotes", "sales return": "salesReturns",
-    "delivery": "deliveries", "bill": "bills", "debit note": "debitNotes", "purchase order": "purchaseOrders"
+    "invoice": "invoices", "bulk invoice": "bulkInvoices", "recurring invoice": "recurringInvoices",
+    "quote": "quotes", "order": "orders", "sales order": "orders", "credit note": "creditNotes", "sales return": "salesReturns",
+    "delivery": "deliveries", "bill": "bills", "bulk bill": "bulkBills", "recurring bill": "recurringBills",
+    "debit note": "debitNotes", "purchase order": "purchaseOrders"
   };
 
   function esc(v) {
@@ -3880,24 +3908,28 @@ try{
     }
 
     /* documents */
-    TYPES.forEach(function (t) {
-      if (!t.keys) return;
-      t.keys.forEach(function (key) {
-        LS(key).forEach(function (doc) {
-          if (!doc) return;
-          (Array.isArray(doc.items) ? doc.items : []).forEach(function (ln) {
-            if (!match(ln) || !warehouseOk(doc, ln, wh)) return;
-            var q = ln.qty != null ? ln.qty : ln.quantity;
-            var rate = first(ln, ["price", "rate", "unitPrice", "buyPrice", "sellPrice"]);
-            var amt = first(ln, ["total", "amount", "lineTotal"]);
-            if (amt === "" && rate !== "") amt = num(q) * num(rate);
-            var bn = batchNo(ln), ref = String(first(doc, t.ref) || "-");
-            put(t.key, {
-              date: doc.date || doc.invoiceDate || doc.deliveryDate || "",
-              ref: bn ? ref + " (Batch " + bn + ")" : ref,
-              who: String(doc.customer || doc.customerName || doc.supplier || doc.supplierName || "-"),
-              qty: q, rate: rate === "" ? 0 : num(rate), amount: amt === "" ? 0 : num(amt)
-            });
+    var refTab = {};                                   /* "i|<ref>" / "b|<ref>" -> tab the document was filed under */
+    var cleanRef = function (r) { return norm(String(r).replace(/\s*\(Batch [^)]*\)\s*$/i, "")); };
+    STORES.forEach(function (st) {
+      LS(st.store).forEach(function (doc) {
+        if (!doc) return;
+        var tabKey = typeof st.tab === "function" ? st.tab(doc) : st.tab;
+        var t = TYPES.filter(function (x) { return x.key === tabKey; })[0];
+        if (!t) return;
+        (Array.isArray(doc.items) ? doc.items : []).forEach(function (ln) {
+          if (!match(ln) || !warehouseOk(doc, ln, wh)) return;
+          var q = ln.qty != null ? ln.qty : ln.quantity;
+          var rate = first(ln, ["price", "rate", "unitPrice", "buyPrice", "sellPrice"]);
+          var amt = first(ln, ["total", "amount", "lineTotal"]);
+          if (amt === "" && rate !== "") amt = num(q) * num(rate);
+          var bn = batchNo(ln), ref = String(first(doc, t.ref) || "-");
+          var who = doc.customer || doc.customerName || doc.supplier || doc.supplierName || (Array.isArray(doc.customers) ? doc.customers.join(", ") : "") || "-";
+          if (st.fam && ref !== "-") refTab[st.fam + "|" + cleanRef(ref)] = tabKey;
+          put(tabKey, {
+            date: doc.date || doc.invoiceDate || doc.deliveryDate || "",
+            ref: bn ? ref + " (Batch " + bn + ")" : ref,
+            who: String(who),
+            qty: q, rate: rate === "" ? 0 : num(rate), amount: amt === "" ? 0 : num(amt)
           });
         });
       });
@@ -3910,6 +3942,7 @@ try{
       var ty = norm(h.type || "Stock Adjustment");
       if (ty === "opening balance") return;
       var tab = HIST_TO_TAB[ty];
+      if (tab === "invoices" || tab === "bills") tab = refTab[(tab === "invoices" ? "i|" : "b|") + cleanRef(h.ref || h.refInvoice || "-")] || tab;   /* a bulk / recurring document's stock entry belongs on its own tab */
       if (tab) {
         var t = TYPES.filter(function (x) { return x.key === tab; })[0];
         put(tab, { date: h.date || "", ref: String(h.ref || h.refInvoice || "-"), who: String(h.user || "-"),

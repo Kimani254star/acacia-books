@@ -1197,3 +1197,32 @@
     }, 1500);
   });
 })();
+
+/* ===== Purchase Order: batch / expiry on a line (only on plans that include batch tracking: Business, Enterprise, All Access) ===== */
+(function () {
+  "use strict";
+  if (window.__acxPoBatch) return;
+  window.__acxPoBatch = true;
+  function allowed() {
+    try { return !window.AcaciaPlans || !window.AcaciaPlans.hasFeatureAccess || window.AcaciaPlans.hasFeatureAccess("batch"); } catch (e) { return true; }
+  }
+  function build() {
+    var sel = document.getElementById("poProductSelect");
+    if (!sel || !sel.parentNode) return;
+    var row = document.getElementById("acxPoBatchRow");
+    if (!allowed()) { if (row) row.style.display = "none"; return; }
+    if (!row) {
+      row = document.createElement("div");
+      row.id = "acxPoBatchRow";
+      row.className = "flex flex-wrap gap-2 items-end mb-4";
+      row.innerHTML =
+        '<div><label class="block text-sm font-semibold mb-1">Batch no. (optional)</label><input id="poItemBatchNo" type="text" class="border p-2 rounded" placeholder="B-2026-001"></div>' +
+        '<div><label class="block text-sm font-semibold mb-1">Expiry (optional)</label><input id="poItemBatchExp" type="date" class="border p-2 rounded"></div>';
+      sel.parentNode.parentNode.insertBefore(row, sel.parentNode.nextSibling);
+    }
+    var t = document.getElementById("poItemType");
+    row.style.display = t && String(t.value || "").toLowerCase() !== "product" ? "none" : "";
+  }
+  setInterval(build, 1500);
+  window.addEventListener("load", build);
+})();
