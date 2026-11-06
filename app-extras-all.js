@@ -3868,13 +3868,26 @@ try{
 
   /* ---------- matching a document line to the stock item ---------- */
   function lineName(l) { return l && (l.name || l.desc || l.description || l.item || l.product || l.itemName); }
+  /* every spelling a document line may use for its item: the name, a "Name — Warehouse (Qty: ..) - price" dropdown label,
+     a "Name | Batch: .." suffix, or (recurring invoices) the item name stored in the sku field */
+  function lineKeys(l) {
+    var out = [];
+    [l.sku, l.name, l.desc, l.description, l.item, l.product, l.itemName].forEach(function (v) {
+      if (v == null || v === "") return;
+      var t = String(v).replace(/\s*\|\s*Batch:.*$/i, "");
+      out.push(norm(t));
+      var d = t.split(/\s+[\u2014\u2013]\s+/)[0]; if (d !== t) out.push(norm(d));
+      var b = t.replace(/\s*\[[^\]]*\]\s*$/, ""); if (b !== t) out.push(norm(b));
+    });
+    return out;
+  }
   function matcher(item) {
     var sku = norm(item.sku), name = norm(item.name);
     return function (line) {
       if (!line) return false;
-      var ls = norm(line.sku);
-      if (sku && ls) return ls === sku;
-      return !!name && norm(lineName(line)) === name;
+      var ls = norm(line.sku), keys = lineKeys(line);
+      if (sku && ls) return ls === sku || (!!name && ls === name);   /* the sku field may hold the item name (recurring invoices) */
+      return (!!name && keys.indexOf(name) > -1) || (!!sku && keys.indexOf(sku) > -1);
     };
   }
   function warehouseOk(doc, line, wh) {

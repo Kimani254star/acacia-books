@@ -1226,3 +1226,155 @@
   setInterval(build, 1500);
   window.addEventListener("load", build);
 })();
+
+/* ===== Goods Received: pick one OR MORE bills  |  Delivery: pick one OR MORE invoices ===== */
+(function () {
+  "use strict";
+  if (window.__acxMultiPick) return;
+  window.__acxMultiPick = true;
+  var D = document;
+  function el(id) { return D.getElementById(id); }
+  function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function jset(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function itemsOf(opt) { try { return JSON.parse(opt.dataset.items || "[]") || []; } catch (e) { return []; } }
+  function lineText(e) {
+    var n = e.name || e.desc || e.item || e.description || "", q = e.qty || e.quantity || 0;
+    return n ? (q ? n + " (x" + q + ")" : n) : "";
+  }
+
+  /* the checklist that replaces a single-choice <select>; the select stays (hidden) and mirrors the first ticked entry for older code */
+  var CFG = {
+    grnBillSelect: { label: "Bills (tick one or more)", empty: "Select a supplier to list their bills", onChange: function () { grnChanged(); } },
+    customerInvoiceSelect: { label: "Invoices (tick one or more)", empty: "Select a customer to list their invoices", onChange: function () { delChanged(); } }
+  };
+  function box(id) { return el("acxMulti_" + id); }
+  function selectedOptions(id) {
+    var sel = el(id), b = box(id), out = [];
+    if (!sel || !b) return out;
+    var ticked = {}; [].forEach.call(b.querySelectorAll("input[type=checkbox]:checked"), function (c) { ticked[c.value] = 1; });
+    [].forEach.call(sel.options, function (o) { if (o.value && ticked[o.value]) out.push(o); });
+    return out;
+  }
+  function rebuild(id) {
+    var sel = el(id); if (!sel) return;
+    var b = box(id);
+    if (!b) {
+      b = D.createElement("div"); b.id = "acxMulti_" + id;
+      b.className = "border rounded p-2 bg-white"; b.style.cssText = "width:700px;max-width:100%;max-height:220px;overflow:auto";
+      sel.style.display = "none"; sel.parentNode.insertBefore(b, sel.nextSibling);
+      var lab = D.querySelector('label[for="' + id + '"]'); if (lab) lab.textContent = CFG[id].label;
+      b.addEventListener("change", function (ev) { if (ev.target && ev.target.type === "checkbox" && !ev.target.hasAttribute("data-all")) sync(id); });
+      b.addEventListener("click", function (ev) {
+        var t = ev.target; if (!t || !t.getAttribute) return;
+        if (t.hasAttribute("data-all")) { [].forEach.call(b.querySelectorAll("input[type=checkbox]:not([data-all])"), function (c) { c.checked = t.checked; }); sync(id); }
+      });
+    }
+    var opts = [].filter.call(sel.options, function (o) { return o.value; });
+    b.innerHTML = "";
+    if (!opts.length) { b.innerHTML = '<div class="text-sm text-gray-500">' + esc(CFG[id].empty) + "</div>"; return sync(id, true); }
+    var head = D.createElement("label"); head.className = "flex items-center gap-2 text-sm font-semibold border-b pb-1 mb-1";
+    head.innerHTML = '<input type="checkbox" data-all="1"> Select all <span class="ml-auto text-xs text-gray-500" data-count></span>'; b.appendChild(head);
+    opts.forEach(function (o) {
+      var l = D.createElement("label"); l.className = "flex items-center gap-2 text-sm py-0.5 cursor-pointer";
+      var c = D.createElement("input"); c.type = "checkbox"; c.value = o.value; l.appendChild(c);
+      l.appendChild(D.createTextNode(o.textContent)); b.appendChild(l);
+    });
+    sync(id, true);
+  }
+  function sync(id, silent) {
+    var sel = el(id), b = box(id), picked = selectedOptions(id);
+    if (sel) sel.value = picked.length ? picked[0].value : "";
+    var cnt = b && b.querySelector("[data-count]"); if (cnt) cnt.textContent = picked.length ? picked.length + " selected" : "";
+    var all = b && b.querySelector("[data-all]");
+    if (all) { var n = b.querySelectorAll("input[type=checkbox]:not([data-all])").length; all.checked = picked.length > 0 && picked.length === n; }
+    if (!silent) CFG[id].onChange(); else CFG[id].onChange(true);
+  }
+
+  /* ---------- GRN ---------- */
+  function grnChanged() {
+    var form = el("grnForm");
+    if (!form) { form = D.createElement("div"); form.id = "grnForm"; form.style.display = "none"; D.body.appendChild(form); }   /* holds the selected bills' items until the GRN is saved */
+    var picked = selectedOptions("grnBillSelect"), items = [], nums = [];
+    var bills = jget("bills", []);
+    picked.forEach(function (o) {
+      nums.push(o.value);
+      var bill = bills.filter(function (b) { return String(b.billNumber || b.number || b.id) === String(o.value); })[0];
+      var its = (bill && (bill.items || bill.lineItems)) || itemsOf(o);
+      its.forEach(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.bill = o.value; items.push(c); });
+    });
+    if (form) form.dataset.items = JSON.stringify(items);
+    var d = el("grnDescription"); if (d && (items.length || !d.value)) d.value = items.map(lineText).filter(Boolean).join(", ");
+    var r = el("grnReferenceNumber"); if (r && nums.length) r.value = nums.join(", ");
+    var pv = el("grnItemsPreview"), anchor = box("grnBillSelect");
+    if (!pv && anchor) { pv = D.createElement("div"); pv.id = "grnItemsPreview"; pv.className = "mb-4 overflow-x-auto"; anchor.parentNode.parentNode.insertBefore(pv, anchor.parentNode.nextSibling); }
+    if (pv) pv.innerHTML = items.length ? '<table class="min-w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2 border">Bill</th><th class="p-2 border">Item</th><th class="p-2 border text-right">Qty</th><th class="p-2 border text-right">Rate</th></tr></thead><tbody>' +
+      items.map(function (e) { return "<tr><td class=\"p-2 border\">" + esc(e.bill) + "</td><td class=\"p-2 border\">" + esc(e.name || e.desc || e.item || e.description || "-") + "</td><td class=\"p-2 border text-right\">" + esc(e.qty || e.quantity || 0) + "</td><td class=\"p-2 border text-right\">" + esc(e.rate || e.price || 0) + "</td></tr>"; }).join("") + "</tbody></table>" : "";
+  }
+  window.populateGRNItems = function () { sync("grnBillSelect"); };
+  var oBills = window.populateBillDropdownBySupplier;
+  if (typeof oBills === "function") window.populateBillDropdownBySupplier = function () { var r = oBills.apply(this, arguments); rebuild("grnBillSelect"); return r; };
+  var oAddGRN = window.addGRN;
+  if (typeof oAddGRN === "function") window.addGRN = function () {
+    var num = (el("grnNumber") || {}).value, nums = selectedOptions("grnBillSelect").map(function (o) { return o.value; });
+    var before = jget("grns", []).length;
+    var r = oAddGRN.apply(this, arguments);
+    try {
+      var g = jget("grns", []);
+      if (g.length > before || nums.length) {
+        var rec = g.filter(function (x) { return x.number === num; }).pop();
+        if (rec && nums.length) { rec.bills = nums; jset("grns", g); }
+      }
+      if (g.length >= before && jget("grns", []).length > 0 && (el("grnSupplier") || {}).value === "") { if (typeof window.populateBillDropdownBySupplier === "function") window.populateBillDropdownBySupplier(""); else rebuild("grnBillSelect"); var pv = el("grnItemsPreview"); if (pv) pv.innerHTML = ""; }
+    } catch (e) {}
+    return r;
+  };
+
+  /* ---------- Delivery ---------- */
+  function delItems() {
+    var picked = selectedOptions("customerInvoiceSelect"), invoices = jget("invoices", []), out = [], nums = [], ids = [];
+    picked.forEach(function (o) {
+      var inv = invoices.filter(function (x) { return String(x.id) === String(o.value); })[0] || invoices[parseInt(o.value, 10)] || {};
+      var num = inv.number || inv.invoiceNumber || inv.id || o.value; nums.push(String(num)); ids.push(o.value);
+      itemsOf(o).forEach(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.invoiceNumber = String(num); out.push(c); });
+    });
+    return { items: out, nums: nums, ids: ids, picked: picked };
+  }
+  function delChanged() {
+    var s = delItems(), ref = el("deliveryReferenceNumber"), d = el("deliveryDescription");
+    if (ref) ref.value = s.nums.join(", ");
+    if (d && (!d.value || d.value === d.dataset.acxAuto)) { var t = s.items.map(lineText).filter(Boolean).join(", "); d.value = t; d.dataset.acxAuto = t; }
+  }
+  window.populateDeliveryItems = function () { sync("customerInvoiceSelect"); };
+  var oInv = window.showCustomerInvoices;
+  if (typeof oInv === "function") window.showCustomerInvoices = function () { var r = oInv.apply(this, arguments); rebuild("customerInvoiceSelect"); return r; };
+  var oAddDel = window.addDelivery;
+  if (typeof oAddDel === "function") window.addDelivery = function () {
+    var s = delItems(), sel = el("customerInvoiceSelect"), first = s.picked[0], saved = null;
+    if (first && s.picked.length > 1) { saved = first.dataset.items; first.dataset.items = JSON.stringify(s.items); }   /* the original save reads the chosen option's items */
+    var before = jget("deliveries", []).length;
+    var r;
+    try { r = oAddDel.apply(this, arguments); } finally { if (first && saved != null) first.dataset.items = saved; }
+    try {
+      var dl = jget("deliveries", []);
+      if (dl.length > before && s.ids.length) {
+        var rec = dl[dl.length - 1]; rec.invoiceIds = s.ids; rec.invoiceNumbers = s.nums; jset("deliveries", dl);
+        var invoices = jget("invoices", []), orders = jget("orders", []), changed = false;
+        s.ids.forEach(function (id) {
+          var inv = invoices.filter(function (x) { return String(x.id) === String(id); })[0];
+          var oi = inv && inv.sourceOrderId ? orders.findIndex(function (o) { return o.id === inv.sourceOrderId; }) : -1;
+          if (oi > -1 && orders[oi].packageStatus !== "Delivered") { orders[oi].packageStatus = "Delivered"; orders[oi].converted = true; changed = true; }
+        });
+        if (changed) { jset("orders", orders); if (typeof window.renderOrders === "function") window.renderOrders(); }
+        rebuild("customerInvoiceSelect");
+        var d = el("deliveryDescription"); if (d) d.dataset.acxAuto = "";
+      }
+    } catch (e) {}
+    return r;
+  };
+
+  /* make sure the checklists exist even before a supplier / customer has been chosen */
+  function ensure() { Object.keys(CFG).forEach(function (id) { if (el(id) && !box(id)) rebuild(id); }); }
+  setInterval(ensure, 1500);
+  window.addEventListener("load", ensure);
+})();
