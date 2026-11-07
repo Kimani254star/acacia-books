@@ -1378,3 +1378,231 @@
   setInterval(ensure, 1500);
   window.addEventListener("load", ensure);
 })();
+
+/* ===== Real SKU on every document line =====
+   Order and recurring-invoice lines keep the item NAME in their "sku" field, and invoice / quote / credit lines have no SKU at all,
+   so two items with the same name could not be told apart. Every new line now also records the item's real SKU as "itemSku"
+   (when it can be resolved unambiguously), and existing documents are filled in once. */
+(function () {
+  "use strict";
+  if (window.__acxSkuStamp) return;
+  window.__acxSkuStamp = true;
+  var D = document;
+  function norm(v) { return String(v == null ? "" : v).trim().toLowerCase(); }
+  function baseName(v) { var t = String(v == null ? "" : v).replace(/\s*\|\s*Batch:.*$/i, ""); return t.split(/\s+[\u2014\u2013]\s+/)[0].trim(); }
+  function whOf(v) { var m = String(v || "").match(/\s[\u2014\u2013]\s+(.+?)\s+\(Qty:/); return m ? m[1] : ""; }
+  function stock() { try { return typeof window.getAllInventories === "function" ? window.getAllInventories() : []; } catch (e) { return []; } }
+  function resolve(line, all) {
+    if (!line || line.itemSku != null) return null;
+    var s = norm(line.sku);
+    if (s && all.some(function (i) { return norm(i.sku) === s; })) return null;          /* already a real SKU */
+    var wh = norm(line.warehouse || whOf(line.desc));
+    var names = [line.sku, line.name, line.desc, line.itemName, line.description].map(baseName).filter(Boolean);
+    for (var k = 0; k < names.length; k++) {
+      var nm = norm(names[k]);
+      var m = all.filter(function (i) { return norm(i.name) === nm; });
+      if (m.length > 1 && wh) { var w = m.filter(function (i) { return norm(i.warehouse) === wh; }); if (w.length) m = w; }
+      if (!m.length) continue;
+      var skus = {}; m.forEach(function (i) { skus[norm(i.sku)] = i.sku || ""; });
+      var keys = Object.keys(skus);
+      if (keys.length === 1 && keys[0]) return skus[keys[0]];                           /* all matches share one SKU */
+      return null;                                                                       /* ambiguous or SKU-less: leave it */
+    }
+    return null;
+  }
+  function stamp(line, all) { var r = resolve(line, all); if (r) line.itemSku = r; }
+  var HOOKS = [
+    ["addInvoiceItem", function () { return typeof invoiceItems !== "undefined" ? invoiceItems : null; }],
+    ["addQuoteItem", function () { return typeof quoteItems !== "undefined" ? quoteItems : null; }],
+    ["addOrderItem", function () { return typeof orderItems !== "undefined" ? orderItems : null; }],
+    ["addCreditItem", function () { return typeof creditNoteItems !== "undefined" ? creditNoteItems : null; }],
+    ["addBulkInvoiceItem", function () { return typeof bulkInvoiceItems !== "undefined" ? bulkInvoiceItems : null; }],
+    ["addRecurringInvoiceItem", function () { return typeof recurringInvoiceItems !== "undefined" ? recurringInvoiceItems : null; }],
+    ["addDebitItem", function () { return typeof debitItems !== "undefined" ? debitItems : null; }],
+    ["addPOItem", function () { return typeof poItems !== "undefined" ? poItems : null; }]
+  ];
+  function install() {                                  /* idempotent: later scripts may redefine these functions, so it also runs after load */
+    HOOKS.forEach(function (h) {
+      var orig = window[h[0]];
+      if (typeof orig !== "function" || orig.__acxSku) return;
+      var wrapped = function () {
+        var r = orig.apply(this, arguments);
+        try { var arr = h[1](), all = stock(); if (Array.isArray(arr)) arr.forEach(function (l) { stamp(l, all); }); } catch (e) {}
+        return r;
+      };
+      wrapped.__acxSku = true;
+      window[h[0]] = wrapped;
+    });
+  }
+  install();
+  /* a later script can assign these again (app-2 re-assigns addInvoiceItem when its screen opens), so intercept the assignment too */
+  HOOKS.forEach(function (h) {
+    try {
+      var cur = window[h[0]], wrapFn = function (fn) {
+        if (typeof fn !== "function" || fn.__acxSku) return fn;
+        var w = function () { var r = fn.apply(this, arguments); try { var arr = h[1](), all = stock(); if (Array.isArray(arr)) arr.forEach(function (l) { stamp(l, all); }); } catch (e) {} return r; };
+        w.__acxSku = true; return w;
+      };
+      var val = wrapFn(cur);
+      Object.defineProperty(window, h[0], { configurable: true, enumerable: true, get: function () { return val; }, set: function (v) { val = wrapFn(v); } });
+    } catch (e) {}
+  });
+  window.addEventListener("load", function () { install(); setTimeout(install, 1500); setInterval(install, 4000); });
+  /* one-time fill-in of existing documents (only unambiguous names; nothing else is changed) */
+  var STORES = ["invoices", "quotes", "orders", "creditNotes", "bulkInvoices", "recurringInvoices", "deliveries", "purchaseOrders"];
+  function backfill() {
+    try {
+      if (localStorage.getItem("acxSkuBackfill_v1") || !localStorage.getItem("loggedInUser")) return;
+      var all = stock(); if (!all.length) return;
+      STORES.forEach(function (key) {
+        var docs; try { docs = JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return; }
+        if (!Array.isArray(docs)) return;
+        var changed = false;
+        docs.forEach(function (d) { (d && Array.isArray(d.items) ? d.items : []).forEach(function (l) { var b = l && l.itemSku; stamp(l, all); if (l && l.itemSku !== b) changed = true; }); });
+        if (changed) localStorage.setItem(key, JSON.stringify(docs));
+      });
+      localStorage.setItem("acxSkuBackfill_v1", "1");
+    } catch (e) {}
+  }
+  window.__acxSkuBackfill = backfill;
+  window.addEventListener("load", function () { setTimeout(backfill, 4000); });
+})();
+
+/* ===== Purchase Order: receive goods (full or partial) before / without billing =====
+   PO -> Receive (Goods Received note + stock) -> Convert to Bill (bills the whole PO, adds only the units not yet received). */
+(function () {
+  "use strict";
+  if (window.__acxPoReceive) return;
+  window.__acxPoReceive = true;
+  var D = document;
+  function el(id) { return D.getElementById(id); }
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function norm(v) { return String(v == null ? "" : v).trim().replace(/\s+/g, " ").toLowerCase(); }
+  function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function isStockLine(it) { return typeof window.__acxLineStock === "function" ? !!window.__acxLineStock(it) : String(it.type || "").toLowerCase() === "product"; }
+  function batchOn() { try { return typeof window.hasFeatureAccess === "function" ? !!window.hasFeatureAccess("batch") : true; } catch (e) { return true; } }
+  function poList() { return typeof window.getPOList === "function" ? window.getPOList() : jget("purchaseOrders", []); }
+  function received(po, it) { var q = num(it.qty); return po.converted ? q : Math.min(num(it.receivedQty), q); }
+  function summary(po) {
+    var q = 0, r = 0;
+    (po.items || []).forEach(function (it) { if (isStockLine(it)) { q += num(it.qty); r += received(po, it); } });
+    if (!q) return "";
+    return r <= 0 ? "Not received" : r >= q ? "Received" : "Partially received (" + r + "/" + q + ")";
+  }
+  window.__acxPoReceiveSummary = summary;
+
+  var RC = null;   /* warehouse rows parsed once per receive, so several lines of one warehouse update the same list */
+  function whRows(w) { if (!RC) RC = {}; if (!RC[w]) RC[w] = jget("inventory_" + w, []); return RC[w]; }
+  function findRow(name, sku, wh) {
+    var keys = Object.keys(localStorage).filter(function (k) { return k.indexOf("inventory_") === 0 && k.length > 10; });
+    var order = keys.map(function (k) { return k.slice(10); });
+    if (wh) order = order.filter(function (w) { return norm(w) === norm(wh); }).concat(order.filter(function (w) { return norm(w) !== norm(wh); }));
+    var sp = typeof window.__acxSplitBatch === "function" ? window.__acxSplitBatch(name) : { clean: name };
+    for (var i = 0; i < order.length; i++) {
+      var rows = whRows(order[i]);
+      var row = (sku && rows.filter(function (r) { return r && r.active !== false && String(r.sku || "").trim() === String(sku).trim(); })[0]) ||
+        rows.filter(function (r) { return r && r.active !== false && norm(r.name) === norm(sp.clean); })[0];
+      if (row) return { wh: order[i], rows: rows, row: row };
+    }
+    return null;
+  }
+
+  function close() { var m = el("acxPoRcvModal"); if (m) m.remove(); }
+  window.receivePO = function (idx) {
+    var po = poList()[idx];
+    if (!po) return alert("PO not found");
+    if (po.converted) return alert("This PO is already billed - its goods were received with the bill.");
+    if (po.status === "draft") return alert("Finalize the PO before receiving goods against it.");
+    var lines = (po.items || []).map(function (it, i) { return { i: i, it: it }; }).filter(function (x) { return isStockLine(x.it); });
+    if (!lines.length) return alert("This PO has no stock items to receive.");
+    var bo = batchOn();
+    close();
+    var m = D.createElement("div"); m.id = "acxPoRcvModal";
+    m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:12px";
+    var h = '<div class="bg-white rounded shadow-lg p-4" style="width:900px;max-width:100%;max-height:90vh;overflow:auto">' +
+      '<h3 class="text-lg font-bold mb-1">Receive goods - ' + esc(po.poNumber) + '</h3><p class="text-sm text-gray-600 mb-3">' + esc(po.supplier || "") + ' &middot; enter what arrived now (it can be less than ordered).</p>' +
+      '<table class="min-w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2 border text-left">Item</th><th class="p-2 border text-right">Ordered</th><th class="p-2 border text-right">Received</th><th class="p-2 border text-right">Receive now</th>' +
+      (bo ? '<th class="p-2 border">Batch no.</th><th class="p-2 border">Expiry</th>' : '') + '</tr></thead><tbody>';
+    lines.forEach(function (x) {
+      var q = num(x.it.qty), r = received(po, x.it), rem = Math.max(0, q - r);
+      var nm = typeof window.__acxSplitBatch === "function" ? window.__acxSplitBatch(x.it.name || x.it.desc || "").clean : (x.it.name || x.it.desc || "");
+      h += '<tr data-i="' + x.i + '"><td class="p-2 border">' + esc(nm) + '</td><td class="p-2 border text-right">' + q + '</td><td class="p-2 border text-right">' + r + '</td>' +
+        '<td class="p-2 border text-right"><input type="number" min="0" max="' + rem + '" step="any" value="' + rem + '" class="border p-1 rounded text-right w-24" data-rcv ' + (rem ? "" : "disabled") + '></td>' +
+        (bo ? '<td class="p-2 border"><input type="text" class="border p-1 rounded w-32" data-bn value="' + esc(x.it.batch && x.it.batch.batchNo || "") + '"' + (rem ? "" : " disabled") + '></td><td class="p-2 border"><input type="date" class="border p-1 rounded" data-bx value="' + esc(x.it.batch && x.it.batch.expiry || "") + '"' + (rem ? "" : " disabled") + '></td>' : '') + '</tr>';
+    });
+    h += '</tbody></table><div class="flex justify-end gap-2 mt-4"><button type="button" id="acxPoRcvCancel" class="border px-3 py-1 rounded">Cancel</button>' +
+      '<button type="button" id="acxPoRcvSave" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Receive</button></div></div>';
+    m.innerHTML = h; D.body.appendChild(m);
+    el("acxPoRcvCancel").onclick = close;
+    el("acxPoRcvSave").onclick = function () {
+      var btn = this; btn.disabled = true;
+      try { save(idx, m); } catch (e) { console.error(e); alert("Receiving failed: " + e.message); btn.disabled = false; }
+    };
+  };
+
+  function save(idx, m) {
+    var list = poList(), po = list[idx];
+    if (!po || po.converted) return close();
+    var picks = [];
+    [].forEach.call(m.querySelectorAll("tbody tr"), function (tr) {
+      var i = +tr.getAttribute("data-i"), it = po.items[i], q = num(it.qty), rem = Math.max(0, q - received(po, it));
+      var r = num(tr.querySelector("[data-rcv]").value);
+      if (r <= 0) return;
+      if (r > rem + 1e-9) throw new Error("More than ordered for " + (it.name || it.desc) + " (remaining " + rem + ")");
+      var bn = tr.querySelector("[data-bn]"), bx = tr.querySelector("[data-bx]");
+      picks.push({ i: i, it: it, r: r, batch: bn && bn.value.trim() ? { batchNo: bn.value.trim(), expiry: bx ? bx.value : "" } : null });
+    });
+    if (!picks.length) { alert("Enter a quantity to receive."); el("acxPoRcvSave").disabled = false; return; }
+    RC = {};
+    var grnNo = typeof window.generateNextGRNNumber === "function" ? window.generateNextGRNNumber() : "GRN-" + Date.now();
+    var today = (new Date).toISOString().split("T")[0], items = [], touched = {}, missing = [];
+    picks.forEach(function (p) {
+      var sp = typeof window.__acxSplitBatch === "function" ? window.__acxSplitBatch(p.it.name || p.it.desc || "") : { clean: p.it.name };
+      var hit = findRow(p.it.name || p.it.desc, p.it.sku || p.it.itemSku, p.it.warehouse);
+      var line = { name: hit ? hit.row.name : sp.clean, desc: hit ? hit.row.name : sp.clean, sku: hit ? String(hit.row.sku || "") : String(p.it.sku || ""), warehouse: hit ? hit.wh : (p.it.warehouse || ""), qty: p.r, price: num(p.it.price), type: p.it.type || "product" };
+      if (p.batch) line.batch = p.batch;
+      items.push(line);
+      if (!hit) { missing.push(line.name); return; }
+      hit.row.qty = num(hit.row.qty) + p.r;
+      if (p.batch && typeof window.__acxBatchAdj === "function") window.__acxBatchAdj(hit.row, { type: "product", qty: p.r, batch: p.batch }, 1);
+      hit.row.history = hit.row.history || [];
+      hit.row.history.push({ date: (new Date).toLocaleString(), type: "Goods Received", ref: grnNo, qty: p.r });
+      touched[hit.wh] = hit.rows;
+      p.it.receivedQty = num(p.it.receivedQty) + p.r;
+    });
+    if (missing.length) throw new Error("Not found in stock: " + missing.join(", ") + ". Nothing was received.");
+    Object.keys(touched).forEach(function (w) { if (typeof window.saveInventory === "function") window.saveInventory(w, touched[w]); else localStorage.setItem("inventory_" + w, JSON.stringify(touched[w])); });
+    var grns = jget("grns", []);
+    grns.push({ number: grnNo, fromPO: po.poNumber, supplier: po.supplier, chartOfAccount: po.chartOfAccount, items: items, date: today, status: "Approved", received: true });
+    localStorage.setItem("grns", JSON.stringify(grns));
+    po.receiveStatus = summary(po);
+    if (typeof window.savePOList === "function") window.savePOList(list); else localStorage.setItem("purchaseOrders", JSON.stringify(list));
+    RC = null;
+    close();
+    ["renderPurchaseOrders", "renderGRNTable", "renderStockValuation", "renderInventorySummary", "renderInventoryTable"].forEach(function (n) { try { if (typeof window[n] === "function") window[n](); } catch (e) {} });
+    var msg = "Goods received: " + grnNo + " (" + summary(po) + ")";
+    if (typeof window.showToast === "function") window.showToast(msg); else alert(msg);
+  }
+
+  /* PO list: show the receiving status and a Receive button on every row */
+  function decorate() {
+    var tb = D.querySelector("#supplierPOsTable tbody"); if (!tb) return;
+    var list = poList();
+    [].forEach.call(tb.querySelectorAll("tr"), function (tr) {
+      var cb = tr.querySelector(".po-checkbox"); if (!cb || tr.getAttribute("data-acx-rcv")) return;
+      var no = tr.cells[1] ? tr.cells[1].textContent.trim() : "";
+      var po = list.filter(function (p) { return p.poNumber === no; })[0] || list[+cb.value]; if (!po) return;
+      tr.setAttribute("data-acx-rcv", "1");
+      var st = summary(po);
+      if (st && tr.cells[6]) { var s = D.createElement("div"); s.className = "text-xs text-gray-600 mt-1"; s.textContent = st; tr.cells[6].appendChild(s); }
+      var conv = [].filter.call(tr.querySelectorAll("button"), function (b) { return /convertPO\(/.test(b.getAttribute("onclick") || ""); })[0];
+      if (conv && !po.converted && po.status !== "draft") {
+        var b = D.createElement("button"); b.type = "button"; b.className = conv.className; b.textContent = "\ud83d\udce6 Receive";
+        b.setAttribute("onclick", "receivePO(" + cb.value + ")"); conv.parentNode.insertBefore(b, conv);
+      }
+    });
+  }
+  var oR = window.renderPurchaseOrders;
+  if (typeof oR === "function") window.renderPurchaseOrders = function () { var r = oR.apply(this, arguments); try { decorate(); } catch (e) {} return r; };
+})();

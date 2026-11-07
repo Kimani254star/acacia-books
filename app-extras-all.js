@@ -3803,6 +3803,7 @@ try{
     { key: "bulkBills",         label: "Bulk Bills",         who: "Supplier", ref: ["billNumber", "number", "id"] },
     { key: "recurringBills",    label: "Recurring Bills",    who: "Supplier", ref: ["billNumber", "number", "id"] },
     { key: "purchaseOrders",    label: "Purchase Orders",    who: "Supplier", ref: ["poNumber", "number", "id"] },
+    { key: "grn",               label: "Goods Received",     who: "Supplier", ref: ["number", "grnNumber", "id"] },
     { key: "debitNotes",        label: "Debit Notes",        who: "Supplier", ref: ["reference", "number", "debitNoteNumber", "id"] },
     { key: "batches",           label: "Batches" },
     { key: "adjustments",       label: "Adjustments" },
@@ -3826,6 +3827,7 @@ try{
     { store: "bulkBills",      fam: "b", tab: "bulkBills" },
     { store: "recurringBills", fam: "b", tab: "recurringBills" },
     { store: "purchaseOrders", tab: "purchaseOrders" },
+    { store: "grns",           tab: "grn" },
     { store: "supplierDebitNotes", tab: "debitNotes" },
     { store: "debitNotes",     tab: "debitNotes" }
   ];
@@ -3835,7 +3837,7 @@ try{
     "invoice": "invoices", "bulk invoice": "bulkInvoices", "recurring invoice": "recurringInvoices",
     "quote": "quotes", "order": "orders", "sales order": "orders", "credit note": "creditNotes", "sales return": "salesReturns",
     "delivery": "deliveries", "bill": "bills", "bulk bill": "bulkBills", "recurring bill": "recurringBills",
-    "debit note": "debitNotes", "purchase order": "purchaseOrders"
+    "debit note": "debitNotes", "purchase order": "purchaseOrders", "goods received": "grn"
   };
 
   function esc(v) {
@@ -3885,6 +3887,8 @@ try{
     var sku = norm(item.sku), name = norm(item.name);
     return function (line) {
       if (!line) return false;
+      var is = norm(line.itemSku);
+      if (sku && is) return is === sku;                                   /* the line records the item's real SKU */
       var ls = norm(line.sku), keys = lineKeys(line);
       if (sku && ls) return ls === sku || (!!name && ls === name);   /* the sku field may hold the item name (recurring invoices) */
       return (!!name && keys.indexOf(name) > -1) || (!!sku && keys.indexOf(sku) > -1);
