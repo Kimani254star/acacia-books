@@ -3884,15 +3884,9 @@ try{
     return out;
   }
   function matcher(item) {
-    var sku = norm(item.sku), name = norm(item.name);
-    return function (line) {
-      if (!line) return false;
-      var is = norm(line.itemSku);
-      if (sku && is) return is === sku;                                   /* the line records the item's real SKU */
-      var ls = norm(line.sku), keys = lineKeys(line);
-      if (sku && ls) return ls === sku || (!!name && ls === name);   /* the sku field may hold the item name (recurring invoices) */
-      return (!!name && keys.indexOf(name) > -1) || (!!sku && keys.indexOf(sku) > -1);
-    };
+    var name = norm(item.name);
+    /* items are identified by name: the "sku" on stock items and document lines is a unit-of-measure code shared by many items */
+    return function (line) { return !!line && !!name && lineKeys(line).indexOf(name) > -1; };
   }
   function warehouseOk(doc, line, wh) {
     var w = (line && line.warehouse) || (doc && doc.warehouse);

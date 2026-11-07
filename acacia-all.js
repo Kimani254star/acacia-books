@@ -1330,48 +1330,124 @@
     return r;
   };
 
-  /* ---------- Delivery ---------- */
-  function delItems() {
-    var picked = selectedOptions("customerInvoiceSelect"), invoices = jget("invoices", []), out = [], nums = [], ids = [];
-    picked.forEach(function (o) {
-      var inv = invoices.filter(function (x) { return String(x.id) === String(o.value); })[0] || invoices[parseInt(o.value, 10)] || {};
-      var num = inv.number || inv.invoiceNumber || inv.id || o.value; nums.push(String(num)); ids.push(o.value);
-      itemsOf(o).forEach(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.invoiceNumber = String(num); out.push(c); });
+  /* ---------- Delivery (one or more invoices, full or partial) ---------- */
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function invById(id) { var l = jget("invoices", []); return l.filter(function (x) { return String(x.id) === String(id); })[0] || null; }
+  function invNo(inv) { return String(inv.number || inv.invoiceNumber || inv.id || ""); }
+  function legacyDelivered(inv) {                        /* delivered before quantities were tracked: any delivery that names the invoice counts as complete */
+    return jget("deliveries", []).some(function (d) {
+      return String(d.invoiceId) === String(inv.id) || (d.invoiceIds || []).map(String).indexOf(String(inv.id)) > -1 || (d.invoiceNumbers || []).indexOf(invNo(inv)) > -1;
     });
-    return { items: out, nums: nums, ids: ids, picked: picked };
+  }
+  function lineDone(inv, l, legacy) { return l.deliveredQty != null ? num(l.deliveredQty) : (legacy ? num(l.qty) : 0); }
+  function deliveryState(inv) {
+    var legacy = (inv.items || []).some(function (l) { return l.deliveredQty == null; }) && legacyDelivered(inv), q = 0, d = 0;
+    (inv.items || []).forEach(function (l) { q += num(l.qty); d += Math.min(num(l.qty), lineDone(inv, l, legacy)); });
+    if (!q) return { label: "", done: true, q: 0, d: 0 };
+    return d <= 0 ? { label: "Not delivered", done: false, q: q, d: d } : d >= q ? { label: "Delivered", done: true, q: q, d: d } : { label: "Partly delivered (" + d + "/" + q + ")", done: false, q: q, d: d };
+  }
+  window.__acxDeliveryState = deliveryState;
+
+  function delItems() {
+    var picked = selectedOptions("customerInvoiceSelect"), out = { picked: picked, ids: [], nums: [], invs: [] };
+    picked.forEach(function (o) {
+      var inv = invById(o.value) || jget("invoices", [])[parseInt(o.value, 10)] || {};
+      out.ids.push(o.value); out.nums.push(invNo(inv) || o.value); out.invs.push(inv);
+    });
+    return out;
+  }
+  function panel() {
+    var p = el("acxDelLines"), anchor = box("customerInvoiceSelect");
+    if (!p && anchor) { p = D.createElement("div"); p.id = "acxDelLines"; p.className = "mb-4 overflow-x-auto"; anchor.parentNode.insertBefore(p, anchor.nextSibling); }
+    return p;
   }
   function delChanged() {
-    var s = delItems(), ref = el("deliveryReferenceNumber"), d = el("deliveryDescription");
+    var s = delItems(), ref = el("deliveryReferenceNumber"), d = el("deliveryDescription"), p = panel(), rows = [];
     if (ref) ref.value = s.nums.join(", ");
-    if (d && (!d.value || d.value === d.dataset.acxAuto)) { var t = s.items.map(lineText).filter(Boolean).join(", "); d.value = t; d.dataset.acxAuto = t; }
+    var h = "";
+    s.invs.forEach(function (inv, k) {
+      var legacy = legacyDelivered(inv);
+      (inv.items || []).forEach(function (l, li) {
+        var q = num(l.qty), done = Math.min(q, lineDone(inv, l, legacy)), rem = Math.max(0, q - done);
+        rows.push({ inv: inv, li: li, rem: rem });
+        h += '<tr data-inv="' + esc(s.ids[k]) + '" data-li="' + li + '"><td class="p-2 border">' + esc(s.nums[k]) + '</td><td class="p-2 border">' + esc(l.name || l.desc || l.itemName || "-") + '</td><td class="p-2 border text-right">' + q + '</td><td class="p-2 border text-right">' + done + '</td>' +
+          '<td class="p-2 border text-right"><input type="number" min="0" max="' + rem + '" step="any" value="' + rem + '" class="border p-1 rounded text-right w-24" data-now ' + (rem ? "" : "disabled") + '></td></tr>';
+      });
+    });
+    if (p) p.innerHTML = rows.length ? '<table class="min-w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2 border">Invoice</th><th class="p-2 border">Item</th><th class="p-2 border text-right">Invoiced</th><th class="p-2 border text-right">Delivered</th><th class="p-2 border text-right">Deliver now</th></tr></thead><tbody>' + h + "</tbody></table>" : "";
+    if (d && (!d.value || d.value === d.dataset.acxAuto)) {
+      var t = []; [].forEach.call(p ? p.querySelectorAll("tbody tr") : [], function (tr) { var q = num(tr.querySelector("[data-now]").value); if (q > 0) { var inv = invById(tr.getAttribute("data-inv")), l = inv && inv.items[+tr.getAttribute("data-li")]; if (l) t.push((l.name || l.desc || l.itemName || "") + " (x" + q + ")"); } });
+      d.value = t.join(", "); d.dataset.acxAuto = d.value;
+    }
   }
   window.populateDeliveryItems = function () { sync("customerInvoiceSelect"); };
   var oInv = window.showCustomerInvoices;
   if (typeof oInv === "function") window.showCustomerInvoices = function () { var r = oInv.apply(this, arguments); rebuild("customerInvoiceSelect"); return r; };
   var oAddDel = window.addDelivery;
   if (typeof oAddDel === "function") window.addDelivery = function () {
-    var s = delItems(), sel = el("customerInvoiceSelect"), first = s.picked[0], saved = null;
-    if (first && s.picked.length > 1) { saved = first.dataset.items; first.dataset.items = JSON.stringify(s.items); }   /* the original save reads the chosen option's items */
-    var before = jget("deliveries", []).length;
-    var r;
+    var s = delItems(), p = el("acxDelLines"), first = s.picked[0], saved = null, now = [], priors = {};
+    if (first && p && p.querySelector("tbody tr")) {
+      var bad = "";
+      [].forEach.call(p.querySelectorAll("tbody tr"), function (tr) {
+        var inv = invById(tr.getAttribute("data-inv")), li = +tr.getAttribute("data-li"), l = inv && inv.items[li]; if (!l) return;
+        var q = num(tr.querySelector("[data-now]").value), legacy = legacyDelivered(inv), rem = Math.max(0, num(l.qty) - Math.min(num(l.qty), lineDone(inv, l, legacy)));
+        if (!priors[inv.id]) priors[inv.id] = (inv.items || []).map(function (x) { return Math.min(num(x.qty), lineDone(inv, x, legacy)); });   /* what each line had before THIS delivery (the new delivery would otherwise make an untouched line look delivered) */
+        if (q > rem + 1e-9) bad = "More than invoiced for " + (l.name || l.desc || "an item") + " (" + invNo(inv) + ", remaining " + rem + ")";
+        if (q > 0) { var c = {}; for (var k in l) c[k] = l[k]; c.qty = q; c.invoiceNumber = invNo(inv); now.push({ inv: inv, li: li, q: q, line: c }); }
+      });
+      if (bad) return void alert(bad);
+      if (!now.length) return void alert("Nothing to deliver: every selected invoice line is already delivered.");
+      saved = first.dataset.items; first.dataset.items = JSON.stringify(now.map(function (n) { return n.line; }));   /* the original save reads the chosen option's items */
+    }
+    var before = jget("deliveries", []).length, r, ordersSnap = localStorage.getItem("orders");
     try { r = oAddDel.apply(this, arguments); } finally { if (first && saved != null) first.dataset.items = saved; }
     try {
       var dl = jget("deliveries", []);
       if (dl.length > before && s.ids.length) {
-        var rec = dl[dl.length - 1]; rec.invoiceIds = s.ids; rec.invoiceNumbers = s.nums; jset("deliveries", dl);
-        var invoices = jget("invoices", []), orders = jget("orders", []), changed = false;
-        s.ids.forEach(function (id) {
-          var inv = invoices.filter(function (x) { return String(x.id) === String(id); })[0];
-          var oi = inv && inv.sourceOrderId ? orders.findIndex(function (o) { return o.id === inv.sourceOrderId; }) : -1;
-          if (oi > -1 && orders[oi].packageStatus !== "Delivered") { orders[oi].packageStatus = "Delivered"; orders[oi].converted = true; changed = true; }
+        var rec = dl[dl.length - 1]; rec.invoiceIds = s.ids; rec.invoiceNumbers = s.nums;
+        var invoices = jget("invoices", []), orders = jget("orders", []), changedO = false, partial = false;
+        var addNow = {}; now.forEach(function (n) { var k = n.inv.id + "#" + n.li; addNow[k] = (addNow[k] || 0) + n.q; });
+        Object.keys(priors).forEach(function (id) {
+          var inv = invoices.filter(function (x) { return String(x.id) === String(id); })[0]; if (!inv) return;
+          (inv.items || []).forEach(function (l, li) { l.deliveredQty = Math.min(num(l.qty), (priors[id][li] || 0) + (addNow[id + "#" + li] || 0)); });
         });
-        if (changed) { jset("orders", orders); if (typeof window.renderOrders === "function") window.renderOrders(); }
+        var touched = {}; now.forEach(function (n) { touched[n.inv.id] = 1; });
+        invoices.forEach(function (inv) { if (touched[inv.id] && !deliveryState(inv).done) partial = true; });
+        if (partial && ordersSnap != null) { try { orders = JSON.parse(ordersSnap); changedO = true; } catch (e) {} }   /* the original save marks the order delivered: undo that while something is still to deliver */
+        invoices.forEach(function (inv) {
+          if (!touched[inv.id]) return;
+          var st = deliveryState(inv); inv.deliveryStatus = st.label;
+          var oi = inv.sourceOrderId ? orders.findIndex(function (o) { return o.id === inv.sourceOrderId; }) : -1;
+          if (oi > -1 && st.done && orders[oi].packageStatus !== "Delivered") { orders[oi].packageStatus = "Delivered"; orders[oi].converted = true; changedO = true; }
+        });
+        rec.partial = partial; rec.lines = now.map(function (n) { return { invoice: invNo(n.inv), item: n.line.name || n.line.desc || n.line.itemName || "", qty: n.q }; });
+        jset("deliveries", dl); jset("invoices", invoices);
+        if (changedO) { jset("orders", orders); if (typeof window.renderOrders === "function") window.renderOrders(); }
         rebuild("customerInvoiceSelect");
         var d = el("deliveryDescription"); if (d) d.dataset.acxAuto = "";
+        if (typeof window.renderInvoices === "function") window.renderInvoices();
       }
-    } catch (e) {}
+    } catch (e) { console.error(e); }
     return r;
   };
+
+  /* Invoices list: show how much of each invoice has been delivered */
+  function decorateInvoices() {
+    var tb = el("invoiceTable"); if (!tb) return;
+    var list = jget("invoices", []);
+    [].forEach.call(tb.querySelectorAll("tr"), function (tr) {
+      if (tr.getAttribute("data-acx-del") || !tr.cells || tr.cells.length < 11) return;
+      var no = tr.cells[1].textContent.trim(), inv = list.filter(function (x) { return invNo(x) === no; })[0]; if (!inv) return;
+      tr.setAttribute("data-acx-del", "1");
+      var st = deliveryState(inv); if (!st.label) return;
+      var s = D.createElement("div"); s.className = "text-xs mt-1"; s.style.color = st.done ? "#15803d" : (st.d > 0 ? "#b45309" : "#6b7280"); s.textContent = "\ud83d\ude9a " + st.label;
+      tr.cells[10].appendChild(s);
+    });
+  }
+  window.__acxDecorateInvoices = decorateInvoices;
+  var oRI = window.renderInvoices;
+  if (typeof oRI === "function" && !oRI.__acxDel) { var wr = function () { var r = oRI.apply(this, arguments); try { decorateInvoices(); } catch (e) {} return r; }; wr.__acxDel = true; window.renderInvoices = wr; }
+  window.addEventListener("load", function () { setInterval(function () { try { decorateInvoices(); } catch (e) {} }, 2000); });
 
   /* make sure the checklists exist even before a supplier / customer has been chosen */
   function ensure() { Object.keys(CFG).forEach(function (id) { if (el(id) && !box(id)) rebuild(id); }); }
@@ -1379,93 +1455,29 @@
   window.addEventListener("load", ensure);
 })();
 
-/* ===== Real SKU on every document line =====
-   Order and recurring-invoice lines keep the item NAME in their "sku" field, and invoice / quote / credit lines have no SKU at all,
-   so two items with the same name could not be told apart. Every new line now also records the item's real SKU as "itemSku"
-   (when it can be resolved unambiguously), and existing documents are filled in once. */
+/* ===== Clean-up: remove the "itemSku" field an earlier version added to documents =====
+   In this app the item "SKU" is a unit-of-measure code (PCS, KGM ...), shared by many items, so it can not identify an item.
+   Items are identified by NAME (+ warehouse). The extra field was never needed; this removes it once, and only that field. */
 (function () {
   "use strict";
-  if (window.__acxSkuStamp) return;
-  window.__acxSkuStamp = true;
-  var D = document;
-  function norm(v) { return String(v == null ? "" : v).trim().toLowerCase(); }
-  function baseName(v) { var t = String(v == null ? "" : v).replace(/\s*\|\s*Batch:.*$/i, ""); return t.split(/\s+[\u2014\u2013]\s+/)[0].trim(); }
-  function whOf(v) { var m = String(v || "").match(/\s[\u2014\u2013]\s+(.+?)\s+\(Qty:/); return m ? m[1] : ""; }
-  function stock() { try { return typeof window.getAllInventories === "function" ? window.getAllInventories() : []; } catch (e) { return []; } }
-  function resolve(line, all) {
-    if (!line || line.itemSku != null) return null;
-    var s = norm(line.sku);
-    if (s && all.some(function (i) { return norm(i.sku) === s; })) return null;          /* already a real SKU */
-    var wh = norm(line.warehouse || whOf(line.desc));
-    var names = [line.sku, line.name, line.desc, line.itemName, line.description].map(baseName).filter(Boolean);
-    for (var k = 0; k < names.length; k++) {
-      var nm = norm(names[k]);
-      var m = all.filter(function (i) { return norm(i.name) === nm; });
-      if (m.length > 1 && wh) { var w = m.filter(function (i) { return norm(i.warehouse) === wh; }); if (w.length) m = w; }
-      if (!m.length) continue;
-      var skus = {}; m.forEach(function (i) { skus[norm(i.sku)] = i.sku || ""; });
-      var keys = Object.keys(skus);
-      if (keys.length === 1 && keys[0]) return skus[keys[0]];                           /* all matches share one SKU */
-      return null;                                                                       /* ambiguous or SKU-less: leave it */
-    }
-    return null;
-  }
-  function stamp(line, all) { var r = resolve(line, all); if (r) line.itemSku = r; }
-  var HOOKS = [
-    ["addInvoiceItem", function () { return typeof invoiceItems !== "undefined" ? invoiceItems : null; }],
-    ["addQuoteItem", function () { return typeof quoteItems !== "undefined" ? quoteItems : null; }],
-    ["addOrderItem", function () { return typeof orderItems !== "undefined" ? orderItems : null; }],
-    ["addCreditItem", function () { return typeof creditNoteItems !== "undefined" ? creditNoteItems : null; }],
-    ["addBulkInvoiceItem", function () { return typeof bulkInvoiceItems !== "undefined" ? bulkInvoiceItems : null; }],
-    ["addRecurringInvoiceItem", function () { return typeof recurringInvoiceItems !== "undefined" ? recurringInvoiceItems : null; }],
-    ["addDebitItem", function () { return typeof debitItems !== "undefined" ? debitItems : null; }],
-    ["addPOItem", function () { return typeof poItems !== "undefined" ? poItems : null; }]
-  ];
-  function install() {                                  /* idempotent: later scripts may redefine these functions, so it also runs after load */
-    HOOKS.forEach(function (h) {
-      var orig = window[h[0]];
-      if (typeof orig !== "function" || orig.__acxSku) return;
-      var wrapped = function () {
-        var r = orig.apply(this, arguments);
-        try { var arr = h[1](), all = stock(); if (Array.isArray(arr)) arr.forEach(function (l) { stamp(l, all); }); } catch (e) {}
-        return r;
-      };
-      wrapped.__acxSku = true;
-      window[h[0]] = wrapped;
-    });
-  }
-  install();
-  /* a later script can assign these again (app-2 re-assigns addInvoiceItem when its screen opens), so intercept the assignment too */
-  HOOKS.forEach(function (h) {
+  if (window.__acxItemSkuCleanup) return;
+  window.__acxItemSkuCleanup = true;
+  var STORES = ["invoices", "quotes", "orders", "creditNotes", "bulkInvoices", "recurringInvoices", "deliveries", "purchaseOrders", "grns"];
+  function run() {
     try {
-      var cur = window[h[0]], wrapFn = function (fn) {
-        if (typeof fn !== "function" || fn.__acxSku) return fn;
-        var w = function () { var r = fn.apply(this, arguments); try { var arr = h[1](), all = stock(); if (Array.isArray(arr)) arr.forEach(function (l) { stamp(l, all); }); } catch (e) {} return r; };
-        w.__acxSku = true; return w;
-      };
-      var val = wrapFn(cur);
-      Object.defineProperty(window, h[0], { configurable: true, enumerable: true, get: function () { return val; }, set: function (v) { val = wrapFn(v); } });
-    } catch (e) {}
-  });
-  window.addEventListener("load", function () { install(); setTimeout(install, 1500); setInterval(install, 4000); });
-  /* one-time fill-in of existing documents (only unambiguous names; nothing else is changed) */
-  var STORES = ["invoices", "quotes", "orders", "creditNotes", "bulkInvoices", "recurringInvoices", "deliveries", "purchaseOrders"];
-  function backfill() {
-    try {
-      if (localStorage.getItem("acxSkuBackfill_v1") || !localStorage.getItem("loggedInUser")) return;
-      var all = stock(); if (!all.length) return;
+      if (localStorage.getItem("acxItemSkuCleanup_v1")) return;
       STORES.forEach(function (key) {
         var docs; try { docs = JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return; }
         if (!Array.isArray(docs)) return;
         var changed = false;
-        docs.forEach(function (d) { (d && Array.isArray(d.items) ? d.items : []).forEach(function (l) { var b = l && l.itemSku; stamp(l, all); if (l && l.itemSku !== b) changed = true; }); });
+        docs.forEach(function (d) { (d && Array.isArray(d.items) ? d.items : []).forEach(function (l) { if (l && Object.prototype.hasOwnProperty.call(l, "itemSku")) { delete l.itemSku; changed = true; } }); });
         if (changed) localStorage.setItem(key, JSON.stringify(docs));
       });
-      localStorage.setItem("acxSkuBackfill_v1", "1");
+      localStorage.setItem("acxItemSkuCleanup_v1", "1");
     } catch (e) {}
   }
-  window.__acxSkuBackfill = backfill;
-  window.addEventListener("load", function () { setTimeout(backfill, 4000); });
+  window.__acxItemSkuCleanup = run;
+  window.addEventListener("load", function () { setTimeout(run, 2500); });
 })();
 
 /* ===== Purchase Order: receive goods (full or partial) before / without billing =====
@@ -1501,8 +1513,7 @@
     var sp = typeof window.__acxSplitBatch === "function" ? window.__acxSplitBatch(name) : { clean: name };
     for (var i = 0; i < order.length; i++) {
       var rows = whRows(order[i]);
-      var row = (sku && rows.filter(function (r) { return r && r.active !== false && String(r.sku || "").trim() === String(sku).trim(); })[0]) ||
-        rows.filter(function (r) { return r && r.active !== false && norm(r.name) === norm(sp.clean); })[0];
+      var row = rows.filter(function (r) { return r && r.active !== false && norm(r.name) === norm(sp.clean); })[0];
       if (row) return { wh: order[i], rows: rows, row: row };
     }
     return null;
@@ -1559,7 +1570,7 @@
     var today = (new Date).toISOString().split("T")[0], items = [], touched = {}, missing = [];
     picks.forEach(function (p) {
       var sp = typeof window.__acxSplitBatch === "function" ? window.__acxSplitBatch(p.it.name || p.it.desc || "") : { clean: p.it.name };
-      var hit = findRow(p.it.name || p.it.desc, p.it.sku || p.it.itemSku, p.it.warehouse);
+      var hit = findRow(p.it.name || p.it.desc, null, p.it.warehouse);
       var line = { name: hit ? hit.row.name : sp.clean, desc: hit ? hit.row.name : sp.clean, sku: hit ? String(hit.row.sku || "") : String(p.it.sku || ""), warehouse: hit ? hit.wh : (p.it.warehouse || ""), qty: p.r, price: num(p.it.price), type: p.it.type || "product" };
       if (p.batch) line.batch = p.batch;
       items.push(line);
@@ -1605,4 +1616,132 @@
   }
   var oR = window.renderPurchaseOrders;
   if (typeof oR === "function") window.renderPurchaseOrders = function () { var r = oR.apply(this, arguments); try { decorate(); } catch (e) {} return r; };
+})();
+
+/* ===== Stop duplicate stock items =====
+   A NEW item is refused when an item with the same name already exists in that warehouse (that is how "the same item twice" starts).
+   The same name in another warehouse is normal (stock transfers), and the "SKU" field is a unit-of-measure code shared by many items, so it is ignored. */
+(function () {
+  "use strict";
+  if (window.__acxDupGuard) return;
+  window.__acxDupGuard = true;
+  var D = document;
+  function norm(v) { return String(v == null ? "" : v).trim().replace(/\s+/g, " ").toLowerCase(); }
+  function val(id) { var e = D.getElementById(id); return e ? e.value : ""; }
+  function check(wh, name) {
+    var here = [];
+    try { here = typeof window.getInventory === "function" ? window.getInventory(wh) : []; } catch (e) {}
+    var n = norm(name);
+    for (var i = 0; i < here.length; i++) {
+      var r = here[i];
+      if (r && n && norm(r.name) === n) return { block: "\u201c" + r.name + "\u201d already exists in " + wh + ". Edit that item instead of adding it again." };
+    }
+    return null;
+  }
+  window.__acxDupCheck = check;
+  var busy = false;
+  function guard(orig) {
+    var w = function () {
+      if (busy) return orig.apply(this, arguments);                       /* a second layer of this guard (see install) checks nothing */
+      busy = true;
+      try { return run.apply(this, arguments); } finally { busy = false; }
+    };
+    function run() {
+      try {
+        if (val("editIndex") === "") {                                    /* adding, not editing */
+          var wh = val("warehouseSelect"), name = val("itemName").trim();
+          if (wh && name) {
+            var c = check(wh, name);
+            if (c && c.block) return void alert(c.block);
+            if (c && c.warn && !confirm(c.warn)) return;
+          }
+        }
+      } catch (e) {}
+      return orig.apply(this, arguments);
+    }
+    w.__acxDup = true;
+    w.__pricing = !!orig.__pricing;                                       /* books-all.js re-wraps saveItem unless it is marked; keep its marker only if it is already inside */
+    return w;
+  }
+  function install() {                      /* idempotent: later scripts re-define saveItem, so this also runs after load and on a timer */
+    var f = window.saveItem;
+    if (typeof f === "function" && !f.__acxDup) window.saveItem = guard(f);
+  }
+  install();
+  window.addEventListener("load", function () { install(); setInterval(install, 1500); });
+})();
+
+/* ===== Dashboard: batches that are expired or about to expire (plans with batch tracking only) ===== */
+(function () {
+  "use strict";
+  if (window.__acxExpiryCard) return;
+  window.__acxExpiryCard = true;
+  var D = document, SOON_DAYS = 30;
+  function allowed() { try { return !window.AcaciaPlans || !window.AcaciaPlans.hasFeatureAccess || window.AcaciaPlans.hasFeatureAccess("batch"); } catch (e) { return true; } }
+  function scan() {
+    var today = new Date(new Date().toDateString()).getTime(), soonEnd = today + SOON_DAYS * 864e5, out = { expired: 0, expiredUnits: 0, soon: 0, soonUnits: 0, items: {} };
+    var all = []; try { all = typeof window.getAllInventories === "function" ? window.getAllInventories() : []; } catch (e) {}
+    all.forEach(function (it) {
+      (it && Array.isArray(it.batches) ? it.batches : []).forEach(function (b) {
+        var q = parseFloat(b && b.qty) || 0, e = b && (b.expiry || b.expiryDate); if (q <= 0 || !e) return;
+        var t = new Date(e).getTime(); if (isNaN(t)) return;
+        if (t < today) { out.expired++; out.expiredUnits += q; out.items[it.name] = 1; }
+        else if (t <= soonEnd) { out.soon++; out.soonUnits += q; out.items[it.name] = 1; }
+      });
+    });
+    out.names = Object.keys(out.items);
+    return out;
+  }
+  window.__acxExpiryScan = scan;
+  function render() {
+    var host = D.getElementById("dashStockKPI"); if (!host) return;
+    var grid = host.parentNode && host.parentNode.parentNode; if (!grid || !grid.parentNode) return;
+    var card = D.getElementById("acxExpiryCard");
+    if (!allowed()) { if (card) card.style.display = "none"; return; }
+    var r = scan();
+    if (!card) {
+      card = D.createElement("div"); card.id = "acxExpiryCard";
+      card.className = "mb-4 rounded-lg border p-3 text-sm flex flex-wrap items-center gap-3";
+      grid.parentNode.insertBefore(card, grid.nextSibling);
+    }
+    card.style.display = (r.expired || r.soon) ? "" : "none";
+    card.style.background = r.expired ? "#fef2f2" : "#fffbeb"; card.style.borderColor = r.expired ? "#fecaca" : "#fde68a";
+    var names = r.names.slice(0, 4).join(", ") + (r.names.length > 4 ? " +" + (r.names.length - 4) + " more" : "");
+    card.innerHTML = '<span style="font-size:1.25rem">\u23f3</span><div style="flex:1;min-width:220px"><div class="font-semibold">Batch expiry</div><div>' +
+      (r.expired ? '<b style="color:#b91c1c">' + r.expired + ' expired batch' + (r.expired > 1 ? 'es' : '') + '</b> (' + r.expiredUnits + ' units still in stock)' : '') +
+      (r.expired && r.soon ? ' &middot; ' : '') +
+      (r.soon ? '<b style="color:#b45309">' + r.soon + ' expiring within ' + SOON_DAYS + ' days</b> (' + r.soonUnits + ' units)' : '') +
+      '</div><div class="text-xs text-gray-600">' + names.replace(/[&<>]/g, "") + '</div></div>' +
+      '<button type="button" class="border border-blue-900 text-blue-900 font-semibold px-3 py-1 rounded hover:bg-blue-50" id="acxExpiryBtn">View</button>';
+    var b = D.getElementById("acxExpiryBtn");
+    if (b) b.onclick = function () { try { if (typeof window.showReport === "function") window.showReport("expiredItemsPanel"); } catch (e) {} };
+  }
+  window.__acxExpiryRender = render;
+  window.addEventListener("load", function () { setTimeout(render, 2500); setInterval(render, 60000); });
+  D.addEventListener("acx:data-changed", function () { setTimeout(render, 300); });
+})();
+
+/* ===== Browser storage watch =====
+   Books keeps its data in the browser (localStorage, about 5 MB). When that is full, saves start to fail, so warn well before. */
+(function () {
+  "use strict";
+  if (window.__acxStorageWatch) return;
+  window.__acxStorageWatch = true;
+  var D = document, QUOTA = 5 * 1024 * 1024, WARN = 0.7;
+  function usedChars() { var n = 0; try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); n += k.length + String(localStorage.getItem(k) || "").length; } } catch (e) {} return n; }
+  function status() { var used = usedChars() * 2, pct = Math.min(100, Math.round(used / QUOTA * 100)); return { usedMB: Math.round(used / 1048576 * 10) / 10, pct: pct, warn: used / QUOTA >= WARN }; }
+  window.__acxStorageStatus = status;
+  function check() {
+    var s = status(), bar = D.getElementById("acxStorageBar");
+    if (!s.warn || sessionStorage.getItem("acxStorageDismissed")) { if (bar) bar.remove(); return; }
+    if (!bar) {
+      bar = D.createElement("div"); bar.id = "acxStorageBar";
+      bar.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);bottom:12px;z-index:99999;max-width:92vw;background:#fffbeb;border:1px solid #f59e0b;color:#78350f;border-radius:8px;padding:8px 12px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;gap:10px;align-items:center";
+      D.body.appendChild(bar);
+    }
+    bar.innerHTML = '<span>\u26a0\ufe0f Browser storage is <b>' + s.pct + '%</b> full (' + s.usedMB + ' MB of about 5 MB). Export a backup and clear old data before it fills up, or saves will start to fail.</span><button type="button" style="border:1px solid #b45309;border-radius:6px;padding:2px 8px" id="acxStorageX">Dismiss</button>';
+    D.getElementById("acxStorageX").onclick = function () { try { sessionStorage.setItem("acxStorageDismissed", "1"); } catch (e) {} bar.remove(); };
+  }
+  window.__acxStorageCheck = check;
+  window.addEventListener("load", function () { setTimeout(check, 5000); setInterval(check, 600000); });
 })();
