@@ -2006,11 +2006,17 @@ try{
   function convert(rawRows, existing){
     var present = {}, report = { rows: 0, skipped: 0, noSku: 0, noBuyAcc: 0, noSellAcc: 0, unknown: {} };
     var out = [];
-    var byKey = {};
+    /* Items are identified by NAME. The "SKU" here is a unit-of-measure code (PCS, KGM ...) shared by many items, so it may only be used
+       when it is unique: one existing item AND one row in the file. (Matching on it first made every PCS row overwrite the same item.) */
+    var nmz = function(v){ return str(v).toLowerCase().replace(/\s+/g, " "); };
+    var byKey = {}, skuN = {}, fileSku = {};
     (existing || []).forEach(function(it){
       if (!it) return;
-      if (str(it.sku)) byKey["s:" + str(it.sku).toLowerCase()] = it;
-      if (str(it.name)) byKey["n:" + str(it.name).toLowerCase()] = it;
+      if (str(it.sku)) { var sk = "s:" + str(it.sku).toLowerCase(); byKey[sk] = it; skuN[sk] = (skuN[sk] || 0) + 1; }
+      if (str(it.name)) byKey["n:" + nmz(it.name)] = it;
+    });
+    rawRows.forEach(function(raw){
+      Object.keys(raw).forEach(function(h){ if (HMAP[norm(h)] === "sku") { var s0 = str(raw[h]).toLowerCase(); if (s0) fileSku[s0] = (fileSku[s0] || 0) + 1; } });
     });
     rawRows.forEach(function(raw){
       var f = {}, extra = {}, has = {};
@@ -2022,7 +2028,7 @@ try{
       var name = str(f.name);
       if (!name) { report.skipped++; return; }
       var sku = str(f.sku);
-      var old = (sku && byKey["s:" + sku.toLowerCase()]) || byKey["n:" + name.toLowerCase()] || null;
+      var old = byKey["n:" + nmz(name)] || (sku && skuN["s:" + sku.toLowerCase()] === 1 && fileSku[sku.toLowerCase()] === 1 ? byKey["s:" + sku.toLowerCase()] : null) || null;
 
       function acct(codeVal, nameVal, oldVal, label){
         var v = str(codeVal), a = null;
@@ -2083,21 +2089,24 @@ try{
         if (!res.items.length) { alert("⚠️ No usable rows. Each row needs an item Name (headers such as Name, Item or Product)."); return; }
         /* MERGE (not replace): update items that match by SKU / name, add new ones, keep everything else already in the warehouse */
         var base = Array.isArray(existing) ? existing.slice() : [];
-        var idxS = {}, idxN = {};
+        var nmz = function(v){ return str(v).toLowerCase().replace(/\s+/g, " "); };
+        var idxS = {}, idxN = {}, skuCnt = {}, fileCnt = {};
         base.forEach(function(it, i){
           if (!it) return;
-          if (str(it.sku)) idxS[str(it.sku).toLowerCase()] = i;
-          if (str(it.name)) idxN[str(it.name).toLowerCase()] = i;
+          if (str(it.sku)) { var k0 = str(it.sku).toLowerCase(); idxS[k0] = i; skuCnt[k0] = (skuCnt[k0] || 0) + 1; }
+          if (str(it.name)) idxN[nmz(it.name)] = i;
         });
+        res.items.forEach(function(it){ var k1 = str(it.sku).toLowerCase(); if (k1) fileCnt[k1] = (fileCnt[k1] || 0) + 1; });
         var added = 0, updated = 0;
         res.items.forEach(function(it){
-          var k = str(it.sku).toLowerCase(), n = str(it.name).toLowerCase();
-          var at = (k && idxS[k] !== undefined) ? idxS[k] : (n && idxN[n] !== undefined ? idxN[n] : -1);
+          var k = str(it.sku).toLowerCase(), n = nmz(it.name);
+          /* match by NAME; the SKU / unit code only when it is unique (see convert) */
+          var at = (n && idxN[n] !== undefined) ? idxN[n] : ((k && skuCnt[k] === 1 && fileCnt[k] === 1 && idxS[k] !== undefined) ? idxS[k] : -1);
           if (at >= 0) { base[at] = it; updated++; }
           else {
             base.push(it); added++;
             var ni = base.length - 1;
-            if (k) idxS[k] = ni;
+            if (k) { idxS[k] = ni; skuCnt[k] = (skuCnt[k] || 0) + 1; }
             if (n) idxN[n] = ni;
           }
         });

@@ -199,12 +199,14 @@ try{
     return num(v);
   };
   function findIn(list, sku, name) {
-    for (var i = 0; i < list.length; i++) {
-      var x = list[i]; if (!x) continue;
-      if (sku && x.sku && low(x.sku) === low(sku)) return x;
-    }
+    /* items are identified by NAME; the SKU is a unit-of-measure code shared by many items, so it is only a fallback and only when unique */
     for (var j = 0; j < list.length; j++) {
       var y = list[j]; if (y && name && low(y.name) === low(name)) return y;
+    }
+    if (sku) {
+      var hit = null, cnt = 0;
+      for (var i = 0; i < list.length; i++) { var x = list[i]; if (x && x.sku && low(x.sku) === low(sku)) { cnt++; hit = hit || x; } }
+      if (cnt === 1) return hit;
     }
     return null;
   }
@@ -217,16 +219,17 @@ try{
     /* O(1) item lookup by SKU (then name) across all warehouses; the index is built once per open form */
     f.find = function (sku, name) {
       if (!idx) {
-        idx = { s: Object.create(null), n: Object.create(null) };
+        idx = { s: Object.create(null), n: Object.create(null), c: Object.create(null) };
         warehouses().forEach(function (wh) {
           f(wh).forEach(function (x) {
             if (!x) return; var a = low(x.sku), b = low(x.name);
-            if (a && !(a in idx.s)) idx.s[a] = x; if (b && !(b in idx.n)) idx.n[b] = x;
+            if (a) { idx.c[a] = (idx.c[a] || 0) + 1; if (!(a in idx.s)) idx.s[a] = x; }
+            if (b && !(b in idx.n)) idx.n[b] = x;
           });
         });
       }
       var s1 = low(sku), n1 = low(name);
-      return (s1 && idx.s[s1]) || (n1 && idx.n[n1]) || null;
+      return (n1 && idx.n[n1]) || (s1 && idx.c[s1] === 1 && idx.s[s1]) || null;      /* name first; a SKU / unit code only when it is unique */
     };
     return f;
   }
@@ -237,7 +240,7 @@ try{
     warehouses().forEach(function (wh) {
       inv(wh).forEach(function (it) {
         if (!it || !it.name || it.active === false) return;
-        var key = low(it.sku) || low(it.name);
+        var key = low(it.name);   /* the SKU is a unit code shared by many items: it must not merge different items into one entry */
         var c = map[key];
         if (!c) { c = map[key] = { key: key, lname: low(it.name), lsku: low(it.sku), name: it.name, sku: it.sku || '', unit: itemUnit(it), cost: itemCost(it), total: 0, byWh: {}, isBundle: !!it.isBundle }; order.push(key); }
         c.total = r6(c.total + num(it.qty)); c.byWh[wh] = r6(num(c.byWh[wh]) + num(it.qty));
