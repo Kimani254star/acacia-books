@@ -73,6 +73,11 @@ button:hover{background:var(--brand2)}button.alt{background:#2b3170}
     <label>Meeting code or link</label><input id="code" placeholder="acacia-4821-weekly">
     <button class="alt" onclick="joinMeeting()">Join meeting</button>
   </div>
+  <div class="card" id="webCard" style="display:none;grid-column:1/-1">
+    <h2>🎓 Training webinars</h2>
+    <p class="s">Sessions your company is invited to. Register, then join here when it opens (15 minutes before the start).</p>
+    <div id="webList"></div>
+  </div>
 </div>
 
 <div id="room">
@@ -121,7 +126,7 @@ function roomFromInput(v){
 }
 function inviteLink(code){return location.origin+location.pathname+"?room="+encodeURIComponent(code)}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
-function me(){try{return JSON.parse(localStorage.getItem("loggedInUser")||"null")||{}}catch(e){return {}}}
+function me(){try{var u=JSON.parse(localStorage.getItem("loggedInUser")||"null");if(u&&(u.email||u.username))return u;var c=JSON.parse(localStorage.getItem("acaciaCrmSession")||"null");if(c){c=c.user||c;return {username:c.fullName||c.name||c.email,email:c.email||c.username,companyId:c.companyId||c.company_id,role:c.role}}return u||{}}catch(e){return {}}}
 function isAdmin(){var u=me();return !!(u.companyId||u.company_id)&&/^(admin|owner|administrator)$/i.test(String(u.role||""))||u.isAdmin===true}
 function rpc(fn,args){return fetch(SUPA_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"Content-Type":"application/json",apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY},body:JSON.stringify(args)}).then(function(r){return r.ok?r.json():r.json().then(function(e){throw new Error(e.message||"Request failed")})})}
 function who(){var u=me();return {c:String(u.companyId||u.company_id||""),l:String(u.loginId||u.login_id||u.username||u.email||"")}}
@@ -474,8 +479,56 @@ window.addEventListener("beforeunload",function(){if(joined){try{chan.untrack()}
 window.addEventListener("resize",function(){if(joined)render()});
 
 if(!isAdmin()){$("cardTitle").textContent="🎥 Your details";$("cardSub").textContent="Only admins can start and record meetings. Enter your name, choose your mic/camera, then use the code or link your admin shared with you and join on the right.";$("titleBox").style.display="none";$("startBtn").style.display="none"}
+/* ================= training webinars (registered in the bell, joined here) ================= */
+var WEB=[],WREG=[];
+function wLogin(){var u=me();return String(u.email||u.username||u.loginId||u.login_id||"").toLowerCase()}
+function wCompany(){var u=me();return String(u.companyId||u.company_id||"")}
+function wH(){return {"Content-Type":"application/json",apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY}}
+function wEnd(x){return new Date(x.starts_at).getTime()+(x.duration_min||60)*60000}
+function wRoom(x){var m=/[?&]room=([^&#]+)/.exec(x.join_url||"");return m?decodeURIComponent(m[1]):""}
+function wFmt(d){return new Date(d).toLocaleString([],{dateStyle:"medium",timeStyle:"short"})}
+function loadWebinars(){
+  var lid=wLogin(),co=wCompany().toLowerCase();if(!lid)return;
+  Promise.all([
+    fetch(SUPA_URL+"/rest/v1/acacia_webinars?status=eq.scheduled&order=starts_at.asc&limit=50",{headers:wH()}).then(function(r){return r.ok?r.json():[]}).catch(function(){return []}),
+    rpc("acx_my_webinars",{p_login:lid}).catch(function(){return []})
+  ]).then(function(r){
+    WREG=(r[1]||[]).map(function(x){return String(x&&x.webinar_id?x.webinar_id:x)});
+    WEB=(r[0]||[]).filter(function(x){
+      var ids=(x.company_ids||[]).map(function(c){return String(c).toLowerCase()});
+      return wEnd(x)>Date.now()&&(!ids.length||ids.indexOf(co)>-1);
+    });
+    drawWebinars();
+  });
+}
+function drawWebinars(){
+  var box=$("webCard");if(!box)return;
+  if(!WEB.length){box.style.display="none";return}
+  box.style.display="";
+  $("webList").innerHTML=WEB.map(function(x){
+    var reg=WREG.indexOf(String(x.id))>-1,opens=new Date(x.starts_at).getTime()-15*60000,isOpen=Date.now()>=opens,room=wRoom(x),btn;
+    if(!reg)btn='<button class="alt" onclick="webRegister(\''+x.id+'\')">Register</button>';
+    else if(isOpen)btn=room?'<button onclick="webJoin(\''+x.id+'\')">📹 Join now</button>':'<a href="'+esc(x.join_url||"#")+'" target="_blank" rel="noopener"><button>📹 Join now</button></a>';
+    else btn='<span class="s">✓ Registered · join opens '+wFmt(opens)+'</span>';
+    return '<div style="border-top:1px solid #2a2f3a;padding:10px 0"><b>'+esc(x.title)+'</b><div class="s">'+wFmt(x.starts_at)+' · '+(x.duration_min||60)+' min'+(x.host?' · Host: '+esc(x.host):'')+'</div>'+(x.invite_note?'<div class="s" style="color:inherit">'+esc(x.invite_note)+'</div>':'')+'<div style="margin-top:6px">'+btn+'</div></div>';
+  }).join("");
+}
+function webRegister(id){
+  var u=me();
+  fetch(SUPA_URL+"/rest/v1/acacia_webinar_registrations?on_conflict=webinar_id,login_id",{method:"POST",headers:Object.assign(wH(),{Prefer:"resolution=ignore-duplicates,return=minimal"}),body:JSON.stringify({webinar_id:id,login_id:wLogin(),user_name:u.fullName||u.name||u.username||"",company_id:wCompany()})})
+  .then(function(r){return r.ok?null:r.text()}).then(function(err){
+    if(err){toast(/full/i.test(err)?"Sorry, this session is full.":"Could not register. Try again.");return}
+    WREG.push(String(id));toast("You're registered. Join opens 15 minutes before the start.");drawWebinars();
+  }).catch(function(){toast("Could not reach the server.")});
+}
+function webJoin(id){
+  var x=WEB.find(function(v){return String(v.id)===String(id)});if(!x)return;
+  var n=$("name").value.trim();if(!n){toast("Enter your name above (Your name), then press Join again.");$("name").focus();return}
+  $("code").value=wRoom(x);open_(wRoom(x),x.title);
+}
+loadWebinars();setInterval(loadWebinars,60000);
 // Prefill + auto-join from invite link
-$("name").value=localStorage.getItem("acaciaMeetName")||"";
+$("name").value=localStorage.getItem("acaciaMeetName")||me().fullName||me().name||me().username||"";
 var q=new URLSearchParams(location.search).get("room");
 if(q){$("code").value=q;$("link").textContent="You were invited to: "+q+" — enter your name and press Join."}
 </script>

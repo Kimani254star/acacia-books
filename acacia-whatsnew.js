@@ -15,6 +15,12 @@
   var norm = function(x){ return String(x == null ? '' : x).trim().toLowerCase(); };
   var mine = function(r){ return !r.company_ids || !r.company_ids.length || r.company_ids.map(norm).indexOf(norm(CFG.companyId)) > -1; };
   var dt = function(d){ return new Date(d).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }); };
+  var ikey = function(x){ return x.id + '|' + (x.invited_at || ''); };
+  var meetHref = function(x){
+    var u = x.join_url || '', m = /[?&]room=([^&#]+)/.exec(u);
+    if (m) return (CFG.meetUrl || 'meet.html') + '?room=' + m[1] + '&webinar=' + encodeURIComponent(x.id);
+    return safe(u);
+  };
   var end = function(x){ return new Date(x.starts_at).getTime() + (x.duration_min || 60) * 60000; };
 
   function css(){
@@ -49,9 +55,12 @@
   function toast(m){ var t = $('#awnToast'); t.textContent = m; t.style.display = 'block'; setTimeout(function(){ t.style.display = 'none'; }, 5000); }
   function unseen(){
     var sa = jg(K('a')), sw = jg(K('w'));
-    return { a: A.filter(function(x){ return sa.indexOf(x.id) < 0; }), w: W.filter(function(x){ return x.status === 'scheduled' && end(x) > Date.now() && sw.indexOf(x.id) < 0; }) };
+    var si = jg(K('i')), rg = jg(K('r'));
+    return { a: A.filter(function(x){ return sa.indexOf(x.id) < 0; }),
+      w: W.filter(function(x){ return x.status === 'scheduled' && end(x) > Date.now() && sw.indexOf(x.id) < 0; }),
+      i: W.filter(function(x){ return x.invited_at && x.status === 'scheduled' && end(x) > Date.now() && rg.indexOf(x.id) < 0 && si.indexOf(ikey(x)) < 0; }) };
   }
-  function dot(){ var u = unseen(), n = u.a.length + u.w.length, d = $('#awnDot'); if (d) { d.textContent = n; d.style.display = n ? 'block' : 'none'; } }
+  function dot(){ var u = unseen(), ids = {}; u.w.concat(u.i).forEach(function(x){ ids[x.id] = 1; }); var n = u.a.length + Object.keys(ids).length, d = $('#awnDot'); if (d) { d.textContent = n; d.style.display = n ? 'block' : 'none'; } }
   function toggle(on){
     var p = $('#awnPanel'); on = on == null ? !p.classList.contains('open') : on;
     p.classList.toggle('open', on);
@@ -73,10 +82,11 @@
         var open = Date.now() >= new Date(x.starts_at).getTime() - 15 * 60000 && !done, b = '';
         if (done) b = safe(x.recording_url) ? '<a href="' + esc(x.recording_url) + '" target="_blank" rel="noopener">▶ Watch recording</a>' : '<span class="awn-meta">Session ended</span>';
         else if (!r) b = '<button class="awn-btn p" data-reg="' + x.id + '"' + (full ? ' disabled' : '') + '>' + (full ? 'Full' : 'Register') + '</button>';
-        else b = (open && safe(x.join_url) ? '<a class="awn-btn p" href="' + esc(x.join_url) + '" target="_blank" rel="noopener">Join now</a>' : '<span class="awn-tag">✓ Registered</span> <span class="awn-meta">Join link opens 15 min before</span>') + ' <button class="awn-btn" data-ics="' + x.id + '">Add to calendar</button>';
-        return '<div class="awn-card' + (u.w.indexOf(x) > -1 ? ' awn-new' : '') + '"><div class="awn-meta">' + (x.module ? '<span class="awn-tag">' + esc(x.module) + '</span>' : '') + '<span>' + dt(x.starts_at) + ' · ' + (x.duration_min || 60) + ' min</span></div><h4>' + esc(x.title) + '</h4>' + (x.host ? '<div class="awn-meta">Host: ' + esc(x.host) + (x.capacity && !done ? ' · ' + Math.max(0, x.capacity - n) + ' seats left' : '') + '</div>' : '') + (x.description ? '<p>' + esc(x.description) + '</p>' : '') + b + '</div>';
+        else b = (open && meetHref(x) ? '<a class="awn-btn p" href="' + esc(meetHref(x)) + '" target="_blank" rel="noopener">📹 Join in Acacia Meet</a>' : '<span class="awn-tag">✓ Registered</span> <span class="awn-meta">Join link opens 15 min before</span>') + ' <button class="awn-btn" data-ics="' + x.id + '">Add to calendar</button>';
+        return '<div class="awn-card' + (u.w.indexOf(x) > -1 || u.i.indexOf(x) > -1 ? ' awn-new' : '') + '"><div class="awn-meta">' + (u.i.indexOf(x) > -1 ? '<span class="awn-tag" style="background:#fef3c7;color:#92400e">📩 You are invited</span>' : '') + (x.module ? '<span class="awn-tag">' + esc(x.module) + '</span>' : '') + '<span>' + dt(x.starts_at) + ' · ' + (x.duration_min || 60) + ' min</span></div><h4>' + esc(x.title) + '</h4>' + (x.host ? '<div class="awn-meta">Host: ' + esc(x.host) + (x.capacity && !done ? ' · ' + Math.max(0, x.capacity - n) + ' seats left' : '') + '</div>' : '') + (x.invite_note && !done ? '<p style="color:var(--t)"><b>' + esc(x.invite_note) + '</b></p>' : '') + (x.description ? '<p>' + esc(x.description) + '</p>' : '') + b + '</div>';
       }).join('') : '<p style="color:var(--m)">No trainings scheduled yet.</p>';
       js(K('w'), W.map(function(x){ return x.id; }));
+      var si = jg(K('i')); W.forEach(function(x){ if (x.invited_at && si.indexOf(ikey(x)) < 0) si.push(ikey(x)); }); js(K('i'), si.slice(-200));
     }
     $('#awnBody').innerHTML = h; dot();
   }
@@ -109,9 +119,14 @@
       var mr = await fetch(CFG.url + '/rest/v1/rpc/acx_my_webinars', { method: 'POST', headers: hd(), body: JSON.stringify({ p_login: String(CFG.loginId).toLowerCase() }) }).then(function(x){ return x.ok ? x.json() : null; }).catch(function(){ return null; });
       if (Array.isArray(mr)) { var ids = mr.map(function(x){ return x && x.webinar_id ? x.webinar_id : x; }); var keep = jg(K('r')); ids.forEach(function(i){ if (keep.indexOf(i) < 0) keep.push(i); }); js(K('r'), keep); }
     } catch(e){}
-    dot(); draw();
     var un = unseen();
-    if (!popped && (un.a.length || un.w.length)) { popped = true; tab = un.a.length ? 'new' : 'train'; setTimeout(function(){ toggle(true); }, 1200); }
+    un.i.forEach(function(x){
+      var nk = K('n') + '_' + ikey(x); if (warned[nk] || localStorage.getItem(nk)) return; warned[nk] = 1; try { localStorage.setItem(nk, '1'); } catch(e){}
+      try { if (typeof w.addNotification === 'function') w.addNotification('📩 Training invite: ' + x.title + ' — ' + dt(x.starts_at) + '. Open the bell > Training to register.', { force: true, type: 'info', key: 'webinar-' + x.id }); } catch(e){}
+    });
+    dot(); draw();
+    if (!popped && (un.a.length || un.w.length || un.i.length)) { popped = true; tab = (un.i.length || un.w.length) ? 'train' : 'new'; if (un.i.length) toast('📩 You are invited to training: ' + un.i[0].title); setTimeout(function(){ toggle(true); }, 1200); }
+    else if (popped && un.i.length) { toast('📩 New training invite: ' + un.i[0].title); dot(); }
     var reg = jg(K('r'));
     W.forEach(function(x){
       var d = new Date(x.starts_at) - Date.now(); if (reg.indexOf(x.id) < 0 || d <= 0) return;
@@ -124,7 +139,7 @@
       if (!o || !o.loginId) return console.warn('[AcaciaWhatsNew] loginId is required');
       CFG = Object.assign({ url: 'https://xglsampckermarjpczdf.supabase.co', key: 'sb_publishable_x-dPR7pzhvJgag9soW0I8w_yfKTmi6A' }, o);
       css(); build(); load();
-      if (!w.__awnTimer) { w.__awnTimer = setInterval(function(){ load(); }, 300000); document.addEventListener('visibilitychange', function(){ if (!document.hidden) load(); }); }
+      if (!w.__awnTimer) { w.__awnTimer = setInterval(function(){ load(); }, 60000); document.addEventListener('visibilitychange', function(){ if (!document.hidden) load(); }); }
     },
     refresh: function(){ return load(); }, open: function(t){ if (t) tab = t; toggle(true); }
   };
@@ -133,7 +148,9 @@
     var last = '';
     setInterval(function(){
       var u = null; try { u = JSON.parse(localStorage.getItem('loggedInUser') || 'null'); } catch(e){}
-      var lid = u && (u.email || u.username); var key = lid && u.companyId ? String(lid).toLowerCase() + '|' + u.companyId : '';
+      if (!u || !(u.email || u.username)) { try { var cs = JSON.parse(localStorage.getItem('acaciaCrmSession') || 'null'); if (cs) { cs = cs.user || cs; u = { email: cs.email || cs.username || cs.loginId, companyId: cs.companyId || cs.company_id, fullName: cs.fullName || cs.name }; } } catch(e){} }
+      var lid = u && (u.email || u.username); var key = lid && (u.companyId || u.company_id) ? String(lid).toLowerCase() + '|' + (u.companyId || u.company_id) : '';
+      if (u && !u.companyId && u.company_id) u.companyId = u.company_id;
       var lay = document.getElementById('layout'); if (lay && lay.classList.contains('hidden')) key = '';
       if (key === last) return; last = key;
       var b = $('#awnBell'), p = $('#awnPanel');
