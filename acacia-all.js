@@ -1745,3 +1745,24 @@
   window.__acxStorageCheck = check;
   window.addEventListener("load", function () { setTimeout(check, 5000); setInterval(check, 600000); });
 })();
+
+/* ===== Multi-currency: a customer's receivables are kept in KES; show them in the customer's own currency =====
+   Open invoices in that currency convert back at the rate they were issued at (a USD 100 invoice shows $100.00, not $13,000.00);
+   anything else (opening balance) converts at today's rate. */
+(function () {
+  "use strict";
+  if (window.__acxRecvIn) return;
+  window.__acxRecvIn = function (c) {
+    var cur = (c && c.currency) || "KES", total = parseFloat(c && c.receivables) || 0;
+    if (cur === "KES") return total;
+    var today = 1; try { today = typeof window.convertToKES === "function" ? (window.convertToKES(1, cur) || 1) : 1; } catch (e) {}
+    var inv = []; try { inv = JSON.parse(localStorage.getItem("invoices") || "[]"); } catch (e) {}
+    var inCur = 0, inKes = 0;
+    inv.forEach(function (i) {
+      if (!i || i.customer !== c.name || (i.currency || "KES") !== cur) return;
+      var bal = parseFloat(i.balance != null ? i.balance : i.totalKES) || 0; if (bal <= 0) return;
+      var rate = parseFloat(i.exchangeRate) || today; inCur += bal / rate; inKes += bal;
+    });
+    return inCur + Math.max(0, total - inKes) / today;
+  };
+})();
