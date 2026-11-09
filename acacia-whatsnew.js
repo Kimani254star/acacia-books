@@ -3,7 +3,7 @@
    Add <script src="acacia-whatsnew.js" defer></script>, then after login call:
    AcaciaWhatsNew.init({ loginId:'user@email', companyId:'COMPANY_ID', userName:'Jane', mount:'#topbar' }) */
 (function(w){
-  var CFG = {}, A = [], W = [], N = {}, tab = 'new', popped = false, warned = {};
+  var CFG = {}, A = [], W = [], N = {}, tab = 'new', popped = false, warned = {}, ERR = {}, RAW = {};
   var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var safe = function(u){ return /^https?:\/\//i.test(u || '') ? u : ''; };
   var $ = function(s){ return document.querySelector(s); };
@@ -11,7 +11,7 @@
   var jg = function(k){ try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch(e){ return []; } };
   var js = function(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
   var hd = function(x){ return Object.assign({ apikey: CFG.key, Authorization: 'Bearer ' + CFG.key, 'Content-Type': 'application/json' }, x || {}); };
-  var get = function(p){ return fetch(CFG.url + '/rest/v1/' + p, { headers: hd() }).then(function(r){ if (!r.ok) { r.text().then(function(t){ console.warn('[AcaciaWhatsNew] could not read ' + p.split('?')[0] + ' (' + r.status + '). Run acacia_webinars_fix.sql in Supabase.', t); }); return []; } return r.json(); }).catch(function(){ return []; });};
+  var get = function(p){ var t0 = p.split('?')[0]; return fetch(CFG.url + '/rest/v1/' + p, { headers: hd() }).then(function(r){ if (!r.ok) { return r.text().then(function(t){ ERR[t0] = r.status + ' ' + String(t).slice(0, 160); console.warn('[AcaciaWhatsNew] could not read ' + t0 + ' (' + r.status + ')', t); return []; }); } delete ERR[t0]; return r.json(); }).catch(function(e){ ERR[t0] = 'network: ' + e; return []; }); };
   var norm = function(x){ return String(x == null ? '' : x).trim().toLowerCase(); };
   var mine = function(r){ return !r.company_ids || !r.company_ids.length || r.company_ids.map(norm).indexOf(norm(CFG.companyId)) > -1; };
   var dt = function(d){ return new Date(d).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }); };
@@ -52,6 +52,13 @@
       if (x.dataset.ics) ics(x.dataset.ics);
     });
   }
+  function diag(t, n){
+    var e = ERR[t];
+    return '<p style="color:var(--m);font-size:12px;border-top:1px dashed var(--l);padding-top:8px;margin-top:12px">' +
+      (e ? '⚠️ The app could not read <b>' + t + '</b> (' + esc(e) + '). Run acacia_webinar_invites.sql in Supabase.' :
+       (n ? 'The server has ' + n + ' item(s), but none are for this company (' + esc(CFG.companyId) + ').' : 'Connected. The server returned 0 items.')) +
+      '<br>Signed in as ' + esc(CFG.loginId) + '</p>';
+  }
   function toast(m){ var t = $('#awnToast'); t.textContent = m; t.style.display = 'block'; setTimeout(function(){ t.style.display = 'none'; }, 5000); }
   function unseen(){
     var sa = jg(K('a')), sw = jg(K('w'));
@@ -74,7 +81,7 @@
       h = A.length ? A.map(function(a){
         var st = (a.steps || []).map(function(s){ return '<li>' + esc(s) + '</li>'; }).join('');
         return '<div class="awn-card' + (u.a.indexOf(a) > -1 ? ' awn-new' : '') + '"><div class="awn-meta">' + (a.module ? '<span class="awn-tag">' + esc(a.module) + '</span>' : '') + '<span>' + dt(a.published_at) + '</span></div><h4>' + esc(a.title) + '</h4>' + (a.summary ? '<p>' + esc(a.summary) + '</p>' : '') + (st ? '<details' + (u.a.indexOf(a) > -1 ? ' open' : '') + '><summary>How to use it</summary><ol>' + st + '</ol></details>' : '') + (safe(a.video_url) ? '<a href="' + esc(a.video_url) + '" target="_blank" rel="noopener">▶ Watch video</a>' : '') + (safe(a.link) ? '<a href="' + esc(a.link) + '" target="_blank" rel="noopener">Read guide</a>' : '') + '</div>';
-      }).join('') : '<p style="color:var(--m)">Nothing new yet.</p>';
+      }).join('') : '<p style="color:var(--m)">Nothing new yet.</p>' + diag('acacia_announcements', RAW.a);
       js(K('a'), A.map(function(x){ return x.id; }));
     } else {
       h = W.length ? W.map(function(x){
@@ -84,7 +91,7 @@
         else if (!r) b = '<button class="awn-btn p" data-reg="' + x.id + '"' + (full ? ' disabled' : '') + '>' + (full ? 'Full' : 'Register') + '</button>';
         else b = (open && meetHref(x) ? '<a class="awn-btn p" href="' + esc(meetHref(x)) + '" target="_blank" rel="noopener">📹 Join in Acacia Meet</a>' : '<span class="awn-tag">✓ Registered</span> <span class="awn-meta">Join link opens 15 min before</span>') + ' <button class="awn-btn" data-ics="' + x.id + '">Add to calendar</button>';
         return '<div class="awn-card' + (u.w.indexOf(x) > -1 || u.i.indexOf(x) > -1 ? ' awn-new' : '') + '"><div class="awn-meta">' + (u.i.indexOf(x) > -1 ? '<span class="awn-tag" style="background:#fef3c7;color:#92400e">📩 You are invited</span>' : '') + (x.module ? '<span class="awn-tag">' + esc(x.module) + '</span>' : '') + '<span>' + dt(x.starts_at) + ' · ' + (x.duration_min || 60) + ' min</span></div><h4>' + esc(x.title) + '</h4>' + (x.host ? '<div class="awn-meta">Host: ' + esc(x.host) + (x.capacity && !done ? ' · ' + Math.max(0, x.capacity - n) + ' seats left' : '') + '</div>' : '') + (x.invite_note && !done ? '<p style="color:var(--t)"><b>' + esc(x.invite_note) + '</b></p>' : '') + (x.description ? '<p>' + esc(x.description) + '</p>' : '') + b + '</div>';
-      }).join('') : '<p style="color:var(--m)">No trainings scheduled yet.</p>';
+      }).join('') : '<p style="color:var(--m)">No trainings scheduled yet.</p>' + diag('acacia_webinars', RAW.w);
       js(K('w'), W.map(function(x){ return x.id; }));
       var si = jg(K('i')); W.forEach(function(x){ if (x.invited_at && si.indexOf(ikey(x)) < 0) si.push(ikey(x)); }); js(K('i'), si.slice(-200));
     }
@@ -112,6 +119,7 @@
       get('acacia_webinars?status=in.(scheduled,completed)&order=starts_at.asc&limit=50'),
       fetch(CFG.url + '/rest/v1/rpc/acx_webinar_counts', { method: 'POST', headers: hd(), body: '{}' }).then(function(x){ return x.ok ? x.json() : []; }).catch(function(){ return []; })
     ]);
+    RAW = { a: r[0].length, w: r[1].length };
     A = r[0].filter(mine);
     W = r[1].filter(mine).sort(function(a, b){ var da = end(a) < Date.now(), db = end(b) < Date.now(); return da === db ? (da ? new Date(b.starts_at) - new Date(a.starts_at) : new Date(a.starts_at) - new Date(b.starts_at)) : da - db; });
     N = {}; (r[2] || []).forEach(function(c){ N[c.webinar_id] = Number(c.n); });
