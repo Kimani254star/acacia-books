@@ -2157,6 +2157,7 @@ try{
           }
         });
         res.report.added = added; res.report.updated = updated;
+        try { if (window.acxEnsureItemIds) window.acxEnsureItemIds(base, existing, false, w); } catch (e1) {}
         localStorage.setItem("inventory_" + w, JSON.stringify(base));
         ["syncInventoryBalancesToCOA"].forEach(function(fn){ if (typeof window[fn] === "function") { try { window[fn](); } catch (e) {} } });
         ["renderInventoryTable", "renderAccounts", "renderBalanceSheet", "renderInventorySummary", "renderStockValuation", "renderStockReports"].forEach(function(fn){

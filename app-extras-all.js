@@ -5562,3 +5562,80 @@ try{
   };
 })();
 }catch(e){console.error("[acacia-doc-preview.js]",e)}
+
+/* ---- merged: item ids (imported/cloned stock sync) ---- */
+try{
+/* acacia-item-ids.js - gives every stock item its own permanent "id" so Books, Inventory, Sell and POS can match items.
+ *
+ * Why imported items did not sync but cloned ones did: the cloud sync identifies a record by id, else by sku.
+ * Imported items had no id and often shared one SKU code (PCS, KGM ...) or had none, so they collided with
+ * each other (and with "deleted" markers for the same SKU) and were dropped from the sync. Cloned items got a
+ * unique "-COPY" sku, so they synced. A unique id removes the problem for every way of adding stock.
+ * Load after acacia-live-sync.js in index.html. */
+(function (W) {
+  "use strict";
+  if (W.__acxItemIds) return;
+  W.__acxItemIds = true;
+
+  function nm(v) { return String(v == null ? "" : v).trim().toLowerCase().replace(/\s+/g, " "); }
+  function h32(s) { var h = 5381, i; s = String(s); for (i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+  function rnd() { return "itm-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+  /* items: array to fix IN PLACE; prev: the array stored before (to keep ids of items that already had one);
+     legacy: use a repeatable id (so two browsers fixing the same old stock agree) instead of a random one. */
+  function ensure(items, prev, legacy, wh) {
+    if (!Array.isArray(items)) return false;
+    var byName = {}, seen = {}, changed = false, counts = {};
+    (Array.isArray(prev) ? prev : []).forEach(function (p) { if (p && p.id && nm(p.name)) byName[nm(p.name)] = p.id; });
+    items.forEach(function (it) {
+      if (!it || typeof it !== "object") return;
+      var id = it.id;
+      if (id != null && id !== "" && typeof id !== "object" && !seen[id]) { seen[id] = 1; return; }
+      var had = id != null && id !== "";                      /* duplicate id (e.g. a clone copied it) -> give the later one its own */
+      var cand = !had && byName[nm(it.name)];
+      if (cand && !seen[cand]) { it.id = cand; seen[cand] = 1; changed = true; return; }
+      if (legacy && !had) {
+        var base = "itm-" + h32((wh || "") + "|" + nm(it.name) + "|" + nm(it.sku)), n = (counts[base] = (counts[base] || 0) + 1);
+        id = n > 1 ? base + "-" + n : base;
+      } else id = rnd();
+      while (seen[id]) id = rnd();
+      it.id = id; seen[id] = 1; changed = true;
+    });
+    return changed;
+  }
+  W.acxEnsureItemIds = ensure;
+
+  function read(k) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return Array.isArray(v) ? v : null; } catch (e) { return null; } }
+
+  /* every save from Books (add, edit, clone, price changes ...) */
+  function wrapSave() {
+    if (typeof W.saveInventory !== "function" || W.saveInventory.__ids) return typeof W.saveInventory === "function";
+    var orig = W.saveInventory;
+    W.saveInventory = function (wh, items) {
+      try { ensure(items, read("inventory_" + wh), false, wh); } catch (e) { console.warn("[item-ids]", e); }
+      return orig.apply(this, arguments);
+    };
+    W.saveInventory.__ids = true;
+    return true;
+  }
+
+  /* one-time repair of stock already saved without ids (runs again when new warehouses appear) */
+  function migrate() {
+    var u; try { u = JSON.parse(localStorage.getItem("loggedInUser") || "null"); } catch (e) { u = null; }
+    if (!u || !u.companyId || u.demo) return;
+    var wl = read("warehouses") || [], n = 0;
+    wl.forEach(function (w) {
+      var name = w && (w.name || w); if (!name) return;
+      var key = "inventory_" + name, arr = read(key);
+      if (arr && ensure(arr, null, true, name)) { try { localStorage.setItem(key, JSON.stringify(arr)); n++; } catch (e) {} }
+    });
+    if (n) console.log("[item-ids] gave ids to stock in " + n + " warehouse(s); syncing");
+  }
+
+  var tries = 0;
+  (function boot() { if (!wrapSave() && ++tries < 40) return setTimeout(boot, 500); })();
+  setTimeout(migrate, 9000);
+  setInterval(migrate, 60000);
+})(window);
+
+}catch(e){console.error("[merged:item-ids]",e)}
