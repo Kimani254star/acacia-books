@@ -2071,6 +2071,40 @@ try{
     return { items: out, report: report };
   }
 
+  
+  /* push the warehouse straight to the cloud and read it back, so an import can never silently "go back" after a refresh */
+  function syncAndVerify(w, base, changes){
+    var key = "inventory_" + w, cid = "";
+    try { cid = (JSON.parse(localStorage.getItem("loggedInUser") || "null") || {}).companyId || ""; } catch (e) {}
+    var cs = window.__companySync;
+    if (!cs || !cid || !window.__SUPA_URL__) return Promise.resolve("ℹ️ Saved on this device. Cloud sync is not active, so other devices will not see it.");
+    function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+    function check(){
+      return fetch(window.__SUPA_URL__ + "/rest/v1/company_state?company_id=eq." + encodeURIComponent(cid) + "&key=eq." + encodeURIComponent(key) + "&select=value",
+        { headers: { apikey: window.__SUPA_KEY__, Authorization: "Bearer " + window.__SUPA_KEY__ } })
+        .then(function(r){ return r.json(); })
+        .then(function(rows){
+          if (!Array.isArray(rows) || !rows.length) return false;
+          var remote; try { remote = JSON.parse(rows[0].value); } catch (e) { return false; }
+          if (!Array.isArray(remote)) return false;
+          var byName = {}; remote.forEach(function(r){ if (r && r.name) byName[String(r.name).trim().toLowerCase().replace(/\s+/g, " ")] = r; });
+          return changes.every(function(c){
+            var r = byName[String(c.name).trim().toLowerCase().replace(/\s+/g, " ")];
+            return !!r && Math.abs(num(r.qty) - c.to) < 0.000001;
+          });
+        });
+    }
+    var tries = 0;
+    function attempt(){
+      tries++;
+      return Promise.resolve().then(function(){ try { cs.pushAllCompanyKeys && cs.pushAllCompanyKeys(); } catch (e) {} return cs.pushDirty(); })
+        .then(function(){ return wait(700); })
+        .then(check)
+        .then(function(ok){ if (ok) return "☁️ Synced: the new stock is saved in the cloud."; if (tries < 4) return wait(1500).then(attempt); return "⚠️ Saved on this device, but the cloud copy does not match yet (another tab or user changed the same items, or the connection is slow). It will keep retrying; keep this tab open for a minute before refreshing."; });
+    }
+    return attempt().catch(function(){ return "⚠️ Saved on this device, but the cloud check failed. Keep this tab open until it syncs."; });
+  }
+
   window.importInventoryExcel = function(ev){
     var input = ev.target, w = wh();
     if (!w) { alert("Please select a warehouse first."); input.value = ""; return; }
@@ -2097,13 +2131,25 @@ try{
           if (str(it.name)) idxN[nmz(it.name)] = i;
         });
         res.items.forEach(function(it){ var k1 = str(it.sku).toLowerCase(); if (k1) fileCnt[k1] = (fileCnt[k1] || 0) + 1; });
-        var added = 0, updated = 0;
+        var added = 0, updated = 0, changes = [];
+        var refNo = "IMP-" + Date.now().toString(36).toUpperCase();
+        var who = ""; try { var lu = JSON.parse(localStorage.getItem("loggedInUser") || "null") || {}; who = lu.name || lu.fullName || lu.username || lu.email || ""; } catch (e0) {}
+        function histEntry(q){ return { date: new Date().toLocaleString(), type: "Stock Import", ref: refNo, qty: q, user: who || "Unknown" }; }
         res.items.forEach(function(it){
           var k = str(it.sku).toLowerCase(), n = nmz(it.name);
           /* match by NAME; the SKU / unit code only when it is unique (see convert) */
           var at = (n && idxN[n] !== undefined) ? idxN[n] : ((k && skuCnt[k] === 1 && fileCnt[k] === 1 && idxS[k] !== undefined) ? idxS[k] : -1);
-          if (at >= 0) { base[at] = it; updated++; }
+          if (at >= 0) {
+            var prev = base[at] || {};
+            var merged = Object.assign({}, prev, it);           /* keep id & every field the file does not carry (stops item identity changing, which broke sync) */
+            var dq = Math.round((num(it.qty) - num(prev.qty)) * 1e6) / 1e6;
+            merged.history = (Array.isArray(prev.history) ? prev.history : []).slice();
+            if (dq) merged.history.push(histEntry(dq));
+            if (dq) changes.push({ name: it.name, from: num(prev.qty), to: num(it.qty) });
+            base[at] = merged; updated++;
+          }
           else {
+            if (num(it.qty)) { it.history = (Array.isArray(it.history) ? it.history : []).concat(histEntry(num(it.qty))); changes.push({ name: it.name, from: 0, to: num(it.qty) }); }
             base.push(it); added++;
             var ni = base.length - 1;
             if (k) { idxS[k] = ni; skuCnt[k] = (skuCnt[k] || 0) + 1; }
@@ -2123,7 +2169,8 @@ try{
         if (r.noBuyAcc) msg += "\n⚠️ " + r.noBuyAcc + " item(s) have no Buying / Chart of Account.";
         if (r.noSellAcc) msg += "\n⚠️ " + r.noSellAcc + " item(s) have no Selling Account.";
         if (r.noSku) msg += "\n• " + r.noSku + " item(s) have no SKU.";
-        alert(msg);
+        msg += "\n• Stock changes were recorded in each item's history (ref " + refNo + ").";
+        syncAndVerify(w, base, changes).then(function(st){ alert(msg + "\n\n" + st); });
       } catch (e) {
         console.error("Inventory import failed:", e);
         alert("❌ Error reading file: " + (e && e.message ? e.message : e));
