@@ -330,7 +330,7 @@ try{
     if (!(asm.lines || []).length) errs.push('Add at least one component.');
     if (forStock && !asm.warehouse) errs.push('Choose a Location.');
     (asm.lines || []).forEach(function (ln, i) {
-      var label = ln.name || ('row ' + (i + 1)), key = low(ln.sku) || low(ln.name);
+      var label = ln.name || ('row ' + (i + 1)), key = low(ln.name) || low(ln.sku);
       if (!key) { errs.push('Row ' + (i + 1) + ': pick an item.'); return; }
       if (!(num(ln.qtyPer) > 0)) errs.push(label + ': quantity required must be more than 0.');
       if (seen[key + '|' + low(ln.warehouse)]) errs.push(label + ' is picked twice.');
@@ -424,11 +424,18 @@ try{
   }
 
   /* Reverse an Assembled run: finished item out, components back (same batches) */
-  function disassemble(asm) {
+  function disassemble(asm, opts) {
+    opts = opts || {};
     if (asm.status !== 'Assembled') return { ok: false, errors: ['Only an assembled run can be disassembled.'] };
     var cache = {}, get = function (wh) { if (!(wh in cache)) cache[wh] = readInv(wh); return cache[wh]; };
-    var fin = findIn(get(asm.warehouse), asm.finishedSku || asm.sku, asm.name), q = num(asm.qty);
-    if (!fin || num(fin.qty) + EPS < q) return { ok: false, errors: ['Only ' + fq(fin ? fin.qty : 0) + ' of ' + asm.name + ' is left in ' + asm.warehouse + ' (' + fq(q) + ' needed). Some of it has been sold or moved, so this run cannot be reversed.'] };
+    var fin = findIn(get(asm.warehouse), asm.finishedSku || asm.sku, asm.name), full = num(asm.qty), q = full;
+    var left = fin ? Math.max(0, num(fin.qty)) : 0;
+    if (!fin || left + EPS < full) {
+      /* some of the bundle was sold / moved. Default: refuse. With opts.partial: reverse only what is still on the shelf. */
+      if (!opts.partial || !(left > EPS)) return { ok: false, short: true, left: left, need: full, errors: ['Only ' + fq(left) + ' of ' + asm.name + ' is left in ' + asm.warehouse + ' (' + fq(full) + ' needed). Some of it has been sold or moved, so this run cannot be fully reversed.'] };
+      q = left;
+    }
+    var ratio = full > 0 ? q / full : 1;
 
     var acts = ls('stockActivities', []); if (!Array.isArray(acts)) acts = [];
     var nextNo = nextActNo(acts), by = who(), iso = new Date().toISOString(), day = today(), ids = [];
@@ -442,13 +449,14 @@ try{
     acts.push(fa); ids.push(fa.id);
 
     asm.lines.forEach(function (ln) {
-      var wh = ln.takenFrom || lineWh(asm, ln), list = get(wh), it = findIn(list, ln.sku, ln.name), need = lineNeed(asm, ln);
+      var wh = ln.takenFrom || lineWh(asm, ln), list = get(wh), it = findIn(list, ln.sku, ln.name), need = r6(lineNeed(asm, ln) * ratio);
       if (!it) { it = { name: ln.name, sku: ln.sku, qty: 0, batches: [], buyPrice: num(ln.unitCost), sellPrice: 0, active: true, history: [] }; list.push(it); }
       it.qty = r6(num(it.qty) + need);
       (ln.used || []).forEach(function (u) {
+        var uq = r6(num(u.qty) * ratio);
         it.batches = Array.isArray(it.batches) ? it.batches : [];
         var b = it.batches.filter(function (x) { return String(x.batchNo || x.batchNumber || '') === u.batchNo; })[0];
-        if (b) b.qty = r6(num(b.qty) + u.qty); else it.batches.push({ batchNo: u.batchNo, expiryDate: u.expiryDate || '', qty: u.qty });
+        if (b) b.qty = r6(num(b.qty) + uq); else it.batches.push({ batchNo: u.batchNo, expiryDate: u.expiryDate || '', qty: uq });
       });
       (it.history = it.history || []).push({ type: 'Assembly reversed', qty: need, ref: asm.no, date: day, isoDate: iso, user: by });
       var a = { id: uid('SA'), no: nextNo(), type: 'Assembly reversed - component returned', item: ln.name, sku: ln.sku || '', warehouse: wh, qin: need, qout: 0, date: day, reference: asm.no, reason: 'Disassembled ' + fq(q) + ' x ' + asm.name, by: by };
@@ -457,7 +465,8 @@ try{
     Object.keys(cache).forEach(function (wh) { writeInv(wh, cache[wh]); });
     put('stockActivities', acts);
     asm.status = 'Disassembled'; asm.disassembledAt = iso; asm.disassembledBy = by; asm.reverseActivityIds = ids;
-    return { ok: true };
+    asm.disassembledQty = q;
+    return { ok: true, partial: q + EPS < full, qty: q, of: full };
   }
 
   /* ------------------------------------------------------------------ one-time copy of the old bundles into recipes */
@@ -972,16 +981,19 @@ try{
     if (!canDo('edit', 'reverse assemblies')) return;
     if (!confirm('Disassemble ' + a.no + '? ' + fq(a.qty) + ' x ' + a.name + ' will be taken out of ' + a.warehouse + ' and the components returned to stock.')) return;
     var res = disassemble(a);
+    if (!res.ok && res.short && res.left > 0 && confirm(res.errors[0] + '\n\nDisassemble only the ' + fq(res.left) + ' that is still in stock? Components for ' + fq(res.left) + ' go back to stock; the rest stays as sold/moved.')) res = disassemble(a, { partial: true });
     if (!res.ok) { alert(res.errors.join('\n')); return; }
-    persistAsm(a); refreshApp(); toast(a.no + ' disassembled - stock reversed'); INV = makeInv(); render();
+    persistAsm(a); refreshApp(); toast(a.no + (res.partial ? ' partly disassembled (' + fq(res.qty) + ' of ' + fq(res.of) + ')' : ' disassembled - stock reversed')); INV = makeInv(); render();
   }
   function delAsm(id) {
     var a = assemblies().filter(function (x) { return x.id === id; })[0]; if (!a) return;
     if (!canDo('delete', 'delete assemblies')) return;
     if (a.status === 'Assembled') {
       if (!confirm('Delete ' + a.no + '? Its stock is reversed first (' + fq(a.qty) + ' x ' + a.name + ' removed, components returned).')) return;
-      var res = disassemble(a); if (!res.ok) { alert(res.errors.join('\n')); return; }
-      refreshApp();
+      var res = disassemble(a);
+      if (!res.ok) {
+        if (!confirm(res.errors.join('\n') + '\n\nDelete the assembly record ONLY? Stock will stay exactly as it is now (nothing is added or removed).')) return;
+      } else refreshApp();
     } else if (!confirm('Delete ' + a.no + '?')) return;
     saveAssemblies(assemblies().filter(function (x) { return x.id !== id; })); toast(a.no + ' deleted'); INV = makeInv(); render();
   }
