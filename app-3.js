@@ -596,7 +596,7 @@ try{
     list.forEach(function (a) {
       h += '<tr><td><b>' + esc(a.no) + '</b></td><td>' + esc(a.date || '') + '</td><td>' + esc(a.name) + '<div class="ac-muted">' + esc(a.sku || '') + '</div></td><td>' + esc(a.warehouse || '-') + '</td>' +
         '<td class="r">' + fq(a.qty) + '</td><td class="r">' + money(a.unitCost) + '</td><td class="r">' + money(a.totalCost) + '</td><td><span class="ac-pill p-' + esc(a.status) + '">' + esc(a.status) + '</span></td><td class="ac-acts">' +
-        (a.status === 'Draft' ? '<button class="ac-btn ac-sm" data-act="openAsm" data-id="' + esc(a.id) + '">Edit</button><button class="ac-btn ac-sm" data-act="assembleRow" data-id="' + esc(a.id) + '">Assemble</button>' : '<button class="ac-btn alt ac-sm" data-act="openAsm" data-id="' + esc(a.id) + '">View</button><button class="ac-btn ac-sm" data-act="editAsm" data-id="' + esc(a.id) + '">Edit</button>') +
+        (a.status === 'Draft' ? '<button class="ac-btn ac-sm" data-act="openAsm" data-id="' + esc(a.id) + '">Edit</button><button class="ac-btn ac-sm" data-act="assembleRow" data-id="' + esc(a.id) + '">Assemble</button>' : '<button class="ac-btn alt ac-sm" data-act="openAsm" data-id="' + esc(a.id) + '">View</button>') +
         (a.status === 'Assembled' ? '<button class="ac-btn alt ac-sm" data-act="disasm" data-id="' + esc(a.id) + '">Disassemble</button>' : '') +
         '<button class="ac-btn alt ac-sm" data-act="printAsm" data-id="' + esc(a.id) + '">Print</button><button class="ac-btn red ac-sm" data-act="delAsm" data-id="' + esc(a.id) + '">Delete</button></td></tr>';
     });
@@ -985,22 +985,6 @@ try{
     if (!res.ok) { alert(res.errors.join('\n')); return; }
     persistAsm(a); refreshApp(); toast(a.no + (res.partial ? ' partly disassembled (' + fq(res.qty) + ' of ' + fq(res.of) + ')' : ' disassembled - stock reversed')); INV = makeInv(); render();
   }
-  /* Edit on any run: a Draft opens as is; an Assembled / Disassembled run is first returned to Draft (Assembled: its stock is reversed) so it can be changed and assembled again */
-  function editAsm(id) {
-    var a = assemblies().filter(function (x) { return x.id === id; })[0]; if (!a) return;
-    if (!canDo('edit', 'edit assemblies')) return;
-    if (a.status === 'Draft') { openAsm(id); return; }
-    if (a.status === 'Assembled') {
-      if (!confirm('Edit ' + a.no + '? Its stock is reversed first (' + fq(a.qty) + ' x ' + a.name + ' removed, components returned) and it goes back to Draft. Assemble it again after saving your changes.')) return;
-      var res = disassemble(a);
-      if (!res.ok) { alert(res.errors.join('\n') + '\n\nThis run cannot be edited because its stock cannot be fully reversed. Use Disassemble (partial) or Delete instead.'); return; }
-      refreshApp();
-    } else if (!confirm('Edit ' + a.no + '? It goes back to Draft; assemble it again after saving.')) return;
-    a.status = 'Draft';
-    ['assembledAt', 'assembledBy', 'disassembledAt', 'disassembledBy', 'disassembledQty', 'activityIds', 'reverseActivityIds'].forEach(function (k) { delete a[k]; });
-    (a.lines || []).forEach(function (ln) { delete ln.used; delete ln.takenFrom; });
-    a.updatedAt = new Date().toISOString(); persistAsm(a); INV = makeInv(); openAsm(id);
-  }
   function delAsm(id) {
     var a = assemblies().filter(function (x) { return x.id === id; })[0]; if (!a) return;
     if (!canDo('delete', 'delete assemblies')) return;
@@ -1044,7 +1028,6 @@ try{
       case 'tab': V.tab = t.getAttribute('data-v'); V.mode = 'list'; V.q = ''; A = null; R = null; render(); break;
       case 'newAsm': openAsm(); break;
       case 'openAsm': openAsm(id); break;
-      case 'editAsm': editAsm(id); break;
       case 'asmFromRecipe': openAsm(null, id); break;
       case 'assembleRow': assembleRow(id); break;
       case 'disasm': disasmRow(id); break;

@@ -734,6 +734,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   var BADGE = { Draft: 'bg-gray-200 text-gray-700', Counting: 'bg-yellow-100 text-yellow-800', Submitted: 'bg-blue-100 text-blue-800', Approved: 'bg-green-100 text-green-800', Posted: 'bg-green-700 text-white' };
   var REASONS = ['Miscount', 'Damaged', 'Expired', 'Theft / loss', 'Received, not recorded', 'Issued, not recorded', 'Wrong location', 'Other'];
   var state = { view: 'register', id: null, t: null };
+  var stSel = {};
   var saveTimer = null;
 
   /* ---------- helpers ---------- */
@@ -781,26 +782,52 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     var td = 'border p-2';
     var body = rows.length ? rows.map(function (t) {
       var k = totals(t), anyCount = k.counted > 0;
-      return '<tr class="hover:bg-gray-50"><td class="' + td + ' font-semibold">' + esc(t.no) + '</td><td class="' + td + '">' + esc(fmtDate(t.date)) + '</td><td class="' + td + '">' + esc(t.warehouse) + (t.category ? ' <span class="text-xs text-gray-500">(' + esc(t.category) + ')</span>' : '') + '</td>' +
+      return '<tr class="hover:bg-gray-50"><td class="' + td + ' text-center"><input type="checkbox" class="st-chk" data-id="' + esc(t.id) + '"' + (stSel[t.id] ? ' checked' : '') + ' onchange="stPick(\'' + esc(t.id) + '\',this.checked)"></td><td class="' + td + ' font-semibold">' + esc(t.no) + '</td><td class="' + td + '">' + esc(fmtDate(t.date)) + '</td><td class="' + td + '">' + esc(t.warehouse) + (t.category ? ' <span class="text-xs text-gray-500">(' + esc(t.category) + ')</span>' : '') + '</td>' +
         '<td class="' + td + ' text-right">' + k.total + '</td><td class="' + td + ' text-right">' + (anyCount ? (k.diffLines ? '<span class="text-red-600 font-semibold">' + k.diffLines + '</span>' : '0') : '-') + '</td>' +
         '<td class="' + td + '"><span class="px-2 py-0.5 rounded text-xs ' + BADGE[t.status] + '">' + esc(t.status) + '</span>' + (readyForBulk(t) ? ' <span class="px-2 py-0.5 rounded text-xs bg-purple-100 text-purple-800" title="Variance report is ready - apply it in Inventory > Bulk Adjustment">Variance ready</span>' : '') + '</td>' +
         '<td class="' + td + ' text-center whitespace-nowrap"><button class="' + BTN.replace('px-3 py-1.5', 'px-2 py-1') + ' mr-1" onclick="stOpen(\'' + esc(t.id) + '\')">Open</button>' +
-        (t.status === 'Draft' || t.status === 'Counting' ? '<button class="bg-red-700 text-white px-2 py-1 rounded text-sm hover:bg-red-600" onclick="stDelete(\'' + esc(t.id) + '\')">Delete</button>' : '') + '</td></tr>';
-    }).join('') : '<tr><td colspan="7" class="text-center p-4 text-gray-500">No stock takes found.</td></tr>';
+        '<button class="' + BTN2.replace('px-3 py-1.5', 'px-2 py-1') + ' mr-1" onclick="stEdit(\'' + esc(t.id) + '\')">Edit</button>' +
+        '<button class="bg-red-700 text-white px-2 py-1 rounded text-sm hover:bg-red-600" onclick="stDelete(\'' + esc(t.id) + '\')">Delete</button></td></tr>';
+    }).join('') : '<tr><td colspan="8" class="text-center p-4 text-gray-500">No stock takes found.</td></tr>';
     var keepForm = $('stForm') && !$('stForm').classList.contains('hidden');
     root.innerHTML =
       '<div class="flex flex-col md:flex-row md:items-end justify-between gap-2 mb-3"><div><h2 class="text-sm font-bold">Stock Take Register</h2><div class="text-xs text-gray-500">Inventory Control</div></div>' +
       '<div class="flex flex-wrap items-center gap-2"><input id="stSearch" placeholder="Search count no., warehouse, status" class="border rounded-md px-3 py-1.5 text-sm w-64" value="' + esc(($('stSearch') || {}).value || '') + '" oninput="stRenderRegister()">' +
       '<select id="stStatus" class="border rounded-md px-2 py-1.5 text-sm" onchange="stRenderRegister()"><option value="">All statuses</option>' + ['Draft', 'Counting', 'Submitted', 'Approved', 'Posted'].map(function (s) { return '<option' + (s === st ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
       '<button class="' + BTN2 + '" onclick="stExportStock()">Export Stock Sheet (CSV)</button><button class="' + BTN2 + '" onclick="stImportAny()">Import Count (CSV)</button>' +
-      '<button class="' + BTN + ' font-semibold" onclick="stToggleForm()">New Stock Take</button></div></div>' +
+      '<button id="stBulkDel" class="bg-red-700 text-white px-3 py-1.5 rounded text-sm hover:bg-red-600 font-semibold hidden" onclick="stDeleteSelected()">Delete Selected</button> <button class="' + BTN + ' font-semibold" onclick="stToggleForm()">New Stock Take</button></div></div>' +
       '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">' + card('Total Stock Takes', cards.total) + card('Pending Approval', cards.pend, 'text-yellow-700') + card('Completed', cards.done, 'text-green-700') + card('With Variances', cards.diff, 'text-red-600') + '</div>' +
       formHtml(keepForm) +
-      '<div class="bg-white p-4 rounded shadow mb-6"><div class="overflow-x-auto"><table class="w-full border-collapse border border-gray-300 text-sm"><thead class="bg-gray-100"><tr>' +
+      '<div class="bg-white p-4 rounded shadow mb-6"><div class="overflow-x-auto"><table class="w-full border-collapse border border-gray-300 text-sm"><thead class="bg-gray-100"><tr><th class="border p-2 text-center"><input type="checkbox" id="stChkAll" title="Select all shown" onchange="stPickAll(this.checked)"></th>' +
       ['Count No.', 'Date', 'Warehouse', 'Items', 'Variance', 'Status'].map(function (h, i) { return '<th class="border p-2 text-' + (i === 3 || i === 4 ? 'right' : 'left') + '">' + h + '</th>'; }).join('') + '<th class="border p-2 text-center">Actions</th></tr></thead><tbody>' + body + '</tbody></table></div>' +
       '<div class="text-xs text-gray-500 mt-2">Variance = number of items whose physical count differs from the system quantity.</div></div>';
     if (keepForm) wireForm();
+    stSync();
   }
+  /* bulk selection (ids survive search / filter changes) */
+  function stSync() {
+    var have = {}; takes().forEach(function (t) { have[t.id] = 1; });
+    Object.keys(stSel).forEach(function (k) { if (!have[k]) delete stSel[k]; });
+    var n = Object.keys(stSel).length, b = $('stBulkDel'), boxes = document.querySelectorAll('.st-chk'), all = $('stChkAll');
+    if (b) { b.classList.toggle('hidden', n === 0); b.textContent = 'Delete Selected (' + n + ')'; }
+    if (all) { var c = 0; boxes.forEach(function (x) { if (x.checked) c++; }); all.checked = boxes.length > 0 && c === boxes.length; all.indeterminate = c > 0 && c < boxes.length; }
+  }
+  w.stPick = function (id, on) { if (on) stSel[id] = 1; else delete stSel[id]; stSync(); };
+  w.stPickAll = function (on) {
+    document.querySelectorAll('.st-chk').forEach(function (x) { x.checked = on; var id = x.getAttribute('data-id'); if (on) stSel[id] = 1; else delete stSel[id]; });
+    stSync();
+  };
+  w.stDeleteSelected = function () {
+    var ids = Object.keys(stSel), list = takes().filter(function (t) { return ids.indexOf(t.id) > -1; });
+    if (!list.length) { stSync(); return; }
+    var posted = list.filter(function (t) { return t.status === 'Posted'; }).length;
+    var msg = 'Delete ' + list.length + ' stock take' + (list.length === 1 ? '' : 's') + '?\n\n' + list.slice(0, 12).map(function (t) { return t.no + ' (' + t.status + ')'; }).join('\n') + (list.length > 12 ? '\n...and ' + (list.length - 12) + ' more' : '') +
+      (posted ? '\n\n' + posted + ' of them ' + (posted === 1 ? 'is' : 'are') + ' POSTED: stock adjustments already made are NOT reversed and stay in Stock History. Only the register records are removed.' : '\n\nInventory is not affected.');
+    if (!confirm(msg)) return;
+    setTakes(takes().filter(function (t) { return ids.indexOf(t.id) < 0; }));
+    if (state.id && ids.indexOf(state.id) > -1) state = { view: 'register', id: null, t: null };
+    stSel = {}; render();
+  };
   w.stRenderRegister = function () {
     var s = $('stSearch'), pos = s ? s.selectionStart : 0, had = s && document.activeElement === s;
     renderRegister();
@@ -858,9 +885,48 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   };
   w.stDelete = function (id) {
     var t = byId(id); if (!t) return;
-    if (t.status !== 'Draft' && t.status !== 'Counting') return alert('Only a Draft or Counting stock take can be deleted.');
-    if (!confirm('Delete stock take ' + t.no + '? Inventory is not affected.')) return;
-    setTakes(takes().filter(function (x) { return x.id !== id; })); renderRegister();
+    var msg = t.status === 'Posted'
+      ? 'Delete stock take ' + t.no + '? It is already POSTED: the stock adjustments made from it are NOT reversed and stay in Stock History. Only this register record is removed.'
+      : 'Delete stock take ' + t.no + ' (' + t.status + ')? Inventory is not affected.';
+    if (!confirm(msg)) return;
+    setTakes(takes().filter(function (x) { return x.id !== id; }));
+    if (state.id === id) state = { view: 'register', id: null, t: null };
+    render();
+  };
+  /* Edit: change the details of a count. Warehouse / category stay fixed because the item list was loaded from them.
+   * Draft / Counting: all details. Submitted / Approved: goes back to Counting (nothing is posted yet).
+   * Posted: only Assigned To + Notes, because stock has already been adjusted. */
+  w.stEdit = function (id) {
+    var t = byId(id); if (!t) return;
+    var posted = t.status === 'Posted', back = t.status === 'Submitted' || t.status === 'Approved';
+    if (back && !confirm('Edit ' + t.no + '? It goes back to Counting and its ' + t.status.toLowerCase() + ' sign-off is cleared. Submit it again after your changes.')) return;
+    var old = $('stEditModal'); if (old) old.remove();
+    var o = document.createElement('div'); o.id = 'stEditModal';
+    o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:12px';
+    var lab = function (l) { return '<label class="block text-sm font-semibold mb-1">' + l + '</label>'; };
+    o.innerHTML = '<div style="background:#fff;border-radius:10px;max-width:460px;width:100%;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.3);max-height:92vh;overflow:auto">' +
+      '<div style="font-weight:700;font-size:15px">Edit Stock Take ' + esc(t.no) + '</div>' +
+      '<div style="font-size:12px;color:#6b7280;margin:4px 0 12px">' + esc(t.warehouse) + (t.category ? ' / ' + esc(t.category) : '') + (posted ? ' - posted: only Assigned To and Notes can change.' : ' - warehouse and category cannot change.') + '</div>' +
+      (posted ? '' : lab('Count Date') + '<input id="stEdDate" type="date" class="' + INP + ' mb-3" value="' + esc(t.date || '') + '">') +
+      (posted ? '' : lab('Count Method') + '<select id="stEdMethod" class="' + INP + ' mb-3"><option' + (t.method === 'Cycle Count' ? '' : ' selected') + '>Full Count</option><option' + (t.method === 'Cycle Count' ? ' selected' : '') + '>Cycle Count</option></select>') +
+      lab('Assigned To') + '<input id="stEdAssign" class="' + INP + ' mb-3" value="' + esc(t.assignedTo || '') + '">' +
+      lab('Notes') + '<textarea id="stEdNotes" rows="3" class="' + INP + ' mb-3 resize-y">' + esc(t.notes || '') + '</textarea>' +
+      (posted ? '' : '<label class="flex items-center gap-2 text-sm mb-4"><input id="stEdBlind" type="checkbox"' + (t.blind ? ' checked' : '') + '> Blind count</label>') +
+      '<div class="text-right space-x-2"><button class="' + BTN + ' font-semibold" id="stEdGo">Save Changes</button><button class="bg-gray-500 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-600" id="stEdX">Cancel</button></div></div>';
+    document.body.appendChild(o);
+    o.addEventListener('mousedown', function (e) { if (e.target === o) o.remove(); });
+    $('stEdX').onclick = function () { o.remove(); };
+    $('stEdGo').onclick = function () {
+      var cur = byId(id); if (!cur) { o.remove(); return; }
+      if (!posted) {
+        var d = $('stEdDate').value; if (!d) return alert('Please choose the count date.');
+        cur.date = d; cur.method = $('stEdMethod').value; cur.blind = $('stEdBlind').checked;
+      }
+      cur.assignedTo = $('stEdAssign').value.trim(); cur.notes = $('stEdNotes').value.trim();
+      if (back) { cur.status = 'Counting'; cur.submittedBy = ''; cur.submittedAt = ''; cur.approvedBy = ''; cur.approvedAt = ''; }
+      cur.editedBy = who(); cur.editedAt = new Date().toISOString();
+      put(cur); o.remove(); render();
+    };
   };
   w.stOpen = function (id) { state = { view: 'sheet', id: id, t: null }; render(); };
   w.stBack = function () { if (state.t) { clearTimeout(saveTimer); put(state.t); } state = { view: 'register', id: null, t: null }; render(); };
