@@ -4128,14 +4128,14 @@ try{
     var tabs = [{ k: "overview", l: "Overview" }, { k: "transactions", l: "Transactions" }];
     var listHtml = TYPES.map(function (t) {
       var n = t.key === "openingBalance" ? 0 : (data[t.key] || []).length;
-      return '<div class="sh-li' + (S.type === t.key ? " on" : "") + '" data-type="' + t.key + '"><span>' + t.label + "</span>" + (n ? "<small>" + n + "</small>" : "") + "</div>";
+      return '<div class="sh-li' + (S.type === t.key ? " on" : "") + '" data-type="' + t.key + '"><span>' + __invEsc(t.label) + "</span>" + (n ? "<small>" + n + "</small>" : "") + "</div>";
     }).join("");
 
     var content;
     var cur = TYPES.filter(function (t) { return t.key === S.type; })[0] || TYPES[0];
     if (cur.key === "openingBalance") content = obHtml(item, S.wh, S.idx);
     else {
-      content = "<h3>" + cur.label + "</h3>" +
+      content = "<h3>" + __invEsc(cur.label) + "</h3>" +
         (cur.key === "batches" ? batchTable(data.batches) : cur.key === "adjustments" ? adjTable(data.adjustments) : docTable(cur, data[cur.key]));
     }
 

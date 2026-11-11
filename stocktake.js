@@ -68,6 +68,30 @@
   async function doLogin(company, email, pass) {
     if (!(window.crypto && crypto.subtle)) throw new Error('Open this page over https to sign in.');
     email = low(email); company = low(company);
+    /* the password is checked inside Postgres (acx_login); this page never sees a hash */
+    async function rpcLogin(co) {
+      var r = await fetch(SUPA + '/rest/v1/rpc/acx_login', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_email: email, p_password: pass, p_company: co || null }) });
+      if (r.status === 404) return null;                                   /* acx_login not installed yet: old path below */
+      if (r.status === 429 || r.status === 400) { var t = await r.text(); throw new Error(/lock|too many/i.test(t) ? 'Too many wrong attempts. Try again in a few minutes.' : 'Invalid email, company name or password.'); }
+      if (!r.ok) throw new Error('Could not sign in (' + r.status + ').');
+      var j = await r.json(); return Array.isArray(j) ? j : [];
+    }
+    function accept(r) {
+      var d = Object.assign({}, r.data || {}); d.companyId = d.companyId || r.company_id;
+      if (d.disabled === true || d.active === false || /^(inactive|disabled|suspended|blocked)$/i.test(String(d.status || ''))) throw new Error('This account is switched off. Ask your administrator.');
+      try { if (r.session && window.AcxSession) window.AcxSession.add(r.session); } catch (e) {}
+      return { companyId: d.companyId, companyName: d.companyName || company, email: d.email || email, name: d.name || d.fullName || d.username || d.email || email, role: d.role || '' };
+    }
+    var found = await rpcLogin(company);
+    if (found && found.length) return accept(found[0]);
+    if (found) {                                                           /* company name may only match the organisation profile: check that here */
+      var any = await rpcLogin(null);
+      for (var k = 0; k < (any || []).length; k++) {
+        var cid = any[k].company_id; try { if (window.AcxSession && any[k].session) window.AcxSession.add(any[k].session); } catch (e) {}
+        if (await orgMatches(cid, company)) return accept(any[k]);
+      }
+      throw new Error('Invalid email, company name or password.');
+    }
     var rows = await api('app_accounts?select=login_id,username,company_id,data&or=(login_id.eq.' + enc(email) + ',username.eq.' + enc(email) + ')');
     for (var i = 0; i < (rows || []).length; i++) {
       var r = rows[i], d = Object.assign({}, r.data || {}); d.companyId = d.companyId || r.company_id;
@@ -75,10 +99,8 @@
       var okC = low(d.companyName) === company || low(d.companyId) === company || (Array.isArray(d.previousCompanyNames) && d.previousCompanyNames.some(function (x) { return low(x) === company; }));
       if (!okC) okC = await orgMatches(d.companyId, company);
       if (!okC) continue;
-      var ok = d.passwordHash && d.passwordSalt ? (await sha(d.passwordSalt + ':' + pass)) === d.passwordHash : (typeof d.password === 'string' && d.password === pass);
-      if (!ok) continue;
-      if (d.disabled === true || d.active === false || /^(inactive|disabled|suspended|blocked)$/i.test(String(d.status || ''))) throw new Error('This account is switched off. Ask your administrator.');
-      return { companyId: d.companyId, companyName: d.companyName || company, email: d.email || email, name: d.name || d.fullName || d.username || d.email || email, role: d.role || '' };
+      if (!(d.passwordHash && d.passwordSalt && (await sha(d.passwordSalt + ':' + pass)) === d.passwordHash)) continue;
+      return accept(r);
     }
     throw new Error('Invalid email, company name or password.');
   }
@@ -325,7 +347,7 @@
       try { U = await doLogin(c, em, pw); lset('acxst_user', U); lset('acxst_lastco', c); lset('acxst_lastem', em); S.screen = 'home'; loadHome(); }
       catch (er) { $('#app').innerHTML = vLogin(er.message); }
     }
-    else if (a === 'logout') { if (confirm('Sign out? Counts not yet pushed stay on this phone.')) { LS.removeItem('acxst_user'); U = null; S.sess = null; S.screen = 'home'; render(); } }
+    else if (a === 'logout') { if (confirm('Sign out? Counts not yet pushed stay on this phone.')) { LS.removeItem('acxst_user'); try { window.AcxSession && window.AcxSession.clear(true); } catch (e) {} U = null; S.sess = null; S.screen = 'home'; render(); } }
     else if (a === 'refresh') loadHome(true);
     else if (a === 'take') startTake(b.getAttribute('data-no'));
     else if (a === 'wh') startWarehouse(b.getAttribute('data-w'));
