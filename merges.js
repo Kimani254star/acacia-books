@@ -790,7 +790,8 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
         '<button class="bg-red-700 text-white px-2 py-1 rounded text-sm hover:bg-red-600" onclick="stDelete(\'' + esc(t.id) + '\')">Delete</button></td></tr>';
     }).join('') : '<tr><td colspan="8" class="text-center p-4 text-gray-500">No stock takes found.</td></tr>';
     var keepForm = $('stForm') && !$('stForm').classList.contains('hidden');
-    root.innerHTML =
+    try { ingestMobile(true); } catch (e) { console.warn('[mobile counts]', e); }
+    root.innerHTML = mobileBanner() +
       '<div class="flex flex-col md:flex-row md:items-end justify-between gap-2 mb-3"><div><h2 class="text-sm font-bold">Stock Take Register</h2><div class="text-xs text-gray-500">Inventory Control</div></div>' +
       '<div class="flex flex-wrap items-center gap-2"><input id="stSearch" placeholder="Search count no., warehouse, status" class="border rounded-md px-3 py-1.5 text-sm w-64" value="' + esc(($('stSearch') || {}).value || '') + '" oninput="stRenderRegister()">' +
       '<select id="stStatus" class="border rounded-md px-2 py-1.5 text-sm" onchange="stRenderRegister()"><option value="">All statuses</option>' + ['Draft', 'Counting', 'Submitted', 'Approved', 'Posted'].map(function (s) { return '<option' + (s === st ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
@@ -1521,6 +1522,80 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     (function check() { if (baLogLen(wh) > before) w.acxStockTakeMarkAdjusted(wh, snap); else if (tries++ < 5) setTimeout(check, 150); })();
   }, true);
 
+
+  /* ---------- MOBILE COUNTS (Acacia Stock Count app -> Assessment) ----------
+   * The phone app (stocktake.html) pushes finished counts into the cloud key "stocktakeMobile" (one entry per count).
+   * Books picks them up here: the counts go onto the matching Draft/Counting stock take (or a new one is started for that
+   * warehouse) with the SAME matching rules as Import Count (CSV): SKU, then barcode, then name. Inventory is NOT changed;
+   * the register shows a banner with a View Variance button. Posting still happens only from the stock take, as before. */
+  var MKEY = 'stocktakeMobile';
+  function mobileList() { return rd(MKEY); }
+  function saveMobile(a) { localStorage.setItem(MKEY, JSON.stringify(a)); }
+  function newTakeFor(list, wh, by) {
+    var seen = {}, lines = [];
+    invOf(wh).forEach(function (it) {
+      var key = low(it.sku || it.name); if (seen[key]) return; seen[key] = 1;
+      lines.push({ key: key, name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: wh, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
+    });
+    if (!lines.length) return null;
+    return { id: 'STK' + Date.now(), no: nextNo(list, 'ST-', 'no', 3), date: today(), warehouse: wh, category: '', method: 'Full Count', assignedTo: by || '', notes: 'Created from a mobile count', blind: false, status: 'Counting', countStartedAt: new Date().toISOString(),
+      createdBy: by || who(), createdAt: new Date().toISOString(), countedBy: '', submittedBy: '', approvedBy: '', postedBy: '', lines: lines };
+  }
+  function ingestMobile(silent) {
+    var u = null; try { u = JSON.parse(localStorage.getItem('loggedInUser') || 'null'); } catch (e) {}
+    if (!u || u.demo) return 0;
+    var inbox = mobileList(), done = 0, changedInbox = false;
+    inbox.forEach(function (sub) {
+      if (!sub || sub.applied || !Array.isArray(sub.lines) || !sub.lines.length) return;
+      var list = takes(), t = null, created = false, by = sub.by || 'Mobile app';
+      if (sub.takeNo) t = list.filter(function (x) { return low(x.no) === low(sub.takeNo); })[0];
+      else if (sub.warehouse) {
+        var wh = warehouses().filter(function (n) { return low(n) === low(sub.warehouse); })[0];
+        if (!wh) { sub.applied = 'rejected'; sub.note = 'Warehouse "' + sub.warehouse + '" was not found in Books.'; changedInbox = true; return; }
+        t = list.filter(function (x) { return x.warehouse === wh && (x.status === 'Draft' || x.status === 'Counting'); })[0];
+        if (!t) { t = newTakeFor(list, wh, by); created = !!t; }
+      }
+      if (!t) { sub.applied = 'rejected'; sub.note = sub.takeNo ? 'Stock take ' + sub.takeNo + ' was not found in Books.' : 'No stock take or warehouse to put this count on.'; changedInbox = true; return; }
+      if (t.status !== 'Draft' && t.status !== 'Counting') { sub.applied = 'rejected'; sub.note = 'Stock take ' + t.no + ' is ' + t.status + ' and can no longer take a count.'; changedInbox = true; return; }
+      var rows = [['Item Name', 'SKU', 'Barcode', 'Physical Qty', 'Remarks']];
+      sub.lines.forEach(function (l) { rows.push([l.name || '', l.sku || '', l.barcode || '', l.qty, l.remarks || '']); });
+      var from = new Date().toISOString(), res = applyImport(t, { c: { name: 0, sku: 1, barcode: 2, phys: 3, remarks: 4 }, rows: rows, h: 0 });
+      t.lines.forEach(function (l) { if (l.countedAt && l.countedAt >= from) l.countedBy = by; });
+      if (res.set) t.countedBy = by;
+      if (!res.set) { sub.applied = 'rejected'; sub.note = 'None of the counted items matched this stock take.'; changedInbox = true; return; }
+      if (t.status === 'Draft') { t.status = 'Counting'; t.countStartedAt = new Date().toISOString(); }
+      if (created) { var all = takes(); all.push(t); setTakes(all); } else put(t);
+      sub.applied = true; sub.appliedAt = new Date().toISOString(); sub.takeNo = t.no; sub.takeId = t.id; sub.warehouse = t.warehouse;
+      sub.matched = res.set; sub.unmatched = res.unmatched.length; sub.viewed = false; sub.note = importNote(res);
+      changedInbox = true; done++;
+    });
+    if (changedInbox) saveMobile(inbox);
+    if (done) {
+      try { if (typeof w.showNotification === 'function') w.showNotification(done + ' mobile count' + (done === 1 ? '' : 's') + ' received. Open Inventory > Assessment to see the variance.', 'success'); } catch (e) {}
+      if (!silent && state.view === 'register' && rootEl() && rootEl().offsetParent !== null) renderRegister();
+    }
+    return done;
+  }
+  function mobileBanner() {
+    var out = mobileList().filter(function (s) { return s && !s.viewed && (s.applied === true || s.applied === 'rejected'); });
+    if (!out.length) return '';
+    return '<div class="mb-3 space-y-2">' + out.map(function (s) {
+      var ok = s.applied === true;
+      return '<div class="flex flex-col md:flex-row md:items-center justify-between gap-2 rounded border p-3 text-sm ' + (ok ? 'bg-green-50 border-green-300 text-green-900' : 'bg-red-50 border-red-300 text-red-800') + '">' +
+        '<div><b>' + (ok ? 'Mobile count received' : 'Mobile count not applied') + '</b> &middot; ' + esc(s.by || 'Mobile app') + ' &middot; ' + esc(s.warehouse || '') + (ok ? ' &middot; ' + esc(s.takeNo) + ' &middot; ' + esc(s.matched) + ' item(s) counted' + (s.unmatched ? ', ' + esc(s.unmatched) + ' not found' : '') : '') +
+        (ok ? '' : '<div class="text-xs mt-1">' + esc(s.note || '') + '</div>') + '</div>' +
+        '<div class="flex gap-2">' + (ok ? '<button class="' + BTN + '" onclick="stMobileView(\'' + esc(s.id) + '\')">View Variance</button>' : '') + '<button class="' + BTN2 + '" onclick="stMobileDismiss(\'' + esc(s.id) + '\')">Dismiss</button></div></div>';
+    }).join('') + '</div>';
+  }
+  function markViewed(id) { var a = mobileList(); a.forEach(function (s) { if (s && s.id === id) s.viewed = true; }); saveMobile(a); }
+  w.stMobileDismiss = function (id) { markViewed(id); renderRegister(); };
+  w.stMobileView = function (id) {
+    var s = mobileList().filter(function (x) { return x && x.id === id; })[0]; markViewed(id);
+    if (s && s.takeId && byId(s.takeId)) w.stVariance(s.takeId); else renderRegister();
+  };
+  w.stIngestMobile = function () { return ingestMobile(false); };
+  setTimeout(function () { try { ingestMobile(false); } catch (e) {} }, 5000);
+  setInterval(function () { try { if (!document.hidden && mobileList().some(function (s) { return s && !s.applied; })) ingestMobile(false); } catch (e) {} }, 8000);
 
   /* ---------- mount ---------- */
   setTimeout(function () { var t = $(TAB); if (t && !t.classList.contains('hidden')) render(); }, 800);
