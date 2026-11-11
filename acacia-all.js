@@ -29,7 +29,8 @@
   function parseT(s) { if (typeof s !== 'string') return {}; try { var o = JSON.parse(s); return isObj(o) ? o : {}; } catch (e) { return {}; } }
   function ident(r) {
     if (!isObj(r)) return null;
-    for (var i = 0; i < IDF.length; i++) { var v = r[IDF[i]]; if (v != null && v !== '' && typeof v !== 'object') return 'i:' + IDF[i] + ':' + String(v); }
+    var stock = r.buyPrice !== undefined || r.sellPrice !== undefined || r.qty !== undefined; // stock lines: the SKU is a shared unit code (PCS, KGM...), never an identity
+    for (var i = 0; i < IDF.length; i++) { if (stock && IDF[i] === 'sku') continue; var v = r[IDF[i]]; if (v != null && v !== '' && typeof v !== 'object') return 'i:' + IDF[i] + ':' + String(v); }
     return null; // hash-only records are not tombstoned
   }
   function trackable(k) {

@@ -2088,7 +2088,8 @@ try{
           var remote; try { remote = JSON.parse(rows[0].value); } catch (e) { return false; }
           if (!Array.isArray(remote)) return false;
           var byName = {}; remote.forEach(function(r){ if (r && r.name) byName[String(r.name).trim().toLowerCase().replace(/\s+/g, " ")] = r; });
-          return changes.every(function(c){
+          var lastBy = {}; changes.forEach(function(c){ lastBy[String(c.name).trim().toLowerCase().replace(/\s+/g, " ")] = c; });
+          return Object.keys(lastBy).map(function(k){ return lastBy[k]; }).every(function(c){
             var r = byName[String(c.name).trim().toLowerCase().replace(/\s+/g, " ")];
             return !!r && Math.abs(num(r.qty) - c.to) < 0.000001;
           });
@@ -2709,3 +2710,152 @@ try{(function(W){
   setTimeout(function(){try{W.renderAmendedWarehouseMovement();}catch(e){}},1200);
 })(window);
 }catch(e){console.error('[merged:stock-adjustment-report]',e)}
+
+/* ######## acacia-stock-fix (merged) ######## */
+try{
+/* acacia-stock-fix.js - keeps imported / added stock from "disappearing", and lets an import REPLACE the table.
+ *
+ * 1) Cloud merge: Books' 3-way merge treated "an item I have, unchanged since the last sync, but missing from the cloud copy"
+ *    as "deleted on another device" and removed it. If the cloud copy of a warehouse was ever replaced by a shorter list
+ *    (another tab / app / a retry), all freshly imported items were dropped and only the older item stayed.
+ *    Deletions are already recorded explicitly (tombstones), so for stock lists a missing item is now simply kept.
+ * 2) Stale tombstones keyed by SKU (a shared unit code such as PCS) are revived once, so they stop hiding good stock.
+ * 3) Import: when the file does not contain some items already in the warehouse, you are asked whether to REPLACE the
+ *    warehouse stock with the file (old lines go to the Recycle Bin, lines that have transactions are kept) or MERGE.
+ * Load LAST in index.html. */
+(function (W) {
+  "use strict";
+  if (W.__acxStockFix) return;
+  W.__acxStockFix = true;
+
+  var LS = W.localStorage;
+  function norm(v) { return String(v == null ? "" : v).toLowerCase().replace(/\s+/g, " ").trim(); }
+  function jget(k, d) { try { var v = JSON.parse(LS.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+
+  /* ---------- 1) merge guard ---------- */
+  function patchMerge() {
+    var M = W.__acxMerge;
+    if (!M || typeof M.merge3 !== "function" || typeof M.index !== "function") return false;
+    if (M.merge3.__stockSafe) return true;
+    var orig = M.merge3;
+    var safe = function (local, remote, base, opts) {
+      try {
+        var stock = opts && opts.additive && opts.additive.length === 1 && opts.additive[0] === "qty"; /* inventory_* lists */
+        if (stock && base && base.f && Array.isArray(local) && Array.isArray(remote)) {
+          var li = M.index(local).map, ri = M.index(remote).map, f = {}, r = base.r ? {} : null;
+          Object.keys(base.f).forEach(function (id) {
+            if (li[id] && ri[id]) { f[id] = base.f[id]; if (r && base.r[id]) r[id] = base.r[id]; }
+          });
+          base = { f: f, r: r };   /* ids seen on only one side carry no base => kept, never inferred as deleted */
+        }
+      } catch (e) { console.warn("[stock-fix] merge guard", e); }
+      return orig.call(this, local, remote, base, opts);
+    };
+    safe.__stockSafe = true;
+    M.merge3 = safe;
+    return true;
+  }
+
+  /* ---------- 2) revive stale SKU tombstones for stock ---------- */
+  function cleanTombstones() {
+    try {
+      var u = jget("loggedInUser", null);
+      if (!u || !u.companyId || u.demo) return;
+      var t = jget("tombstones", null);
+      if (!t || typeof t !== "object") return;
+      var now = Date.now() + (W.__acxClockOffset || 0), changed = false;
+      Object.keys(t).forEach(function (col) {
+        if (!/^inventory_/.test(col)) return;
+        Object.keys(t[col] || {}).forEach(function (id) {
+          var e = t[col][id];
+          if (/^i:sku:/.test(id) && Array.isArray(e) && e[1]) { t[col][id] = [now, 0]; changed = true; }
+        });
+      });
+      if (changed) { LS.setItem("tombstones", JSON.stringify(t)); console.info("[stock-fix] revived stale SKU delete-markers on stock"); }
+    } catch (e) { console.warn("[stock-fix] tombstones", e); }
+  }
+
+  /* ---------- 3) replace-or-merge on import ---------- */
+  var NAME_HDR = { name: 1, item: 1, itemname: 1, product: 1, productname: 1, title: 1 };
+  function namesFrom(rows) {
+    var out = {};
+    (rows || []).forEach(function (raw) {
+      Object.keys(raw || {}).some(function (h) {
+        if (NAME_HDR[String(h).toLowerCase().replace(/[^a-z0-9]/g, "")]) { var n = norm(raw[h]); if (n) out[n] = 1; return true; }
+        return false;
+      });
+    });
+    return out;
+  }
+  function readRows(file, cb) {
+    var isCsv = /\.csv$/i.test(file.name || ""), fr = new FileReader();
+    fr.onerror = function () { cb(null); };
+    if (isCsv) {
+      fr.onload = function (e) { try { cb((W.__invParseCSV || function () { return []; })(e.target.result)); } catch (x) { cb(null); } };
+      fr.readAsText(file); return;
+    }
+    fr.onload = function (e) {
+      var ensure = W.__ensureXLSXLib || function (ok) { ok(); };
+      ensure(function () {
+        try {
+          var wb = W.XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+          cb(W.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "", raw: true }));
+        } catch (x) { cb(null); }
+      });
+    };
+    fr.readAsArrayBuffer(file);
+  }
+
+  function wrapImport() {
+    var orig = W.importInventoryExcel;
+    if (typeof orig !== "function") return false;
+    if (orig.__stockFix) return true;
+    var w = function (ev) {
+      var input = ev && ev.target, self = this, args = arguments;
+      var sel = document.getElementById("warehouseSelect"), wh = sel && sel.value;
+      var file = input && input.files && input.files[0];
+      if (!wh || !file || !/\.(csv|xlsx|xls|xlsm)$/i.test(file.name || "")) return orig.apply(self, args);
+      readRows(file, function (rows) {
+        try {
+          if (!rows || !rows.length) return orig.apply(self, args);
+          var inFile = namesFrom(rows), key = "inventory_" + wh, cur = jget(key, []);
+          if (!Array.isArray(cur)) cur = [];
+          var tx = jget("transactions", []);
+          var gone = cur.filter(function (it) { return it && norm(it.name) && !inFile[norm(it.name)]; });
+          if (!gone.length) return orig.apply(self, args);
+          var blocked = gone.filter(function (it) { return tx.some(function (t) { return t && t.itemSKU === it.sku && it.sku; }); });
+          var removable = gone.filter(function (it) { return blocked.indexOf(it) < 0; });
+          if (!removable.length) return orig.apply(self, args);
+          var ok = W.confirm(
+            "This file does not contain " + gone.length + " item(s) that are already in \"" + wh + "\".\n\n" +
+            "OK = REPLACE: remove those " + removable.length + " item(s) (they go to the Recycle Bin)" +
+            (blocked.length ? " - " + blocked.length + " with transactions are kept" : "") + " and import the file.\n" +
+            "Cancel = MERGE: keep them and add / update from the file."
+          );
+          if (ok) {
+            var drop = {}; removable.forEach(function (it) { drop[norm(it.name)] = 1; });
+            var keep = [];
+            cur.forEach(function (it) {
+              if (it && drop[norm(it.name)]) { try { if (typeof W.moveToRecycle === "function") W.moveToRecycle(it, "File", wh); } catch (e) {} }
+              else keep.push(it);
+            });
+            LS.setItem(key, JSON.stringify(keep));   /* the delete-markers are recorded by the normal storage hook */
+          }
+        } catch (e) { console.warn("[stock-fix] replace step", e); }
+        return orig.apply(self, args);
+      });
+    };
+    w.__stockFix = true;
+    W.importInventoryExcel = w;
+    return true;
+  }
+
+  var tries = 0;
+  (function boot() {
+    var a = patchMerge(), b = wrapImport();
+    if ((!a || !b) && ++tries < 60) return setTimeout(boot, 500);
+    setTimeout(cleanTombstones, 8000);
+  })();
+})(window);
+
+}catch(e){console.error("[merged:stock-fix]",e)}
