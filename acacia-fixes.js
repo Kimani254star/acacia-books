@@ -2859,3 +2859,192 @@ try{
 })(window);
 
 }catch(e){console.error("[merged:stock-fix]",e)}
+
+/* ######## acacia-stock-identity-fix (merged) ######## */
+try{
+/* Stops imported / added stock from "merging into one item" after a while.
+ * Cause: the cloud merge identifies a record by id, else by SKU. Imported items often have no id and share one SKU
+ * (PCS, KGM ...), so the merge matched them by POSITION in the list: item #1 of this tab was overwritten by item #1 of
+ * the cloud / other tab, and on every sync more items turned into copies of one item.
+ * Fix: before any stock list (inventory_*) is merged, every item that has no id is given the id of the same-named item
+ * on the other side, else a stable id made from its name - so items are always matched by NAME, never by position.
+ * Load LAST in index.html (after the other stock fixes). */
+(function (W) {
+  "use strict";
+  if (W.__acxStockIdentity) return;
+  W.__acxStockIdentity = true;
+  function nm(v) { return String(v == null ? "" : v).trim().toLowerCase().replace(/\s+/g, " "); }
+  function hasId(it) { return it && it.id != null && it.id !== "" && typeof it.id !== "object"; }
+
+  function giveIds(M, local, remote) {
+    var nameId = {}, used = {};
+    [local, remote].forEach(function (list) {
+      list.forEach(function (it) {
+        if (!it || typeof it !== "object") return;
+        if (hasId(it)) { used[it.id] = 1; if (nm(it.name) && !nameId[nm(it.name)]) nameId[nm(it.name)] = it.id; }
+      });
+    });
+    function fix(list) {
+      var dup = {};
+      return list.map(function (it) {
+        if (!it || typeof it !== "object" || hasId(it) || !nm(it.name)) return it;
+        var key = nm(it.name), id = nameId[key];
+        if (!id) { id = "itm-" + M.h32("name|" + key); nameId[key] = id; }
+        dup[key] = (dup[key] || 0) + 1;
+        if (dup[key] > 1) id = id + "-" + dup[key];          /* two un-id'd items with the same name stay separate */
+        var copy = Object.assign({}, it); copy.id = id; return copy;
+      });
+    }
+    return [fix(local), fix(remote)];
+  }
+
+  function patch() {
+    var M = W.__acxMerge;
+    if (!M || typeof M.merge3 !== "function" || typeof M.h32 !== "function") return false;
+    if (M.merge3.__idSafe) return true;
+    var orig = M.merge3;
+    var safe = function (local, remote, base, opts) {
+      try {
+        var stock = opts && opts.additive && opts.additive.length === 1 && opts.additive[0] === "qty";
+        if (stock && Array.isArray(local) && Array.isArray(remote)) {
+          var both = giveIds(M, local, remote); local = both[0]; remote = both[1];
+        }
+        var bal = opts && opts.additive && opts.additive.length === 1 && opts.additive[0] === "balance";   /* banks / customers / suppliers */
+        if (bal && Array.isArray(local) && Array.isArray(remote) && W.__acxBankIds && W.__acxBankIds.isBankList(local.concat(remote))) {
+          var bb = W.__acxBankIds.normalise(local, remote); local = bb[0]; remote = bb[1];
+        }
+      } catch (e) { console.warn("[stock-identity]", e); }
+      return orig.call(this, local, remote, base, opts);
+    };
+    safe.__idSafe = true;
+    M.merge3 = safe;
+    return true;
+  }
+  var tries = 0;
+  (function boot() { if (!patch() && ++tries < 80) setTimeout(boot, 500); })();
+})(window);
+}catch(e){console.error('[merged:stock-identity-fix]',e)}
+
+
+/* ######## acacia-bank-identity-fix (merged) ######## */
+try{
+/* Stops Funds bank accounts from being duplicated.
+ * Cause: a bank account added in Funds has NO id, so the cloud merge identified it by a fingerprint of ALL its fields.
+ * The moment its balance changed (a payment, a transfer, a stale tab) the fingerprint changed, and the merge kept the old
+ * copy AND the new copy => the same bank appeared twice (more each sync).
+ * Fix: every bank gets a permanent id made from bank name + account number (the same on every device), the merge matches
+ * banks by that id (so balances merge instead of duplicating), Add Bank refuses a bank that already exists, and an
+ * existing duplicate can be merged once (backup kept). Load LAST in index.html. */
+(function (W) {
+  "use strict";
+  if (W.__acxBankIds) return;
+  var LS = W.localStorage;
+  function nm(v) { return String(v == null ? "" : v).trim().toLowerCase().replace(/\s+/g, " "); }
+  function h32(s) { var h = 5381, i; s = String(s); for (i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+  function isSys(b) { return !!(b && (b.system || b.name === "Undeposited Funds" || b.name === "Petty Cash")); }
+  function isBank(b) { return !!b && typeof b === "object" && !Array.isArray(b) && "accountNumber" in b && ("chartAccount" in b || "currency" in b); }
+  function hasId(b) { return b && b.id != null && b.id !== "" && typeof b.id !== "object"; }
+  function keyOf(b) { return isSys(b) ? "sys|" + nm(b.name) : nm(b.name) + "|" + String(b.accountNumber == null ? "" : b.accountNumber).trim(); }
+  function idFor(b) { return "bnk-" + h32(keyOf(b)); }
+  function isBankList(list) {
+    var n = 0, ok = 0;
+    list.forEach(function (b) { if (b && typeof b === "object") { n++; if (isBank(b)) ok++; } });
+    return n > 0 && ok === n;
+  }
+
+  /* merge helper: same bank on both sides gets the same id; a second copy of the same bank inside one list is dropped (last one wins) */
+  function normalise(local, remote) {
+    var idByKey = {};
+    [local, remote].forEach(function (list) { list.forEach(function (b) { if (isBank(b) && hasId(b) && !idByKey[keyOf(b)]) idByKey[keyOf(b)] = b.id; }); });
+    function fix(list) {
+      var lastAt = {};
+      list.forEach(function (b, i) { if (isBank(b) && nm(b.name)) lastAt[keyOf(b)] = i; });
+      var out = [];
+      list.forEach(function (b, i) {
+        if (!isBank(b) || !nm(b.name)) { out.push(b); return; }
+        if (lastAt[keyOf(b)] !== i) return;
+        var id = idByKey[keyOf(b)] || idFor(b);
+        if (hasId(b) && b.id === id) { out.push(b); return; }
+        var c = Object.assign({}, b); c.id = id; out.push(c);
+      });
+      return out;
+    }
+    return [fix(local), fix(remote)];
+  }
+  W.__acxBankIds = { isBankList: isBankList, normalise: normalise, keyOf: keyOf };
+
+  function read() { try { var v = JSON.parse(LS.getItem("banks") || "null"); return Array.isArray(v) ? v : null; } catch (e) { return null; } }
+  function live() { try { return (typeof banks !== "undefined" && Array.isArray(banks)) ? banks : null; } catch (e) { return null; } }
+
+  /* give every bank its id (also on the in-memory list, otherwise Books saves it back without one) */
+  function giveIds() {
+    var u; try { u = JSON.parse(LS.getItem("loggedInUser") || "null"); } catch (e) { u = null; }
+    if (!u || !u.companyId || u.demo) return;
+    var arr = read(); if (!arr) return;
+    var changed = false, mem = live();
+    arr.forEach(function (b) { if (isBank(b) && nm(b.name) && !hasId(b)) { b.id = idFor(b); changed = true; } });
+    if (mem) mem.forEach(function (b) { if (isBank(b) && nm(b.name) && !hasId(b)) b.id = idFor(b); });
+    if (changed) { try { LS.setItem("banks", JSON.stringify(arr)); } catch (e) {} }
+  }
+
+  /* Add Bank: refuse a bank that already exists (same name + account number) */
+  function wrapAdd() {
+    if (typeof W.addBank !== "function") return false;
+    if (W.addBank.__noDup) return true;
+    var orig = W.addBank;
+    W.addBank = function () {
+      try {
+        var el = function (i) { var x = document.getElementById(i); return x ? String(x.value || "").trim() : ""; };
+        var name = el("bankName"), acc = el("accountNumber");
+        if (name) {
+          if (name === "Undeposited Funds" || name === "Petty Cash") { alert("\"" + name + "\" is a built-in account and already exists."); return; }
+          var cand = { name: name, accountNumber: acc, chartAccount: "x" }, k = keyOf(cand);
+          var dup = (read() || []).filter(function (b) { return isBank(b) && !isSys(b) && keyOf(b) === k; })[0];
+          if (dup) { alert("This account already exists in Funds: " + dup.name + (dup.accountNumber ? " (" + dup.accountNumber + ")" : "") + ".\nA bank is only added once. Edit the existing account instead."); return; }
+        }
+      } catch (e) { console.warn("[bank-dup guard]", e); }
+      var r = orig.apply(this, arguments);
+      setTimeout(giveIds, 50);
+      return r;
+    };
+    W.addBank.__noDup = true;
+    return true;
+  }
+
+  /* merge duplicates that already exist (asks once; the old list is kept in localStorage "banks_backup_before_dedupe") */
+  var asked = false;
+  function dupGroups(arr) {
+    var g = {};
+    arr.forEach(function (b, i) { if (isBank(b) && nm(b.name)) (g[keyOf(b)] = g[keyOf(b)] || []).push(i); });
+    return Object.keys(g).filter(function (k) { return g[k].length > 1; }).map(function (k) { return g[k]; });
+  }
+  W.acxDedupeBanks = function (silent) {
+    var arr = read(); if (!arr) return 0;
+    var groups = dupGroups(arr); if (!groups.length) { if (!silent) alert("No duplicate bank accounts found."); return 0; }
+    var lines = groups.map(function (ix) {
+      var last = arr[ix[ix.length - 1]];
+      return "• " + last.name + (last.accountNumber ? " (" + last.accountNumber + ")" : "") + ": " + ix.length + " copies, balances " + ix.map(function (i) { return arr[i].balance; }).join(" / ") + "  → keep " + last.balance;
+    });
+    if (!confirm("Duplicate bank accounts were found:\n\n" + lines.join("\n") + "\n\nMerge each into ONE account (the most recent copy is kept)? Check the balance afterwards. A backup is kept.")) return 0;
+    try { LS.setItem("banks_backup_before_dedupe", JSON.stringify({ at: new Date().toISOString(), banks: arr })); } catch (e) {}
+    var drop = {}; groups.forEach(function (ix) { ix.slice(0, -1).forEach(function (i) { drop[i] = 1; }); });
+    var out = arr.filter(function (b, i) { return !drop[i]; });
+    out.forEach(function (b) { if (isBank(b) && nm(b.name) && !hasId(b)) b.id = idFor(b); });
+    var mem = live(); if (mem) { mem.length = 0; out.forEach(function (b) { mem.push(b); }); }
+    LS.setItem("banks", JSON.stringify(out));
+    ["renderBankTable", "updateBankDropdowns", "syncBankBalancesToCOA", "renderAccounts", "renderBalanceSheet"].forEach(function (f) { try { if (typeof W[f] === "function") W[f](); } catch (e) {} });
+    try { if (W.__companySync && W.__companySync.pushAllCompanyKeys) W.__companySync.pushAllCompanyKeys(); } catch (e) {}
+    alert("Done: " + Object.keys(drop).length + " duplicate bank account(s) merged.");
+    return Object.keys(drop).length;
+  };
+  function checkDups() {
+    if (asked) return; var arr = read(); if (!arr) return;
+    if (dupGroups(arr).length) { asked = true; W.acxDedupeBanks(true); }
+  }
+
+  var tries = 0;
+  (function boot() { wrapAdd(); if (++tries < 90) setTimeout(boot, 2000); })();     /* re-wrap if another script replaces addBank */
+  setTimeout(giveIds, 6000); setInterval(giveIds, 30000);
+  setTimeout(checkDups, 12000);
+})(window);
+}catch(e){console.error('[merged:bank-identity-fix]',e)}

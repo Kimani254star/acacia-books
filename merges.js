@@ -873,7 +873,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     var seen = {}, lines = [];
     invOf(wh).forEach(function (it) {
       if (cat && catOf(it) !== cat) return;
-      var key = low(it.sku || it.name); if (seen[key]) return; seen[key] = 1;           /* one line per item: no duplicate counting */
+      var key = low(it.name) + '|' + low(it.sku || ''); if (seen[key]) return; seen[key] = 1;           /* one line per item: no duplicate counting */
       lines.push({ key: key, name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: wh, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
     });
     if (!lines.length) return alert('No items were found in this warehouse' + (cat ? ' and category' : '') + ' to count.');
@@ -1090,7 +1090,13 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     if (!confirm('Post ' + t.no + '? ' + diff.length + ' adjustment(s) will change the balances in ' + t.warehouse + ' and appear in Stock Activity. This cannot be undone.')) return;
     var inv = w.getInventory(t.warehouse) || [], acts = rd('stockActivities'), now = today();
     diff.forEach(function (l, n) {
-      var v = calc(l).v, hit = inv.filter(function (x) { return x && ((l.sku && x.sku && low(x.sku) === low(l.sku)) || low(x.name) === low(l.name)); })[0];
+      var v = calc(l).v, hit = (function () {
+        var byN = inv.filter(function (x) { return x && low(x.name) === low(l.name); });
+        if (byN.length === 1) return byN[0];
+        if (byN.length > 1) return byN.filter(function (x) { return l.sku && low(x.sku) === low(l.sku); })[0] || byN[0];
+        var bySku = l.sku ? inv.filter(function (x) { return x && x.sku && low(x.sku) === low(l.sku); }) : [];
+        return bySku.length === 1 ? bySku[0] : undefined;
+      })();
       if (!hit) { if (v < 0) return; hit = { name: l.name, sku: l.sku, category: l.category, qty: 0 }; inv.push(hit); }
       var before = num(hit.qty), after = Math.max(0, r4(before + v)), applied = r4(after - before);
       hit.qty = after; l.postedQty = applied; l.adjusted = true; l.adjustedVia = 'Stock take post';
@@ -1100,6 +1106,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     });
     w.saveInventory(t.warehouse, inv); localStorage.setItem('stockActivities', JSON.stringify(acts));
     t.status = 'Posted'; t.postedBy = who(); t.postedAt = new Date().toISOString(); t.postedDate = now; put(t);
+    try { if (window.__companySync && window.__companySync.pushAllCompanyKeys) window.__companySync.pushAllCompanyKeys(); if (window.__companySyncKick) window.__companySyncKick(); } catch (e) {}   /* send the new stock + activity to the cloud now so linked apps see it */
     ['renderInventoryTable', 'renderMovementTable', 'renderStockTransfer'].forEach(function (f) { try { if (typeof w[f] === 'function') w[f](); } catch (e) {} });
     alert('Posted. ' + diff.length + ' adjustment(s) were applied and sent to Stock Activity.'); renderSheet();
   };
@@ -1149,7 +1156,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     var seen = {}, lines = [];
     invOf(wh).forEach(function (it) {
       if (cat && catOf(it) !== cat) return;
-      var key = low(it.sku || it.name); if (seen[key]) return; seen[key] = 1;
+      var key = low(it.name) + '|' + low(it.sku || ''); if (seen[key]) return; seen[key] = 1;
       lines.push({ warehouse: wh, name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '' });
     });
     return { count: lines.length, rows: [CSV_HEAD].concat(lines.map(function (l) { return lineRow('', l); })) };
@@ -1239,8 +1246,9 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   /* put the file's physical quantities on the stock take lines (matching on SKU, then barcode, then name) */
   function applyImport(t, tbl) {
     var c = tbl.c, idx = { sku: {}, bc: {}, name: {} }, touched = {}, res = { set: 0, blank: 0, unmatched: [], invalid: [], otherWh: 0, dup: 0 };
+    var skuN = {}; t.lines.forEach(function (l) { if (l.sku) skuN[low(l.sku)] = (skuN[low(l.sku)] || 0) + 1; });
     t.lines.forEach(function (l, i) {
-      if (l.sku && idx.sku[low(l.sku)] == null) idx.sku[low(l.sku)] = i;
+      if (l.sku && skuN[low(l.sku)] === 1 && idx.sku[low(l.sku)] == null) idx.sku[low(l.sku)] = i;   /* a SKU shared by several items (PCS, KGM ...) is not an identity: fall through to barcode / name */
       if (l.barcode && idx.bc[low(l.barcode)] == null) idx.bc[low(l.barcode)] = i;
       if (idx.name[low(l.name)] == null) idx.name[low(l.name)] = i;
     });
@@ -1307,7 +1315,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
         if (!t) {
           var seen = {}, lines = [];
           invOf(wh).forEach(function (it) {
-            var key = low(it.sku || it.name); if (seen[key]) return; seen[key] = 1;
+            var key = low(it.name) + '|' + low(it.sku || ''); if (seen[key]) return; seen[key] = 1;
             lines.push({ key: key, name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: wh, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
           });
           if (!lines.length) return alert('No items were found in ' + wh + ' to count.');
@@ -1534,7 +1542,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   function newTakeFor(list, wh, by) {
     var seen = {}, lines = [];
     invOf(wh).forEach(function (it) {
-      var key = low(it.sku || it.name); if (seen[key]) return; seen[key] = 1;
+      var key = low(it.name) + '|' + low(it.sku || ''); if (seen[key]) return; seen[key] = 1;
       lines.push({ key: key, name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: wh, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
     });
     if (!lines.length) return null;
