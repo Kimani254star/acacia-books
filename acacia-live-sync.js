@@ -14,7 +14,7 @@
   W.__acxLiveSync = true;
 
   var POLL_MS = 20000, busy = false, timer = null, pushT = null;
-  var PUSH_RE = /^(inventory_|warehouses$|orgInfo|acaciaOrgProfile$|banks$|branding$|customDomain$|domain$|branches$)/;
+  var PUSH_RE = /^(inventory_|warehouses$|stockTakes$|stocktakeMobile$|orgInfo|acaciaOrgProfile$|banks$|branding$|customDomain$|domain$|branches$)/;
 
   function user() { try { return JSON.parse(localStorage.getItem("loggedInUser") || "null"); } catch (e) { return null; } }
   function run(n) { try { if (typeof W[n] === "function") W[n](); } catch (e) { console.warn("[live-sync]", n, e); } }
@@ -24,6 +24,8 @@
     keys.forEach(function (k) {
       if (/^inventory_|^warehouses$/.test(k)) inv = true;
       if (k === "banks") bank = true;
+      if (k === "stocktakeMobile") run("stIngestMobile");   /* a count arrived from the Stock Count phone app */
+      if (k === "stockTakes") run("stTopUp");
     });
     if (inv) {
       ["renderInventoryTable", "renderInventorySummary", "renderStockValuation", "renderStockReports", "renderPriceListTable"].forEach(run);

@@ -771,6 +771,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   /* ---------- register ---------- */
   function renderRegister() {
     var root = rootEl(); if (!root) return;
+    try { topUpAll(); } catch (e) { console.warn('[stock take top-up]', e); }
     var all = takes(), q = low(($('stSearch') || {}).value), st = ($('stStatus') || {}).value || '';
     var cards = { total: all.length, pend: 0, done: 0, diff: 0 };
     all.forEach(function (t) { var k = totals(t); if (t.status === 'Submitted') cards.pend++; if (t.status === 'Posted') cards.done++; if (k.diffLines > 0) cards.diff++; });
@@ -884,6 +885,26 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     a.push(t); setTakes(a);
     state = { view: 'sheet', id: t.id, t: null }; render();
   };
+  /* An open stock take is a snapshot of the warehouse taken when it was created. Items imported / added afterwards were missing
+   * from it (so Stock Take, Export and the Stock Count phone app showed only the old items). Open Full Count takes
+   * (Draft / Counting) are topped up here with any warehouse item that is not on the sheet yet. Counted lines are untouched. */
+  function topUp(t) {
+    if (!t || t.method === 'Cycle Count' || (t.status !== 'Draft' && t.status !== 'Counting')) return 0;
+    var have = {}; (t.lines || []).forEach(function (l) { have[l.key || (low(l.name) + '|' + low(l.sku || ''))] = 1; });
+    var add = 0; t.lines = t.lines || [];
+    invOf(t.warehouse).forEach(function (it) {
+      if (t.category && catOf(it) !== t.category) return;
+      var key = low(it.name) + '|' + low(it.sku || ''); if (have[key]) return; have[key] = 1;
+      t.lines.push({ key: key, name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: t.warehouse, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
+      add++;
+    });
+    return add;
+  }
+  function topUpAll() {
+    var a = takes(), n = 0; a.forEach(function (t) { n += topUp(t); });
+    if (n) setTakes(a); return n;
+  }
+  w.stTopUp = topUpAll;
   w.stDelete = function (id) {
     var t = byId(id); if (!t) return;
     var msg = t.status === 'Posted'
@@ -929,7 +950,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       put(cur); o.remove(); render();
     };
   };
-  w.stOpen = function (id) { state = { view: 'sheet', id: id, t: null }; render(); };
+  w.stOpen = function (id) { try { topUpAll(); } catch (e) { console.warn('[stock take top-up]', e); } state = { view: 'sheet', id: id, t: null }; render(); };
   w.stBack = function () { if (state.t) { clearTimeout(saveTimer); put(state.t); } state = { view: 'register', id: null, t: null }; render(); };
 
   /* ---------- working sheet ---------- */
@@ -1147,6 +1168,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
 
   /* Export straight from the Stock module: physical qty and variance stay blank until the count is imported */
   function stockSheet(wh, cat) {
+    try { topUpAll(); } catch (e) {}
     var open = takes().filter(function (t) { return t.warehouse === wh && (t.status === 'Draft' || t.status === 'Counting') && (!cat || !t.category || t.category === cat); })[0];
     if (open) {
       open = byId(open.id) || open; var sys = !blindNow(open);

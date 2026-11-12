@@ -107,6 +107,16 @@
 
   /* ---------- state ---------- */
   var U = lget('acxst_user', null), S = { screen: 'home', sess: null, tab: 'all', q: '', shown: PAGE, view: [], takes: [], whs: [], loadErr: '', loading: false, scanInc: lget('acxst_inc', true), poll: null };
+  var ACCENTS = { blue: '#1e3a8a', green: '#166534', purple: '#6d28d9', teal: '#0f766e', red: '#b91c1c', slate: '#334155' };
+  function applyLook() {
+    var L = lget('acxst_look', {}), h = document.documentElement;
+    if (L.theme === 'dark' || L.theme === 'light') h.setAttribute('data-theme', L.theme); else h.removeAttribute('data-theme');
+    var c = ACCENTS[L.accent];
+    if (c) { h.style.setProperty('--pri', c); h.style.setProperty('--pri2', c); } else { h.style.removeProperty('--pri'); h.style.removeProperty('--pri2'); }
+    document.body.style.fontSize = ({ s: '14px', m: '16px', l: '18px' })[L.size] || '16px';
+    var m = document.querySelector('meta[name=theme-color]'); if (m) m.setAttribute('content', c || '#1e3a8a');
+  }
+  applyLook();
   var dev = LS.getItem('acxst_dev'); if (!dev) { dev = Math.random().toString(36).slice(2, 8); try { LS.setItem('acxst_dev', dev); } catch (e) {} }
   var skey = function (k) { return 'acxst_s_' + U.companyId + '_' + k; };
   var ikey = function () { return 'acxst_idx_' + U.companyId; };
@@ -277,8 +287,9 @@
 
   /* ---------- screens ---------- */
   function topbar(title, sub, back, right) {
-    return '<div class="top">' + (back ? '<button class="ib" data-a="back" aria-label="back">&#8592;</button>' : '') + '<h1>' + esc(title) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</h1>' + (right || '') + '</div>' + (navigator.onLine ? '' : '<div class="off">Offline - counts are saved on this phone</div>');
+    return '<div class="top">' + MENU + (back ? '<button class="ib" data-a="back" aria-label="back">&#8592;</button>' : '') + '<h1>' + esc(title) + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</h1>' + (right || '') + '</div>' + (navigator.onLine ? '' : '<div class="off">Offline - counts are saved on this phone</div>');
   }
+  var MENU = '<button class="ib menu" data-a="menu" aria-label="menu">&#9776;</button>';
   function vLogin(err) {
     return '<div class="wrap"><img class="logo" src="acaciabooks-logo.png" alt=""><h1 class="center" style="margin:6px 0 2px;font-size:22px">Acacia Stock Count</h1><p class="center mute" style="margin:0 0 16px">Sign in with your Acacia Books login</p>' +
       '<div class="card"><label>Company name</label><input id="lc" type="text" autocomplete="organization" autocapitalize="none" value="' + esc(lget('acxst_lastco', '')) + '">' +
@@ -287,7 +298,7 @@
       (err ? '<div class="msg bad">' + esc(err) + '</div>' : '') + '<button class="btn" id="lgo" data-a="login">Sign in</button></div></div>';
   }
   function vHome() {
-    var ss = sessions(), h = topbar('Stock Count', U.companyName + ' · ' + U.name, false, '<button class="ib" data-a="refresh" aria-label="refresh">&#8635;</button><button class="ib" data-a="logout" aria-label="sign out">&#9211;</button>') + '<div class="wrap">';
+    var ss = sessions(), h = topbar('Dashboard', U.companyName + ' · ' + U.name, false, '<button class="ib" data-a="refresh" aria-label="refresh">&#8635;</button>') + '<div class="wrap">';
     if (S.loadErr) h += '<div class="msg warn">' + esc(S.loadErr) + '</div>';
     h += '<div class="card"><h2>On this phone</h2>';
     if (!ss.length) h += '<div class="mute">No counts started yet.</div>';
@@ -308,7 +319,7 @@
   }
   function vCount() {
     var s = S.sess, st = stats(s);
-    return '<div class="stick"><div class="top"><button class="ib" data-a="back" aria-label="back">&#8592;</button><h1>' + esc(s.title) + '<small id="prog">' + st.counted + ' of ' + st.total + ' counted</small><div class="bar"><i id="bari" style="width:' + (st.total ? st.counted * 100 / st.total : 0) + '%"></i></div></h1><button class="ib" data-a="scan" aria-label="scan">&#128247;</button></div>' + (navigator.onLine ? '' : '<div class="off">Offline - counts are saved on this phone</div>') +
+    return '<div class="stick"><div class="top">' + MENU + '<button class="ib" data-a="back" aria-label="back">&#8592;</button><h1>' + esc(s.title) + '<small id="prog">' + st.counted + ' of ' + st.total + ' counted</small><div class="bar"><i id="bari" style="width:' + (st.total ? st.counted * 100 / st.total : 0) + '%"></i></div></h1><button class="ib" data-a="scan" aria-label="scan">&#128247;</button></div>' + (navigator.onLine ? '' : '<div class="off">Offline - counts are saved on this phone</div>') +
       '<div class="tools"><div class="srch"><input id="q" type="search" placeholder="Search, or scan a barcode / SKU" value="' + esc(S.q) + '" autocomplete="off"></div>' +
       '<div class="tabs"><button data-a="tab" data-t="all" class="' + (S.tab === 'all' ? 'on' : '') + '">All</button><button data-a="tab" data-t="todo" class="' + (S.tab === 'todo' ? 'on' : '') + '">To count</button><button data-a="tab" data-t="done" class="' + (S.tab === 'done' ? 'on' : '') + '">Counted</button></div>' +
       '<label class="sw"><input type="checkbox" id="inc"' + (S.scanInc ? ' checked' : '') + '> A scan adds 1 to the count</label></div></div>' +
@@ -328,18 +339,55 @@
     return h + '</div>';
   }
 
+  function vSide() {
+    var on = (S.screen === 'reports' || S.screen === 'appearance') ? S.screen : 'home';
+    function it(id, ico, label) { return '<button class="nav' + (on === id ? ' on' : '') + '" data-a="nav" data-s="' + id + '"><span>' + ico + '</span>' + label + '</button>'; }
+    return '<aside class="side" id="side"><div class="sh"><img src="acaciabooks-logo.png" alt=""><div><b>Stock Count</b><small>' + esc(U.companyName || '') + '</small></div></div>' +
+      '<nav>' + it('home', '&#9632;', 'Dashboard') + it('reports', '&#9776;', 'Reports') + it('appearance', '&#9788;', 'Appearance') + '</nav>' +
+      '<div class="sf"><div class="mute" style="margin:0 12px 8px">' + esc(U.name || U.email || '') + '</div><button class="nav out" data-a="logout"><span>&#9211;</span>Log out</button></div></aside><div class="scrim" id="scrim" data-a="menu"></div>';
+  }
+  function vReports() {
+    var ss = sessions(), sent = 0, units = 0, counted = 0, h = topbar('Reports', U.companyName + ' · ' + U.name, false, '') + '<div class="wrap">';
+    ss.forEach(function (s) { var st = stats(s); if (s.pushedAt) sent++; units += st.units; counted += st.counted; });
+    h += '<div class="card"><h2>Summary</h2><div class="sum"><div><b>' + ss.length + '</b><span>counts on this phone</span></div><div><b>' + sent + '</b><span>sent to Books</span></div><div><b>' + fmt(counted) + '</b><span>items counted</span></div><div><b>' + fmt(units) + '</b><span>units counted</span></div></div></div>';
+    h += '<div class="card"><h2>Counts</h2>';
+    if (!ss.length) h += '<div class="mute">No counts yet. Start one from the Dashboard.</div>';
+    ss.slice().sort(function (a, b) { return String(b.startedAt || '').localeCompare(String(a.startedAt || '')); }).forEach(function (s) {
+      var st = stats(s), pct = st.total ? Math.round(st.counted * 100 / st.total) : 0;
+      h += '<div class="item"><div class="t"><b>' + esc(s.title) + '</b><span>' + st.counted + ' of ' + st.total + ' counted (' + pct + '%) · ' + fmt(st.units) + ' units · ' + st.left + ' left' + (s.startedAt ? ' · started ' + new Date(s.startedAt).toLocaleDateString() : '') + (s.pushedAt ? ' · sent ' + new Date(s.pushedAt).toLocaleString() : '') + '</span></div>' + (s.pushedAt ? '<span class="pill ok">sent</span>' : '<span class="pill warn">not sent</span>') + '<button class="go" data-a="resume" data-k="' + esc(s.k) + '">Open</button></div>';
+    });
+    return h + '</div></div>';
+  }
+  function vAppearance() {
+    var L = lget('acxst_look', {}), th = L.theme || 'auto', ac = L.accent || 'blue', sz = L.size || 'm';
+    function seg(a, cur, opts) { return '<div class="tabs">' + opts.map(function (o) { return '<button data-a="' + a + '" data-v="' + o[0] + '" class="' + (cur === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
+    var sw = Object.keys(ACCENTS).map(function (k) { return '<button class="swatch' + (ac === k ? ' on' : '') + '" data-a="accent" data-v="' + k + '" style="background:' + ACCENTS[k] + '" aria-label="' + k + '"></button>'; }).join('');
+    return topbar('Appearance', 'Saved on this phone', false, '') + '<div class="wrap"><div class="card"><h2>Theme</h2>' + seg('theme', th, [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']]) + '</div>' +
+      '<div class="card"><h2>Colour</h2><div class="swatches">' + sw + '</div></div><div class="card"><h2>Text size</h2>' + seg('size', sz, [['s', 'Small'], ['m', 'Medium'], ['l', 'Large']]) + '</div></div>';
+  }
   function render() {
     var app = $('#app'); if (!app) return;
     if (!U) { app.innerHTML = vLogin(); return; }
-    if (S.screen === 'count' && S.sess) { app.innerHTML = vCount(); drawList(); }
-    else if (S.screen === 'review' && S.sess) { app.innerHTML = vReview(); if (S.sess.pushedAt && S.sess.subId) startPoll(S.sess.subId); }
-    else { S.screen = 'home'; app.innerHTML = vHome(); }
+    var body, after = null;
+    if (S.screen === 'count' && S.sess) { body = vCount(); after = drawList; }
+    else if (S.screen === 'review' && S.sess) { body = vReview(); after = function () { if (S.sess.pushedAt && S.sess.subId) startPoll(S.sess.subId); }; }
+    else if (S.screen === 'reports') body = vReports();
+    else if (S.screen === 'appearance') body = vAppearance();
+    else { S.screen = 'home'; body = vHome(); }
+    app.innerHTML = '<div class="shell">' + vSide() + '<main class="main">' + body + '</main></div>';
+    if (after) after();
   }
 
   /* ---------- events ---------- */
   document.addEventListener('click', async function (e) {
     var b = e.target.closest && e.target.closest('[data-a]'); if (!b) return; var a = b.getAttribute('data-a');
     if (a === 'inp') return;
+    if (a === 'menu') { var sd = $('#side'), sc = $('#scrim'); if (sd) { sd.classList.toggle('open'); sc.classList.toggle('on', sd.classList.contains('open')); } return; }
+    if (a === 'nav') {
+      var to = b.getAttribute('data-s'); clearInterval(S.poll); saveNow(); closeScan(); S.sess = null; S.screen = to; render();
+      if (to === 'home') loadHome(); window.scrollTo(0, 0); return;
+    }
+    if (a === 'theme' || a === 'accent' || a === 'size') { var L = lget('acxst_look', {}); L[a] = b.getAttribute('data-v'); lset('acxst_look', L); applyLook(); render(); return; }
     if (a === 'login') {
       var c = $('#lc').value.trim(), em = $('#le').value.trim(), pw = $('#lp').value.trim();
       if (!c || !em || !pw) return toast('Enter company name, email and password.');
