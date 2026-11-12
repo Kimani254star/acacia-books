@@ -108,11 +108,22 @@
   /* ---------- state ---------- */
   var U = lget('acxst_user', null), S = { screen: 'home', sess: null, tab: 'all', q: '', shown: PAGE, view: [], takes: [], whs: [], loadErr: '', loading: false, scanInc: lget('acxst_inc', true), poll: null };
   var ACCENTS = { blue: '#1e3a8a', green: '#166534', purple: '#6d28d9', teal: '#0f766e', red: '#b91c1c', slate: '#334155' };
+var FONTS = {
+    cambria: ['Cambria', 'Cambria,Georgia,"Times New Roman",serif'],
+    georgia: ['Georgia', 'Georgia,"Times New Roman",serif'],
+    system: ['System', '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif'],
+    arial: ['Arial', 'Arial,Helvetica,sans-serif'],
+    verdana: ['Verdana', 'Verdana,Geneva,sans-serif'],
+    trebuchet: ['Trebuchet', '"Trebuchet MS",Tahoma,sans-serif'],
+    tahoma: ['Tahoma', 'Tahoma,Geneva,sans-serif'],
+    mono: ['Monospace', 'ui-monospace,Menlo,Consolas,"Courier New",monospace']
+  };
   function applyLook() {
     var L = lget('acxst_look', {}), h = document.documentElement;
     if (L.theme === 'dark' || L.theme === 'light') h.setAttribute('data-theme', L.theme); else h.removeAttribute('data-theme');
     var c = ACCENTS[L.accent];
     if (c) { h.style.setProperty('--pri', c); h.style.setProperty('--pri2', c); } else { h.style.removeProperty('--pri'); h.style.removeProperty('--pri2'); }
+    document.body.style.fontFamily = (FONTS[L.font] || FONTS.cambria)[1];
     document.body.style.fontSize = ({ s: '14px', m: '16px', l: '18px' })[L.size] || '16px';
     var m = document.querySelector('meta[name=theme-color]'); if (m) m.setAttribute('content', c || '#1e3a8a');
   }
@@ -359,11 +370,11 @@
     return h + '</div></div>';
   }
   function vAppearance() {
-    var L = lget('acxst_look', {}), th = L.theme || 'auto', ac = L.accent || 'blue', sz = L.size || 'm';
+    var L = lget('acxst_look', {}), th = L.theme || 'auto', ac = L.accent || 'blue', sz = L.size || 'm', fn = FONTS[L.font] ? L.font : 'cambria';
     function seg(a, cur, opts) { return '<div class="tabs">' + opts.map(function (o) { return '<button data-a="' + a + '" data-v="' + o[0] + '" class="' + (cur === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
     var sw = Object.keys(ACCENTS).map(function (k) { return '<button class="swatch' + (ac === k ? ' on' : '') + '" data-a="accent" data-v="' + k + '" style="background:' + ACCENTS[k] + '" aria-label="' + k + '"></button>'; }).join('');
     return topbar('Appearance', 'Saved on this phone', false, '') + '<div class="wrap"><div class="card"><h2>Theme</h2>' + seg('theme', th, [['auto', 'Auto'], ['light', 'Light'], ['dark', 'Dark']]) + '</div>' +
-      '<div class="card"><h2>Colour</h2><div class="swatches">' + sw + '</div></div><div class="card"><h2>Text size</h2>' + seg('size', sz, [['s', 'Small'], ['m', 'Medium'], ['l', 'Large']]) + '</div></div>';
+      '<div class="card"><h2>Colour</h2><div class="swatches">' + sw + '</div></div><div class="card"><h2>Font</h2><div class="fonts">' + Object.keys(FONTS).map(function (k) { return '<button class="fontbtn' + (fn === k ? ' on' : '') + '" data-a="font" data-v="' + k + '" style="font-family:' + FONTS[k][1].replace(/"/g, "'") + '">' + FONTS[k][0] + '<small>Aa 123</small></button>'; }).join('') + '</div></div><div class="card"><h2>Text size</h2>' + seg('size', sz, [['s', 'Small'], ['m', 'Medium'], ['l', 'Large']]) + '</div></div>';
   }
   function render() {
     var app = $('#app'); if (!app) return;
@@ -387,7 +398,7 @@
       var to = b.getAttribute('data-s'); clearInterval(S.poll); saveNow(); closeScan(); S.sess = null; S.screen = to; render();
       if (to === 'home') loadHome(); window.scrollTo(0, 0); return;
     }
-    if (a === 'theme' || a === 'accent' || a === 'size') { var L = lget('acxst_look', {}); L[a] = b.getAttribute('data-v'); lset('acxst_look', L); applyLook(); render(); return; }
+    if (a === 'theme' || a === 'accent' || a === 'size' || a === 'font') { var L = lget('acxst_look', {}); L[a] = b.getAttribute('data-v'); lset('acxst_look', L); applyLook(); render(); return; }
     if (a === 'login') {
       var c = $('#lc').value.trim(), em = $('#le').value.trim(), pw = $('#lp').value.trim();
       if (!c || !em || !pw) return toast('Enter company name, email and password.');

@@ -83,3 +83,4 @@ input[type=text],input[type=email],input[type=password],input[type=search],input
 .nav.out,.nav.out span{color:var(--bad)}
 .swatches{display:flex;gap:12px;flex-wrap:wrap}.swatch{width:42px;height:42px;border-radius:50%;border:3px solid transparent;outline:1px solid var(--line)}.swatch.on{border-color:var(--card);outline:3px solid var(--ink)}
 @media (min-width:900px){.side{transform:none;width:240px}.shell{padding-left:240px}.menu{display:none}.scrim,.scrim.on{display:none}}
+.fonts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fontbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 12px;text-align:left;font-size:15px;color:var(--ink)}.fontbtn small{display:block;color:var(--mute);font-size:13px;margin-top:2px}.fontbtn.on{border-color:var(--pri);outline:2px solid var(--pri)}
