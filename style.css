@@ -1841,3 +1841,63 @@ html.dark #contentArea table tbody tr:nth-child(even),html[data-theme=dark] #con
 html[data-theme=amoled] #contentArea table tbody tr:nth-child(even),html[data-theme=solar-dark] #contentArea table tbody tr:nth-child(even){background:#152019}
 html.dark #contentArea table tbody td,html[data-theme=dark] #contentArea table tbody td,
 html[data-theme=amoled] #contentArea table tbody td,html[data-theme=solar-dark] #contentArea table tbody td{color:#e7eee9}
+
+
+/* ===== Top bar colour parity with both sidebars =====
+   Uses the same customization primary colour and readable sidebar text.
+   Includes the company switcher, search field, mounted toolbar actions and hover states.
+*/
+#layout>div:first-child{
+  background:var(--acx-primary,var(--ab-ink))!important;
+  color:var(--acx-sidebar-text,#f7faf8)!important;
+  border-bottom:1px solid rgba(255,255,255,.12)!important;
+}
+#layout>div:first-child :is(#welcomeUser,#orgNameHeader,#awnMount,button,a,svg){
+  color:var(--acx-sidebar-text,#f7faf8)!important;
+}
+#layout>div:first-child #orgNameHeader{
+  background:transparent!important;
+}
+#layout>div:first-child :is(button,a):hover{
+  background:rgba(217,164,65,.18)!important;
+  color:var(--acx-sidebar-hover-text,#f4cf83)!important;
+}
+#layout>div:first-child :is(button,a):hover svg{
+  color:var(--acx-sidebar-hover-text,#f4cf83)!important;
+}
+#layout>div:first-child #globalSearch{
+  color:var(--acx-sidebar-text,#f7faf8)!important;
+  background:transparent!important;
+  caret-color:var(--acx-sidebar-text,#f7faf8)!important;
+}
+#layout>div:first-child #globalSearch::placeholder{
+  color:color-mix(in srgb,var(--acx-sidebar-text,#f7faf8) 68%,transparent)!important;
+  opacity:1!important;
+}
+#layout>div:first-child #globalSearch:focus{
+  outline:none!important;
+  box-shadow:0 0 0 2px rgba(217,164,65,.35)!important;
+}
+#layout>div:first-child #globalSearch,
+#layout>div:first-child #globalSearch+button{
+  border-color:rgba(255,255,255,.18)!important;
+}
+#layout>div:first-child #globalSearch:focus,
+#layout>div:first-child #globalSearch:focus-visible{
+  border-color:var(--ab-gold,#d9a441)!important;
+}
+#layout>div:first-child .bg-gray-800{
+  background:rgba(0,0,0,.20)!important;
+}
+#layout>div:first-child #acxCompanyMenu{
+  background:#17251f!important;
+  color:#f7faf8!important;
+  border-color:rgba(255,255,255,.16)!important;
+}
+#layout>div:first-child #acxCompanyMenu :is(button,a){
+  color:#f7faf8!important;
+}
+#layout>div:first-child #acxCompanyMenu :is(button,a):hover{
+  background:rgba(217,164,65,.18)!important;
+  color:#f4cf83!important;
+}
