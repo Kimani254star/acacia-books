@@ -44,6 +44,7 @@ try{
       if (t) clearTimeout(t);
       if (!r.ok) return null;                       // RPC not installed yet -> fail open
       var v = await r.json();
+      if (v === "deactivated") { try { localStorage.setItem("acx_deact_" + low(cid), "1"); } catch (e) {} return "deleted"; }   // company deleted from inside an app
       return v === "deleted" ? "deleted" : v === "ok" ? "ok" : null;
     } catch (e) { return null; }
   }
@@ -64,7 +65,17 @@ try{
   function purge(cid, login, whole) {
     try {
       var users = jget("users", []);
-      if (Array.isArray(users)) {
+      var deact = !!whole && !!localStorage.getItem("acx_deact_" + low(cid));
+      if (deact && Array.isArray(users)) {
+        /* company deleted by its admin: keep the records but mark the company and every user Deactivated */
+        users.forEach(function (u) { if (u && low(u.companyId) === low(cid)) { u.status = "Deactivated"; u.deactivated = true; } });
+        localStorage.setItem("users", JSON.stringify(users));
+        var cos = jget("companies", []);
+        if (Array.isArray(cos)) {
+          cos.forEach(function (c) { if (c && low(c.companyId || c.id) === low(cid)) { c.status = "Deactivated"; c.deactivated = true; } });
+          localStorage.setItem("companies", JSON.stringify(cos));
+        }
+      } else if (Array.isArray(users)) {
         var keep = users.filter(function (u) {
           if (!u || low(u.companyId) !== low(cid)) return true;
           return whole ? false : low(u.email || u.username) !== low(login);
@@ -88,9 +99,9 @@ try{
       (document.body || document.documentElement).appendChild(o);
     }
     o.innerHTML = '<div style="max-width:440px;text-align:center"><div style="font-size:42px;margin-bottom:8px">\uD83D\uDD12</div>' +
-      '<h2 style="font-size:22px;margin:0 0 10px">' + (whole ? "Company removed" : "Access removed") + "</h2>" +
+      '<h2 style="font-size:22px;margin:0 0 10px">' + (whole ? "Company deactivated" : "Access removed") + "</h2>" +
       '<p style="color:#94a3b8;line-height:1.6;margin:0 0 22px">' +
-      (whole ? "This company account has been deleted and can no longer be used."
+      (whole ? "This company account has been deleted or deactivated and can no longer be used."
              : "Your access to this company has been removed.") +
       " Please contact your administrator or support if you think this is a mistake.</p>" +
       '<button id="acxDeletedOk" style="background:#1e3a8a;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-weight:600;cursor:pointer">OK</button></div>';
@@ -5639,3 +5650,90 @@ try{
 })(window);
 
 }catch(e){console.error("[merged:item-ids]",e)}
+
+/* ===== account card: Company ID, License code, Delete account (Organization Profile > Subscription) ===== */
+try{
+(function () {
+  "use strict";
+  if (window.__acxAcctCard) return;
+  window.__acxAcctCard = true;
+  var low = function (v) { return String(v == null ? "" : v).trim().toLowerCase(); };
+  var esc = function (v) { return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function me() { return jget("loggedInUser", null); }
+  async function rpc(fn, args) {
+    var r = await fetch(window.__SUPA_URL__ + "/rest/v1/rpc/" + fn, {
+      method: "POST", headers: { apikey: window.__SUPA_KEY__, Authorization: "Bearer " + window.__SUPA_KEY__, "Content-Type": "application/json" },
+      body: JSON.stringify(args) });
+    var t = await r.text(), j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
+    if (!r.ok) throw new Error((j && (j.message || j.hint)) || ("Request failed (" + r.status + ")"));
+    return j;
+  }
+
+  var info = null, infoAt = 0, loading = false;
+  async function loadInfo(card) {
+    var u = me(); if (!u || !u.companyId || loading) return;
+    if (info && Date.now() - infoAt < 30000) return;
+    loading = true;
+    try { info = await rpc("acx_company_info", { p_company: String(u.companyId) }) || {}; }
+    catch (e) { info = { found: false, error: e.message }; }
+    infoAt = Date.now(); loading = false;
+    draw(card, true);
+  }
+
+  function draw(card, force) {
+    var u = me() || {}, row = window.__acxCompanyRow || {}, i = info || {};
+    var orgId = i.org_code || row.org_code || u.orgCode || u.companyId || "-";
+    var lic = i.license_code || row.license_code || "";
+    var plan = i.plan || row.plan || u.plan || "-";
+    var isAdmin = /admin|owner/.test(String(u.role || "admin").toLowerCase());
+    var sig = [orgId, lic, plan, isAdmin].join("|");
+    if (!force && card.getAttribute("data-sig") === sig) return;
+    if (card.querySelector("#acxAcctDelBox input:focus")) return;       // do not wipe what the user is typing
+    card.setAttribute("data-sig", sig);
+    card.innerHTML =
+      '<h3 class="text-sm font-semibold mb-3">\uD83C\uDD94 Company ID &amp; license</h3>' +
+      '<div class="text-sm" style="display:grid;grid-template-columns:140px 1fr;gap:6px 12px">' +
+        '<span class="text-gray-500">Company ID</span><b style="font-family:monospace">' + esc(orgId) + '</b>' +
+        '<span class="text-gray-500">License code</span>' + (lic ? '<b style="font-family:monospace">' + esc(lic) + '</b>' : '<span class="text-gray-500">Issued once Acacia approves your plan</span>') +
+      '</div>' +
+      (isAdmin ?
+        '<div class="mt-5 pt-4 border-t border-red-200"><h4 class="text-sm font-semibold text-red-700 mb-1">Delete account</h4>' +
+        '<p class="text-xs text-gray-600 mb-2">Deactivates this company and all its users in every Acacia app. Nobody can sign in afterwards and it is removed from Support. Your business records are kept.</p>' +
+        '<div id="acxAcctDelBox"><button type="button" data-ac="start" class="border border-red-300 text-red-700 font-semibold px-3 py-1 rounded text-sm hover:bg-red-50">Delete this account...</button></div></div>' : '');
+    var st = card.querySelector('[data-ac="start"]');
+    if (st) st.onclick = function () {
+      var name = u.companyName || row.company_name || (i && i.company_name) || "";
+      card.querySelector("#acxAcctDelBox").innerHTML =
+        '<p class="text-xs text-gray-600 mb-2">Type the company name' + (name ? ' <b>' + esc(name) + '</b>' : '') + ' and your password to confirm.</p>' +
+        '<input data-ac="name" class="border p-2 rounded w-full text-sm mb-2" placeholder="Company name" autocomplete="off">' +
+        '<input data-ac="pw" type="password" class="border p-2 rounded w-full text-sm mb-2" placeholder="Your password" autocomplete="current-password">' +
+        '<button type="button" data-ac="go" class="bg-red-700 text-white font-bold px-3 py-1 rounded text-sm hover:bg-red-800">Permanently delete account</button>' +
+        '<p data-ac="err" class="text-xs text-red-600 mt-2"></p>';
+      var go = card.querySelector('[data-ac="go"]'), err = card.querySelector('[data-ac="err"]');
+      go.onclick = async function () {
+        var typed = low(card.querySelector('[data-ac="name"]').value), pw = card.querySelector('[data-ac="pw"]').value || "";
+        if (name && typed !== low(name)) { err.textContent = "The company name does not match."; return; }
+        if (!pw) { err.textContent = "Enter your password."; return; }
+        go.disabled = true; err.textContent = "";
+        try {
+          await rpc("acx_delete_my_company", { p_company: String(u.companyId), p_email: low(u.email || u.username), p_password: pw });
+          try { localStorage.setItem("acx_deact_" + low(u.companyId), "1"); } catch (e) {}
+          card.innerHTML = '<p class="text-sm text-green-700">Your account has been deleted and the company is deactivated. Signing you out...</p>';
+          setTimeout(function () { try { window.acxCheckDeleted && window.acxCheckDeleted(); } catch (e) {} }, 800);
+        } catch (e) { go.disabled = false; err.textContent = e.message || "Could not delete the account."; }
+      };
+    };
+  }
+
+  function ensure() {
+    var box = document.getElementById("acxUpgradeBox"); if (!box || !box.parentNode) return;
+    var card = document.getElementById("acxAccountBox");
+    if (!card) { card = document.createElement("div"); card.id = "acxAccountBox"; card.className = box.className; card.style.marginTop = "16px"; }
+    if (card.previousElementSibling !== box) box.parentNode.insertBefore(card, box.nextSibling);
+    draw(card); loadInfo(card);
+  }
+  setInterval(ensure, 1500);
+  window.addEventListener("acx-company-row", function () { info = null; setTimeout(ensure, 0); });
+})();
+}catch(e){console.error('[account-card]',e)}

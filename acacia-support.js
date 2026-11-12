@@ -82,7 +82,16 @@
       '.acxs-f textarea:focus{border-color:#22615D}' +
       '.acxs-f button{border:0;background:#22615D;color:#fff;border-radius:10px;padding:9px 14px;font-weight:600;cursor:pointer}' +
       '.acxs-f button:disabled{opacity:.5;cursor:default}' +
-      '.acxs-err{color:#b91c1c;font-size:12px;padding:6px 12px;background:#fef2f2}';
+      '.acxs-err{color:#b91c1c;font-size:12px;padding:6px 12px;background:#fef2f2}' +
+      '.acxs-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px;margin-bottom:10px}' +
+      '.acxs-kv{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:13px}' +
+      '.acxs-kv:last-child{border-bottom:0}.acxs-kv span{color:#6b7280}.acxs-kv b{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;word-break:break-all;text-align:right}' +
+      '.acxs-cp{border:1px solid #d1d5db;background:#fff;border-radius:6px;font-size:11px;padding:2px 7px;cursor:pointer;margin-left:6px}' +
+      '.acxs-note{font-size:12px;color:#6b7280;line-height:1.5}' +
+      '.acxs-danger{border-color:#fecaca;background:#fff7f7}.acxs-danger h4{margin:0 0 4px;color:#991b1b;font-size:14px}' +
+      '.acxs-danger input{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;font:inherit;margin:6px 0;outline:none}' +
+      '.acxs-del{width:100%;border:0;border-radius:10px;background:#b91c1c;color:#fff;font-weight:600;padding:10px;cursor:pointer;margin-top:4px}' +
+      '.acxs-del:disabled{opacity:.5;cursor:default}.acxs-ghost{width:100%;border:1px solid #d1d5db;background:#fff;border-radius:10px;padding:9px;cursor:pointer;margin-top:6px;font-weight:600;color:#991b1b}';
     document.head.appendChild(st);
   }
 
@@ -108,9 +117,10 @@
     view = 'list'; current = null; lastCount = -1;
     var s = session();
     root.innerHTML =
-      '<div class="acxs-h"><b>Acacia Support<small>Chat with the developer team</small></b><button id="acxsX" title="Close">&times;</button></div>' +
+      '<div class="acxs-h"><b>Acacia Support<small>Chat with the developer team</small></b><button id="acxsAcct" title="My company: Company ID, license, delete account">&#128100;</button><button id="acxsX" title="Close">&times;</button></div>' +
       '<div class="acxs-b" id="acxsBody"><div class="acxs-empty">Loading your conversations...</div></div><div class="acxs-err" style="display:none"></div>';
     root.querySelector('#acxsX').onclick = close;
+    root.querySelector('#acxsAcct').onclick = showAccount;
     var load = function () {
       rpc('acx_ticket_list', { p_company: s.companyId, p_email: s.email }).then(function (rows) {
         tickets = rows || [];
@@ -149,11 +159,12 @@
     var s = session(), hasList = tickets.length > 0;
     root.innerHTML =
       '<div class="acxs-h">' + (hasList ? '<button id="acxsBack" title="Back">&larr;</button>' : '') +
-      '<b>' + esc(t ? (t.subject || 'Support request') : 'New conversation') + '<small>' + esc(s.app) + ' &middot; ' + esc(s.email) + '</small></b><button id="acxsX" title="Close">&times;</button></div>' +
+      '<b>' + esc(t ? (t.subject || 'Support request') : 'New conversation') + '<small>' + esc(s.app) + ' &middot; ' + esc(s.email) + '</small></b><button id="acxsAcct" title="My company">&#128100;</button><button id="acxsX" title="Close">&times;</button></div>' +
       '<div class="acxs-b" id="acxsBody"></div><div class="acxs-err" style="display:none"></div>' +
       '<div class="acxs-f"><textarea id="acxsIn" rows="1" placeholder="Type your message..."></textarea><button id="acxsSend">Send</button></div>';
     root.querySelector('#acxsX').onclick = close;
     var back = root.querySelector('#acxsBack'); if (back) back.onclick = showList;
+    root.querySelector('#acxsAcct').onclick = showAccount;
     var ta = root.querySelector('#acxsIn');
     ta.onkeydown = function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
     root.querySelector('#acxsSend').onclick = send;
@@ -212,6 +223,77 @@
     });
   }
 
+  /* ---------- account view: Company ID, license code, delete account ---------- */
+  function appLogout() {
+    try { if (window.AcxSession) window.AcxSession.clear(true); } catch (e) {}
+    try {
+      if (typeof window.handleLogout === 'function') return window.handleLogout();
+      if (typeof window.signOut === 'function') return window.signOut();
+      var o = document.getElementById('aclOut'); if (o) return o.click();
+      var h = document.querySelector('[onclick*="handleLogout"],[onclick*="signOut"],[onclick*="logout"]'); if (h) h.click();
+    } catch (e) {}
+  }
+  function copyBtn(v) { return v ? '<button class="acxs-cp" data-copy="' + esc(v) + '">Copy</button>' : ''; }
+  function showAccount() {
+    view = 'account'; stopPoll();
+    var s = session();
+    root.innerHTML =
+      '<div class="acxs-h"><button id="acxsBack" title="Back to chat">&larr;</button><b>My company<small>' + esc(s.app) + ' &middot; ' + esc(s.email) + '</small></b><button id="acxsX" title="Close">&times;</button></div>' +
+      '<div class="acxs-b" id="acxsBody"><div class="acxs-empty">Loading...</div></div><div class="acxs-err" style="display:none"></div>';
+    root.querySelector('#acxsX').onclick = close;
+    root.querySelector('#acxsBack').onclick = showList;
+    rpc('acx_company_info', { p_company: s.companyId }).then(function (i) { drawAccount(i || {}, s); })
+      .catch(function (e) { drawAccount({ found: false, error: e.message }, s); });
+  }
+  function drawAccount(info, s) {
+    var b = root && root.querySelector('#acxsBody'); if (!b || view !== 'account') return;
+    var cid = info.org_code || s.companyId;
+    var lic = info.license_code
+      ? '<b>' + esc(info.license_code) + '</b>' + copyBtn(info.license_code)
+      : '<b style="font-family:inherit;font-weight:500;color:#6b7280">Issued once Acacia approves your plan</b>';
+    var until = info.paid_until ? new Date(info.paid_until).toLocaleDateString() : '';
+    b.innerHTML =
+      '<div class="acxs-card">' +
+        '<div class="acxs-kv"><span>Company</span><b>' + esc(info.company_name || s.companyName || '-') + '</b></div>' +
+        '<div class="acxs-kv"><span>Company ID</span><div><b>' + esc(cid) + '</b>' + copyBtn(cid) + '</div></div>' +
+        '<div class="acxs-kv"><span>License code</span><div>' + lic + '</div></div>' +
+        '<div class="acxs-kv"><span>Plan</span><b>' + esc(info.plan || '-') + '</b></div>' +
+        '<div class="acxs-kv"><span>Status</span><b>' + esc(info.status || '-') + (until ? ' &middot; until ' + esc(until) : '') + '</b></div>' +
+      '</div>' +
+      (info.error ? '<div class="acxs-note" style="margin-bottom:10px">Could not load the latest details (' + esc(info.error) + '). Ask the developer to run <b>acacia_company_lifecycle.sql</b>.</div>' : '') +
+      '<div class="acxs-card acxs-danger"><h4>Delete account</h4>' +
+        '<div class="acxs-note">Deactivates this company in every Acacia app: nobody can sign in any more and it is removed from Support. Only the company administrator can do this.</div>' +
+        '<div id="acxsDelBox"><button class="acxs-ghost" id="acxsDelStart">Delete this account...</button></div>' +
+      '</div>';
+    [].forEach.call(b.querySelectorAll('.acxs-cp'), function (btn) {
+      btn.onclick = function () {
+        var v = btn.getAttribute('data-copy');
+        try { navigator.clipboard.writeText(v); btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1200); } catch (e) {}
+      };
+    });
+    b.querySelector('#acxsDelStart').onclick = function () {
+      var name = info.company_name || s.companyName || '';
+      b.querySelector('#acxsDelBox').innerHTML =
+        '<div class="acxs-note" style="margin-top:8px">Type the company name' + (name ? ' <b>' + esc(name) + '</b>' : '') + ' and your password to confirm.</div>' +
+        '<input id="acxsDelName" autocomplete="off" placeholder="Company name">' +
+        '<input id="acxsDelPw" type="password" autocomplete="current-password" placeholder="Your password">' +
+        '<button class="acxs-del" id="acxsDelGo">Permanently delete account</button>';
+      b.querySelector('#acxsDelGo').onclick = function () {
+        var go = b.querySelector('#acxsDelGo');
+        var typed = (b.querySelector('#acxsDelName').value || '').trim().toLowerCase();
+        var pw = b.querySelector('#acxsDelPw').value || '';
+        if (name && typed !== String(name).trim().toLowerCase()) { setErr('The company name does not match.'); return; }
+        if (!pw) { setErr('Enter your password.'); return; }
+        go.disabled = true; setErr('');
+        rpc('acx_delete_my_company', { p_company: s.companyId, p_email: s.email, p_password: pw }).then(function () {
+          try { localStorage.setItem('acx_tomb_' + s.companyId.toLowerCase(), String(Date.now())); } catch (e) {}
+          b.innerHTML = '<div class="acxs-empty">Your account has been deleted and the company is deactivated.<br>Signing you out...</div>';
+          setTimeout(function () { appLogout(); setTimeout(function () { location.reload(); }, 600); }, 1500);
+        }).catch(function (e) { go.disabled = false; setErr(e.message || 'Could not delete the account.'); });
+      };
+    };
+  }
+
   /* ---------- public entry ---------- */
   window.acxOpenSupportPanel = function () {
     var s = session();
@@ -223,6 +305,17 @@
       return;
     }
     showList();
+  };
+  window.acxOpenAccountPanel = function () {
+    var s = session();
+    build();
+    if (!s || !s.email) {
+      root.innerHTML = '<div class="acxs-h"><b>My company</b><button id="acxsX">&times;</button></div>' +
+        '<div class="acxs-b"><div class="acxs-empty">Please sign in first.</div></div>';
+      root.querySelector('#acxsX').onclick = close;
+      return;
+    }
+    showAccount();
   };
   window.acxCloseSupportPanel = close;
 })();
