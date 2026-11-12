@@ -1755,3 +1755,89 @@ details.acx-faq p{padding:0 1rem 1rem;margin:0;font-size:.875rem;color:#4b5563}
 .split-preview-layout .split-list-box{width:100%;flex:none}
 .split-preview-layout .split-details-box{max-width:none;min-width:0;width:100%;position:static;max-height:none}
 }
+
+/* ===== Acacia Books visual identity: consistent contrast, restrained surfaces ===== */
+:root{
+  --ab-ink:#12241e;
+  --ab-canopy:#1f4b3f;
+  --ab-canopy-light:#2f6b57;
+  --ab-canopy-pale:#e7f0ec;
+  --ab-gold:#d9a441;
+  --ab-gold-dark:#94651e;
+  --ab-paper:#f7f8f5;
+  --ab-line:#dfe6e1;
+  --app-accent:var(--ab-canopy);
+  --app-surface:#ffffff;
+  --app-surface-alt:#f5f7f5;
+  --app-fg:#18251f;
+  --app-muted:#64736b;
+  --app-border:#dfe6e1;
+}
+html:not(.dark):not([data-theme=dark]):not([data-theme=amoled]):not([data-theme=solar-dark]) body:has(#layout:not(.hidden)){
+  background:var(--ab-paper);
+  color:var(--ab-ink);
+}
+#layout>div:first-child{background:var(--acx-primary,var(--ab-canopy))!important}
+#layout>div:first-child #welcomeUser,#layout>div:first-child #orgNameHeader{color:#fff!important}
+#sidebar,#rightSidebar{
+  background:var(--acx-primary,var(--ab-ink))!important;
+  color:#f7faf8!important;
+  border-color:rgba(255,255,255,.10)!important;
+}
+#sidebar a,#sidebar button,#rightSidebar a,#rightSidebar button{
+  color:#f3f7f4;
+  border-radius:6px;
+  transition:background-color .15s ease,color .15s ease;
+}
+#sidebar a:hover,#sidebar button:hover,#rightSidebar a:hover,#rightSidebar button:hover{
+  background:rgba(217,164,65,.18)!important;
+  color:#f4cf83!important;
+}
+#contentArea{background:var(--ab-paper)}
+#contentArea .bg-blue-900,#contentArea .bg-indigo-900,
+#contentArea button.bg-blue-800,#contentArea a.bg-blue-800{
+  background-color:var(--ab-canopy)!important;
+  color:#fff!important;
+}
+#contentArea .bg-blue-900:hover,#contentArea .bg-indigo-900:hover,
+#contentArea button.bg-blue-800:hover,#contentArea a.bg-blue-800:hover{
+  background-color:var(--ab-canopy-light)!important;
+}
+#contentArea .text-blue-900,#contentArea .text-blue-800,#contentArea .text-indigo-900{color:var(--ab-canopy)!important}
+#contentArea .border-blue-900,#contentArea .border-blue-800{border-color:var(--ab-canopy)!important}
+#contentArea .bg-blue-50,#contentArea .bg-indigo-50{background-color:var(--ab-canopy-pale)!important}
+#contentArea :is(.bg-white,[class*="bg-white/"]){border-color:var(--app-border)}
+#contentArea :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),select,textarea){
+  color:#18251f;
+  background-color:#fff;
+  border-color:#cbd6cf;
+}
+#contentArea :is(input,select,textarea)::placeholder{color:#78877e;opacity:1}
+#contentArea :is(input,select,textarea):focus{border-color:var(--ab-canopy)!important;box-shadow:0 0 0 3px rgba(31,75,63,.13)!important}
+#contentArea table thead th{background:#edf2ee;color:#263a30}
+#contentArea table tbody tr:nth-child(odd){background:#fff}
+#contentArea table tbody tr:nth-child(even){background:#f7f9f7}
+#contentArea table tbody td,#contentArea table tbody th{color:#26332c}
+#contentArea table tbody tr:hover{background:#eef4ef!important}
+#contentArea :is(.shadow,.shadow-sm,.shadow-md,.shadow-lg,.shadow-xl,.shadow-2xl){--tw-shadow:0 2px 8px rgba(18,36,30,.07);--tw-shadow-colored:0 2px 8px rgba(18,36,30,.07)}
+#contentArea :is(.rounded-xl,.rounded-2xl){border-radius:10px}
+#contentArea :is(.border-gray-200,.border-slate-200){border-color:#e1e7e2}
+#contentArea :is(.text-gray-500,.text-slate-500){color:#64736b}
+#contentArea :is(.text-gray-600,.text-slate-600){color:#526158}
+/* Keep the existing Cambria font stack; this section changes colour and surfaces only. */
+html.dark,html[data-theme=dark],html[data-theme=amoled],html[data-theme=solar-dark]{
+  --app-surface:#1d2923;
+  --app-surface-alt:#152019;
+  --app-fg:#e7eee9;
+  --app-muted:#a6b4aa;
+  --app-border:#35443a;
+}
+html.dark #contentArea,html[data-theme=dark] #contentArea,html[data-theme=amoled] #contentArea,html[data-theme=solar-dark] #contentArea{background:#111b16;color:#e7eee9}
+html.dark #contentArea table thead th,html[data-theme=dark] #contentArea table thead th,
+html[data-theme=amoled] #contentArea table thead th,html[data-theme=solar-dark] #contentArea table thead th{background:#26352c;color:#edf4ef}
+html.dark #contentArea table tbody tr:nth-child(odd),html[data-theme=dark] #contentArea table tbody tr:nth-child(odd),
+html[data-theme=amoled] #contentArea table tbody tr:nth-child(odd),html[data-theme=solar-dark] #contentArea table tbody tr:nth-child(odd){background:#1d2923}
+html.dark #contentArea table tbody tr:nth-child(even),html[data-theme=dark] #contentArea table tbody tr:nth-child(even),
+html[data-theme=amoled] #contentArea table tbody tr:nth-child(even),html[data-theme=solar-dark] #contentArea table tbody tr:nth-child(even){background:#152019}
+html.dark #contentArea table tbody td,html[data-theme=dark] #contentArea table tbody td,
+html[data-theme=amoled] #contentArea table tbody td,html[data-theme=solar-dark] #contentArea table tbody td{color:#e7eee9}

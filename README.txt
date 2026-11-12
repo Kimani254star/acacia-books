@@ -5,6 +5,3 @@ SUPABASE:  run supabase/mobile_payments.sql in SQL Editor; paste supabase/functi
            Edge Function named "pay" with JWT verification OFF; add secrets listed in supabase/SETUP.md
 PAYPAL:    open payments-real.js and paste your PayPal Client ID into  paypalClientId: ""
 Support repo: nothing to add.
-
-
-BRANDING READABILITY UPDATE: acacia-fixes.js now checks text contrast at the WCAG AA 4.5:1 minimum, including after company color changes. Organization Profile inputs, links, labels, branding previews and placeholder text retain readable foregrounds.

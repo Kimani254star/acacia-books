@@ -1498,8 +1498,6 @@ try{
                 "#orgProfileTab .op-card,#orgProfileTab .op-nav{color:#1f2937}" +
     "#orgProfileTab .op-card input,#orgProfileTab .op-card select,#orgProfileTab .op-card textarea{background:#fff!important;color:#111827!important;border:1px solid #d1d5db}" +
     "#orgProfileTab .op-card label{color:#374151}" +
-    "#orgProfileTab .op-card input::placeholder,#orgProfileTab .op-card textarea::placeholder{color:#64748b!important;opacity:1}" +
-    "html.dark #orgProfileTab .op-card input::placeholder,html.dark #orgProfileTab .op-card textarea::placeholder{color:#94a3b8!important}" +
     "#orgProfileTab .op-nav a{color:#1e3a8a!important;background:#fff!important}" +
     "#orgProfileTab .op-nav a.op-nav-active{color:#fff!important;background:#1e3a8a!important}" +
     "#orgProfileTab .op-savebtn{background:#1e3a8a!important;color:#fff!important}" +
@@ -1597,7 +1595,7 @@ try{
   }
 
   /* ---------- the guard ---------- */
-  var MIN_RATIO = 4.5;          // WCAG AA contrast floor for profile labels, links, and app text
+  var MIN_RATIO = 2.2;          // below this the text is effectively invisible on its background
   var fixedMap = new WeakMap(); // element -> original inline colour we replaced {v, p}
   var running = false, again = false, timer = null, slow = 0;
 
@@ -2075,37 +2073,85 @@ try{
 
   
   /* push the warehouse straight to the cloud and read it back, so an import can never silently "go back" after a refresh */
+  /* Verify the complete local warehouse snapshot against the correct company's cloud row.
+     A local save is not reported as synced until the remote copy contains every local item. */
   function syncAndVerify(w, base, changes){
     var key = "inventory_" + w, cid = "";
     try { cid = (JSON.parse(localStorage.getItem("loggedInUser") || "null") || {}).companyId || ""; } catch (e) {}
-    var cs = window.__companySync;
-    if (!cs || !cid || !window.__SUPA_URL__) return Promise.resolve("ℹ️ Saved on this device. Cloud sync is not active, so other devices will not see it.");
-    function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
-    function check(){
-      return fetch(window.__SUPA_URL__ + "/rest/v1/company_state?company_id=eq." + encodeURIComponent(cid) + "&key=eq." + encodeURIComponent(key) + "&select=value",
-        { headers: { apikey: window.__SUPA_KEY__, Authorization: "Bearer " + window.__SUPA_KEY__ } })
-        .then(function(r){ return r.json(); })
-        .then(function(rows){
-          if (!Array.isArray(rows) || !rows.length) return false;
-          var remote; try { remote = JSON.parse(rows[0].value); } catch (e) { return false; }
-          if (!Array.isArray(remote)) return false;
-          var byName = {}; remote.forEach(function(r){ if (r && r.name) byName[String(r.name).trim().toLowerCase().replace(/\s+/g, " ")] = r; });
-          var lastBy = {}; changes.forEach(function(c){ lastBy[String(c.name).trim().toLowerCase().replace(/\s+/g, " ")] = c; });
-          return Object.keys(lastBy).map(function(k){ return lastBy[k]; }).every(function(c){
-            var r = byName[String(c.name).trim().toLowerCase().replace(/\s+/g, " ")];
-            return !!r && Math.abs(num(r.qty) - c.to) < 0.000001;
-          });
-        });
+    var ctx = window.__acxStockImportContext;
+    if (ctx && ctx.warehouse === w && ctx.companyId) {
+      if (ctx.companyId !== cid) return Promise.resolve("❌ Company changed during import. The cloud sync was stopped to protect company data.");
+      cid = ctx.companyId;
     }
-    var tries = 0;
+    var cs = window.__companySync;
+    if (!cid) return Promise.resolve("❌ No active company was found. Stock was not confirmed for cloud synchronisation.");
+    if (!cs || !window.__SUPA_URL__ || !window.__SUPA_KEY__) {
+      return Promise.resolve("ℹ️ Saved locally for this company. Cloud sync is not configured, so other devices will not receive this import yet.");
+    }
+    function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+    function norm(v){ return String(v == null ? "" : v).trim().toLowerCase().replace(/\s+/g, " "); }
+    function validSnapshot(remote){
+      if (!Array.isArray(remote) || !Array.isArray(base)) return false;
+      var byId = Object.create(null), byName = Object.create(null);
+      remote.forEach(function(it){
+        if (!it || typeof it !== "object") return;
+        if (it.id != null && it.id !== "") byId[String(it.id)] = it;
+        var n = norm(it.name);
+        if (n) (byName[n] || (byName[n] = [])).push(it);
+      });
+      return base.every(function(expected){
+        if (!expected || typeof expected !== "object") return true;
+        var actual = expected.id != null && expected.id !== "" ? byId[String(expected.id)] : null;
+        if (!actual) {
+          var list = byName[norm(expected.name)] || [];
+          actual = list.filter(function(it){ return Math.abs(num(it.qty) - num(expected.qty)) < 0.000001; })[0] || null;
+        }
+        return !!actual && Math.abs(num(actual.qty) - num(expected.qty)) < 0.000001;
+      });
+    }
+    function readRemote(){
+      var url = window.__SUPA_URL__ + "/rest/v1/company_state?company_id=eq." +
+        encodeURIComponent(cid) + "&key=eq." + encodeURIComponent(key) + "&select=value&limit=1";
+      return fetch(url, {
+        method: "GET",
+        cache: "no-store",
+        headers: { apikey: window.__SUPA_KEY__, Authorization: "Bearer " + window.__SUPA_KEY__ }
+      }).then(function(r){
+        if (!r.ok) throw new Error("Cloud read returned HTTP " + r.status);
+        return r.json();
+      }).then(function(rows){
+        if (!Array.isArray(rows) || !rows.length) return false;
+        var remote;
+        try { remote = JSON.parse(rows[0].value); } catch (e) { return false; }
+        return validSnapshot(remote);
+      });
+    }
+    var tries = 0, maxTries = 45;
     function attempt(){
       tries++;
-      return Promise.resolve().then(function(){ try { cs.pushAllCompanyKeys && cs.pushAllCompanyKeys(); } catch (e) {} return cs.pushDirty(); })
-        .then(function(){ return wait(700); })
-        .then(check)
-        .then(function(ok){ if (ok) return "☁️ Synced: the new stock is saved in the cloud."; if (tries < 4) return wait(1500).then(attempt); return "⚠️ Saved on this device, but the cloud copy does not match yet (another tab or user changed the same items, or the connection is slow). It will keep retrying; keep this tab open for a minute before refreshing."; });
+      var push = Promise.resolve();
+      if (cs && typeof cs.pushAllCompanyKeys === "function") {
+        try { cs.pushAllCompanyKeys(); } catch (e) {}
+      }
+      if (cs && typeof cs.pushDirty === "function") {
+        push = Promise.resolve().then(function(){ return cs.pushDirty(); }).catch(function(e){
+          console.warn("[inventory-sync] push attempt failed", e);
+        });
+      }
+      return push.then(function(){ return wait(800); })
+        .then(readRemote)
+        .then(function(ok){
+          if (ok) return "☁️ Cloud sync confirmed: all " + base.length + " inventory item(s) in " + w + " match the cloud copy for this company.";
+          if (tries < maxTries) return wait(Math.min(2500, 500 + tries * 100)).then(attempt);
+          return "⚠️ The import is saved locally, but the cloud copy could not be fully verified after " + maxTries +
+            " checks. Do not delete local data or re-import repeatedly. Keep this tab open and check the connection and cloud permissions.";
+        });
     }
-    return attempt().catch(function(){ return "⚠️ Saved on this device, but the cloud check failed. Keep this tab open until it syncs."; });
+    return attempt().catch(function(e){
+      console.warn("[inventory-sync] verification failed", e);
+      return "⚠️ The import is saved locally, but cloud verification failed: " + (e && e.message ? e.message : String(e)) +
+        ". Keep the local data intact and retry synchronisation when the connection is available.";
+    });
   }
 
   window.importInventoryExcel = function(ev){
@@ -2120,6 +2166,16 @@ try{
     }
     function finish(rows){
       try {
+        var importCtx = window.__acxStockImportContext;
+        var activeUser = null; try { activeUser = JSON.parse(localStorage.getItem("loggedInUser") || "null"); } catch (ctxErr) {}
+        var activeCid = activeUser && String(activeUser.companyId || "");
+        var currentWh = wh();
+        if (importCtx && importCtx.fileName === String(file.name || "") &&
+            (String(importCtx.companyId || "") !== activeCid || String(importCtx.warehouse || "") !== String(currentWh || ""))) {
+          alert("❌ Import cancelled because the active company or warehouse changed while the file was being prepared. No stock was written.");
+          return;
+        }
+        if (!activeCid) { alert("❌ No active company was found. Sign in to a company before importing stock."); return; }
         if (!Array.isArray(rows) || !rows.length) { alert("⚠️ No rows found in that file. Make sure the first sheet has a header row followed by data rows."); return; }
         var existing = lsGet("inventory_" + w, []);
         var res = convert(rows, Array.isArray(existing) ? existing : []);
@@ -2174,7 +2230,7 @@ try{
         if (r.noSellAcc) msg += "\n⚠️ " + r.noSellAcc + " item(s) have no Selling Account.";
         if (r.noSku) msg += "\n• " + r.noSku + " item(s) have no SKU.";
         msg += "\n• Stock changes were recorded in each item's history (ref " + refNo + ").";
-        syncAndVerify(w, base, changes).then(function(st){ alert(msg + "\n\n" + st); });
+        syncAndVerify(w, base, changes).then(function(st){ alert(msg + "\n\n" + st); var c = window.__acxStockImportContext; if (c && c.fileName === String(file.name || "")) window.__acxStockImportContext = null; });
       } catch (e) {
         console.error("Inventory import failed:", e);
         alert("❌ Error reading file: " + (e && e.message ? e.message : e));
