@@ -1498,6 +1498,8 @@ try{
                 "#orgProfileTab .op-card,#orgProfileTab .op-nav{color:#1f2937}" +
     "#orgProfileTab .op-card input,#orgProfileTab .op-card select,#orgProfileTab .op-card textarea{background:#fff!important;color:#111827!important;border:1px solid #d1d5db}" +
     "#orgProfileTab .op-card label{color:#374151}" +
+    "#orgProfileTab .op-card input::placeholder,#orgProfileTab .op-card textarea::placeholder{color:#64748b!important;opacity:1}" +
+    "html.dark #orgProfileTab .op-card input::placeholder,html.dark #orgProfileTab .op-card textarea::placeholder{color:#94a3b8!important}" +
     "#orgProfileTab .op-nav a{color:#1e3a8a!important;background:#fff!important}" +
     "#orgProfileTab .op-nav a.op-nav-active{color:#fff!important;background:#1e3a8a!important}" +
     "#orgProfileTab .op-savebtn{background:#1e3a8a!important;color:#fff!important}" +
@@ -1595,7 +1597,7 @@ try{
   }
 
   /* ---------- the guard ---------- */
-  var MIN_RATIO = 2.2;          // below this the text is effectively invisible on its background
+  var MIN_RATIO = 4.5;          // WCAG AA contrast floor for profile labels, links, and app text
   var fixedMap = new WeakMap(); // element -> original inline colour we replaced {v, p}
   var running = false, again = false, timer = null, slow = 0;
 
