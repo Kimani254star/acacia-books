@@ -2072,9 +2072,9 @@ try{
   }
 
   
-  /* push the warehouse straight to the cloud and read it back, so an import can never silently "go back" after a refresh */
-  /* Verify the complete local warehouse snapshot against the correct company's cloud row.
-     A local save is not reported as synced until the remote copy contains every local item. */
+  /* push the warehouse straight to the cloud and read it back, so an import can never silently "go back" after a refresh.
+     v2: the read-back understands every way Supabase can hand the value back (text, jsonb string, jsonb array, double-encoded),
+     gives up after a few checks instead of 45, pushes the row directly if the normal sync did not land it, and says WHY when it cannot confirm. */
   function syncAndVerify(w, base, changes){
     var key = "inventory_" + w, cid = "";
     try { cid = (JSON.parse(localStorage.getItem("loggedInUser") || "null") || {}).companyId || ""; } catch (e) {}
@@ -2090,62 +2090,120 @@ try{
     }
     function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
     function norm(v){ return String(v == null ? "" : v).trim().toLowerCase().replace(/\s+/g, " "); }
-    function validSnapshot(remote){
-      if (!Array.isArray(remote) || !Array.isArray(base)) return false;
+    var REST = window.__SUPA_URL__ + "/rest/v1/company_state";
+    function hdr(extra){ var h = { apikey: window.__SUPA_KEY__, Authorization: "Bearer " + window.__SUPA_KEY__ }; for (var k in (extra || {})) h[k] = extra[k]; return h; }
+
+    /* Supabase may return the stored value as text, a JSON string inside jsonb, a real jsonb array, or a double-encoded string */
+    function toList(v){
+      var x = v, n = 0;
+      while (typeof x === "string" && n < 4) { try { x = JSON.parse(x); } catch (e) { return { list: null, why: "the stored value is not valid JSON" }; } n++; }
+      if (x && !Array.isArray(x) && typeof x === "object" && Array.isArray(x.value)) x = x.value;
+      if (Array.isArray(x)) return { list: x, why: "" };
+      return { list: null, why: "the stored value is not a list of items" };
+    }
+    /* compare local snapshot with the cloud list: returns the items that are missing or have another quantity */
+    function compare(remote){
       var byId = Object.create(null), byName = Object.create(null);
       remote.forEach(function(it){
         if (!it || typeof it !== "object") return;
         if (it.id != null && it.id !== "") byId[String(it.id)] = it;
-        var n = norm(it.name);
-        if (n) (byName[n] || (byName[n] = [])).push(it);
+        var n = norm(it.name); if (n) (byName[n] || (byName[n] = [])).push(it);
       });
-      return base.every(function(expected){
-        if (!expected || typeof expected !== "object") return true;
-        var actual = expected.id != null && expected.id !== "" ? byId[String(expected.id)] : null;
-        if (!actual) {
-          var list = byName[norm(expected.name)] || [];
-          actual = list.filter(function(it){ return Math.abs(num(it.qty) - num(expected.qty)) < 0.000001; })[0] || null;
+      var bad = [];
+      base.forEach(function(exp){
+        if (!exp || typeof exp !== "object") return;
+        var act = exp.id != null && exp.id !== "" ? byId[String(exp.id)] : null;
+        if (!act) {
+          var list = byName[norm(exp.name)] || [];
+          act = list.filter(function(it){ return Math.abs(num(it.qty) - num(exp.qty)) < 0.000001; })[0] || list[0] || null;
         }
-        return !!actual && Math.abs(num(actual.qty) - num(expected.qty)) < 0.000001;
+        if (!act) bad.push({ name: exp.name, local: num(exp.qty), cloud: "missing" });
+        else if (Math.abs(num(act.qty) - num(exp.qty)) >= 0.000001) bad.push({ name: exp.name, local: num(exp.qty), cloud: num(act.qty) });
       });
+      return bad;
     }
+    /* one read of the cloud row. Always resolves to { ok, reason, bad } and never throws */
     function readRemote(){
-      var url = window.__SUPA_URL__ + "/rest/v1/company_state?company_id=eq." +
-        encodeURIComponent(cid) + "&key=eq." + encodeURIComponent(key) + "&select=value&limit=1";
-      return fetch(url, {
-        method: "GET",
-        cache: "no-store",
-        headers: { apikey: window.__SUPA_KEY__, Authorization: "Bearer " + window.__SUPA_KEY__ }
-      }).then(function(r){
-        if (!r.ok) throw new Error("Cloud read returned HTTP " + r.status);
-        return r.json();
-      }).then(function(rows){
-        if (!Array.isArray(rows) || !rows.length) return false;
-        var remote;
-        try { remote = JSON.parse(rows[0].value); } catch (e) { return false; }
-        return validSnapshot(remote);
-      });
+      var url = REST + "?company_id=eq." + encodeURIComponent(cid) + "&key=eq." + encodeURIComponent(key) + "&select=value,updated_at&limit=1";
+      return fetch(url, { method: "GET", cache: "no-store", headers: hdr() }).then(function(r){
+        if (!r.ok) return r.text().then(function(t){
+          var m = t; try { var j = JSON.parse(t); m = (j.code ? "[" + j.code + "] " : "") + (j.message || j.details || j.hint || t); } catch (e) {}
+          return { ok: false, http: r.status, reason: "Supabase answered HTTP " + r.status + " when reading the stock row: " + String(m).slice(0, 200) };
+        });
+        return r.json().then(function(rows){
+          if (!Array.isArray(rows) || !rows.length) return { ok: false, norow: true, reason: "Supabase returned no row for " + key + " (the save never arrived, or a Supabase security rule is hiding it from this browser)" };
+          var p = toList(rows[0].value);
+          if (!p.list) return { ok: false, badformat: true, reason: "the cloud row exists but " + p.why };
+          var bad = compare(p.list);
+          if (!bad.length) return { ok: true, count: p.list.length };
+          return { ok: false, mismatch: true, bad: bad, reason: bad.length + " of " + base.length + " item(s) differ in the cloud (e.g. " +
+            bad.slice(0, 3).map(function(b){ return b.name + ": here " + b.local + ", cloud " + b.cloud; }).join("; ") + ")" };
+        });
+      }).catch(function(e){ return { ok: false, http: 0, reason: "network error while reading the cloud: " + (e && e.message ? e.message : e) }; });
     }
-    var tries = 0, maxTries = 45;
+    /* direct save of this warehouse (last write wins). "" = saved, otherwise a readable reason */
+    function forcePush(){
+      var ns = window.__companyNS, v;
+      try { v = ns && ns.nGet ? ns.nGet.call(ns.real, key + ns.SEP + cid) : null; } catch (e) { v = null; }
+      if (typeof v !== "string" || !v) { try { v = JSON.stringify(base); } catch (e2) { v = null; } }
+      if (!v) return Promise.resolve("nothing to save");
+      var row = { company_id: cid, key: key, value: v, updated_at: new Date().toISOString() };
+      return fetch(REST + "?on_conflict=company_id,key", {
+        method: "POST",
+        headers: hdr({ "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=representation" }),
+        body: JSON.stringify([row])
+      }).then(function(res){
+        return res.text().then(function(txt){
+          if (!res.ok) {
+            var m = txt; try { var j = JSON.parse(txt); m = (j.code ? "[" + j.code + "] " : "") + (j.message || j.details || j.hint || txt); } catch (e) {}
+            return "Supabase refused the direct save: HTTP " + res.status + " " + String(m).slice(0, 200);
+          }
+          var back = []; try { back = JSON.parse(txt) || []; } catch (e) {}
+          if (!back.length) return "Supabase accepted the request but saved no row (a security rule on company_state is blocking writes from this browser)";
+          try {
+            var ver = cs.ver ? cs.ver() : null;
+            if (ver) ver[key] = back[0].updated_at;
+            if (ns && ns.dirty) delete ns.dirty[key];
+          } catch (e) {}
+          return "";
+        });
+      }).catch(function(e){ return "network error while saving to the cloud: " + (e && e.message ? e.message : e); });
+    }
+
+    var tries = 0, MAX = 6, forced = false, lastReason = "", pushNote = "";
     function attempt(){
       tries++;
+      try { if (typeof cs.pushAllCompanyKeys === "function") cs.pushAllCompanyKeys(); } catch (e) {}
       var push = Promise.resolve();
-      if (cs && typeof cs.pushAllCompanyKeys === "function") {
-        try { cs.pushAllCompanyKeys(); } catch (e) {}
+      if (typeof cs.pushDirty === "function") {
+        push = Promise.resolve().then(function(){ return cs.pushDirty(); }).catch(function(e){ console.warn("[inventory-sync] push attempt failed", e); });
       }
-      if (cs && typeof cs.pushDirty === "function") {
-        push = Promise.resolve().then(function(){ return cs.pushDirty(); }).catch(function(e){
-          console.warn("[inventory-sync] push attempt failed", e);
-        });
-      }
-      return push.then(function(){ return wait(800); })
-        .then(readRemote)
-        .then(function(ok){
-          if (ok) return "☁️ Cloud sync confirmed: all " + base.length + " inventory item(s) in " + w + " match the cloud copy for this company.";
-          if (tries < maxTries) return wait(Math.min(2500, 500 + tries * 100)).then(attempt);
-          return "⚠️ The import is saved locally, but the cloud copy could not be fully verified after " + maxTries +
-            " checks. Do not delete local data or re-import repeatedly. Keep this tab open and check the connection and cloud permissions.";
-        });
+      return push.then(function(){ return wait(700); }).then(readRemote).then(function(r){
+        if (r.ok) return "☁️ Cloud sync confirmed: all " + base.length + " inventory item(s) in " + w + " match the cloud copy for this company." + (forced ? " (Saved directly after the normal sync was slow.)" : "");
+        lastReason = r.reason;
+        /* permission problems will not fix themselves: stop at once and say so */
+        if (r.http === 401 || r.http === 403) return fail();
+        /* the normal sync had two tries; now save this warehouse directly once */
+        if (tries >= 2 && !forced && (r.norow || r.mismatch || r.badformat)) {
+          forced = true;
+          return forcePush().then(function(why){ pushNote = why; return wait(500); }).then(readRemote).then(function(r2){
+            if (r2.ok) return "☁️ Cloud sync confirmed: all " + base.length + " inventory item(s) in " + w + " match the cloud copy for this company. (Saved directly because the normal sync had not landed.)";
+            lastReason = r2.reason;
+            return tries < MAX ? wait(1200).then(attempt) : fail();
+          });
+        }
+        if (tries < MAX) return wait(Math.min(2500, 600 + tries * 300)).then(attempt);
+        return fail();
+      });
+    }
+    function fail(){
+      var hint = "";
+      if (/HTTP 40[13]|42501|no row|security rule|saved no row/i.test(lastReason + " " + pushNote))
+        hint = "\n\nThis points at Supabase permissions on company_state. Run sql/acacia_inventory_sync_fix.sql (sections A and B) in the Supabase SQL Editor and send the result.";
+      else if (/not valid JSON|not a list/i.test(lastReason))
+        hint = "\n\nRun sql/acacia_inventory_sync_fix.sql section C in Supabase to repair the stored format.";
+      return "⚠️ Your import is saved on this device, but the cloud copy could not be confirmed.\nReason: " + lastReason +
+        (pushNote ? "\nDirect save: " + pushNote : "") + hint + "\n\nDo not re-import. Your local stock is intact.";
     }
     return attempt().catch(function(e){
       console.warn("[inventory-sync] verification failed", e);

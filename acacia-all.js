@@ -36,6 +36,9 @@
   function trackable(k) {
     k = String(k);
     if (!k || k === KEY || SKIP.test(k) || k.indexOf('__') === 0) return false;
+    /* Stock (inventory_<warehouse>) is exempt: its deletions already travel through the 3-way merge, and a stale/duplicated
+       deletion marker used to make a second device drop every item except one. */
+    if (/^inventory_/.test(k)) return false;
     var n = ns(); try { if (n && n.isGlobal && n.isGlobal(k)) return false; } catch (e) {}
     return true;
   }
@@ -81,6 +84,7 @@
     return out;
   }
   function deadSet(t, col) {
+    if (/^inventory_/.test(String(col))) return null;   /* stock is never filtered by deletion markers */
     var m = t && t[col], s = null;
     if (!m) return null;
     Object.keys(m).forEach(function (id) { if (m[id][1]) { s = s || Object.create(null); s[id] = 1; } });
