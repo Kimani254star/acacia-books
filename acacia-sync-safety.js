@@ -58,6 +58,7 @@
       }
       var cs = W.__companySync, pull = Promise.resolve();
       if (cs && typeof cs.pullCompany === "function" && navigator.onLine) pull = Promise.race([Promise.resolve().then(function () { return cs.pullCompany(); }), timeout(8000)]).catch(function () {});
+      if (W.acxStockSync && W.acxStockSync.syncAll && navigator.onLine) pull = pull.then(function () { return Promise.race([W.acxStockSync.syncAll(), timeout(8000)]); }).catch(function () {});
       return pull.then(function () { return orig.apply(self, args); });
     };
     wrapped.__syncSafe = true;

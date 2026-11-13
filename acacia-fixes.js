@@ -2175,7 +2175,9 @@ try{
       tries++;
       try { if (typeof cs.pushAllCompanyKeys === "function") cs.pushAllCompanyKeys(); } catch (e) {}
       var push = Promise.resolve();
-      if (typeof cs.pushDirty === "function") {
+      if (window.acxStockSync && typeof window.acxStockSync.syncNow === "function") {
+        push = window.acxStockSync.syncNow(w).then(function(r){ if (r && !r.ok) pushNote = r.msg; }).catch(function(e){ console.warn("[inventory-sync] push attempt failed", e); });
+      } else if (typeof cs.pushDirty === "function") {
         push = Promise.resolve().then(function(){ return cs.pushDirty(); }).catch(function(e){ console.warn("[inventory-sync] push attempt failed", e); });
       }
       return push.then(function(){ return wait(700); }).then(readRemote).then(function(r){
