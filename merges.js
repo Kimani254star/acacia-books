@@ -875,7 +875,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     invOf(wh).forEach(function (it) {
       if (cat && catOf(it) !== cat) return;
       var key = low(it.name) + '|' + low(it.sku || ''); if (seen[key]) return; seen[key] = 1;           /* one line per item: no duplicate counting */
-      lines.push({ key: key, name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: wh, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
+      lines.push({ key: key, itemId: it.id != null ? String(it.id) : '', name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: wh, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
     });
     if (!lines.length) return alert('No items were found in this warehouse' + (cat ? ' and category' : '') + ' to count.');
     var a = takes(), t = {
@@ -888,22 +888,79 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   /* An open stock take is a snapshot of the warehouse taken when it was created. Items imported / added afterwards were missing
    * from it (so Stock Take, Export and the Stock Count phone app showed only the old items). Open Full Count takes
    * (Draft / Counting) are topped up here with any warehouse item that is not on the sheet yet. Counted lines are untouched. */
-  function topUp(t) {
-    if (!t || t.method === 'Cycle Count' || (t.status !== 'Draft' && t.status !== 'Counting')) return 0;
+  /* ---- keep an open count in step with Inventory ----
+   * Root cause of "stock take not synchronising with Inventory": every line stored System Qty ONCE, when the count was created,
+   * and topUp() only ever added missing items. Sales, bills, transfers, imports and other adjustments made afterwards changed
+   * Inventory but never the count, so System Qty / Variance (and the Bulk Adjustment quantity) were worked out against old numbers.
+   * Open counts (Draft / Counting) now re-read System Qty, unit cost and item identity from Inventory every time they are opened,
+   * exported, submitted or when the cloud brings new stock in. A renamed / re-SKU'd item is matched by SKU / barcode / name and
+   * its line is updated, instead of adding a duplicate line next to an orphan. */
+  function invIndex(wh) {
+    var ix = { byId: {}, byKey: {}, bySku: {}, byBc: {}, byName: {} };
+    invOf(wh).forEach(function (it) {
+      if (it.id != null && it.id !== '' && !ix.byId[String(it.id)]) ix.byId[String(it.id)] = it;     /* stable item id (acacia-stock-repair.js): survives rename / SKU change */
+      var k = low(it.name) + '|' + low(it.sku || ''); if (!ix.byKey[k]) ix.byKey[k] = it;
+      if (it.sku) { var s = low(it.sku); (ix.bySku[s] = ix.bySku[s] || []).push(it); }
+      if (it.barcode) { var b = low(it.barcode); (ix.byBc[b] = ix.byBc[b] || []).push(it); }
+      var n = low(it.name); (ix.byName[n] = ix.byName[n] || []).push(it);
+    });
+    return ix;
+  }
+  function findInv(ix, l) {
+    if (l.itemId && ix.byId[l.itemId]) return ix.byId[l.itemId];
+    if (l.key && ix.byKey[l.key]) return ix.byKey[l.key];
+    var k2 = low(l.name) + '|' + low(l.sku || ''); if (ix.byKey[k2]) return ix.byKey[k2];
+    var a = l.sku ? ix.bySku[low(l.sku)] : null; if (a && a.length === 1) return a[0];
+    a = l.barcode ? ix.byBc[low(l.barcode)] : null; if (a && a.length === 1) return a[0];
+    a = ix.byName[low(l.name)]; if (a && a.length === 1) return a[0];
+    return null;
+  }
+  /* returns the number of lines changed */
+  function refreshQty(t) {
+    if (!t || (t.status !== 'Draft' && t.status !== 'Counting')) return 0;
+    var ix = invIndex(t.warehouse), changed = 0;
+    (t.lines || []).forEach(function (l) {
+      var it = findInv(ix, l); if (!it) return;
+      var q = num(it.qty), c = costOf(it), key = low(it.name) + '|' + low(it.sku || ''), hit = false;
+      if (num(l.systemQty) !== q) { l.systemQty = q; hit = true; }
+      if (c && num(l.unitCost) !== c) { l.unitCost = c; hit = true; }
+      if (it.id != null && it.id !== '' && l.itemId !== String(it.id)) { l.itemId = String(it.id); hit = true; }
+      if (l.key !== key || l.name !== it.name || (l.sku || '') !== (it.sku || '') || (l.barcode || '') !== (it.barcode || '')) {
+        l.key = key; l.name = it.name; l.sku = it.sku || ''; l.barcode = it.barcode || ''; l.category = catOf(it); hit = true;
+      }
+      if (hit) changed++;
+    });
+    if (changed) t.qtyRefreshedAt = new Date().toISOString();
+    return changed;
+  }
+  function addMissing(t) {
+    if (!t || t.method === 'Cycle Count') return 0;
     var have = {}; (t.lines || []).forEach(function (l) { have[l.key || (low(l.name) + '|' + low(l.sku || ''))] = 1; });
     var add = 0; t.lines = t.lines || [];
     invOf(t.warehouse).forEach(function (it) {
       if (t.category && catOf(it) !== t.category) return;
       var key = low(it.name) + '|' + low(it.sku || ''); if (have[key]) return; have[key] = 1;
-      t.lines.push({ key: key, name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: t.warehouse, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
+      t.lines.push({ key: key, itemId: it.id != null ? String(it.id) : '', name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: t.warehouse, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
       add++;
     });
     return add;
   }
+  function topUp(t) {
+    if (!t || (t.status !== 'Draft' && t.status !== 'Counting')) return 0;
+    var editing = state.view === 'sheet' && state.t && state.t.id === t.id;        /* never move numbers under a sheet that is being typed in */
+    return (editing ? 0 : refreshQty(t)) + addMissing(t);
+  }
   function topUpAll() {
-    var a = takes(), n = 0; a.forEach(function (t) { n += topUp(t); });
+    var a = allTakes(), n = 0; a.forEach(function (t) { n += topUp(t); });      /* allTakes() uses the open sheet's in-memory copy, so unsaved counts are kept */
     if (n) setTakes(a); return n;
   }
+  /* explicit button: "Refresh System Qty" on an open count */
+  w.stRefreshQty = function (id) {
+    var t = byId(id); if (!t) return;
+    var n = refreshQty(t), add = addMissing(t);
+    put(t); renderSheet();
+    try { if (typeof w.showNotification === 'function') w.showNotification(n || add ? 'System quantities refreshed from Inventory (' + n + ' line(s) updated' + (add ? ', ' + add + ' new item(s) added' : '') + ').' : 'System quantities already match Inventory.', 'success'); } catch (e) {}
+  };
   w.stTopUp = topUpAll;
   w.stDelete = function (id) {
     var t = byId(id); if (!t) return;
@@ -992,6 +1049,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     var out = [];
     if (t.status === 'Draft') out.push(b('Start Counting', 'stStart'));
     if (t.status === 'Counting') out.push(b('Submit for Review', 'stSubmit'));
+    if (t.status === 'Draft' || t.status === 'Counting') out.push(b('Refresh System Qty', 'stRefreshQty', BTN2));
     if (t.status === 'Submitted') { out.push(b('Approve', 'stApprove')); out.push(b('Send Back for Recount', 'stReject', BTN2)); }
     if (t.status === 'Approved') out.push(b('Post Adjustments', 'stPost'));
     var kk = totals(t);
@@ -1084,6 +1142,8 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   };
   w.stSubmit = function (id) {
     var t = byId(id); if (!t || t.status !== 'Counting') return;
+    var moved = refreshQty(t);
+    if (moved) { put(t); renderSheet(); return alert('Inventory changed while you were counting: System Qty was updated on ' + moved + ' line(s) so the variance is against current stock. Please review the variance, then submit again.'); }
     var missing = t.lines.filter(function (l) { return !calc(l).counted; });
     if (missing.length) return alert(missing.length + ' item(s) are not counted yet (first: ' + missing[0].name + '). Enter a physical quantity for every item, or remove it from a cycle count before submitting.');
     var noReason = t.lines.filter(function (l) { var k = calc(l); return k.v !== 0 && !l.reason; });
@@ -1338,7 +1398,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
           var seen = {}, lines = [];
           invOf(wh).forEach(function (it) {
             var key = low(it.name) + '|' + low(it.sku || ''); if (seen[key]) return; seen[key] = 1;
-            lines.push({ key: key, name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: wh, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
+            lines.push({ key: key, itemId: it.id != null ? String(it.id) : '', name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: wh, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
           });
           if (!lines.length) return alert('No items were found in ' + wh + ' to count.');
           t = { id: 'STK' + Date.now(), no: nextNo(list, 'ST-', 'no', 3), date: today(), warehouse: wh, category: '', method: 'Full Count', assignedTo: who(), notes: 'Created from an imported count file', blind: false, status: 'Counting', countStartedAt: new Date().toISOString(),
@@ -1452,6 +1512,8 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   function allTakes() { return takes().map(function (t) { return state.t && state.t.id === t.id ? state.t : t; }); }
   function readyForBulk(t) { return !!t && t.status !== 'Posted' && t.status !== 'Draft' && (!!t.varianceAt || t.status === 'Submitted' || t.status === 'Approved'); }
   function lineKey(l) { return l.key || low(l.sku || l.name); }
+  /* Lines are keyed 'name|sku' but Bulk Adjustment rows only know name and SKU, so the variance used to be stored under a key the page never looked up. Store it under every key a row can produce. */
+  function lineKeys(l) { var o = [lineKey(l), low(l.name) + '|' + low(l.sku || ''), low(l.sku || l.name)]; return o.filter(function (k, i) { return k && o.indexOf(k) === i; }); }
   w.acxStockTakeVariance = function (wh) {
     var res = { map: {}, takes: [], items: 0, net: 0 };
     allTakes().forEach(function (t) {
@@ -1459,7 +1521,8 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       var n = 0, net = 0;
       t.lines.forEach(function (l) {
         if (l.adjusted) return; var k = calc(l); if (!k.counted || !k.v) return;
-        res.map[lineKey(l)] = { v: k.v, sys: num(l.systemQty), phys: k.p, no: t.no, reason: 'Stock take ' + t.no + (l.reason ? ': ' + l.reason : '') };
+        var rec = { v: k.v, sys: num(l.systemQty), phys: k.p, no: t.no, ck: lineKey(l), reason: 'Stock take ' + t.no + (l.reason ? ': ' + l.reason : '') };
+        lineKeys(l).forEach(function (kk) { res.map[kk] = rec; });
         n++; net += k.v;
       });
       res.takes.push({ no: t.no, date: t.date, items: n, net: r4(net) }); res.items += n; res.net = r4(res.net + net);
@@ -1511,7 +1574,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       if (!tr.hasAttribute('data-id')) { var c1 = tr.querySelector('td[colspan="5"]'); if (c1) c1.setAttribute('colspan', '6'); return; }
       if (tr.getAttribute('data-ba-done')) return; tr.setAttribute('data-ba-done', '1');
       var tds = tr.children, name = (tds[0].textContent || '').trim(), sku = (tds[1].textContent || '').trim(); if (sku === '-') sku = '';
-      var key = low(sku || name), e = V.map[key], ref = tds[3] || null, cell = document.createElement('td'); cell.className = 'p-3.5';
+      var e = V.map[low(name) + '|' + low(sku)] || V.map[low(sku || name)], key = e ? e.ck : low(sku || name), ref = tds[3] || null, cell = document.createElement('td'); cell.className = 'p-3.5';
       if (e) {
         var cur = parseFloat((tds[2].textContent || '').trim()) || 0, moved = Math.abs(cur - e.sys) > 0.00001;
         cell.innerHTML = '<span class="font-semibold ' + (e.v < 0 ? 'text-red-600' : 'text-green-700') + '">' + signed(e.v) + '</span> <span class="text-xs text-gray-500">' + esc(e.no) + '</span>' +
@@ -1565,7 +1628,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     var seen = {}, lines = [];
     invOf(wh).forEach(function (it) {
       var key = low(it.name) + '|' + low(it.sku || ''); if (seen[key]) return; seen[key] = 1;
-      lines.push({ key: key, name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: wh, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
+      lines.push({ key: key, itemId: it.id != null ? String(it.id) : '', name: it.name, sku: it.sku || '', barcode: it.barcode || '', category: catOf(it), warehouse: wh, systemQty: num(it.qty), unitCost: costOf(it), physicalQty: null, reason: '', remarks: '', countedBy: '', countedAt: '' });
     });
     if (!lines.length) return null;
     return { id: 'STK' + Date.now(), no: nextNo(list, 'ST-', 'no', 3), date: today(), warehouse: wh, category: '', method: 'Full Count', assignedTo: by || '', notes: 'Created from a mobile count', blind: false, status: 'Counting', countStartedAt: new Date().toISOString(),

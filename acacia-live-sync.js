@@ -28,6 +28,7 @@
       if (k === "stockTakes") run("stTopUp");
     });
     if (inv) {
+      run("stTopUp");   /* open stock counts re-read System Qty so Assessment / Bulk Adjustment follow Inventory */
       ["renderInventoryTable", "renderInventorySummary", "renderStockValuation", "renderStockReports", "renderPriceListTable"].forEach(run);
     }
     if (bank) { ["renderBankTable", "updateBankDropdowns"].forEach(run); }
