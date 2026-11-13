@@ -34,6 +34,7 @@
   function rawSet(k, v) { var n = ns(); try { n.nSet.call(n.real, k, v); return true; } catch (e) { return false; } }
   function bKey(c, w) { return "__stkbase_" + c + "_" + w; }
   function rKey(c, w) { return "__stkrev_" + c + "_" + w; }
+  function lockKey(c, w) { return String(c) + "\u0000" + String(w); }
   function setStatus(state, msg, w) { status.state = state; status.msg = msg || ""; status.at = Date.now(); if (w) status.byWh[w] = { state: state, msg: msg || "", at: status.at }; }
 
   function toList(v) {
@@ -84,17 +85,21 @@
   }
 
   /* ---------- local writes ---------- */
-  function writeLocal(w, listOrStr) {
-    var n = ns(), c = cid(); if (!n || !c) return false;
+  function writeLocal(c, w, listOrStr) {
+    var n = ns(); c = String(c || "");
+    if (!n || !c || cid() !== c) return false;
     var str = typeof listOrStr === "string" ? listOrStr : JSON.stringify(listOrStr);
     applying = true;
     try {
       if (n.setApplying) n.setApplying(true);
-      try { n.nSet.call(n.real, "inventory_" + w + n.SEP + c, str); } finally { if (n.setApplying) n.setApplying(false); }
-    } catch (e) { applying = false; return false; }
-    applying = false;
+      try {
+        if (cid() !== c) return false;
+        n.nSet.call(n.real, "inventory_" + w + n.SEP + c, str);
+      } finally { if (n.setApplying) n.setApplying(false); }
+    } catch (e) { return false; }
+    finally { applying = false; }
     try { if (n.dirty) delete n.dirty["inventory_" + w]; } catch (e) {}
-    return true;
+    return cid() === c;
   }
   function refresh() {
     try { W.__invalidateInventoryCache && W.__invalidateInventoryCache(); } catch (e) {}
@@ -118,6 +123,7 @@
     var local = toList(localStr);
     if (local) ensureIds(local, w);
     var cloudRow = await getRow(c, key);
+    if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
     var cloud = cloudRow ? toList(cloudRow.value) : null;
     if (cloudRow && !cloud) throw new Error("the cloud row for " + w + " is not a readable list");
     if (cloud) ensureIds(cloud, w);
@@ -128,10 +134,11 @@
     if (!cloudRow) {
       if (!localHas) return { ok: true, msg: "nothing to sync", changed: false };
       var p0 = await putRow(c, key, JSON.stringify(local), "");
+      if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
       if (p0.conflict) return { retry: true };
       if (p0.error) throw new Error(p0.error);
       remember(c, w, JSON.stringify(local), p0.rev);
-      if (JSON.stringify(local) !== localStr) writeLocal(w, local);
+      if (JSON.stringify(local) !== localStr) writeLocal(c, w, local);
       return { ok: true, msg: "uploaded " + p0.count + " item(s)", changed: false };
     }
 
@@ -146,7 +153,7 @@
     /* this device is new for this warehouse (no base) */
     if (!hasBase) {
       if (!localHas) {
-        writeLocal(w, cloud); remember(c, w, JSON.stringify(cloud), cloudRev); refresh();
+        writeLocal(c, w, cloud); remember(c, w, JSON.stringify(cloud), cloudRev); refresh();
         return { ok: true, msg: "took " + cloud.length + " item(s) from the cloud", changed: true };
       }
       /* local already holds items: union by id, then upload */
@@ -154,26 +161,28 @@
       if (!u) throw new Error("merge module is not loaded yet");
       ensureIds(u, w);
       var pu = await putRow(c, key, JSON.stringify(u), cloudRev);
+      if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
       if (pu.conflict) return { retry: true };
       if (pu.error) throw new Error(pu.error);
-      writeLocal(w, u); remember(c, w, JSON.stringify(u), pu.rev); refresh();
+      writeLocal(c, w, u); remember(c, w, JSON.stringify(u), pu.rev); refresh();
       return { ok: true, msg: "linked this device: " + pu.count + " item(s)", changed: true };
     }
 
     if (!localChanged && !cloudChanged) return { ok: true, msg: "in sync", changed: false };
 
     if (!localChanged && cloudChanged) {                                  /* only the cloud changed */
-      writeLocal(w, cloud); remember(c, w, JSON.stringify(cloud), cloudRev); refresh();
+      writeLocal(c, w, cloud); remember(c, w, JSON.stringify(cloud), cloudRev); refresh();
       return { ok: true, msg: "took the newer cloud copy (" + cloud.length + " items)", changed: true };
     }
 
     if (localChanged && !cloudChanged) {                                  /* only this device changed */
       var body = JSON.stringify(local);
       var pl = await putRow(c, key, body, cloudRev);
+      if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
       if (pl.conflict) return { retry: true };
       if (pl.error) throw new Error(pl.error);
       remember(c, w, body, pl.rev);
-      if (body !== localStr) writeLocal(w, body);
+      if (body !== localStr) writeLocal(c, w, body);
       return { ok: true, msg: "uploaded " + pl.count + " item(s)", changed: false };
     }
 
@@ -182,20 +191,23 @@
     if (!m) throw new Error("merge module is not loaded yet");
     ensureIds(m, w);
     var mb = JSON.stringify(m), pm = await putRow(c, key, mb, cloudRev);
+      if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
     if (pm.conflict) return { retry: true };
     if (pm.error) throw new Error(pm.error);
-    writeLocal(w, mb); remember(c, w, mb, pm.rev); refresh();
+    writeLocal(c, w, mb); remember(c, w, mb, pm.rev); refresh();
     return { ok: true, msg: "merged this device with the cloud: " + pm.count + " item(s)", changed: true };
   }
 
   /* sync one warehouse; never runs twice at once for the same warehouse */
-  function syncNow(w) {
+  function syncNow(w, expectedCompany) {
     var c = cid();
     if (!c) return Promise.resolve({ ok: false, msg: "no active company" });
+    if (expectedCompany && c !== String(expectedCompany)) return Promise.resolve({ ok: false, msg: "company changed during sync - stopped" });
     if (!W.__SUPA_URL__ || !W.__SUPA_KEY__) return Promise.resolve({ ok: false, msg: "cloud is not configured" });
     if (!navigator.onLine) return Promise.resolve({ ok: false, msg: "offline - will sync when the connection returns" });
-    if (busy[w]) { again[w] = true; return busy[w]; }
-    busy[w] = (async function () {
+    var lock = lockKey(c, w);
+    if (busy[lock]) { again[lock] = true; return busy[lock]; }
+    busy[lock] = (async function () {
       var res = { ok: false, msg: "unknown" }, tries = 0;
       try {
         for (;;) {
@@ -211,11 +223,11 @@
         res = { ok: false, msg: String(e && e.message || e) };
         setStatus("error", res.msg, w);
         console.warn("[stock-sync]", w, res.msg);
-      } finally { delete busy[w]; }
-      if (again[w]) { delete again[w]; setTimeout(function () { syncNow(w); }, 400); }
+      } finally { delete busy[lock]; }
+      if (again[lock]) { delete again[lock]; setTimeout(function () { syncNow(w, c); }, 400); }
       return res;
     })();
-    return busy[w];
+    return busy[lock];
   }
 
   function localWarehouses() {
@@ -228,8 +240,9 @@
     var set = {}, results = [];
     localWarehouses().forEach(function (w) { set[w] = 1; });
     (await listKeys(c)).forEach(function (k) { set[k.slice(10)] = 1; });
+    if (cid() !== c) return [];
     var list = Object.keys(set);
-    for (var i = 0; i < list.length; i++) results.push({ warehouse: list[i], result: await syncNow(list[i]) });
+    for (var i = 0; i < list.length; i++) results.push({ warehouse: list[i], result: await syncNow(list[i], c) });
     return results;
   }
 
@@ -239,9 +252,10 @@
     var n = ns(); if (!n || !n.onSetItem) return false;
     n.onSetItem(function (k) {
       if (applying || !/^inventory_/.test(String(k))) return;
-      var w = String(k).slice(10);
-      clearTimeout(timers[w]);
-      timers[w] = setTimeout(function () { syncNow(w); }, DEBOUNCE_MS);
+      var c = cid(); if (!c) return;
+      var w = String(k).slice(10), lock = lockKey(c, w);
+      clearTimeout(timers[lock]);
+      timers[lock] = setTimeout(function () { syncNow(w, c); }, DEBOUNCE_MS);
     });
     return true;
   }
@@ -254,7 +268,7 @@
   document.addEventListener("visibilitychange", function () { if (!document.hidden) syncAll(); });
   W.addEventListener("online", function () { syncAll(); });
   W.addEventListener("acx:company-changed", function () { setTimeout(syncAll, 1500); });
-  W.addEventListener("pagehide", function () { /* push anything pending right now */ localWarehouses().forEach(function (w) { clearTimeout(timers[w]); }); });
+  W.addEventListener("pagehide", function () { Object.keys(timers).forEach(function (k) { clearTimeout(timers[k]); }); });
 
   W.acxStockSync = {
     syncNow: syncNow, syncAll: syncAll, status: function () { return status; },
