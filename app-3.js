@@ -1123,3 +1123,116 @@ try{
 })(window);
 
 }catch(e){console.error("[bundle assembly]",e)}
+
+/* Acacia Books — compact Settings navigation. Existing setting panels and data are preserved. */
+(function () {
+  'use strict';
+  var groups = [
+    { id: 'general', title: 'General Settings', icon: '⚙️', items: [
+      ['remindersTab', 'Reminders'],
+      ['paymentTermsTab', 'Payment Terms'],
+      ['currenciesTab', 'Currencies']
+    ]},
+    { id: 'automation', title: 'Automation', icon: '⚡', items: [
+      ['workflowRulesTab', 'Workflow Rules']
+    ]},
+    { id: 'portals', title: 'Portals & Payments', icon: '🌐', items: [
+      ['customerPortalTab', 'Customer Portal'],
+      ['vendorPortalTab', 'Vendor Portal'],
+      ['paymentGatewaysTab', 'Payment Gateways']
+    ]},
+    { id: 'developer', title: 'Developer & Integrations', icon: '🔌', items: [
+      ['integrationsHubTab', 'Integrations'],
+      ['connectionsTab', 'Connections'],
+      ['apiKeysTab', 'API Keys'],
+      ['incomingWebhooksTab', 'Incoming Webhooks'],
+      ['outgoingWebhooksTab', 'Outgoing Webhooks']
+    ]},
+    { id: 'data', title: 'Data & Forms', icon: '🗄️', items: [
+      ['webFormsTab', 'Web Forms'],
+      ['dataManagementTab', 'Data Management']
+    ]}
+  ];
+  function addStyles() {
+    if (document.getElementById('acxSettingsGroupsStyle')) return;
+    var style = document.createElement('style');
+    style.id = 'acxSettingsGroupsStyle';
+    style.textContent = [
+      '#settingsSubmenu2 .acx-settings-group{list-style:none;margin:.35rem 0 .45rem;padding:0;border:1px solid rgba(148,163,184,.24);border-radius:9px;overflow:hidden;background:rgba(255,255,255,.035)}',
+      '#settingsSubmenu2 .acx-settings-group-toggle{display:flex;align-items:center;justify-content:space-between;gap:.5rem;width:100%;padding:.58rem .65rem;text-align:left;font-size:12px;font-weight:700;color:inherit;border-radius:0;transition:background .18s}',
+      '#settingsSubmenu2 .acx-settings-group-toggle:hover{background:rgba(250,204,21,.18);color:inherit}',
+      '#settingsSubmenu2 .acx-settings-group-toggle .acx-group-chevron{font-size:10px;transition:transform .18s}',
+      '#settingsSubmenu2 .acx-settings-group-toggle[aria-expanded="true"] .acx-group-chevron{transform:rotate(90deg)}',
+      '#settingsSubmenu2 .acx-settings-group-items{padding:.15rem .35rem .35rem .75rem;margin:0;list-style:none}',
+      '#settingsSubmenu2 .acx-settings-group-items li{margin:.08rem 0}',
+      '#settingsSubmenu2 .acx-settings-group-items button{font-size:12px;padding:.42rem .55rem;border-radius:6px}',
+      '#settingsSubmenu2 .acx-settings-group-items button:hover{background:#facc15;color:#111827}'
+    ].join('\n');
+    document.head.appendChild(style);
+  }
+  function findOrCreateItem(menu, id, label) {
+    var existing = Array.prototype.find.call(menu.querySelectorAll('button'), function (button) {
+      return (button.getAttribute('onclick') || '').indexOf("'" + id + "'") >= 0 ||
+        (button.getAttribute('onclick') || '').indexOf('"' + id + '"') >= 0;
+    });
+    if (existing) return existing.closest('li') || existing.parentElement;
+    var li = document.createElement('li');
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg';
+    button.textContent = label;
+    button.addEventListener('click', function () {
+      if (typeof window.showTab === 'function') window.showTab(id);
+    });
+    li.appendChild(button);
+    return li;
+  }
+  function buildSettingsGroups() {
+    var menu = document.getElementById('settingsSubmenu2');
+    if (!menu || menu.dataset.acxGroupedSettings === '1') return !!menu;
+    var allReady = groups.every(function (group) {
+      return group.items.every(function (item) { return !!document.getElementById(item[0]); });
+    });
+    if (!allReady) return false;
+    addStyles();
+    groups.forEach(function (group) {
+      var groupLi = document.createElement('li');
+      groupLi.className = 'acx-settings-group';
+      groupLi.dataset.settingsGroup = group.id;
+      var toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'acx-settings-group-toggle';
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.innerHTML = '<span>' + group.icon + ' ' + group.title + '</span><span class="acx-group-chevron">▶</span>';
+      var list = document.createElement('ul');
+      list.className = 'acx-settings-group-items hidden';
+      list.id = 'acxSettingsGroup' + group.id;
+      toggle.setAttribute('aria-controls', list.id);
+      toggle.addEventListener('click', function () {
+        var opening = list.classList.contains('hidden');
+        list.classList.toggle('hidden', !opening);
+        toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+      });
+      group.items.forEach(function (item) {
+        var li = findOrCreateItem(menu, item[0], item[1]);
+        if (li && li.parentElement) li.parentElement.removeChild(li);
+        list.appendChild(li);
+      });
+      groupLi.appendChild(toggle);
+      groupLi.appendChild(list);
+      menu.appendChild(groupLi);
+    });
+    menu.dataset.acxGroupedSettings = '1';
+    return true;
+  }
+  function boot() {
+    if (buildSettingsGroups()) return;
+    var attempts = 0;
+    var retry = setInterval(function () {
+      attempts++;
+      if (buildSettingsGroups() || attempts >= 30) clearInterval(retry);
+    }, 300);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
