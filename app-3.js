@@ -1124,115 +1124,99 @@ try{
 
 }catch(e){console.error("[bundle assembly]",e)}
 
-/* Acacia Books — compact Settings navigation. Existing setting panels and data are preserved. */
+/* Acacia Books — Settings categories with horizontal submodule tabs. */
 (function () {
   'use strict';
   var groups = [
-    { id: 'general', title: 'General Settings', icon: '⚙️', items: [
-      ['remindersTab', 'Reminders'],
-      ['paymentTermsTab', 'Payment Terms'],
-      ['currenciesTab', 'Currencies']
-    ]},
-    { id: 'automation', title: 'Automation', icon: '⚡', items: [
-      ['workflowRulesTab', 'Workflow Rules']
-    ]},
-    { id: 'portals', title: 'Portals & Payments', icon: '🌐', items: [
-      ['customerPortalTab', 'Customer Portal'],
-      ['vendorPortalTab', 'Vendor Portal'],
-      ['paymentGatewaysTab', 'Payment Gateways']
-    ]},
-    { id: 'developer', title: 'Developer & Integrations', icon: '🔌', items: [
-      ['integrationsHubTab', 'Integrations'],
-      ['connectionsTab', 'Connections'],
-      ['apiKeysTab', 'API Keys'],
-      ['incomingWebhooksTab', 'Incoming Webhooks'],
-      ['outgoingWebhooksTab', 'Outgoing Webhooks']
-    ]},
-    { id: 'data', title: 'Data & Forms', icon: '🗄️', items: [
-      ['webFormsTab', 'Web Forms'],
-      ['dataManagementTab', 'Data Management']
-    ]}
+    { id:'general', title:'General Settings', icon:'⚙️', items:[['remindersTab','Reminders'],['paymentTermsTab','Payment Terms'],['currenciesTab','Currencies']] },
+    { id:'automation', title:'Automation', icon:'⚡', items:[['workflowRulesTab','Workflow Rules']] },
+    { id:'portals', title:'Portals & Payments', icon:'🌐', items:[['customerPortalTab','Customer Portal'],['vendorPortalTab','Vendor Portal'],['paymentGatewaysTab','Payment Gateways']] },
+    { id:'developer', title:'Developer & Integrations', icon:'🔌', items:[['integrationsHubTab','Integrations'],['connectionsTab','Connections'],['apiKeysTab','API Keys'],['incomingWebhooksTab','Incoming Webhooks'],['outgoingWebhooksTab','Outgoing Webhooks']] },
+    { id:'data', title:'Data & Forms', icon:'🗄️', items:[['webFormsTab','Web Forms'],['dataManagementTab','Data Management']] }
   ];
-  function addStyles() {
-    if (document.getElementById('acxSettingsGroupsStyle')) return;
-    var style = document.createElement('style');
-    style.id = 'acxSettingsGroupsStyle';
-    style.textContent = [
-      '#settingsSubmenu2 .acx-settings-group{list-style:none;margin:.35rem 0 .45rem;padding:0;border:1px solid rgba(148,163,184,.24);border-radius:9px;overflow:hidden;background:rgba(255,255,255,.035)}',
-      '#settingsSubmenu2 .acx-settings-group-toggle{display:flex;align-items:center;justify-content:space-between;gap:.5rem;width:100%;padding:.58rem .65rem;text-align:left;font-size:12px;font-weight:700;color:inherit;border-radius:0;transition:background .18s}',
-      '#settingsSubmenu2 .acx-settings-group-toggle:hover{background:rgba(250,204,21,.18);color:inherit}',
-      '#settingsSubmenu2 .acx-settings-group-toggle .acx-group-chevron{font-size:10px;transition:transform .18s}',
-      '#settingsSubmenu2 .acx-settings-group-toggle[aria-expanded="true"] .acx-group-chevron{transform:rotate(90deg)}',
-      '#settingsSubmenu2 .acx-settings-group-items{padding:.15rem .35rem .35rem .75rem;margin:0;list-style:none}',
-      '#settingsSubmenu2 .acx-settings-group-items li{margin:.08rem 0}',
-      '#settingsSubmenu2 .acx-settings-group-items button{font-size:12px;padding:.42rem .55rem;border-radius:6px}',
-      '#settingsSubmenu2 .acx-settings-group-items button:hover{background:#facc15;color:#111827}'
-    ].join('\n');
-    document.head.appendChild(style);
+  var activeGroup = null, nav = null, hooked = false;
+  function style(){
+    if(document.getElementById('acxSettingsTabsStyle')) return;
+    var st=document.createElement('style'); st.id='acxSettingsTabsStyle';
+    st.textContent = [
+      '#settingsSubmenu2 .acx-settings-category{list-style:none;margin:.3rem 0;padding:0}',
+      '#settingsSubmenu2 .acx-settings-category button{display:flex;align-items:center;gap:.55rem;width:100%;padding:.62rem .7rem;border-radius:8px;text-align:left;font-size:12px;font-weight:700;color:inherit}',
+      '#settingsSubmenu2 .acx-settings-category button:hover{background:rgba(250,204,21,.18)}',
+      '#settingsSubmenu2 .acx-settings-category button[aria-current="page"]{background:#1e3a8a;color:#fff}',
+      '#acxSettingsSubmoduleTabs{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;overflow-y:hidden;padding:4px 2px 12px;margin:0 0 14px;border-bottom:1px solid #e5e7eb;scrollbar-width:thin}',
+      '#acxSettingsSubmoduleTabs button{flex:0 0 auto;white-space:nowrap;padding:9px 14px;border:1px solid #dfe3e8;border-radius:11px;background:#f1f3f6;color:#25334a;font:600 12px Cambria,Georgia,serif;cursor:pointer;transition:background .15s,border-color .15s}',
+      '#acxSettingsSubmoduleTabs button:hover{background:#e7ebf1;border-color:#cbd5e1}',
+      '#acxSettingsSubmoduleTabs button[aria-selected="true"]{background:#1e3a8a;border-color:#1e3a8a;color:#fff}',
+      '@media(max-width:640px){#acxSettingsSubmoduleTabs{gap:6px}#acxSettingsSubmoduleTabs button{padding:8px 11px;font-size:11px}}'
+    ].join('\n'); document.head.appendChild(st);
   }
-  function findOrCreateItem(menu, id, label) {
-    var existing = Array.prototype.find.call(menu.querySelectorAll('button'), function (button) {
-      return (button.getAttribute('onclick') || '').indexOf("'" + id + "'") >= 0 ||
-        (button.getAttribute('onclick') || '').indexOf('"' + id + '"') >= 0;
-    });
-    if (existing) return existing.closest('li') || existing.parentElement;
-    var li = document.createElement('li');
-    var button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg';
-    button.textContent = label;
-    button.addEventListener('click', function () {
-      if (typeof window.showTab === 'function') window.showTab(id);
-    });
-    li.appendChild(button);
-    return li;
+  function contentHost(){ return document.getElementById('contentArea'); }
+  function ensureTabs(){
+    var host=contentHost(); if(!host||!host.parentNode) return null;
+    if(!nav){ nav=document.getElementById('acxSettingsSubmoduleTabs'); }
+    if(!nav){ nav=document.createElement('nav'); nav.id='acxSettingsSubmoduleTabs'; nav.setAttribute('aria-label','Settings submodules'); nav.hidden=true; host.parentNode.insertBefore(nav,host); }
+    else if(nav.parentNode!==host.parentNode) host.parentNode.insertBefore(nav,host);
+    return nav;
   }
-  function buildSettingsGroups() {
-    var menu = document.getElementById('settingsSubmenu2');
-    if (!menu || menu.dataset.acxGroupedSettings === '1') return !!menu;
-    var allReady = groups.every(function (group) {
-      return group.items.every(function (item) { return !!document.getElementById(item[0]); });
+  function groupFor(tab){ return groups.find(function(g){return g.items.some(function(it){return it[0]===tab;});})||null; }
+  function renderTabs(group, selected){
+    var bar=ensureTabs(); if(!bar) return;
+    activeGroup=group; bar.innerHTML=''; bar.hidden=!group;
+    if(!group) return;
+    group.items.forEach(function(item){
+      var b=document.createElement('button'); b.type='button'; b.textContent=item[1];
+      b.setAttribute('role','tab'); b.setAttribute('aria-selected',item[0]===selected?'true':'false');
+      b.addEventListener('click',function(){ if(typeof window.showTab==='function') window.showTab(item[0]); });
+      bar.appendChild(b);
     });
-    if (!allReady) return false;
-    addStyles();
-    groups.forEach(function (group) {
-      var groupLi = document.createElement('li');
-      groupLi.className = 'acx-settings-group';
-      groupLi.dataset.settingsGroup = group.id;
-      var toggle = document.createElement('button');
-      toggle.type = 'button';
-      toggle.className = 'acx-settings-group-toggle';
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.innerHTML = '<span>' + group.icon + ' ' + group.title + '</span><span class="acx-group-chevron">▶</span>';
-      var list = document.createElement('ul');
-      list.className = 'acx-settings-group-items hidden';
-      list.id = 'acxSettingsGroup' + group.id;
-      toggle.setAttribute('aria-controls', list.id);
-      toggle.addEventListener('click', function () {
-        var opening = list.classList.contains('hidden');
-        list.classList.toggle('hidden', !opening);
-        toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+    var menu=document.getElementById('settingsSubmenu2');
+    if(menu) menu.querySelectorAll('[data-acx-settings-category]').forEach(function(b){
+      b.setAttribute('aria-current',b.getAttribute('data-acx-settings-category')===group.id?'page':'false');
+    });
+  }
+  function selectGroup(group){
+    if(!group||!group.items.length) return;
+    renderTabs(group,group.items[0][0]);
+    if(typeof window.showTab==='function') window.showTab(group.items[0][0]);
+  }
+  function buildMenu(){
+    var menu=document.getElementById('settingsSubmenu2'); if(!menu) return false;
+    var ready=groups.every(function(g){return g.items.every(function(it){return !!document.getElementById(it[0]);});});
+    if(!ready) return false;
+    style();
+    menu.querySelectorAll('[data-acx-settings-category]').forEach(function(n){n.remove();});
+    groups.forEach(function(g){
+      g.items.forEach(function(it){
+        var old=Array.prototype.find.call(menu.querySelectorAll('button'),function(b){var oc=b.getAttribute('onclick')||'';return oc.indexOf("'"+it[0]+"'")>=0||oc.indexOf('"'+it[0]+'"')>=0;});
+        if(old){var li=old.closest('li'); if(li) li.remove(); else old.remove();}
       });
-      group.items.forEach(function (item) {
-        var li = findOrCreateItem(menu, item[0], item[1]);
-        if (li && li.parentElement) li.parentElement.removeChild(li);
-        list.appendChild(li);
-      });
-      groupLi.appendChild(toggle);
-      groupLi.appendChild(list);
-      menu.appendChild(groupLi);
+      var li=document.createElement('li'); li.className='acx-settings-category'; li.dataset.acxSettingsCategory=g.id;
+      var b=document.createElement('button'); b.type='button'; b.dataset.acxSettingsCategory=g.id; b.innerHTML='<span aria-hidden="true">'+g.icon+'</span><span>'+g.title+'</span>';
+      b.addEventListener('click',function(){selectGroup(g);}); li.appendChild(b); menu.appendChild(li);
     });
-    menu.dataset.acxGroupedSettings = '1';
-    return true;
+    ensureTabs(); return true;
   }
-  function boot() {
-    if (buildSettingsGroups()) return;
-    var attempts = 0;
-    var retry = setInterval(function () {
-      attempts++;
-      if (buildSettingsGroups() || attempts >= 30) clearInterval(retry);
-    }, 300);
+  function hookShowTab(){
+    if(hooked||typeof window.showTab!=='function') return false;
+    var original=window.showTab;
+    function wrapped(tab){
+      var result=original.apply(this,arguments);
+      var g=groupFor(tab);
+      if(g) renderTabs(g,tab);
+      else if(nav) nav.hidden=true;
+      return result;
+    }
+    wrapped.__acxSettingsTabs=true; window.showTab=wrapped; hooked=true; return true;
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  function boot(){
+    var attempts=0;
+    var timer=setInterval(function(){
+      attempts++; var ready=buildMenu(); hookShowTab();
+      if(ready&&hooked){clearInterval(timer); var last='';try{last=sessionStorage.getItem('acxLastTab')||'';}catch(e){}
+        var g=groupFor(last); if(g) renderTabs(g,last);
+      }
+      if(attempts>=50) clearInterval(timer);
+    },250);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
