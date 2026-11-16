@@ -1,0 +1,41 @@
+ACACIA BOOKS — TARGETED STOCK MODULE REPAIR
+Date: 2026-11-12
+
+SCOPE
+This update is limited to Stock / Inventory identity, company scoping, import verification, and cloud push concurrency. Existing ERP modules, business workflows, and database schema are retained.
+
+CHANGES
+1. Added acacia-stock-repair.js and loaded it after the existing application scripts.
+   - Requires an active company context for inventory reads and saves through the shared inventory functions.
+   - Assigns stable, company-and-warehouse-specific item IDs.
+   - Preserves existing item IDs and reuses IDs from matching existing items during imports.
+   - Applies IDs to existing inventory records as a local migration and to subsequent inventory writes.
+   - Invalidates the inventory cache after identity migration.
+
+2. Updated acacia-fixes.js.
+   - Prevents an import from continuing if the active company or selected warehouse changes while the file is being prepared.
+   - Cloud verification now checks the complete local warehouse snapshot against the matching company_state row.
+   - Verification retries for up to 45 checks and reports local save separately from confirmed cloud sync.
+   - Does not replace the existing inventory list during a normal import.
+
+3. Updated app-3.js.
+   - A concurrent pushDirty() call now waits for the active push to finish (up to 30 seconds) before attempting its own push.
+   - This prevents callers from treating an in-progress cloud push as completed.
+
+4. Updated index.html.
+   - Loads acacia-stock-repair.js last, after the existing scripts.
+   - Removed the standalone acacia-item-ids.js reference because the corresponding item-ID logic is already embedded in app-extras-all.js and the new repair now supplies the required helper.
+
+PRESERVED
+- Existing application structure and modules.
+- Existing company records and inventory data.
+- Existing Supabase tables and company_state storage model.
+- Existing warehouse and stock transaction workflows.
+- Existing sales, purchasing, accounting, and reporting integrations.
+
+VALIDATION PERFORMED
+- JavaScript syntax checks passed for app-3.js, acacia-fixes.js, and acacia-stock-repair.js.
+- Isolated helper test passed: legacy stock received IDs, IDs remained stable, new saves received IDs, and companyless shared inventory reads were blocked.
+
+IMPORTANT DEPLOYMENT NOTE
+This is a source-code repair, not a live production database migration or end-to-end Supabase test. Back up the current production data before deployment. Test with two separate company accounts and verify imports, edits, deletions, transfers, refreshes, and cloud synchronisation before treating the repair as production-approved.

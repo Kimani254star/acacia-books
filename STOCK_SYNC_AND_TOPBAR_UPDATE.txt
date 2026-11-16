@@ -1,0 +1,28 @@
+ACACIA BOOKS — TOP BAR + STOCK SYNC UPDATE
+
+TOP BAR
+- Updated style.css so the top bar uses the same primary background colour as the left and right sidebars.
+- Top bar text, company selector, search and action icons use the sidebar text colour and hover contrast.
+- Company dropdown remains readable.
+
+STOCK SYNC — SOURCE OF TRUTH
+- The inventory with many products is the master copy.
+- Do not run SQL UPDATE/DELETE/UPSERT statements to replace stock rows manually.
+- SQL cannot read browser localStorage; stock records are currently pushed by the Books application.
+- Run stock_sync_setup.sql in Supabase SQL Editor. It prepares/checks the company_state table's unique company/key index and Realtime registration, then gives read-only diagnostics.
+- The SQL does not overwrite existing company_state data or create stock items.
+
+SAFE PUSH SEQUENCE
+1. Back up the Supabase project and export the complete inventory from the browser showing many products.
+2. Close the incomplete one-product browser/session. Do not let it push.
+3. Open the master browser, sign into the exact company, select All Warehouses, and keep it online.
+4. Confirm the company ID is correct.
+5. In Books, use its normal cloud sync / sync all action and wait for the cloud confirmation. Do not use a second stale browser during this step.
+6. Open the other device/session only after the master reports sync completion; sign in to the same company and allow it to pull.
+7. Compare item counts by warehouse and verify sample SKUs, quantities, buy/sell prices, VAT and item history.
+
+IMPORTANT
+- SQL only prepares the sync table. It cannot transfer the browser's local inventory by itself.
+- If the diagnostic query returns zero inventory_* rows for the company, the master browser has not yet uploaded its warehouse stock.
+- If SQL reports a type/cast error, stop and share the error; do not change the value column type blindly.
+- Do not apply broad public RLS policies just to make sync work. Existing app policies and key configuration must be checked securely.

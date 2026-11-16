@@ -1,0 +1,1773 @@
+
+/* ######## acacia-tombstones.js ######## */
+/* acacia-tombstones.js
+ * Deletion tombstones so deleted records never come back after cloud sync,
+ * a missing __syncbase_ baseline, or restoring an old Google backup.
+ *
+ * - Captures deletions automatically via __companyNS.onSetItem (listener gets key,newValue,oldValue).
+ * - Stored as the per-company key "tombstones" => syncs through company_state like any other key.
+ * - Shape: { "<collection>": { "<ident>": [timestampMs, 1|0] } }   1 = deleted, 0 = revived (Recycle-Bin restore / re-added)
+ * - Newest timestamp wins when two copies are merged.
+ * - Hooks called from app-3.js: filterVal, cleanKey, remote, snapshot.
+ */
+(function () {
+  'use strict';
+  if (window.__acxTomb) return;
+  var KEY = 'tombstones';
+  var IDF = ['id', '_id', 'uuid', 'invoiceNumber', 'billNumber', 'quoteNumber', 'orderNumber', 'receiptNumber', 'poNumber', 'grnNumber', 'sku']; // same order as sync ident()
+  var SKIP = /(^|[_:])(audit|logs?|notif|notifications|history|session|cache|draft|recent|activity|backup|stamps?|tombstones)/i;
+  var DEL_KEEP = 365 * 864e5, REV_KEEP = 30 * 864e5, MAX_ENTRIES = 20000;
+  var pending = Object.create(null), timer = null;
+
+  function ns() { return window.__companyNS; }
+  function now() { return Date.now() + (window.__acxClockOffset || 0); }
+  function comp() { try { var n = ns(); return n && n.activeCompany ? n.activeCompany() : null; } catch (e) { return null; } }
+  function rawGet(k) { var n = ns(), c = comp(); if (!n || !c) return null; try { return n.nGet.call(n.real, k + n.SEP + c); } catch (e) { return null; } }
+  function rawSet(k, v) { var n = ns(), c = comp(); if (!n || !c) return; try { n.nSet.call(n.real, k + n.SEP + c, v); } catch (e) {} }
+  function isObj(x) { return !!x && typeof x === 'object' && !Array.isArray(x); }
+  function parse(s) { if (typeof s !== 'string' || s.charAt(0) !== '[') return null; try { var a = JSON.parse(s); return Array.isArray(a) ? a : null; } catch (e) { return null; } }
+  function parseT(s) { if (typeof s !== 'string') return {}; try { var o = JSON.parse(s); return isObj(o) ? o : {}; } catch (e) { return {}; } }
+  function ident(r) {
+    if (!isObj(r)) return null;
+    var stock = r.buyPrice !== undefined || r.sellPrice !== undefined || r.qty !== undefined; // stock lines: the SKU is a shared unit code (PCS, KGM...), never an identity
+    for (var i = 0; i < IDF.length; i++) { if (stock && IDF[i] === 'sku') continue; var v = r[IDF[i]]; if (v != null && v !== '' && typeof v !== 'object') return 'i:' + IDF[i] + ':' + String(v); }
+    return null; // hash-only records are not tombstoned
+  }
+  function trackable(k) {
+    k = String(k);
+    if (!k || k === KEY || SKIP.test(k) || k.indexOf('__') === 0) return false;
+    /* Stock (inventory_<warehouse>) is exempt: its deletions already travel through the 3-way merge, and a stale/duplicated
+       deletion marker used to make a second device drop every item except one. */
+    if (/^inventory_/.test(k)) return false;
+    var n = ns(); try { if (n && n.isGlobal && n.isGlobal(k)) return false; } catch (e) {}
+    return true;
+  }
+  function loadT() { return parseT(rawGet(KEY)); }
+  function saveT(t, touch) {
+    prune(t);
+    var s = JSON.stringify(t);
+    if (s === rawGet(KEY)) return;
+    // use the virtual localStorage so the normal dirty/push flow marks it for sync
+    if (touch !== false) { try { window.localStorage.setItem(KEY, s); return; } catch (e) {} }
+    rawSet(KEY, s);
+  }
+  function prune(t) {
+    var cut = now(), total = 0, cols = Object.keys(t);
+    cols.forEach(function (c) {
+      var m = t[c];
+      Object.keys(m).forEach(function (id) {
+        var e = m[id], age = cut - e[0];
+        if ((e[1] ? age > DEL_KEEP : age > REV_KEEP)) delete m[id]; else total++;
+      });
+      if (!Object.keys(m).length) delete t[c];
+    });
+    if (total > MAX_ENTRIES) { // drop oldest revived first, then oldest deleted
+      var all = [];
+      Object.keys(t).forEach(function (c) { Object.keys(t[c]).forEach(function (id) { all.push([c, id, t[c][id]]); }); });
+      all.sort(function (a, b) { return (a[2][1] - b[2][1]) || (a[2][0] - b[2][0]); });
+      for (var i = 0; i < all.length - MAX_ENTRIES; i++) { delete t[all[i][0]][all[i][1]]; }
+    }
+  }
+  function mergeT(a, b) { // newest timestamp wins; tie => deleted wins
+    var out = {};
+    [a, b].forEach(function (src) {
+      Object.keys(src || {}).forEach(function (c) {
+        if (!isObj(src[c])) return;
+        out[c] = out[c] || {};
+        Object.keys(src[c]).forEach(function (id) {
+          var e = src[c][id]; if (!Array.isArray(e)) return;
+          var cur = out[c][id];
+          if (!cur || e[0] > cur[0] || (e[0] === cur[0] && e[1] > cur[1])) out[c][id] = [e[0], e[1] ? 1 : 0];
+        });
+      });
+    });
+    return out;
+  }
+  function deadSet(t, col) {
+    if (/^inventory_/.test(String(col))) return null;   /* stock is never filtered by deletion markers */
+    var m = t && t[col], s = null;
+    if (!m) return null;
+    Object.keys(m).forEach(function (id) { if (m[id][1]) { s = s || Object.create(null); s[id] = 1; } });
+    return s;
+  }
+  function filterArr(arr, dead) {
+    var out = [], n = 0;
+    for (var i = 0; i < arr.length; i++) { var id = ident(arr[i]); if (id && dead[id]) n++; else out.push(arr[i]); }
+    return { arr: out, n: n };
+  }
+
+  /* ---------- capture ---------- */
+  function diff(key, oldS, newS) {
+    var o = parse(oldS), n = parse(newS);
+    if (!o || !n) return;
+    var nowIds = Object.create(null), added = [], removed = [], i, id;
+    for (i = 0; i < n.length; i++) { id = ident(n[i]); if (id) nowIds[id] = 1; }
+    var oldIds = Object.create(null);
+    for (i = 0; i < o.length; i++) { id = ident(o[i]); if (id) { oldIds[id] = 1; if (!nowIds[id]) removed.push(id); } }
+    for (id in nowIds) if (!oldIds[id]) added.push(id);
+    if (!removed.length && !added.length) return;
+    var t = loadT(), ts = now(), changed = false, m = t[key] || (t[key] = {});
+    removed.forEach(function (x) { m[x] = [ts, 1]; changed = true; });
+    added.forEach(function (x) { if (m[x] && m[x][1]) { m[x] = [ts, 0]; changed = true; } }); // Recycle-Bin restore / re-created
+    if (changed) saveT(t);
+  }
+  function flush() {
+    var p = pending; pending = Object.create(null); clearTimeout(timer); timer = null;
+    Object.keys(p).forEach(function (k) { try { diff(k, p[k].o, p[k].n); } catch (e) { console.warn('[tombstones] diff', k, e); } });
+  }
+  function onSet(key, newV, oldV) {
+    if (typeof newV !== 'string' || typeof oldV !== 'string' || newV === oldV) return;
+    if (newV.charAt(0) !== '[' || oldV.charAt(0) !== '[') return;
+    if (!trackable(key)) return;
+    var p = pending[key];
+    if (p) p.n = newV; else pending[key] = { o: oldV, n: newV };
+    if (!timer) timer = setTimeout(flush, 300);
+  }
+
+  /* ---------- hooks used by app-3.js ---------- */
+  // remote collection value -> filtered value (never mutates input)
+  function filterVal(key, val) {
+    try {
+      if (typeof val !== 'string' || val.charAt(0) !== '[' || key === KEY) return { v: val, n: 0 };
+      flush();
+      var dead = deadSet(loadT(), key); if (!dead) return { v: val, n: 0 };
+      var a = parse(val); if (!a) return { v: val, n: 0 };
+      var r = filterArr(a, dead);
+      return r.n ? { v: JSON.stringify(r.arr), n: r.n } : { v: val, n: 0 };
+    } catch (e) { return { v: val, n: 0 }; }
+  }
+  // purge tombstoned records from the LOCAL copy of one collection (silent: no listeners, no re-tombstoning)
+  function cleanKey(key, e) {
+    try {
+      if (key === KEY) return 0;
+      flush();
+      var dead = deadSet(loadT(), key); if (!dead) return 0;
+      var cur = rawGet(key), a = parse(cur); if (!a) return 0;
+      var r = filterArr(a, dead); if (!r.n) return 0;
+      var n = ns(); n.setApplying && n.setApplying(true);
+      try { rawSet(key, JSON.stringify(r.arr)); } finally { n.setApplying && n.setApplying(false); }
+      return r.n;
+    } catch (x) { console.warn('[tombstones] cleanKey', key, x); return 0; }
+  }
+  // incoming "tombstones" value from the cloud: merge (never overwrite), then purge every local collection
+  function remote(val, e) {
+    var res = { changed: [], pushBack: false };
+    try {
+      flush();
+      var local = loadT(), inc = parseT(val), merged = mergeT(local, inc);
+      var s = JSON.stringify(merged), n = ns();
+      if (s !== rawGet(KEY)) { n.setApplying && n.setApplying(true); try { rawSet(KEY, s); } finally { n.setApplying && n.setApplying(false); } }
+      if (s !== JSON.stringify(inc)) { try { e.dirty[KEY] = 1; } catch (x) {} res.pushBack = true; }
+      Object.keys(merged).forEach(function (col) { if (cleanKey(col, e)) { res.changed.push(col); try { e.dirty[col] = 1; } catch (x) {} } });
+    } catch (x) { console.warn('[tombstones] remote', x); }
+    return res;
+  }
+  // Google Backup restore: merge the backup's tombstones into local, then strip dead records out of the backup data
+  function snapshot(t, companyId, e) {
+    try {
+      if (!t || !t.data) return;
+      flush();
+      var local = loadT(), bk = parseT(t.data[KEY]), merged = mergeT(local, bk), s = JSON.stringify(merged), n = ns();
+      delete t.data[KEY];
+      if (t.stamps) delete t.stamps[KEY];
+      Object.keys(t.data).forEach(function (k) {
+        var dead = deadSet(merged, k); if (!dead) return;
+        var a = parse(t.data[k]); if (!a) return;
+        var r = filterArr(a, dead); if (r.n) t.data[k] = JSON.stringify(r.arr);
+      });
+      if (s !== rawGet(KEY)) {
+        rawSet(KEY, s);
+        setTimeout(function () { try { n.touch && n.touch(KEY); } catch (x) {} }, 0); // mark for cloud push after applying flag clears
+      }
+      Object.keys(merged).forEach(function (col) { cleanKey(col, e); }); // local collections not in the backup
+    } catch (x) { console.warn('[tombstones] snapshot', x); }
+  }
+
+  window.__acxTomb = { filterVal: filterVal, cleanKey: cleanKey, remote: remote, snapshot: snapshot, flush: flush, _ident: ident, _merge: mergeT };
+
+  function hook() {
+    var n = ns();
+    if (!n || !n.onSetItem) return false;
+    n.onSetItem(onSet);
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', function () { if (document.hidden) flush(); });
+    return true;
+  }
+  if (!hook()) { var tries = 0, iv = setInterval(function () { if (hook() || ++tries > 50) clearInterval(iv); }, 200); }
+})();
+
+
+/* ######## acacia-bill-fx.js ######## */
+/* ============================================================================
+   acacia-bill-fx.js
+   1) Currency Adjustment driven by BILL PAYMENTS
+      - a bill remembers the exchange rate it was booked at (bill.currencyRate)
+      - when the bill is paid, the payment is taken at the rate of that day
+      - the difference is a realised exchange gain / loss and is written to the
+        Currency Adjustment sub-module (localStorage "currencyAdjustments"),
+        from where the Profit & Loss "Currency Adjustment" line and the Balance
+        Sheet pick it up.
+      - the adjustments are DERIVED from billPayments, so reversing / deleting /
+        editing a payment automatically corrects (or removes) its adjustment.
+   2) Retained Earnings computed by the Balance Sheet are shown on the Equity
+      table (and the Retained Earnings table) and follow every Balance Sheet
+      update.
+   ========================================================================== */
+(function () {
+  "use strict";
+  if (window.__acxBillFxLoaded) return;
+  window.__acxBillFxLoaded = true;
+
+  var LS = window.localStorage;
+  function J(k, d) { try { var v = JSON.parse(LS.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function r2(v) { return Math.round(v * 100) / 100; }
+  function up(v) { v = String(v || "").toUpperCase(); return v === "KSH" || v === "KSHS" ? "KES" : v; }
+  function baseCur() { try { return up(window.__getBaseCurrencyEarly ? window.__getBaseCurrencyEarly() : (LS.getItem("appBaseCurrency") || "KES")) || "KES"; } catch (e) { return "KES"; } }
+  function dp() { try { return window.__getDecimalPlaces ? window.__getDecimalPlaces() : 2; } catch (e) { return 2; } }
+  function money(v) { var d = dp(); return Number(v).toLocaleString(void 0, { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function todayISO() { var d = new Date(), p = function (n) { return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()); }
+
+  /* ---------- exchange rate helpers ---------- */
+  // 1 unit of `cur` expressed in base currency, from the live/stored exchange rates
+  window.acxLiveRate = function (cur, fallback) {
+    cur = up(cur);
+    var base = baseCur();
+    if (!cur || cur === base) return 1;
+    var v = NaN;
+    try { v = window.__cvBase ? Number(window.__cvBase(1, cur)) : NaN; } catch (e) {}
+    if (isFinite(v) && v > 0 && Math.abs(v - 1) > 1e-9) return Math.round(v * 10000) / 10000;
+    return num(fallback) > 0 ? num(fallback) : 1;
+  };
+  function isForeign(bill) {
+    if (!bill) return false;
+    var c = up(bill.currency || baseCur());
+    return c !== baseCur() && num(bill.currencyRate) > 0;
+  }
+  window.acxBillById = function (id) {
+    var list = [];
+    try { list = typeof window.getBillsWithIds === "function" ? window.getBillsWithIds() : J("bills", []); } catch (e) { list = J("bills", []); }
+    for (var i = 0; i < list.length; i++) if (list[i] && list[i].id === id) return list[i];
+    return null;
+  };
+  window.acxBillRateDefault = function (bill) {
+    if (!isForeign(bill)) return 1;
+    return window.acxLiveRate(bill.currency, bill.currencyRate);
+  };
+  window.acxBillRateLabel = function (bill) {
+    if (!isForeign(bill)) return "Exchange Rate (to KES, leave 1 if KES):";
+    var cur = up(bill.currency), base = baseCur();
+    return "Exchange rate today: 1 " + cur + " = ? " + base + " <span style=\"color:#6b7280\">(bill was booked at " + num(bill.currencyRate) +
+      "). Any difference is posted to Currency Adjustment.</span>";
+  };
+
+  /* Work out a payment of `p` (base currency, clears the bill at its booked
+     value) plus `y` (base currency, over-payment / prepayment) made when the
+     bill currency trades at `h`. Returns null for base-currency bills.        */
+  window.acxBillPayCalc = function (bill, bank, p, y, h) {
+    if (!isForeign(bill)) return null;
+    var base = baseCur(), cur = up(bill.currency), c = num(bill.currencyRate);
+    h = num(h) > 0 ? num(h) : c;
+    p = num(p); y = num(y);
+    var foreign = p / c;                 // amount of the bill currency being settled
+    var costBase = foreign * h;          // what it really costs in base currency today
+    var bankCur = up((bank && bank.currency) || base);
+    var bankRate = bankCur === base ? 1 : bankCur === cur ? h : (num(bank && bank.rateToKES) || window.acxLiveRate(bankCur, 1));
+    var deduct = r2((costBase + y) / (bankRate > 0 ? bankRate : 1));
+    return { cur: cur, billRate: c, payRate: h, foreign: foreign, baseCost: costBase, fx: costBase - p, bankDeduct: deduct };
+  };
+
+  /* ---------- Currency Adjustment sync (derived from bill payments) ---------- */
+  var syncing = false;
+  window.acxSyncBillFx = function () {
+    if (syncing) return false;
+    syncing = true;
+    try {
+      var pays = J("billPayments", []), cur = J("currencyAdjustments", []);
+      var auto = [];
+      pays.forEach(function (p) {
+        if (!p || !p.billCurrency || !(num(p.payRate) > 0) || !(num(p.billRate) > 0)) return;
+        var amt = num(p.amount);
+        if (amt <= 0) return;
+        var c = num(p.billRate), h = num(p.payRate);
+        var foreign = amt / c, diff = foreign * h - amt;        // >0 = loss (we paid more base currency)
+        if (Math.abs(diff) < 0.005) return;
+        var loss = diff > 0, a = Math.abs(diff), bank = p.bank || "Bank";
+        auto.push({
+          id: "billfx-" + (p.id || (p.billNumber + "-" + p.date)),
+          auto: true, source: "billPayment", paymentId: p.id, billNumber: p.billNumber, supplier: p.supplier,
+          date: p.date, bank: bank, account: "Currency Gain/(Loss)", currency: p.billCurrency, type: "Realized",
+          balance: foreign, oldRate: c, rate: h, amount: -diff, converted: -diff,
+          note: "Bill " + (p.billNumber || "") + (p.supplier ? " – " + p.supplier : "") + ": booked at " + c + ", paid at " + h,
+          journal: loss
+            ? [{ account: "Accounts Payable", debit: amt, credit: 0 }, { account: "Currency Gain/(Loss)", debit: a, credit: 0 }, { account: bank, debit: 0, credit: amt + a }]
+            : [{ account: "Accounts Payable", debit: amt, credit: 0 }, { account: "Currency Gain/(Loss)", debit: 0, credit: a }, { account: bank, debit: 0, credit: amt - a }]
+        });
+      });
+      var kept = cur.filter(function (a) { return !(a && a.auto && a.source === "billPayment"); });
+      var next = kept.concat(auto);
+      if (JSON.stringify(next) === JSON.stringify(cur)) return false;
+      LS.setItem("currencyAdjustments", JSON.stringify(next));
+      ["updateTotalCurrencyAdjustment", "renderCurrencyAdjustments", "renderProfitLoss", "renderBalanceSheet", "renderBankTable"].forEach(function (fn) {
+        try { if (typeof window[fn] === "function") window[fn](); } catch (e) {}
+      });
+      return true;
+    } catch (e) {
+      console.warn("[bill-fx] sync failed", e);
+      return false;
+    } finally { syncing = false; }
+  };
+
+  // any other code path that rewrites bill payments (prepayments, undo, cloud sync...) also re-syncs
+  var timer = null;
+  function schedule() { clearTimeout(timer); timer = setTimeout(function () { window.acxSyncBillFx(); }, 60); }
+  try {
+    var origSet = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k) {
+      var r = origSet.apply(this, arguments);
+      if (this === LS && (k === "billPayments")) schedule();
+      return r;
+    };
+  } catch (e) {}
+
+  /* ---------- Balance Sheet / Equity table link ---------- */
+  window.__acxFrOwnsBS = function () {
+    var t = document.getElementById("balanceSheetTable");
+    return !!(t && t.classList.contains("fr-tbl"));
+  };
+
+  function retained() {
+    var st = window.__acxBsRetained || null;
+    var asAt = (st && st.asAt) || todayISO();
+    var total = null;
+    try { if (window.FR && typeof window.FR.bs === "function") total = num(window.FR.bs(asAt).earnings); } catch (e) {}
+    if (total == null) { if (!st) return null; total = num(st.total); }
+    var prior = st && st.asAt === asAt ? num(st.prior) : 0;
+    return { asAt: asAt, total: total, prior: prior, current: total - prior };
+  }
+
+  function equityRecordsTotal() {
+    return J("equityRecords", []).reduce(function (s, r) { return s + num(r && r.value); }, 0);
+  }
+
+  var RE_ROW = "acx-re-row";
+  function rowHtml(kind, r) {
+    var desc = "Calculated by the Balance Sheet" + (Math.abs(r.prior) > 0.004 ? " — prior periods " + money(r.prior) + " + this period " + money(r.current) : " — profit/(loss) to date");
+    if (kind === "retainedEarningsBody") {
+      return '<td class="p-2 border">Retained Earnings (Balance Sheet)</td><td class="p-2 border">' + desc + '</td><td class="p-2 border">Retained Earnings</td><td class="p-2 border text-right">' + money(r.total) + "</td>";
+    }
+    return '<td class="p-3"></td><td class="p-3 font-mono text-sm text-gray-500">AUTO</td>' +
+      '<td class="p-3 font-semibold text-gray-900">Retained Earnings <span class="ml-1 text-sm bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">from Balance Sheet</span></td>' +
+      '<td class="p-3 text-gray-600">' + r.asAt + "</td>" +
+      '<td class="p-3 text-right font-mono font-medium text-gray-800">' + money(r.total) + "</td>" +
+      '<td class="p-3 text-gray-500">' + desc + "</td>" +
+      '<td class="p-3"><span class="inline-block bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-medium text-sm">Retained Earnings (calculated)</span></td>' +
+      '<td class="p-3 text-center text-gray-400 text-sm">Auto</td>';
+  }
+
+  var observers = {};
+  function paint(id) {
+    var tb = document.getElementById(id);
+    if (!tb) return;
+    var r = retained();
+    if (observers[id]) observers[id].disconnect();
+    try {
+      var old = tb.querySelector("." + RE_ROW);
+      if (old) old.remove();
+      if (r) {
+        var tr = document.createElement("tr");
+        tr.className = RE_ROW + " bg-blue-50/40";
+        tr.innerHTML = rowHtml(id, r);
+        if (id === "retainedEarningsBody") {
+          // replace the "No retained earnings available" placeholder
+          Array.prototype.forEach.call(tb.querySelectorAll("tr"), function (x) { if (/No retained earnings/i.test(x.textContent)) x.remove(); });
+        }
+        tb.appendChild(tr);
+        if (id === "equityTableBody") {
+          var tot = equityRecordsTotal() + r.total;
+          var f = document.getElementById("equityFooterAmountTotal");
+          if (f) f.textContent = money(tot);
+          var card = document.getElementById("equityTotalValueCard");
+          if (card) card.textContent = "KES " + money(tot);
+        }
+      }
+    } catch (e) { console.warn("[bill-fx] retained row failed", e); }
+    watch(id);
+  }
+  function watch(id) {
+    var tb = document.getElementById(id);
+    if (!tb || !window.MutationObserver) return;
+    if (!observers[id]) {
+      observers[id] = new MutationObserver(function () {
+        if (!tb.querySelector("." + RE_ROW)) paint(id);
+      });
+    }
+    observers[id].observe(tb, { childList: true });
+  }
+  function paintAll() { paint("equityTableBody"); paint("retainedEarningsBody"); }
+
+  document.addEventListener("acx:bs-rendered", paintAll);
+  function boot() {
+    paintAll();
+    window.acxSyncBillFx();
+    // tabs render lazily — keep trying until the tables exist
+    var tries = 0, iv = setInterval(function () {
+      tries++;
+      if (document.getElementById("equityTableBody") && !observers.equityTableBody) paint("equityTableBody");
+      if (document.getElementById("retainedEarningsBody") && !observers.retainedEarningsBody) paint("retainedEarningsBody");
+      if (tries > 40) clearInterval(iv);
+    }, 1500);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(boot, 800); });
+  else setTimeout(boot, 800);
+})();
+
+
+/* ######## acacia-bill-batch.js ######## */
+/* ============================================================================
+   acacia-bill-batch.js
+   Product lines on Bills, Bulk Bills and Recurring Bills can now put the
+   received stock into a BATCH:
+     - pick one of the item's existing batches, or
+     - choose "New batch" and type the batch number (+ optional mfg / expiry).
+   On save the quantity is added to that batch (created if new) and the item
+   total is raised as before. Deleting / editing a bill takes it back off the
+   same batch. Only Product lines are affected (other item types never touch
+   stock). Load AFTER app-2.js / app-3.js.
+   ========================================================================== */
+(function () {
+  "use strict";
+  if (window.__acxBillBatchLoaded) return;
+  window.__acxBillBatchLoaded = true;
+
+  var NEW = "__new__";
+  function $(id) { return document.getElementById(id); }
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+
+  /* ---------- stock side: add / remove quantity on a batch ---------- */
+  window.__acxBatchAdj = function (item, line, sign) {
+    try {
+      if (!item || !line || !line.batch) return;
+      if (typeof window.__acxLineStock === "function" && !window.__acxLineStock(line)) return;   // only Product lines touch stock/batches
+      var b0 = line.batch;
+      var no = String(b0.batchNo || b0.batch || "").trim();
+      if (!no) return;
+      var qty = num(line.qty);
+      if (!Array.isArray(item.batches)) item.batches = [];
+
+      var b = item.batches.find(function (x) { return String(x.batchNo || x.batch || "").trim() === no; });
+      if (!b) {
+        if (sign <= 0) return;                       // nothing to take off
+        // first tracked batch on an item that already held untracked stock:
+        // keep that stock visible, otherwise the batch total would hide it
+        if (item.batches.length === 0) {
+          var prior = num(item.qty) - qty;          // item.qty already includes this line
+          if (prior > 0.0000001) item.batches.push({ batchNo: "Opening stock", mfgDate: "", expiryDate: "", qty: prior });
+        }
+        b = { batchNo: no, mfgDate: b0.mfg || b0.mfgDate || "", expiryDate: b0.expiry || b0.expiryDate || "", qty: 0 };
+        item.batches.push(b);
+      } else if (sign > 0) {
+        if (!b.expiryDate && (b0.expiry || b0.expiryDate)) b.expiryDate = b0.expiry || b0.expiryDate;
+        if (!b.mfgDate && (b0.mfg || b0.mfgDate)) b.mfgDate = b0.mfg || b0.mfgDate;
+      }
+      b.qty = Math.max(num(b.qty) + sign * qty, 0);
+    } catch (e) { console.warn("[bill-batch] adjust failed", e); }
+  };
+
+  /* ---------- form side ---------- */
+  var FORMS = [
+    { sel: "billItemDesc",     type: "billItemType",     add: "#addBillItemBtn,button[onclick='addBillItem()']" },
+    { sel: "bulkBillItemDesc", type: "bulkBillItemType", add: "button[onclick='addBulkBillItem()']" },
+    { sel: "rbProduct",        type: "rbItemType",       add: "button[onclick='rbAddItem()']" }
+  ];
+
+  function planAllows() {
+    try { return !window.AcaciaPlans || !window.AcaciaPlans.hasFeatureAccess || window.AcaciaPlans.hasFeatureAccess("batch"); } catch (e) { return true; }
+  }
+
+  function setup(cfg) {
+    var sel = $(cfg.sel);
+    if (!sel) return false;
+    if (sel.__acxNB) return true;
+    var wrap = $(cfg.sel + "_batchWrap"), bs = $(cfg.sel + "_batchSel");
+    if (!wrap || !bs) return false;                 // the existing batch picker is not built yet
+    sel.__acxNB = true;
+
+    var nb = document.createElement("div");
+    nb.id = cfg.sel + "_newBatchWrap";
+    nb.className = "mb-4 hidden";
+    nb.innerHTML =
+      '<div class="flex flex-wrap gap-2 items-end">' +
+      '<div><label class="block text-sm font-semibold mb-1">New batch no.</label><input id="' + cfg.sel + '_nbNo" type="text" class="border p-2 rounded" placeholder="B-2026-001"></div>' +
+      '<div><label class="block text-sm font-semibold mb-1">Mfg date (optional)</label><input id="' + cfg.sel + '_nbMfg" type="date" class="border p-2 rounded"></div>' +
+      '<div><label class="block text-sm font-semibold mb-1">Expiry (optional)</label><input id="' + cfg.sel + '_nbExp" type="date" class="border p-2 rounded"></div>' +
+      "</div>";
+    wrap.parentNode.insertBefore(nb, wrap.nextSibling);
+
+    function isProduct() {
+      var t = cfg.type ? $(cfg.type) : null;
+      return String((t && t.value) || "").toLowerCase() === "product";
+    }
+    function refresh() {
+      var label = wrap.querySelector("label");
+      if (!sel.value || !isProduct() || !planAllows()) {
+        wrap.classList.add("hidden"); nb.classList.add("hidden");
+        if (bs.value === NEW) bs.value = "";
+        return;
+      }
+      if (label) label.textContent = "📦 Batch — pick an existing batch or add a new one:";
+      if (!Array.prototype.some.call(bs.options, function (o) { return o.value === NEW; })) {
+        var o = document.createElement("option");
+        o.value = NEW; o.textContent = "➕ New batch…";
+        bs.appendChild(o);
+      }
+      bs.disabled = false;
+      wrap.classList.remove("hidden");
+      nb.classList.toggle("hidden", bs.value !== NEW);
+    }
+    function later() { setTimeout(refresh, 40); setTimeout(refresh, 250); }
+
+    sel.addEventListener("change", later);
+    bs.addEventListener("change", refresh);
+    if (cfg.type && $(cfg.type)) $(cfg.type).addEventListener("change", refresh);
+    document.addEventListener("acx:data-changed", later);
+
+    // runs before the form's own Add handler (capture phase on document)
+    document.addEventListener("click", function (ev) {
+      var btns = document.querySelectorAll(cfg.add), hit = false;
+      Array.prototype.forEach.call(btns, function (b) { if (ev.target === b || b.contains(ev.target)) hit = true; });
+      if (!hit || bs.value !== NEW || !isProduct()) return;
+      var opt = sel.options[sel.selectedIndex];
+      if (!opt || !opt.value) return;                // form will complain "Select a product"
+      var no = ($(cfg.sel + "_nbNo").value || "").trim();
+      if (!no) {
+        ev.stopImmediatePropagation(); ev.preventDefault();
+        alert("Enter the new batch number, or pick an existing batch.");
+        return;
+      }
+      var o = { batchNo: no, expiry: $(cfg.sel + "_nbExp").value || "", mfg: $(cfg.sel + "_nbMfg").value || "", qty: "", isNew: true };
+      var orig = opt.value, origText = opt.textContent, tag = " | Batch: " + no + (o.expiry ? " (Exp " + o.expiry + ")" : ""), u = orig + tag;
+      try {
+        var p = JSON.parse(orig);
+        if (p && typeof p === "object") { p.name = (p.name || "") + tag; p.batch = o; u = JSON.stringify(p); }
+      } catch (e) {}
+      opt.value = u;
+      setTimeout(function () {
+        opt.value = orig; opt.textContent = origText;
+        bs.value = "";
+        $(cfg.sel + "_nbNo").value = ""; $(cfg.sel + "_nbMfg").value = ""; $(cfg.sel + "_nbExp").value = "";
+        nb.classList.add("hidden");
+      }, 0);
+    }, true);
+
+    refresh();
+    return true;
+  }
+
+  function boot() {
+    var pending = FORMS.slice(), tries = 0;
+    (function tick() {
+      pending = pending.filter(function (c) { return !setup(c); });
+      if (pending.length && ++tries < 60) setTimeout(tick, 1000);
+    })();
+    document.addEventListener("acx:data-changed", function () { FORMS.forEach(setup); });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(boot, 600); });
+  else setTimeout(boot, 600);
+})();
+
+
+/* ######## acacia-numbering.js ######## */
+/* acacia-numbering.js
+ * Settings > Customization > Numbering is the single source of truth for document numbers.
+ *
+ * Every document type below asks acxDocNo(key) for its next number. The number is
+ *     prefix + (highest number already used with that prefix + 1, never lower than "Next #") padded + suffix
+ * so it never repeats, survives deleted/edited documents and does not burn numbers when a form is opened and closed.
+ *
+ *   Reset = "never"   : continues forever.
+ *   Reset = "yearly"  : only documents dated this year are counted, so the series restarts at 1 each January.
+ *   Reset = "monthly" : same, restarting each month.
+ *   Reset = "daily"   : same, restarting each day.
+ *
+ * Loaded after all other app scripts (see index.html).
+ */
+(function () {
+  "use strict";
+  if (window.__acxNumbering2) return;
+  window.__acxNumbering2 = true;
+  var W = window;
+
+  /* where each document type's saved records live (used to find the highest number already issued) */
+  var SOURCES = {
+    manualJournals: ["manualJournals"],
+    recurringJournals: ["recurringJournals"],
+    payments: ["billPayments"],
+    bills: ["bills"],
+    bulkBills: ["bulkBills", "bills"],
+    recurringBills: ["recurringBills", "bills"],
+    taxPayments: ["taxPayments"],
+    operationalCosts: ["operationalCosts"],
+    purchaseOrders: ["purchaseOrders"],
+    debitNotes: ["supplierDebitNotes", "debitNotes"],
+    purchaseReturns: ["purchaseReturns"],
+    grns: ["grns"],
+    invoices: ["invoices"],
+    quotes: ["quotes"],
+    orders: ["orders"],
+    bulkInvoices: ["bulkInvoices"],
+    creditNotes: ["creditNotes"],
+    salesReturns: ["salesReturns"],
+    receipts: ["receipts"],
+    recurringInvoices: ["recurringInvoices", "invoices"],
+    deliveries: ["deliveries"]
+  };
+
+  function read(k) {
+    try { var v = JSON.parse(localStorage.getItem(k) || "null"); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+  }
+  function esc(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+  function rows() {
+    try { if (typeof W.__acxNumberingRows === "function") return W.__acxNumberingRows() || []; } catch (e) {}
+    return [];
+  }
+  function rowFor(key, override) {
+    if (override) return override;
+    var all = rows();
+    for (var i = 0; i < all.length; i++) if (all[i] && all[i].key === key) return all[i];
+    return null;
+  }
+  function matcher(row) {
+    /* optional "AB-" style user code between prefix and digits is allowed (multi-user sessions add it) */
+    return new RegExp("^" + esc(row.prefix || "") + "(?:[A-Za-z]+\\d*-)?(\\d+)" + esc(row.suffix || "") + "$");
+  }
+  function isPeriodic(row) { return row.reset === "yearly" || row.reset === "monthly" || row.reset === "daily"; }
+  function inPeriod(rec, row) {
+    if (!isPeriodic(row)) return true;
+    var d = rec.date || rec.invoiceDate || rec.billDate || rec.createdAt;
+    var dt = d ? new Date(d) : null;
+    if (!dt || isNaN(dt.getTime())) return true;
+    var now = new Date();
+    if (dt.getFullYear() !== now.getFullYear()) return false;
+    if (row.reset === "yearly") return true;
+    if (dt.getMonth() !== now.getMonth()) return false;
+    return row.reset === "monthly" || dt.getDate() === now.getDate();
+  }
+  function maxUsed(key, row, extra) {
+    var re = matcher(row), max = 0;
+    var lists = (SOURCES[key] || []).map(read);
+    if (Array.isArray(extra)) lists.push(extra);
+    lists.forEach(function (list) {
+      list.forEach(function (rec) {
+        if (!rec || typeof rec !== "object" || !inPeriod(rec, row)) return;
+        Object.keys(rec).forEach(function (f) {
+          var v = rec[f];
+          if (typeof v !== "string") return;
+          var m = re.exec(v);
+          if (m) { var n = parseInt(m[1], 10); if (n < 1e9 && n > max) max = n; } /* >= 1e9 is a timestamp id, not a number */
+        });
+      });
+    });
+    return max;
+  }
+  function build(row, n) {
+    return (row.prefix || "") + String(n).padStart(+row.pad || 0, "0") + (row.suffix || "");
+  }
+  function nextN(key, row, opts) {
+    var used = maxUsed(key, row, opts && opts.extra);
+    var n = used + 1;
+    if (!isPeriodic(row)) n = Math.max(parseInt(row.next, 10) || 1, n);
+    return n + ((opts && opts.offset) || 0);
+  }
+
+  /* next number for a document type, or null when Customization has no row for it */
+  W.acxDocNo = function (key, opts) {
+    var row = rowFor(key);
+    return row ? build(row, nextN(key, row, opts)) : null;
+  };
+  /* same, for showing a preview in the Customization table (uses the row as currently typed) */
+  W.acxPeekNumber = function (key, row) {
+    try { var r = rowFor(key, row); return r ? build(r, nextN(key, r)) : null; } catch (e) { return null; }
+  };
+  /* true when a value already follows the configured prefix/suffix for this document type */
+  W.acxDocMatches = function (key, value) {
+    var row = rowFor(key);
+    return !!(row && matcher(row).test(String(value || "")));
+  };
+
+  /* ---------- generators: replace the number logic underneath each existing generateXNumber() ---------- */
+  function setIn(id, v) { var el = document.getElementById(id); if (el) el.value = v; }
+  function hook(fn, key, opt) {
+    var name = fn + "__acxOrig", orig = W[name];
+    if (typeof orig !== "function") return false;
+    W[name] = function () {
+      var n = null;
+      try { n = W.acxDocNo(key); } catch (e) { n = null; }
+      if (n == null) return orig.apply(this, arguments);
+      if (opt && opt.input) setIn(opt.input, n);
+      return opt && opt.voidReturn ? undefined : n;
+    };
+    return true;
+  }
+  hook("generateInvoiceNumber", "invoices");
+  hook("generateQuoteNumber", "quotes", { input: "quoteNumber" });
+  hook("generateOrderNumber", "orders");
+  hook("generateBulkInvoiceNumber", "bulkInvoices", { input: "bulkInvoiceNumber", voidReturn: true });
+  hook("generateCreditNoteNumber", "creditNotes", { input: "creditNumber", voidReturn: true });
+  hook("generateReceiptNumber", "receipts");
+  hook("generateRecurringInvoiceNumber", "recurringInvoices");
+  hook("generateBillNumber", "bills");
+  hook("generateBulkBillNumber", "bulkBills");
+  hook("generatePONumber", "purchaseOrders");
+  hook("generatePurchaseReturnNumber", "purchaseReturns");
+  hook("generateNextGRNNumber", "grns");
+  hook("nextJournalNumber", "manualJournals");
+  hook("nextRecurringJournalNumber", "recurringJournals");
+  hook("generateNextTrackNumber", "deliveries", { input: "deliveryTrackNumber", voidReturn: true });
+
+  /* invoices generated by a recurring template continue the recurring series */
+  var prevRinv = W.__acxNextRinv;
+  W.__acxNextRinv = function (invoices) {
+    var n = null;
+    try { n = W.acxDocNo("recurringInvoices", { extra: invoices }); } catch (e) {}
+    return n != null ? n : (typeof prevRinv === "function" ? prevRinv.apply(this, arguments) : null);
+  };
+  var prevRbil = W.__acxNextRbil;
+  W.__acxNextRbil = function (bills) {
+    var n = null;
+    try { n = W.acxDocNo("recurringBills", { extra: bills }); } catch (e) {}
+    return n != null ? n : (typeof prevRbil === "function" ? prevRbil.apply(this, arguments) : null);
+  };
+
+  /* the old Preferences > Documents numbering now follows Customization too */
+  var legacyKeys = { inv: "invoices", quote: "quotes", po: "purchaseOrders", rcpt: "receipts", cn: "creditNotes", dn: "debitNotes" };
+  var prevNext = W.nextDocNumber;
+  W.nextDocNumber = function (t) {
+    var key = legacyKeys[t], n = null;
+    if (key) { try { n = W.acxDocNo(key); } catch (e) {} }
+    return n != null ? n : (typeof prevNext === "function" ? prevNext.apply(this, arguments) : null);
+  };
+
+  /* ---------- documents that had no visible number yet: stamp one on every new record ---------- */
+  function stampNew(store, key, before) {
+    var arr = read(store);
+    if (arr.length <= before) return;
+    var changed = false;
+    for (var i = before; i < arr.length; i++) {
+      var r = arr[i];
+      if (r && typeof r === "object" && !r.number) {
+        var n = W.acxDocNo(key, { extra: arr });
+        if (n == null) return;
+        r.number = n; changed = true;
+      }
+    }
+    if (changed) { try { localStorage.setItem(store, JSON.stringify(arr)); } catch (e) {} }
+  }
+  function stamp(fn, store, key) {
+    var f = W[fn];
+    if (typeof f !== "function" || f.__acxStamped) return;
+    var w = function () {
+      var before = read(store).length;
+      var res = f.apply(this, arguments);
+      var done = function () { try { stampNew(store, key, before); } catch (e) {} };
+      if (res && typeof res.then === "function") res.then(done, function () {}); else done();
+      return res;
+    };
+    w.__acxStamped = true;
+    W[fn] = w;
+  }
+  stamp("addSupplierPayment", "billPayments", "payments");
+  stamp("addTaxPayment", "taxPayments", "taxPayments");
+  stamp("addOperationalCost", "operationalCosts", "operationalCosts");
+  stamp("saveDebitNote", "supplierDebitNotes", "debitNotes");
+  stamp("saveSalesReturn", "salesReturns", "salesReturns");
+
+  /* ---------- Preferences no longer has its own (conflicting) numbering boxes ---------- */
+  function replacePrefsGrid() {
+    var g = document.getElementById("docNumberingGrid");
+    if (!g || g.getAttribute("data-acx-num")) return;
+    g.setAttribute("data-acx-num", "1");
+    g.innerHTML = '<div class="text-sm text-gray-700 p-2">Document numbers are now set in <b>Settings &rarr; Customization &rarr; Numbering</b>, for every document type. ' +
+      '<button type="button" id="acxGoNumbering" class="text-blue-800 underline">Open Numbering</button></div>';
+    var b = document.getElementById("acxGoNumbering");
+    if (b) b.addEventListener("click", function () {
+      try { if (typeof W.showTab === "function") W.showTab("settingstemplateTab"); } catch (e) {}
+      setTimeout(function () {
+        var n = document.querySelector('#advCustomization [data-cust="cNumber"], #advCustomization button[onclick*="cNumber"]');
+        if (n && n.click) n.click();
+      }, 50);
+    });
+  }
+  function watchPrefsGrid() {
+    replacePrefsGrid();
+    var g = document.getElementById("docNumberingGrid");
+    if (!g || !W.MutationObserver) return;
+    new MutationObserver(function () {
+      if (g.querySelector("[data-prefkey]")) { g.removeAttribute("data-acx-num"); replacePrefsGrid(); }
+    }).observe(g, { childList: true });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watchPrefsGrid); else watchPrefsGrid();
+
+  /* refresh the Customization table once so it shows all document types */
+  try { if (typeof W.__initAdvCustomization === "function") W.__initAdvCustomization(); } catch (e) {}
+})();
+
+
+/* ######## acacia-template-redirect.js ######## */
+/* ===================================================================
+   acacia-template-redirect.js
+   Makes Customization > PDF Templates the ONLY place to edit a
+   document template.
+
+   Anywhere in the system that used to open its own template editor
+   (the per-document "Edit Template" popups, the "Document Template"
+   bar, the old "Edit in Customization" button) now takes the user to
+   Customization > PDF Templates, with the right Form Type selected
+   and the document's saved template loaded (if it has one).
+
+   Load this LAST in index.html (after acacia-numbering.js).
+   =================================================================== */
+(function () {
+  "use strict";
+  if (window.__acxTplRedirect) return;
+  window.__acxTplRedirect = true;
+
+  /* ---------- hide the old built-in editors & duplicate button ---------- */
+  var st = document.createElement("style");
+  st.textContent =
+    "#utsEditor{display:none!important}" +
+    "#templateEditor,#orderTemplateEditor,#bulkTemplateEditor,#quoteTemplateEditor,#salesReturnTemplateEditor{display:none!important}" +
+    ".uts-bar [data-role=editInCustomization]{display:none!important}";
+  (document.head || document.documentElement).appendChild(st);
+
+  /* ---------- helpers ---------- */
+  function registryByKey(key) {
+    try { return (window.acxDocRegistryByKey || {})[key] || null; } catch (e) { return null; }
+  }
+
+  function registryByContext(el) {
+    var reg = window.acxDocRegistry || [];
+    var n = el;
+    while (n && n !== document.body) {
+      if (n.id) {
+        for (var i = 0; i < reg.length; i++) {
+          if (reg[i].modal === n.id || reg[i].tab === n.id) return reg[i];
+        }
+      }
+      n = n.parentElement;
+    }
+    return null;
+  }
+
+  function savedTemplateFor(key) {
+    if (!key) return "";
+    try {
+      var s = JSON.parse(localStorage.getItem("docTemplateSettings_" + key) || "{}") || {};
+      if (s.customTemplate) return s.customTemplate;
+    } catch (e) {}
+    try {
+      var d = JSON.parse(localStorage.getItem("templateModuleDefaults") || "{}") || {};
+      if (d[key]) return d[key];
+    } catch (e) {}
+    return "";
+  }
+
+  function closePreviewModals() {
+    try {
+      document.querySelectorAll('[id$="PreviewModal"], [id*="PreviewModal"]').forEach(function (m) {
+        m.classList.add("hidden");
+      });
+    } catch (e) {}
+  }
+
+  function setFormType(formType) {
+    var sel = document.getElementById("templateFormType");
+    if (!sel || !formType) return;
+    var found = false;
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === formType || sel.options[i].text === formType) {
+        sel.selectedIndex = i; found = true; break;
+      }
+    }
+    if (!found) {
+      var o = document.createElement("option");
+      o.textContent = formType; o.value = formType;
+      sel.appendChild(o);
+      sel.value = formType;
+    }
+  }
+
+  function selectTemplate(name) {
+    var dd = document.getElementById("savedTemplatesDropdown");
+    if (!dd || !name) return;
+    var exists = false;
+    try { exists = localStorage.getItem("template_" + name) !== null; } catch (e) {}
+    if (!exists) return;
+    var has = false;
+    for (var i = 0; i < dd.options.length; i++) if (dd.options[i].value === name) { has = true; break; }
+    if (!has) {
+      var o = document.createElement("option");
+      o.value = name; o.textContent = name;
+      dd.appendChild(o);
+    }
+    dd.value = name;
+    if (typeof window.loadTemplateEditor === "function") window.loadTemplateEditor();
+  }
+
+  /* ---------- the one place to edit templates ---------- */
+  function goEditTemplate(opts) {
+    opts = opts || {};
+    closePreviewModals();
+
+    if (typeof window.showTab === "function") window.showTab("settingstemplateTab");
+
+    function arrive(tries) {
+      var host = document.getElementById("settingstemplateTab");
+      if (host && host.classList.contains("hidden")) {
+        /* showTab refused (plan/role) or not ready - nothing more to do */
+        if (tries > 0) return setTimeout(function () { arrive(tries - 1); }, 100);
+        return;
+      }
+      /* open the PDF Templates tab inside Customization */
+      var btn = document.querySelector('#custTabs .cust-tab[data-sec="cTemplates"]');
+      if (btn) btn.click();
+
+      /* pick the Form Type for this document and load the template list */
+      if (opts.formType) setFormType(opts.formType);
+      try { if (typeof window.loadTemplateList === "function") window.loadTemplateList(); } catch (e) {}
+      try { if (typeof window.updatePreview === "function") window.updatePreview(); } catch (e) {}
+
+      /* load this document's saved template into the editor */
+      if (opts.template) selectTemplate(opts.template);
+
+      var target = document.getElementById("allTemplatesGallery") || document.getElementById("cTemplates");
+      if (target && target.scrollIntoView) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    setTimeout(function () { arrive(10); }, 150);
+  }
+  window.acxGoEditTemplate = goEditTemplate;
+
+  function goForKey(key) {
+    var d = registryByKey(key);
+    goEditTemplate({ formType: d && d.formType, template: savedTemplateFor(key) });
+  }
+
+  /* ---------- 1. existing "open designer" hook (used by the old
+              "Edit in Customization" button and the template cards) ---------- */
+  function designerHook(templateName, formType) {
+    goEditTemplate({ template: templateName || "", formType: formType || "" });
+  }
+  try {
+    Object.defineProperty(window, "acxOpenTemplateDesigner", {
+      configurable: true,
+      get: function () { return designerHook; },
+      set: function () { /* ignore later overwrites */ }
+    });
+  } catch (e) { window.acxOpenTemplateDesigner = designerHook; }
+
+  /* ---------- 2. the "Document Template" bar's Edit Template button ---------- */
+  function utsHook(key) { goForKey(key); }
+  try {
+    Object.defineProperty(window, "utsOpenEditor", {
+      configurable: true,
+      get: function () { return utsHook; },
+      set: function () { /* ignore later overwrites */ }
+    });
+  } catch (e) { window.utsOpenEditor = utsHook; }
+
+  /* ---------- 3. the old per-document editors ---------- */
+  var OLD = {
+    openTemplateEditor: "invoice",
+    openOrderTemplateEditor: "order",
+    openBulkTemplateEditor: "bulkinvoice",
+    openQuoteTemplateEditor: "quote",
+    openSalesReturnTemplateEditor: "salesreturn"
+  };
+  Object.keys(OLD).forEach(function (fn) {
+    window[fn] = function () { goForKey(OLD[fn]); };
+  });
+
+  /* ---------- 4. safety net: any other "Edit Template" /
+              "Edit in Customization" button outside Customization ---------- */
+  document.addEventListener("click", function (ev) {
+    var b = ev.target && ev.target.closest ? ev.target.closest("button, a") : null;
+    if (!b) return;
+    if (b.closest("#settingstemplateTab")) return;           /* already in Customization */
+    if (b.closest("#utsEditor")) return;
+    var label = (b.textContent || "").replace(/\s+/g, " ").trim();
+    if (!/^(✏️\s*)?edit (template|in customization)$/i.test(label)) return;
+
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+
+    var bar = b.closest(".uts-bar");
+    var key = "";
+    if (bar && bar.id) key = bar.id.replace(/^uts(Modal|Tab)Bar_/, "");
+    if (key) return goForKey(key);
+
+    var d = registryByContext(b);
+    if (d) return goForKey(d.key);
+    goEditTemplate({});
+  }, true);
+})();
+
+
+/* ######## Product is the default item type ######## */
+(function () {
+  "use strict";
+  if (window.__acxDefaultProduct) return;
+  window.__acxDefaultProduct = true;
+  var PAIRS = [["invoiceProductSelect", "invoiceItemType"], ["bulkInvoiceProductSelect", "bulkItemType"], ["recurringInvoiceProductSelect", "recurringInvoiceItemType"]];
+  function run() {
+    PAIRS.forEach(function (p) { try { if (typeof window.__acxApplyStockRule === "function") window.__acxApplyStockRule(p[0], p[1]); } catch (e) {} });
+  }
+  var n = 0, iv = setInterval(function () { run(); if (++n > 20) clearInterval(iv); }, 1500);
+  document.addEventListener("acx:data-changed", run);
+})();
+
+/* ######## dashboard refresh after credit / debit note applications ######## */
+(function () {
+  "use strict";
+  if (window.__acxCnDashRefresh) return;
+  window.__acxCnDashRefresh = true;
+  var timer = null;
+  function refresh() {
+    ["loadDashboard", "updateDashboardTotals", "renderAccountsReceivable", "renderAccountsPayable"].forEach(function (fn) {
+      try { if (typeof window[fn] === "function") window[fn](); } catch (e) {}
+    });
+  }
+  try {
+    var origSet = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k) {
+      var r = origSet.apply(this, arguments);
+      try {
+        if (/(credit|debit)NoteApplications$/.test(String(k))) { clearTimeout(timer); timer = setTimeout(refresh, 150); }
+      } catch (e) {}
+      return r;
+    };
+  } catch (e) {}
+})();
+
+/* ######## acacia-hr-payroll-report.js ########
+ * Reports > Human Resource Reports > Payroll (#payrollPanel) was blank:
+ *  - showReport("payrollPanel") had no render hook
+ *  - renderPayroll() (used by every filter control) was only an alias to renderGrossPayroll
+ *  - clearPayrollFilter / compare / columns / settings handlers did not exist
+ * This renders the panel from payrollPayments and wires all its controls.
+ */
+(function () {
+  "use strict";
+  if (window.__acxHrPayrollReport) return;
+  window.__acxHrPayrollReport = true;
+
+  var S = { compare: null, columns: { 1: true, 2: true, 3: true, 4: true }, filter: "all", showMonth: false };
+
+  function ls(k) { try { var v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function num(v) { v = parseFloat(v); return isFinite(v) ? v : 0; }
+  function el(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function dp() { return window.__getDecimalPlaces ? window.__getDecimalPlaces() : 2; }
+  function money(v) { return "KES " + num(v).toLocaleString(void 0, { minimumFractionDigits: dp(), maximumFractionDigits: dp() }); }
+  function monthOf(r) {
+    if (r && /^\d{4}-\d{2}$/.test(String(r.month || ""))) return r.month;
+    var d = r && (r.date || r.payDate); return d && /^\d{4}-\d{2}/.test(String(d)) ? String(d).slice(0, 7) : "";
+  }
+  function shiftMonth(m, delta) { var p = m.split("-"), d = new Date(+p[0], +p[1] - 1 + delta, 1); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); }
+  function curMonth() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); }
+
+  function inPeriod(rec) {
+    var month = (el("payrollMonth") || {}).value || "", start = (el("payrollStart") || {}).value || "", end = (el("payrollEnd") || {}).value || "";
+    var m = monthOf(rec);
+    if (month) return m === month;
+    if ((start || end) && m) {
+      var ms = new Date(m + "-01T00:00:00"), me = new Date(+m.slice(0, 4), +m.slice(5, 7), 0, 23, 59, 59);
+      if (start && me < new Date(start + "T00:00:00")) return false;
+      if (end && ms > new Date(end + "T23:59:59")) return false;
+    }
+    return true;
+  }
+  function key(r) { return String(r.empID || r.name || "").toLowerCase(); }
+
+  function previousMonths() {
+    if (!S.compare || !S.compare.type) return null;
+    var month = (el("payrollMonth") || {}).value || curMonth();
+    return S.compare.type === "previousYear" ? shiftMonth(month, -12 * (parseInt(S.compare.years, 10) || 1)) : shiftMonth(month, -1);
+  }
+
+  function applyColumnVisibility() {
+    var panel = el("payrollPanel"); if (!panel) return;
+    var t = panel.querySelector("table"); if (!t) return;
+    Array.prototype.forEach.call(t.rows, function (row) {
+      Array.prototype.forEach.call(row.cells, function (c, i) {
+        if (i >= 1 && i <= 4 && S.columns[i] === false) c.style.display = "none"; else if (i >= 1 && i <= 4) c.style.display = "";
+      });
+    });
+  }
+
+  function render() {
+    var body = el("payrollSummary"); if (!body) return;
+    var thead = body.parentNode.tHead, prevM = previousMonths();
+    var all = ls("payrollPayments"), rows;
+
+    if (S.filter === "unpaid") {
+      var month = (el("payrollMonth") || {}).value || curMonth();
+      var paid = {}; all.forEach(function (r) { if (monthOf(r) === month) paid[key(r)] = 1; });
+      rows = ls("employees").filter(function (e) { return e && !paid[String(e.empID || e.id || e.name || "").toLowerCase()] && !paid[String(e.name || "").toLowerCase()]; })
+        .map(function (e) { return { name: e.name || e.empID || "-", gross: 0, deductions: 0, net: 0, month: month, unpaid: true }; });
+    } else {
+      rows = all.filter(inPeriod);
+    }
+
+    var prevNet = {};
+    if (prevM) all.forEach(function (r) { if (monthOf(r) === prevM) prevNet[key(r)] = (prevNet[key(r)] || 0) + num(r.net != null ? r.net : r.total); });
+
+    if (thead && thead.rows[0]) {
+      var last = thead.rows[0].lastElementChild;
+      var old = thead.rows[0].querySelector("[data-prev-col]"); if (old) old.remove();
+      if (prevM) { var th = document.createElement("th"); th.className = "border px-2 py-1 text-right"; th.setAttribute("data-prev-col", "1"); th.textContent = "Net Pay (" + prevM + ")"; thead.rows[0].appendChild(th); }
+    }
+
+    var run = 0, html = "";
+    rows.forEach(function (r) {
+      var net = num(r.net != null ? r.net : (r.total != null ? r.total : num(r.gross) - num(r.deductions)));
+      run += net;
+      var label = esc(r.name || r.empID || "-") + (S.showMonth && monthOf(r) ? ' <span style="color:#94a3b8;font-size:11px">· ' + esc(monthOf(r)) + "</span>" : "") + (r.unpaid ? ' <span style="color:#dc2626;font-size:11px">(unpaid)</span>' : "");
+      html += '<tr><td class="border px-2 py-1">' + label + '</td>' +
+        '<td class="border px-2 py-1 text-right">' + money(r.gross) + '</td>' +
+        '<td class="border px-2 py-1 text-right">' + money(r.deductions) + '</td>' +
+        '<td class="border px-2 py-1 font-bold text-right">' + money(net) + '</td>' +
+        '<td class="border px-2 py-1 text-right">' + money(run) + '</td>' +
+        (prevM ? '<td class="border px-2 py-1 text-right">' + money(prevNet[key(r)] || 0) + '</td>' : "") + '</tr>';
+    });
+    body.innerHTML = html || '<tr><td colspan="' + (prevM ? 6 : 5) + '" class="border px-2 py-3 text-center text-gray-500">No payroll records for the selected period.</td></tr>';
+    var gt = el("payrollGrandTotal"); if (gt) gt.textContent = money(run);
+    applyColumnVisibility();
+  }
+
+  function closeDropdowns(except) {
+    ["payrollCompareDropdown", "payrollColumnCustomizer", "payrollSettingsDropdown"].forEach(function (id) {
+      var d = el(id); if (d && id !== except) d.classList.add("hidden");
+    });
+  }
+  function toggleDD(id) { var d = el(id); if (!d) return; var open = !d.classList.contains("hidden"); closeDropdowns(); if (!open) d.classList.remove("hidden"); }
+
+  window.renderPayroll = window.renderPayrollSummary = render;
+  window.clearPayrollFilter = function () { ["payrollMonth", "payrollStart", "payrollEnd"].forEach(function (id) { var i = el(id); if (i) i.value = ""; }); };
+  window.togglePayrollSubAccounts = function () { S.showMonth = !S.showMonth; render(); };
+  window.togglePayrollCompareDropdown = function () { toggleDD("payrollCompareDropdown"); };
+  window.togglePayrollCompareOptions = function () { var t = el("payrollCompareType"), c = el("payrollYearsContainer"); if (t && c) c.style.display = t.value === "previousYear" ? "block" : "none"; };
+  window.applyPayrollComparison = function () { var t = el("payrollCompareType"), y = el("payrollCompareYears"); S.compare = t && t.value ? { type: t.value, years: y ? y.value : "1" } : null; render(); closeDropdowns(); };
+  window.clearPayrollComparison = function () { var t = el("payrollCompareType"), y = el("payrollCompareYears"); if (t) t.value = ""; if (y) y.value = "1"; S.compare = null; window.togglePayrollCompareOptions(); render(); closeDropdowns(); };
+  window.togglePayrollColumnCustomizer = function () { toggleDD("payrollColumnCustomizer"); };
+  window.togglePayrollColumn = function (i, cb) { S.columns[i] = !!(cb && cb.checked); render(); };
+  window.togglePayrollSettingsDropdown = function () { toggleDD("payrollSettingsDropdown"); };
+  window.applyPayrollSettings = function () { var f = el("payrollFilter"); S.filter = f ? f.value : "all"; render(); closeDropdowns(); };
+  window.clearPayrollSettings = function () { var f = el("payrollFilter"); if (f) f.value = "all"; S.filter = "all"; render(); closeDropdowns(); };
+
+  /* render whenever the Payroll report is opened */
+  function hook() {
+    var orig = window.showReport;
+    if (typeof orig !== "function") { setTimeout(hook, 200); return; }
+    if (orig.__acxPayroll) return;
+    var w = function (id) {
+      var r = orig.apply(this, arguments);
+      if (id === "payrollPanel") { try { render(); } catch (e) { console.warn("[payroll report]", e); } }
+      return r;
+    };
+    w.__acxPayroll = true;
+    window.showReport = w;
+  }
+  hook();
+  /* other wrappers may replace showReport after us, so re-assert once things settle */
+  setTimeout(hook, 1500);
+  document.addEventListener("click", function (e) {
+    var t = e.target && e.target.closest ? e.target.closest("[onclick*='payrollPanel']") : null;
+    if (t) setTimeout(function () { var p = el("payrollPanel"); if (p && !p.classList.contains("hidden")) render(); }, 60);
+  }, true);
+  /* refresh when payroll data changes while the report is open */
+  try {
+    var origSet = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (k) {
+      var r = origSet.apply(this, arguments);
+      try { if (/payrollPayments$/.test(String(k))) setTimeout(function () { var p = el("payrollPanel"); if (p && p.offsetParent !== null) render(); }, 100); } catch (e) {}
+      return r;
+    };
+  } catch (e) {}
+
+  /* one-time dashboard refresh in case loadDashboard ran before the P&L engine (FR) was ready */
+  window.addEventListener("load", function () {
+    setTimeout(function () {
+      try { if (window.FR && window.FR.pnl && el("dashYearlyProfitKPI") && typeof window.loadDashboard === "function") window.loadDashboard(); } catch (e) {}
+    }, 1500);
+  });
+})();
+
+/* ===== Purchase Order: batch / expiry on a line (only on plans that include batch tracking: Business, Enterprise, All Access) ===== */
+(function () {
+  "use strict";
+  if (window.__acxPoBatch) return;
+  window.__acxPoBatch = true;
+  function allowed() {
+    try { return !window.AcaciaPlans || !window.AcaciaPlans.hasFeatureAccess || window.AcaciaPlans.hasFeatureAccess("batch"); } catch (e) { return true; }
+  }
+  function build() {
+    var sel = document.getElementById("poProductSelect");
+    if (!sel || !sel.parentNode) return;
+    var row = document.getElementById("acxPoBatchRow");
+    if (!allowed()) { if (row) row.style.display = "none"; return; }
+    if (!row) {
+      row = document.createElement("div");
+      row.id = "acxPoBatchRow";
+      row.className = "flex flex-wrap gap-2 items-end mb-4";
+      row.innerHTML =
+        '<div><label class="block text-sm font-semibold mb-1">Batch no. (optional)</label><input id="poItemBatchNo" type="text" class="border p-2 rounded" placeholder="B-2026-001"></div>' +
+        '<div><label class="block text-sm font-semibold mb-1">Expiry (optional)</label><input id="poItemBatchExp" type="date" class="border p-2 rounded"></div>';
+      sel.parentNode.parentNode.insertBefore(row, sel.parentNode.nextSibling);
+    }
+    var t = document.getElementById("poItemType");
+    row.style.display = t && String(t.value || "").toLowerCase() !== "product" ? "none" : "";
+  }
+  setInterval(build, 1500);
+  window.addEventListener("load", build);
+})();
+
+/* ===== Goods Received: pick one OR MORE bills  |  Delivery: pick one OR MORE invoices ===== */
+(function () {
+  "use strict";
+  if (window.__acxMultiPick) return;
+  window.__acxMultiPick = true;
+  var D = document;
+  function el(id) { return D.getElementById(id); }
+  function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function jset(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function itemsOf(opt) { try { return JSON.parse(opt.dataset.items || "[]") || []; } catch (e) { return []; } }
+  function lineText(e) {
+    var n = e.name || e.desc || e.item || e.description || "", q = e.qty || e.quantity || 0;
+    return n ? (q ? n + " (x" + q + ")" : n) : "";
+  }
+
+  /* the checklist that replaces a single-choice <select>; the select stays (hidden) and mirrors the first ticked entry for older code */
+  var CFG = {
+    grnBillSelect: { label: "Bills (tick one or more)", empty: "Select a supplier to list their bills", onChange: function () { grnChanged(); } },
+    customerInvoiceSelect: { label: "Invoices (tick one or more)", empty: "Select a customer to list their invoices", onChange: function () { delChanged(); } }
+  };
+  function box(id) { return el("acxMulti_" + id); }
+  function selectedOptions(id) {
+    var sel = el(id), b = box(id), out = [];
+    if (!sel || !b) return out;
+    var ticked = {}; [].forEach.call(b.querySelectorAll("input[type=checkbox]:checked"), function (c) { ticked[c.value] = 1; });
+    [].forEach.call(sel.options, function (o) { if (o.value && ticked[o.value]) out.push(o); });
+    return out;
+  }
+  function rebuild(id) {
+    var sel = el(id); if (!sel) return;
+    var b = box(id);
+    if (!b) {
+      b = D.createElement("div"); b.id = "acxMulti_" + id;
+      b.className = "border rounded p-2 bg-white"; b.style.cssText = "width:700px;max-width:100%;max-height:220px;overflow:auto";
+      sel.style.display = "none"; sel.parentNode.insertBefore(b, sel.nextSibling);
+      var lab = D.querySelector('label[for="' + id + '"]'); if (lab) lab.textContent = CFG[id].label;
+      b.addEventListener("change", function (ev) { if (ev.target && ev.target.type === "checkbox" && !ev.target.hasAttribute("data-all")) sync(id); });
+      b.addEventListener("click", function (ev) {
+        var t = ev.target; if (!t || !t.getAttribute) return;
+        if (t.hasAttribute("data-all")) { [].forEach.call(b.querySelectorAll("input[type=checkbox]:not([data-all])"), function (c) { c.checked = t.checked; }); sync(id); }
+      });
+    }
+    var opts = [].filter.call(sel.options, function (o) { return o.value; });
+    b.innerHTML = "";
+    if (!opts.length) { b.innerHTML = '<div class="text-sm text-gray-500">' + esc(CFG[id].empty) + "</div>"; return sync(id, true); }
+    var head = D.createElement("label"); head.className = "flex items-center gap-2 text-sm font-semibold border-b pb-1 mb-1";
+    head.innerHTML = '<input type="checkbox" data-all="1"> Select all <span class="ml-auto text-xs text-gray-500" data-count></span>'; b.appendChild(head);
+    opts.forEach(function (o) {
+      var l = D.createElement("label"); l.className = "flex items-center gap-2 text-sm py-0.5 cursor-pointer";
+      var c = D.createElement("input"); c.type = "checkbox"; c.value = o.value; l.appendChild(c);
+      l.appendChild(D.createTextNode(o.textContent)); b.appendChild(l);
+    });
+    sync(id, true);
+  }
+  function sync(id, silent) {
+    var sel = el(id), b = box(id), picked = selectedOptions(id);
+    if (sel) sel.value = picked.length ? picked[0].value : "";
+    var cnt = b && b.querySelector("[data-count]"); if (cnt) cnt.textContent = picked.length ? picked.length + " selected" : "";
+    var all = b && b.querySelector("[data-all]");
+    if (all) { var n = b.querySelectorAll("input[type=checkbox]:not([data-all])").length; all.checked = picked.length > 0 && picked.length === n; }
+    if (!silent) CFG[id].onChange(); else CFG[id].onChange(true);
+  }
+
+  /* ---------- GRN ---------- */
+  function grnChanged() {
+    var form = el("grnForm");
+    if (!form) { form = D.createElement("div"); form.id = "grnForm"; form.style.display = "none"; D.body.appendChild(form); }   /* holds the selected bills' items until the GRN is saved */
+    var picked = selectedOptions("grnBillSelect"), items = [], nums = [];
+    var bills = jget("bills", []);
+    picked.forEach(function (o) {
+      nums.push(o.value);
+      var bill = bills.filter(function (b) { return String(b.billNumber || b.number || b.id) === String(o.value); })[0];
+      var its = (bill && (bill.items || bill.lineItems)) || itemsOf(o);
+      its.forEach(function (it) { var c = {}; for (var k in it) c[k] = it[k]; c.bill = o.value; items.push(c); });
+    });
+    if (form) form.dataset.items = JSON.stringify(items);
+    var d = el("grnDescription"); if (d && (items.length || !d.value)) d.value = items.map(lineText).filter(Boolean).join(", ");
+    var r = el("grnReferenceNumber"); if (r && nums.length) r.value = nums.join(", ");
+    var pv = el("grnItemsPreview"), anchor = box("grnBillSelect");
+    if (!pv && anchor) { pv = D.createElement("div"); pv.id = "grnItemsPreview"; pv.className = "mb-4 overflow-x-auto"; anchor.parentNode.parentNode.insertBefore(pv, anchor.parentNode.nextSibling); }
+    if (pv) pv.innerHTML = items.length ? '<table class="min-w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2 border">Bill</th><th class="p-2 border">Item</th><th class="p-2 border text-right">Qty</th><th class="p-2 border text-right">Rate</th></tr></thead><tbody>' +
+      items.map(function (e) { return "<tr><td class=\"p-2 border\">" + esc(e.bill) + "</td><td class=\"p-2 border\">" + esc(e.name || e.desc || e.item || e.description || "-") + "</td><td class=\"p-2 border text-right\">" + esc(e.qty || e.quantity || 0) + "</td><td class=\"p-2 border text-right\">" + esc(e.rate || e.price || 0) + "</td></tr>"; }).join("") + "</tbody></table>" : "";
+  }
+  window.populateGRNItems = function () { sync("grnBillSelect"); };
+  var oBills = window.populateBillDropdownBySupplier;
+  if (typeof oBills === "function") window.populateBillDropdownBySupplier = function () { var r = oBills.apply(this, arguments); rebuild("grnBillSelect"); return r; };
+  var oAddGRN = window.addGRN;
+  if (typeof oAddGRN === "function") window.addGRN = function () {
+    var num = (el("grnNumber") || {}).value, nums = selectedOptions("grnBillSelect").map(function (o) { return o.value; });
+    var before = jget("grns", []).length;
+    var r = oAddGRN.apply(this, arguments);
+    try {
+      var g = jget("grns", []);
+      if (g.length > before || nums.length) {
+        var rec = g.filter(function (x) { return x.number === num; }).pop();
+        if (rec && nums.length) { rec.bills = nums; jset("grns", g); }
+      }
+      if (g.length >= before && jget("grns", []).length > 0 && (el("grnSupplier") || {}).value === "") { if (typeof window.populateBillDropdownBySupplier === "function") window.populateBillDropdownBySupplier(""); else rebuild("grnBillSelect"); var pv = el("grnItemsPreview"); if (pv) pv.innerHTML = ""; }
+    } catch (e) {}
+    return r;
+  };
+
+  /* ---------- Delivery (one or more invoices, full or partial) ---------- */
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function invById(id) { var l = jget("invoices", []); return l.filter(function (x) { return String(x.id) === String(id); })[0] || null; }
+  function invNo(inv) { return String(inv.number || inv.invoiceNumber || inv.id || ""); }
+  function legacyDelivered(inv) {                        /* delivered before quantities were tracked: any delivery that names the invoice counts as complete */
+    return jget("deliveries", []).some(function (d) {
+      return String(d.invoiceId) === String(inv.id) || (d.invoiceIds || []).map(String).indexOf(String(inv.id)) > -1 || (d.invoiceNumbers || []).indexOf(invNo(inv)) > -1;
+    });
+  }
+  function lineDone(inv, l, legacy) { return l.deliveredQty != null ? num(l.deliveredQty) : (legacy ? num(l.qty) : 0); }
+  function deliveryState(inv) {
+    var legacy = (inv.items || []).some(function (l) { return l.deliveredQty == null; }) && legacyDelivered(inv), q = 0, d = 0;
+    (inv.items || []).forEach(function (l) { q += num(l.qty); d += Math.min(num(l.qty), lineDone(inv, l, legacy)); });
+    if (!q) return { label: "", done: true, q: 0, d: 0 };
+    return d <= 0 ? { label: "Not delivered", done: false, q: q, d: d } : d >= q ? { label: "Delivered", done: true, q: q, d: d } : { label: "Partly delivered (" + d + "/" + q + ")", done: false, q: q, d: d };
+  }
+  window.__acxDeliveryState = deliveryState;
+
+  function delItems() {
+    var picked = selectedOptions("customerInvoiceSelect"), out = { picked: picked, ids: [], nums: [], invs: [] };
+    picked.forEach(function (o) {
+      var inv = invById(o.value) || jget("invoices", [])[parseInt(o.value, 10)] || {};
+      out.ids.push(o.value); out.nums.push(invNo(inv) || o.value); out.invs.push(inv);
+    });
+    return out;
+  }
+  function panel() {
+    var p = el("acxDelLines"), anchor = box("customerInvoiceSelect");
+    if (!p && anchor) { p = D.createElement("div"); p.id = "acxDelLines"; p.className = "mb-4 overflow-x-auto"; anchor.parentNode.insertBefore(p, anchor.nextSibling); }
+    return p;
+  }
+  function delChanged() {
+    var s = delItems(), ref = el("deliveryReferenceNumber"), d = el("deliveryDescription"), p = panel(), rows = [];
+    if (ref) ref.value = s.nums.join(", ");
+    var h = "";
+    s.invs.forEach(function (inv, k) {
+      var legacy = legacyDelivered(inv);
+      (inv.items || []).forEach(function (l, li) {
+        var q = num(l.qty), done = Math.min(q, lineDone(inv, l, legacy)), rem = Math.max(0, q - done);
+        rows.push({ inv: inv, li: li, rem: rem });
+        h += '<tr data-inv="' + esc(s.ids[k]) + '" data-li="' + li + '"><td class="p-2 border">' + esc(s.nums[k]) + '</td><td class="p-2 border">' + esc(l.name || l.desc || l.itemName || "-") + '</td><td class="p-2 border text-right">' + q + '</td><td class="p-2 border text-right">' + done + '</td>' +
+          '<td class="p-2 border text-right"><input type="number" min="0" max="' + rem + '" step="any" value="' + rem + '" class="border p-1 rounded text-right w-24" data-now ' + (rem ? "" : "disabled") + '></td></tr>';
+      });
+    });
+    if (p) p.innerHTML = rows.length ? '<table class="min-w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2 border">Invoice</th><th class="p-2 border">Item</th><th class="p-2 border text-right">Invoiced</th><th class="p-2 border text-right">Delivered</th><th class="p-2 border text-right">Deliver now</th></tr></thead><tbody>' + h + "</tbody></table>" : "";
+    if (d && (!d.value || d.value === d.dataset.acxAuto)) {
+      var t = []; [].forEach.call(p ? p.querySelectorAll("tbody tr") : [], function (tr) { var q = num(tr.querySelector("[data-now]").value); if (q > 0) { var inv = invById(tr.getAttribute("data-inv")), l = inv && inv.items[+tr.getAttribute("data-li")]; if (l) t.push((l.name || l.desc || l.itemName || "") + " (x" + q + ")"); } });
+      d.value = t.join(", "); d.dataset.acxAuto = d.value;
+    }
+  }
+  window.populateDeliveryItems = function () { sync("customerInvoiceSelect"); };
+  var oInv = window.showCustomerInvoices;
+  if (typeof oInv === "function") window.showCustomerInvoices = function () { var r = oInv.apply(this, arguments); rebuild("customerInvoiceSelect"); return r; };
+  var oAddDel = window.addDelivery;
+  if (typeof oAddDel === "function") window.addDelivery = function () {
+    var s = delItems(), p = el("acxDelLines"), first = s.picked[0], saved = null, now = [], priors = {};
+    if (first && p && p.querySelector("tbody tr")) {
+      var bad = "";
+      [].forEach.call(p.querySelectorAll("tbody tr"), function (tr) {
+        var inv = invById(tr.getAttribute("data-inv")), li = +tr.getAttribute("data-li"), l = inv && inv.items[li]; if (!l) return;
+        var q = num(tr.querySelector("[data-now]").value), legacy = legacyDelivered(inv), rem = Math.max(0, num(l.qty) - Math.min(num(l.qty), lineDone(inv, l, legacy)));
+        if (!priors[inv.id]) priors[inv.id] = (inv.items || []).map(function (x) { return Math.min(num(x.qty), lineDone(inv, x, legacy)); });   /* what each line had before THIS delivery (the new delivery would otherwise make an untouched line look delivered) */
+        if (q > rem + 1e-9) bad = "More than invoiced for " + (l.name || l.desc || "an item") + " (" + invNo(inv) + ", remaining " + rem + ")";
+        if (q > 0) { var c = {}; for (var k in l) c[k] = l[k]; c.qty = q; c.invoiceNumber = invNo(inv); now.push({ inv: inv, li: li, q: q, line: c }); }
+      });
+      if (bad) return void alert(bad);
+      if (!now.length) return void alert("Nothing to deliver: every selected invoice line is already delivered.");
+      saved = first.dataset.items; first.dataset.items = JSON.stringify(now.map(function (n) { return n.line; }));   /* the original save reads the chosen option's items */
+    }
+    var before = jget("deliveries", []).length, r, ordersSnap = localStorage.getItem("orders");
+    try { r = oAddDel.apply(this, arguments); } finally { if (first && saved != null) first.dataset.items = saved; }
+    try {
+      var dl = jget("deliveries", []);
+      if (dl.length > before && s.ids.length) {
+        var rec = dl[dl.length - 1]; rec.invoiceIds = s.ids; rec.invoiceNumbers = s.nums;
+        var invoices = jget("invoices", []), orders = jget("orders", []), changedO = false, partial = false;
+        var addNow = {}; now.forEach(function (n) { var k = n.inv.id + "#" + n.li; addNow[k] = (addNow[k] || 0) + n.q; });
+        Object.keys(priors).forEach(function (id) {
+          var inv = invoices.filter(function (x) { return String(x.id) === String(id); })[0]; if (!inv) return;
+          (inv.items || []).forEach(function (l, li) { l.deliveredQty = Math.min(num(l.qty), (priors[id][li] || 0) + (addNow[id + "#" + li] || 0)); });
+        });
+        var touched = {}; now.forEach(function (n) { touched[n.inv.id] = 1; });
+        invoices.forEach(function (inv) { if (touched[inv.id] && !deliveryState(inv).done) partial = true; });
+        if (partial && ordersSnap != null) { try { orders = JSON.parse(ordersSnap); changedO = true; } catch (e) {} }   /* the original save marks the order delivered: undo that while something is still to deliver */
+        invoices.forEach(function (inv) {
+          if (!touched[inv.id]) return;
+          var st = deliveryState(inv); inv.deliveryStatus = st.label;
+          var oi = inv.sourceOrderId ? orders.findIndex(function (o) { return o.id === inv.sourceOrderId; }) : -1;
+          if (oi > -1 && st.done && orders[oi].packageStatus !== "Delivered") { orders[oi].packageStatus = "Delivered"; orders[oi].converted = true; changedO = true; }
+        });
+        rec.partial = partial; rec.lines = now.map(function (n) { return { invoice: invNo(n.inv), item: n.line.name || n.line.desc || n.line.itemName || "", qty: n.q }; });
+        jset("deliveries", dl); jset("invoices", invoices);
+        if (changedO) { jset("orders", orders); if (typeof window.renderOrders === "function") window.renderOrders(); }
+        rebuild("customerInvoiceSelect");
+        var d = el("deliveryDescription"); if (d) d.dataset.acxAuto = "";
+        if (typeof window.renderInvoices === "function") window.renderInvoices();
+      }
+    } catch (e) { console.error(e); }
+    return r;
+  };
+
+  /* Invoices list: show how much of each invoice has been delivered */
+  function decorateInvoices() {
+    var tb = el("invoiceTable"); if (!tb) return;
+    var list = jget("invoices", []);
+    [].forEach.call(tb.querySelectorAll("tr"), function (tr) {
+      if (tr.getAttribute("data-acx-del") || !tr.cells || tr.cells.length < 11) return;
+      var no = tr.cells[1].textContent.trim(), inv = list.filter(function (x) { return invNo(x) === no; })[0]; if (!inv) return;
+      tr.setAttribute("data-acx-del", "1");
+      var st = deliveryState(inv); if (!st.label) return;
+      var s = D.createElement("div"); s.className = "text-xs mt-1"; s.style.color = st.done ? "#15803d" : (st.d > 0 ? "#b45309" : "#6b7280"); s.textContent = "\ud83d\ude9a " + st.label;
+      tr.cells[10].appendChild(s);
+    });
+  }
+  window.__acxDecorateInvoices = decorateInvoices;
+  var oRI = window.renderInvoices;
+  if (typeof oRI === "function" && !oRI.__acxDel) { var wr = function () { var r = oRI.apply(this, arguments); try { decorateInvoices(); } catch (e) {} return r; }; wr.__acxDel = true; window.renderInvoices = wr; }
+  window.addEventListener("load", function () { setInterval(function () { try { decorateInvoices(); } catch (e) {} }, 2000); });
+
+  /* make sure the checklists exist even before a supplier / customer has been chosen */
+  function ensure() { Object.keys(CFG).forEach(function (id) { if (el(id) && !box(id)) rebuild(id); }); }
+  setInterval(ensure, 1500);
+  window.addEventListener("load", ensure);
+})();
+
+/* ===== Clean-up: remove the "itemSku" field an earlier version added to documents =====
+   In this app the item "SKU" is a unit-of-measure code (PCS, KGM ...), shared by many items, so it can not identify an item.
+   Items are identified by NAME (+ warehouse). The extra field was never needed; this removes it once, and only that field. */
+(function () {
+  "use strict";
+  if (window.__acxItemSkuCleanup) return;
+  window.__acxItemSkuCleanup = true;
+  var STORES = ["invoices", "quotes", "orders", "creditNotes", "bulkInvoices", "recurringInvoices", "deliveries", "purchaseOrders", "grns"];
+  function run() {
+    try {
+      if (localStorage.getItem("acxItemSkuCleanup_v1")) return;
+      STORES.forEach(function (key) {
+        var docs; try { docs = JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return; }
+        if (!Array.isArray(docs)) return;
+        var changed = false;
+        docs.forEach(function (d) { (d && Array.isArray(d.items) ? d.items : []).forEach(function (l) { if (l && Object.prototype.hasOwnProperty.call(l, "itemSku")) { delete l.itemSku; changed = true; } }); });
+        if (changed) localStorage.setItem(key, JSON.stringify(docs));
+      });
+      localStorage.setItem("acxItemSkuCleanup_v1", "1");
+    } catch (e) {}
+  }
+  window.__acxItemSkuCleanup = run;
+  window.addEventListener("load", function () { setTimeout(run, 2500); });
+})();
+
+/* ===== Purchase Order: receive goods (full or partial) before / without billing =====
+   PO -> Receive (Goods Received note + stock) -> Convert to Bill (bills the whole PO, adds only the units not yet received). */
+(function () {
+  "use strict";
+  if (window.__acxPoReceive) return;
+  window.__acxPoReceive = true;
+  var D = document;
+  function el(id) { return D.getElementById(id); }
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function norm(v) { return String(v == null ? "" : v).trim().replace(/\s+/g, " ").toLowerCase(); }
+  function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function isStockLine(it) { return typeof window.__acxLineStock === "function" ? !!window.__acxLineStock(it) : String(it.type || "").toLowerCase() === "product"; }
+  function batchOn() { try { return typeof window.hasFeatureAccess === "function" ? !!window.hasFeatureAccess("batch") : true; } catch (e) { return true; } }
+  function poList() { return typeof window.getPOList === "function" ? window.getPOList() : jget("purchaseOrders", []); }
+  function received(po, it) { var q = num(it.qty); return po.converted ? q : Math.min(num(it.receivedQty), q); }
+  function summary(po) {
+    var q = 0, r = 0;
+    (po.items || []).forEach(function (it) { if (isStockLine(it)) { q += num(it.qty); r += received(po, it); } });
+    if (!q) return "";
+    return r <= 0 ? "Not received" : r >= q ? "Received" : "Partially received (" + r + "/" + q + ")";
+  }
+  window.__acxPoReceiveSummary = summary;
+
+  var RC = null;   /* warehouse rows parsed once per receive, so several lines of one warehouse update the same list */
+  function whRows(w) { if (!RC) RC = {}; if (!RC[w]) RC[w] = jget("inventory_" + w, []); return RC[w]; }
+  function findRow(name, sku, wh) {
+    var keys = Object.keys(localStorage).filter(function (k) { return k.indexOf("inventory_") === 0 && k.length > 10; });
+    var order = keys.map(function (k) { return k.slice(10); });
+    if (wh) order = order.filter(function (w) { return norm(w) === norm(wh); }).concat(order.filter(function (w) { return norm(w) !== norm(wh); }));
+    var sp = typeof window.__acxSplitBatch === "function" ? window.__acxSplitBatch(name) : { clean: name };
+    for (var i = 0; i < order.length; i++) {
+      var rows = whRows(order[i]);
+      var row = rows.filter(function (r) { return r && r.active !== false && norm(r.name) === norm(sp.clean); })[0];
+      if (row) return { wh: order[i], rows: rows, row: row };
+    }
+    return null;
+  }
+
+  function close() { var m = el("acxPoRcvModal"); if (m) m.remove(); }
+  window.receivePO = function (idx) {
+    var po = poList()[idx];
+    if (!po) return alert("PO not found");
+    if (po.converted) return alert("This PO is already billed - its goods were received with the bill.");
+    if (po.status === "draft") return alert("Finalize the PO before receiving goods against it.");
+    var lines = (po.items || []).map(function (it, i) { return { i: i, it: it }; }).filter(function (x) { return isStockLine(x.it); });
+    if (!lines.length) return alert("This PO has no stock items to receive.");
+    var bo = batchOn();
+    close();
+    var m = D.createElement("div"); m.id = "acxPoRcvModal";
+    m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:12px";
+    var h = '<div class="bg-white rounded shadow-lg p-4" style="width:900px;max-width:100%;max-height:90vh;overflow:auto">' +
+      '<h3 class="text-lg font-bold mb-1">Receive goods - ' + esc(po.poNumber) + '</h3><p class="text-sm text-gray-600 mb-3">' + esc(po.supplier || "") + ' &middot; enter what arrived now (it can be less than ordered).</p>' +
+      '<table class="min-w-full text-sm border"><thead class="bg-gray-100"><tr><th class="p-2 border text-left">Item</th><th class="p-2 border text-right">Ordered</th><th class="p-2 border text-right">Received</th><th class="p-2 border text-right">Receive now</th>' +
+      (bo ? '<th class="p-2 border">Batch no.</th><th class="p-2 border">Expiry</th>' : '') + '</tr></thead><tbody>';
+    lines.forEach(function (x) {
+      var q = num(x.it.qty), r = received(po, x.it), rem = Math.max(0, q - r);
+      var nm = typeof window.__acxSplitBatch === "function" ? window.__acxSplitBatch(x.it.name || x.it.desc || "").clean : (x.it.name || x.it.desc || "");
+      h += '<tr data-i="' + x.i + '"><td class="p-2 border">' + esc(nm) + '</td><td class="p-2 border text-right">' + q + '</td><td class="p-2 border text-right">' + r + '</td>' +
+        '<td class="p-2 border text-right"><input type="number" min="0" max="' + rem + '" step="any" value="' + rem + '" class="border p-1 rounded text-right w-24" data-rcv ' + (rem ? "" : "disabled") + '></td>' +
+        (bo ? '<td class="p-2 border"><input type="text" class="border p-1 rounded w-32" data-bn value="' + esc(x.it.batch && x.it.batch.batchNo || "") + '"' + (rem ? "" : " disabled") + '></td><td class="p-2 border"><input type="date" class="border p-1 rounded" data-bx value="' + esc(x.it.batch && x.it.batch.expiry || "") + '"' + (rem ? "" : " disabled") + '></td>' : '') + '</tr>';
+    });
+    h += '</tbody></table><div class="flex justify-end gap-2 mt-4"><button type="button" id="acxPoRcvCancel" class="border px-3 py-1 rounded">Cancel</button>' +
+      '<button type="button" id="acxPoRcvSave" class="border border-blue-900 text-white bg-blue-900 font-bold px-3 py-1 rounded hover:bg-blue-800">Receive</button></div></div>';
+    m.innerHTML = h; D.body.appendChild(m);
+    el("acxPoRcvCancel").onclick = close;
+    el("acxPoRcvSave").onclick = function () {
+      var btn = this; btn.disabled = true;
+      try { save(idx, m); } catch (e) { console.error(e); alert("Receiving failed: " + e.message); btn.disabled = false; }
+    };
+  };
+
+  function save(idx, m) {
+    var list = poList(), po = list[idx];
+    if (!po || po.converted) return close();
+    var picks = [];
+    [].forEach.call(m.querySelectorAll("tbody tr"), function (tr) {
+      var i = +tr.getAttribute("data-i"), it = po.items[i], q = num(it.qty), rem = Math.max(0, q - received(po, it));
+      var r = num(tr.querySelector("[data-rcv]").value);
+      if (r <= 0) return;
+      if (r > rem + 1e-9) throw new Error("More than ordered for " + (it.name || it.desc) + " (remaining " + rem + ")");
+      var bn = tr.querySelector("[data-bn]"), bx = tr.querySelector("[data-bx]");
+      picks.push({ i: i, it: it, r: r, batch: bn && bn.value.trim() ? { batchNo: bn.value.trim(), expiry: bx ? bx.value : "" } : null });
+    });
+    if (!picks.length) { alert("Enter a quantity to receive."); el("acxPoRcvSave").disabled = false; return; }
+    RC = {};
+    var grnNo = typeof window.generateNextGRNNumber === "function" ? window.generateNextGRNNumber() : "GRN-" + Date.now();
+    var today = (new Date).toISOString().split("T")[0], items = [], touched = {}, missing = [];
+    picks.forEach(function (p) {
+      var sp = typeof window.__acxSplitBatch === "function" ? window.__acxSplitBatch(p.it.name || p.it.desc || "") : { clean: p.it.name };
+      var hit = findRow(p.it.name || p.it.desc, null, p.it.warehouse);
+      var line = { name: hit ? hit.row.name : sp.clean, desc: hit ? hit.row.name : sp.clean, sku: hit ? String(hit.row.sku || "") : String(p.it.sku || ""), warehouse: hit ? hit.wh : (p.it.warehouse || ""), qty: p.r, price: num(p.it.price), type: p.it.type || "product" };
+      if (p.batch) line.batch = p.batch;
+      items.push(line);
+      if (!hit) { missing.push(line.name); return; }
+      hit.row.qty = num(hit.row.qty) + p.r;
+      if (p.batch && typeof window.__acxBatchAdj === "function") window.__acxBatchAdj(hit.row, { type: "product", qty: p.r, batch: p.batch }, 1);
+      hit.row.history = hit.row.history || [];
+      hit.row.history.push({ date: (new Date).toLocaleString(), type: "Goods Received", ref: grnNo, qty: p.r });
+      touched[hit.wh] = hit.rows;
+      p.it.receivedQty = num(p.it.receivedQty) + p.r;
+    });
+    if (missing.length) throw new Error("Not found in stock: " + missing.join(", ") + ". Nothing was received.");
+    Object.keys(touched).forEach(function (w) { if (typeof window.saveInventory === "function") window.saveInventory(w, touched[w]); else localStorage.setItem("inventory_" + w, JSON.stringify(touched[w])); });
+    var grns = jget("grns", []);
+    grns.push({ number: grnNo, fromPO: po.poNumber, supplier: po.supplier, chartOfAccount: po.chartOfAccount, items: items, date: today, status: "Approved", received: true });
+    localStorage.setItem("grns", JSON.stringify(grns));
+    po.receiveStatus = summary(po);
+    if (typeof window.savePOList === "function") window.savePOList(list); else localStorage.setItem("purchaseOrders", JSON.stringify(list));
+    RC = null;
+    close();
+    ["renderPurchaseOrders", "renderGRNTable", "renderStockValuation", "renderInventorySummary", "renderInventoryTable"].forEach(function (n) { try { if (typeof window[n] === "function") window[n](); } catch (e) {} });
+    var msg = "Goods received: " + grnNo + " (" + summary(po) + ")";
+    if (typeof window.showToast === "function") window.showToast(msg); else alert(msg);
+  }
+
+  /* PO list: show the receiving status and a Receive button on every row */
+  function decorate() {
+    var tb = D.querySelector("#supplierPOsTable tbody"); if (!tb) return;
+    var list = poList();
+    [].forEach.call(tb.querySelectorAll("tr"), function (tr) {
+      var cb = tr.querySelector(".po-checkbox"); if (!cb || tr.getAttribute("data-acx-rcv")) return;
+      var no = tr.cells[1] ? tr.cells[1].textContent.trim() : "";
+      var po = list.filter(function (p) { return p.poNumber === no; })[0] || list[+cb.value]; if (!po) return;
+      tr.setAttribute("data-acx-rcv", "1");
+      var st = summary(po);
+      if (st && tr.cells[6]) { var s = D.createElement("div"); s.className = "text-xs text-gray-600 mt-1"; s.textContent = st; tr.cells[6].appendChild(s); }
+      var conv = [].filter.call(tr.querySelectorAll("button"), function (b) { return /convertPO\(/.test(b.getAttribute("onclick") || ""); })[0];
+      if (conv && !po.converted && po.status !== "draft") {
+        var b = D.createElement("button"); b.type = "button"; b.className = conv.className; b.textContent = "\ud83d\udce6 Receive";
+        b.setAttribute("onclick", "receivePO(" + cb.value + ")"); conv.parentNode.insertBefore(b, conv);
+      }
+    });
+  }
+  var oR = window.renderPurchaseOrders;
+  if (typeof oR === "function") window.renderPurchaseOrders = function () { var r = oR.apply(this, arguments); try { decorate(); } catch (e) {} return r; };
+})();
+
+/* ===== Stop duplicate stock items =====
+   A NEW item is refused when an item with the same name already exists in that warehouse (that is how "the same item twice" starts).
+   The same name in another warehouse is normal (stock transfers), and the "SKU" field is a unit-of-measure code shared by many items, so it is ignored. */
+(function () {
+  "use strict";
+  if (window.__acxDupGuard) return;
+  window.__acxDupGuard = true;
+  var D = document;
+  function norm(v) { return String(v == null ? "" : v).trim().replace(/\s+/g, " ").toLowerCase(); }
+  function val(id) { var e = D.getElementById(id); return e ? e.value : ""; }
+  function check(wh, name) {
+    var here = [];
+    try { here = typeof window.getInventory === "function" ? window.getInventory(wh) : []; } catch (e) {}
+    var n = norm(name);
+    for (var i = 0; i < here.length; i++) {
+      var r = here[i];
+      if (r && n && norm(r.name) === n) return { block: "\u201c" + r.name + "\u201d already exists in " + wh + ". Edit that item instead of adding it again." };
+    }
+    return null;
+  }
+  window.__acxDupCheck = check;
+  var busy = false;
+  function guard(orig) {
+    var w = function () {
+      if (busy) return orig.apply(this, arguments);                       /* a second layer of this guard (see install) checks nothing */
+      busy = true;
+      try { return run.apply(this, arguments); } finally { busy = false; }
+    };
+    function run() {
+      try {
+        if (val("editIndex") === "") {                                    /* adding, not editing */
+          var wh = val("warehouseSelect"), name = val("itemName").trim();
+          if (wh && name) {
+            var c = check(wh, name);
+            if (c && c.block) return void alert(c.block);
+            if (c && c.warn && !confirm(c.warn)) return;
+          }
+        }
+      } catch (e) {}
+      return orig.apply(this, arguments);
+    }
+    w.__acxDup = true;
+    w.__pricing = !!orig.__pricing;                                       /* books-all.js re-wraps saveItem unless it is marked; keep its marker only if it is already inside */
+    return w;
+  }
+  function install() {                      /* idempotent: later scripts re-define saveItem, so this also runs after load and on a timer */
+    var f = window.saveItem;
+    if (typeof f === "function" && !f.__acxDup) window.saveItem = guard(f);
+  }
+  install();
+  window.addEventListener("load", function () { install(); setInterval(install, 1500); });
+})();
+
+/* ===== Dashboard: batches that are expired or about to expire (plans with batch tracking only) ===== */
+(function () {
+  "use strict";
+  if (window.__acxExpiryCard) return;
+  window.__acxExpiryCard = true;
+  var D = document, SOON_DAYS = 30;
+  function allowed() { try { return !window.AcaciaPlans || !window.AcaciaPlans.hasFeatureAccess || window.AcaciaPlans.hasFeatureAccess("batch"); } catch (e) { return true; } }
+  function scan() {
+    var today = new Date(new Date().toDateString()).getTime(), soonEnd = today + SOON_DAYS * 864e5, out = { expired: 0, expiredUnits: 0, soon: 0, soonUnits: 0, items: {} };
+    var all = []; try { all = typeof window.getAllInventories === "function" ? window.getAllInventories() : []; } catch (e) {}
+    all.forEach(function (it) {
+      (it && Array.isArray(it.batches) ? it.batches : []).forEach(function (b) {
+        var q = parseFloat(b && b.qty) || 0, e = b && (b.expiry || b.expiryDate); if (q <= 0 || !e) return;
+        var t = new Date(e).getTime(); if (isNaN(t)) return;
+        if (t < today) { out.expired++; out.expiredUnits += q; out.items[it.name] = 1; }
+        else if (t <= soonEnd) { out.soon++; out.soonUnits += q; out.items[it.name] = 1; }
+      });
+    });
+    out.names = Object.keys(out.items);
+    return out;
+  }
+  window.__acxExpiryScan = scan;
+  function render() {
+    var host = D.getElementById("dashStockKPI"); if (!host) return;
+    var grid = host.parentNode && host.parentNode.parentNode; if (!grid || !grid.parentNode) return;
+    var card = D.getElementById("acxExpiryCard");
+    if (!allowed()) { if (card) card.style.display = "none"; return; }
+    var r = scan();
+    if (!card) {
+      card = D.createElement("div"); card.id = "acxExpiryCard";
+      card.className = "mb-4 rounded-lg border p-3 text-sm flex flex-wrap items-center gap-3";
+      grid.parentNode.insertBefore(card, grid.nextSibling);
+    }
+    card.style.display = (r.expired || r.soon) ? "" : "none";
+    card.style.background = r.expired ? "#fef2f2" : "#fffbeb"; card.style.borderColor = r.expired ? "#fecaca" : "#fde68a";
+    var names = r.names.slice(0, 4).join(", ") + (r.names.length > 4 ? " +" + (r.names.length - 4) + " more" : "");
+    card.innerHTML = '<span style="font-size:1.25rem">\u23f3</span><div style="flex:1;min-width:220px"><div class="font-semibold">Batch expiry</div><div>' +
+      (r.expired ? '<b style="color:#b91c1c">' + r.expired + ' expired batch' + (r.expired > 1 ? 'es' : '') + '</b> (' + r.expiredUnits + ' units still in stock)' : '') +
+      (r.expired && r.soon ? ' &middot; ' : '') +
+      (r.soon ? '<b style="color:#b45309">' + r.soon + ' expiring within ' + SOON_DAYS + ' days</b> (' + r.soonUnits + ' units)' : '') +
+      '</div><div class="text-xs text-gray-600">' + names.replace(/[&<>]/g, "") + '</div></div>' +
+      '<button type="button" class="border border-blue-900 text-blue-900 font-semibold px-3 py-1 rounded hover:bg-blue-50" id="acxExpiryBtn">View</button>';
+    var b = D.getElementById("acxExpiryBtn");
+    if (b) b.onclick = function () { try { if (typeof window.showReport === "function") window.showReport("expiredItemsPanel"); } catch (e) {} };
+  }
+  window.__acxExpiryRender = render;
+  window.addEventListener("load", function () { setTimeout(render, 2500); setInterval(render, 60000); });
+  D.addEventListener("acx:data-changed", function () { setTimeout(render, 300); });
+})();
+
+/* ===== Browser storage watch =====
+   Books keeps its data in the browser (localStorage, about 5 MB). When that is full, saves start to fail, so warn well before. */
+(function () {
+  "use strict";
+  if (window.__acxStorageWatch) return;
+  window.__acxStorageWatch = true;
+  var D = document, QUOTA = 5 * 1024 * 1024, WARN = 0.7;
+  function usedChars() { var n = 0; try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); n += k.length + String(localStorage.getItem(k) || "").length; } } catch (e) {} return n; }
+  function status() { var used = usedChars() * 2, pct = Math.min(100, Math.round(used / QUOTA * 100)); return { usedMB: Math.round(used / 1048576 * 10) / 10, pct: pct, warn: used / QUOTA >= WARN }; }
+  window.__acxStorageStatus = status;
+  function check() {
+    var s = status(), bar = D.getElementById("acxStorageBar");
+    if (!s.warn || sessionStorage.getItem("acxStorageDismissed")) { if (bar) bar.remove(); return; }
+    if (!bar) {
+      bar = D.createElement("div"); bar.id = "acxStorageBar";
+      bar.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);bottom:12px;z-index:99999;max-width:92vw;background:#fffbeb;border:1px solid #f59e0b;color:#78350f;border-radius:8px;padding:8px 12px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.15);display:flex;gap:10px;align-items:center";
+      D.body.appendChild(bar);
+    }
+    bar.innerHTML = '<span>\u26a0\ufe0f Browser storage is <b>' + s.pct + '%</b> full (' + s.usedMB + ' MB of about 5 MB). Export a backup and clear old data before it fills up, or saves will start to fail.</span><button type="button" style="border:1px solid #b45309;border-radius:6px;padding:2px 8px" id="acxStorageX">Dismiss</button>';
+    D.getElementById("acxStorageX").onclick = function () { try { sessionStorage.setItem("acxStorageDismissed", "1"); } catch (e) {} bar.remove(); };
+  }
+  window.__acxStorageCheck = check;
+  window.addEventListener("load", function () { setTimeout(check, 5000); setInterval(check, 600000); });
+})();
+
+/* ===== Multi-currency: a customer's receivables are kept in KES; show them in the customer's own currency =====
+   Open invoices in that currency convert back at the rate they were issued at (a USD 100 invoice shows $100.00, not $13,000.00);
+   anything else (opening balance) converts at today's rate. */
+(function () {
+  "use strict";
+  if (window.__acxRecvIn) return;
+  window.__acxRecvIn = function (c) {
+    var cur = (c && c.currency) || "KES", total = parseFloat(c && c.receivables) || 0;
+    if (cur === "KES") return total;
+    var today = 1; try { today = typeof window.convertToKES === "function" ? (window.convertToKES(1, cur) || 1) : 1; } catch (e) {}
+    var inv = []; try { inv = JSON.parse(localStorage.getItem("invoices") || "[]"); } catch (e) {}
+    var inCur = 0, inKes = 0;
+    inv.forEach(function (i) {
+      if (!i || i.customer !== c.name || (i.currency || "KES") !== cur) return;
+      var bal = parseFloat(i.balance != null ? i.balance : i.totalKES) || 0; if (bal <= 0) return;
+      var rate = parseFloat(i.exchangeRate) || today; inCur += bal / rate; inKes += bal;
+    });
+    return inCur + Math.max(0, total - inKes) / today;
+  };
+})();
