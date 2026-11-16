@@ -16,21 +16,41 @@
   var internalWrite = false;
   var sequence = 0;
   var moduleMap = {
-    invoices: 'Invoices', receipts: 'Receipts', customers: 'Customers', quotes: 'Quotations',
-    quotations: 'Quotations', supplierBills: 'Supplier Bills', bills: 'Supplier Bills',
-    purchaseOrders: 'Purchase Orders', stockActivities: 'Stock Activity', transactions: 'Bank Transactions',
-    expenses: 'Expenses', expenseClaims: 'Expenses', payrollRecords: 'Payroll', employees: 'Employees',
-    suppliers: 'Suppliers', products: 'Products', inventory: 'Inventory', stock: 'Inventory',
-    deliveryOrders: 'Delivery', creditNotes: 'Credit Notes', salesReturns: 'Sales Returns',
-    taxPayments: 'Tax Payments', manualJournals: 'Manual Journals', recurringInvoices: 'Recurring Invoices',
-    operationalCosts: 'Expenses', banks: 'Banking Accounts', bankAccounts: 'Banking Accounts', deliveries: 'Delivery',
-    customerPayments: 'Customer Payments', supplierPayments: 'Supplier Payments', billPayments: 'Supplier Payments',
-    payrollPayments: 'Payroll Payments', journalEntries: 'Journals', recurringJournals: 'Recurring Journals',
-    bulkInvoices: 'Bulk Invoices', bulkBills: 'Bulk Bills', purchaseReturns: 'Purchase Returns',
-    supplierDebitNotes: 'Supplier Debit Notes', supplierQuotes: 'Supplier Quotations',
-    taxAdjustments: 'Tax Adjustments', stockCounts: 'Stock Counts'
+    invoices: 'Invoices', recurringInvoices: 'Recurring Invoices', bulkInvoices: 'Bulk Invoices',
+    receipts: 'Receipts', customerPayments: 'Customer Payments', payments: 'Customer Payments',
+    customers: 'Customers', quotes: 'Quotations', quotations: 'Quotations', quoteToInvoice: 'Quotations',
+    orders: 'Sales Orders', deliveries: 'Delivery', deliveryOrders: 'Delivery',
+    creditNotes: 'Credit Notes', salesReturns: 'Sales Returns',
+    bills: 'Supplier Bills', supplierBills: 'Supplier Bills', bulkBills: 'Bulk Bills',
+    purchaseOrders: 'Purchase Orders', goodsReceived: 'Goods Received', grns: 'Goods Received',
+    supplierPayments: 'Supplier Payments', billPayments: 'Supplier Payments', purchaseReturns: 'Purchase Returns',
+    supplierDebitNotes: 'Supplier Debit Notes', supplierQuotes: 'Supplier Quotations', suppliers: 'Suppliers',
+    inventory: 'Inventory', stock: 'Inventory', products: 'Products', services: 'Services',
+    stockActivities: 'Stock Activity', movements: 'Stock Movements', transfers: 'Stock Transfers',
+    stockCounts: 'Stock Counts', warehouses: 'Warehouses', packages: 'Packages', bundles: 'Bundles', shipments: 'Shipments',
+    transactions: 'Bank Transactions', banks: 'Banking Accounts', bankAccounts: 'Banking Accounts',
+    manualTransactions: 'Bank Transactions', currentAccTransactions: 'Bank Transactions',
+    expenses: 'Expenses', expenseClaims: 'Expense Claims', operationalCosts: 'Expenses',
+    payrollRecords: 'Payroll', payrollPayments: 'Payroll Payments', employees: 'Employees', attendance: 'Attendance',
+    journalEntries: 'Journals', manualJournals: 'Manual Journals', recurringJournals: 'Recurring Journals',
+    taxPayments: 'Tax Payments', taxAdjustments: 'Tax Adjustments',
+    chartOfAccounts: 'Chart of Accounts', budgets: 'Budgets', projects: 'Projects',
+    otherIncomes: 'Other Income', assetDepreciationEvents: 'Asset Depreciation',
+    customerDrafts: 'Customer Drafts', supplierDrafts: 'Supplier Drafts',
+    writeOffs: 'Write-offs', amendments: 'Amendments',
+    assetFiles: 'Fixed Assets', assetApprovalLogs: 'Asset Approvals', assetDepreciationEvents: 'Asset Depreciation',
+    bankDrafts: 'Banking Drafts', bankMappings: 'Bank Mappings', branches: 'Branches',
+    batchTracking: 'Batch Tracking', damagedStock: 'Damaged Stock', expiredItems: 'Expired Stock',
+    budgets: 'Budgets', budgetData: 'Budgets', budgetHistory: 'Budget History', budgetVariance: 'Budget Variance',
+    projects: 'Projects', projectExpenses: 'Project Expenses', projectRevenue: 'Project Revenue',
+    projectProgress: 'Project Progress', projectTimeline: 'Project Timeline',
+    attendance: 'Attendance', overtimeSummary: 'Overtime', actuals: 'Actuals', progressUpdates: 'Project Updates',
+    userActivities: 'User Activity', auditLogs: 'Audit Logs', notifications: 'Notifications', systemAlerts: 'System Alerts',
+    financialRecords: 'Financial Records', currentAccounts: 'Current Accounts', equityRecords: 'Equity Records',
+    otherIncomes: 'Other Income', shareholderEquity: 'Shareholder Equity', writeOffLogs: 'Write-off Logs'
   };
-  var triggerModules = Object.keys(moduleMap).map(function (key) { return { key: key, label: moduleMap[key] }; });
+  var seenModuleLabels = Object.create(null);
+  var triggerModules = Object.keys(moduleMap).filter(function (key) { var label = moduleMap[key]; if (seenModuleLabels[label]) return false; seenModuleLabels[label] = true; return true; }).map(function (key) { return { key: key, label: moduleMap[key] }; });
   var operators = [
     ['equals', 'Equals'], ['not_equals', 'Does not equal'], ['contains', 'Contains'],
     ['not_contains', 'Does not contain'], ['greater_than', 'Greater than'],
@@ -39,7 +59,8 @@
   ];
   var actionTypes = [
     ['task', 'Create follow-up task'], ['reminder', 'Create reminder'],
-    ['notification', 'Create in-app notification'], ['review', 'Add to review queue']
+    ['notification', 'Create in-app notification'], ['review', 'Add to review queue'],
+    ['set_status', 'Update triggering record status']
   ];
 
   function read(key, fallback) {
@@ -58,8 +79,13 @@
     });
   }
   function uid(prefix) { return (prefix || 'WF') + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7); }
-  function me() { try { return JSON.parse(W.localStorage.getItem('loggedInUser') || 'null') || {}; } catch (e) { return {}; } }
-  function companyId() { var user = me(); return String(user.companyId || user.company_id || ''); }
+  function me() { try { return JSON.parse(W.localStorage.getItem('loggedInUser') || W.localStorage.getItem('currentUser') || 'null') || {}; } catch (e) { return {}; } }
+  function companyId() {
+    var user = me(), selected = '';
+    try { selected = W.localStorage.getItem('currentCompanyId') || W.localStorage.getItem('lastCompanyId') || ''; } catch (e) {}
+    return String(selected || user.companyId || user.company_id || user.company || '');
+  }
+  function scoped(list) { var cid = companyId(); return (Array.isArray(list) ? list : []).filter(function (item) { return String(item.companyId || '') === cid; }); }
   function stamp() { return new Date().toISOString(); }
   function toast(message, tone) {
     var host = D.getElementById('acxWorkflowToastHost');
@@ -108,7 +134,7 @@
     runs.unshift(entry);
     write(RUNS_KEY, runs.slice(0, 300));
   }
-  function performAction(action, rule, record, moduleName, eventType, dryRun) {
+  function performAction(action, rule, record, moduleName, eventType, dryRun, storageKey, recordIndex) {
     var title = interpolate(action.title || rule.name, record, moduleName, eventType);
     var description = interpolate(action.description || '', record, moduleName, eventType);
     if (dryRun) return { type: action.type, title: title, description: description, preview: true };
@@ -137,6 +163,19 @@
       var queue = read(REVIEWS_KEY, []);
       queue.unshift(Object.assign({}, base, { title: title || 'Review required', description: description, status: 'Awaiting review' }));
       write(REVIEWS_KEY, queue.slice(0, 500));
+    } else if (action.type === 'set_status') {
+      if (eventType === 'deleted') throw new Error('A deleted record cannot have its status updated.');
+      var nextStatus = String(action.statusValue || '').trim();
+      if (!nextStatus) throw new Error('Enter a new status for the status-update action.');
+      var key = storageKey || rule.moduleKey, records = read(key, null);
+      if (!Array.isArray(records)) throw new Error('The triggering module data could not be located for a status update.');
+      var recordId = identity(record, Number(recordIndex || 0)), found = false;
+      records = records.map(function (item, index) {
+        if (identity(item, index) !== recordId) return item;
+        found = true; var updated = Object.assign({}, item, { status: interpolate(nextStatus, record, moduleName, eventType), updatedAt: stamp() }); return updated;
+      });
+      if (!found) throw new Error('The triggering record could not be found for a status update.');
+      write(key, records);
     }
     return { type: action.type, title: title, success: true };
   }
@@ -145,24 +184,24 @@
     var rules = read(RULES_KEY, []);
     rules.forEach(function (rule) {
       if (!rule || !rule.enabled || rule.moduleKey !== event.moduleKey || rule.eventType !== event.type) return;
-      if (rule.companyId && rule.companyId !== companyId()) return;
+      if (String(rule.companyId || '') !== companyId()) return;
       if (!passes(rule, event.record)) return;
       var results = [];
       try {
-        (rule.actions || []).forEach(function (action) { results.push(performAction(action, rule, event.record, event.moduleName, event.type, false)); });
+        (rule.actions || []).forEach(function (action) { results.push(performAction(action, rule, event.record, event.moduleName, event.type, false, event.storageKey, event.recordIndex)); });
         rule.lastRunAt = stamp(); rule.lastRunStatus = 'Success'; rule.runCount = Number(rule.runCount || 0) + 1;
-        pushRun({ id: uid('RUN'), ruleId: rule.id, ruleName: rule.name, module: event.moduleName, event: event.type, recordId: event.record.id || '', status: 'Success', createdAt: stamp(), actions: results });
+        pushRun({ id: uid('RUN'), ruleId: rule.id, ruleName: rule.name, module: event.moduleName, event: event.type, recordId: event.record.id || event.record._id || event.record.number || '', status: 'Success', createdAt: stamp(), companyId: companyId(), actions: results });
       } catch (error) {
         rule.lastRunAt = stamp(); rule.lastRunStatus = 'Failed';
-        pushRun({ id: uid('RUN'), ruleId: rule.id, ruleName: rule.name, module: event.moduleName, event: event.type, recordId: event.record.id || '', status: 'Failed', error: error.message, createdAt: stamp(), actions: results });
+        pushRun({ id: uid('RUN'), ruleId: rule.id, ruleName: rule.name, module: event.moduleName, event: event.type, recordId: event.record.id || event.record._id || event.record.number || '', status: 'Failed', error: error.message, createdAt: stamp(), companyId: companyId(), actions: results });
         console.error('[Acacia Workflow] Rule execution failed:', error);
       }
     });
     write(RULES_KEY, rules);
     renderIfOpen();
   }
-  function emit(moduleKey, type, record, oldRecord) {
-    var event = { id: uid('EVT'), moduleKey: moduleKey, moduleName: moduleMap[moduleKey] || moduleKey, type: type, record: record || {}, oldRecord: oldRecord || null, createdAt: stamp() };
+  function emit(moduleKey, type, record, oldRecord, storageKey, recordIndex) {
+    var event = { id: uid('EVT'), moduleKey: moduleKey, moduleName: moduleMap[moduleKey] || moduleKey, type: type, record: record || {}, oldRecord: oldRecord || null, storageKey: storageKey || moduleKey, recordIndex: Number(recordIndex || 0), createdAt: stamp() };
     W.dispatchEvent(new CustomEvent('acx:workflow:event', { detail: event }));
     execute(event);
   }
@@ -172,8 +211,16 @@
   function identity(record, index) { return String(record && (record.id || record._id || record.uuid || record.invoiceNumber || record.billNumber || record.number || record.sku || record.name) || ('index-' + index)); }
   function detectStorageChange(key, before, after) {
     var moduleKey = moduleMap[key] ? key : null;
+    if (!moduleKey) {
+      var aliases = Object.keys(moduleMap).sort(function (a, b) { return b.length - a.length; });
+      for (var ai = 0; ai < aliases.length; ai++) {
+        if (key.indexOf(aliases[ai] + '_') === 0 || key.indexOf(aliases[ai] + ':') === 0 || key.indexOf(aliases[ai] + '-') === 0) { moduleKey = aliases[ai]; break; }
+      }
+    }
     if (!moduleKey && /^inventory([:_-]|$)/i.test(key)) moduleKey = 'inventory';
     if (!moduleKey && /^stockActivities([:_-]|$)/i.test(key)) moduleKey = 'stockActivities';
+    if (!moduleKey && /^stockCounts([:_-]|$)/i.test(key)) moduleKey = 'stockCounts';
+    if (!moduleKey && /^warehouses([:_-]|$)/i.test(key)) moduleKey = 'warehouses';
     if (!moduleKey) return;
     var oldList = parseArray(before), newList = parseArray(after);
     if (!oldList && !newList) return;
@@ -187,13 +234,13 @@
       if (!type) return;
       var dedupe = key + ':' + id + ':' + type;
       if (recentEvents[dedupe] && Date.now() - recentEvents[dedupe] < 350) return;
-      recentEvents[dedupe] = Date.now(); emit(moduleKey, type, record, old || null);
+      recentEvents[dedupe] = Date.now(); emit(moduleKey, type, record, old || null, key, index);
     });
     oldList.forEach(function (record, index) {
       var id = identity(record, index); if (newById[id]) return;
       var dedupe = key + ':' + id + ':deleted';
       if (recentEvents[dedupe] && Date.now() - recentEvents[dedupe] < 350) return;
-      recentEvents[dedupe] = Date.now(); emit(moduleKey, 'deleted', record, record);
+      recentEvents[dedupe] = Date.now(); emit(moduleKey, 'deleted', record, record, key, index);
     });
   }
   function installStorageWatcher() {
@@ -223,6 +270,18 @@
           protoWrapped.__acxWorkflowWrapped = true;
           W.Storage.prototype.setItem = protoWrapped;
         }
+      }
+      if (W.Storage && W.Storage.prototype && !W.Storage.prototype.removeItem.__acxWorkflowWrapped) {
+        var nativeRemove = W.Storage.prototype.removeItem;
+        var removeWrapped = function (key) {
+          var before = null;
+          try { if (this === W.localStorage) before = this.getItem(String(key)); } catch (e) {}
+          var result = nativeRemove.call(this, key);
+          if (this === W.localStorage && !internalWrite && before != null) { try { detectStorageChange(String(key), before, null); } catch (e) { console.warn('[Acacia Workflow] Delete event detection:', e); } }
+          return result;
+        };
+        removeWrapped.__acxWorkflowWrapped = true;
+        W.Storage.prototype.removeItem = removeWrapped;
       }
     } catch (e) { console.warn('[Acacia Workflow] Storage watcher unavailable:', e); }
     W.addEventListener('storage', function (event) {
@@ -288,14 +347,14 @@
   function metric(label, value, note) { return '<div class="wf-card" style="padding:14px"><div class="wf-muted">' + esc(label) + '</div><div style="font-size:24px;font-weight:800;margin-top:5px">' + esc(value) + '</div><div class="wf-muted" style="margin-top:3px">' + esc(note) + '</div></div>'; }
   function render() {
     var tab = D.getElementById('workflowRulesTab'); if (!tab) return;
-    var rules = read(RULES_KEY, []), runs = read(RUNS_KEY, []), tasks = read(TASKS_KEY, []), reminders = read(REMINDERS_KEY, []), notices = read(NOTICES_KEY, []), reviews = read(REVIEWS_KEY, []);
+    var rules = scoped(read(RULES_KEY, [])), runs = scoped(read(RUNS_KEY, [])), tasks = scoped(read(TASKS_KEY, [])), reminders = scoped(read(REMINDERS_KEY, [])), notices = scoped(read(NOTICES_KEY, [])), reviews = scoped(read(REVIEWS_KEY, []));
     var active = rules.filter(function (rule) { return rule.enabled; }).length;
     var failed = runs.filter(function (run) { return run.status === 'Failed'; }).length;
     var lastRun = runs[0] ? new Date(runs[0].createdAt).toLocaleString() : 'No executions yet';
     tab.innerHTML = '<div style="max-width:1500px;margin:0 auto">' +
-      '<div class="wf-row" style="justify-content:space-between;margin-bottom:18px"><div><div style="font-size:22px;font-weight:800;color:#111827">Workflow Rules</div><div class="wf-muted" style="margin-top:4px">Automate routine work across Acacia Books using event triggers, conditions and actions.</div></div><button class="wf-btn primary" data-wf="new">＋ Create Workflow</button></div>' +
+      '<div class="wf-row" style="justify-content:space-between;margin-bottom:18px"><div><div style="font-size:22px;font-weight:800;color:#111827">Workflow Rules</div><div class="wf-muted" style="margin-top:4px">Run company-scoped rules across Sales, Purchases, Inventory, Banking, Expenses, Payroll, Projects and other connected modules.</div></div><button class="wf-btn primary" data-wf="new">＋ Create Workflow</button></div>' +
       '<div class="wf-grid" style="margin-bottom:16px">' + metric('Total workflows', rules.length, 'Saved rules') + metric('Active workflows', active, 'Currently enabled') + metric('Tasks & reminders', tasks.length + reminders.length, 'Created by workflows') + metric('Execution failures', failed, lastRun) + '</div>' +
-      '<div class="wf-card" style="padding:15px;margin-bottom:15px"><div class="wf-row" style="justify-content:space-between"><div><div style="font-weight:800;font-size:14px">How automation works</div><div class="wf-muted" style="margin-top:4px">When a record is created, updated or deleted, Acacia checks matching rules, evaluates conditions and runs the selected actions.</div></div><span class="wf-chip">Company-scoped rules</span></div><div class="wf-row" style="margin-top:12px;gap:8px"><span class="wf-chip">1. Trigger</span><span class="wf-muted">→</span><span class="wf-chip">2. Conditions</span><span class="wf-muted">→</span><span class="wf-chip">3. Actions</span><span class="wf-muted">→</span><span class="wf-chip">4. Execution log</span></div></div>' +
+      '<div class="wf-card" style="padding:15px;margin-bottom:15px"><div class="wf-row" style="justify-content:space-between"><div><div style="font-weight:800;font-size:14px">How automation works</div><div class="wf-muted" style="margin-top:4px">Acacia watches supported module data changes across the website, checks the active company’s rules, evaluates conditions and runs the selected actions. You can also connect custom screens with acxWorkflowEmit().</div></div><span class="wf-chip">Company-scoped rules</span></div><div class="wf-row" style="margin-top:12px;gap:8px"><span class="wf-chip">1. Trigger</span><span class="wf-muted">→</span><span class="wf-chip">2. Conditions</span><span class="wf-muted">→</span><span class="wf-chip">3. Actions</span><span class="wf-muted">→</span><span class="wf-chip">4. Execution log</span></div></div>' +
       '<div class="wf-card" style="overflow:hidden;margin-bottom:15px"><div class="wf-row" style="justify-content:space-between;padding:14px 15px"><div><div style="font-weight:800;font-size:14px">Your workflows</div><div class="wf-muted">Manage, test and monitor automation rules</div></div><div class="wf-row"><input id="wfSearch" class="wf-input" style="width:210px" placeholder="Search workflows"><select id="wfFilter" class="wf-select" style="width:140px"><option value="all">All statuses</option><option value="active">Active</option><option value="paused">Paused</option></select></div></div><div style="overflow:auto"><table class="wf-table"><thead><tr><th>Workflow</th><th>Trigger</th><th>Actions</th><th>Last run</th><th>Status</th><th>Manage</th></tr></thead><tbody id="wfRulesBody"></tbody></table></div></div>' +
       '<div class="wf-card" style="padding:15px;margin-bottom:15px"><div class="wf-row" style="justify-content:space-between"><div><div style="font-weight:800;font-size:14px">Workflow-created work</div><div class="wf-muted">Tasks, reminders, notifications and review items generated by your rules.</div></div><span class="wf-chip">' + (tasks.length + reminders.length + notices.length + reviews.length) + ' items</span></div><div class="wf-grid" style="margin-top:12px"><div><div class="wf-muted">Follow-up tasks</div><b>' + tasks.length + '</b></div><div><div class="wf-muted">Reminders</div><b>' + reminders.length + '</b></div><div><div class="wf-muted">Notifications</div><b>' + notices.length + '</b></div><div><div class="wf-muted">Review queue</div><b>' + reviews.length + '</b></div></div><div class="wf-row" style="margin-top:12px"><button class="wf-btn" data-wf="tasks">View tasks</button><button class="wf-btn" data-wf="reminders">View reminders</button><button class="wf-btn" data-wf="reviews">View review queue</button><button class="wf-btn" data-wf="notifications">View notifications</button></div></div>' +
       '<div class="wf-card" style="overflow:hidden"><div style="padding:14px 15px;border-bottom:1px solid #eef0f3"><div style="font-weight:800;font-size:14px">Recent execution history</div><div class="wf-muted">Every matched rule execution is recorded here.</div></div><div style="overflow:auto"><table class="wf-table"><thead><tr><th>Time</th><th>Workflow</th><th>Module</th><th>Event</th><th>Record</th><th>Result</th></tr></thead><tbody id="wfRunsBody"></tbody></table></div></div>' +
@@ -304,7 +363,7 @@
   }
   function renderRulesTable() {
     var body = D.getElementById('wfRulesBody'); if (!body) return;
-    var rules = read(RULES_KEY, []), search = (D.getElementById('wfSearch') || {}).value || '', filter = (D.getElementById('wfFilter') || {}).value || 'all';
+    var rules = scoped(read(RULES_KEY, [])), search = (D.getElementById('wfSearch') || {}).value || '', filter = (D.getElementById('wfFilter') || {}).value || 'all';
     var shown = rules.filter(function (rule) {
       var matches = (rule.name + ' ' + (moduleMap[rule.moduleKey] || rule.moduleKey)).toLowerCase().indexOf(search.toLowerCase()) >= 0;
       return matches && (filter === 'all' || (filter === 'active' ? rule.enabled : !rule.enabled));
@@ -318,7 +377,7 @@
   }
   function renderRunsTable() {
     var body = D.getElementById('wfRunsBody'); if (!body) return;
-    var runs = read(RUNS_KEY, []).slice(0, 30);
+    var runs = scoped(read(RUNS_KEY, [])).slice(0, 30);
     body.innerHTML = runs.length ? runs.map(function (run) {
       return '<tr><td>' + esc(new Date(run.createdAt).toLocaleString()) + '</td><td><b>' + esc(run.ruleName) + '</b></td><td>' + esc(run.module) + '</td><td>' + esc(run.event) + '</td><td>' + esc(run.recordId || '—') + '</td><td>' + statusPill(run.status) + (run.error ? '<div class="wf-muted">' + esc(run.error) + '</div>' : '') + '</td></tr>';
     }).join('') : '<tr><td colspan="6"><div class="wf-empty">No workflow executions have been recorded yet.</div></td></tr>';
@@ -331,7 +390,8 @@
   function actionMarkup(action, index) {
     action = action || { type: 'notification', title: '', description: '', dueDays: 1, priority: 'Normal' };
     return '<div class="wf-action" data-action="' + index + '"><select class="wf-select" data-action-type="' + index + '">' + optionList(actionTypes, action.type) + '</select><input class="wf-input" data-action-title="' + index + '" placeholder="Action title" value="' + esc(action.title || '') + '"><input class="wf-input" data-action-description="' + index + '" placeholder="Description / message" value="' + esc(action.description || '') + '"><button class="wf-btn danger" data-action-remove="' + index + '">Remove</button></div>' +
-      (action.type === 'task' || action.type === 'reminder' ? '<div class="wf-row" style="margin:5px 0 10px 0;padding-left:4px"><label class="wf-muted">Due in days <input class="wf-input" style="width:75px;display:inline-block" type="number" min="0" max="365" data-action-days="' + index + '" value="' + esc(action.dueDays == null ? 1 : action.dueDays) + '"></label>' + (action.type === 'task' ? '<label class="wf-muted">Priority <select class="wf-select" style="width:110px;display:inline-block" data-action-priority="' + index + '">' + optionList([['Low', 'Low'], ['Normal', 'Normal'], ['High', 'High']], action.priority || 'Normal') + '</select></label>' : '') + '</div>' : '');
+      (action.type === 'task' || action.type === 'reminder' ? '<div class="wf-row" style="margin:5px 0 10px 0;padding-left:4px"><label class="wf-muted">Due in days <input class="wf-input" style="width:75px;display:inline-block" type="number" min="0" max="365" data-action-days="' + index + '" value="' + esc(action.dueDays == null ? 1 : action.dueDays) + '"></label>' + (action.type === 'task' ? '<label class="wf-muted">Priority <select class="wf-select" style="width:110px;display:inline-block" data-action-priority="' + index + '">' + optionList([['Low', 'Low'], ['Normal', 'Normal'], ['High', 'High']], action.priority || 'Normal') + '</select></label>' : '') + '</div>' : '') +
+      (action.type === 'set_status' ? '<div class="wf-row" style="margin:5px 0 10px 0;padding-left:4px"><label class="wf-muted">New record status <input class="wf-input" style="width:190px;display:inline-block" data-action-status="' + index + '" placeholder="e.g. Approved" value="' + esc(action.statusValue || '') + '"></label><span class="wf-muted">Updates the status field on the triggering record.</span></div>' : '');
   }
   function openBuilder(rule) {
     currentEdit = rule ? rule.id : null;
@@ -345,8 +405,8 @@
     builder.innerHTML = '<div class="wf-row" style="justify-content:space-between;margin-bottom:14px"><div><div style="font-size:17px;font-weight:800">' + (rule ? 'Edit workflow' : 'Create workflow') + '</div><div class="wf-muted">Define when this rule runs and what Acacia should do.</div></div><button class="wf-btn" data-wf="cancel-builder">Close</button></div>' +
       '<div class="wf-grid"><div style="grid-column:span 2"><label class="wf-label">Workflow name *</label><input id="wfName" class="wf-input" maxlength="100" placeholder="e.g. Follow up overdue invoices" value="' + esc(rule && rule.name || '') + '"></div><div style="grid-column:span 2"><label class="wf-label">Description</label><input id="wfDescription" class="wf-input" maxlength="240" placeholder="What should this workflow achieve?" value="' + esc(rule && rule.description || '') + '"></div><div><label class="wf-label">When this happens</label><select id="wfModule" class="wf-select">' + optionList(triggerModules.map(function (m) { return [m.key, m.label]; }), selectedModule) + '</select></div><div><label class="wf-label">Event</label><select id="wfEvent" class="wf-select">' + optionList([['created', 'Record is created'], ['updated', 'Record is updated'], ['deleted', 'Record is deleted']], selectedEvent) + '</select></div><div><label class="wf-label">Condition matching</label><select id="wfConditionMode" class="wf-select">' + optionList([['all', 'All conditions must match'], ['any', 'Any condition can match']], rule && rule.conditionMode || 'all') + '</select></div><div><label class="wf-label">Initial status</label><select id="wfEnabled" class="wf-select">' + optionList([['true', 'Enabled after saving'], ['false', 'Save as paused']], rule && rule.enabled === false ? 'false' : 'true') + '</select></div></div>' +
       '<div style="margin-top:18px"><div class="wf-row" style="justify-content:space-between"><div><b style="font-size:13px">Conditions</b><div class="wf-muted">Optional. Use field names from the selected record, such as status, total, balance or customer.</div></div><button class="wf-btn" data-wf="add-condition">＋ Add condition</button></div><div id="wfConditions">' + conditions.map(conditionMarkup).join('') + '</div><div class="wf-muted" style="margin-top:7px">No conditions means the workflow runs for every matching event.</div></div>' +
-      '<div style="margin-top:18px"><div class="wf-row" style="justify-content:space-between"><div><b style="font-size:13px">Actions</b><div class="wf-muted">Choose what Acacia should create when all trigger conditions are met.</div></div><button class="wf-btn" data-wf="add-action">＋ Add action</button></div><div id="wfActions">' + actions.map(actionMarkup).join('') + '</div></div>' +
-      '<div style="padding:12px;background:#f8fafc;border-radius:8px;margin-top:16px"><b style="font-size:12px">Available placeholders</b><div class="wf-muted" style="margin-top:4px">Use {{name}}, {{id}}, {{status}}, {{customer}}, {{total}}, {{balance}}, {{number}}, {{module}} and {{date}} in action titles and descriptions. The exact fields available depend on the selected module.</div></div>' +
+      '<div style="margin-top:18px"><div class="wf-row" style="justify-content:space-between"><div><b style="font-size:13px">Actions</b><div class="wf-muted">Choose what Acacia should do when all trigger conditions are met. Status updates change the triggering record in its source module.</div></div><button class="wf-btn" data-wf="add-action">＋ Add action</button></div><div id="wfActions">' + actions.map(actionMarkup).join('') + '</div></div>' +
+      '<div style="padding:12px;background:#f8fafc;border-radius:8px;margin-top:16px"><b style="font-size:12px">Available placeholders</b><div class="wf-muted" style="margin-top:4px">Use {{name}}, {{id}}, {{status}}, {{customer}}, {{total}}, {{balance}}, {{number}}, {{module}}, {{event}} and {{date}} in action titles and descriptions. The exact fields available depend on the selected module.</div></div>' +
       '<div class="wf-row" style="justify-content:flex-end;margin-top:16px"><button class="wf-btn" data-wf="cancel-builder">Cancel</button><button class="wf-btn" data-wf="save-rule">Save workflow</button></div>';
     var heading = tab.querySelector('.wf-row'); if (heading && heading.parentNode) heading.parentNode.insertBefore(builder, heading.nextSibling); else tab.prepend(builder);
     builder.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -361,15 +421,16 @@
     }).filter(function (condition) { return condition.field.trim(); });
     var acts = actions.map(function (action, index) {
       var type = (D.querySelector('[data-action-type="' + index + '"]') || {}).value || action.type;
-      return { type: type, title: (D.querySelector('[data-action-title="' + index + '"]') || {}).value || '', description: (D.querySelector('[data-action-description="' + index + '"]') || {}).value || '', dueDays: Number((D.querySelector('[data-action-days="' + index + '"]') || {}).value || 1), priority: (D.querySelector('[data-action-priority="' + index + '"]') || {}).value || 'Normal' };
+      return { type: type, title: (D.querySelector('[data-action-title="' + index + '"]') || {}).value || '', description: (D.querySelector('[data-action-description="' + index + '"]') || {}).value || '', dueDays: Number((D.querySelector('[data-action-days="' + index + '"]') || {}).value || 1), priority: (D.querySelector('[data-action-priority="' + index + '"]') || {}).value || 'Normal', statusValue: (D.querySelector('[data-action-status="' + index + '"]') || {}).value || '' };
     });
     if (!acts.length) { toast('Add at least one action.', 'error'); return null; }
+    if (acts.some(function (action) { return action.type === 'set_status' && !String(action.statusValue || '').trim(); })) { toast('Enter the new status for every status-update action.', 'error'); return null; }
     return { name: name.trim(), description: (D.getElementById('wfDescription').value || '').trim(), moduleKey: moduleKey, eventType: D.getElementById('wfEvent').value, conditionMode: D.getElementById('wfConditionMode').value, conditions: conds, actions: acts, enabled: D.getElementById('wfEnabled').value === 'true' };
   }
   function saveRule() {
     var data = collectBuilder(); if (!data) return;
     var rules = read(RULES_KEY, []), existing = rules.filter(function (rule) { return rule.id === currentEdit; })[0];
-    if (existing) Object.assign(existing, data, { updatedAt: stamp() });
+    if (existing) Object.assign(existing, data, { companyId: companyId(), updatedAt: stamp() });
     else rules.unshift(Object.assign({ id: uid('WF'), createdAt: stamp(), createdBy: me().username || me().email || 'System', companyId: companyId(), runCount: 0 }, data));
     write(RULES_KEY, rules); toast(existing ? 'Workflow updated.' : 'Workflow created.'); render();
   }
@@ -378,9 +439,10 @@
     var records = read(rule.moduleKey, []);
     if (!Array.isArray(records) && rule.moduleKey === 'inventory') records = [];
     if (!Array.isArray(records)) records = [];
+    records = records.filter(function (record) { return !record.companyId || String(record.companyId) === companyId(); });
     var sample = records[0] || { id: 'SAMPLE-001', name: 'Sample record', status: 'Open', total: 1000, balance: 500, customer: 'Sample Customer' };
     var matched = passes(rule, sample);
-    var previews = matched ? (rule.actions || []).map(function (action) { return performAction(action, rule, sample, moduleMap[rule.moduleKey], rule.eventType, true); }) : [];
+    var previews = matched ? (rule.actions || []).map(function (action) { return performAction(action, rule, sample, moduleMap[rule.moduleKey], rule.eventType, true, rule.moduleKey); }) : [];
     var result = matched ? 'Conditions match. No data was changed.\n\nPlanned actions:\n' + previews.map(function (action) { return '• ' + action.type + ': ' + action.title; }).join('\n') : 'The sample record does not match this workflow’s conditions. No data was changed.';
     alert('Workflow test — ' + rule.name + '\n\n' + result);
   }
@@ -392,7 +454,7 @@
       notifications: [NOTICES_KEY, 'Workflow notifications', 'Read']
     };
     var item = map[type]; if (!item) return;
-    var list = read(item[0], []);
+    var list = scoped(read(item[0], []));
     var modal = D.getElementById('acxWorkflowCollectionModal');
     if (!modal) { modal = D.createElement('div'); modal.id = 'acxWorkflowCollectionModal'; modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.48);z-index:100400;display:flex;align-items:center;justify-content:center;padding:16px'; D.body.appendChild(modal); }
     modal.dataset.collectionType = type;
@@ -440,7 +502,7 @@
     conditions = conditions.map(function (_, index) { return { field: (D.querySelector('[data-cond-field="' + index + '"]') || {}).value || '', operator: (D.querySelector('[data-cond-op="' + index + '"]') || {}).value || 'equals', value: (D.querySelector('[data-cond-value="' + index + '"]') || {}).value || '' }; });
   }
   function collectCurrentActions() {
-    actions = actions.map(function (action, index) { return { type: (D.querySelector('[data-action-type="' + index + '"]') || {}).value || action.type, title: (D.querySelector('[data-action-title="' + index + '"]') || {}).value || '', description: (D.querySelector('[data-action-description="' + index + '"]') || {}).value || '', dueDays: Number((D.querySelector('[data-action-days="' + index + '"]') || {}).value || 1), priority: (D.querySelector('[data-action-priority="' + index + '"]') || {}).value || 'Normal' }; });
+    actions = actions.map(function (action, index) { return { type: (D.querySelector('[data-action-type="' + index + '"]') || {}).value || action.type, title: (D.querySelector('[data-action-title="' + index + '"]') || {}).value || '', description: (D.querySelector('[data-action-description="' + index + '"]') || {}).value || '', dueDays: Number((D.querySelector('[data-action-days="' + index + '"]') || {}).value || 1), priority: (D.querySelector('[data-action-priority="' + index + '"]') || {}).value || 'Normal', statusValue: (D.querySelector('[data-action-status="' + index + '"]') || {}).value || action.statusValue || '' }; });
   }
   function refreshBuilderSections() {
     var condHost = D.getElementById('wfConditions'), actionHost = D.getElementById('wfActions');
@@ -455,6 +517,8 @@
     css();
     if (!ensureTab()) { setTimeout(init, 300); return; }
     installStorageWatcher();
+    var activeCompany = companyId();
+    if (activeCompany) { var savedRules = read(RULES_KEY, []), migrated = false; savedRules.forEach(function (rule) { if (!rule.companyId) { rule.companyId = activeCompany; migrated = true; } }); if (migrated) write(RULES_KEY, savedRules); }
     var tab = D.getElementById('workflowRulesTab');
     tab.addEventListener('click', handleClick);
     tab.addEventListener('input', handleInput);

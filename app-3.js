@@ -1124,113 +1124,153 @@ try{
 
 }catch(e){console.error("[bundle assembly]",e)}
 
-/* Acacia Books — compact Settings navigation. Existing setting panels and data are preserved. */
+/* Acacia Books — Settings section pages with Organisation Profile-style navigation. */
 (function () {
   'use strict';
   var groups = [
-    { id: 'general', title: 'General Settings', icon: '⚙️', items: [
-      ['remindersTab', 'Reminders'],
-      ['paymentTermsTab', 'Payment Terms'],
-      ['currenciesTab', 'Currencies']
+    { id: 'general', title: 'General Settings', icon: '⚙️', description: 'Manage the basic preferences used throughout Acacia Books.', items: [
+      ['remindersTab', 'Reminders', '🔔'],
+      ['paymentTermsTab', 'Payment Terms', '📅'],
+      ['currenciesTab', 'Currencies', '💱']
     ]},
-    { id: 'automation', title: 'Automation', icon: '⚡', items: [
-      ['workflowRulesTab', 'Workflow Rules']
+    { id: 'automation', title: 'Automation', icon: '⚡', description: 'Configure automated business processes and workflow rules.', items: [
+      ['workflowRulesTab', 'Workflow Rules', '🧩']
     ]},
-    { id: 'portals', title: 'Portals & Payments', icon: '🌐', items: [
-      ['customerPortalTab', 'Customer Portal'],
-      ['vendorPortalTab', 'Vendor Portal'],
-      ['paymentGatewaysTab', 'Payment Gateways']
+    { id: 'portals', title: 'Portals & Payments', icon: '🌐', description: 'Manage customer and vendor access, and online payment services.', items: [
+      ['customerPortalTab', 'Customer Portal', '🧑‍💼'],
+      ['vendorPortalTab', 'Vendor Portal', '🏭'],
+      ['paymentGatewaysTab', 'Payment Gateways', '💳']
     ]},
-    { id: 'developer', title: 'Developer & Integrations', icon: '🔌', items: [
-      ['integrationsHubTab', 'Integrations'],
-      ['connectionsTab', 'Connections'],
-      ['apiKeysTab', 'API Keys'],
-      ['incomingWebhooksTab', 'Incoming Webhooks'],
-      ['outgoingWebhooksTab', 'Outgoing Webhooks']
+    { id: 'developer', title: 'Developer & Integrations', icon: '🔌', description: 'Manage connections, API access and webhooks.', items: [
+      ['integrationsHubTab', 'Integrations', '🔗'],
+      ['connectionsTab', 'Connections', '🔌'],
+      ['apiKeysTab', 'API Keys', '🔑'],
+      ['incomingWebhooksTab', 'Incoming Webhooks', '📥'],
+      ['outgoingWebhooksTab', 'Outgoing Webhooks', '📤']
     ]},
-    { id: 'data', title: 'Data & Forms', icon: '🗄️', items: [
-      ['webFormsTab', 'Web Forms'],
-      ['dataManagementTab', 'Data Management']
+    { id: 'data', title: 'Data & Forms', icon: '🗄️', description: 'Manage public forms, data handling and retention settings.', items: [
+      ['webFormsTab', 'Web Forms', '📝'],
+      ['dataManagementTab', 'Data Management', '🗄️']
     ]}
   ];
+
   function addStyles() {
-    if (document.getElementById('acxSettingsGroupsStyle')) return;
+    if (document.getElementById('acxSettingsPagesStyle')) return;
     var style = document.createElement('style');
-    style.id = 'acxSettingsGroupsStyle';
+    style.id = 'acxSettingsPagesStyle';
     style.textContent = [
-      '#settingsSubmenu2 .acx-settings-group{list-style:none;margin:.35rem 0 .45rem;padding:0;border:1px solid rgba(148,163,184,.24);border-radius:9px;overflow:hidden;background:rgba(255,255,255,.035)}',
-      '#settingsSubmenu2 .acx-settings-group-toggle{display:flex;align-items:center;justify-content:space-between;gap:.5rem;width:100%;padding:.58rem .65rem;text-align:left;font-size:12px;font-weight:700;color:inherit;border-radius:0;transition:background .18s}',
-      '#settingsSubmenu2 .acx-settings-group-toggle:hover{background:rgba(250,204,21,.18);color:inherit}',
-      '#settingsSubmenu2 .acx-settings-group-toggle .acx-group-chevron{font-size:10px;transition:transform .18s}',
-      '#settingsSubmenu2 .acx-settings-group-toggle[aria-expanded="true"] .acx-group-chevron{transform:rotate(90deg)}',
-      '#settingsSubmenu2 .acx-settings-group-items{padding:.15rem .35rem .35rem .75rem;margin:0;list-style:none}',
-      '#settingsSubmenu2 .acx-settings-group-items li{margin:.08rem 0}',
-      '#settingsSubmenu2 .acx-settings-group-items button{font-size:12px;padding:.42rem .55rem;border-radius:6px}',
-      '#settingsSubmenu2 .acx-settings-group-items button:hover{background:#facc15;color:#111827}'
+      '.acx-settings-page-head{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:15px 18px;margin-bottom:10px;color:#111827}',
+      '.acx-settings-page-title{font-size:16px;font-weight:700;color:#111827}',
+      '.acx-settings-page-desc{font-size:12px;color:#64748b;margin-top:3px}',
+      '.acx-settings-page-nav{display:flex;align-items:center;gap:5px;flex-wrap:wrap;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:6px;margin:0 0 14px;overflow-x:auto}',
+      '.acx-settings-page-nav button{white-space:nowrap;border:0;background:transparent;color:#334155;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}',
+      '.acx-settings-page-nav button:hover{background:#f1f5f9;color:#1e3a8a}',
+      '.acx-settings-page-nav button.active{background:#1e3a8a;color:#fff}',
+      '#settingsSubmenu2 .acx-settings-page-link{list-style:none;margin:.3rem 0}',
+      '#settingsSubmenu2 .acx-settings-page-link button{display:flex;align-items:center;justify-content:space-between;width:100%;padding:.55rem .65rem;text-align:left;font-size:12px;font-weight:700;border-radius:7px;color:inherit}',
+      '#settingsSubmenu2 .acx-settings-page-link button:hover{background:#facc15;color:#111827}',
+      'html.dark .acx-settings-page-head,html.dark .acx-settings-page-nav{background:#1e293b;border-color:#334155;color:#e5e7eb}',
+      'html.dark .acx-settings-page-title{color:#f8fafc}',
+      'html.dark .acx-settings-page-desc{color:#cbd5e1}',
+      'html.dark .acx-settings-page-nav button{color:#e2e8f0}',
+      'html.dark .acx-settings-page-nav button:hover{background:#334155;color:#fff}',
+      'html.dark .acx-settings-page-nav button.active{background:#1e3a8a;color:#fff}'
     ].join('\n');
     document.head.appendChild(style);
   }
-  function findOrCreateItem(menu, id, label) {
-    var existing = Array.prototype.find.call(menu.querySelectorAll('button'), function (button) {
-      return (button.getAttribute('onclick') || '').indexOf("'" + id + "'") >= 0 ||
-        (button.getAttribute('onclick') || '').indexOf('"' + id + '"') >= 0;
-    });
-    if (existing) return existing.closest('li') || existing.parentElement;
-    var li = document.createElement('li');
-    var button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg';
-    button.textContent = label;
-    button.addEventListener('click', function () {
-      if (typeof window.showTab === 'function') window.showTab(id);
-    });
-    li.appendChild(button);
-    return li;
+
+  function itemLi(menu, id) {
+    var buttons = menu.querySelectorAll('button');
+    for (var i = 0; i < buttons.length; i++) {
+      var onclick = buttons[i].getAttribute('onclick') || '';
+      if (onclick.indexOf("'" + id + "'") >= 0 || onclick.indexOf('"' + id + '"') >= 0) {
+        return buttons[i].closest('li') || buttons[i].parentElement;
+      }
+    }
+    return null;
   }
-  function buildSettingsGroups() {
-    var menu = document.getElementById('settingsSubmenu2');
-    if (!menu || menu.dataset.acxGroupedSettings === '1') return !!menu;
-    var allReady = groups.every(function (group) {
-      return group.items.every(function (item) { return !!document.getElementById(item[0]); });
-    });
-    if (!allReady) return false;
-    addStyles();
-    groups.forEach(function (group) {
-      var groupLi = document.createElement('li');
-      groupLi.className = 'acx-settings-group';
-      groupLi.dataset.settingsGroup = group.id;
-      var toggle = document.createElement('button');
-      toggle.type = 'button';
-      toggle.className = 'acx-settings-group-toggle';
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.innerHTML = '<span>' + group.icon + ' ' + group.title + '</span><span class="acx-group-chevron">▶</span>';
-      var list = document.createElement('ul');
-      list.className = 'acx-settings-group-items hidden';
-      list.id = 'acxSettingsGroup' + group.id;
-      toggle.setAttribute('aria-controls', list.id);
-      toggle.addEventListener('click', function () {
-        var opening = list.classList.contains('hidden');
-        list.classList.toggle('hidden', !opening);
-        toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+
+  function activate(group, activeId) {
+    var panels = group.items;
+    panels.forEach(function (item) {
+      var panel = document.getElementById(item[0]);
+      if (!panel) return;
+      var nav = panel.querySelector('.acx-settings-page-nav');
+      if (!nav) return;
+      nav.querySelectorAll('button[data-settings-target]').forEach(function (button) {
+        var active = button.getAttribute('data-settings-target') === activeId;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-current', active ? 'page' : 'false');
       });
-      group.items.forEach(function (item) {
-        var li = findOrCreateItem(menu, item[0], item[1]);
-        if (li && li.parentElement) li.parentElement.removeChild(li);
-        list.appendChild(li);
-      });
-      groupLi.appendChild(toggle);
-      groupLi.appendChild(list);
-      menu.appendChild(groupLi);
     });
-    menu.dataset.acxGroupedSettings = '1';
+  }
+
+  function installPanel(group, item) {
+    var panel = document.getElementById(item[0]);
+    if (!panel || panel.dataset.acxSettingsPage === '1') return !!panel;
+    var head = document.createElement('div');
+    head.className = 'acx-settings-page-head';
+    head.innerHTML = '<div class="acx-settings-page-title">' + group.icon + ' ' + group.title + '</div><div class="acx-settings-page-desc">' + group.description + '</div>';
+    var nav = document.createElement('nav');
+    nav.className = 'acx-settings-page-nav';
+    nav.setAttribute('aria-label', group.title + ' settings');
+    group.items.forEach(function (entry) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.setAttribute('data-settings-target', entry[0]);
+      button.textContent = entry[2] + ' ' + entry[1];
+      button.addEventListener('click', function () {
+        if (typeof window.showTab === 'function') window.showTab(entry[0]);
+        activate(group, entry[0]);
+      });
+      nav.appendChild(button);
+    });
+    panel.insertBefore(nav, panel.firstChild);
+    panel.insertBefore(head, nav);
+    panel.dataset.acxSettingsPage = '1';
     return true;
   }
+
+  function build() {
+    var menu = document.getElementById('settingsSubmenu2');
+    if (!menu) return false;
+    var ready = groups.every(function (group) {
+      return group.items.every(function (item) { return !!document.getElementById(item[0]); });
+    });
+    if (!ready) return false;
+    addStyles();
+    groups.forEach(function (group) {
+      group.items.forEach(function (item) {
+        var old = itemLi(menu, item[0]);
+        if (old && old.parentElement) old.parentElement.removeChild(old);
+        installPanel(group, item);
+      });
+      var existing = menu.querySelector('[data-settings-page-link="' + group.id + '"]');
+      if (!existing) {
+        var li = document.createElement('li');
+        li.className = 'acx-settings-page-link';
+        li.setAttribute('data-settings-page-link', group.id);
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.innerHTML = '<span>' + group.icon + ' ' + group.title + '</span><span aria-hidden="true">›</span>';
+        button.addEventListener('click', function () {
+          var first = group.items[0][0];
+          if (typeof window.showTab === 'function') window.showTab(first);
+          activate(group, first);
+        });
+        li.appendChild(button);
+        menu.appendChild(li);
+      }
+    });
+    return true;
+  }
+
   function boot() {
-    if (buildSettingsGroups()) return;
+    if (build()) return;
     var attempts = 0;
     var retry = setInterval(function () {
       attempts++;
-      if (buildSettingsGroups() || attempts >= 30) clearInterval(retry);
+      if (build() || attempts >= 40) clearInterval(retry);
     }, 300);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
