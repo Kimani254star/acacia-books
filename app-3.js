@@ -1159,17 +1159,19 @@ try{
     var style = document.createElement('style');
     style.id = 'acxSettingsPagesStyle';
     style.textContent = [
-      '.acx-settings-page-head{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:15px 18px;margin-bottom:10px;color:#111827}',
-      '.acx-settings-page-title{font-size:16px;font-weight:700;color:#111827}',
-      '.acx-settings-page-desc{font-size:12px;color:#64748b;margin-top:3px}',
-      '.acx-settings-page-nav{display:flex;align-items:center;gap:5px;flex-wrap:wrap;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:6px;margin:0 0 14px;overflow-x:auto}',
-      '.acx-settings-page-nav button{white-space:nowrap;border:0;background:transparent;color:#334155;padding:9px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}',
-      '.acx-settings-page-nav button:hover{background:#f1f5f9;color:#1e3a8a}',
-      '.acx-settings-page-nav button.active{background:#1e3a8a;color:#fff}',
+      '.acx-settings-page-head{display:flex;align-items:center;gap:.6rem;margin:0 0 .8rem;padding:0 0 .75rem;border-bottom:1px solid #f1f5f9;color:#0f2557}',
+      '.acx-settings-page-title{font-size:1.02rem;font-weight:700;line-height:1.2;color:#0f2557}',
+      '.acx-settings-page-desc{font-size:.75rem;color:#6b7280;margin-top:1px}',
+      '.acx-settings-page-nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;background:#f8fafc;border:1px solid #e5e7eb;border-radius:.75rem;padding:.5rem;margin:1rem 0;overflow-x:auto}',
+      '.acx-settings-page-nav button{white-space:nowrap;font-size:.78rem;font-weight:600;color:#1e3a8a;background:#fff;border:1px solid #dbe3f5;border-radius:9999px;padding:.35rem .75rem;text-decoration:none;transition:all .15s;cursor:pointer}',
+      '.acx-settings-page-nav button:hover{background:#eff6ff;border-color:#93c5fd}',
+      '.acx-settings-page-nav button.active{background:#1e3a8a;color:#fff;border-color:#1e3a8a}',
       '#settingsSubmenu2 .acx-settings-page-link{list-style:none;margin:.3rem 0}',
       '#settingsSubmenu2 .acx-settings-page-link button{display:flex;align-items:center;justify-content:space-between;width:100%;padding:.55rem .65rem;text-align:left;font-size:12px;font-weight:700;border-radius:7px;color:inherit}',
       '#settingsSubmenu2 .acx-settings-page-link button:hover{background:#facc15;color:#111827}',
-      'html.dark .acx-settings-page-head,html.dark .acx-settings-page-nav{background:#1e293b;border-color:#334155;color:#e5e7eb}',
+      'html.dark .acx-settings-page-head{border-color:#334155;color:#e5e7eb}',
+      'html.dark .acx-settings-page-head>div:first-child{background:#263b5c!important}',
+      'html.dark .acx-settings-page-nav{background:#1e293b;border-color:#334155;color:#e5e7eb}',
       'html.dark .acx-settings-page-title{color:#f8fafc}',
       'html.dark .acx-settings-page-desc{color:#cbd5e1}',
       'html.dark .acx-settings-page-nav button{color:#e2e8f0}',
@@ -1210,7 +1212,7 @@ try{
     if (!panel || panel.dataset.acxSettingsPage === '1') return !!panel;
     var head = document.createElement('div');
     head.className = 'acx-settings-page-head';
-    head.innerHTML = '<div class="acx-settings-page-title">' + group.icon + ' ' + group.title + '</div><div class="acx-settings-page-desc">' + group.description + '</div>';
+    head.innerHTML = '<div style="width:2.25rem;height:2.25rem;border-radius:.6rem;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">' + group.icon + '</div><div><div class="acx-settings-page-title">' + group.title + '</div><div class="acx-settings-page-desc">' + group.description + '</div></div>';
     var nav = document.createElement('nav');
     nav.className = 'acx-settings-page-nav';
     nav.setAttribute('aria-label', group.title + ' settings');

@@ -326,20 +326,6 @@
     var area = D.getElementById('contentArea'); if (!area) return false;
     var tab = D.getElementById('workflowRulesTab');
     if (!tab) { tab = D.createElement('div'); tab.id = 'workflowRulesTab'; tab.className = 'hidden'; area.appendChild(tab); }
-    var menu = D.getElementById('settingsSubmenu2');
-    if (menu && !menu.querySelector('[data-acx-workflow-nav="1"]')) {
-      var li = D.createElement('li'); li.className = 'acx-wf-nav-group'; li.setAttribute('data-acx-workflow-nav', '1');
-      var toggle = D.createElement('button'); toggle.type = 'button'; toggle.className = 'acx-wf-nav-toggle'; toggle.setAttribute('aria-expanded', 'false');
-      toggle.innerHTML = '<span>⚡ Automation</span><span aria-hidden="true">▶</span>';
-      var list = D.createElement('ul'); list.className = 'acx-wf-nav-items hidden';
-      var item = D.createElement('li'), button = D.createElement('button'); button.type = 'button';
-      button.className = 'w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg';
-      button.textContent = 'Workflow Rules';
-      button.addEventListener('click', function () { if (typeof W.showTab === 'function') W.showTab('workflowRulesTab'); else { D.querySelectorAll('#contentArea > div').forEach(function (node) { node.classList.add('hidden'); }); tab.classList.remove('hidden'); } });
-      item.appendChild(button); list.appendChild(item);
-      toggle.addEventListener('click', function () { var opening = list.classList.contains('hidden'); list.classList.toggle('hidden', !opening); toggle.setAttribute('aria-expanded', opening ? 'true' : 'false'); });
-      li.appendChild(toggle); li.appendChild(list); menu.appendChild(li);
-    }
     return true;
   }
   function optionList(options, selected) { return options.map(function (option) { return '<option value="' + esc(option[0]) + '"' + (option[0] === selected ? ' selected' : '') + '>' + esc(option[1]) + '</option>'; }).join(''); }
