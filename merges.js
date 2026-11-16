@@ -1708,3 +1708,791 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   }
   if (document.readyState === 'complete') acxStockModulesInit(); else window.addEventListener('load', acxStockModulesInit);
 })();
+
+/* ===================================================================================
+ * Acacia stock: repair + doctor + sync (were acacia-stock-repair.js, acacia-stock-doctor.js, acacia-stock-sync.js).
+ * Each part starts once the page and every script have loaded, as the separate files effectively did.
+ * =================================================================================== */
+;(function () {
+  function acxStock_repair() {
+/* Acacia Books — targeted Stock / Inventory repair.
+   Keeps the existing application and company storage architecture. */
+(function (W) {
+  "use strict";
+  if (W.__acxStockRepair) return;
+  W.__acxStockRepair = true;
+
+  var LS = W.localStorage;
+  var writing = false;
+  var hooked = false;
+
+  function user() {
+    try { return JSON.parse(LS.getItem("loggedInUser") || "null"); }
+    catch (e) { return null; }
+  }
+
+  function companyId() {
+    var u = user(), cid = u && String(u.companyId || "").trim();
+    if (!cid) return "";
+    try {
+      var ns = W.__companyNS;
+      var active = ns && typeof ns.activeCompany === "function" ? String(ns.activeCompany() || "") : cid;
+      if (active && active !== cid) return "";
+    } catch (e) { return ""; }
+    return cid;
+  }
+
+  function norm(v) {
+    return String(v == null ? "" : v).trim().toLowerCase().replace(/\s+/g, " ");
+  }
+
+  function hasId(item) {
+    return !!item && item.id != null && item.id !== "" && typeof item.id !== "object";
+  }
+
+  function hash(value) {
+    var h = 2166136261, s = String(value), i;
+    for (i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(36);
+  }
+
+  function ensureItems(items, warehouse, cid, prior) {
+    if (!Array.isArray(items) || !cid) return false;
+    var changed = false, used = Object.create(null), priorByName = Object.create(null);
+    (Array.isArray(prior) ? prior : []).forEach(function (item) {
+      var name = norm(item && item.name);
+      if (name && hasId(item)) (priorByName[name] || (priorByName[name] = [])).push(String(item.id));
+    });
+
+    items.forEach(function (item) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return;
+      var name = norm(item.name), id = hasId(item) ? String(item.id) : "";
+      if (!id && name && priorByName[name] && priorByName[name].length) {
+        while (priorByName[name].length && !id) {
+          var candidate = priorByName[name].shift();
+          if (!used[candidate]) id = candidate;
+        }
+      }
+      if (!id && name) id = "acx-item-" + hash(cid + "|" + String(warehouse || "") + "|" + name);
+      if (!id && !name) id = "acx-item-" + hash(cid + "|" + String(warehouse || "") + "|unnamed|" + items.indexOf(item));
+      if (used[id]) {
+        var suffix = 2, root = id;
+        while (used[root + "-" + suffix]) suffix++;
+        id = root + "-" + suffix;
+      }
+      if (String(item.id || "") !== id) {
+        item.id = id;
+        changed = true;
+      }
+      used[id] = true;
+    });
+    return changed;
+  }
+
+  W.acxEnsureItemIds = function (items, existing, persist, warehouse) {
+    var cid = companyId();
+    if (!cid || !Array.isArray(items)) return items;
+    ensureItems(items, warehouse || "", cid, existing);
+    return items;
+  };
+
+  function invalidate() {
+    try { W.__invalidateInventoryCache && W.__invalidateInventoryCache(); } catch (e) {}
+    try { W.__acxStockChanged && W.__acxStockChanged(); } catch (e) {}
+  }
+
+  function ensureWarehouse(warehouse) {
+    var cid = companyId();
+    if (!cid || !warehouse) return false;
+    var key = "inventory_" + warehouse, raw = null, items;
+    try { raw = LS.getItem(key); items = raw == null ? null : JSON.parse(raw); }
+    catch (e) { return false; }
+    if (!Array.isArray(items)) return false;
+    if (!ensureItems(items, warehouse, cid, items)) return false;
+    writing = true;
+    try { LS.setItem(key, JSON.stringify(items)); }
+    catch (e) { console.warn("[stock-repair] could not persist item identities", e); }
+    finally { writing = false; }
+    invalidate();
+    return true;
+  }
+
+  function hookStorage() {
+    var ns = W.__companyNS;
+    if (!ns || typeof ns.onSetItem !== "function") return false;
+    ns.onSetItem(function (key, value) {
+      if (writing || !/^inventory_/.test(String(key || ""))) return;
+      var cid = companyId();
+      if (!cid) {
+        console.error("[stock-repair] blocked company-unscoped inventory processing");
+        return;
+      }
+      var items;
+      try { items = JSON.parse(value || "null"); } catch (e) { return; }
+      if (!Array.isArray(items)) return;
+      var warehouse = String(key).slice("inventory_".length);
+      if (!ensureItems(items, warehouse, cid, items)) return;
+      writing = true;
+      try { LS.setItem(key, JSON.stringify(items)); }
+      catch (e) { console.warn("[stock-repair] identity save failed", e); }
+      finally { writing = false; }
+      invalidate();
+    });
+    hooked = true;
+    return true;
+  }
+
+  function wrapInventoryFunctions() {
+    if (typeof W.getInventory === "function" && !W.getInventory.__acxCompanyGuard) {
+      var getInventory = W.getInventory;
+      var guardedGet = function (warehouse) {
+        if (!companyId()) return [];
+        if (warehouse) ensureWarehouse(warehouse);
+        else {
+          for (var i = 0; i < LS.length; i++) {
+            var key = LS.key(i);
+            if (key && key.indexOf("inventory_") === 0) ensureWarehouse(key.slice("inventory_".length));
+          }
+        }
+        return getInventory.apply(this, arguments);
+      };
+      guardedGet.__acxCompanyGuard = true;
+      guardedGet.__acxOriginal = getInventory;
+      W.getInventory = guardedGet;
+    }
+
+    if (typeof W.saveInventory === "function" && !W.saveInventory.__acxCompanyGuard) {
+      var saveInventory = W.saveInventory;
+      var guardedSave = function (warehouse, items) {
+        var cid = companyId();
+        if (!cid) {
+          if (typeof W.showNotification === "function") W.showNotification("Select a valid company before saving stock.", "error");
+          else W.alert("Select a valid company before saving stock.");
+          return false;
+        }
+        if (!Array.isArray(items)) throw new Error("Inventory must be an array.");
+        ensureItems(items, warehouse, cid, null);
+        return saveInventory.apply(this, arguments);
+      };
+      guardedSave.__acxCompanyGuard = true;
+      guardedSave.__acxOriginal = saveInventory;
+      W.saveInventory = guardedSave;
+    }
+
+    if (typeof W.__getAllInventoriesCached === "function" && !W.__getAllInventoriesCached.__acxCompanyGuard) {
+      var cachedAll = W.__getAllInventoriesCached;
+      var guardedAll = function () {
+        if (!companyId()) return [];
+        return cachedAll.apply(this, arguments);
+      };
+      guardedAll.__acxCompanyGuard = true;
+      guardedAll.__acxOriginal = cachedAll;
+      W.__getAllInventoriesCached = guardedAll;
+    }
+
+    if (typeof W.getAllInventories === "function" && !W.getAllInventories.__acxCompanyGuard) {
+      var all = W.getAllInventories;
+      var guardedGetAll = function () {
+        if (!companyId()) return [];
+        return all.apply(this, arguments);
+      };
+      guardedGetAll.__acxCompanyGuard = true;
+      guardedGetAll.__acxOriginal = all;
+      W.getAllInventories = guardedGetAll;
+    }
+
+    if (typeof W.getMergedInventory === "function" && !W.getMergedInventory.__acxCompanyGuard) {
+      var merged = W.getMergedInventory;
+      var guardedMerged = function () {
+        if (!companyId()) return [];
+        return merged.apply(this, arguments);
+      };
+      guardedMerged.__acxCompanyGuard = true;
+      guardedMerged.__acxOriginal = merged;
+      W.getMergedInventory = guardedMerged;
+    }
+  }
+
+  function wrapImport() {
+    var original = W.importInventoryExcel;
+    if (typeof original !== "function" || original.__acxStockCompanyGuard) return false;
+    var guarded = function (event) {
+      var cid = companyId();
+      var input = event && event.target;
+      var select = W.document.getElementById("warehouseSelect");
+      var warehouse = select && select.value || "";
+      var file = input && input.files && input.files[0];
+      if (!cid) {
+        W.alert("Stock import stopped: sign in to a company before importing inventory.");
+        if (input) input.value = "";
+        return;
+      }
+      if (!warehouse) {
+        W.alert("Please select a warehouse before importing inventory.");
+        if (input) input.value = "";
+        return;
+      }
+      W.__acxStockImportContext = {
+        companyId: cid,
+        warehouse: warehouse,
+        fileName: file && String(file.name || ""),
+        token: String(Date.now()) + "-" + hash(cid + "|" + warehouse + "|" + (file && file.name || ""))
+      };
+      return original.apply(this, arguments);
+    };
+    guarded.__acxStockCompanyGuard = true;
+    guarded.__acxOriginal = original;
+    if (original.__syncSafe) guarded.__syncSafe = true;
+    if (original.__stockFix) guarded.__stockFix = true;
+    W.importInventoryExcel = guarded;
+    return true;
+  }
+
+  function boot() {
+    hookStorage();
+    wrapInventoryFunctions();
+    wrapImport();
+    var cid = companyId();
+    if (cid) {
+      for (var i = 0; i < LS.length; i++) {
+        var key = LS.key(i);
+        if (key && key.indexOf("inventory_") === 0) {
+          var warehouse = key.slice("inventory_".length);
+          ensureWarehouse(warehouse);
+        }
+      }
+    }
+    invalidate();
+  }
+
+  W.__acxStockRepairStatus = function () {
+    var cid = companyId(), count = 0;
+    if (cid) {
+      for (var i = 0; i < LS.length; i++) {
+        var key = LS.key(i);
+        if (key && key.indexOf("inventory_") === 0) {
+          try {
+            var items = JSON.parse(LS.getItem(key) || "[]");
+            if (Array.isArray(items)) count += items.length;
+          } catch (e) {}
+        }
+      }
+    }
+    return { active: !!cid, companyId: cid || null, inventoryItems: count, storageHooked: hooked };
+  };
+
+  boot();
+  W.addEventListener("acx-idb-ready", boot);
+  W.addEventListener("acx:company-changed", boot);
+  W.addEventListener("storage", function (event) {
+    if (event && event.key === "loggedInUser") setTimeout(boot, 0);
+  });
+})(window);
+
+  }
+  if (document.readyState === "complete") acxStock_repair(); else window.addEventListener("load", acxStock_repair);
+})();
+
+;(function () {
+  function acxStock_doctor() {
+/* acacia-stock-doctor.js - shows why stock does not match between this device and the cloud, and repairs it.
+ *
+ * Open it:  add  ?stockdoctor=1  to the Books address (e.g. https://acacia-books.vercel.app/?stockdoctor=1)
+ *           or run  acxStockDoctor()  in the browser console.
+ * Run it on the device that has the FULL stock. It never changes anything until you press a button.
+ *   1. Compare   - items on this device vs the cloud, per warehouse (count, size, last saved, differences)
+ *   2. Deletion markers - old "deleted" markers for stock items (these made other devices drop items)
+ *   3. Repair    - remove stock deletion markers; push this device's stock to the cloud
+ * Load LAST in index.html (after acacia-stock-repair.js). */
+(function (W) {
+  "use strict";
+  if (W.__acxStockDoctor) return;
+  W.__acxStockDoctor = true;
+
+  var LS = W.localStorage, lastPushErr = "";
+
+  /* remember the last real push error the sync engine reported */
+  (function () {
+    if (console.__acxDocHook) return;
+    var ow = console.warn;
+    console.warn = function () {
+      try {
+        var a = arguments;
+        if (String(a[0] || "").indexOf("[companySync] push") === 0 && a[1]) {
+          var e = a[1];
+          lastPushErr = typeof e === "object" ? ((e.code ? "[" + e.code + "] " : "") + String(e.message || e.details || e.hint || "")) : String(e);
+        }
+      } catch (x) {}
+      return ow.apply(this, arguments);
+    };
+    console.__acxDocHook = true;
+  })();
+
+  function J(k, d) { try { var v = JSON.parse(LS.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function cid() { var u = J("loggedInUser", null); return u && u.companyId ? String(u.companyId) : ""; }
+  function esc(v) { return String(v == null ? "" : v).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  function nm(v) { return String(v == null ? "" : v).trim().toLowerCase().replace(/\s+/g, " "); }
+  function hdr(x) { var h = { apikey: W.__SUPA_KEY__, Authorization: "Bearer " + W.__SUPA_KEY__ }; for (var k in (x || {})) h[k] = x[k]; return h; }
+  var REST = function () { return W.__SUPA_URL__ + "/rest/v1/company_state"; };
+
+  function toList(v) {
+    var x = v, n = 0;
+    while (typeof x === "string" && n < 4) { try { x = JSON.parse(x); } catch (e) { return null; } n++; }
+    return Array.isArray(x) ? x : null;
+  }
+  function localWarehouses() {
+    var out = [];
+    for (var i = 0; i < LS.length; i++) { var k = LS.key(i); if (k && k.indexOf("inventory_") === 0) out.push(k); }
+    return out.sort();
+  }
+  function getCloud(key) {
+    var url = REST() + "?company_id=eq." + encodeURIComponent(cid()) + "&key=eq." + encodeURIComponent(key) + "&select=value,updated_at&limit=1";
+    return fetch(url, { cache: "no-store", headers: hdr() }).then(function (r) {
+      if (!r.ok) return r.text().then(function (t) { return { error: "HTTP " + r.status + " " + t.slice(0, 160) }; });
+      return r.json().then(function (rows) {
+        if (!rows.length) return { missing: true };
+        var raw = rows[0].value, txt = typeof raw === "string" ? raw : JSON.stringify(raw);
+        return { list: toList(raw), kb: Math.round(txt.length / 102.4) / 10, at: rows[0].updated_at, native: typeof raw !== "string" };
+      });
+    }).catch(function (e) { return { error: "network: " + (e && e.message || e) }; });
+  }
+  function cloudKeys() {
+    var url = REST() + "?company_id=eq." + encodeURIComponent(cid()) + "&key=like." + encodeURIComponent("inventory_*") + "&select=key,updated_at";
+    return fetch(url, { cache: "no-store", headers: hdr() }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; });
+  }
+
+  /* deletion markers that point at stock items */
+  function stockMarkers(liveByKey) {
+    var t = J("tombstones", {}), dead = 0, onLive = 0, cols = 0;
+    Object.keys(t || {}).forEach(function (col) {
+      if (col.indexOf("inventory_") !== 0) return;
+      cols++;
+      var live = liveByKey[col] || {};
+      Object.keys(t[col] || {}).forEach(function (id) {
+        var e = t[col][id]; if (!e || !e[1]) return;
+        dead++;
+        if (live[id]) onLive++;
+      });
+    });
+    return { cols: cols, dead: dead, onLive: onLive };
+  }
+
+  async function diagnose() {
+    var rows = [], liveByKey = {}, keys = localWarehouses();
+    var cl = await cloudKeys();
+    cl.forEach(function (r) { if (keys.indexOf(r.key) < 0) keys.push(r.key); });
+    keys.sort();
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i], loc = J(k, null), lst = Array.isArray(loc) ? loc : null;
+      var o = { key: k, wh: k.slice(10), local: lst ? lst.length : null, localKb: lst ? Math.round(JSON.stringify(lst).length / 102.4) / 10 : 0 };
+      if (lst) {
+        var ids = {}, dupId = 0, noId = 0, sku = {}, live = {};
+        lst.forEach(function (it) {
+          if (!it) return;
+          if (it.id == null || it.id === "") noId++; else { if (ids[it.id]) dupId++; ids[it.id] = 1; live["i:id:" + it.id] = 1; }
+          var s = String(it.sku || "").toLowerCase(); if (s) sku[s] = (sku[s] || 0) + 1;
+        });
+        liveByKey[k] = live; o.noId = noId; o.dupId = dupId;
+        o.sharedSku = Object.keys(sku).filter(function (x) { return sku[x] > 1; }).length;
+      }
+      var c = await getCloud(k); o.cloud = c;
+      if (c.list && lst) {
+        var byId = {}, byName = {};
+        c.list.forEach(function (it) { if (!it) return; if (it.id != null && it.id !== "") byId[it.id] = it; byName[nm(it.name)] = it; });
+        var lid = {}, lname = {};
+        lst.forEach(function (it) { if (!it) return; if (it.id != null && it.id !== "") lid[it.id] = 1; lname[nm(it.name)] = 1; });
+        o.onlyLocal = lst.filter(function (it) { return it && !(it.id != null && byId[it.id]) && !byName[nm(it.name)]; }).length;
+        o.onlyCloud = c.list.filter(function (it) { return it && !(it.id != null && lid[it.id]) && !lname[nm(it.name)]; }).length;
+        o.qtyDiff = lst.filter(function (it) {
+          if (!it) return false; var m = (it.id != null && byId[it.id]) || byName[nm(it.name)];
+          return m && Math.abs(num(m.qty) - num(it.qty)) > 0.000001;
+        }).length;
+      }
+      rows.push(o);
+    }
+    return { rows: rows, markers: stockMarkers(liveByKey), pushErr: lastPushErr, dirty: (function () { try { return Object.keys(W.__companyNS.dirty || {}).filter(function (x) { return /^inventory_/.test(x); }); } catch (e) { return []; } })() };
+  }
+
+  /* ---- repairs ---- */
+  function clearStockMarkers() {
+    var t = J("tombstones", {}), n = 0;
+    Object.keys(t).forEach(function (col) { if (col.indexOf("inventory_") === 0) { n += Object.keys(t[col] || {}).length; delete t[col]; } });
+    LS.setItem("tombstones", JSON.stringify(t));       /* the normal storage hook marks it for cloud sync */
+    try { W.__companySync && W.__companySync.pushDirty && W.__companySync.pushDirty(); } catch (e) {}
+    return n;
+  }
+  function forcePush(key) {
+    var raw = LS.getItem(key);
+    if (typeof raw !== "string" || raw.charAt(0) !== "[") return Promise.resolve("nothing to push for " + key);
+    var row = { company_id: cid(), key: key, value: raw, updated_at: new Date().toISOString() };
+    return fetch(REST() + "?on_conflict=company_id,key", {
+      method: "POST", headers: hdr({ "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=representation" }), body: JSON.stringify([row])
+    }).then(function (r) {
+      return r.text().then(function (t) {
+        if (!r.ok) { var m = t; try { var j = JSON.parse(t); m = (j.code ? "[" + j.code + "] " : "") + (j.message || j.details || j.hint || t); } catch (e) {} return "HTTP " + r.status + " " + String(m).slice(0, 220); }
+        var back = []; try { back = JSON.parse(t) || []; } catch (e) {}
+        if (!back.length) return "Supabase saved no row (a security rule is blocking writes from this browser)";
+        try { var ver = W.__companySync.ver(); if (ver) ver[key] = back[0].updated_at; delete W.__companyNS.dirty[key]; } catch (e) {}
+        return "";
+      });
+    }).catch(function (e) { return "network error: " + (e && e.message || e); });
+  }
+
+  /* ---- screen ---- */
+  var box;
+  function shell() {
+    if (box) box.remove();
+    box = document.createElement("div");
+    box.style.cssText = "position:fixed;inset:0;z-index:2147483600;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:12px;font:14px/1.45 system-ui,sans-serif";
+    box.innerHTML = '<div style="background:#fff;color:#111;max-width:860px;width:100%;max-height:92vh;overflow:auto;border-radius:12px;padding:18px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35)">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">Stock sync doctor</b><button id="sdClose" style="border:0;background:none;font-size:22px;cursor:pointer">&times;</button></div>' +
+      '<div id="sdBody" style="margin-top:10px">Checking…</div></div>';
+    document.body.appendChild(box);
+    box.querySelector("#sdClose").onclick = function () { box.remove(); box = null; };
+    return box.querySelector("#sdBody");
+  }
+  function btn(id, label, color) { return '<button id="' + id + '" style="margin:4px 6px 4px 0;padding:8px 12px;border:0;border-radius:8px;background:' + color + ';color:#fff;cursor:pointer;font:600 13px system-ui">' + label + '</button>'; }
+
+  async function open() {
+    if (!cid()) { alert("Sign in to a company first."); return; }
+    if (!W.__SUPA_URL__ || !W.__SUPA_KEY__) { alert("Cloud is not configured on this page."); return; }
+    var body = shell(), d;
+    try { d = await diagnose(); } catch (e) { body.textContent = "Could not run the check: " + (e && e.message || e); return; }
+    var h = '<div style="color:#555;margin-bottom:8px">Company <b>' + esc(cid()) + '</b>. Run this on the device that has the full stock.</div>';
+    h += '<table style="border-collapse:collapse;width:100%;font-size:13px"><tr style="background:#f3f4f6;text-align:left"><th style="padding:6px">Warehouse</th><th>This device</th><th>Cloud</th><th>Only here</th><th>Only cloud</th><th>Qty differs</th><th>Items w/o id</th></tr>';
+    d.rows.forEach(function (o) {
+      var c = o.cloud, cs = c.error ? '<span style="color:#b91c1c">' + esc(c.error) + '</span>' : c.missing ? '<span style="color:#b91c1c">no row</span>' :
+        !c.list ? '<span style="color:#b91c1c">unreadable format</span>' : c.list.length + " items, " + c.kb + " KB<br><small style='color:#666'>" + esc(String(c.at || "").replace("T", " ").slice(0, 19)) + (c.native ? " · native array" : "") + "</small>";
+      h += '<tr style="border-top:1px solid #e5e7eb"><td style="padding:6px">' + esc(o.wh) + '</td><td>' + (o.local == null ? "-" : o.local + " items, " + o.localKb + " KB") + '</td><td>' + cs + '</td><td>' + (o.onlyLocal == null ? "-" : o.onlyLocal) + '</td><td>' + (o.onlyCloud == null ? "-" : o.onlyCloud) + '</td><td>' + (o.qtyDiff == null ? "-" : o.qtyDiff) + '</td><td>' + (o.noId == null ? "-" : o.noId + (o.dupId ? " (+" + o.dupId + " duplicate ids)" : "")) + '</td></tr>';
+    });
+    h += '</table>';
+    h += '<div style="margin-top:12px;padding:10px;border-radius:8px;background:' + (d.markers.onLive ? "#fef2f2" : "#f9fafb") + '"><b>Deletion markers on stock:</b> ' + d.markers.dead + ' marked deleted' +
+      (d.markers.onLive ? ' - <b style="color:#b91c1c">' + d.markers.onLive + ' of them point at items that exist on this device. Another device removes those items when it syncs.</b>' : ' (none point at current items)') + '</div>';
+    h += '<div style="margin-top:8px;padding:10px;border-radius:8px;background:#f9fafb"><b>Waiting to upload:</b> ' + (d.dirty.length ? esc(d.dirty.join(", ")) : "nothing") + '<br><b>Last upload error:</b> ' + (d.pushErr ? '<span style="color:#b91c1c">' + esc(d.pushErr) + '</span>' : "none seen since this page opened") + '</div>';
+    h += '<div style="margin-top:12px">' + btn("sdMark", "1. Remove stock deletion markers", "#7c3aed") + btn("sdPush", "2. Upload this device's stock to the cloud", "#047857") + btn("sdAgain", "Check again", "#374151") + '</div>';
+    h += '<div id="sdMsg" style="margin-top:8px;color:#374151;white-space:pre-wrap"></div>';
+    h += '<div style="margin-top:8px;color:#6b7280;font-size:12px">Step 2 replaces the cloud copy of each warehouse with this device\'s copy (last save wins). Do it only on the device with the correct, full stock.</div>';
+    body.innerHTML = h;
+    var msg = body.querySelector("#sdMsg");
+    body.querySelector("#sdAgain").onclick = open;
+    body.querySelector("#sdMark").onclick = function () { var n = clearStockMarkers(); msg.textContent = "Removed " + n + " stock deletion marker(s) and queued the change for the cloud. Now run step 2, then open Books on the other device."; };
+    body.querySelector("#sdPush").onclick = async function () {
+      var keys = d.rows.filter(function (o) { return o.local; }).map(function (o) { return o.key; });
+      if (!keys.length) { msg.textContent = "This device has no stock to upload."; return; }
+      if (!W.confirm("Replace the cloud stock with this device's stock for: " + keys.map(function (k) { return k.slice(10); }).join(", ") + "?")) return;
+      msg.textContent = "Uploading…"; var out = [];
+      for (var i = 0; i < keys.length; i++) { var r = await forcePush(keys[i]); out.push(keys[i].slice(10) + ": " + (r || "uploaded")); }
+      msg.textContent = out.join("\n") + "\n\nClick “Check again” to confirm the counts match.";
+    };
+  }
+
+  W.acxStockDoctor = open;
+  if (/[?&]stockdoctor=1/.test(String(location.search))) {
+    var n = 0, iv = setInterval(function () { if ((cid() && W.__companySync) || ++n > 60) { clearInterval(iv); if (cid()) setTimeout(open, 1500); } }, 500);
+  }
+})(window);
+
+  }
+  if (document.readyState === "complete") acxStock_doctor(); else window.addEventListener("load", acxStock_doctor);
+})();
+
+;(function () {
+  function acxStock_sync() {
+/* acacia-stock-sync.js - dedicated, per-company stock sync (replaces the generic sync for inventory_<warehouse> keys).
+ *
+ * Why: the generic sync merged stock with old cloud copies and "deleted" markers, so a second device could lose items and an
+ * import could fail to reach the cloud. Stock now syncs on its own, one cloud row per (company id + warehouse), nothing else:
+ *   - every request is limited to the signed-in company's id; if the active company is not that company, nothing runs;
+ *   - this device remembers the last cloud version it synced (a "revision") and the last synced copy (the "base");
+ *   - only this device changed  -> upload it;          only the cloud changed -> take the cloud copy;
+ *   - both changed              -> 3-way merge (quantities are never added together), then upload;
+ *   - a new device (no base)    -> takes the cloud copy (or merges if it already holds items);
+ *   - every upload is checked against the row Supabase returns, so "saved" always means saved.
+ * The generic engine (app-3.js) skips inventory_ keys; Stock Take / Assessment keys are untouched.
+ * Load LAST in index.html (after acacia-stock-repair.js). */
+(function (W) {
+  "use strict";
+  if (W.__acxStockSync) return;
+  W.__acxStockSync = true;
+
+  var LS = W.localStorage, POLL_MS = 20000, DEBOUNCE_MS = 1500, busy = {}, again = {}, applying = false;
+  var status = { state: "idle", msg: "", at: 0, byWh: {} };
+
+  /* ---------- helpers ---------- */
+  function J(k, d) { try { var v = JSON.parse(LS.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function ns() { return W.__companyNS || null; }
+  function cid() {
+    var u = J("loggedInUser", null), c = u && u.companyId && !u.demo ? String(u.companyId) : "", n = ns(), act = "";
+    if (!c) return "";
+    try { act = n && n.activeCompany ? String(n.activeCompany() || "") : c; } catch (e) { act = c; }
+    return act && act !== c ? "" : c;              /* company mismatch => do nothing */
+  }
+  function REST() { return W.__SUPA_URL__ + "/rest/v1/company_state"; }
+  function hdr(x) { var h = { apikey: W.__SUPA_KEY__, Authorization: "Bearer " + W.__SUPA_KEY__ }; for (var k in (x || {})) h[k] = x[k]; return h; }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function rawGet(k) { var n = ns(); try { return n.nGet.call(n.real, k); } catch (e) { return null; } }
+  function rawSet(k, v) { var n = ns(); try { n.nSet.call(n.real, k, v); return true; } catch (e) { return false; } }
+  function bKey(c, w) { return "__stkbase_" + c + "_" + w; }
+  function rKey(c, w) { return "__stkrev_" + c + "_" + w; }
+  function lockKey(c, w) { return String(c) + "\u0000" + String(w); }
+  function setStatus(state, msg, w) { status.state = state; status.msg = msg || ""; status.at = Date.now(); if (w) status.byWh[w] = { state: state, msg: msg || "", at: status.at }; }
+
+  function toList(v) {
+    var x = v, n = 0;
+    while (typeof x === "string" && n < 4) { try { x = JSON.parse(x); } catch (e) { return null; } n++; }
+    return Array.isArray(x) ? x : null;
+  }
+  function ensureIds(list, w) { try { if (typeof W.acxEnsureItemIds === "function") W.acxEnsureItemIds(list, null, false, w); } catch (e) {} return list; }
+  function errText(t, status) { var m = t; try { var j = JSON.parse(t); m = (j.code ? "[" + j.code + "] " : "") + (j.message || j.details || j.hint || t); } catch (e) {} return "HTTP " + status + " " + String(m).slice(0, 220); }
+
+  /* ---------- cloud calls (always filtered by company id + key) ---------- */
+  function getRow(c, key) {
+    var url = REST() + "?company_id=eq." + encodeURIComponent(c) + "&key=eq." + encodeURIComponent(key) + "&select=value,updated_at&limit=1";
+    return fetch(url, { cache: "no-store", headers: hdr() }).then(function (r) {
+      if (!r.ok) return r.text().then(function (t) { throw new Error("read failed: " + errText(t, r.status)); });
+      return r.json();
+    }).then(function (rows) { return rows && rows.length ? rows[0] : null; });
+  }
+  function listKeys(c) {
+    var url = REST() + "?company_id=eq." + encodeURIComponent(c) + "&key=like." + encodeURIComponent("inventory_*") + "&select=key";
+    return fetch(url, { cache: "no-store", headers: hdr() }).then(function (r) { return r.ok ? r.json() : []; }).then(function (rows) {
+      return (rows || []).map(function (x) { return x.key; }).filter(function (k) { return /^inventory_/.test(k); });
+    }).catch(function () { return []; });
+  }
+  /* upload: update only if the cloud is still at `rev`; otherwise insert when there is no row. Returns {ok,rev} | {conflict} | {error} */
+  function putRow(c, key, valueStr, rev) {
+    var now = new Date().toISOString(), req;
+    if (rev) {
+      req = fetch(REST() + "?company_id=eq." + encodeURIComponent(c) + "&key=eq." + encodeURIComponent(key) + "&updated_at=eq." + encodeURIComponent(rev), {
+        method: "PATCH", headers: hdr({ "Content-Type": "application/json", Prefer: "return=representation" }), body: JSON.stringify({ value: valueStr, updated_at: now })
+      });
+    } else {
+      req = fetch(REST(), {
+        method: "POST", headers: hdr({ "Content-Type": "application/json", Prefer: "return=representation" }), body: JSON.stringify({ company_id: c, key: key, value: valueStr, updated_at: now })
+      });
+    }
+    return req.then(function (r) {
+      return r.text().then(function (t) {
+        if (r.status === 409 || /23505|duplicate key/i.test(t)) return { conflict: true };
+        if (!r.ok) return { error: errText(t, r.status) };
+        var rows = []; try { rows = JSON.parse(t) || []; } catch (e) {}
+        if (!rows.length) return rev ? { conflict: true, empty: true } : { error: "Supabase saved no row (a security rule is blocking writes from this browser)" };
+        var back = toList(rows[0].value);
+        if (!back) return { error: "Supabase stored the row but it cannot be read back as a list" };
+        return { ok: true, rev: rows[0].updated_at || now, count: back.length };
+      });
+    }).catch(function (e) { return { error: "network error: " + (e && e.message || e) }; });
+  }
+
+  /* ---------- local writes ---------- */
+  function writeLocal(c, w, listOrStr) {
+    var n = ns(); c = String(c || "");
+    if (!n || !c || cid() !== c) return false;
+    var str = typeof listOrStr === "string" ? listOrStr : JSON.stringify(listOrStr);
+    applying = true;
+    try {
+      if (n.setApplying) n.setApplying(true);
+      try {
+        if (cid() !== c) return false;
+        n.nSet.call(n.real, "inventory_" + w + n.SEP + c, str);
+      } finally { if (n.setApplying) n.setApplying(false); }
+    } catch (e) { return false; }
+    finally { applying = false; }
+    try { if (n.dirty) delete n.dirty["inventory_" + w]; } catch (e) {}
+    return cid() === c;
+  }
+  function refresh() {
+    try { W.__invalidateInventoryCache && W.__invalidateInventoryCache(); } catch (e) {}
+    ["stTopUp", "renderInventoryTable", "renderInventorySummary", "renderStockValuation", "renderStockReports", "renderPriceListTable"].forEach(function (f) {
+      try { if (typeof W[f] === "function") W[f](); } catch (e) {}
+    });
+  }
+  function remember(c, w, str, rev) { var ok = rawSet(bKey(c, w), str); rawSet(rKey(c, w), rev || ""); return ok; }
+
+  /* ---------- the decision ---------- */
+  function merge3(localArr, cloudArr, baseArr) {
+    var M = W.__acxMerge;
+    if (!M || typeof M.merge3 !== "function") return null;
+    var base = baseArr ? M.fpOf(baseArr, true) : null;
+    var res = M.merge3(localArr, cloudArr, base, { preferLocal: true, additive: ["qty"] });
+    if (!res) return res;
+    /* Quantities are NEVER added together: for each item the quantity is whichever side actually changed it
+       (this device wins if both did, or if there is no base); the other fields keep the normal merge. */
+    var byId = function (a) { var o = {}; (a || []).forEach(function (it) { if (it && it.id != null) o[String(it.id)] = it; }); return o; };
+    var L = byId(localArr), C = byId(cloudArr), B = byId(baseArr);
+    res.forEach(function (it) {
+      if (!it || it.id == null) return;
+      var id = String(it.id), l = L[id], c = C[id], b = B[id];
+      if (l && c) it.qty = (b && Number(l.qty) === Number(b.qty) && Number(c.qty) !== Number(b.qty)) ? c.qty : l.qty;
+      else if (l) it.qty = l.qty;
+      else if (c) it.qty = c.qty;
+    });
+    return res;
+  }
+
+  /* one pass for one warehouse; resolves { ok, msg, changed } */
+  async function syncOnce(c, w) {
+    var key = "inventory_" + w, localStr = LS.getItem(key), baseStr = rawGet(bKey(c, w)), rev = rawGet(rKey(c, w)) || "";
+    var local = toList(localStr);
+    if (local) ensureIds(local, w);
+    var cloudRow = await getRow(c, key);
+    if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
+    var cloud = cloudRow ? toList(cloudRow.value) : null;
+    if (cloudRow && !cloud) throw new Error("the cloud row for " + w + " is not a readable list");
+    if (cloud) ensureIds(cloud, w);
+    var cloudRev = cloudRow ? cloudRow.updated_at : "";
+    var localHas = !!(local && local.length);
+
+    /* nothing in the cloud yet */
+    if (!cloudRow) {
+      if (!localHas) return { ok: true, msg: "nothing to sync", changed: false };
+      var p0 = await putRow(c, key, JSON.stringify(local), "");
+      if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
+      if (p0.conflict) return { retry: true };
+      if (p0.error) throw new Error(p0.error);
+      remember(c, w, JSON.stringify(local), p0.rev);
+      if (JSON.stringify(local) !== localStr) writeLocal(c, w, local);
+      return { ok: true, msg: "uploaded " + p0.count + " item(s)", changed: false };
+    }
+
+    var hasBase = baseStr != null && baseStr !== "";
+    var localChanged = hasBase ? (!!local && localStr !== baseStr && JSON.stringify(local) !== baseStr) : localHas;
+    /* safety: never wipe a full cloud warehouse because this device suddenly holds none */
+    if (hasBase && localChanged && local && !local.length && cloud && cloud.length > 5) {
+      throw new Error("this device has no stock for " + w + " but the cloud has " + cloud.length + " items - not overwriting. Open Stock sync doctor.");
+    }
+    var cloudChanged = !hasBase || cloudRev !== rev;
+
+    /* this device is new for this warehouse (no base) */
+    if (!hasBase) {
+      if (!localHas) {
+        writeLocal(c, w, cloud); remember(c, w, JSON.stringify(cloud), cloudRev); refresh();
+        return { ok: true, msg: "took " + cloud.length + " item(s) from the cloud", changed: true };
+      }
+      /* local already holds items: union by id, then upload */
+      var u = merge3(local, cloud, null);
+      if (!u) throw new Error("merge module is not loaded yet");
+      ensureIds(u, w);
+      var pu = await putRow(c, key, JSON.stringify(u), cloudRev);
+      if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
+      if (pu.conflict) return { retry: true };
+      if (pu.error) throw new Error(pu.error);
+      writeLocal(c, w, u); remember(c, w, JSON.stringify(u), pu.rev); refresh();
+      return { ok: true, msg: "linked this device: " + pu.count + " item(s)", changed: true };
+    }
+
+    if (!localChanged && !cloudChanged) return { ok: true, msg: "in sync", changed: false };
+
+    if (!localChanged && cloudChanged) {                                  /* only the cloud changed */
+      writeLocal(c, w, cloud); remember(c, w, JSON.stringify(cloud), cloudRev); refresh();
+      return { ok: true, msg: "took the newer cloud copy (" + cloud.length + " items)", changed: true };
+    }
+
+    if (localChanged && !cloudChanged) {                                  /* only this device changed */
+      var body = JSON.stringify(local);
+      var pl = await putRow(c, key, body, cloudRev);
+      if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
+      if (pl.conflict) return { retry: true };
+      if (pl.error) throw new Error(pl.error);
+      remember(c, w, body, pl.rev);
+      if (body !== localStr) writeLocal(c, w, body);
+      return { ok: true, msg: "uploaded " + pl.count + " item(s)", changed: false };
+    }
+
+    /* both changed: 3-way merge from the last synced copy */
+    var m = merge3(local, cloud, toList(baseStr));
+    if (!m) throw new Error("merge module is not loaded yet");
+    ensureIds(m, w);
+    var mb = JSON.stringify(m), pm = await putRow(c, key, mb, cloudRev);
+      if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
+    if (pm.conflict) return { retry: true };
+    if (pm.error) throw new Error(pm.error);
+    writeLocal(c, w, mb); remember(c, w, mb, pm.rev); refresh();
+    return { ok: true, msg: "merged this device with the cloud: " + pm.count + " item(s)", changed: true };
+  }
+
+  /* sync one warehouse; never runs twice at once for the same warehouse */
+  function syncNow(w, expectedCompany) {
+    var c = cid();
+    if (!c) return Promise.resolve({ ok: false, msg: "no active company" });
+    if (expectedCompany && c !== String(expectedCompany)) return Promise.resolve({ ok: false, msg: "company changed during sync - stopped" });
+    if (!W.__SUPA_URL__ || !W.__SUPA_KEY__) return Promise.resolve({ ok: false, msg: "cloud is not configured" });
+    if (!navigator.onLine) return Promise.resolve({ ok: false, msg: "offline - will sync when the connection returns" });
+    var lock = lockKey(c, w);
+    if (busy[lock]) { again[lock] = true; return busy[lock]; }
+    busy[lock] = (async function () {
+      var res = { ok: false, msg: "unknown" }, tries = 0;
+      try {
+        for (;;) {
+          tries++;
+          if (cid() !== c) { res = { ok: false, msg: "company changed during sync - stopped" }; break; }
+          var r = await syncOnce(c, w);
+          if (r.retry && tries < 4) { await wait(300 + Math.random() * 500); continue; }
+          res = r.retry ? { ok: false, msg: "the cloud kept changing; will retry shortly" } : r;
+          break;
+        }
+        setStatus(res.ok ? "ok" : "warn", res.msg, w);
+      } catch (e) {
+        res = { ok: false, msg: String(e && e.message || e) };
+        setStatus("error", res.msg, w);
+        console.warn("[stock-sync]", w, res.msg);
+      } finally { delete busy[lock]; }
+      if (again[lock]) { delete again[lock]; setTimeout(function () { syncNow(w, c); }, 400); }
+      return res;
+    })();
+    return busy[lock];
+  }
+
+  function localWarehouses() {
+    var out = [];
+    for (var i = 0; i < LS.length; i++) { var k = LS.key(i); if (k && k.indexOf("inventory_") === 0) out.push(k.slice(10)); }
+    return out;
+  }
+  async function syncAll() {
+    var c = cid(); if (!c || !W.__SUPA_URL__) return [];
+    var set = {}, results = [];
+    localWarehouses().forEach(function (w) { set[w] = 1; });
+    (await listKeys(c)).forEach(function (k) { set[k.slice(10)] = 1; });
+    if (cid() !== c) return [];
+    var list = Object.keys(set);
+    for (var i = 0; i < list.length; i++) results.push({ warehouse: list[i], result: await syncNow(list[i], c) });
+    return results;
+  }
+
+  /* ---------- triggers ---------- */
+  var timers = {};
+  function hook() {
+    var n = ns(); if (!n || !n.onSetItem) return false;
+    n.onSetItem(function (k) {
+      if (applying || !/^inventory_/.test(String(k))) return;
+      var c = cid(); if (!c) return;
+      var w = String(k).slice(10), lock = lockKey(c, w);
+      clearTimeout(timers[lock]);
+      timers[lock] = setTimeout(function () { syncNow(w, c); }, DEBOUNCE_MS);
+    });
+    return true;
+  }
+  var tries = 0;
+  (function boot() {
+    if (!hook() && ++tries < 40) return setTimeout(boot, 500);
+    setTimeout(function () { syncAll(); }, 4000);
+    setInterval(function () { if (!document.hidden) syncAll(); }, POLL_MS);
+  })();
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) syncAll(); });
+  W.addEventListener("online", function () { syncAll(); });
+  W.addEventListener("acx:company-changed", function () { setTimeout(syncAll, 1500); });
+  W.addEventListener("pagehide", function () { Object.keys(timers).forEach(function (k) { clearTimeout(timers[k]); }); });
+
+  W.acxStockSync = {
+    syncNow: syncNow, syncAll: syncAll, status: function () { return status; },
+    /* test hooks */ _syncOnce: syncOnce
+  };
+})(window);
+
+  }
+  if (document.readyState === "complete") acxStock_sync(); else window.addEventListener("load", acxStock_sync);
+})();

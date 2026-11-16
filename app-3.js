@@ -1141,8 +1141,7 @@ try{
       ['vendorPortalTab', 'Vendor Portal', '🏭'],
       ['paymentGatewaysTab', 'Payment Gateways', '💳']
     ]},
-    { id: 'developer', title: 'Developer', icon: '🔌', description: 'Manage connections, API access and webhooks.', items: [
-      ['integrationsHubTab', 'Integrations', '🔗'],
+    { id: 'developer', title: 'Developer', icon: '🔌', gate: 'integrationsHubTab', description: 'Manage connections, API access and webhooks.', items: [
       ['connectionsTab', 'Connections', '🔌'],
       ['apiKeysTab', 'API Keys', '🔑'],
       ['incomingWebhooksTab', 'Incoming Webhooks', '📥'],
@@ -1177,6 +1176,14 @@ try{
       'html.dark .acx-settings-page-nav button.active{background:#1e3a8a;color:#fff}'
     ].join('\n');
     document.head.appendChild(style);
+  }
+
+  /* Developer pages are allowed by the 'Integrations' right (integrationsHubTab, which has no page of its own). */
+  function allowed(group, id) {
+    var g = group && group.gate;
+    if (!g || typeof window.acxCanOpenTab !== 'function' || window.acxCanOpenTab(g)) return true;
+    if (typeof window.showTab === 'function') window.showTab(g);   /* shows the normal "not included in your plan or role" message */
+    return false;
   }
 
   function itemLi(menu, id) {
@@ -1220,6 +1227,7 @@ try{
       button.setAttribute('data-settings-target', entry[0]);
       button.textContent = entry[2] + ' ' + entry[1];
       button.addEventListener('click', function () {
+        if (!allowed(group, entry[0])) return;
         if (typeof window.showTab === 'function') window.showTab(entry[0]);
         activate(group, entry[0]);
       });
@@ -1256,6 +1264,7 @@ try{
         button.textContent = group.title;
         button.addEventListener('click', function () {
           var first = group.items[0][0];
+          if (!allowed(group, first)) return;
           if (typeof window.showTab === 'function') window.showTab(first);
           activate(group, first);
         });
