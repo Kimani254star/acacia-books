@@ -1166,9 +1166,7 @@ try{
       '.acx-settings-page-nav button{white-space:nowrap;font-size:.78rem;font-weight:600;color:#1e3a8a;background:#fff;border:1px solid #dbe3f5;border-radius:9999px;padding:.35rem .75rem;text-decoration:none;transition:all .15s;cursor:pointer}',
       '.acx-settings-page-nav button:hover{background:#eff6ff;border-color:#93c5fd}',
       '.acx-settings-page-nav button.active{background:#1e3a8a;color:#fff;border-color:#1e3a8a}',
-      '#settingsSubmenu2 .acx-settings-page-link{list-style:none;margin:.3rem 0}',
-      '#settingsSubmenu2 .acx-settings-page-link button{display:flex;align-items:center;justify-content:space-between;width:100%;padding:.55rem .65rem;text-align:left;font-size:12px;font-weight:700;border-radius:7px;color:inherit}',
-      '#settingsSubmenu2 .acx-settings-page-link button:hover{background:#facc15;color:#111827}',
+      '#settingsSubmenu2 .acx-settings-page-link{list-style:none;margin:0}',
       'html.dark .acx-settings-page-head{border-color:#334155;color:#e5e7eb}',
       'html.dark .acx-settings-page-head>div:first-child{background:#263b5c!important}',
       'html.dark .acx-settings-page-nav{background:#1e293b;border-color:#334155;color:#e5e7eb}',
@@ -1254,7 +1252,8 @@ try{
         li.setAttribute('data-settings-page-link', group.id);
         var button = document.createElement('button');
         button.type = 'button';
-        button.innerHTML = '<span>' + group.icon + ' ' + group.title + '</span><span aria-hidden="true">›</span>';
+        button.className = 'w-full text-left p-1 rounded transition-all duration-300 hover:bg-yellow-400 hover:text-black hover:shadow-lg';
+        button.textContent = group.icon + ' ' + group.title;
         button.addEventListener('click', function () {
           var first = group.items[0][0];
           if (typeof window.showTab === 'function') window.showTab(first);
