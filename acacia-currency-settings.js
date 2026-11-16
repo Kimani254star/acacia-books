@@ -38,6 +38,7 @@
   }
   function buildCurrencies() {
     var panel = $('currenciesTab'); if (!panel) return false;
+    panel.hidden = false; panel.classList.remove('hidden'); panel.style.display = 'block'; panel.style.width = '100%'; panel.style.maxWidth = '100%'; panel.style.overflow = 'visible';
     style();
     var currentRates = rates(), b = base();
     var names = Object.assign({}, CURRENCIES);
@@ -92,8 +93,8 @@
   }
   function buildDeveloper() {
     var panel = $('integrationsHubTab'); if (!panel) return false;
-    style(); panel.hidden = false;
-    contentHost(panel, 'currencies').innerHTML = '<div class="acx-cur-wrap"><div class="acx-cur-head"><div class="ico">🔌</div><div><div class="acx-cur-title">Developer</div><div class="acx-cur-sub">Manage connections, API access and webhooks for Acacia Books.</div></div></div><div class="acx-cur-card"><strong style="color:'+PRIMARY+'">Developer tools</strong><p class="acx-cur-muted" style="margin:5px 0 12px">Choose a tool below to configure your integrations and data connections.</p><div class="acx-dev-grid">'+[
+    style(); panel.hidden = false; panel.classList.remove('hidden'); panel.style.display = 'block'; panel.style.width = '100%'; panel.style.maxWidth = '100%'; panel.style.overflow = 'visible';
+    contentHost(panel, 'developer').innerHTML = '<div class="acx-cur-wrap"><div class="acx-cur-head"><div class="ico">🔌</div><div><div class="acx-cur-title">Developer</div><div class="acx-cur-sub">Manage connections, API access and webhooks for Acacia Books.</div></div></div><div class="acx-cur-card"><strong style="color:'+PRIMARY+'">Developer tools</strong><p class="acx-cur-muted" style="margin:5px 0 12px">Choose a tool below to configure your integrations and data connections.</p><div class="acx-dev-grid">'+[
       ['connectionsTab','🔌','Connections','Connect third-party apps and services.'],['apiKeysTab','🔑','API Keys','Create and manage API access keys.'],['incomingWebhooksTab','📥','Incoming Webhooks','Receive events from external systems.'],['outgoingWebhooksTab','📤','Outgoing Webhooks','Send Acacia events to other systems.'],['webFormsTab','📝','Web Forms','Manage public forms and submissions.'],['dataManagementTab','🗄️','Data Management','Import, export and manage business data.']
     ].map(function(x){return '<button type="button" class="acx-dev-link" data-dev-go="'+x[0]+'"><span>'+x[1]+'</span><strong>'+x[2]+'</strong><span class="acx-cur-muted">'+x[3]+'</span></button>';}).join('')+'</div></div></div>';
     panel.querySelectorAll('[data-dev-go]').forEach(function(btn){btn.onclick=function(){if(typeof window.showTab==='function')window.showTab(btn.getAttribute('data-dev-go'));};});
