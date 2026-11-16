@@ -44,17 +44,6 @@
     m.querySelectorAll('.acx-cost-method').forEach(function(sel){sel.onchange=function(){window.AcaciaCosting.setMethod(wh,Number(sel.dataset.i),sel.value)}});
     document.getElementById('acxCostAllocate').onclick=function(){try{var ids=chosen(),cost=num(document.getElementById('acxCostLanded').value);if(!ids.length)return alert('Select at least one product');if(!confirm('Allocate '+cost.toFixed(2)+' '+base()+' across '+ids.length+' products?'))return;var n=window.AcaciaCosting.bulkLandedCost(wh,ids,cost,document.getElementById('acxCostBasis').value);alert('Landed cost allocated across '+n+' product(s).');m.remove();open()}catch(e){alert(e.message)}};
   }
-  // Costing remains in Settings Hub, alongside the existing Costing and Bulk Costing pages.
-  // Do not add controls to Inventory: these settings are intentionally managed from Settings.
-  function mount(){
-    [['#costingTab','acxCostingOpen','⚖️ Costing methods & product costs'],['#bulkCostingTab','acxBulkCostingOpen','🚢 Bulk costing tools']].forEach(function(cfg){
-      var tab=document.querySelector(cfg[0]);if(!tab||document.getElementById(cfg[1]))return;
-      var head=tab.querySelector('h2');if(!head)return;
-      var b=document.createElement('button');b.id=cfg[1];b.type='button';b.textContent=cfg[2];
-      b.style.cssText='display:block;margin:8px 0 14px;background:#1e3a8a;color:white;padding:8px 12px;border-radius:7px;font-weight:700';
-      b.onclick=open;head.insertAdjacentElement('afterend',b);
-    });
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
-  new MutationObserver(mount).observe(document.documentElement,{childList:true,subtree:true});
+  function mount(){var head=document.querySelector('#inventoryTab h2');if(!head||document.getElementById('acxCostingOpen'))return;var b=document.createElement('button');b.id='acxCostingOpen';b.type='button';b.textContent='⚖️ Costing & Bulk Costing';b.style.cssText='margin:8px 0;background:#1e3a8a;color:white;padding:8px 12px;border-radius:7px;font-weight:700';b.onclick=open;head.insertAdjacentElement('afterend',b)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();new MutationObserver(mount).observe(document.documentElement,{childList:true,subtree:true});
 })();
