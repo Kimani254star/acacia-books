@@ -1,5 +1,5 @@
-/* Acacia Books — unified draft registers for Sales, Purchase, Accounting and Inventory.
-   Reads existing draft records only; never posts or changes transaction data. */
+/* Acacia Books — unified draft registers for Sales, Purchase, Funds, Accounting and Payroll.
+   Inventory is intentionally excluded from the central draft register. */
 (function () {
   "use strict";
   var HUBS = {
@@ -22,10 +22,6 @@
     payroll: {
       title: "Payroll Hub Drafts", tab: "employeesTab",
       keys: /payroll|employee|payslip|grosspay|earnings|deduction|statutory|attendance|leave|overtime|salary|wage/i
-    },
-    inventory: {
-      title: "Inventory Drafts", tab: "inventoryTab",
-      keys: /inventory|stock|transfer|bundle|assembly|package|costing|pricelist|shipment|adjustment|stocktake|damagedstock|expireditems/i
     }
   };
   var KEY_HUBS = {
@@ -33,8 +29,7 @@
     purchase: ["bulkBills","bills","supplierBills","purchaseOrders","purchaseOrderDrafts","grns","supplierDebitNotes","purchaseReturns","supplierQuotes","supplierDrafts","purchaseReturnDrafts","recurringBills","recurringPayments","billPayments"],
     funds: ["banks","bankMappings","bankAccounts","bankDrafts","funds","cashAccounts","cashTransactions","bankTransfers","fundTransfers","deposits","withdrawals","expenses","incomeRecords","pettyCash","receipts","customerPayments","supplierPayments","billPayments","paymentsMade","bankReconciliations"],
     accounting: ["manualJournalDraft","recurringJournalDraft","journalEntries","manualJournals","recurringJournals","manualTransactions","operationalCosts","equityRecords","currentAccounts","directorAccount","budgets","budgetHistory","budgetVariance","taxAdjustments","taxPayments","currencyAdjustments","chartOfAccountsDrafts","nonCurrentLiabilityDraft"],
-    payroll: ["payrollDrafts","payrollRuns","payrollRecords","payslipDrafts","payslips","grossPayroll","earnings","deductions","statutoryDeductions","attendance","leaveRecords","overtime","employeeDrafts","salaryAdvances"],
-    inventory: ["inventoryDrafts","stockDrafts","inventoryItems","inventories","stockItems","stockAdjustments","stockTransfers","stocktakes","damagedStock","expiredItems","assemblies","bundles","shipments","inventoryCosting","itemDrafts"]
+    payroll: ["payrollDrafts","payrollRuns","payrollRecords","payslipDrafts","payslips","grossPayroll","earnings","deductions","statutoryDeductions","attendance","leaveRecords","overtime","employeeDrafts","salaryAdvances"]
   };
   var current = "sales";
   function parse(v) { try { return JSON.parse(v); } catch (_) { return null; } }
@@ -51,7 +46,6 @@
     if (/journal|accounting|accountant|manualtransaction|taxadjust|taxpayment|equity|liabilit|asset|operationalcost|budget|currencyadjust|chartofaccount/.test(s)) return "accounting";
     if (/purchase|supplier|bill|grn|goodsreceived|debitnote|purchasereturn|recurringpayment/.test(s)) return "purchase";
     if (/invoice|sales|quote|creditnote|delivery|receipt|customerpayment|salesreturn|bulkorder/.test(s)) return "sales";
-    if (/inventory|stock|transfer|bundle|assembly|package|costing|pricelist|shipment|adjustment|stocktake|damaged|expired/.test(s)) return "inventory";
     return "";
   }
   function recordHint(v) {
@@ -131,7 +125,7 @@
       if (key === "acxUniversalDrafts" && Array.isArray(data)) {
         data.forEach(function (v, n) {
           var h = v && (v.hub || v.moduleHub) || classify(recordHint(v) + " " + String(v && v.sec || ""));
-          if (!h && v && v.sec) { var sec = String(v.sec).toLowerCase(); if (/payroll|employee|payslip|attendance|earnings/.test(sec)) h = "payroll"; else if (/fund|bank|cash|payment|receipt/.test(sec)) h = "funds"; else if (/journal|account|asset|equity|liabilit|tax|budget/.test(sec)) h = "accounting"; else if (/purchase|supplier|bill|grn/.test(sec)) h = "purchase"; else if (/inventory|stock|warehouse|shipment|bundle|movement/.test(sec)) h = "inventory"; else if (/invoice|sales|quote|order|credit|delivery/.test(sec)) h = "sales"; }
+          if (!h && v && v.sec) { var sec = String(v.sec).toLowerCase(); if (/payroll|employee|payslip|attendance|earnings/.test(sec)) h = "payroll"; else if (/fund|bank|cash|payment|receipt/.test(sec)) h = "funds"; else if (/journal|account|asset|equity|liabilit|tax|budget/.test(sec)) h = "accounting"; else if (/purchase|supplier|bill|grn/.test(sec)) h = "purchase"; else if (/invoice|sales|quote|order|credit|delivery/.test(sec)) h = "sales"; }
           if (h === hub) add(out,key,n,v,h,"universal");
         });
         continue;
@@ -199,6 +193,7 @@
         '<td class="p-2">'+esc(d.amount || "—")+'</td>' +
         '<td class="p-2"><span class="inline-block rounded-full bg-amber-50 text-amber-800 px-2 py-1 text-xs font-semibold">DRAFT</span></td>' +
         '<td class="p-2 whitespace-nowrap"><button class="text-blue-800 font-semibold mr-3" onclick="acxContinueDraft('+i+')">Continue Editing</button>' +
+        (d.meta === "universal" ? '<button class="bg-blue-900 text-white px-2 py-1 rounded text-xs mr-2" onclick="acxCompleteUniversalDraft(\''+esc(d.record.id)+'\')">Complete</button>' : '') +
         '<button class="text-red-700" onclick="acxDeleteHubDraft('+i+')">Delete</button></td></tr>';
     }).join("") : '<tr><td colspan="6" class="p-6 text-center text-gray-500">No drafts found in this hub yet. Save unfinished work as Draft in a module and it will appear here.</td></tr>';
   };
