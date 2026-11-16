@@ -48,3 +48,12 @@ INVENTORY COSTING & BULK COSTING (2026-11-16)
 - Bulk landed-cost allocation distributes an additional shipment cost by current inventory value or quantity.
 - Exposes window.AcaciaCosting.receive(...) and issue(...) for receipt/issue integrations.
 - Important limitation: this patch adds the costing engine and controls, but does not yet rewire every legacy purchase, sales, return, POS, transfer, and journal posting path to call receive/issue. Do not treat FIFO COGS or financial statements as production-complete until those workflows are integrated and tested. Existing transactions are preserved.
+
+HUB DRAFT REGISTERS (2026-11-16)
+--------------------------------
+- Added a Drafts entry under Sales Hub, Purchase Hub, Accounting Hub and Inventory.
+- Each hub register reads existing local draft records from browser storage and displays the draft type, name/reference, date, amount and status.
+- Drafts are not converted into posted transactions by this register. Existing source records are left intact.
+- Open module takes the user to the corresponding source module; it does not itself post or approve a draft.
+- Draft counts are shown beside each hub's Drafts menu entry. Refresh reloads the current register.
+- Static validation: JavaScript syntax checks passed. Browser-level workflow and record-by-record resume testing are still required.
