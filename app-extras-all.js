@@ -90,6 +90,7 @@ try{
     } catch (e) { /* ignore */ }
   }
 
+  var lockCtx = null;
   function lockOut(whole) {
     var o = document.getElementById("acxDeletedLock");
     if (!o) {
@@ -104,12 +105,85 @@ try{
       (whole ? "This company account has been deleted or deactivated and can no longer be used."
              : "Your access to this company has been removed.") +
       " Please contact your administrator or support if you think this is a mistake.</p>" +
-      '<button id="acxDeletedOk" style="background:#1e3a8a;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-weight:600;cursor:pointer">OK</button></div>';
+      '<button id="acxDeletedRestore" style="background:#16a34a;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-weight:600;cursor:pointer;margin-right:8px">Request restore</button><button id="acxDeletedOk" style="background:#1e3a8a;color:#fff;border:0;border-radius:8px;padding:10px 22px;font-weight:600;cursor:pointer">OK</button></div>';
+    var rb = document.getElementById("acxDeletedRestore");
+    if (rb) rb.onclick = function () { var l = lockCtx || {}; restoreDialog(l.cid, l.login, !!whole); };
     document.getElementById("acxDeletedOk").onclick = function () {
       try { localStorage.removeItem("loggedInUser"); } catch (e) {}
       location.reload();
     };
   }
+
+
+  /* ---- Ask Support to restore a deleted account (needs acacia_account_restore.sql) ---- */
+  async function rpcAny(fn, args) {
+    var r = await fetch(window.__SUPA_URL__ + "/rest/v1/rpc/" + fn, {
+      method: "POST",
+      headers: { apikey: window.__SUPA_KEY__, Authorization: "Bearer " + window.__SUPA_KEY__, "Content-Type": "application/json" },
+      body: JSON.stringify(args)
+    });
+    var t = await r.text(), j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
+    if (!r.ok) throw new Error((j && (j.message || j.hint)) || ("Request failed (" + r.status + ")"));
+    return j;
+  }
+  function escH(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function restoreDialog(cid, email, whole) {
+    var old = document.getElementById("acxRestoreDlg"); if (old) old.remove();
+    var o = document.createElement("div");
+    o.id = "acxRestoreDlg";
+    o.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:rgba(11,18,32,.88);display:flex;align-items:center;justify-content:center;padding:20px;font-family:system-ui,sans-serif";
+    var inp = "width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:9px 11px;margin:0 0 9px;font-size:14px";
+    o.innerHTML = '<div style="background:#fff;color:#0f172a;max-width:430px;width:100%;border-radius:14px;padding:22px">' +
+      '<h3 style="margin:0 0 6px;font-size:18px">' + (whole ? "This company account was deleted" : "Your access was removed") + '</h3>' +
+      '<p style="margin:0 0 12px;color:#475569;font-size:13px;line-height:1.5">If this was a mistake, ask Acacia Support to restore it. Support will review and approve your request.</p>' +
+      '<div id="acxRestoreBody"></div>' +
+      '<div style="text-align:right;margin-top:6px"><button id="acxRestoreClose" style="background:#e2e8f0;border:0;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600">Close</button></div></div>';
+    document.body.appendChild(o);
+    var body = o.querySelector("#acxRestoreBody");
+    o.querySelector("#acxRestoreClose").onclick = function () { o.remove(); };
+    function note(msg, color) { return '<div style="background:' + color + ';border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:10px">' + msg + "</div>"; }
+    function showForm(errMsg, extra) {
+      body.innerHTML = (extra || "") +
+        '<div style="font-size:12px;color:#64748b;margin-bottom:8px">Company ID: <b>' + escH(cid) + "</b><br>Email: <b>" + escH(email) + "</b></div>" +
+        '<input id="acxRsName" placeholder="Your name" style="' + inp + '">' +
+        '<input id="acxRsPhone" placeholder="Phone (optional)" style="' + inp + '">' +
+        '<textarea id="acxRsMsg" rows="3" placeholder="Why should it be restored? (optional)" style="' + inp + 'resize:vertical"></textarea>' +
+        '<div id="acxRsErr" style="color:#dc2626;font-size:12px;min-height:16px;margin-bottom:6px">' + escH(errMsg || "") + "</div>" +
+        '<button id="acxRsSend" style="background:#1e3a8a;color:#fff;border:0;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer">Request restore</button>';
+      body.querySelector("#acxRsSend").onclick = async function () {
+        var b = this; b.disabled = true; b.textContent = "Sending...";
+        try {
+          await rpcAny("acx_request_restore", {
+            p_company: cid, p_email: email,
+            p_name: body.querySelector("#acxRsName").value, p_phone: body.querySelector("#acxRsPhone").value,
+            p_message: body.querySelector("#acxRsMsg").value, p_company_name: null, p_scope: whole ? "company" : "user"
+          });
+          showStatus();
+        } catch (e) {
+          b.disabled = false; b.textContent = "Request restore";
+          body.querySelector("#acxRsErr").textContent = e.message || "Could not send the request.";
+        }
+      };
+    }
+    async function showStatus() {
+      body.innerHTML = '<div style="color:#64748b;font-size:13px">Checking...</div>';
+      var st = null;
+      try { st = await rpcAny("acx_restore_status", { p_company: cid, p_email: email }); }
+      catch (e) { showForm("Could not reach Support: " + (e.message || e)); return; }
+      var s = st && st.status;
+      if (s === "pending") {
+        body.innerHTML = note("\u23F3 <b>Request sent.</b> Support has been notified and will approve it soon. Come back and press <b>Check again</b>.", "#fef3c7") +
+          '<button id="acxRsAgain" style="background:#1e3a8a;color:#fff;border:0;border-radius:8px;padding:9px 16px;font-weight:600;cursor:pointer">Check again</button>';
+        body.querySelector("#acxRsAgain").onclick = showStatus;
+      } else if (s === "approved") {
+        body.innerHTML = note("\u2705 <b>Approved.</b> Your account has been restored. Close this window and sign in again.", "#dcfce7");
+      } else if (s === "rejected") {
+        showForm("", note("\u274C Support did not approve the last request" + (st.note ? ": " + escH(st.note) : ".") + " You can send a new one.", "#fee2e2"));
+      } else showForm("");
+    }
+    showStatus();
+  }
+  window.acxRestoreDialog = restoreDialog;
 
   /* ---- 1. Gate every login --------------------------------------------- */
   function resolveCompanyId(email, companyInput) {
@@ -137,8 +211,7 @@ try{
             var whole = (await effectiveState(cid, "")) === "deleted";
             purge(cid, email, whole);
             try { if (typeof hideAppLoader === "function") hideAppLoader(); } catch (e) {}
-            alert(whole ? "\u274C This company account has been deleted."
-                        : "\u274C Your access to this company has been removed.");
+            restoreDialog(cid, email, whole);
             return false;
           }
         }
@@ -162,6 +235,7 @@ try{
       if (st === "deleted") {
         var whole = (await effectiveState(me.companyId, "")) === "deleted";
         purge(me.companyId, login, whole);
+        lockCtx = { cid: me.companyId, login: login };
         lockOut(whole);
       }
     } finally { busy = false; }
