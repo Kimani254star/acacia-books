@@ -2496,3 +2496,1480 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   }
   if (document.readyState === "complete") acxStock_sync(); else window.addEventListener("load", acxStock_sync);
 })();
+
+
+/* ===== merged from acacia-session.js ===== */
+/* acacia-session.js - sends the Acacia session token with every Supabase request.
+ * Load FIRST in <head> (before supabase-js / any app script). Tokens come from the acx_login RPC. */
+(function (w) {
+  'use strict';
+  if (w.AcxSession) return;
+  var BASE = 'https://xglsampckermarjpczdf.supabase.co/rest/v1/';
+  var ANON = 'sb_publishable_x-dPR7pzhvJgag9soW0I8w_yfKTmi6A';
+  var KEY = 'acx_sessions', MAX = 8, rawFetch = w.fetch;
+
+  function list() { try { var a = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(a) ? a.filter(function (t) { return /^[0-9a-f]{64}$/.test(t); }) : []; } catch (e) { return []; } }
+  function save(a) { try { if (a.length) localStorage.setItem(KEY, JSON.stringify(a.slice(-MAX))); else localStorage.removeItem(KEY); } catch (e) {} }
+  function add(t) { if (!/^[0-9a-f]{64}$/.test(String(t || ''))) return; var a = list().filter(function (x) { return x !== t; }); a.push(t); save(a); }
+  function clear(logout) {
+    var a = list(); save([]);
+    if (logout && rawFetch) a.forEach(function (t) {
+      try { rawFetch.call(w, BASE + 'rpc/acx_logout', { method: 'POST', headers: { apikey: ANON, Authorization: 'Bearer ' + ANON, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: t }), keepalive: true }); } catch (e) {}
+    });
+  }
+
+  if (rawFetch) w.fetch = function (input, init) {
+    try {
+      var a = list();
+      var url = typeof input === 'string' ? input : (input && input.url) || String(input || '');
+      if (a.length && url.indexOf(BASE) === 0) {
+        if (typeof Request !== 'undefined' && input instanceof Request) {
+          var h = new Headers(input.headers); h.set('x-acx-session', a.join(',')); input = new Request(input, { headers: h });
+        } else {
+          init = Object.assign({}, init); var hh = new Headers(init.headers || {}); hh.set('x-acx-session', a.join(',')); init.headers = hh;
+        }
+      }
+    } catch (e) {}
+    return rawFetch.call(this, input, init);
+  };
+
+  /* Ask the server to check a login. Returns {status:'ok'|'denied'|'missing'|'error', rows:[...]}; rows carry no password fields and one 'session' each.
+     Nothing is stored: the caller decides which row to accept and calls add(row.session). */
+  var recent = { k: '', t: 0 };
+  async function login(email, password, company) {
+    try {
+      var em = String(email || '').trim().toLowerCase();
+      var r = await rawFetch.call(w, BASE + 'rpc/acx_login', { method: 'POST', headers: { apikey: ANON, Authorization: 'Bearer ' + ANON, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_email: em, p_password: password, p_company: company || null }) });
+      if (r.status === 404) return { status: 'missing', rows: [] };
+      if (!r.ok) return { status: 'error', rows: [] };
+      var rows = await r.json(); rows = Array.isArray(rows) ? rows : [];
+      if (rows.length) recent = { k: em, t: Date.now() };
+      return { status: rows.length ? 'ok' : 'denied', rows: rows };
+    } catch (e) { return { status: 'network', rows: [] }; }
+  }
+
+  /* For apps whose own login runs in the browser (Books): after it succeeds, ask the server for a session. */
+  async function start(email, password, company) {
+    if (recent.k && recent.k === String(email || '').trim().toLowerCase() && Date.now() - recent.t < 60000) return true;   /* login() just did this */
+    try {
+      var r = await rawFetch.call(w, BASE + 'rpc/acx_login', { method: 'POST', headers: { apikey: ANON, Authorization: 'Bearer ' + ANON, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_email: String(email || '').trim().toLowerCase(), p_password: password, p_company: company || null }) });
+      if (!r.ok) return false;
+      var rows = await r.json(); if (!Array.isArray(rows) || !rows.length) return false;
+      rows.forEach(function (x) { if (x && x.session) add(x.session); });
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* Books: check the password on the server first. Only when acx_login is missing or unreachable does it use the old
+     'fallback' (which reads the account row). Returns the account data to merge into the local users list, or null. */
+  async function accountFirst(email, company, fallback) {
+    var pass = ''; try { pass = String((w.document.getElementById('loginPass') || {}).value || '').trim(); } catch (e) {}
+    if (!pass) return fallback();
+    var res = await login(email, pass, company);
+    if (res.status === 'missing' || res.status === 'network') return fallback();
+    if (res.status !== 'ok') return null;
+    var row = res.rows[0];
+    if (company && w.acxCompanyMatches) {
+      var m = res.rows.filter(function (x) { var d = Object.assign({}, x.data || {}); d.companyId = d.companyId || x.company_id; return w.acxCompanyMatches(d, company); })[0];
+      if (m) row = m;
+    }
+    var u = Object.assign({}, row.data || {}); u.companyId = u.companyId || row.company_id;
+    /* the server just confirmed this password, so keep a salted hash of it on this device for the app's own local check */
+    var sb = new Uint8Array(16); w.crypto.getRandomValues(sb);
+    var salt = Array.prototype.map.call(sb, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+    var dig = await w.crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + ':' + pass));
+    u.passwordHash = Array.prototype.map.call(new Uint8Array(dig), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+    u.passwordSalt = salt; delete u.password;
+    if (row.session) add(row.session);
+    return u;
+  }
+
+  w.AcxSession = { add: add, list: list, clear: clear, start: start, login: login, accountFirst: accountFirst };
+})(window);
+
+/* HTML helpers used by the escaping done in app-1/2/3.js. They are defined here because this file loads first. */
+(function (w) {
+  if (!w.__invEsc) w.__invEsc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  /* for fields that may hold formatted text (notes, terms, descriptions): keep simple formatting, drop scripts, handlers and unsafe links */
+  w.__acxClean = function (v) {
+    if (v == null) return ''; v = String(v);
+    if (!/[<&]/.test(v)) return v;
+    try {
+      var d = new DOMParser().parseFromString('<body>' + v + '</body>', 'text/html');
+      d.querySelectorAll('script,style,iframe,object,embed,link,meta,base,form,svg,math,template').forEach(function (n) { n.remove(); });
+      d.querySelectorAll('*').forEach(function (el) {
+        Array.prototype.slice.call(el.attributes).forEach(function (a) {
+          var n = a.name.toLowerCase(), val = a.value;
+          if (n.indexOf('on') === 0 || n === 'srcdoc' || n === 'formaction' || ((n === 'href' || n === 'src' || n === 'action' || n === 'xlink:href') && !/^\s*(https?:|mailto:|tel:|#|\/|data:image\/(png|jpe?g|gif|webp);)/i.test(val))) el.removeAttribute(a.name);
+        });
+      });
+      return d.body.innerHTML;
+    } catch (e) { return w.__invEsc(v); }
+  };
+})(window);
+
+
+
+/* ===== merged from acacia-hub-drafts.js ===== */
+/* Acacia Books — unified draft registers for Sales, Purchase, Funds, Accounting and Payroll.
+   Inventory is intentionally excluded from the central draft register. */
+(function () {
+  "use strict";
+  var HUBS = {
+    sales: {
+      title: "Sales Hub Drafts", tab: "invoicesTab",
+      keys: /invoice|sales|quote|order|creditnote|credit_note|delivery|receipt|customerpayment|bulkInvoiceDrafts|recurringinvoice/i
+    },
+    purchase: {
+      title: "Purchase Hub Drafts", tab: "supplierBillsTab",
+      keys: /purchase|supplier|bill|grn|goodsreceived|debitnote|debit_note|purchasereturn|bulkBill|recurringpayment/i
+    },
+    funds: {
+      title: "Funds Hub Drafts", tab: "bankAccountsTab",
+      keys: /fund|bank|cash|payment|receipt|deposit|withdraw|transferfund|expense|income|pettycash|reconcil/i
+    },
+    accounting: {
+      title: "Accountant Hub Drafts", tab: "manualJournalsTab",
+      keys: /journal|account|equity|liabilit|asset|taxadjust|taxpayment|transactiondraft|operationalcost|budget|currencyadjust|chartofaccount/i
+    },
+    payroll: {
+      title: "Payroll Hub Drafts", tab: "employeesTab",
+      keys: /payroll|employee|payslip|grosspay|earnings|deduction|statutory|attendance|leave|overtime|salary|wage/i
+    }
+  };
+  var KEY_HUBS = {
+    sales: ["bulkInvoiceDrafts","invoiceDrafts","creditNoteDrafts","salesReturnDrafts","deliveryDrafts","invoices","bulkInvoices","quotes","orders","salesOrders","creditNotes","salesReturns","deliveries","receipts","customerPayments","recurringInvoices"],
+    purchase: ["bulkBills","bills","supplierBills","purchaseOrders","purchaseOrderDrafts","grns","supplierDebitNotes","purchaseReturns","supplierQuotes","supplierDrafts","purchaseReturnDrafts","recurringBills","recurringPayments","billPayments"],
+    funds: ["banks","bankMappings","bankAccounts","bankDrafts","funds","cashAccounts","cashTransactions","bankTransfers","fundTransfers","deposits","withdrawals","expenses","incomeRecords","pettyCash","receipts","customerPayments","supplierPayments","billPayments","paymentsMade","bankReconciliations"],
+    accounting: ["manualJournalDraft","recurringJournalDraft","journalEntries","manualJournals","recurringJournals","manualTransactions","operationalCosts","equityRecords","currentAccounts","directorAccount","budgets","budgetHistory","budgetVariance","taxAdjustments","taxPayments","currencyAdjustments","chartOfAccountsDrafts","nonCurrentLiabilityDraft"],
+    payroll: ["payrollDrafts","payrollRuns","payrollRecords","payslipDrafts","payslips","grossPayroll","earnings","deductions","statutoryDeductions","attendance","leaveRecords","overtime","employeeDrafts","salaryAdvances"]
+  };
+  var current = "sales";
+  function parse(v) { try { return JSON.parse(v); } catch (_) { return null; } }
+  function isDraft(v) {
+    if (!v || typeof v !== "object") return false;
+    if (v.isDraft === true || v.__isDraft === true) return true;
+    var s = v.status || v.state || v.documentStatus || v.transactionStatus || "";
+    return /^\s*draft\s*$/i.test(String(s));
+  }
+  function classify(haystack) {
+    var s = String(haystack || "").toLowerCase();
+    if (/payroll|payslip|grosspay|earnings|deduction|statutory|attendance|leave|overtime|salary|wage|employee/.test(s)) return "payroll";
+    if (/fund|bank|cash|payment|receipt|deposit|withdraw|pettycash|reconcil|expense|income/.test(s)) return "funds";
+    if (/journal|accounting|accountant|manualtransaction|taxadjust|taxpayment|equity|liabilit|asset|operationalcost|budget|currencyadjust|chartofaccount/.test(s)) return "accounting";
+    if (/purchase|supplier|bill|grn|goodsreceived|debitnote|purchasereturn|recurringpayment/.test(s)) return "purchase";
+    if (/invoice|sales|quote|creditnote|delivery|receipt|customerpayment|salesreturn|bulkorder/.test(s)) return "sales";
+    return "";
+  }
+  function recordHint(v) {
+    if (!v || typeof v !== "object") return "";
+    return [v.type,v.documentType,v.module,v.source,v.category,v.section,v.sec,v.table,v.scope,v.label,v.name,v.description,v.hub,v.area].join(" ");
+  }
+  function nameOf(v, key) {
+    if (v && typeof v === "object") {
+      var fields = ["name","itemName","productName","customerName","supplierName","description","invoiceNumber","invoiceNo","invoiceNoBase","billNumber","orderNumber","reference","referenceNo","number","no","id"];
+      for (var i=0;i<fields.length;i++) if (v[fields[i]] != null && typeof v[fields[i]] !== "object" && String(v[fields[i]]).trim()) return String(v[fields[i]]);
+      if (Array.isArray(v.customers) && v.customers.length) return "Bulk invoice — " + v.customers.join(", ");
+      if (Array.isArray(v.items) && v.items.length) return (v.items[0].name || v.items[0].itemName || "Draft document") + (v.items.length > 1 ? " +" + (v.items.length-1) + " items" : "");
+    }
+    return key || "Untitled draft";
+  }
+  function typeOf(key, v) {
+    var s = (key + " " + recordHint(v)).toLowerCase();
+    if (/invoice/.test(s)) return "Invoice";
+    if (/quote/.test(s)) return "Quotation";
+    if (/purchase.?order|supplierpurchaseorder/.test(s)) return "Purchase Order";
+    if (/order/.test(s)) return "Sales Order";
+    if (/bill/.test(s)) return "Purchase Bill";
+    if (/journal/.test(s)) return "Journal Entry";
+    if (/transfer/.test(s)) return "Stock Transfer";
+    if (/assembly|bundle/.test(s)) return "Assembly / Bundle";
+    if (/shipment/.test(s)) return "Shipment";
+    if (/adjust/.test(s)) return "Adjustment";
+    if (/cost/.test(s)) return "Costing";
+    if (/credit/.test(s)) return "Credit Note";
+    if (/debit/.test(s)) return "Debit Note";
+    if (/receipt/.test(s)) return "Receipt";
+    if (/delivery/.test(s)) return "Delivery";
+    if (/bank/.test(s)) return "Bank Reconciliation";
+    if (/asset|liabilit|equity/.test(s)) return "Accounting Entry";
+    if (/inventory|stock|item/.test(s)) return "Inventory";
+    return (v && (v.type || v.documentType)) || "Saved Draft";
+  }
+  function routeFor(key, v) {
+    var s = (key + " " + recordHint(v)).toLowerCase();
+    if (/quote/.test(s)) return "quotesTab";
+    if (/purchase.?order|supplierpurchaseorder/.test(s)) return "supplierPurchaseOrdersTab";
+    if (/order/.test(s)) return /purchase|supplier/.test(s) ? "supplierPurchaseOrdersTab" : "ordersTab";
+    if (/bill|purchase|supplier/.test(s)) return "supplierBillsTab";
+    if (/journal|transactiondraft|accounting/.test(s)) return "manualJournalsTab";
+    if (/transfer|movement/.test(s)) return "movementTab";
+    if (/bundle|assembly/.test(s)) return "BundleItems";
+    if (/shipment/.test(s)) return "shipmentsTab";
+    if (/cost/.test(s)) return "inventoryTab";
+    if (/credit/.test(s)) return "creditNoteTab";
+    if (/debit/.test(s)) return "supplierDebitNotesTab";
+    if (/delivery/.test(s)) return "deliveryTab";
+    if (/receipt/.test(s)) return "receiptsTab";
+    if (/invoice|sales/.test(s)) return "invoicesTab";
+    return HUBS[current].tab;
+  }
+  function add(out, key, index, record, hub, meta) {
+    var id = record && record.id != null ? String(record.id) : "";
+    var token = key + "|" + String(index) + "|" + id;
+    if (out.some(function (x) { return x.token === token; })) return;
+    var date = record && (record.date || record.createdAt || record.updatedAt || record.transactionDate || record.when || record.at) || "";
+    var amount = record && (record.total || record.amount || record.grandTotal || record.netAmount || record.balance || "") || "";
+    out.push({
+      token: token, key: key, index: index, record: record, hub: hub, meta: meta || "",
+      type: typeOf(key, record), name: nameOf(record, key), date: date,
+      amount: amount, status: "Draft"
+    });
+  }
+  function getDrafts(hub) {
+    var out = [];
+    for (var i=0; i<localStorage.length; i++) {
+      var key = localStorage.key(i);
+      if (!key) continue;
+      var data = parse(localStorage.getItem(key));
+      if (data == null) continue;
+
+      /* Generic form drafts created by the universal Save as Draft buttons. */
+      if (key === "acxUniversalDrafts" && Array.isArray(data)) {
+        data.forEach(function (v, n) {
+          var h = v && (v.hub || v.moduleHub) || classify(recordHint(v) + " " + String(v && v.sec || ""));
+          if (!h && v && v.sec) { var sec = String(v.sec).toLowerCase(); if (/payroll|employee|payslip|attendance|earnings/.test(sec)) h = "payroll"; else if (/fund|bank|cash|payment|receipt/.test(sec)) h = "funds"; else if (/journal|account|asset|equity|liabilit|tax|budget/.test(sec)) h = "accounting"; else if (/purchase|supplier|bill|grn/.test(sec)) h = "purchase"; else if (/invoice|sales|quote|order|credit|delivery/.test(sec)) h = "sales"; }
+          if (h === hub) add(out,key,n,v,h,"universal");
+        });
+        continue;
+      }
+
+      var keyHub = "";
+      Object.keys(KEY_HUBS).some(function (h) {
+        if (KEY_HUBS[h].some(function (k) { return k.toLowerCase() === key.toLowerCase(); }) || HUBS[h].keys.test(key)) {
+          keyHub = h; return true;
+        }
+        return false;
+      });
+      var list = Array.isArray(data) ? data : null;
+      if (list) {
+        list.forEach(function (v,n) {
+          if (!v || typeof v !== "object") return;
+          var h = keyHub || classify(recordHint(v));
+          if (h !== hub) return;
+          if (isDraft(v) || /draft/i.test(key)) add(out,key,n,v,h,"array");
+        });
+      } else if (data && typeof data === "object") {
+        /* Single-record draft keys (e.g. manualJournalDraft) and maps (e.g. bankDrafts). */
+        if (isDraft(data) || /draft/i.test(key)) {
+          if (keyHub === hub || classify(recordHint(data)) === hub) add(out,key,"",data,keyHub || hub,"single");
+        } else if (/draft/i.test(key)) {
+          Object.keys(data).forEach(function (subkey) {
+            var v = data[subkey];
+            if (v && typeof v === "object" && (keyHub === hub || classify(recordHint(v)) === hub)) add(out,key,subkey,v,keyHub || hub,"map");
+          });
+        }
+      }
+    }
+    return out;
+  }
+  function esc(v) {
+    return String(v == null ? "" : v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});
+  }
+  function showTab(tab) {
+    if (typeof window.showTab === "function") window.showTab(tab);
+    else {
+      var el = document.getElementById(tab);
+      if (el) { document.querySelectorAll('[id$="Tab"]').forEach(function(n){n.classList.add("hidden");}); el.classList.remove("hidden"); }
+    }
+  }
+  window.acxOpenHubDrafts = function(hub) {
+    if (!HUBS[hub]) hub = "sales";
+    current = hub;
+    showTab("acxHubDraftsTab");
+    var title = document.getElementById("acxDraftsTitle");
+    if (title) title.textContent = HUBS[hub].title;
+    window.acxRefreshHubDrafts();
+  };
+  window.acxRefreshHubDrafts = function() {
+    Object.keys(HUBS).forEach(function(h) {
+      var el = document.getElementById("acxDraftCount-" + h);
+      if (el) { var n = getDrafts(h).length; el.textContent = n ? "(" + n + ")" : ""; }
+    });
+    var body = document.getElementById("acxHubDraftRows");
+    if (!body) return;
+    var rows = getDrafts(current);
+    body.innerHTML = rows.length ? rows.map(function(d,i) {
+      return '<tr class="border-b hover:bg-gray-50">' +
+        '<td class="p-2">'+esc(d.type)+'</td><td class="p-2 font-medium">'+esc(d.name)+'</td>' +
+        '<td class="p-2">'+esc(d.date ? String(d.date).slice(0,10) : "—")+'</td>' +
+        '<td class="p-2">'+esc(d.amount || "—")+'</td>' +
+        '<td class="p-2"><span class="inline-block rounded-full bg-amber-50 text-amber-800 px-2 py-1 text-xs font-semibold">DRAFT</span></td>' +
+        '<td class="p-2 whitespace-nowrap"><button class="text-blue-800 font-semibold mr-3" onclick="acxContinueDraft('+i+')">Continue Editing</button>' +
+        (d.meta === "universal" ? '<button class="bg-blue-900 text-white px-2 py-1 rounded text-xs mr-2" onclick="acxCompleteUniversalDraft(\''+esc(d.record.id)+'\')">Complete</button>' : '') +
+        '<button class="text-red-700" onclick="acxDeleteHubDraft('+i+')">Delete</button></td></tr>';
+    }).join("") : '<tr><td colspan="6" class="p-6 text-center text-gray-500">No drafts found in this hub yet. Save unfinished work as Draft in a module and it will appear here.</td></tr>';
+  };
+  window.acxContinueDraft = function(i) {
+    var d = getDrafts(current)[i];
+    if (!d) return;
+    if (d.meta === "universal") {
+      var sec = d.record && d.record.sec;
+      if (sec && document.getElementById(sec)) showTab(sec);
+      else showTab(HUBS[current].tab);
+      var b = document.createElement("button");
+      b.type = "button"; b.setAttribute("data-acx-edit", d.record.id);
+      b.style.display = "none"; document.body.appendChild(b); b.click(); b.remove();
+      return;
+    }
+    showTab(routeFor(d.key,d.record));
+    if (d.key === "manualJournalDraft" && typeof window.restoreJournalDraft === "function") window.restoreJournalDraft();
+    if (d.key === "bulkInvoiceDrafts" && d.record) {
+      var r = d.record;
+      function set(id,val) { var el=document.getElementById(id); if(el && val!=null) { el.value=val; el.dispatchEvent(new Event("change",{bubbles:true})); } }
+      set("bulkInvoiceDate",r.date); set("bulkInvoiceNumber",r.invoiceNoBase); set("bulkInvoiceNetDays",r.netDays);
+      set("bulkInvoiceCurrency",r.currency); set("bulkInvoiceCurrencyRate",r.rate); set("bulkChartAccountSelect",r.account); set("bulkInvoiceSalesPerson",r.salesPerson);
+      var customers=document.getElementById("bulkInvoiceCustomers");
+      if(customers && Array.isArray(r.customers)) Array.from(customers.options).forEach(function(o){o.selected=r.customers.indexOf(o.value)>=0;});
+      try { window.bulkInvoiceItems = Array.isArray(r.items) ? JSON.parse(JSON.stringify(r.items)) : []; if(typeof window.renderBulkInvoiceItems==="function") window.renderBulkInvoiceItems(); if(typeof window.calculateBulkInvoiceTotals==="function") window.calculateBulkInvoiceTotals(); } catch(e) {}
+    }
+  };
+  window.acxDeleteHubDraft = function(i) {
+    var d = getDrafts(current)[i];
+    if (!d || !window.confirm("Delete this saved draft? This cannot be undone.")) return;
+    var data = parse(localStorage.getItem(d.key));
+    if (d.meta === "universal") {
+      var all = Array.isArray(data) ? data : [];
+      localStorage.setItem(d.key,JSON.stringify(all.filter(function(x){return String(x.id)!==String(d.record.id);})));
+    } else if (Array.isArray(data)) {
+      data.splice(Number(d.index),1); localStorage.setItem(d.key,JSON.stringify(data));
+    } else if (d.meta === "map") {
+      delete data[d.index]; localStorage.setItem(d.key,JSON.stringify(data));
+    } else {
+      localStorage.removeItem(d.key);
+    }
+    window.acxRefreshHubDrafts();
+  };
+
+  /* Refresh immediately after native module save actions write to localStorage. */
+  try {
+    if (!Storage.prototype.__acxDraftRefreshHook) {
+      var originalSet = Storage.prototype.setItem;
+      Storage.prototype.setItem = function(k,v) {
+        var result = originalSet.apply(this,arguments);
+        if (this === window.localStorage && typeof window.acxRefreshHubDrafts === "function") window.acxRefreshHubDrafts();
+        return result;
+      };
+      var originalRemove = Storage.prototype.removeItem;
+      Storage.prototype.removeItem = function(k) {
+        var result = originalRemove.apply(this,arguments);
+        if (this === window.localStorage && typeof window.acxRefreshHubDrafts === "function") window.acxRefreshHubDrafts();
+        return result;
+      };
+      Storage.prototype.__acxDraftRefreshHook = true;
+    }
+  } catch(e) {}
+  window.addEventListener("storage",function(){window.acxRefreshHubDrafts();});
+  document.addEventListener("DOMContentLoaded",function(){window.acxRefreshHubDrafts();});
+  setInterval(function(){ if (typeof window.acxRefreshHubDrafts === "function") window.acxRefreshHubDrafts(); },2500);
+})();
+
+
+
+/* ===== merged from acacia-inventory-cleanup.js ===== */
+/* Acacia Books — remove Inventory Hub Drafts and Packing Slips UI. */
+(function () {
+  "use strict";
+  var running = false;
+  function norm(value) { return String(value || "").replace(/\s+/g, " ").trim().toLowerCase(); }
+  function removeNode(node) { if (node && node.parentNode) node.parentNode.removeChild(node); }
+  function clean() {
+    if (running || !document.body) return;
+    running = true;
+    try {
+      var nav = document.getElementById("inventorySubmenu");
+      if (nav) Array.prototype.slice.call(nav.querySelectorAll("button,a,[role=menuitem],li")).forEach(function (el) {
+        var t = norm(el.innerText || el.textContent);
+        if (/^(drafts?|packing slips?)$/.test(t) || /packing.?slips?/.test(t)) removeNode(el.tagName === "LI" ? el : (el.closest("li") || el));
+      });
+      var inventory = document.getElementById("inventoryTab");
+      if (inventory) {
+        Array.prototype.slice.call(inventory.querySelectorAll("button,a,[role=button],table,[id],[data-section]")).forEach(function (el) {
+          var id = norm(el.id);
+          var label = norm(el.innerText || el.textContent);
+          if (/^(save as draft|open drafts|inventory drafts|packing slips?)$/.test(label) ||
+              /(inventory.?drafts?|packing.?slips?)/.test(id) ||
+              /(packing.?slips?)/.test(label)) removeNode(el);
+        });
+        Array.prototype.slice.call(inventory.querySelectorAll('button[onclick*="saveDraft"],button[onclick*="openInventoryDraft"],button[onclick*="packingSlip"]')).forEach(removeNode);
+      }
+      Array.prototype.slice.call(document.querySelectorAll('[id*="packingSlip" i],[id*="packing-slips" i],[id*="inventoryDraft" i],[id*="stockDraft" i],[data-module="inventory-drafts" i],button[onclick*="packingSlip"],a[href*="packingSlip"]')).forEach(removeNode);
+      var draftTabs = document.getElementById("acxDraftHubTabs");
+      if (draftTabs) Array.prototype.slice.call(draftTabs.querySelectorAll("button")).forEach(function (el) {
+        if (/inventory/i.test(el.innerText || el.textContent)) removeNode(el);
+      });
+    } catch (e) { console.warn("[acacia-inventory-cleanup]", e); }
+    running = false;
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", clean);
+  else clean();
+  if (window.MutationObserver) {
+    var observer = new MutationObserver(function () { clean(); });
+    function observe() { if (document.body) observer.observe(document.body, { childList: true, subtree: true }); }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", observe);
+    else observe();
+  }
+  window.addEventListener("load", clean);
+})();
+
+
+
+/* ===== merged from acacia-plan-sidebar.js ===== */
+/* acacia-plan-sidebar.js - the sidebar only shows what the company's plan (and the user's role) includes.
+ *
+ * Why it was not working: filterSidebarByRole() looked for showTab('x') with SINGLE quotes, but the sidebar buttons are
+ * written showTab("x") with double quotes, so no button ever matched and nothing was hidden.
+ *
+ * What this does:
+ *   - hides every sidebar item whose module is not in the plan (Free / Starter / Pro / Business / Enterprise / All Access)
+ *     or not allowed for the signed-in user's role;
+ *   - hides a whole hub (Inventory Hub, Sales Hub ...) when none of its items are available;
+ *   - keeps Dashboard and Plans always visible, so a company can always upgrade;
+ *   - re-checks by itself when the plan, role or modules change (for example after an upgrade);
+ *   - blocks opening a locked module by any other route (it also adds the plan test to acxCanOpenTab).
+ * Load LAST in index.html. */
+(function (W) {
+  "use strict";
+  if (W.__acxPlanSidebar) return;
+  W.__acxPlanSidebar = true;
+
+  var ORDER = ["free", "starter", "pro", "business", "enterprise", "all_access"];
+  var ALWAYS = { dashboard: 1, plansTab: 1 };           /* never hidden */
+  var KEEP_GROUPS = { plansSubmenu: 1 };
+
+  function user() { try { return JSON.parse(localStorage.getItem("loggedInUser") || "null"); } catch (e) { return null; } }
+  function companyPlan(u) {
+    try {
+      var id = String((u && u.companyId) || ""), list = JSON.parse(localStorage.getItem("companies") || "[]") || [];
+      var c = list.filter(function (x) { return String(x.companyId || "") === id; })[0];
+      return c && c.plan ? c.plan : "";
+    } catch (e) { return ""; }
+  }
+  function planIndex(u) {
+    var p = (u && u.plan) || companyPlan(u) || localStorage.getItem("selectedPlan") || "";
+    var n = String(p).toLowerCase().replace(/[\s-]+/g, "_");
+    if (n === "allaccess") n = "all_access";
+    return ORDER.indexOf(n);                               /* -1 = unknown plan: do not filter by plan */
+  }
+  /* same rule the app already uses: an unregistered admin sees everything */
+  function planApplies(u) { return !(u && String(u.role || "").toLowerCase() === "admin" && !u.registered); }
+  function access() { try { return typeof submoduleAccess !== "undefined" ? submoduleAccess : null; } catch (e) { return null; } }
+
+  /* does the plan include this module? */
+  function planSees(tab, pi, sa) {
+    if (ALWAYS[tab]) return true;
+    sa = sa || access();
+    if (!sa || pi < 0 || !Object.prototype.hasOwnProperty.call(sa, tab)) return true;
+    var row = sa[tab];
+    return !Array.isArray(row) || row[pi] !== false;
+  }
+  /* plan AND role/user permission */
+  function canSee(tab, u) {
+    if (ALWAYS[tab]) return true;
+    if (planApplies(u) && !planSees(tab, planIndex(u))) return false;
+    try { if (!origCanOpen(tab)) return false; } catch (e) {}
+    return true;
+  }
+
+  var origCanOpen = typeof W.acxCanOpenTab === "function" ? W.acxCanOpenTab : function () { return true; };
+  /* the same plan test when a module is opened by any other route (a link, a button, the quick-create menu) */
+  W.acxCanOpenTab = function (tab) {
+    if (!origCanOpen(tab)) return false;
+    var u = user();
+    return !planApplies(u) || planSees(tab, planIndex(u));
+  };
+
+  function tabOf(btn) {
+    var m = String(btn.getAttribute("onclick") || "").match(/showTab\(\s*["']([^"']+)["']/);
+    return m ? m[1] : "";
+  }
+  function setHidden(btn, hide) {
+    var li = btn.closest ? btn.closest("li") : null;
+    btn.classList.toggle("hidden", hide);
+    if (li && li.querySelectorAll("button").length === 1) {
+      if (hide) { li.setAttribute("data-acx-plan-hid", "1"); li.style.display = "none"; }
+      else if (li.getAttribute("data-acx-plan-hid")) { li.removeAttribute("data-acx-plan-hid"); li.style.removeProperty("display"); }
+    }
+  }
+
+  function apply() {
+    var u = user(), sb = document.getElementById("sidebar");
+    if (!u || !sb) return;
+    /* 1. individual modules */
+    var tabs = sb.querySelectorAll("button[onclick]");
+    Array.prototype.forEach.call(tabs, function (b) {
+      var id = tabOf(b); if (!id) return;
+      setHidden(b, !canSee(id, u));
+    });
+    /* 2. hubs with nothing left inside */
+    Array.prototype.forEach.call(sb.querySelectorAll("button[onclick]"), function (b) {
+      var m = String(b.getAttribute("onclick") || "").match(/toggleSubmenu\(\s*["']([^"']+)["']/);
+      if (!m || KEEP_GROUPS[m[1]]) return;
+      var ul = document.getElementById(m[1]); if (!ul) return;
+      var any = false;
+      Array.prototype.forEach.call(ul.querySelectorAll("button[onclick]"), function (c) {
+        var id = tabOf(c);
+        if (id && !c.classList.contains("hidden")) any = true;
+        else if (!id) any = true;                          /* a button that is not a module link: keep the hub */
+      });
+      setHidden(b, !any);
+      if (!any) ul.classList.add("hidden");
+    });
+  }
+
+  W.filterSidebarByRole = apply;                           /* the app calls this after sign-in */
+
+  /* re-check when plan / role / modules change, and when the sidebar is (re)drawn */
+  var last = "";
+  function sig() { var u = user() || {}; return [u.plan, u.role, u.registered, JSON.stringify(u.modules || null), localStorage.getItem("selectedPlan"), localStorage.getItem("customModules")].join("|"); }
+  function tick() { var s = sig(); if (s !== last) { last = s; try { apply(); } catch (e) { console.warn("[plan-sidebar]", e); } } }
+  setInterval(tick, 1500);
+  document.addEventListener("DOMContentLoaded", function () { setTimeout(function () { last = ""; tick(); }, 800); });
+  W.addEventListener("storage", function () { tick(); });
+  setTimeout(function () { last = ""; tick(); }, 1200);
+
+  W.acxPlanSidebar = { apply: apply, planSees: planSees, planIndex: planIndex, canSee: canSee };
+})(window);
+
+
+
+/* ===== merged from workflow-rules.js ===== */
+(function (W, D) {
+  'use strict';
+  if (W.__acxWorkflowRulesLoaded) return;
+  W.__acxWorkflowRulesLoaded = true;
+
+  var RULES_KEY = 'acxWorkflowRules';
+  var RUNS_KEY = 'acxWorkflowRuns';
+  var TASKS_KEY = 'acxWorkflowTasks';
+  var REMINDERS_KEY = 'acxWorkflowReminders';
+  var NOTICES_KEY = 'acxWorkflowNotifications';
+  var REVIEWS_KEY = 'acxWorkflowReviewQueue';
+  var currentEdit = null;
+  var conditions = [];
+  var actions = [];
+  var recentEvents = Object.create(null);
+  var internalWrite = false;
+  var sequence = 0;
+  var moduleMap = {
+    invoices: 'Invoices', recurringInvoices: 'Recurring Invoices', bulkInvoices: 'Bulk Invoices',
+    receipts: 'Receipts', customerPayments: 'Customer Payments', payments: 'Customer Payments',
+    customers: 'Customers', quotes: 'Quotations', quotations: 'Quotations', quoteToInvoice: 'Quotations',
+    orders: 'Sales Orders', deliveries: 'Delivery', deliveryOrders: 'Delivery',
+    creditNotes: 'Credit Notes', salesReturns: 'Sales Returns',
+    bills: 'Supplier Bills', supplierBills: 'Supplier Bills', bulkBills: 'Bulk Bills',
+    purchaseOrders: 'Purchase Orders', goodsReceived: 'Goods Received', grns: 'Goods Received',
+    supplierPayments: 'Supplier Payments', billPayments: 'Supplier Payments', purchaseReturns: 'Purchase Returns',
+    supplierDebitNotes: 'Supplier Debit Notes', supplierQuotes: 'Supplier Quotations', suppliers: 'Suppliers',
+    inventory: 'Inventory', stock: 'Inventory', products: 'Products', services: 'Services',
+    stockActivities: 'Stock Activity', movements: 'Stock Movements', transfers: 'Stock Transfers',
+    stockCounts: 'Stock Counts', warehouses: 'Warehouses', packages: 'Packages', bundles: 'Bundles', shipments: 'Shipments',
+    transactions: 'Bank Transactions', banks: 'Banking Accounts', bankAccounts: 'Banking Accounts',
+    manualTransactions: 'Bank Transactions', currentAccTransactions: 'Bank Transactions',
+    expenses: 'Expenses', expenseClaims: 'Expense Claims', operationalCosts: 'Expenses',
+    payrollRecords: 'Payroll', payrollPayments: 'Payroll Payments', employees: 'Employees', attendance: 'Attendance',
+    journalEntries: 'Journals', manualJournals: 'Manual Journals', recurringJournals: 'Recurring Journals',
+    taxPayments: 'Tax Payments', taxAdjustments: 'Tax Adjustments',
+    chartOfAccounts: 'Chart of Accounts', budgets: 'Budgets', projects: 'Projects',
+    otherIncomes: 'Other Income', assetDepreciationEvents: 'Asset Depreciation',
+    customerDrafts: 'Customer Drafts', supplierDrafts: 'Supplier Drafts',
+    writeOffs: 'Write-offs', amendments: 'Amendments',
+    assetFiles: 'Fixed Assets', assetApprovalLogs: 'Asset Approvals', assetDepreciationEvents: 'Asset Depreciation',
+    bankDrafts: 'Banking Drafts', bankMappings: 'Bank Mappings', branches: 'Branches',
+    batchTracking: 'Batch Tracking', damagedStock: 'Damaged Stock', expiredItems: 'Expired Stock',
+    budgets: 'Budgets', budgetData: 'Budgets', budgetHistory: 'Budget History', budgetVariance: 'Budget Variance',
+    projects: 'Projects', projectExpenses: 'Project Expenses', projectRevenue: 'Project Revenue',
+    projectProgress: 'Project Progress', projectTimeline: 'Project Timeline',
+    attendance: 'Attendance', overtimeSummary: 'Overtime', actuals: 'Actuals', progressUpdates: 'Project Updates',
+    userActivities: 'User Activity', auditLogs: 'Audit Logs', notifications: 'Notifications', systemAlerts: 'System Alerts',
+    financialRecords: 'Financial Records', currentAccounts: 'Current Accounts', equityRecords: 'Equity Records',
+    otherIncomes: 'Other Income', shareholderEquity: 'Shareholder Equity', writeOffLogs: 'Write-off Logs'
+  };
+  var seenModuleLabels = Object.create(null);
+  var triggerModules = Object.keys(moduleMap).filter(function (key) { var label = moduleMap[key]; if (seenModuleLabels[label]) return false; seenModuleLabels[label] = true; return true; }).map(function (key) { return { key: key, label: moduleMap[key] }; });
+  var operators = [
+    ['equals', 'Equals'], ['not_equals', 'Does not equal'], ['contains', 'Contains'],
+    ['not_contains', 'Does not contain'], ['greater_than', 'Greater than'],
+    ['greater_or_equal', 'Greater than or equal'], ['less_than', 'Less than'],
+    ['less_or_equal', 'Less than or equal'], ['is_empty', 'Is empty'], ['is_not_empty', 'Is not empty']
+  ];
+  var actionTypes = [
+    ['task', 'Create follow-up task'], ['reminder', 'Create reminder'],
+    ['notification', 'Create in-app notification'], ['review', 'Add to review queue'],
+    ['set_status', 'Update triggering record status']
+  ];
+
+  function read(key, fallback) {
+    try { var value = JSON.parse(W.localStorage.getItem(key) || 'null'); return value == null ? fallback : value; }
+    catch (e) { return fallback; }
+  }
+  function write(key, value) {
+    internalWrite = true;
+    try { W.localStorage.setItem(key, JSON.stringify(value)); }
+    catch (e) { console.error('[Acacia Workflow] Save failed:', e); }
+    finally { internalWrite = false; }
+  }
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function uid(prefix) { return (prefix || 'WF') + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7); }
+  function me() { try { return JSON.parse(W.localStorage.getItem('loggedInUser') || W.localStorage.getItem('currentUser') || 'null') || {}; } catch (e) { return {}; } }
+  function companyId() {
+    var user = me(), selected = '';
+    try { selected = W.localStorage.getItem('currentCompanyId') || W.localStorage.getItem('lastCompanyId') || ''; } catch (e) {}
+    return String(selected || user.companyId || user.company_id || user.company || '');
+  }
+  function scoped(list) { var cid = companyId(); return (Array.isArray(list) ? list : []).filter(function (item) { return String(item.companyId || '') === cid; }); }
+  function stamp() { return new Date().toISOString(); }
+  function toast(message, tone) {
+    var host = D.getElementById('acxWorkflowToastHost');
+    if (!host) { host = D.createElement('div'); host.id = 'acxWorkflowToastHost'; host.style.cssText = 'position:fixed;right:20px;bottom:22px;z-index:100500;display:grid;gap:8px;max-width:min(390px,calc(100vw - 32px))'; D.body.appendChild(host); }
+    var item = D.createElement('div');
+    item.style.cssText = 'padding:11px 14px;border-radius:9px;background:' + (tone === 'error' ? '#991b1b' : '#172554') + ';color:#fff;box-shadow:0 8px 24px #0002;font:13px/1.45 Arial,sans-serif';
+    item.textContent = message; host.appendChild(item); setTimeout(function () { item.remove(); }, 4200);
+  }
+  function getPath(object, path) {
+    return String(path || '').split('.').reduce(function (value, part) { return value == null ? undefined : value[part]; }, object);
+  }
+  function compare(actual, operator, expected) {
+    var a = actual, b = expected;
+    if (operator === 'is_empty') return a == null || String(a).trim() === '';
+    if (operator === 'is_not_empty') return !(a == null || String(a).trim() === '');
+    if (operator === 'contains') return String(a == null ? '' : a).toLowerCase().indexOf(String(b).toLowerCase()) >= 0;
+    if (operator === 'not_contains') return String(a == null ? '' : a).toLowerCase().indexOf(String(b).toLowerCase()) < 0;
+    if (operator === 'equals') return String(a == null ? '' : a).toLowerCase() === String(b == null ? '' : b).toLowerCase();
+    if (operator === 'not_equals') return String(a == null ? '' : a).toLowerCase() !== String(b == null ? '' : b).toLowerCase();
+    var na = Number(String(a == null ? '' : a).replace(/,/g, '')), nb = Number(String(b == null ? '' : b).replace(/,/g, ''));
+    if (!isFinite(na) || !isFinite(nb)) return false;
+    if (operator === 'greater_than') return na > nb;
+    if (operator === 'greater_or_equal') return na >= nb;
+    if (operator === 'less_than') return na < nb;
+    if (operator === 'less_or_equal') return na <= nb;
+    return false;
+  }
+  function passes(rule, record) {
+    if (!rule.conditions || !rule.conditions.length) return true;
+    var checks = rule.conditions.map(function (condition) {
+      return compare(getPath(record, condition.field), condition.operator, condition.value);
+    });
+    return rule.conditionMode === 'any' ? checks.some(Boolean) : checks.every(Boolean);
+  }
+  function interpolate(template, record, moduleName, eventType) {
+    return String(template || '').replace(/\{\{\s*([\w.]+)\s*\}\}/g, function (_, path) {
+      if (path === 'module') return moduleName;
+      if (path === 'event') return eventType;
+      if (path === 'date') return new Date().toLocaleDateString();
+      var value = getPath(record, path);
+      return value == null ? '' : String(value);
+    });
+  }
+  function pushRun(entry) {
+    var runs = read(RUNS_KEY, []);
+    runs.unshift(entry);
+    write(RUNS_KEY, runs.slice(0, 300));
+  }
+  function performAction(action, rule, record, moduleName, eventType, dryRun, storageKey, recordIndex) {
+    var title = interpolate(action.title || rule.name, record, moduleName, eventType);
+    var description = interpolate(action.description || '', record, moduleName, eventType);
+    if (dryRun) return { type: action.type, title: title, description: description, preview: true };
+    var base = {
+      id: uid('WFA'), ruleId: rule.id, ruleName: rule.name, module: moduleName,
+      recordId: record && (record.id || record._id || record.number || record.invoiceNumber) || '',
+      event: eventType, createdAt: stamp(), createdBy: me().username || me().email || 'System',
+      companyId: companyId(), status: 'Open'
+    };
+    if (action.type === 'task') {
+      var due = new Date(); due.setDate(due.getDate() + Math.max(0, Number(action.dueDays || 1)));
+      var tasks = read(TASKS_KEY, []);
+      tasks.unshift(Object.assign({}, base, { title: title || 'Workflow follow-up', description: description, dueDate: due.toISOString().slice(0, 10), priority: action.priority || 'Normal', assignedTo: action.assignee || '' }));
+      write(TASKS_KEY, tasks.slice(0, 500));
+    } else if (action.type === 'reminder') {
+      var when = new Date(); when.setDate(when.getDate() + Math.max(0, Number(action.dueDays || 1)));
+      var reminders = read(REMINDERS_KEY, []);
+      reminders.unshift(Object.assign({}, base, { title: title || 'Workflow reminder', description: description, dueDate: when.toISOString().slice(0, 10), dueTime: action.dueTime || '09:00', status: 'Pending' }));
+      write(REMINDERS_KEY, reminders.slice(0, 500));
+    } else if (action.type === 'notification') {
+      var notices = read(NOTICES_KEY, []);
+      notices.unshift(Object.assign({}, base, { title: title || 'Workflow notification', message: description || title, read: false }));
+      write(NOTICES_KEY, notices.slice(0, 500));
+      toast(title || 'A workflow rule was triggered');
+    } else if (action.type === 'review') {
+      var queue = read(REVIEWS_KEY, []);
+      queue.unshift(Object.assign({}, base, { title: title || 'Review required', description: description, status: 'Awaiting review' }));
+      write(REVIEWS_KEY, queue.slice(0, 500));
+    } else if (action.type === 'set_status') {
+      if (eventType === 'deleted') throw new Error('A deleted record cannot have its status updated.');
+      var nextStatus = String(action.statusValue || '').trim();
+      if (!nextStatus) throw new Error('Enter a new status for the status-update action.');
+      var key = storageKey || rule.moduleKey, records = read(key, null);
+      if (!Array.isArray(records)) throw new Error('The triggering module data could not be located for a status update.');
+      var recordId = identity(record, Number(recordIndex || 0)), found = false;
+      records = records.map(function (item, index) {
+        if (identity(item, index) !== recordId) return item;
+        found = true; var updated = Object.assign({}, item, { status: interpolate(nextStatus, record, moduleName, eventType), updatedAt: stamp() }); return updated;
+      });
+      if (!found) throw new Error('The triggering record could not be found for a status update.');
+      write(key, records);
+    }
+    return { type: action.type, title: title, success: true };
+  }
+  function execute(event) {
+    if (!event || !event.moduleKey || !event.record) return;
+    var rules = read(RULES_KEY, []);
+    rules.forEach(function (rule) {
+      if (!rule || !rule.enabled || rule.moduleKey !== event.moduleKey || rule.eventType !== event.type) return;
+      if (String(rule.companyId || '') !== companyId()) return;
+      if (!passes(rule, event.record)) return;
+      var results = [];
+      try {
+        (rule.actions || []).forEach(function (action) { results.push(performAction(action, rule, event.record, event.moduleName, event.type, false, event.storageKey, event.recordIndex)); });
+        rule.lastRunAt = stamp(); rule.lastRunStatus = 'Success'; rule.runCount = Number(rule.runCount || 0) + 1;
+        pushRun({ id: uid('RUN'), ruleId: rule.id, ruleName: rule.name, module: event.moduleName, event: event.type, recordId: event.record.id || event.record._id || event.record.number || '', status: 'Success', createdAt: stamp(), companyId: companyId(), actions: results });
+      } catch (error) {
+        rule.lastRunAt = stamp(); rule.lastRunStatus = 'Failed';
+        pushRun({ id: uid('RUN'), ruleId: rule.id, ruleName: rule.name, module: event.moduleName, event: event.type, recordId: event.record.id || event.record._id || event.record.number || '', status: 'Failed', error: error.message, createdAt: stamp(), companyId: companyId(), actions: results });
+        console.error('[Acacia Workflow] Rule execution failed:', error);
+      }
+    });
+    write(RULES_KEY, rules);
+    renderIfOpen();
+  }
+  function emit(moduleKey, type, record, oldRecord, storageKey, recordIndex) {
+    var event = { id: uid('EVT'), moduleKey: moduleKey, moduleName: moduleMap[moduleKey] || moduleKey, type: type, record: record || {}, oldRecord: oldRecord || null, storageKey: storageKey || moduleKey, recordIndex: Number(recordIndex || 0), createdAt: stamp() };
+    W.dispatchEvent(new CustomEvent('acx:workflow:event', { detail: event }));
+    execute(event);
+  }
+  W.acxWorkflowEmit = emit;
+
+  function parseArray(value) { try { var parsed = JSON.parse(value || 'null'); return Array.isArray(parsed) ? parsed : null; } catch (e) { return null; } }
+  function identity(record, index) { return String(record && (record.id || record._id || record.uuid || record.invoiceNumber || record.billNumber || record.number || record.sku || record.name) || ('index-' + index)); }
+  function detectStorageChange(key, before, after) {
+    var moduleKey = moduleMap[key] ? key : null;
+    if (!moduleKey) {
+      var aliases = Object.keys(moduleMap).sort(function (a, b) { return b.length - a.length; });
+      for (var ai = 0; ai < aliases.length; ai++) {
+        if (key.indexOf(aliases[ai] + '_') === 0 || key.indexOf(aliases[ai] + ':') === 0 || key.indexOf(aliases[ai] + '-') === 0) { moduleKey = aliases[ai]; break; }
+      }
+    }
+    if (!moduleKey && /^inventory([:_-]|$)/i.test(key)) moduleKey = 'inventory';
+    if (!moduleKey && /^stockActivities([:_-]|$)/i.test(key)) moduleKey = 'stockActivities';
+    if (!moduleKey && /^stockCounts([:_-]|$)/i.test(key)) moduleKey = 'stockCounts';
+    if (!moduleKey && /^warehouses([:_-]|$)/i.test(key)) moduleKey = 'warehouses';
+    if (!moduleKey) return;
+    var oldList = parseArray(before), newList = parseArray(after);
+    if (!oldList && !newList) return;
+    oldList = oldList || []; newList = newList || [];
+    var oldById = Object.create(null), newById = Object.create(null);
+    oldList.forEach(function (record, index) { oldById[identity(record, index)] = record; });
+    newList.forEach(function (record, index) { newById[identity(record, index)] = record; });
+    newList.forEach(function (record, index) {
+      var id = identity(record, index), old = oldById[id];
+      var type = old ? (JSON.stringify(old) === JSON.stringify(record) ? null : 'updated') : 'created';
+      if (!type) return;
+      var dedupe = key + ':' + id + ':' + type;
+      if (recentEvents[dedupe] && Date.now() - recentEvents[dedupe] < 350) return;
+      recentEvents[dedupe] = Date.now(); emit(moduleKey, type, record, old || null, key, index);
+    });
+    oldList.forEach(function (record, index) {
+      var id = identity(record, index); if (newById[id]) return;
+      var dedupe = key + ':' + id + ':deleted';
+      if (recentEvents[dedupe] && Date.now() - recentEvents[dedupe] < 350) return;
+      recentEvents[dedupe] = Date.now(); emit(moduleKey, 'deleted', record, record, key, index);
+    });
+  }
+  function installStorageWatcher() {
+    try {
+      var storage = W.localStorage;
+      var original = storage.setItem;
+      if (original && !original.__acxWorkflowWrapped) {
+        var wrapped = function (key, value) {
+          var before = null;
+          try { before = this.getItem(String(key)); } catch (e) {}
+          var result = original.call(this, key, value);
+          if (this === storage && !internalWrite) { try { detectStorageChange(String(key), before, String(value)); } catch (e) { console.warn('[Acacia Workflow] Event detection:', e); } }
+          return result;
+        };
+        wrapped.__acxWorkflowWrapped = true;
+        var installed = false;
+        try { storage.setItem = wrapped; installed = storage.setItem === wrapped; } catch (e) {}
+        if (!installed && W.Storage && W.Storage.prototype && !W.Storage.prototype.setItem.__acxWorkflowWrapped) {
+          var nativeSet = W.Storage.prototype.setItem;
+          var protoWrapped = function (key, value) {
+            var before = null;
+            try { if (this === W.localStorage) before = this.getItem(String(key)); } catch (e) {}
+            var result = nativeSet.call(this, key, value);
+            if (this === W.localStorage && !internalWrite) { try { detectStorageChange(String(key), before, String(value)); } catch (e) { console.warn('[Acacia Workflow] Event detection:', e); } }
+            return result;
+          };
+          protoWrapped.__acxWorkflowWrapped = true;
+          W.Storage.prototype.setItem = protoWrapped;
+        }
+      }
+      if (W.Storage && W.Storage.prototype && !W.Storage.prototype.removeItem.__acxWorkflowWrapped) {
+        var nativeRemove = W.Storage.prototype.removeItem;
+        var removeWrapped = function (key) {
+          var before = null;
+          try { if (this === W.localStorage) before = this.getItem(String(key)); } catch (e) {}
+          var result = nativeRemove.call(this, key);
+          if (this === W.localStorage && !internalWrite && before != null) { try { detectStorageChange(String(key), before, null); } catch (e) { console.warn('[Acacia Workflow] Delete event detection:', e); } }
+          return result;
+        };
+        removeWrapped.__acxWorkflowWrapped = true;
+        W.Storage.prototype.removeItem = removeWrapped;
+      }
+    } catch (e) { console.warn('[Acacia Workflow] Storage watcher unavailable:', e); }
+    W.addEventListener('storage', function (event) {
+      if (event.key && !internalWrite) detectStorageChange(event.key, event.oldValue, event.newValue);
+    });
+    W.addEventListener('acx:workflow:event', function (event) { if (event.detail && event.detail.__external) execute(event.detail); });
+  }
+
+  function css() {
+    if (D.getElementById('acxWorkflowStyle')) return;
+    var style = D.createElement('style'); style.id = 'acxWorkflowStyle';
+    style.textContent = [
+      '#workflowRulesTab{color:#172033;background:#f7f8fb;min-height:calc(100vh - 30px);padding:22px!important;font-family:inherit}',
+      '#workflowRulesTab .wf-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 2px 8px rgba(15,23,42,.035)}',
+      '#workflowRulesTab .wf-btn{border:1px solid #d1d5db;border-radius:7px;padding:8px 12px;font-size:12px;font-weight:700;background:#fff;color:#1f2937;cursor:pointer}',
+      '#workflowRulesTab .wf-btn.primary{background:#1e3a8a;color:#fff;border-color:#1e3a8a}',
+      '#workflowRulesTab .wf-btn.danger{color:#b91c1c;border-color:#fecaca}',
+      '#workflowRulesTab .wf-input,#workflowRulesTab .wf-select,#workflowRulesTab .wf-textarea{width:100%;border:1px solid #d1d5db;border-radius:7px;padding:9px 10px;background:#fff;color:#111827;font-size:13px;min-width:0}',
+      '#workflowRulesTab .wf-label{display:block;font-size:11px;font-weight:700;color:#4b5563;margin:0 0 5px}',
+      '#workflowRulesTab .wf-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;background:#eff6ff;color:#1d4ed8}',
+      '#workflowRulesTab .wf-muted{color:#6b7280;font-size:12px}',
+      '#workflowRulesTab .wf-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}',
+      '#workflowRulesTab .wf-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}',
+      '#workflowRulesTab .wf-condition,#workflowRulesTab .wf-action{display:grid;grid-template-columns:minmax(120px,1fr) minmax(140px,1fr) minmax(120px,1fr) auto;gap:8px;align-items:center;margin-top:8px}',
+      '#workflowRulesTab .wf-action{grid-template-columns:minmax(140px,.8fr) minmax(160px,1fr) minmax(180px,1.4fr) auto}',
+      '#workflowRulesTab .wf-table{width:100%;border-collapse:collapse;font-size:12px}',
+      '#workflowRulesTab .wf-table th{background:#f8fafc;color:#64748b;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:10px;border-bottom:1px solid #e5e7eb}',
+      '#workflowRulesTab .wf-table td{padding:11px 10px;border-bottom:1px solid #eef0f3;vertical-align:middle}',
+      '#workflowRulesTab .wf-switch{width:34px;height:19px;border-radius:20px;background:#cbd5e1;position:relative;cursor:pointer;border:0;padding:0}',
+      '#workflowRulesTab .wf-switch:after{content:"";position:absolute;width:15px;height:15px;top:2px;left:2px;background:#fff;border-radius:50%;transition:transform .15s}',
+      '#workflowRulesTab .wf-switch.on{background:#15803d}#workflowRulesTab .wf-switch.on:after{transform:translateX(15px)}',
+      '#workflowRulesTab .wf-empty{text-align:center;padding:34px 16px;color:#64748b}',
+      '#settingsSubmenu2 .acx-wf-nav-group{list-style:none;margin:.35rem 0 .45rem;padding:0;border:1px solid rgba(148,163,184,.24);border-radius:9px;overflow:hidden;background:rgba(255,255,255,.035)}',
+      '#settingsSubmenu2 .acx-wf-nav-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:.58rem .65rem;text-align:left;font-size:12px;font-weight:700;color:inherit}',
+      '#settingsSubmenu2 .acx-wf-nav-items{padding:.15rem .35rem .35rem .75rem;margin:0;list-style:none}',
+      '#settingsSubmenu2 .acx-wf-nav-items button{font-size:12px;padding:.42rem .55rem;border-radius:6px}',
+      '@media(max-width:850px){#workflowRulesTab .wf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#workflowRulesTab .wf-condition,#workflowRulesTab .wf-action{grid-template-columns:1fr 1fr}#workflowRulesTab{padding:12px!important}}',
+      '@media(max-width:520px){#workflowRulesTab .wf-grid{grid-template-columns:1fr}#workflowRulesTab .wf-condition,#workflowRulesTab .wf-action{grid-template-columns:1fr}}'
+    ].join('\n'); D.head.appendChild(style);
+  }
+  function ensureTab() {
+    var area = D.getElementById('contentArea'); if (!area) return false;
+    var tab = D.getElementById('workflowRulesTab');
+    if (!tab) { tab = D.createElement('div'); tab.id = 'workflowRulesTab'; tab.className = 'hidden'; area.appendChild(tab); }
+    return true;
+  }
+  function optionList(options, selected) { return options.map(function (option) { return '<option value="' + esc(option[0]) + '"' + (option[0] === selected ? ' selected' : '') + '>' + esc(option[1]) + '</option>'; }).join(''); }
+  function statusPill(status) { return '<span class="wf-chip" style="' + (status === 'Failed' ? 'background:#fef2f2;color:#b91c1c' : status === 'Disabled' ? 'background:#f1f5f9;color:#64748b' : 'background:#ecfdf5;color:#047857') + '">' + esc(status) + '</span>'; }
+  function metric(label, value, note) { return '<div class="wf-card" style="padding:14px"><div class="wf-muted">' + esc(label) + '</div><div style="font-size:24px;font-weight:800;margin-top:5px">' + esc(value) + '</div><div class="wf-muted" style="margin-top:3px">' + esc(note) + '</div></div>'; }
+  function render() {
+    var tab = D.getElementById('workflowRulesTab'); if (!tab) return;
+    var rules = scoped(read(RULES_KEY, [])), runs = scoped(read(RUNS_KEY, [])), tasks = scoped(read(TASKS_KEY, [])), reminders = scoped(read(REMINDERS_KEY, [])), notices = scoped(read(NOTICES_KEY, [])), reviews = scoped(read(REVIEWS_KEY, []));
+    var active = rules.filter(function (rule) { return rule.enabled; }).length;
+    var failed = runs.filter(function (run) { return run.status === 'Failed'; }).length;
+    var lastRun = runs[0] ? new Date(runs[0].createdAt).toLocaleString() : 'No executions yet';
+    tab.innerHTML = '<div style="max-width:1500px;margin:0 auto">' +
+      '<div class="wf-row" style="justify-content:space-between;margin-bottom:18px"><div><div style="font-size:22px;font-weight:800;color:#111827">Workflow Rules</div><div class="wf-muted" style="margin-top:4px">Run company-scoped rules across Sales, Purchases, Inventory, Banking, Expenses, Payroll, Projects and other connected modules.</div></div><button class="wf-btn primary" data-wf="new">＋ Create Workflow</button></div>' +
+      '<div class="wf-grid" style="margin-bottom:16px">' + metric('Total workflows', rules.length, 'Saved rules') + metric('Active workflows', active, 'Currently enabled') + metric('Tasks & reminders', tasks.length + reminders.length, 'Created by workflows') + metric('Execution failures', failed, lastRun) + '</div>' +
+      '<div class="wf-card" style="padding:15px;margin-bottom:15px"><div class="wf-row" style="justify-content:space-between"><div><div style="font-weight:800;font-size:14px">How automation works</div><div class="wf-muted" style="margin-top:4px">Acacia watches supported module data changes across the website, checks the active company’s rules, evaluates conditions and runs the selected actions. You can also connect custom screens with acxWorkflowEmit().</div></div><span class="wf-chip">Company-scoped rules</span></div><div class="wf-row" style="margin-top:12px;gap:8px"><span class="wf-chip">1. Trigger</span><span class="wf-muted">→</span><span class="wf-chip">2. Conditions</span><span class="wf-muted">→</span><span class="wf-chip">3. Actions</span><span class="wf-muted">→</span><span class="wf-chip">4. Execution log</span></div></div>' +
+      '<div class="wf-card" style="overflow:hidden;margin-bottom:15px"><div class="wf-row" style="justify-content:space-between;padding:14px 15px"><div><div style="font-weight:800;font-size:14px">Your workflows</div><div class="wf-muted">Manage, test and monitor automation rules</div></div><div class="wf-row"><input id="wfSearch" class="wf-input" style="width:210px" placeholder="Search workflows"><select id="wfFilter" class="wf-select" style="width:140px"><option value="all">All statuses</option><option value="active">Active</option><option value="paused">Paused</option></select></div></div><div style="overflow:auto"><table class="wf-table"><thead><tr><th>Workflow</th><th>Trigger</th><th>Actions</th><th>Last run</th><th>Status</th><th>Manage</th></tr></thead><tbody id="wfRulesBody"></tbody></table></div></div>' +
+      '<div class="wf-card" style="padding:15px;margin-bottom:15px"><div class="wf-row" style="justify-content:space-between"><div><div style="font-weight:800;font-size:14px">Workflow-created work</div><div class="wf-muted">Tasks, reminders, notifications and review items generated by your rules.</div></div><span class="wf-chip">' + (tasks.length + reminders.length + notices.length + reviews.length) + ' items</span></div><div class="wf-grid" style="margin-top:12px"><div><div class="wf-muted">Follow-up tasks</div><b>' + tasks.length + '</b></div><div><div class="wf-muted">Reminders</div><b>' + reminders.length + '</b></div><div><div class="wf-muted">Notifications</div><b>' + notices.length + '</b></div><div><div class="wf-muted">Review queue</div><b>' + reviews.length + '</b></div></div><div class="wf-row" style="margin-top:12px"><button class="wf-btn" data-wf="tasks">View tasks</button><button class="wf-btn" data-wf="reminders">View reminders</button><button class="wf-btn" data-wf="reviews">View review queue</button><button class="wf-btn" data-wf="notifications">View notifications</button></div></div>' +
+      '<div class="wf-card" style="overflow:hidden"><div style="padding:14px 15px;border-bottom:1px solid #eef0f3"><div style="font-weight:800;font-size:14px">Recent execution history</div><div class="wf-muted">Every matched rule execution is recorded here.</div></div><div style="overflow:auto"><table class="wf-table"><thead><tr><th>Time</th><th>Workflow</th><th>Module</th><th>Event</th><th>Record</th><th>Result</th></tr></thead><tbody id="wfRunsBody"></tbody></table></div></div>' +
+      '</div>';
+    renderRulesTable(); renderRunsTable();
+  }
+  function renderRulesTable() {
+    var body = D.getElementById('wfRulesBody'); if (!body) return;
+    var rules = scoped(read(RULES_KEY, [])), search = (D.getElementById('wfSearch') || {}).value || '', filter = (D.getElementById('wfFilter') || {}).value || 'all';
+    var shown = rules.filter(function (rule) {
+      var matches = (rule.name + ' ' + (moduleMap[rule.moduleKey] || rule.moduleKey)).toLowerCase().indexOf(search.toLowerCase()) >= 0;
+      return matches && (filter === 'all' || (filter === 'active' ? rule.enabled : !rule.enabled));
+    });
+    if (!shown.length) { body.innerHTML = '<tr><td colspan="6"><div class="wf-empty"><div style="font-size:26px;margin-bottom:7px">⚡</div><b>No workflows found</b><div class="wf-muted" style="margin-top:5px">Create a workflow to automate a repeatable business process.</div></div></td></tr>'; return; }
+    body.innerHTML = shown.map(function (rule) {
+      var trigger = (moduleMap[rule.moduleKey] || rule.moduleKey) + ' · ' + rule.eventType;
+      var last = rule.lastRunAt ? new Date(rule.lastRunAt).toLocaleString() : 'Never';
+      return '<tr><td><b>' + esc(rule.name) + '</b><div class="wf-muted">' + esc(rule.description || 'No description') + '</div></td><td>' + esc(trigger) + '</td><td>' + esc((rule.actions || []).map(function (a) { return (actionTypes.filter(function (x) { return x[0] === a.type; })[0] || [a.type, a.type])[1]; }).join(', ')) + '</td><td>' + esc(last) + '</td><td>' + statusPill(rule.enabled ? 'Active' : 'Disabled') + '</td><td><div class="wf-row" style="gap:5px;flex-wrap:nowrap"><button class="wf-btn" data-rule-edit="' + esc(rule.id) + '">Edit</button><button class="wf-btn" data-rule-test="' + esc(rule.id) + '">Test</button><button class="wf-switch ' + (rule.enabled ? 'on' : '') + '" title="' + (rule.enabled ? 'Pause workflow' : 'Enable workflow') + '" data-rule-toggle="' + esc(rule.id) + '"></button><button class="wf-btn" data-rule-more="' + esc(rule.id) + '">•••</button></div></td></tr>';
+    }).join('');
+  }
+  function renderRunsTable() {
+    var body = D.getElementById('wfRunsBody'); if (!body) return;
+    var runs = scoped(read(RUNS_KEY, [])).slice(0, 30);
+    body.innerHTML = runs.length ? runs.map(function (run) {
+      return '<tr><td>' + esc(new Date(run.createdAt).toLocaleString()) + '</td><td><b>' + esc(run.ruleName) + '</b></td><td>' + esc(run.module) + '</td><td>' + esc(run.event) + '</td><td>' + esc(run.recordId || '—') + '</td><td>' + statusPill(run.status) + (run.error ? '<div class="wf-muted">' + esc(run.error) + '</div>' : '') + '</td></tr>';
+    }).join('') : '<tr><td colspan="6"><div class="wf-empty">No workflow executions have been recorded yet.</div></td></tr>';
+  }
+  function renderIfOpen() { var tab = D.getElementById('workflowRulesTab'); if (tab && !tab.classList.contains('hidden')) render(); }
+  function conditionMarkup(condition, index) {
+    condition = condition || { field: 'status', operator: 'equals', value: '' };
+    return '<div class="wf-condition" data-condition="' + index + '"><input class="wf-input" data-cond-field="' + index + '" placeholder="Field, e.g. status" value="' + esc(condition.field) + '"><select class="wf-select" data-cond-op="' + index + '">' + optionList(operators, condition.operator) + '</select><input class="wf-input" data-cond-value="' + index + '" placeholder="Value" value="' + esc(condition.value || '') + '"><button class="wf-btn danger" data-cond-remove="' + index + '">Remove</button></div>';
+  }
+  function actionMarkup(action, index) {
+    action = action || { type: 'notification', title: '', description: '', dueDays: 1, priority: 'Normal' };
+    return '<div class="wf-action" data-action="' + index + '"><select class="wf-select" data-action-type="' + index + '">' + optionList(actionTypes, action.type) + '</select><input class="wf-input" data-action-title="' + index + '" placeholder="Action title" value="' + esc(action.title || '') + '"><input class="wf-input" data-action-description="' + index + '" placeholder="Description / message" value="' + esc(action.description || '') + '"><button class="wf-btn danger" data-action-remove="' + index + '">Remove</button></div>' +
+      (action.type === 'task' || action.type === 'reminder' ? '<div class="wf-row" style="margin:5px 0 10px 0;padding-left:4px"><label class="wf-muted">Due in days <input class="wf-input" style="width:75px;display:inline-block" type="number" min="0" max="365" data-action-days="' + index + '" value="' + esc(action.dueDays == null ? 1 : action.dueDays) + '"></label>' + (action.type === 'task' ? '<label class="wf-muted">Priority <select class="wf-select" style="width:110px;display:inline-block" data-action-priority="' + index + '">' + optionList([['Low', 'Low'], ['Normal', 'Normal'], ['High', 'High']], action.priority || 'Normal') + '</select></label>' : '') + '</div>' : '') +
+      (action.type === 'set_status' ? '<div class="wf-row" style="margin:5px 0 10px 0;padding-left:4px"><label class="wf-muted">New record status <input class="wf-input" style="width:190px;display:inline-block" data-action-status="' + index + '" placeholder="e.g. Approved" value="' + esc(action.statusValue || '') + '"></label><span class="wf-muted">Updates the status field on the triggering record.</span></div>' : '');
+  }
+  function openBuilder(rule) {
+    currentEdit = rule ? rule.id : null;
+    conditions = rule ? JSON.parse(JSON.stringify(rule.conditions || [])) : [];
+    actions = rule ? JSON.parse(JSON.stringify(rule.actions || [])) : [{ type: 'notification', title: 'Review {{module}} record', description: 'A record was {{event}}. Reference: {{id}}', dueDays: 1 }];
+    var tab = D.getElementById('workflowRulesTab'); if (!tab) return;
+    var existing = D.getElementById('wfBuilder'); if (existing) existing.remove();
+    var builder = D.createElement('div'); builder.id = 'wfBuilder'; builder.className = 'wf-card'; builder.style.cssText = 'padding:18px;margin-bottom:16px;border:1px solid #93c5fd';
+    var selectedModule = rule ? rule.moduleKey : 'invoices';
+    var selectedEvent = rule ? rule.eventType : 'created';
+    builder.innerHTML = '<div class="wf-row" style="justify-content:space-between;margin-bottom:14px"><div><div style="font-size:17px;font-weight:800">' + (rule ? 'Edit workflow' : 'Create workflow') + '</div><div class="wf-muted">Define when this rule runs and what Acacia should do.</div></div><button class="wf-btn" data-wf="cancel-builder">Close</button></div>' +
+      '<div class="wf-grid"><div style="grid-column:span 2"><label class="wf-label">Workflow name *</label><input id="wfName" class="wf-input" maxlength="100" placeholder="e.g. Follow up overdue invoices" value="' + esc(rule && rule.name || '') + '"></div><div style="grid-column:span 2"><label class="wf-label">Description</label><input id="wfDescription" class="wf-input" maxlength="240" placeholder="What should this workflow achieve?" value="' + esc(rule && rule.description || '') + '"></div><div><label class="wf-label">When this happens</label><select id="wfModule" class="wf-select">' + optionList(triggerModules.map(function (m) { return [m.key, m.label]; }), selectedModule) + '</select></div><div><label class="wf-label">Event</label><select id="wfEvent" class="wf-select">' + optionList([['created', 'Record is created'], ['updated', 'Record is updated'], ['deleted', 'Record is deleted']], selectedEvent) + '</select></div><div><label class="wf-label">Condition matching</label><select id="wfConditionMode" class="wf-select">' + optionList([['all', 'All conditions must match'], ['any', 'Any condition can match']], rule && rule.conditionMode || 'all') + '</select></div><div><label class="wf-label">Initial status</label><select id="wfEnabled" class="wf-select">' + optionList([['true', 'Enabled after saving'], ['false', 'Save as paused']], rule && rule.enabled === false ? 'false' : 'true') + '</select></div></div>' +
+      '<div style="margin-top:18px"><div class="wf-row" style="justify-content:space-between"><div><b style="font-size:13px">Conditions</b><div class="wf-muted">Optional. Use field names from the selected record, such as status, total, balance or customer.</div></div><button class="wf-btn" data-wf="add-condition">＋ Add condition</button></div><div id="wfConditions">' + conditions.map(conditionMarkup).join('') + '</div><div class="wf-muted" style="margin-top:7px">No conditions means the workflow runs for every matching event.</div></div>' +
+      '<div style="margin-top:18px"><div class="wf-row" style="justify-content:space-between"><div><b style="font-size:13px">Actions</b><div class="wf-muted">Choose what Acacia should do when all trigger conditions are met. Status updates change the triggering record in its source module.</div></div><button class="wf-btn" data-wf="add-action">＋ Add action</button></div><div id="wfActions">' + actions.map(actionMarkup).join('') + '</div></div>' +
+      '<div style="padding:12px;background:#f8fafc;border-radius:8px;margin-top:16px"><b style="font-size:12px">Available placeholders</b><div class="wf-muted" style="margin-top:4px">Use {{name}}, {{id}}, {{status}}, {{customer}}, {{total}}, {{balance}}, {{number}}, {{module}}, {{event}} and {{date}} in action titles and descriptions. The exact fields available depend on the selected module.</div></div>' +
+      '<div class="wf-row" style="justify-content:flex-end;margin-top:16px"><button class="wf-btn" data-wf="cancel-builder">Cancel</button><button class="wf-btn" data-wf="save-rule">Save workflow</button></div>';
+    var heading = tab.querySelector('.wf-row'); if (heading && heading.parentNode) heading.parentNode.insertBefore(builder, heading.nextSibling); else tab.prepend(builder);
+    builder.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function collectBuilder() {
+    collectCurrentConditions();
+    var name = (D.getElementById('wfName') || {}).value || '';
+    if (!name.trim()) { toast('Enter a workflow name before saving.', 'error'); return null; }
+    var moduleKey = D.getElementById('wfModule').value;
+    var conds = conditions.map(function (_, index) {
+      return { field: (D.querySelector('[data-cond-field="' + index + '"]') || {}).value || '', operator: (D.querySelector('[data-cond-op="' + index + '"]') || {}).value || 'equals', value: (D.querySelector('[data-cond-value="' + index + '"]') || {}).value || '' };
+    }).filter(function (condition) { return condition.field.trim(); });
+    var acts = actions.map(function (action, index) {
+      var type = (D.querySelector('[data-action-type="' + index + '"]') || {}).value || action.type;
+      return { type: type, title: (D.querySelector('[data-action-title="' + index + '"]') || {}).value || '', description: (D.querySelector('[data-action-description="' + index + '"]') || {}).value || '', dueDays: Number((D.querySelector('[data-action-days="' + index + '"]') || {}).value || 1), priority: (D.querySelector('[data-action-priority="' + index + '"]') || {}).value || 'Normal', statusValue: (D.querySelector('[data-action-status="' + index + '"]') || {}).value || '' };
+    });
+    if (!acts.length) { toast('Add at least one action.', 'error'); return null; }
+    if (acts.some(function (action) { return action.type === 'set_status' && !String(action.statusValue || '').trim(); })) { toast('Enter the new status for every status-update action.', 'error'); return null; }
+    return { name: name.trim(), description: (D.getElementById('wfDescription').value || '').trim(), moduleKey: moduleKey, eventType: D.getElementById('wfEvent').value, conditionMode: D.getElementById('wfConditionMode').value, conditions: conds, actions: acts, enabled: D.getElementById('wfEnabled').value === 'true' };
+  }
+  function saveRule() {
+    var data = collectBuilder(); if (!data) return;
+    var rules = read(RULES_KEY, []), existing = rules.filter(function (rule) { return rule.id === currentEdit; })[0];
+    if (existing) Object.assign(existing, data, { companyId: companyId(), updatedAt: stamp() });
+    else rules.unshift(Object.assign({ id: uid('WF'), createdAt: stamp(), createdBy: me().username || me().email || 'System', companyId: companyId(), runCount: 0 }, data));
+    write(RULES_KEY, rules); toast(existing ? 'Workflow updated.' : 'Workflow created.'); render();
+  }
+  function testRule(id) {
+    var rule = read(RULES_KEY, []).filter(function (item) { return item.id === id; })[0]; if (!rule) return;
+    var records = read(rule.moduleKey, []);
+    if (!Array.isArray(records) && rule.moduleKey === 'inventory') records = [];
+    if (!Array.isArray(records)) records = [];
+    records = records.filter(function (record) { return !record.companyId || String(record.companyId) === companyId(); });
+    var sample = records[0] || { id: 'SAMPLE-001', name: 'Sample record', status: 'Open', total: 1000, balance: 500, customer: 'Sample Customer' };
+    var matched = passes(rule, sample);
+    var previews = matched ? (rule.actions || []).map(function (action) { return performAction(action, rule, sample, moduleMap[rule.moduleKey], rule.eventType, true, rule.moduleKey); }) : [];
+    var result = matched ? 'Conditions match. No data was changed.\n\nPlanned actions:\n' + previews.map(function (action) { return '• ' + action.type + ': ' + action.title; }).join('\n') : 'The sample record does not match this workflow’s conditions. No data was changed.';
+    alert('Workflow test — ' + rule.name + '\n\n' + result);
+  }
+  function showCollection(type) {
+    var map = {
+      tasks: [TASKS_KEY, 'Workflow-created tasks', 'Completed'],
+      reminders: [REMINDERS_KEY, 'Workflow-created reminders', 'Done'],
+      reviews: [REVIEWS_KEY, 'Workflow review queue', 'Resolved'],
+      notifications: [NOTICES_KEY, 'Workflow notifications', 'Read']
+    };
+    var item = map[type]; if (!item) return;
+    var list = scoped(read(item[0], []));
+    var modal = D.getElementById('acxWorkflowCollectionModal');
+    if (!modal) { modal = D.createElement('div'); modal.id = 'acxWorkflowCollectionModal'; modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.48);z-index:100400;display:flex;align-items:center;justify-content:center;padding:16px'; D.body.appendChild(modal); }
+    modal.dataset.collectionType = type;
+    modal.innerHTML = '<div style="width:min(850px,100%);max-height:85vh;overflow:auto;background:#fff;border-radius:13px;box-shadow:0 18px 55px #0003;color:#172033"><div style="padding:16px 18px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between"><div><b style="font-size:16px">' + esc(item[1]) + '</b><div style="font-size:11px;color:#64748b;margin-top:3px">' + list.length + ' items · Generated by Workflow Rules</div></div><button class="wf-btn" data-work-close>Close</button></div><div style="overflow:auto"><table class="wf-table"><thead><tr><th>Item</th><th>Workflow</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + (list.length ? list.map(function (entry) { return '<tr><td><b>' + esc(entry.title || 'Untitled') + '</b><div class="wf-muted">' + esc(entry.description || entry.message || '') + '</div></td><td>' + esc(entry.ruleName || 'Workflow') + '</td><td>' + esc(entry.dueDate || new Date(entry.createdAt).toLocaleDateString()) + '</td><td>' + esc(entry.status || (entry.read ? 'Read' : 'Open')) + '</td><td><div class="wf-row" style="gap:5px;flex-wrap:nowrap"><button class="wf-btn" data-work-done="' + esc(entry.id) + '">' + (type === 'notifications' ? 'Mark read' : item[2]) + '</button><button class="wf-btn danger" data-work-delete="' + esc(entry.id) + '">Delete</button></div></td></tr>'; }).join('') : '<tr><td colspan="5"><div class="wf-empty">No items have been created yet.</div></td></tr>') + '</tbody></table></div></div>';
+  }
+  function handleClick(event) {
+    var target = event.target.closest('[data-wf],[data-rule-edit],[data-rule-test],[data-rule-toggle],[data-rule-more],[data-cond-remove],[data-action-remove],[data-work-done],[data-work-delete],[data-work-close]');
+    if (!target) return;
+    if (target.hasAttribute('data-work-close')) { var closeModal = D.getElementById('acxWorkflowCollectionModal'); if (closeModal) closeModal.remove(); return; }
+    if (target.hasAttribute('data-work-done') || target.hasAttribute('data-work-delete')) {
+      var modal = D.getElementById('acxWorkflowCollectionModal'), collectionType = modal && modal.dataset.collectionType;
+      var collectionMap = { tasks: TASKS_KEY, reminders: REMINDERS_KEY, reviews: REVIEWS_KEY, notifications: NOTICES_KEY };
+      var collectionKey = collectionMap[collectionType]; if (!collectionKey) return;
+      var collection = read(collectionKey, []), workId = target.getAttribute('data-work-done') || target.getAttribute('data-work-delete');
+      if (target.hasAttribute('data-work-delete')) collection = collection.filter(function (entry) { return entry.id !== workId; });
+      else collection.forEach(function (entry) { if (entry.id === workId) { if (collectionType === 'notifications') entry.read = true; else entry.status = collectionType === 'tasks' ? 'Completed' : collectionType === 'reminders' ? 'Done' : 'Resolved'; entry.completedAt = stamp(); } });
+      write(collectionKey, collection); showCollection(collectionType); renderIfOpen(); return;
+    }
+    if (target.hasAttribute('data-rule-edit')) { var id = target.getAttribute('data-rule-edit'); openBuilder(read(RULES_KEY, []).filter(function (rule) { return rule.id === id; })[0]); return; }
+    if (target.hasAttribute('data-rule-test')) { testRule(target.getAttribute('data-rule-test')); return; }
+    if (target.hasAttribute('data-rule-toggle')) {
+      var toggleId = target.getAttribute('data-rule-toggle'), rules = read(RULES_KEY, []), rule = rules.filter(function (item) { return item.id === toggleId; })[0];
+      if (rule) { rule.enabled = !rule.enabled; rule.updatedAt = stamp(); write(RULES_KEY, rules); render(); toast(rule.enabled ? 'Workflow enabled.' : 'Workflow paused.'); } return;
+    }
+    if (target.hasAttribute('data-rule-more')) {
+      var moreId = target.getAttribute('data-rule-more');
+      var choice = prompt('Type DUPLICATE to copy this workflow, or DELETE to remove it.');
+      var all = read(RULES_KEY, []), original = all.filter(function (item) { return item.id === moreId; })[0];
+      if (!original) return;
+      if (String(choice).toUpperCase() === 'DUPLICATE') { var copy = JSON.parse(JSON.stringify(original)); copy.id = uid('WF'); copy.name += ' (Copy)'; copy.enabled = false; copy.createdAt = stamp(); copy.runCount = 0; delete copy.lastRunAt; all.unshift(copy); write(RULES_KEY, all); render(); toast('Workflow duplicated as a paused copy.'); }
+      else if (String(choice).toUpperCase() === 'DELETE' && confirm('Delete workflow "' + original.name + '"? Its execution history will remain.')) { write(RULES_KEY, all.filter(function (item) { return item.id !== moreId; })); render(); toast('Workflow deleted.'); }
+      return;
+    }
+    if (target.hasAttribute('data-cond-remove')) { conditions.splice(Number(target.getAttribute('data-cond-remove')), 1); refreshBuilderSections(); return; }
+    if (target.hasAttribute('data-action-remove')) { actions.splice(Number(target.getAttribute('data-action-remove')), 1); refreshBuilderSections(); return; }
+    var action = target.getAttribute('data-wf');
+    if (action === 'new') openBuilder(null);
+    else if (action === 'cancel-builder') { var builder = D.getElementById('wfBuilder'); if (builder) builder.remove(); currentEdit = null; }
+    else if (action === 'save-rule') saveRule();
+    else if (action === 'add-condition') { collectCurrentConditions(); conditions.push({ field: 'status', operator: 'equals', value: '' }); refreshBuilderSections(); }
+    else if (action === 'add-action') { collectCurrentActions(); actions.push({ type: 'notification', title: '', description: '' }); refreshBuilderSections(); }
+    else if (action === 'tasks' || action === 'reminders' || action === 'reviews' || action === 'notifications') showCollection(action);
+  }
+  function collectCurrentConditions() {
+    conditions = conditions.map(function (_, index) { return { field: (D.querySelector('[data-cond-field="' + index + '"]') || {}).value || '', operator: (D.querySelector('[data-cond-op="' + index + '"]') || {}).value || 'equals', value: (D.querySelector('[data-cond-value="' + index + '"]') || {}).value || '' }; });
+  }
+  function collectCurrentActions() {
+    actions = actions.map(function (action, index) { return { type: (D.querySelector('[data-action-type="' + index + '"]') || {}).value || action.type, title: (D.querySelector('[data-action-title="' + index + '"]') || {}).value || '', description: (D.querySelector('[data-action-description="' + index + '"]') || {}).value || '', dueDays: Number((D.querySelector('[data-action-days="' + index + '"]') || {}).value || 1), priority: (D.querySelector('[data-action-priority="' + index + '"]') || {}).value || 'Normal', statusValue: (D.querySelector('[data-action-status="' + index + '"]') || {}).value || action.statusValue || '' }; });
+  }
+  function refreshBuilderSections() {
+    var condHost = D.getElementById('wfConditions'), actionHost = D.getElementById('wfActions');
+    if (condHost) condHost.innerHTML = conditions.map(conditionMarkup).join('');
+    if (actionHost) actionHost.innerHTML = actions.map(actionMarkup).join('');
+  }
+  function handleInput(event) {
+    if (event.target && (event.target.id === 'wfSearch' || event.target.id === 'wfFilter')) renderRulesTable();
+    if (event.target && event.target.matches('[data-action-type]')) { collectCurrentActions(); refreshBuilderSections(); }
+  }
+  function init() {
+    css();
+    if (!ensureTab()) { setTimeout(init, 300); return; }
+    installStorageWatcher();
+    var activeCompany = companyId();
+    if (activeCompany) { var savedRules = read(RULES_KEY, []), migrated = false; savedRules.forEach(function (rule) { if (!rule.companyId) { rule.companyId = activeCompany; migrated = true; } }); if (migrated) write(RULES_KEY, savedRules); }
+    var tab = D.getElementById('workflowRulesTab');
+    tab.addEventListener('click', handleClick);
+    tab.addEventListener('input', handleInput);
+    tab.addEventListener('change', handleInput);
+    render();
+  }
+  if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', init); else init();
+})(window, document);
+
+
+
+/* ===== merged from acacia-multicurrency.js ===== */
+/* Acacia Books — Multi-currency accounting layer
+ * Backwards-compatible transaction metadata, historical FX snapshots and FX exposure reports.
+ * Existing transaction amounts are never rewritten by this module.
+ */
+(function () {
+  'use strict';
+  if (window.__acxMultiCurrencyLoaded) return;
+  window.__acxMultiCurrencyLoaded = true;
+  var VERSION = 2;
+  var KEYS = { history: 'acxExchangeRateHistory', audit: 'acxFxAudit', settings: 'exchangeRates' };
+  var TX_KEYS = ['invoices','bills','quotes','supplierQuotes','purchaseOrders','creditNotes','creditNoteDrafts','receipts','customerPayments','billPayments','payments','manualJournals','journalEntries'];
+  var busy = false;
+  function read(k, fallback) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? fallback : v; } catch (_) { return fallback; } }
+  function write(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { console.warn('[Acacia FX] storage write failed', k, e); } }
+  function base() { try { return String(localStorage.getItem('appBaseCurrency') || (read('orgInfo', {}) || {}).baseCurrency || 'KES').replace(/"/g,'').toUpperCase(); } catch (_) { return 'KES'; } }
+  function norm(c) { c = String(c || base()).trim().toUpperCase(); return c === 'KSH' || c === 'KSHS' ? 'KES' : c; }
+  function round(n, dp) { var p = Math.pow(10, dp == null ? 6 : dp); return Math.round((Number(n) + Number.EPSILON) * p) / p; }
+  function rates() { var r = read(KEYS.settings, {}) || {}; if (!r || typeof r !== 'object' || Array.isArray(r)) r = {}; var b = base(); r[b] = 1; return r; }
+  function rate(c, date) {
+    c = norm(c); if (c === base()) return 1;
+    var h = read(KEYS.history, []), best = null, target = String(date || new Date().toISOString()).slice(0,10);
+    for (var i=0;i<h.length;i++) { var x=h[i]; if (x && x.baseCurrency === base() && x.currency === c && String(x.effectiveDate || '').slice(0,10) <= target && Number(x.rate)>0 && (!best || String(x.effectiveDate)>String(best.effectiveDate) || (String(x.effectiveDate)===String(best.effectiveDate) && String(x.capturedAt||'')>String(best.capturedAt||'')))) best=x; }
+    if (best) return Number(best.rate);
+    var currencyHistory = h.filter(function(x){return x && x.baseCurrency===base() && x.currency===c && Number(x.rate)>0;});
+    if (currencyHistory.length) {
+      var first = currencyHistory.reduce(function(a,x){return String(x.effectiveDate)<String(a.effectiveDate)?x:a;},currencyHistory[0]);
+      if (target < String(first.effectiveDate||'').slice(0,10)) return null;
+    }
+    var v = Number(rates()[c]); return v > 0 ? v : null;
+  }
+  function convert(amount, from, to, fxDate, explicitRate) {
+    amount = Number(amount); if (!isFinite(amount)) return 0;
+    from = norm(from); to = norm(to || base());
+    if (from === to) return amount;
+    var rf = from === base() ? 1 : (explicitRate > 0 && from !== base() && to === base() ? Number(explicitRate) : rate(from, fxDate));
+    var rt = to === base() ? 1 : rate(to, fxDate);
+    if (!(rf > 0 && rt > 0)) return null;
+    return amount * rf / rt;
+  }
+  function snapshot(c, fxDate, explicit) {
+    c = norm(c); var v = c === base() ? 1 : Number(explicit) > 0 ? Number(explicit) : rate(c, fxDate);
+    if (!(v > 0)) return null;
+    return { currency:c, baseCurrency:base(), rate:v, effectiveDate:String(fxDate || new Date().toISOString()).slice(0,10), capturedAt:new Date().toISOString(), source: explicit ? 'transaction' : 'rate-table' };
+  }
+  function amountOf(o) {
+    if (!o) return 0;
+    var candidates = ['foreignTotal','totalForeign','totalAmount','total','amount','subtotal'];
+    for (var i=0;i<candidates.length;i++) { var n=Number(o[candidates[i]]); if (isFinite(n) && n !== 0) return n; }
+    return 0;
+  }
+  function annotate(o, key) {
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return o;
+    var sourceInvoice = (key === 'creditNotes' || key === 'creditNoteDrafts') && o.invoiceId ? (read('invoices',[]).find(function(x){return String(x.id)===String(o.invoiceId)||String(x.invoiceNumber)===String(o.invoiceId);}) || null) : null;
+    var c = norm(o.currency || o.transactionCurrency || (sourceInvoice && sourceInvoice.currency) || ((key === 'quotes' || key === 'creditNotes' || key === 'creditNoteDrafts') ? selected(key === 'quotes' ? 'quote' : 'credit') : base()));
+    var date = o.date || o.invoiceDate || o.billDate || o.createdAt || new Date().toISOString();
+    var ex = Number(o.exchangeRate || o.currencyRate || o.fxRate || (sourceInvoice && sourceInvoice.exchangeRate) || ((key === 'quotes' || key === 'creditNotes' || key === 'creditNoteDrafts') ? selectedRate(key === 'quotes' ? 'quote' : 'credit') : 0));
+    var snap = snapshot(c, date, ex);
+    if (!snap) { o.fxStatus = 'rate-required'; return o; }
+    o.currency = c; o.transactionCurrency = c;
+    if (!(Number(o.exchangeRate)>0)) o.exchangeRate = snap.rate;
+    o.baseCurrency = base();
+    o.fxSnapshot = o.fxSnapshot || snap;
+    var foreign = amountOf(o);
+    if (key === 'bills') {
+      // Legacy bills store total in base currency and subtotal/VAT in transaction currency.
+      var legacyForeign = Number(o.subtotal || 0) + Number(o.vat || 0);
+      if (legacyForeign > 0) { foreign = legacyForeign; o.foreignTotal = round(legacyForeign); o.baseTotal = Number(o.total) || round(legacyForeign * snap.rate); }
+    } else if (key === 'invoices') {
+      o.foreignTotal = Number(o.foreignTotal || o.total || 0);
+      o.baseTotal = Number(o.totalKES || o.baseTotal || (Number(o.foreignTotal) * snap.rate));
+    } else {
+      o.foreignTotal = Number(o.foreignTotal || foreign || 0);
+      o.baseTotal = Number(o.baseTotal || (o.foreignTotal * snap.rate));
+    }
+    o.fxStatus = 'captured';
+    return o;
+  }
+  function appendHistory() {
+    var c = base(), r = rates(), h = read(KEYS.history, []), today = new Date().toISOString().slice(0,10);
+    Object.keys(r).forEach(function (cur) {
+      var v = Number(r[cur]); if (!(v>0)) return;
+      var found = h.some(function (x) { return x && x.baseCurrency===c && x.currency===cur && x.effectiveDate===today && Number(x.rate)===v; });
+      if (!found) h.push({baseCurrency:c,currency:cur,rate:v,effectiveDate:today,capturedAt:new Date().toISOString(),source:'settings'});
+    });
+    if (h.length > 12000) h = h.slice(-12000);
+    write(KEYS.history,h);
+  }
+  function recordAudit(action, data) { var a=read(KEYS.audit,[]); a.push({id:'FX-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),action:action,at:new Date().toISOString(),baseCurrency:base(),data:data||{}}); if(a.length>5000)a=a.slice(-5000);write(KEYS.audit,a); }
+  function normalizeArray(key, value) {
+    if (!Array.isArray(value)) return value;
+    var changed=false, out=value.map(function (o) { if (!o || typeof o!=='object') return o; var before=JSON.stringify(o);
+      if (['receipts','customerPayments','billPayments','payments'].indexOf(key)>=0) {
+        var inv=read('invoices',[]), bills=read('bills',[]), ref=o.invoiceId||o.billId||o.documentId||o.linkedDocumentId;
+        var linked=(inv||[]).find(function(d){return d&&(String(d.id)===String(ref)||String(d.invoiceNumber)===String(ref));}) || (bills||[]).find(function(d){return d&&(String(d.id)===String(ref)||String(d.billNumber)===String(ref));});
+        if(linked){o.currency=o.currency||o.billCurrency||linked.currency||base();o.transactionCurrency=o.currency;o.exchangeRate=Number(o.exchangeRate||o.payRate||o.billRate||linked.exchangeRate||linked.currencyRate||1);o.baseCurrency=base();o.linkedFxSnapshot=linked.fxSnapshot||snapshot(linked.currency||base(),linked.date,linked.exchangeRate||linked.currencyRate);}
+      }
+      if (['receipts','customerPayments','billPayments','payments'].indexOf(key)>=0) {
+        /* Payment schemas differ across modules. Preserve their amount fields; only attach a dated FX snapshot. */
+        var pc=norm(o.currency||o.transactionCurrency||(o.linkedFxSnapshot&&o.linkedFxSnapshot.currency)||base());
+        var pd=o.date||o.paymentDate||o.createdAt||new Date().toISOString();
+        var pr=Number(o.exchangeRate||o.payRate||o.billRate||0);
+        var ps=snapshot(pc,pd,pr);
+        if(ps){o.currency=pc;o.transactionCurrency=pc;o.exchangeRate=Number(o.exchangeRate||ps.rate);o.baseCurrency=base();o.fxSnapshot=o.fxSnapshot||ps;o.fxStatus='captured';}
+      } else annotate(o,key);
+      if(before!==JSON.stringify(o))changed=true; return o; });
+    return changed ? out : value;
+  }
+  function installStorageHook() {
+    if (Storage.prototype.__acxFxHook) return;
+    var nativeSet = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (this === localStorage && !busy && TX_KEYS.indexOf(String(key)) >= 0) {
+        try { var parsed=JSON.parse(value); if(Array.isArray(parsed)){busy=true;value=JSON.stringify(normalizeArray(String(key),parsed));} } catch (_) {} finally { busy=false; }
+      }
+      var result=nativeSet.call(this,key,value);
+      if (this===localStorage && key===KEYS.settings && !busy) { try { appendHistory(); } catch(e){} }
+      return result;
+    };
+    Storage.prototype.__acxFxHook = true;
+  }
+  function ensureControl(container, id, label, selected) {
+    if (!container || container.querySelector('[data-acx-fx="'+id+'"]')) return;
+    var wrap=document.createElement('div'); wrap.className='mt-3 p-3 rounded-lg border'; wrap.style.cssText='border-color:#dbe3f2;background:#f8faff;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;';
+    var cur=document.createElement('label'); cur.style.cssText='font-size:12px;font-weight:700;color:#1e3a8a'; cur.textContent='Currency';
+    var sel=document.createElement('select'); sel.setAttribute('data-acx-fx',id); sel.style.cssText='display:block;width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:7px;background:white;color:#0f172a';
+    var r=rates(), keys=Object.keys(r).filter(function(k){return Number(r[k])>0;}); if(keys.indexOf(base())<0)keys.unshift(base()); keys.sort();
+    keys.forEach(function(k){var op=document.createElement('option');op.value=k;op.textContent=k;sel.appendChild(op)}); sel.value=selected||base();
+    cur.appendChild(sel);
+    var rateLabel=document.createElement('label');rateLabel.style.cssText='font-size:12px;font-weight:700;color:#1e3a8a';rateLabel.textContent='Rate (1 '+sel.value+' = '+base()+')';
+    var rateInput=document.createElement('input');rateInput.type='number';rateInput.step='0.000001';rateInput.min='0.000001';rateInput.value=rate(sel.value)||1;rateInput.style.cssText='display:block;width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:7px;background:white;color:#0f172a';rateInput.setAttribute('data-acx-fx-rate',id);rateLabel.appendChild(rateInput);
+    sel.addEventListener('change',function(){rateLabel.firstChild.textContent='Rate (1 '+sel.value+' = '+base()+')';rateInput.value=rate(sel.value)||'';});
+    wrap.appendChild(cur);wrap.appendChild(rateLabel);container.appendChild(wrap);
+  }
+  function addQuoteAndCreditControls() {
+    var q=document.getElementById('quoteDate'); if(q)ensureControl(q.closest('.space-y-4')||q.parentElement.parentElement,'quote','Quote currency',base());
+    var c=document.getElementById('creditDate'); if(c)ensureControl(c.closest('.space-y-4')||c.parentElement.parentElement,'credit','Credit note currency',base());
+    var sq=document.getElementById('quoteSupplier'); if(sq && document.getElementById('quoteDate')) { /* shared quote IDs are scoped by active tab */ }
+  }
+  function selected(id) { var e=document.querySelector('[data-acx-fx="'+id+'"]'); return e ? norm(e.value) : base(); }
+  function selectedRate(id) { var e=document.querySelector('[data-acx-fx-rate="'+id+'"]'); var n=e?Number(e.value):rate(selected(id)); return n>0?n:rate(selected(id)); }
+  function decorateFormData(key, doc) {
+    if(!doc || typeof doc!=='object')return doc;
+    var id=key==='quotes'?'quote':key==='creditNotes'?'credit':null;
+    if(id){doc.currency=selected(id);doc.exchangeRate=selectedRate(id)||1;}
+    annotate(doc,key);return doc;
+  }
+  function patchSave(name,key,kind) {
+    var original=window[name]; if(typeof original!=='function'||original.__acxFxWrapped)return false;
+    var wrapped=function(){
+      var before=read(key,[]), beforeJson=Array.isArray(before)?before.map(function(x){return JSON.stringify(x)}):[];
+      var result=original.apply(this,arguments);
+      try {
+        var list=read(key,[]);
+        if(Array.isArray(list)&&list.length){
+          var target=-1;
+          for(var i=0;i<list.length;i++) if(beforeJson[i]!==JSON.stringify(list[i])) target=i;
+          if(target<0 && list.length>beforeJson.length) target=list.length-1;
+          if(target<0 && (name==='saveQuote'||name==='saveQuoteDraft') && typeof window.editingQuoteIndex==='number' && window.editingQuoteIndex>=0) target=window.editingQuoteIndex;
+          if(target<0 && (name==='saveCreditNote'||name==='saveCreditNoteDraft') && window.editingCreditNoteId!=null) target=list.findIndex(function(x){return String(x.id)===String(window.editingCreditNoteId);});
+          if(target>=0&&list[target]){decorateFormData(key,list[target]);write(key,list);}
+        }
+      }catch(e){console.warn('[Acacia FX] post-save',name,e)}
+      return result;
+    };
+    wrapped.__acxFxWrapped=true;wrapped.__acxOriginal=original;window[name]=wrapped;return true;
+  }
+  function patchSaves() {
+    patchSave('saveQuote','quotes'); patchSave('saveQuoteDraft','quotes');
+    patchSave('saveCreditNote','creditNotes'); patchSave('saveCreditNoteDraft','creditNoteDrafts');
+    patchSave('saveSupplierQuote','supplierQuotes'); patchSave('savePurchaseOrder','purchaseOrders');
+    [['editQuote','quotes','quote'],['editCreditNote','creditNotes','credit']].forEach(function(x){
+      var f=window[x[0]]; if(typeof f!=='function'||f.__acxFxWrapped)return;
+      var w=function(i){var r=f.apply(this,arguments);addQuoteAndCreditControls();var a=read(x[1],[]),d;
+        if(x[0]==='editQuote') d=a[Number(i)];
+        else d=a.find(function(v){return String(v.id)===String(i);});
+        if(d){var el=document.querySelector('[data-acx-fx="'+x[2]+'"]'),rateEl=document.querySelector('[data-acx-fx-rate="'+x[2]+'"]');
+          if(el){var wanted=norm(d.currency||base());if(!Array.from(el.options).some(function(o){return o.value===wanted})){var op=document.createElement('option');op.value=wanted;op.textContent=wanted;el.appendChild(op);}el.value=wanted;}
+          if(rateEl)rateEl.value=Number(d.exchangeRate||1);
+        }return r;};
+      w.__acxFxWrapped=true;window[x[0]]=w;
+    });
+  }
+  function exposure() {
+    var b=base(), now=new Date().toISOString().slice(0,10), inv=read('invoices',[]), bills=read('bills',[]), ar={},ap={}, rows=[];
+    function add(map,c,foreign,baseBook,type,ref) { c=norm(c); if(c===b||!isFinite(foreign)||foreign<=0)return; map[c]=(map[c]||0)+foreign; var current=convert(foreign,c,b,now); if(current==null)return; rows.push({type:type,reference:ref,currency:c,foreign:foreign,bookBase:baseBook,currentBase:round(current,2),unrealised:round(current-baseBook,2)}); }
+    inv.forEach(function(x){var ex=Number(x.exchangeRate||1),book=Number(x.balance);if(!isFinite(book))book=Number(x.baseBalanceDue);if(!isFinite(book))book=(x.paid===true||String(x.status||'').toLowerCase()==='paid')?0:Math.max(0,Number(x.totalKES||x.baseTotal||0)-Number(x.amountPaid||x.basePaidAmount||0));var bal=Number(x.foreignBalance);if(!isFinite(bal))bal=ex>0?Math.max(0,book/ex):0;add(ar,x.currency||b,bal,book,'Receivable',x.invoiceNumber||x.id);});
+    bills.forEach(function(x){var ex=Number(x.exchangeRate||x.currencyRate||1),book=Number(x.balance);if(!isFinite(book))book=Number(x.baseBalanceDue);if(!isFinite(book))book=(String(x.status||'').toLowerCase()==='paid')?0:Math.max(0,Number(x.baseTotal||x.total||0)-Number(x.amountPaid||x.paidAmount||x.basePaidAmount||0));var foreign=Number(x.foreignBalance);if(!isFinite(foreign))foreign=ex>0?Math.max(0,book/ex):0;add(ap,x.currency||b,foreign,book,'Payable',x.billNumber||x.id);});
+    return {baseCurrency:b,asOf:now,receivables:ar,payables:ap,openItems:rows,totalUnrealisedGain:round(rows.reduce(function(s,x){return s+Math.max(0,x.unrealised);},0),2),totalUnrealisedLoss:round(rows.reduce(function(s,x){return s+Math.max(0,-x.unrealised);},0),2),netUnrealised:round(rows.reduce(function(s,x){return s+x.unrealised;},0),2)};
+  }
+  function realised() {
+    var invoices=read('invoices',[]), bills=read('bills',[]), payments=read('customerPayments',[]).concat(read('receipts',[]),read('billPayments',[]),read('payments',[])), sum=0, items=[], seen={};
+    payments.forEach(function(p){
+      if(!p || p.openingBalance || p.source==='fundsTransaction' && !p.invoiceId && !p.billId && !p.billNumber) return;
+      var id=p.invoiceId||p.billId||p.documentId, doc=invoices.find(function(d){return String(d.id)===String(id)||String(d.invoiceNumber)===String(id);}), kind='Receivable';
+      if(!doc){doc=bills.find(function(d){return String(d.id)===String(id)||String(d.billNumber)===String(id)||String(d.billNumber)===String(p.billNumber);});kind='Payable';}
+      if(!doc && p.billIndex!=null) { doc=bills[Number(p.billIndex)]; kind='Payable'; }
+      if(!doc)return;
+      var dedupe=String(p.id||'')+'|'+String(doc.id||doc.invoiceNumber||doc.billNumber); if(seen[dedupe])return; seen[dedupe]=1;
+      var c=norm(doc.currency||base()), original=Number(doc.exchangeRate||doc.currencyRate||1), paidBase=Number(p.amountBase||p.baseAmount||p.amount||0), payDate=p.date||new Date().toISOString().slice(0,10), payRate=Number(p.exchangeRate||p.payRate||p.billRate||rate(c,payDate));
+      if(c===base()||!(paidBase>0&&original>0&&payRate>0))return;
+      var foreignSettled=paidBase/payRate, carrying=foreignSettled*original, diff=round(kind==='Receivable'?paidBase-carrying:carrying-paidBase,2);
+      sum+=diff; items.push({reference:doc.invoiceNumber||doc.billNumber||doc.id,type:kind,paidBase:paidBase,currency:c,invoiceRate:original,paymentRate:payRate,realisedFx:diff,date:payDate});
+    });
+    return {netRealisedFx:round(sum,2),items:items};
+  }
+  function renderReport() {
+    var host=document.getElementById('acxFxReport'); if(!host)return;
+    var e=exposure(), r=realised(), fmt=function(n){return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});};
+    host.innerHTML='<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b style="color:#1e3a8a">Foreign currency exposure</b><div style="font-size:12px;color:#64748b">Revaluation estimate · '+e.asOf+' · '+e.baseCurrency+'</div></div><button type="button" id="acxFxRefresh" style="padding:7px 12px;border:1px solid #1e3a8a;border-radius:7px;color:#1e3a8a">Refresh</button></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px;margin:12px 0"><div style="padding:10px;background:#f8fafc;border-radius:8px"><small>Unrealised gain</small><div style="font-weight:700;color:#15803d">'+e.baseCurrency+' '+fmt(e.totalUnrealisedGain)+'</div></div><div style="padding:10px;background:#f8fafc;border-radius:8px"><small>Unrealised loss</small><div style="font-weight:700;color:#b91c1c">'+e.baseCurrency+' '+fmt(e.totalUnrealisedLoss)+'</div></div><div style="padding:10px;background:#f8fafc;border-radius:8px"><small>Net unrealised FX</small><div style="font-weight:700">'+e.baseCurrency+' '+fmt(e.netUnrealised)+'</div></div><div style="padding:10px;background:#f8fafc;border-radius:8px"><small>Net realised FX (linked payments)</small><div style="font-weight:700">'+e.baseCurrency+' '+fmt(r.netRealisedFx)+'</div></div></div><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="text-align:left;padding:7px">Type</th><th style="text-align:left;padding:7px">Reference</th><th style="text-align:left;padding:7px">Currency</th><th style="text-align:right;padding:7px">Open amount</th><th style="text-align:right;padding:7px">Book value ('+e.baseCurrency+')</th><th style="text-align:right;padding:7px">Current value</th><th style="text-align:right;padding:7px">FX difference</th></tr></thead><tbody>'+e.openItems.map(function(x){return '<tr><td style="padding:7px;border-top:1px solid #e2e8f0">'+x.type+'</td><td style="padding:7px;border-top:1px solid #e2e8f0">'+String(x.reference||'').replace(/[&<>]/g,'')+'</td><td style="padding:7px;border-top:1px solid #e2e8f0">'+x.currency+'</td><td style="padding:7px;text-align:right;border-top:1px solid #e2e8f0">'+fmt(x.foreign)+'</td><td style="padding:7px;text-align:right;border-top:1px solid #e2e8f0">'+fmt(x.bookBase)+'</td><td style="padding:7px;text-align:right;border-top:1px solid #e2e8f0">'+fmt(x.currentBase)+'</td><td style="padding:7px;text-align:right;border-top:1px solid #e2e8f0">'+fmt(x.unrealised)+'</td></tr>';}).join('')+'</tbody></table></div><p style="font-size:11px;color:#64748b;margin-top:8px">Estimate only: review linked payment allocations and post approved revaluation journals before statutory reporting. Historical invoice and bill rates remain unchanged.</p>';
+    var btn=document.getElementById('acxFxRefresh'); if(btn)btn.onclick=renderReport;
+  }
+  function addFxReport() {
+    if(document.getElementById('acxFxReport'))return;
+    var root=document.getElementById('reportsTab')||document.getElementById('settingsTab')||document.querySelector('#mainContent')||document.body;
+    if(!root)return;
+    var card=document.createElement('section');card.id='acxFxReport';card.className='mt-4 p-4 rounded-xl border';card.style.cssText='border-color:#dbe3f2;background:#fff;color:#0f172a';
+    var title=document.createElement('h3');title.textContent='Multi-currency accounting · FX revaluation';title.style.cssText='font-weight:700;color:#1e3a8a;margin-bottom:10px';card.appendChild(title);root.appendChild(card);renderReport();
+  }
+  function init() {
+    installStorageHook(); appendHistory();
+    TX_KEYS.forEach(function(k){var a=read(k,null);if(Array.isArray(a)){var b=normalizeArray(k,a);if(JSON.stringify(a)!==JSON.stringify(b))write(k,b);}});
+    patchSaves(); addQuoteAndCreditControls(); addFxReport();
+    var mo=new MutationObserver(function(){patchSaves();addQuoteAndCreditControls();}); mo.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style']});
+    document.addEventListener('click',function(){setTimeout(function(){patchSaves();addQuoteAndCreditControls();},80);},true);
+    window.addEventListener('acx:rates-updated',function(){appendHistory();renderReport();});
+    window.addEventListener('acx-currency-rates-updated',function(){appendHistory();renderReport();});
+    window.addEventListener('storage',function(e){if(e.key===KEYS.settings){appendHistory();renderReport();}});
+    window.acxFX={version:VERSION,baseCurrency:base,rate:rate,convert:convert,snapshot:snapshot,exposure:exposure,realised:realised,renderReport:renderReport,history:function(){return read(KEYS.history,[]);},recordAudit:recordAudit};
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+
+
+
+/* ===== merged from acacia-inventory-costing.js ===== */
+/* Acacia Books inventory costing: dual-method foundation + bulk costing tools.
+   Preserves legacy buyPrice and existing inventory records. */
+(function(){'use strict';
+  var KEY='acxCostingSettingsV1';
+  function read(k,f){try{var v=JSON.parse(localStorage.getItem(k)||'null');return v==null?f:v}catch(e){return f}}
+  function write(k,v){localStorage.setItem(k,JSON.stringify(v))}
+  function num(v){v=Number(String(v==null?0:v).replace(/,/g,''));return isFinite(v)?v:0}
+  function base(){return window.__getBaseCurrencyEarly?window.__getBaseCurrencyEarly():(localStorage.getItem('baseCurrency')||'KES')}
+  function settings(){var s=read(KEY,{});return Object.assign({defaultMethod:'weighted-average',landedAllocation:'value'},s)}
+  function saveSettings(s){write(KEY,s)}
+  function warehouses(){return typeof __invWarehouseNames==='function'?__invWarehouseNames():[]}
+  function get(wh){return typeof getInventory==='function'?getInventory(wh):read('inventory_'+wh,[])}
+  function put(wh,a){if(typeof saveInventory==='function')saveInventory(wh,a);else write('inventory_'+wh,a)}
+  function method(item){return item.costingMethod||settings().defaultMethod}
+  function ensure(item){if(!item.costingMethod)item.costingMethod=settings().defaultMethod;
+    if(item.costingMethod==='fifo'&&!Array.isArray(item.costLayers)){
+      var q=Math.max(0,num(item.qty)),c=num(item.buyPrice);
+      item.costLayers=q>0?[{id:'OPEN-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),date:item.openingDate||item.createdAt||new Date().toISOString().slice(0,10),qtyIn:q,qtyRemaining:q,unitCost:c,currency:item.currency||base(),baseUnitCost:c,source:'Opening balance'}]:[];
+    }
+    if(item.costingMethod==='weighted-average'&&!isFinite(Number(item.averageCost)))item.averageCost=num(item.buyPrice);
+    return item;
+  }
+  function sync(wh){var a=get(wh),dirty=false;a.forEach(function(it){if(it){var before=JSON.stringify([it.costingMethod,it.costLayers,it.averageCost]);ensure(it);if(before!==JSON.stringify([it.costingMethod,it.costLayers,it.averageCost]))dirty=true}});if(dirty)put(wh,a);return a}
+  window.AcaciaCosting={settings:settings,saveSettings:saveSettings,method:method,ensure:ensure,
+    receive:function(wh,index,qty,unitCost,currency,rate,date,source){var a=sync(wh),it=a[index];if(!it)throw Error('Product not found');qty=num(qty);unitCost=num(unitCost);rate=num(rate)||1;if(qty<=0||unitCost<0)throw Error('Enter a positive quantity and a valid unit cost');ensure(it);var bcost=unitCost*rate;
+      if(method(it)==='fifo'){it.costLayers.push({id:'RCV-'+Date.now(),date:date||new Date().toISOString().slice(0,10),qtyIn:qty,qtyRemaining:qty,unitCost:unitCost,currency:currency||base(),exchangeRate:rate,baseUnitCost:bcost,source:source||'Stock receipt'});}
+      else {var old=num(it.qty),avg=num(it.averageCost||it.buyPrice),next=old+qty;it.averageCost=next>0?((old*avg)+(qty*bcost))/next:bcost;it.buyPrice=it.averageCost;}
+      it.qty=num(it.qty)+qty;it.costingUpdatedAt=new Date().toISOString();put(wh,a);return it;},
+    issue:function(wh,index,qty){var a=sync(wh),it=a[index];if(!it)throw Error('Product not found');qty=num(qty);if(qty<=0||qty>num(it.qty))throw Error('Issue quantity exceeds available stock');ensure(it);var cost=0,alloc=[];
+      if(method(it)==='fifo'){var left=qty;it.costLayers.slice().sort(function(x,y){return String(x.date||'').localeCompare(String(y.date||''))||String(x.id).localeCompare(String(y.id))}).forEach(function(layer){if(left<=0)return;var take=Math.min(left,num(layer.qtyRemaining));if(take>0){layer.qtyRemaining-=take;left-=take;cost+=take*num(layer.baseUnitCost==null?layer.unitCost:layer.baseUnitCost);alloc.push({layerId:layer.id,qty:take,baseUnitCost:num(layer.baseUnitCost==null?layer.unitCost:layer.baseUnitCost)})}});if(left>0.000001)throw Error('FIFO cost layers do not cover available quantity. Reconcile opening layers before posting.');}
+      else cost=qty*num(it.averageCost||it.buyPrice);
+      it.qty=num(it.qty)-qty;put(wh,a);return{quantity:qty,costBase:cost,unitCostBase:cost/qty,allocations:alloc,method:method(it)};},
+    setMethod:function(wh,index,m){if(['fifo','weighted-average'].indexOf(m)<0)throw Error('Invalid costing method');var a=sync(wh),it=a[index];if(!it)throw Error('Product not found');if(m==='fifo'&&it.costingMethod!=='fifo'){it.costingMethod='fifo';it.costLayers=[{id:'CONV-'+Date.now(),date:new Date().toISOString().slice(0,10),qtyIn:num(it.qty),qtyRemaining:num(it.qty),unitCost:num(it.averageCost||it.buyPrice),baseUnitCost:num(it.averageCost||it.buyPrice),currency:base(),source:'Method conversion — current carrying cost'}].filter(function(x){return x.qtyIn>0})}else if(m==='weighted-average'&&it.costingMethod!=='weighted-average'){var q=num(it.qty),v=(it.costLayers||[]).reduce(function(s,l){return s+num(l.qtyRemaining)*num(l.baseUnitCost==null?l.unitCost:l.baseUnitCost)},0);it.averageCost=q>0?v/q:num(it.buyPrice);it.buyPrice=it.averageCost;it.costingMethod='weighted-average';}else it.costingMethod=m;put(wh,a);return it;},
+    bulkLandedCost:function(wh,indices,total,allocation){var a=sync(wh),items=indices.map(function(i){return{index:i,item:a[i]}}).filter(function(x){return x.item});total=num(total);if(!items.length||total<0)throw Error('Select products and enter a valid landed cost');var weights=items.map(function(x){return allocation==='quantity'?Math.max(0,num(x.item.qty)):Math.max(0,num(x.item.qty)*num(x.item.buyPrice))}),sum=weights.reduce(function(s,x){return s+x},0);if(sum<=0)throw Error('Selected products have no quantity/value basis for allocation');items.forEach(function(x,i){var share=total*weights[i]/sum,it=x.item,q=Math.max(0,num(it.qty));if(!q)return;var add=share/q;ensure(it);if(method(it)==='fifo'){var layer=it.costLayers.slice().reverse().find(function(l){return num(l.qtyRemaining)>0});if(layer){layer.unitCost=num(layer.unitCost)+add;layer.baseUnitCost=num(layer.baseUnitCost==null?layer.unitCost-add:layer.baseUnitCost)+add;layer.landedCostAllocated=num(layer.landedCostAllocated)+share}else it.costLayers.push({id:'LAND-'+Date.now()+'-'+i,date:new Date().toISOString().slice(0,10),qtyIn:q,qtyRemaining:q,unitCost:add,baseUnitCost:add,currency:base(),source:'Bulk landed cost'})}else{it.averageCost=num(it.averageCost||it.buyPrice)+add;it.buyPrice=it.averageCost;}it.landedCostAllocated=num(it.landedCostAllocated)+share;});put(wh,a);return items.length;}
+  };
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])})}
+  function open(){var wh=(document.getElementById('warehouseSelect')||{}).value||'';if(!wh){alert('Select one warehouse to manage costing.');return}var a=sync(wh);var rows=a.map(function(it,i){return '<tr><td><input type="checkbox" class="acx-cost-check" value="'+i+'" checked></td><td>'+esc(it.name)+'</td><td>'+esc(it.sku||'')+'</td><td>'+num(it.qty)+'</td><td><select class="acx-cost-method" data-i="'+i+'"><option value="weighted-average" '+(method(it)==='weighted-average'?'selected':'')+'>Weighted Average</option><option value="fifo" '+(method(it)==='fifo'?'selected':'')+'>FIFO</option></select></td><td>'+num(it.averageCost||it.buyPrice).toFixed(2)+'</td><td>'+(it.costLayers||[]).length+'</td></tr>'}).join('');
+    var old=document.getElementById('acxCostingModal');if(old)old.remove();var m=document.createElement('div');m.id='acxCostingModal';m.style.cssText='position:fixed;inset:0;background:#0f172a99;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';m.innerHTML='<div style="background:white;color:#172033;width:min(1050px,98vw);max-height:90vh;overflow:auto;border-radius:14px;padding:20px;box-shadow:0 20px 60px #0004"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><h2 style="font-size:20px;font-weight:800;color:#1e3a8a">Inventory Costing & Bulk Costing</h2><button id="acxCostClose" style="font-size:24px">×</button></div><p style="font-size:13px;color:#64748b;margin:6px 0 14px">Warehouse: <b>'+esc(wh)+'</b>. Choose a method per product or apply a method to selected products.</p><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;background:#f8fafc;padding:12px;border-radius:10px;margin-bottom:12px"><label style="font-size:13px">Business default<br><select id="acxCostDefault" style="border:1px solid #cbd5e1;padding:7px;border-radius:6px"><option value="weighted-average">Weighted Average</option><option value="fifo">FIFO</option></select></label><button id="acxCostSaveDefault" style="background:#1e3a8a;color:white;padding:8px 12px;border-radius:7px">Save default</button><label style="font-size:13px">Apply method to selected<br><select id="acxCostBulkMethod" style="border:1px solid #cbd5e1;padding:7px;border-radius:6px"><option value="weighted-average">Weighted Average</option><option value="fifo">FIFO</option></select></label><button id="acxCostApplyMethod" style="background:#1e3a8a;color:white;padding:8px 12px;border-radius:7px">Apply method</button></div><div style="overflow:auto;max-height:42vh"><table style="width:100%;font-size:13px;border-collapse:collapse"><thead><tr style="background:#eff6ff"><th>Select</th><th>Product</th><th>SKU</th><th>Qty</th><th>Method</th><th>Unit cost ('+esc(base())+')</th><th>FIFO layers</th></tr></thead><tbody>'+rows+'</tbody></table></div><h3 style="font-weight:700;margin:16px 0 8px">Bulk landed-cost allocation</h3><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end"><label style="font-size:13px">Additional shipment cost ('+esc(base())+')<br><input id="acxCostLanded" type="number" min="0" step="0.01" style="border:1px solid #cbd5e1;padding:8px;border-radius:6px;width:190px"></label><label style="font-size:13px">Allocate by<br><select id="acxCostBasis" style="border:1px solid #cbd5e1;padding:8px;border-radius:6px"><option value="value">Current inventory value</option><option value="quantity">Quantity</option></select></label><button id="acxCostAllocate" style="background:#b8892d;color:white;padding:9px 14px;border-radius:7px;font-weight:700">Allocate to selected</button></div><p style="font-size:12px;color:#64748b;margin-top:10px">FIFO uses dated receipt layers; weighted average updates the carrying cost. Changing method converts at the current carrying cost. Bulk landed-cost allocation updates inventory cost records, not historical supplier bills.</p></div>';document.body.appendChild(m);
+    document.getElementById('acxCostDefault').value=settings().defaultMethod;
+    function chosen(){return Array.from(m.querySelectorAll('.acx-cost-check:checked')).map(function(x){return Number(x.value)})}
+    document.getElementById('acxCostClose').onclick=function(){m.remove()};m.addEventListener('click',function(e){if(e.target===m)m.remove()});
+    document.getElementById('acxCostSaveDefault').onclick=function(){var s=settings();s.defaultMethod=document.getElementById('acxCostDefault').value;saveSettings(s);alert('Business default costing method saved. Existing products keep their assigned method.')};
+    document.getElementById('acxCostApplyMethod').onclick=function(){var ids=chosen(),v=document.getElementById('acxCostBulkMethod').value;if(!ids.length)return alert('Select at least one product');if(!confirm('Apply '+v+' to '+ids.length+' product(s)?'))return;ids.forEach(function(i){window.AcaciaCosting.setMethod(wh,i,v)});m.remove();open()};
+    m.querySelectorAll('.acx-cost-method').forEach(function(sel){sel.onchange=function(){window.AcaciaCosting.setMethod(wh,Number(sel.dataset.i),sel.value)}});
+    document.getElementById('acxCostAllocate').onclick=function(){try{var ids=chosen(),cost=num(document.getElementById('acxCostLanded').value);if(!ids.length)return alert('Select at least one product');if(!confirm('Allocate '+cost.toFixed(2)+' '+base()+' across '+ids.length+' products?'))return;var n=window.AcaciaCosting.bulkLandedCost(wh,ids,cost,document.getElementById('acxCostBasis').value);alert('Landed cost allocated across '+n+' product(s).');m.remove();open()}catch(e){alert(e.message)}};
+  }
+  // Costing remains in Settings Hub, alongside the existing Costing and Bulk Costing pages.
+  // Do not add controls to Inventory: these settings are intentionally managed from Settings.
+  function mount(){
+    [['#costingTab','acxCostingOpen','⚖️ Costing methods & product costs'],['#bulkCostingTab','acxBulkCostingOpen','🚢 Bulk costing tools']].forEach(function(cfg){
+      var tab=document.querySelector(cfg[0]);if(!tab||document.getElementById(cfg[1]))return;
+      var head=tab.querySelector('h2');if(!head)return;
+      var b=document.createElement('button');b.id=cfg[1];b.type='button';b.textContent=cfg[2];
+      b.style.cssText='display:block;margin:8px 0 14px;background:#1e3a8a;color:white;padding:8px 12px;border-radius:7px;font-weight:700';
+      b.onclick=open;head.insertAdjacentElement('afterend',b);
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
+  new MutationObserver(mount).observe(document.documentElement,{childList:true,subtree:true});
+})();
+
+
+
+/* ===== merged from acacia-action-menus.js ===== */
+/* acacia-action-menus.js - keeps the "Actions" dropdown of Non-Current Assets, Non-Current Liabilities and Equity
+ * on screen.
+ *
+ * Why: the three menus were pinned to the right edge of their button (absolute right-0). When the button sits near the
+ * left of the page (narrow window, wrapped toolbar, details panel open) the menu grew LEFT, under the fixed sidebar,
+ * and could not be seen or clicked. The menu is now placed from the button's real position on screen:
+ *   - it opens straight under the button, right-aligned to it when there is room;
+ *   - it never goes under the left sidebar or the right tools rail, and never past the window edge;
+ *   - it opens upward when there is no room below, and scrolls inside itself if the window is very short.
+ * All three tabs use the same code, so they behave the same. Nothing else about the menus changes
+ * (same buttons, same Esc / click-away to close, same wiring in app-2.js / app-3.js).
+ * Load LAST in index.html (after acacia-live-sync.js). No SQL. */
+(function (W) {
+  "use strict";
+  if (W.__acxActionMenus) return;
+  W.__acxActionMenus = true;
+
+  var PAIRS = [
+    ["assetActionsBtn", "assetActionsDropdown"],          /* Non-Current Assets */
+    ["liabilityActionsBtn", "liabilityActionsDropdown"],  /* Non-Current Liabilities */
+    ["equityActionsBtn", "equityActionsDropdown"]         /* Equity */
+  ];
+  var GAP = 6, EDGE = 8, Z = 2000;   /* above the sidebar (z-index 1300) */
+  var doc = document, wired = {};
+
+  function $(id) { return doc.getElementById(id); }
+
+  /* right edge of the left sidebar when it is actually showing (0 when it is slid off-screen on a phone) */
+  function leftLimit() {
+    var s = $("sidebar");
+    if (!s) return EDGE;
+    var cs = W.getComputedStyle(s);
+    if (cs.display === "none" || cs.visibility === "hidden") return EDGE;
+    var r = s.getBoundingClientRect();
+    return r.width > 0 && r.right > 0 ? Math.round(r.right) + EDGE : EDGE;
+  }
+  /* left edge of the right tools rail when it is showing */
+  function rightLimit() {
+    var vw = doc.documentElement.clientWidth, s = $("rightSidebar");
+    if (s) {
+      var cs = W.getComputedStyle(s);
+      if (cs.display !== "none" && cs.visibility !== "hidden") {
+        var r = s.getBoundingClientRect();
+        if (r.width > 0 && r.left < vw && r.right > 0) return Math.round(r.left) - EDGE;
+      }
+    }
+    return vw - EDGE;
+  }
+
+  function place(btn, dd) {
+    if (!btn || !dd || dd.classList.contains("hidden")) return;
+    var st = dd.style;
+    st.position = "fixed"; st.right = "auto"; st.bottom = "auto"; st.margin = "0";
+    st.zIndex = String(Z); st.overflowY = "auto"; st.maxHeight = "";
+    var b = btn.getBoundingClientRect(), w = dd.offsetWidth, h = dd.offsetHeight;
+    var vh = W.innerHeight || doc.documentElement.clientHeight;
+    var minL = leftLimit(), maxR = rightLimit();
+    if (maxR - minL < w) { maxR = Math.max(maxR, minL + w); }   /* very narrow: keep the menu whole, start at the sidebar edge */
+
+    var left = b.right - w;                       /* right-aligned to the button (the original look) */
+    if (left < minL) left = Math.max(minL, Math.min(b.left, maxR - w));   /* not enough room on the left: start at the button or the sidebar edge */
+    if (left + w > maxR) left = Math.max(minL, maxR - w);
+
+    var top = b.bottom + GAP, room = vh - top - EDGE;
+    if (h > room && b.top - GAP - EDGE > room) {  /* more room above: open upward */
+      top = Math.max(EDGE, b.top - GAP - h);
+      room = b.top - GAP - top;
+    }
+    st.left = Math.round(left) + "px";
+    st.top = Math.round(top) + "px";
+    if (h > room) st.maxHeight = Math.max(120, Math.floor(room)) + "px";
+  }
+
+  function wire(pair) {
+    var btn = $(pair[0]), dd = $(pair[1]);
+    if (!btn || !dd || wired[pair[1]]) return;
+    wired[pair[1]] = true;
+    var go = function () { place(btn, dd); };
+    /* the app shows / hides the menu by toggling the "hidden" class - react to that */
+    if (W.MutationObserver) new MutationObserver(function () { if (!dd.classList.contains("hidden")) go(); }).observe(dd, { attributes: true, attributeFilter: ["class"] });
+    /* One owner for open/close. Equity had TWO click handlers (app-2.js and app-3.js) that both toggled, so it opened and
+       shut again in the same click and never showed. This capture handler runs first, toggles once and stops the others. */
+    var chev = btn.querySelector("svg");
+    btn.addEventListener("click", function (e) {
+      e.stopImmediatePropagation(); e.stopPropagation();
+      var open = dd.classList.contains("hidden");
+      PAIRS.forEach(function (q) { var o = $(q[1]); if (o && o !== dd) { o.classList.add("hidden"); var c = $(q[0]) && $(q[0]).querySelector("svg"); if (c) c.style.transform = ""; } });
+      dd.classList.toggle("hidden", !open);
+      if (chev) chev.style.transform = open ? "rotate(180deg)" : "";
+      if (open) go();
+    }, true);
+    var close = function () { dd.classList.add("hidden"); if (chev) chev.style.transform = ""; };
+    doc.addEventListener("click", function (e) { if (!dd.classList.contains("hidden") && !dd.contains(e.target) && !btn.contains(e.target)) close(); });
+    doc.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+    /* keep it attached to the button while the page scrolls or the window changes */
+    var again = function () { if (!dd.classList.contains("hidden")) go(); };
+    W.addEventListener("resize", again);
+    W.addEventListener("scroll", again, true);
+  }
+
+  function wireAll() { PAIRS.forEach(wire); }
+
+  /* the tabs are in index.html from the start, but wire again if anything re-renders them */
+  wireAll();
+  if (doc.readyState === "loading") doc.addEventListener("DOMContentLoaded", wireAll);
+  W.addEventListener("load", wireAll);
+  var tries = 0, iv = setInterval(function () { wireAll(); if (++tries > 20) clearInterval(iv); }, 1500);
+})(window);
+
