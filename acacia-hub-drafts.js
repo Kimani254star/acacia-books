@@ -11,9 +11,17 @@
       title: "Purchase Hub Drafts", tab: "supplierBillsTab",
       keys: /purchase|supplier|bill|grn|goodsreceived|debitnote|debit_note|purchasereturn|bulkBill|recurringpayment/i
     },
+    funds: {
+      title: "Funds Hub Drafts", tab: "bankAccountsTab",
+      keys: /fund|bank|cash|payment|receipt|deposit|withdraw|transferfund|expense|income|pettycash|reconcil/i
+    },
     accounting: {
-      title: "Accounting Hub Drafts", tab: "manualJournalsTab",
-      keys: /journal|account|equity|liabilit|asset|taxadjust|taxpayment|transactiondraft|bankdraft|operationalcost|budget|currencyadjust|chartofaccount/i
+      title: "Accountant Hub Drafts", tab: "manualJournalsTab",
+      keys: /journal|account|equity|liabilit|asset|taxadjust|taxpayment|transactiondraft|operationalcost|budget|currencyadjust|chartofaccount/i
+    },
+    payroll: {
+      title: "Payroll Hub Drafts", tab: "employeesTab",
+      keys: /payroll|employee|payslip|grosspay|earnings|deduction|statutory|attendance|leave|overtime|salary|wage/i
     },
     inventory: {
       title: "Inventory Drafts", tab: "inventoryTab",
@@ -23,7 +31,9 @@
   var KEY_HUBS = {
     sales: ["bulkInvoiceDrafts","invoiceDrafts","creditNoteDrafts","salesReturnDrafts","deliveryDrafts","invoices","bulkInvoices","quotes","orders","salesOrders","creditNotes","salesReturns","deliveries","receipts","customerPayments","recurringInvoices"],
     purchase: ["bulkBills","bills","supplierBills","purchaseOrders","purchaseOrderDrafts","grns","supplierDebitNotes","purchaseReturns","supplierQuotes","supplierDrafts","purchaseReturnDrafts","recurringBills","recurringPayments","billPayments"],
-    accounting: ["manualJournalDraft","recurringJournalDraft","journalEntries","manualJournals","recurringJournals","manualTransactions","banks","bankMappings","bankAccounts","bankDrafts","operationalCosts","equityRecords","currentAccounts","directorAccount","budgets","budgetHistory","budgetVariance","taxAdjustments","taxPayments","currencyAdjustments","chartOfAccountsDrafts","nonCurrentLiabilityDraft"],
+    funds: ["banks","bankMappings","bankAccounts","bankDrafts","funds","cashAccounts","cashTransactions","bankTransfers","fundTransfers","deposits","withdrawals","expenses","incomeRecords","pettyCash","receipts","customerPayments","supplierPayments","billPayments","paymentsMade","bankReconciliations"],
+    accounting: ["manualJournalDraft","recurringJournalDraft","journalEntries","manualJournals","recurringJournals","manualTransactions","operationalCosts","equityRecords","currentAccounts","directorAccount","budgets","budgetHistory","budgetVariance","taxAdjustments","taxPayments","currencyAdjustments","chartOfAccountsDrafts","nonCurrentLiabilityDraft"],
+    payroll: ["payrollDrafts","payrollRuns","payrollRecords","payslipDrafts","payslips","grossPayroll","earnings","deductions","statutoryDeductions","attendance","leaveRecords","overtime","employeeDrafts","salaryAdvances"],
     inventory: ["inventoryDrafts","stockDrafts","inventoryItems","inventories","stockItems","stockAdjustments","stockTransfers","stocktakes","damagedStock","expiredItems","assemblies","bundles","shipments","inventoryCosting","itemDrafts"]
   };
   var current = "sales";
@@ -36,7 +46,9 @@
   }
   function classify(haystack) {
     var s = String(haystack || "").toLowerCase();
-    if (/journal|accounting|accountant|manualtransaction|taxadjust|taxpayment|bankdraft|equity|liabilit|asset|operationalcost|budget|currencyadjust|chartofaccount/.test(s)) return "accounting";
+    if (/payroll|payslip|grosspay|earnings|deduction|statutory|attendance|leave|overtime|salary|wage|employee/.test(s)) return "payroll";
+    if (/fund|bank|cash|payment|receipt|deposit|withdraw|pettycash|reconcil|expense|income/.test(s)) return "funds";
+    if (/journal|accounting|accountant|manualtransaction|taxadjust|taxpayment|equity|liabilit|asset|operationalcost|budget|currencyadjust|chartofaccount/.test(s)) return "accounting";
     if (/purchase|supplier|bill|grn|goodsreceived|debitnote|purchasereturn|recurringpayment/.test(s)) return "purchase";
     if (/invoice|sales|quote|creditnote|delivery|receipt|customerpayment|salesreturn|bulkorder/.test(s)) return "sales";
     if (/inventory|stock|transfer|bundle|assembly|package|costing|pricelist|shipment|adjustment|stocktake|damaged|expired/.test(s)) return "inventory";
@@ -44,7 +56,7 @@
   }
   function recordHint(v) {
     if (!v || typeof v !== "object") return "";
-    return [v.type,v.documentType,v.module,v.source,v.category,v.section,v.sec,v.table,v.scope,v.label,v.name,v.description].join(" ");
+    return [v.type,v.documentType,v.module,v.source,v.category,v.section,v.sec,v.table,v.scope,v.label,v.name,v.description,v.hub,v.area].join(" ");
   }
   function nameOf(v, key) {
     if (v && typeof v === "object") {
@@ -118,7 +130,8 @@
       /* Generic form drafts created by the universal Save as Draft buttons. */
       if (key === "acxUniversalDrafts" && Array.isArray(data)) {
         data.forEach(function (v, n) {
-          var h = classify(recordHint(v));
+          var h = v && (v.hub || v.moduleHub) || classify(recordHint(v) + " " + String(v && v.sec || ""));
+          if (!h && v && v.sec) { var sec = String(v.sec).toLowerCase(); if (/payroll|employee|payslip|attendance|earnings/.test(sec)) h = "payroll"; else if (/fund|bank|cash|payment|receipt/.test(sec)) h = "funds"; else if (/journal|account|asset|equity|liabilit|tax|budget/.test(sec)) h = "accounting"; else if (/purchase|supplier|bill|grn/.test(sec)) h = "purchase"; else if (/inventory|stock|warehouse|shipment|bundle|movement/.test(sec)) h = "inventory"; else if (/invoice|sales|quote|order|credit|delivery/.test(sec)) h = "sales"; }
           if (h === hub) add(out,key,n,v,h,"universal");
         });
         continue;

@@ -9,11 +9,20 @@
     ZAR: 'South African Rand', NGN: 'Nigerian Naira', UGX: 'Ugandan Shilling', TZS: 'Tanzanian Shilling'
   };
   var $ = function (id) { return document.getElementById(id); };
-  function read(key, fallback) { try { var v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); } catch (_) { return fallback; } }
-  function write(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+  function orgInfo() { try { var v = JSON.parse(localStorage.getItem('orgInfo') || '{}'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; } catch (_) { return {}; } }
+  function saveOrgInfo(info) { try { localStorage.setItem('orgInfo', JSON.stringify(info)); var id = ''; try { var ns = window.__companyNS; id = ns && ns.activeCompany ? String(ns.activeCompany() || '') : ''; } catch (_) {} if (id) localStorage.setItem('orgInfo_' + id, JSON.stringify(info)); try { if (window.__companySyncKick) window.__companySyncKick(); } catch (_) {} } catch (_) {} }
+  function read(key, fallback) { try { var v = localStorage.getItem(key); if (v != null) return JSON.parse(v); var cfg = orgInfo().currencySettings || {}; return Object.prototype.hasOwnProperty.call(cfg, key) ? cfg[key] : fallback; } catch (_) { return fallback; } }
+  function write(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+    var info = orgInfo(); info.currencySettings = info.currencySettings || {}; info.currencySettings[key] = value;
+    if (key === 'exchangeRates') info.exchangeRates = value;
+    if (key === 'appBaseCurrency') info.baseCurrency = String(value || 'KES').toUpperCase();
+    saveOrgInfo(info);
+  }
   function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]); }); }
-  function base() { try { return String(localStorage.getItem('appBaseCurrency') || 'KES').replace(/^\"|\"$/g, '').toUpperCase(); } catch (_) { return 'KES'; } }
-  function rates() { var r = read('exchangeRates', {}) || {}; if (typeof r !== 'object' || Array.isArray(r)) r = {}; r[base()] = 1; return r; }
+  function base() { try { var info = orgInfo(); return String(info.baseCurrency || localStorage.getItem('appBaseCurrency') || 'KES').replace(/^\"|\"$/g, '').toUpperCase(); } catch (_) { return 'KES'; } }
+  function rates() { var info = orgInfo(), stored = read('exchangeRates', {}) || {}, company = info.exchangeRates || {}; var r = Object.assign({}, stored, company); if (typeof r !== 'object' || Array.isArray(r)) r = {}; r[base()] = 1; return r; }
+  function setBaseCurrency(value) { var next = String(value || 'KES').toUpperCase(); localStorage.setItem('appBaseCurrency', next); var info = orgInfo(); info.baseCurrency = next; saveOrgInfo(info); }
   function notifyRates() {
     try { window.dispatchEvent(new Event('acx-currency-rates-updated')); } catch (_) {}
     try { window.dispatchEvent(new StorageEvent('storage', { key: 'exchangeRates', newValue: JSON.stringify(rates()) })); } catch (_) {}
@@ -52,7 +61,7 @@
       var next = this.value, old = base(), r = rates(); if (next === old) return;
       var divisor = Number(r[next]); if (!(divisor > 0)) divisor = 1;
       Object.keys(r).forEach(function (c) { r[c] = c === next ? 1 : Number(r[c]) / divisor; });
-      localStorage.setItem('appBaseCurrency', next); write('exchangeRates', r); write('acxCurrencyLastUpdated', new Date().toLocaleString()); notifyRates(); buildCurrencies();
+      setBaseCurrency(next); write('exchangeRates', r); write('acxCurrencyLastUpdated', new Date().toLocaleString()); notifyRates(); buildCurrencies();
     };
     $('acxAutoRates').onchange = function(){ write('acxCurrencyAutoUpdate', this.checked); };
     $('acxRateFrequency').onchange = function(){ write('acxCurrencyFrequency', this.value); };
@@ -91,7 +100,7 @@
     return true;
   }
   function maybeAutoUpdate(){if(read('acxCurrencyAutoUpdate',true)===false)return;var freq=read('acxCurrencyFrequency','Daily'),days=freq==='Weekly'?7:freq==='Monthly'?30:1,last=read('acxCurrencyLastUpdated',''),stamp=Date.parse(last);if(!stamp||Date.now()-stamp>days*86400000)updateRates();}
-  function boot(){var a=buildCurrencies(),b=buildDeveloper();if(a&&b){if(!window.__acxCurrencyAutoTimer){window.__acxCurrencyAutoTimer=true;setTimeout(maybeAutoUpdate,1800);setInterval(maybeAutoUpdate,3600000);}return true;}return false;}
+  function boot(){try{var savedBase=orgInfo().baseCurrency;if(savedBase){var liveBase=String(localStorage.getItem('appBaseCurrency')||'').replace(/^\"|\"$/g,'').toUpperCase();if(liveBase!==String(savedBase).toUpperCase())localStorage.setItem('appBaseCurrency',String(savedBase).toUpperCase());}var savedRates=orgInfo().exchangeRates;if(savedRates&&typeof savedRates==='object'&&!Array.isArray(savedRates)){var liveRates=read('exchangeRates',{});if(!liveRates||!Object.keys(liveRates).length)localStorage.setItem('exchangeRates',JSON.stringify(savedRates));}}catch(_){}var a=buildCurrencies(),b=buildDeveloper();if(a&&b){if(!window.__acxCurrencyAutoTimer){window.__acxCurrencyAutoTimer=true;setTimeout(maybeAutoUpdate,1800);setInterval(maybeAutoUpdate,3600000);}return true;}return false;}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){var n=0,t=setInterval(function(){n++;if(boot()||n>40)clearInterval(t);},250);});
   else {var n=0,t=setInterval(function(){n++;if(boot()||n>40)clearInterval(t);},250);}
   window.acxUpdateCurrencyRates = updateRates;
