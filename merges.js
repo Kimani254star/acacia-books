@@ -2422,7 +2422,6 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     if (expectedCompany && c !== String(expectedCompany)) return Promise.resolve({ ok: false, msg: "company changed during sync - stopped" });
     if (!W.__SUPA_URL__ || !W.__SUPA_KEY__) return Promise.resolve({ ok: false, msg: "cloud is not configured" });
     if (!navigator.onLine) return Promise.resolve({ ok: false, msg: "offline - will sync when the connection returns" });
-    if (!isOwnWarehouse(w)) return Promise.resolve({ ok: false, msg: w + " is not a warehouse of this company - skipped" });
     var lock = lockKey(c, w);
     if (busy[lock]) { again[lock] = true; return busy[lock]; }
     busy[lock] = (async function () {
@@ -2448,30 +2447,16 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     return busy[lock];
   }
 
-  /* Warehouses THIS company owns (its own "warehouses" list, stored per company). Stock is synced only for these, so an
-     orphan inventory_<name> key (left over from another company / an old import) is never uploaded into this company.
-     Returns null while the list is not known yet (then nothing local-only is uploaded; cloud rows of this company still sync). */
-  function companyWarehouses() {
-    var arr = J("warehouses", null), out = {}, n = 0;
-    if (!Array.isArray(arr)) return null;
-    arr.forEach(function (x) {
-      var nm = typeof x === "string" ? x : (x && (x.name || x.warehouse || x.id));
-      if (nm != null && String(nm).trim() !== "") { out[String(nm)] = 1; n++; }
-    });
-    return n ? out : null;
-  }
-  function isOwnWarehouse(w) { var own = companyWarehouses(); return !own || own[String(w)] === 1; }
   function localWarehouses() {
-    var out = [], own = companyWarehouses();
-    if (!own) return out;                                   /* warehouse list unknown: do not push anything local-only */
-    for (var i = 0; i < LS.length; i++) { var k = LS.key(i); if (k && k.indexOf("inventory_") === 0 && own[k.slice(10)] === 1) out.push(k.slice(10)); }
+    var out = [];
+    for (var i = 0; i < LS.length; i++) { var k = LS.key(i); if (k && k.indexOf("inventory_") === 0) out.push(k.slice(10)); }
     return out;
   }
   async function syncAll() {
     var c = cid(); if (!c || !W.__SUPA_URL__) return [];
-    var set = {}, results = [], own = companyWarehouses();
+    var set = {}, results = [];
     localWarehouses().forEach(function (w) { set[w] = 1; });
-    (await listKeys(c)).forEach(function (k) { var w = k.slice(10); if (!own || own[w] === 1) set[w] = 1; });   /* rows come from this company only; with a known list, only its warehouses */
+    (await listKeys(c)).forEach(function (k) { set[k.slice(10)] = 1; });
     if (cid() !== c) return [];
     var list = Object.keys(set);
     for (var i = 0; i < list.length; i++) results.push({ warehouse: list[i], result: await syncNow(list[i], c) });
@@ -2486,7 +2471,6 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       if (applying || !/^inventory_/.test(String(k))) return;
       var c = cid(); if (!c) return;
       var w = String(k).slice(10), lock = lockKey(c, w);
-      if (!isOwnWarehouse(w)) return;                       /* not one of this company's warehouses */
       clearTimeout(timers[lock]);
       timers[lock] = setTimeout(function () { syncNow(w, c); }, DEBOUNCE_MS);
     });
