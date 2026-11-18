@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Acacia Photos</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="acaciabooks-logo.png">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Roboto,sans-serif;background:#f3f4f8;color:#1f2340}
+.top{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#312e81;color:#fff;flex-wrap:wrap}
+.top img{height:28px}.top b{font-size:17px}.top a.back{margin-left:auto;color:#c7d2fe;text-decoration:none;font-size:14px}
+.top input.title{background:#4338ca;border:0;color:#fff;border-radius:8px;padding:6px 10px;font-size:15px;min-width:200px}
+button,.btn{cursor:pointer;border:0;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;background:#6d28d9;color:#fff}
+button:hover,.btn:hover{background:#7c3aed}button.g{background:#e5e7f5;color:#1f2340}button.g:hover{background:#d4d7ee}button.d{background:#dc2626}
+.bar{display:flex;gap:6px;padding:8px 16px;background:#fff;border-bottom:1px solid #dcdff0;flex-wrap:wrap;align-items:center}
+select{padding:6px;border-radius:8px;border:1px solid #c9cde6}
+.side{width:230px;background:#fff;border-right:1px solid #dcdff0;overflow:auto;padding:10px}
+.side .it{padding:8px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;justify-content:space-between;gap:6px}
+.side .it:hover,.side .it.on{background:#eef0ff}
+.wrap{display:flex;height:calc(100vh - 100px)}.main{flex:1;overflow:auto}
+@media(max-width:700px){.side{width:130px}}
+</style></head><body>
+<div class="top"><img src="acaciabooks-logo.png" alt=""><b>Acacia Photos</b><a class="back" href="index.html">← Back to Acacia Books</a></div>
+
+<div class="bar"><label class="btn">⬆ Add photos<input id="f" type="file" accept="image/*" multiple hidden onchange="add(this.files)"></label>
+<input id="q" placeholder="Search by name…" oninput="render()" style="padding:6px 10px;border-radius:8px;border:1px solid #c9cde6"><span id="n" style="font-size:13px;color:#6b7099"></span>
+<span style="font-size:12px;color:#6b7099;margin-left:auto">Photos are stored privately in this browser.</span></div>
+<div id="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;padding:16px"></div>
+<div id="lb" style="display:none;position:fixed;inset:0;background:#000d;z-index:9;align-items:center;justify-content:center;flex-direction:column;gap:12px" onclick="if(event.target===this)this.style.display='none'">
+<img id="big" style="max-width:92vw;max-height:80vh;border-radius:8px"><div><a id="dl" class="btn" style="text-decoration:none">⬇ Download</a> <button class="d" onclick="del()">🗑 Delete</button> <button class="g" onclick="$('lb').style.display='none'">Close</button></div></div>
+<script>
+var $=function(i){return document.getElementById(i)},db,items=[],sel=null;
+var rq=indexedDB.open("acaciaPhotos",1);rq.onupgradeneeded=function(){rq.result.createObjectStore("p",{keyPath:"id"})};
+rq.onsuccess=function(){db=rq.result;load()};rq.onerror=function(){alert("Photo storage is not available in this browser mode.")};
+function store(m){return db.transaction("p",m).objectStore("p")}
+function load(){store("readonly").getAll().onsuccess=function(e){items=e.target.result.sort(function(a,b){return b.id-a.id});render()}}
+function add(fs){var l=[].slice.call(fs),i=0;(function next(){if(i>=l.length){load();return}var f=l[i++];store("readwrite").put({id:Date.now()+i,name:f.name,type:f.type,blob:f}).transaction.oncomplete=next})()}
+function render(){var q=$("q").value.toLowerCase(),v=items.filter(function(p){return p.name.toLowerCase().indexOf(q)>-1});$("n").textContent=v.length+" photo"+(v.length==1?"":"s");
+ $("grid").innerHTML="";v.forEach(function(p){var u=URL.createObjectURL(p.blob),d=document.createElement("div");d.style.cssText="aspect-ratio:1;border-radius:10px;overflow:hidden;cursor:pointer;background:#ddd";
+  d.innerHTML='<img src="'+u+'" style="width:100%;height:100%;object-fit:cover">';d.onclick=function(){sel=p;$("big").src=u;$("dl").href=u;$("dl").download=p.name;$("lb").style.display="flex"};$("grid").appendChild(d)});
+ if(!v.length)$("grid").innerHTML='<p style="color:#6b7099">No photos yet. Click “Add photos”.</p>'}
+function del(){if(!sel||!confirm("Delete this photo?"))return;store("readwrite").delete(sel.id).transaction.oncomplete=function(){$("lb").style.display="none";load()}}
+</script></body></html>
