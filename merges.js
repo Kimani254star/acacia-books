@@ -1770,6 +1770,11 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     items.forEach(function (item) {
       if (!item || typeof item !== "object" || Array.isArray(item)) return;
       var name = norm(item.name), id = hasId(item) ? String(item.id) : "";
+      var canonicalWarehouse = String(warehouse || "");
+      if (canonicalWarehouse && !String(item.warehouse || "").trim()) {
+        item.warehouse = canonicalWarehouse;
+        changed = true;
+      }
       if (!id && name && priorByName[name] && priorByName[name].length) {
         while (priorByName[name].length && !id) {
           var candidate = priorByName[name].shift();
@@ -2220,7 +2225,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   W.__acxStockSync = true;
 
   var LS = W.localStorage, POLL_MS = 20000, DEBOUNCE_MS = 1500, busy = {}, again = {}, applying = false;
-  var status = { state: "idle", msg: "", at: 0, byWh: {} };
+  var status = { state: "idle", msg: "", at: 0, byWh: {} }, statusCompany = "";
 
   /* ---------- helpers ---------- */
   function J(k, d) { try { var v = JSON.parse(LS.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
@@ -2239,7 +2244,31 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   function bKey(c, w) { return "__stkbase_" + c + "_" + w; }
   function rKey(c, w) { return "__stkrev_" + c + "_" + w; }
   function lockKey(c, w) { return String(c) + "\u0000" + String(w); }
-  function setStatus(state, msg, w) { status.state = state; status.msg = msg || ""; status.at = Date.now(); if (w) status.byWh[w] = { state: state, msg: msg || "", at: status.at }; }
+  function statusKey(c) { return "__stkstatus_" + String(c || ""); }
+  function ensureStatusCompany(c) {
+    c = String(c || "");
+    if (!c || statusCompany === c) return;
+    statusCompany = c;
+    var saved = toStatus(rawGet(statusKey(c)));
+    status.byWh = saved;
+  }
+  function toStatus(value) {
+    try {
+      var parsed = typeof value === "string" ? JSON.parse(value || "{}") : value;
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch (e) { return {}; }
+  }
+  function publishStatus() {
+    var c = cid();
+    if (c) rawSet(statusKey(c), JSON.stringify(status.byWh));
+    try { W.dispatchEvent(new CustomEvent("acx:stock-sync-status", { detail: status })); } catch (e) {}
+  }
+  function setStatus(state, msg, w) {
+    status.state = state; status.msg = msg || ""; status.at = Date.now();
+    ensureStatusCompany(cid());
+    if (w) status.byWh[w] = { state: state, msg: msg || "", at: status.at };
+    publishStatus();
+  }
 
   function toList(v) {
     var x = v, n = 0;
@@ -2289,9 +2318,14 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   }
 
   /* ---------- local writes ---------- */
-  function writeLocal(c, w, listOrStr) {
+  function localUnchanged(c, w, expected) {
+    if (cid() !== String(c || "")) return false;
+    try { return LS.getItem("inventory_" + w) === expected; } catch (e) { return false; }
+  }
+  function writeLocal(c, w, listOrStr, expectedLocalStr) {
     var n = ns(); c = String(c || "");
     if (!n || !c || cid() !== c) return false;
+    if (arguments.length > 3 && !localUnchanged(c, w, expectedLocalStr)) return false;
     var str = typeof listOrStr === "string" ? listOrStr : JSON.stringify(listOrStr);
     applying = true;
     try {
@@ -2341,6 +2375,8 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     if (local) ensureIds(local, w);
     var cloudRow = await getRow(c, key);
     if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
+    /* Do not decide from a stale snapshot: a local save may have landed during the cloud read. */
+    if (!localUnchanged(c, w, localStr)) return { retry: true, msg: "local stock changed during cloud read" };
     var cloud = cloudRow ? toList(cloudRow.value) : null;
     if (cloudRow && !cloud) throw new Error("the cloud row for " + w + " is not a readable list");
     if (cloud) ensureIds(cloud, w);
@@ -2354,8 +2390,9 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
       if (p0.conflict) return { retry: true };
       if (p0.error) throw new Error(p0.error);
+      if (!localUnchanged(c, w, localStr)) return { retry: true, msg: "local stock changed during cloud upload" };
+      if (JSON.stringify(local) !== localStr && !writeLocal(c, w, local, localStr)) return { retry: true };
       remember(c, w, JSON.stringify(local), p0.rev);
-      if (JSON.stringify(local) !== localStr) writeLocal(c, w, local);
       return { ok: true, msg: "uploaded " + p0.count + " item(s)", changed: false };
     }
 
@@ -2381,14 +2418,16 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
       if (pu.conflict) return { retry: true };
       if (pu.error) throw new Error(pu.error);
-      writeLocal(c, w, u); remember(c, w, JSON.stringify(u), pu.rev); refresh();
+      if (!localUnchanged(c, w, localStr) || !writeLocal(c, w, u, localStr)) return { retry: true };
+      remember(c, w, JSON.stringify(u), pu.rev); refresh();
       return { ok: true, msg: "linked this device: " + pu.count + " item(s)", changed: true };
     }
 
     if (!localChanged && !cloudChanged) return { ok: true, msg: "in sync", changed: false };
 
     if (!localChanged && cloudChanged) {                                  /* only the cloud changed */
-      writeLocal(c, w, cloud); remember(c, w, JSON.stringify(cloud), cloudRev); refresh();
+      if (!writeLocal(c, w, cloud, localStr)) return { retry: true };
+      remember(c, w, JSON.stringify(cloud), cloudRev); refresh();
       return { ok: true, msg: "took the newer cloud copy (" + cloud.length + " items)", changed: true };
     }
 
@@ -2398,8 +2437,9 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
       if (pl.conflict) return { retry: true };
       if (pl.error) throw new Error(pl.error);
+      if (!localUnchanged(c, w, localStr)) return { retry: true, msg: "local stock changed during cloud upload" };
+      if (body !== localStr && !writeLocal(c, w, body, localStr)) return { retry: true };
       remember(c, w, body, pl.rev);
-      if (body !== localStr) writeLocal(c, w, body);
       return { ok: true, msg: "uploaded " + pl.count + " item(s)", changed: false };
     }
 
@@ -2411,7 +2451,8 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       if (cid() !== String(c)) return { ok: false, msg: "company changed during sync - stopped" };
     if (pm.conflict) return { retry: true };
     if (pm.error) throw new Error(pm.error);
-    writeLocal(c, w, mb); remember(c, w, mb, pm.rev); refresh();
+    if (!localUnchanged(c, w, localStr) || !writeLocal(c, w, mb, localStr)) return { retry: true };
+    remember(c, w, mb, pm.rev); refresh();
     return { ok: true, msg: "merged this device with the cloud: " + pm.count + " item(s)", changed: true };
   }
 
@@ -2420,10 +2461,18 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     var c = cid();
     if (!c) return Promise.resolve({ ok: false, msg: "no active company" });
     if (expectedCompany && c !== String(expectedCompany)) return Promise.resolve({ ok: false, msg: "company changed during sync - stopped" });
-    if (!W.__SUPA_URL__ || !W.__SUPA_KEY__) return Promise.resolve({ ok: false, msg: "cloud is not configured" });
-    if (!navigator.onLine) return Promise.resolve({ ok: false, msg: "offline - will sync when the connection returns" });
+    ensureStatusCompany(c);
+    if (!W.__SUPA_URL__ || !W.__SUPA_KEY__) {
+      setStatus("error", "Cloud is not configured", w);
+      return Promise.resolve({ ok: false, msg: "cloud is not configured" });
+    }
+    if (!navigator.onLine) {
+      setStatus("error", "Offline — will retry when the connection returns", w);
+      return Promise.resolve({ ok: false, msg: "offline - will sync when the connection returns" });
+    }
     var lock = lockKey(c, w);
     if (busy[lock]) { again[lock] = true; return busy[lock]; }
+    setStatus("pending", "Syncing this warehouse…", w);
     busy[lock] = (async function () {
       var res = { ok: false, msg: "unknown" }, tries = 0;
       try {
@@ -2454,6 +2503,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   }
   async function syncAll() {
     var c = cid(); if (!c || !W.__SUPA_URL__) return [];
+    ensureStatusCompany(c);
     var set = {}, results = [];
     localWarehouses().forEach(function (w) { set[w] = 1; });
     (await listKeys(c)).forEach(function (k) { set[k.slice(10)] = 1; });
@@ -2461,6 +2511,18 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     var list = Object.keys(set);
     for (var i = 0; i < list.length; i++) results.push({ warehouse: list[i], result: await syncNow(list[i], c) });
     return results;
+  }
+
+  function statusRows() {
+    var c = cid();
+    ensureStatusCompany(c);
+    var names = {}, rows = [];
+    localWarehouses().forEach(function (w) { names[w] = true; });
+    Object.keys(status.byWh || {}).forEach(function (w) { names[w] = true; });
+    Object.keys(names).sort().forEach(function (w) {
+      rows.push({ warehouse: w, status: status.byWh[w] || { state: "pending", msg: "Waiting for first sync", at: 0 } });
+    });
+    return rows;
   }
 
   /* ---------- triggers ---------- */
@@ -2471,6 +2533,8 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       if (applying || !/^inventory_/.test(String(k))) return;
       var c = cid(); if (!c) return;
       var w = String(k).slice(10), lock = lockKey(c, w);
+      ensureStatusCompany(c);
+      setStatus("pending", "Stock changed — waiting to sync", w);
       clearTimeout(timers[lock]);
       timers[lock] = setTimeout(function () { syncNow(w, c); }, DEBOUNCE_MS);
     });
@@ -2479,6 +2543,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   var tries = 0;
   (function boot() {
     if (!hook() && ++tries < 40) return setTimeout(boot, 500);
+    ensureStatusCompany(cid());
     setTimeout(function () { syncAll(); }, 4000);
     setInterval(function () { if (!document.hidden) syncAll(); }, POLL_MS);
   })();
@@ -2488,7 +2553,8 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
   W.addEventListener("pagehide", function () { Object.keys(timers).forEach(function (k) { clearTimeout(timers[k]); }); });
 
   W.acxStockSync = {
-    syncNow: syncNow, syncAll: syncAll, status: function () { return status; },
+    syncNow: syncNow, syncAll: syncAll, status: function () { ensureStatusCompany(cid()); return status; },
+    statusRows: statusRows,
     /* test hooks */ _syncOnce: syncOnce
   };
 })(window);
