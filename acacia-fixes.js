@@ -2141,36 +2141,7 @@ try{
         });
       }).catch(function(e){ return { ok: false, http: 0, reason: "network error while reading the cloud: " + (e && e.message ? e.message : e) }; });
     }
-    /* direct save of this warehouse (last write wins). "" = saved, otherwise a readable reason */
-    function forcePush(){
-      var ns = window.__companyNS, v;
-      try { v = ns && ns.nGet ? ns.nGet.call(ns.real, key + ns.SEP + cid) : null; } catch (e) { v = null; }
-      if (typeof v !== "string" || !v) { try { v = JSON.stringify(base); } catch (e2) { v = null; } }
-      if (!v) return Promise.resolve("nothing to save");
-      var row = { company_id: cid, key: key, value: v, updated_at: new Date().toISOString() };
-      return fetch(REST + "?on_conflict=company_id,key", {
-        method: "POST",
-        headers: hdr({ "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=representation" }),
-        body: JSON.stringify([row])
-      }).then(function(res){
-        return res.text().then(function(txt){
-          if (!res.ok) {
-            var m = txt; try { var j = JSON.parse(txt); m = (j.code ? "[" + j.code + "] " : "") + (j.message || j.details || j.hint || txt); } catch (e) {}
-            return "Supabase refused the direct save: HTTP " + res.status + " " + String(m).slice(0, 200);
-          }
-          var back = []; try { back = JSON.parse(txt) || []; } catch (e) {}
-          if (!back.length) return "Supabase accepted the request but saved no row (a security rule on company_state is blocking writes from this browser)";
-          try {
-            var ver = cs.ver ? cs.ver() : null;
-            if (ver) ver[key] = back[0].updated_at;
-            if (ns && ns.dirty) delete ns.dirty[key];
-          } catch (e) {}
-          return "";
-        });
-      }).catch(function(e){ return "network error while saving to the cloud: " + (e && e.message ? e.message : e); });
-    }
-
-    var tries = 0, MAX = 6, forced = false, lastReason = "", pushNote = "";
+    var tries = 0, MAX = 6, lastReason = "", pushNote = "";
     function attempt(){
       tries++;
       try { if (typeof cs.pushAllCompanyKeys === "function") cs.pushAllCompanyKeys(); } catch (e) {}
@@ -2181,19 +2152,10 @@ try{
         push = Promise.resolve().then(function(){ return cs.pushDirty(); }).catch(function(e){ console.warn("[inventory-sync] push attempt failed", e); });
       }
       return push.then(function(){ return wait(700); }).then(readRemote).then(function(r){
-        if (r.ok) return "☁️ Cloud sync confirmed: all " + base.length + " inventory item(s) in " + w + " match the cloud copy for this company." + (forced ? " (Saved directly after the normal sync was slow.)" : "");
+        if (r.ok) return "☁️ Cloud sync confirmed: all " + base.length + " inventory item(s) in " + w + " match the cloud copy for this company.";
         lastReason = r.reason;
         /* permission problems will not fix themselves: stop at once and say so */
         if (r.http === 401 || r.http === 403) return fail();
-        /* the normal sync had two tries; now save this warehouse directly once */
-        if (tries >= 2 && !forced && (r.norow || r.mismatch || r.badformat)) {
-          forced = true;
-          return forcePush().then(function(why){ pushNote = why; return wait(500); }).then(readRemote).then(function(r2){
-            if (r2.ok) return "☁️ Cloud sync confirmed: all " + base.length + " inventory item(s) in " + w + " match the cloud copy for this company. (Saved directly because the normal sync had not landed.)";
-            lastReason = r2.reason;
-            return tries < MAX ? wait(1200).then(attempt) : fail();
-          });
-        }
         if (tries < MAX) return wait(Math.min(2500, 600 + tries * 300)).then(attempt);
         return fail();
       });
@@ -2205,7 +2167,7 @@ try{
       else if (/not valid JSON|not a list/i.test(lastReason))
         hint = "\n\nRun sql/acacia_inventory_sync_fix.sql section C in Supabase to repair the stored format.";
       return "⚠️ Your import is saved on this device, but the cloud copy could not be confirmed.\nReason: " + lastReason +
-        (pushNote ? "\nDirect save: " + pushNote : "") + hint + "\n\nDo not re-import. Your local stock is intact.";
+        (pushNote ? "\nSync: " + pushNote : "") + hint + "\n\nDo not re-import. Your local stock is intact.";
     }
     return attempt().catch(function(e){
       console.warn("[inventory-sync] verification failed", e);
