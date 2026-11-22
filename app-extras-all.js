@@ -5811,3 +5811,25 @@ try{
   window.addEventListener("acx-company-row", function () { info = null; setTimeout(ensure, 0); });
 })();
 }catch(e){console.error('[account-card]',e)}
+/* installable app */
+if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+/* install button: appears only when the browser says this app can be installed (Chrome / Edge / Android) */
+(function () {
+  var dp = null, btn = null;
+  function standalone() { return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }
+  function hide() { if (btn && btn.parentNode) btn.parentNode.removeChild(btn); btn = null; }
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault(); dp = e;
+    if (standalone() || btn) return;
+    try { if (sessionStorage.getItem('acx_install_hidden')) return; } catch (x) {}
+    btn = document.createElement('div');
+    btn.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483000;display:flex;align-items:center;gap:6px;background:#1b5e20;color:#fff;border-radius:999px;padding:9px 8px 9px 16px;font:600 13px system-ui,Segoe UI,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:pointer';
+    btn.innerHTML = '<span>Install app</span><span data-x="1" style="padding:0 8px;opacity:.85;font-size:16px;line-height:1">&times;</span>';
+    btn.addEventListener('click', function (ev) {
+      if (ev.target && ev.target.getAttribute && ev.target.getAttribute('data-x')) { try { sessionStorage.setItem('acx_install_hidden', '1'); } catch (x) {} hide(); return; }
+      if (!dp) return; dp.prompt(); dp.userChoice.then(function () { dp = null; hide(); }, function () {});
+    });
+    (document.body || document.documentElement).appendChild(btn);
+  });
+  window.addEventListener('appinstalled', hide);
+})();

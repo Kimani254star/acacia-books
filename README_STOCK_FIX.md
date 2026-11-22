@@ -1,11 +1,19 @@
-# Acacia Books stock sync fix
+# Acacia Books: stock now syncs like all other company data
 
-This source package includes a focused fix for stock being overwritten during cloud sync.
+Change from the previous package:
 
-- A sync now checks that the local warehouse list has not changed while it reads or writes the cloud. If a user adds stock during that wait, it retries instead of replacing their newer list.
-- Stock items are stamped with the warehouse selected for their own inventory key.
-- The cloud stock sync remains scoped to both the signed-in company ID and the selected warehouse key. It does not merge one company's row with another company's row.
-- `sql/acacia_stock_company_warehouse_fix.sql` first provides a read-only preview. Its repair block only aligns item warehouse labels with the warehouse key in that same company row; it never deletes, moves, or adds quantities.
-- `tests/stock-sync-race.test.cjs` exercises the two save windows that could previously overwrite a newer local stock list. Run with `node --test tests/stock-sync-race.test.cjs` from this folder.
+- `app-3.js`: removed the two `inventory_` exclusions (in `applyRemote` and `pushKey`). Stock (`inventory_<warehouse>`) now goes through the same per-company engine as invoices, customers, etc. (company id + key, base fingerprint, incremental pull).
+- `merges.js`: the separate stock engine (`acxStock_sync`) is replaced by a thin wrapper. It keeps `window.acxStockSync` and the Stock Sync panel working, but only calls the main engine (`__companySync.pushDirty` / `pullCompany`).
+- `sync.js` (live sync) is unchanged: it already pulls every 20 s and pushes `inventory_` keys straight away through the main engine.
+- Removed `tests/stock-sync-race.test.cjs` (it tested the removed engine).
+- `sql/acacia_stock_company_warehouse_fix.sql` is unchanged (read-only preview first, then the repair block).
 
-The archive did not include a database schema or a stock export. The SQL therefore targets the `company_state` structure used by the app and is intentionally non-destructive. If a row is already under the wrong warehouse key, assign its correct company and warehouse before any relocation; SQL cannot infer that from the mixed row.
+Not tested against a live Supabase project: test an import, a clone, and a second browser before deploying.
+
+
+## Update: no separate stock write path
+
+- `acacia-fixes.js`: removed the direct Supabase write (`forcePush`) from the import check. After an import the app now only asks the main engine to push, then reads the cloud row back to check it. It never writes stock to the cloud by any other route.
+- `merges.js`: removed the direct upload (`forcePush`) and the "Upload this device's stock" button from the Stock sync doctor. The doctor still shows read-only counts and can remove stock deletion markers (through the normal storage hook).
+- Unchanged: the Organization Profile direct save (not stock).
+- Not changed: Supabase triggers. Stock rows still pass through the database triggers on `company_state`.
