@@ -1901,3 +1901,16 @@ html[data-theme=amoled] #contentArea table tbody td,html[data-theme=solar-dark] 
   background:rgba(217,164,65,.18)!important;
   color:#f4cf83!important;
 }
+
+/* Plans: horizontal tab bar (Plan / Planning / Execution / Performance) */
+.acx-ptabs{display:flex;flex-wrap:nowrap;align-items:flex-end;gap:2px;overflow-x:auto;margin:0 0 12px;border-bottom:2px solid #1e3a8a;scrollbar-width:thin}
+.acx-ptabs-title{flex:0 0 auto;align-self:center;margin-right:10px;padding:3px 10px;border-radius:999px;background:#facc15;color:#111;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.acx-ptab{flex:0 0 auto;padding:7px 14px;border:1px solid #bfdbfe;border-bottom:0;border-radius:8px 8px 0 0;background:#eff6ff;color:#1e3a8a;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.acx-ptab:hover{background:#dbeafe}
+.acx-ptab.is-active{background:#1e3a8a;border-color:#1e3a8a;color:#fff}
+.acx-ptab:focus-visible{outline:2px solid #facc15;outline-offset:1px}
+.dark .acx-ptab{background:#1f2937;border-color:#374151;color:#e5e7eb}
+.dark .acx-ptab:hover{background:#374151}
+.dark .acx-ptab.is-active{background:#1e3a8a;border-color:#1e3a8a;color:#fff}
+/* Plans: heading, intro and All Plans table belong to the Plan Overview tab only */
+#plansTab.acx-pt-sub > h2,#plansTab.acx-pt-sub > p,#plansTab.acx-pt-sub > div:not(.ph-step):not(#phExtHost):not(#phPlanPickerWrap):not(.acx-ptabs){display:none}

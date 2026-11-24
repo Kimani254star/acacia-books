@@ -6094,3 +6094,109 @@ try { (function () {
   wrapDelete(); window.addEventListener("load", wrapDelete);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", host); else host();
 })(); } catch (e) { console.error("[plans extension]", e); }
+
+/* ===== Plans navigation: sidebar Plan / Planning / Execution (/ Performance) each open one page with horizontal tabs =====
+   Plan      -> Plan Overview | Plan Progress | Plan Revenue
+   Planning  -> Strategic Objectives | Goals & Targets | KPIs | KPI Tracking
+   Execution -> Activities | Responsibilities | Milestones | Deadlines | Plan Reviews
+   Performance (kept from before) -> Plan vs Actual | Financial Performance | Objectives Performance
+   The bar sits at the top of #plansTab and #projectTab and works out which tab is active from what is on screen,
+   so it stays right even when other code opens a plan screen directly. */
+try { (function () {
+  "use strict";
+  if (window.acxPlanNav) return;
+  var GROUPS = {
+    plan: { label: "Plan", tabs: [["overview", "Plan Overview"], ["progress", "Plan Progress"], ["revenue", "Plan Revenue"]] },
+    planning: { label: "Planning", tabs: [["objectives", "Strategic Objectives"], ["goals", "Goals & Targets"], ["kpis", "KPIs"], ["kpilogs", "KPI Tracking"]] },
+    execution: { label: "Execution", tabs: [["activities", "Activities"], ["resp", "Responsibilities"], ["milestones", "Milestones"], ["deadlines", "Deadlines"], ["reviews", "Plan Reviews"]] },
+    performance: { label: "Performance", tabs: [["pva", "Plan vs Actual"], ["fin", "Financial Performance"], ["objperf", "Objectives Performance"]] }
+  };
+  var cur = { group: "plan", tab: "overview" };
+  var $ = function (i) { return document.getElementById(i); };
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function groupOf(tab) { for (var g in GROUPS) if (GROUPS[g].tabs.some(function (t) { return t[0] === tab; })) return g; return null; }
+  function shown(id) { var e = $(id); return !!e && !e.classList.contains("hidden"); }
+
+  /* read what is on screen */
+  function detect() {
+    if (shown("projectTab")) return "progress";
+    if (!shown("plansTab")) return null;
+    var host = $("phExtHost");
+    if (host) { var x = host.querySelector('[id^="phStepX_"]:not(.hidden)'); if (x) return x.id.replace("phStepX_", ""); }
+    return shown("phStep5") ? "revenue" : "overview";
+  }
+  function sync() {
+    var d = detect(), g = d && groupOf(d);
+    if (g) { cur.group = g; cur.tab = d; }
+  }
+
+  function barHtml() {
+    var G = GROUPS[cur.group];
+    return '<span class="acx-ptabs-title">' + esc(G.label) + "</span>" + G.tabs.map(function (t) {
+      var on = t[0] === cur.tab;
+      return '<button type="button" role="tab" aria-selected="' + on + '" class="acx-ptab' + (on ? " is-active" : "") + '" onclick="acxPlanNav.tab(\'' + t[0] + '\')">' + esc(t[1]) + "</button>";
+    }).join("");
+  }
+  /* Plan Revenue lives on #plansTab but its "Working on plan" picker is built into the Plan Progress page:
+     borrow it while Revenue is open and put it back afterwards */
+  var home = null;
+  function placePicker() {
+    var w = $("phPlanPickerWrap"), pt = $("plansTab"), r = $("phStep5");
+    if (!w || !pt || !r) return;
+    if (cur.tab === "revenue") {
+      if (!home) home = { parent: w.parentNode, next: w.nextSibling };
+      if (w.parentNode !== pt) pt.insertBefore(w, r);
+    } else if (home && w.parentNode !== home.parent) {
+      if (home.next && home.next.parentNode === home.parent) home.parent.insertBefore(w, home.next); else home.parent.appendChild(w);
+    }
+  }
+  function render() {
+    placePicker();
+    var pt0 = $("plansTab"); if (pt0) pt0.classList.toggle("acx-pt-sub", cur.tab !== "overview");
+    ["plansTab", "projectTab"].forEach(function (id) {
+      var c = $(id); if (!c) return;
+      var bar = c.querySelector(":scope > .acx-ptabs");
+      if (!bar) { bar = document.createElement("div"); bar.className = "acx-ptabs"; bar.setAttribute("role", "tablist"); c.insertBefore(bar, c.firstChild); }
+      bar.innerHTML = barHtml();
+    });
+  }
+
+  function go(tab) {
+    var call = function (f) { try { if (typeof f === "function") f(); } catch (e) { console.error("[plan nav]", e); } };
+    if (tab === "progress") { call(function () { showTab("projectTab"); }); call(function () { window.phGoStep && window.phGoStep(2); }); }
+    else if (tab === "overview") { call(function () { showTab("plansTab"); }); call(function () { window.phGoStep && window.phGoStep(1); }); }
+    else if (tab === "revenue") { call(function () { showTab("plansTab"); }); call(function () { window.phGoStep && window.phGoStep(5); }); }
+    else { call(function () { showTab("plansTab"); }); call(function () { window.acxPlanExt && window.acxPlanExt.go(tab); }); }
+    cur.group = groupOf(tab) || cur.group; cur.tab = tab;
+    render();
+  }
+
+  window.acxPlanNav = {
+    open: function (group) { var G = GROUPS[group]; if (G) go(G.tabs[0][0]); },
+    tab: go,
+    refresh: function () { sync(); render(); }
+  };
+
+  /* keep the bar right when other code opens or switches plan screens */
+  function hook() {
+    if (typeof window.phGoStep === "function" && !window.phGoStep.__acxNav) {
+      var o = window.phGoStep, w = function (n) { var r = o.apply(this, arguments); window.acxPlanNav.refresh(); return r; };
+      w.__acxNav = true; window.phGoStep = w;
+    }
+    var P = window.acxPlanExt;
+    if (P && typeof P.go === "function" && !P.go.__acxNav) {
+      var og = P.go, wg = function (k) { var r = og.apply(this, arguments); window.acxPlanNav.refresh(); return r; };
+      wg.__acxNav = true; P.go = wg;
+    }
+  }
+  function init() {
+    hook(); sync(); render();
+    var ca = $("contentArea");
+    if (ca && window.MutationObserver) {
+      new MutationObserver(function () { sync(); render(); }).observe(ca, { attributes: true, attributeFilter: ["class"], subtree: true });
+    }
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+  window.addEventListener("load", function () { hook(); window.acxPlanNav.refresh(); });
+  [400, 1500, 4000].forEach(function (ms) { setTimeout(hook, ms); });
+})(); } catch (e) { console.error("[plans nav]", e); }
