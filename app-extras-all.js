@@ -5833,3 +5833,264 @@ if ('serviceWorker' in navigator) window.addEventListener('load', function () { 
   });
   window.addEventListener('appinstalled', hide);
 })();
+
+
+/* ===== Plans Hub extension: Objectives, Goals & Targets, KPIs, KPI Tracking, Activities, Responsibilities,
+   Milestones, Plan Reviews + calculated screens (Deadlines, Plan vs Actual, Financial Performance,
+   Objectives Performance, Plan Reports). Plan type itself is saved by phSavePlan in app-3.js (planType).
+   Data keys (localStorage): planObjectives, planGoals, planKpis, planKpiLogs, planActivities,
+   planResponsibilities, planMilestones, planReviews. Every record links to its plan by planTitle. ===== */
+try { (function () {
+  "use strict";
+  if (window.__acxPlanExt) return;
+  window.__acxPlanExt = true;
+
+  var $ = function (i) { return document.getElementById(i); };
+  function ld(k) { try { var v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function sv(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { console.warn("plan save failed", k, e); } }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function num(v) { return parseFloat(v) || 0; }
+  function fmt(n) { return num(n).toLocaleString(undefined, { maximumFractionDigits: 2 }); }
+  function today() { var d = new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  function daysTo(d) { return Math.round((new Date(d + "T00:00:00") - new Date(today() + "T00:00:00")) / 864e5); }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function avg(a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : null; }
+  function pct(v) { return v == null ? "—" : Math.round(v) + "%"; }
+
+  var GOALST = ["Not Started", "In Progress", "Achieved", "At Risk"];
+  var E = {
+    objectives: { k: "planObjectives", t: "🎯 Strategic Objectives", f: [["title", "Objective", "text"], ["description", "Description", "text"], ["priority", "Priority", ["High", "Medium", "Low"]], ["status", "Status", GOALST], ["targetDate", "Target Date", "date"]], cols: ["title", "priority", "status", "targetDate"] },
+    goals: { k: "planGoals", t: "🏁 Goals & Targets", f: [["title", "Goal", "text"], ["objectiveId", "Objective", "@objectives:title"], ["unit", "Unit", "text"], ["targetValue", "Target", "number"], ["currentValue", "Current", "number"], ["dueDate", "Due Date", "date"], ["status", "Status", GOALST]], cols: ["title", "objectiveId", "targetValue", "currentValue", "dueDate", "status"] },
+    kpis: { k: "planKpis", t: "📊 KPIs", f: [["name", "KPI", "text"], ["objectiveId", "Objective (optional)", "@objectives:title"], ["unit", "Unit", "text"], ["targetValue", "Target", "number"], ["frequency", "Frequency", ["Daily", "Weekly", "Monthly", "Quarterly", "Annually"]], ["direction", "Better when", ["Higher", "Lower"]]], cols: ["name", "objectiveId", "targetValue", "unit", "frequency", "direction"] },
+    kpilogs: { k: "planKpiLogs", t: "📈 KPI Tracking", f: [["kpiId", "KPI", "@kpis:name"], ["date", "Date", "date"], ["value", "Actual Value", "number"], ["note", "Note", "text"]], cols: ["kpiId", "date", "value", "note"] },
+    activities: { k: "planActivities", t: "🛠️ Activities", f: [["title", "Activity", "text"], ["goalId", "Goal (optional)", "@goals:title"], ["startDate", "Start", "date"], ["endDate", "End", "date"], ["budget", "Budget", "number"], ["progress", "Progress %", "number"], ["status", "Status", ["Not Started", "In Progress", "Completed", "On Hold"]]], cols: ["title", "goalId", "startDate", "endDate", "budget", "progress", "status"] },
+    resp: { k: "planResponsibilities", t: "👤 Assign Responsibilities", f: [["activityId", "Activity", "@activities:title"], ["assignee", "Assigned To", "@employees"], ["role", "Role / Responsibility", "text"], ["status", "Status", ["Assigned", "Accepted", "Done"]]], cols: ["activityId", "assignee", "role", "status"] },
+    milestones: { k: "planMilestones", t: "🚩 Milestones", f: [["title", "Milestone", "text"], ["dueDate", "Due Date", "date"], ["status", "Status", ["Pending", "Achieved", "Missed"]], ["completedDate", "Completed On", "date"]], cols: ["title", "dueDate", "status", "completedDate"] },
+    reviews: { k: "planReviews", t: "📝 Plan Reviews", f: [["reviewType", "Review Type", ["Weekly", "Monthly", "Quarterly", "Mid-term", "Annual", "Ad-hoc"]], ["reviewDate", "Review Date", "date"], ["rating", "Rating (1-5)", ["5", "4", "3", "2", "1"]], ["reviewer", "Reviewer", "@employees"], ["comments", "Comments", "text"]], cols: ["reviewType", "reviewDate", "rating", "reviewer", "comments"] }
+  };
+  var CALC = {
+    deadlines: "⏰ Deadlines", pva: "⚖️ Plan vs Actual", fin: "💵 Financial Performance",
+    objperf: "🎯 Objectives Performance", reports: "📑 Plan Reports"
+  };
+  var LABEL = {}; Object.keys(E).forEach(function (k) { E[k].f.forEach(function (f) { LABEL[k + "." + f[0]] = f[1]; }); });
+
+  function spec(f) { return f[2]; }
+  function optList(sp, plan) {
+    if (Array.isArray(sp)) return sp.map(function (v) { return [v, v]; });
+    if (sp === "@employees") return ld("employees").map(function (e) { return e.name; }).filter(Boolean).map(function (n) { return [n, n]; });
+    var p = sp.slice(1).split(":");
+    return ld(E[p[0]].k).filter(function (r) { return r.planTitle === plan; }).map(function (r) { return [r.id, r[p[1]] || r.id]; });
+  }
+  function lookup(sp, id) {
+    if (sp === "@employees") return id;
+    var p = sp.slice(1).split(":"), r = ld(E[p[0]].k).filter(function (x) { return x.id === id; })[0];
+    return r ? r[p[1]] : (id || "");
+  }
+  function val(key, r, name) {
+    var f = E[key].f.filter(function (x) { return x[0] === name; })[0], v = r[name];
+    if (f && typeof f[2] === "string" && f[2].charAt(0) === "@") return esc(lookup(f[2], v));
+    if (f && f[2] === "number") return fmt(v);
+    return esc(v);
+  }
+  function tbl(head, rows, foot) {
+    return '<div class="overflow-x-auto"><table class="w-full text-sm border-collapse"><thead class="bg-blue-900 text-white"><tr>' +
+      head.map(function (h) { return '<th class="border p-2 text-left">' + esc(h) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+      (rows.length ? rows.join("") : '<tr><td class="border p-2 text-center text-gray-500" colspan="' + head.length + '">Nothing to show yet.</td></tr>') +
+      "</tbody>" + (foot || "") + "</table></div>";
+  }
+  function td(v, cls) { return '<td class="border p-2 ' + (cls || "") + '">' + v + "</td>"; }
+  var BTN = "border border-blue-900 text-white bg-blue-900 font-bold px-2 py-1 rounded hover:bg-blue-800";
+
+  /* ---------- entity screens ---------- */
+  function planSelect(id, onch) {
+    var cur = $(id) ? $(id).value : "";
+    var h = plansList().map(function (p) { return "<option" + (p.title === cur ? " selected" : "") + ">" + esc(p.title) + "</option>"; }).join("");
+    return '<select id="' + id + '" onchange="' + onch + '" class="border p-1 rounded text-sm" style="min-width:300px">' + (h || "<option value=''>-- No plans yet --</option>") + "</select>";
+  }
+  function plansList() { return ld("plans"); }
+
+  function buildEntity(key) {
+    var c = E[key];
+    var fields = c.f.map(function (f) {
+      var id = "px_" + key + "_" + f[0], inp;
+      if (Array.isArray(f[2])) inp = '<select id="' + id + '" class="border p-2 rounded w-full">' + f[2].map(function (o) { return "<option>" + esc(o) + "</option>"; }).join("") + "</select>";
+      else if (typeof f[2] === "string" && f[2].charAt(0) === "@") inp = '<select id="' + id + '" class="border p-2 rounded w-full"></select>';
+      else inp = '<input id="' + id + '" type="' + f[2] + '" class="border p-2 rounded w-full"' + (f[2] === "number" ? ' step="any"' : "") + ">";
+      return '<div><label class="block text-sm font-medium mb-1">' + esc(f[1]) + "</label>" + inp + "</div>";
+    }).join("");
+    return '<div id="phStepX_' + key + '" class="ph-step hidden bg-white p-4 rounded shadow mb-4"><h3 class="text-sm font-semibold mb-2">' + c.t + "</h3>" +
+      '<div class="mb-3"><label class="text-sm font-medium mr-2">Plan:</label><span id="px_planwrap_' + key + '"></span></div>' +
+      '<input type="hidden" id="px_id_' + key + '"><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' + fields + "</div>" +
+      '<div class="mt-3 flex gap-2"><button onclick="acxPlanExt.save(\'' + key + '\')" id="px_btn_' + key + '" class="bg-blue-900 text-white px-4 py-1 rounded hover:bg-blue-700">Save</button>' +
+      '<button onclick="acxPlanExt.clear(\'' + key + '\')" class="bg-gray-200 px-4 py-1 rounded">Clear</button></div>' +
+      '<div class="mt-4" id="px_list_' + key + '"></div></div>';
+  }
+  function buildCalc(key) {
+    var filt = key === "reports" ? '<span class="ml-4 text-sm">Type: <select id="px_rf_type" onchange="acxPlanExt.draw(\'reports\')" class="border p-1 rounded"><option value="">All</option><option>Strategic</option><option>Annual</option><option>Departmental</option><option>Other</option></select> Status: <select id="px_rf_status" onchange="acxPlanExt.draw(\'reports\')" class="border p-1 rounded"><option value="">All</option><option>Active</option><option>Completed</option><option>Overdue</option></select></span>' : "";
+    return '<div id="phStepX_' + key + '" class="ph-step hidden bg-white p-4 rounded shadow mb-4"><h3 class="text-sm font-semibold mb-2">' + CALC[key] + "</h3>" + filt +
+      '<p class="text-sm text-gray-600 mb-3" id="px_note_' + key + '"></p><div id="px_out_' + key + '"></div></div>';
+  }
+
+  function drawEntity(key) {
+    var c = E[key], w = $("px_planwrap_" + key);
+    if (w) w.innerHTML = planSelect("px_plan_" + key, "acxPlanExt.draw('" + key + "')");
+    var plan = $("px_plan_" + key) ? $("px_plan_" + key).value : "";
+    c.f.forEach(function (f) {
+      if (typeof f[2] === "string" && f[2].charAt(0) === "@") {
+        var el = $("px_" + key + "_" + f[0]); if (!el) return;
+        var cur = el.value;
+        el.innerHTML = '<option value="">-- Select --</option>' + optList(f[2], plan).map(function (o) { return '<option value="' + esc(o[0]) + '">' + esc(o[1]) + "</option>"; }).join("");
+        el.value = cur;
+      }
+    });
+    var rows = ld(c.k).filter(function (r) { return r.planTitle === plan; }).map(function (r) {
+      return "<tr>" + c.cols.map(function (n) { return td(val(key, r, n)); }).join("") +
+        td('<button onclick="acxPlanExt.edit(\'' + key + "','" + r.id + '\')" class="' + BTN + '">Edit</button> <button onclick="acxPlanExt.del(\'' + key + "','" + r.id + '\')" class="' + BTN + '">Delete</button>') + "</tr>";
+    });
+    var head = c.cols.map(function (n) { return LABEL[key + "." + n]; }).concat(["Actions"]);
+    $("px_list_" + key).innerHTML = tbl(head, rows);
+  }
+
+  /* ---------- calculated screens ---------- */
+  function planStatus(p) {
+    if (p.status === "Completed") return "Completed";
+    if (p.endDate && daysTo(p.endDate) < 0) return "Overdue";
+    return "Active";
+  }
+  function sumBy(list, plan, f) { return list.filter(function (r) { return r.planTitle === plan; }).reduce(function (s, r) { return s + num(r[f]); }, 0); }
+  function goalPct(g) { return g.status === "Achieved" ? 100 : (num(g.targetValue) > 0 ? Math.min(100, num(g.currentValue) / num(g.targetValue) * 100) : 0); }
+  function kpiPct(k) {
+    var logs = ld("planKpiLogs").filter(function (l) { return l.kpiId === k.id; }).sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+    if (!logs.length || !num(k.targetValue)) return null;
+    var v = num(logs[0].value), t = num(k.targetValue);
+    return k.direction === "Lower" ? (v <= 0 ? 100 : Math.min(100, t / v * 100)) : Math.min(100, v / t * 100);
+  }
+
+  function calcDeadlines() {
+    var items = [];
+    ld("plans").forEach(function (p) { if (p.endDate && p.status !== "Completed") items.push(["Plan", p.title, p.title, p.endDate]); });
+    ld("planMilestones").forEach(function (m) { if (m.dueDate && m.status === "Pending") items.push(["Milestone", m.title, m.planTitle, m.dueDate]); });
+    ld("planActivities").forEach(function (a) { if (a.endDate && a.status !== "Completed") items.push(["Activity", a.title, a.planTitle, a.endDate]); });
+    ld("planGoals").forEach(function (g) { if (g.dueDate && g.status !== "Achieved") items.push(["Goal", g.title, g.planTitle, g.dueDate]); });
+    items.sort(function (a, b) { return a[3].localeCompare(b[3]); });
+    return tbl(["Type", "Item", "Plan", "Due", "Days", "Status"], items.map(function (i) {
+      var d = daysTo(i[3]), st = d < 0 ? "Overdue" : d <= 14 ? "Due soon" : "Upcoming";
+      return "<tr>" + td(i[0]) + td(esc(i[1])) + td(esc(i[2])) + td(esc(i[3])) + td(d, "text-right") + td('<span style="color:' + (d < 0 ? "#b91c1c" : d <= 14 ? "#b45309" : "#166534") + ';font-weight:600">' + st + "</span>") + "</tr>";
+    }));
+  }
+  function calcPva() {
+    var rev = ld("planRevenue"), cost = ld("operationalCosts"), acts = ld("planActivities"), t = [0, 0, 0, 0];
+    var rows = ld("plans").map(function (p) {
+      var tr = num(p.targetAmount), ar = sumBy(rev, p.title, "amount"), bg = sumBy(acts, p.title, "budget"), ac = sumBy(cost, p.title, "amount");
+      t[0] += tr; t[1] += ar; t[2] += bg; t[3] += ac;
+      return "<tr>" + td(esc(p.title)) + td(fmt(tr), "text-right") + td(fmt(ar), "text-right") + td(fmt(ar - tr), "text-right") + td(tr ? pct(ar / tr * 100) : "—", "text-right") +
+        td(fmt(bg), "text-right") + td(fmt(ac), "text-right") + td(fmt(bg - ac), "text-right") + td(pct(num(p.progress)), "text-right") + "</tr>";
+    });
+    var foot = '<tfoot><tr class="font-bold bg-gray-100">' + td("Total") + td(fmt(t[0]), "text-right") + td(fmt(t[1]), "text-right") + td(fmt(t[1] - t[0]), "text-right") + td(t[0] ? pct(t[1] / t[0] * 100) : "—", "text-right") + td(fmt(t[2]), "text-right") + td(fmt(t[3]), "text-right") + td(fmt(t[2] - t[3]), "text-right") + td("") + "</tr></tfoot>";
+    return tbl(["Plan", "Revenue Target", "Actual Revenue", "Variance", "% of Target", "Activity Budget", "Actual Spend", "Budget Left", "Progress"], rows, foot);
+  }
+  function calcFin() {
+    var rev = ld("planRevenue"), cost = ld("operationalCosts"), t = [0, 0];
+    var rows = ld("plans").map(function (p) {
+      var r = sumBy(rev, p.title, "amount"), x = sumBy(cost, p.title, "amount"); t[0] += r; t[1] += x;
+      return "<tr>" + td(esc(p.title)) + td(esc(p.department || "")) + td(fmt(r), "text-right") + td(fmt(x), "text-right") + td(fmt(r - x), "text-right") + td(r ? pct((r - x) / r * 100) : "—", "text-right") + "</tr>";
+    });
+    var foot = '<tfoot><tr class="font-bold bg-gray-100">' + td("Total") + td("") + td(fmt(t[0]), "text-right") + td(fmt(t[1]), "text-right") + td(fmt(t[0] - t[1]), "text-right") + td(t[0] ? pct((t[0] - t[1]) / t[0] * 100) : "—", "text-right") + "</tr></tfoot>";
+    return tbl(["Plan", "Department", "Revenue", "Expenses", "Net", "Margin"], rows, foot);
+  }
+  function calcObjPerf() {
+    var goals = ld("planGoals"), acts = ld("planActivities"), kpis = ld("planKpis");
+    var rows = ld("planObjectives").map(function (o) {
+      var gs = goals.filter(function (g) { return g.objectiveId === o.id; }), gids = gs.map(function (g) { return g.id; });
+      var ga = avg(gs.map(goalPct)), ap = avg(acts.filter(function (a) { return gids.indexOf(a.goalId) >= 0; }).map(function (a) { return a.status === "Completed" ? 100 : num(a.progress); }));
+      var kp = avg(kpis.filter(function (k) { return k.objectiveId === o.id; }).map(kpiPct).filter(function (v) { return v != null; }));
+      var all = [ga, ap, kp].filter(function (v) { return v != null; }), ov = avg(all);
+      return "<tr>" + td(esc(o.title)) + td(esc(o.planTitle)) + td(gs.length, "text-right") + td(pct(ga), "text-right") + td(pct(ap), "text-right") + td(pct(kp), "text-right") + td('<b>' + pct(ov) + "</b>", "text-right") + td(esc(o.status)) + "</tr>";
+    });
+    return tbl(["Objective", "Plan", "Goals", "Goal Achievement", "Activity Progress", "KPI Attainment", "Overall", "Status"], rows);
+  }
+  function calcReports() {
+    var ft = $("px_rf_type") ? $("px_rf_type").value : "", fs = $("px_rf_status") ? $("px_rf_status").value : "";
+    var all = ld("plans"), reviews = ld("planReviews"), cnt = { Active: 0, Completed: 0, Overdue: 0 }, types = {};
+    all.forEach(function (p) { cnt[planStatus(p)]++; var ty = p.planType || "Unspecified"; types[ty] = types[ty] || { Active: 0, Completed: 0, Overdue: 0 }; types[ty][planStatus(p)]++; });
+    var card = function (l, v, c) { return '<div class="rounded shadow p-3 text-center" style="min-width:120px;border-top:4px solid ' + c + '"><div class="text-xs text-gray-600">' + l + '</div><div class="text-xl font-bold">' + v + "</div></div>"; };
+    var cards = '<div class="flex flex-wrap gap-3 mb-4">' + card("Plans", all.length, "#1e3a8a") + card("Active", cnt.Active, "#166534") + card("Completed", cnt.Completed, "#0369a1") + card("Overdue", cnt.Overdue, "#b91c1c") + "</div>";
+    var byType = tbl(["Plan Type", "Active", "Completed", "Overdue"], Object.keys(types).map(function (k) { return "<tr>" + td(esc(k)) + td(types[k].Active, "text-right") + td(types[k].Completed, "text-right") + td(types[k].Overdue, "text-right") + "</tr>"; }));
+    var rows = all.filter(function (p) { return (!ft || (p.planType || "") === ft) && (!fs || planStatus(p) === fs); }).map(function (p) {
+      var rv = reviews.filter(function (r) { return r.planTitle === p.title; }), ra = avg(rv.map(function (r) { return num(r.rating); }));
+      return "<tr>" + td(esc(p.title)) + td(esc(p.planType || "—")) + td(esc(p.department || "")) + td(planStatus(p)) + td(pct(num(p.progress)), "text-right") + td(esc(p.endDate || "")) + td(ra == null ? "—" : ra.toFixed(1) + " (" + rv.length + ")", "text-right") + "</tr>";
+    });
+    return cards + '<h4 class="text-sm font-semibold mb-1">By plan type</h4>' + byType + '<h4 class="text-sm font-semibold mt-4 mb-1">Plans</h4>' + tbl(["Plan", "Type", "Department", "Status", "Progress", "End", "Avg Review"], rows);
+  }
+  var CALCFN = { deadlines: calcDeadlines, pva: calcPva, fin: calcFin, objperf: calcObjPerf, reports: calcReports };
+  var NOTES = {
+    deadlines: "Open plans, goals, activities and milestones, nearest first.",
+    pva: "Revenue = revenue linked in Plan Revenue. Spend = expenses logged in Track Expenses. Budget = sum of the plan's activity budgets.",
+    fin: "Revenue linked to each plan against the expenses logged for it.",
+    objperf: "Goal achievement = current vs target. Activity progress = activities under the objective's goals. KPI attainment = latest KPI log vs target.",
+    reports: "Active = open and not past its end date. Overdue = open and past its end date."
+  };
+
+  /* ---------- host + public API ---------- */
+  function host() {
+    var h = $("phExtHost");
+    if (h) return h;
+    var tab = $("plansTab"); if (!tab) return null;
+    h = document.createElement("div"); h.id = "phExtHost";
+    h.innerHTML = Object.keys(E).map(buildEntity).join("") + Object.keys(CALC).map(buildCalc).join("");
+    tab.appendChild(h);
+    return h;
+  }
+  var API = window.acxPlanExt = {
+    go: function (key) {
+      if (!host()) return;
+      if (typeof window.phGoStep === "function") window.phGoStep(0);
+      var el = $("phStepX_" + key); if (el) el.classList.remove("hidden");
+      API.draw(key);
+    },
+    draw: function (key) {
+      if (E[key]) drawEntity(key);
+      else if (CALCFN[key]) { $("px_note_" + key).textContent = NOTES[key]; $("px_out_" + key).innerHTML = CALCFN[key](); }
+    },
+    save: function (key) {
+      var c = E[key], plan = $("px_plan_" + key).value;
+      if (!plan) return alert("Create a plan first, then pick it here.");
+      var first = $("px_" + key + "_" + c.f[0][0]);
+      if (!first.value.trim()) return alert("Please fill in " + c.f[0][1] + ".");
+      var list = ld(c.k), id = $("px_id_" + key).value, rec = id ? list.filter(function (r) { return r.id === id; })[0] : null;
+      if (!rec) { rec = { id: uid(), planTitle: plan, created: new Date().toISOString() }; list.push(rec); }
+      c.f.forEach(function (f) { var v = $("px_" + key + "_" + f[0]).value; rec[f[0]] = f[2] === "number" ? (v === "" ? "" : num(v)) : v; });
+      sv(c.k, list); API.clear(key); API.draw(key);
+    },
+    edit: function (key, id) {
+      var c = E[key], rec = ld(c.k).filter(function (r) { return r.id === id; })[0]; if (!rec) return;
+      $("px_plan_" + key).value = rec.planTitle; drawEntity(key);
+      c.f.forEach(function (f) { $("px_" + key + "_" + f[0]).value = rec[f[0]] == null ? "" : rec[f[0]]; });
+      $("px_id_" + key).value = id; $("px_btn_" + key).textContent = "Update";
+    },
+    del: function (key, id) {
+      if (!confirm("Delete this record?")) return;
+      sv(E[key].k, ld(E[key].k).filter(function (r) { return r.id !== id; })); API.draw(key);
+    },
+    clear: function (key) {
+      E[key].f.forEach(function (f) { var el = $("px_" + key + "_" + f[0]); if (el) el.value = el.tagName === "SELECT" ? (el.options[0] ? el.options[0].value : "") : ""; });
+      $("px_id_" + key).value = ""; $("px_btn_" + key).textContent = "Save";
+    }
+  };
+
+  /* deleting a plan also removes its objectives, goals, KPIs, activities etc. */
+  function wrapDelete() {
+    var o = window.phDeletePlan;
+    if (typeof o !== "function" || o.__acxExt) return;
+    var w = function (idx) {
+      var p = ld("plans")[idx], title = p && p.title, r = o.apply(this, arguments);
+      if (title && !ld("plans").some(function (x) { return x.title === title; })) {
+        Object.keys(E).forEach(function (k) { var l = ld(E[k].k), n = l.filter(function (x) { return x.planTitle !== title; }); if (n.length !== l.length) sv(E[k].k, n); });
+      }
+      return r;
+    };
+    w.__acxExt = true; window.phDeletePlan = w;
+  }
+  wrapDelete(); window.addEventListener("load", wrapDelete);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", host); else host();
+})(); } catch (e) { console.error("[plans extension]", e); }
