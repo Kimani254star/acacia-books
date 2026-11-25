@@ -10,3 +10,31 @@
   window.addEventListener('storage',function(e){if(e.key==='budgets'||e.key==='actuals'||e.key==='acxBudgetDepartments')render()});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',render);else render();
 })();
+
+
+// Profitability report views powered by the same Budget sub-module records.
+(function(){
+  function escR(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function moneyR(v){var n=Number(v)||0;try{return new Intl.NumberFormat(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}).format(n)}catch(e){return n.toFixed(2)}}
+  function totalR(row){return (row.months||[]).reduce(function(s,m){return s+(Number(m.amount)||0)},0)}
+  function renderR(){
+    var bs=[],as=[],revs=[],trans=[];
+    try{bs=typeof budgets!=='undefined'&&Array.isArray(budgets)?budgets:JSON.parse(localStorage.getItem('budgets')||'[]')}catch(e){}
+    try{as=typeof actuals!=='undefined'&&Array.isArray(actuals)?actuals:JSON.parse(localStorage.getItem('actuals')||'[]')}catch(e){}
+    try{revs=JSON.parse(localStorage.getItem('revisionHistoryData')||'[]')}catch(e){}
+    try{trans=JSON.parse(localStorage.getItem('budgetTransferHistory')||localStorage.getItem('budgetTransfers')||'[]')}catch(e){}
+    var sum=function(rows){return rows.reduce(function(t,r){return t+totalR(r)},0)};
+    var names=Array.from(new Set(bs.concat(as).map(function(x){return x.department||'Unassigned'})));
+    var dept=document.getElementById('budgetDepartmentActualRows');if(dept)dept.innerHTML=names.length?names.map(function(n){var b=sum(bs.filter(function(x){return (x.department||'Unassigned')===n})),a=sum(as.filter(function(x){return (x.department||'Unassigned')===n}));return '<tr class="border-t"><td class="p-2">'+escR(n)+'</td><td class="p-2 text-right">'+moneyR(b)+'</td><td class="p-2 text-right">'+moneyR(a)+'</td><td class="p-2 text-right">'+moneyR(b-a)+'</td><td class="p-2 text-right">'+(b?(a/b*100).toFixed(1)+'%':'—')+'</td></tr>'}).join(''):'<tr><td colspan="5" class="p-3 text-center text-gray-500">No department budget or actual data available.</td></tr>';
+    var lineRows=[];bs.forEach(function(b){(b.months||[]).forEach(function(m){var actual=0;as.filter(function(a){return a.department===b.department&&(a.account===b.account||a.budgetName===b.budgetName)}).forEach(function(a){(a.months||[]).filter(function(am){return am.month===m.month}).forEach(function(am){actual+=Number(am.amount)||0})});lineRows.push({b:b,m:m,a:actual})})});
+    var va=document.getElementById('budgetVsActualRows');if(va)va.innerHTML=lineRows.length?lineRows.map(function(x){return '<tr class="border-t"><td class="p-2">'+escR(x.b.budgetName||x.b.name||x.b.account||'—')+'</td><td class="p-2">'+escR(x.b.department||'—')+'</td><td class="p-2">'+escR(x.m.month||'—')+'</td><td class="p-2 text-right">'+moneyR(x.m.amount)+'</td><td class="p-2 text-right">'+moneyR(x.a)+'</td><td class="p-2 text-right">'+moneyR((Number(x.m.amount)||0)-x.a)+'</td></tr>'}).join(''):'<tr><td colspan="6" class="p-3 text-center text-gray-500">No budget line data available.</td></tr>';
+    var ex=document.getElementById('budgetExpenditureRows');if(ex)ex.innerHTML=as.length?as.map(function(a){return (a.months||[]).map(function(m){return '<tr class="border-t"><td class="p-2">'+escR(a.department||'—')+'</td><td class="p-2">'+escR(a.account||a.budgetName||'—')+'</td><td class="p-2">'+escR(m.month||'—')+'</td><td class="p-2 text-right">'+moneyR(m.amount)+'</td></tr>'}).join('')}).join(''):'<tr><td colspan="4" class="p-3 text-center text-gray-500">No expenditure recorded yet.</td></tr>';
+    var al=document.getElementById('budgetAllocationRows');if(al)al.innerHTML=bs.length?bs.map(function(b){return '<tr class="border-t"><td class="p-2">'+escR(b.budgetName||b.name||'—')+'</td><td class="p-2">'+escR(b.account||'—')+'</td><td class="p-2">'+escR(b.department||'—')+'</td><td class="p-2">'+escR(b.period||'—')+'</td><td class="p-2 text-right">'+moneyR(totalR(b))+'</td><td class="p-2">'+escR(b.status||'Approved')+'</td></tr>'}).join(''):'<tr><td colspan="6" class="p-3 text-center text-gray-500">No budget allocations created yet.</td></tr>';
+    var rr=document.getElementById('budgetRevisionRows');if(rr)rr.innerHTML=revs.length?revs.map(function(r){return '<tr class="border-t"><td class="p-2">'+escR(r.date||r.createdAt||r.timestamp||'—')+'</td><td class="p-2">'+escR(r.account||r.budgetName||r.budget||'—')+'</td><td class="p-2">'+escR(r.description||r.reason||r.action||'Budget revision')+'</td><td class="p-2 text-right">'+moneyR(r.amount||r.newAmount||0)+'</td></tr>'}).join(''):'<tr><td colspan="4" class="p-3 text-center text-gray-500">No revision history available.</td></tr>';
+    var tr=document.getElementById('budgetTransferRows');if(tr)tr.innerHTML=trans.length?trans.map(function(r){return '<tr class="border-t"><td class="p-2">'+escR(r.date||r.createdAt||'—')+'</td><td class="p-2">'+escR(r.from||r.fromBudget||r.source||'—')+'</td><td class="p-2">'+escR(r.to||r.toBudget||r.destination||'—')+'</td><td class="p-2 text-right">'+moneyR(r.amount)+'</td><td class="p-2">'+escR(r.status||'Recorded')+'</td></tr>'}).join(''):'<tr><td colspan="5" class="p-3 text-center text-gray-500">No budget transfers recorded yet.</td></tr>';
+  }
+  window.acxRenderBudgetReports=renderR;
+  document.addEventListener('DOMContentLoaded',renderR);
+  window.addEventListener('storage',function(e){if(['budgets','actuals','revisionHistoryData','budgetTransferHistory','budgetTransfers'].indexOf(e.key)>=0)renderR()});
+  setTimeout(renderR,500);
+})();
