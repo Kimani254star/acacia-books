@@ -1914,3 +1914,7 @@ html[data-theme=amoled] #contentArea table tbody td,html[data-theme=solar-dark] 
 .dark .acx-ptab.is-active{background:#1e3a8a;border-color:#1e3a8a;color:#fff}
 /* Plans: heading, intro and All Plans table belong to the Plan Overview tab only */
 #plansTab.acx-pt-sub > h2,#plansTab.acx-pt-sub > p,#plansTab.acx-pt-sub > div:not(.ph-step):not(#phExtHost):not(#phPlanPickerWrap):not(.acx-ptabs){display:none}
+/* Department register action controls: readable spacing and consistent buttons. */
+#budgetPlansList button[onclick*="editBudget"],#budgetPlansList button[onclick*="deleteBudget"],#budgetPlansList button[onclick*="previewBudget"],#budgetPlansList button[onclick*="toggleBudgetMenu"]{margin:2px;}
+/* Ensure adjacent Edit/Delete controls in department registers are visually separated. */
+[id*="department"] table td:last-child button,[id*="Department"] table td:last-child button,[id*="department"] table td:last-child a,[id*="Department"] table td:last-child a{margin-left:4px;margin-right:4px;}
