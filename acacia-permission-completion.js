@@ -1,40 +1,30 @@
-/* Acacia Books permissions completion (v2).
-   Adds ONLY what the built-in Module Access list lacks: the connected-app
-   checkboxes (app_*) and the Mail note. It no longer injects duplicate or
-   invented module IDs - those never matched the live navigation IDs, so they
-   showed as unticked when a user was opened and could never grant access.
-   Report access is handled separately by the Report Access list.
+/* Acacia Books permissions completion: full module inventory + connected apps.
+   Adds missing entries to User Management's module-access checkbox list.
+   Values are stored in the user's existing modules array for compatibility.
    Supabase authorization enforcement must still be wired to these assignments. */
 (function(){
   'use strict';
-  var APPS=[['app_budget','Acacia Budget'],['app_crm','Acacia CRM'],['app_expenses','Acacia Expenses'],['app_inventory','Acacia Inventory'],['app_meet','Acacia Meet'],['app_payroll','Acacia Payroll'],['app_plans','Acacia Plans'],['app_pos','Acacia POS'],['app_sell','Acacia Sell'],['app_stock','Acacia Stock']];
-  function addCheckbox(body,value,label){
-    if(document.querySelector('#moduleAccessList input[type="checkbox"][value="'+value+'"]'))return;
-    var lab=document.createElement('label');
-    lab.style.cssText='display:flex;align-items:center;gap:6px;padding:3px 5px;margin:2px 0;font-size:13px';
-    var cb=document.createElement('input');cb.type='checkbox';cb.value=value;
-    lab.appendChild(cb);lab.appendChild(document.createTextNode(label));body.appendChild(lab);
-  }
-  function extend(){
-    try{
-      var list=document.getElementById('moduleAccessList');if(!list)return;
-      var body=list.querySelector('[data-group-body="custom"]')||list;
-      if(!body.querySelector('#acx-master-group-apps')){
-        var h=document.createElement('div');h.id='acx-master-group-apps';
-        h.textContent='Connected Apps (Subscription + API controlled)';
-        h.style.cssText='font-weight:700;padding:7px 5px 3px;border-top:1px solid #ddd;margin-top:5px';
-        body.appendChild(h);
-      }
-      APPS.forEach(function(a){addCheckbox(body,a[0],a[1]);});
-      if(!body.querySelector('#acx-mail-access-note')){
-        var n=document.createElement('div');n.id='acx-mail-access-note';
-        n.textContent='Acacia Mail: available to every authenticated Books user (no paid app toggle).';
-        n.style.cssText='padding:8px;color:#166534;font-size:12px';body.appendChild(n);
-      }
-      if(typeof refreshModuleAccessGroupStates==='function')refreshModuleAccessGroupStates();
-    }catch(e){console.warn('[Acacia permission completion]',e);}
-  }
+  var MASTER_GROUPS = [
+    {label:'Dashboard',items:[['dashboard','Dashboard Hub']]},
+    {label:'Inventory',items:[['inventoryTab','Inventory'],['inventoryMovementTab','Inventory Movement / Transits'],['assessmentTab','Assessment'],['priceListTab','Price List'],['amendmentsTab','Amendments'],['bundleItemsTab','Bundle Items'],['bulkAdjustmentsTab','Bulk Adjustments'],['packagesTab','Packages'],['inventoryShipmentsTab','Inventory Shipments'],['warehousesTab','Warehouses']]},
+    {label:'Sales',items:[['customersTab','Customers'],['invoicesTab','Invoices'],['quotesTab','Quotes'],['salesOrdersTab','Sales Orders'],['bulkInvoicingTab','Bulk Invoicing'],['creditNotesTab','Credit Notes'],['salesReturnsTab','Sales Returns'],['receiptsTab','Receipts'],['recurringInvoicesTab','Recurring Invoices'],['deliveryTab','Delivery'],['customerStatementsTab','Customer Statements']]},
+    {label:'Purchases',items:[['supplierTab','Suppliers'],['supplierPaymentsTab','Supplier Payments'],['billsTab','Supplier Bills'],['bulkBillingTab','Bulk Billing'],['recurringBillsTab','Recurring Bills'],['taxPaymentsTab','Tax Payments'],['operationalCostsTab','Operational Costs'],['purchaseOrdersTab','Purchase Orders'],['debitNotesTab','Supplier Debit Notes'],['purchaseReturnsTab','Purchase Returns'],['grnTab','Goods Received (GRN)'],['supplierStatementsTab','Supplier Statements']]},
+    {label:'Accounting & Finance',items:[['manualJournalsTab','Manual Journals'],['recurringJournalsTab','Recurring Journals'],['currencyAdjustmentsTab','Currency Adjustments'],['nonCurrentAssetsTab','Non-Current Assets'],['nonCurrentLiabilitiesTab','Non-Current Liabilities'],['equityTab','Equity'],['taxAdjustmentsTab','Tax Adjustments'],['chartOfAccountsTab','Chart of Accounts'],['currentAccountsTab','Current Accounts'],['fundsTab','Funds']]},
+    {label:'Budget Management',items:[['budgetDepartmentsTab','Departments'],['budgetCreateTab','Create Budget'],['annualBudgetsTab','Annual Budgets'],['monthlyBudgetsTab','Monthly Budgets'],['quarterlyBudgetsTab','Quarterly Budgets'],['departmentAllocationsTab','Department Allocations'],['projectAllocationsTab','Project Allocations'],['budgetApprovalsTab','Budget Approvals'],['budgetRevisionsTab','Budget Revisions'],['budgetTransfersTab','Budget Transfers'],['spendingLimitsTab','Spending Limits'],['cashFlowForecastTab','Cash Flow Forecast']]},
+    {label:'Payroll',items:[['employeesTab','Employees'],['earningsTab','Earnings & Allowances'],['deductionsTab','Earnings & Deductions'],['attendanceTab','Attendance & Leave'],['payslipsTab','Payslip Generation'],['statutoriesTab','Statutories'],['payrollReportsTab','Payroll Reports']]},
+    {label:'Projects & Planning',items:[['projectsTab','Projects'],['projectOverviewTab','Project Overview'],['planOverviewTab','Plan Overview'],['planProgressTab','Plan Progress'],['planRevenueTab','Plan Revenue'],['planningTab','Planning']]},
+    {label:'Reports',items:[['reportsPanel','Reports'],['profitLossReport','Profit & Loss'],['balanceSheetReport','Balance Sheet'],['cashFlowReport','Cash Flow'],['vatSummaryReport','VAT Summary'],['taxComputationReport','Tax Computation Summary'],['invoiceSummaryReport','Invoice Summary'],['billSummaryReport','Bill Summary'],['purchaseByItemReport','Purchase by Item'],['purchaseByVendorReport','Purchase by Vendor'],['inventorySummaryReport','Inventory Summary'],['bankSummaryReport','Bank Summary'],['generalLedgerReport','General Ledger'],['generalLedgerDetailedReport','General Ledger Detailed'],['accountsPayableReport','Accounts Payable'],['accountsReceivableReport','Accounts Receivable'],['salesByItemReport','Sales by Item'],['salesByCustomerReport','Sales by Customer'],['salesBySalespersonReport','Sales by Salesperson'],['stockMovementReport','Warehouse Stock Movement'],['stockTransferReport','Warehouse Stock Transfer'],['stockAdjustmentReport','Stock Adjustment Report'],['payrollReport','Payroll Report'],['profitMarginReport','Profit Margin Report'],['currentAccountReport','Current Account Report'],['budgetSummaryReport','Budget Summary'],['taxesReport','Taxes Report'],['plansReport','Plans Report'],['operationalCostsReport','Operational Costs Report'],['stockValuationReport','Stock Valuation'],['loanScheduleReport','Loan Schedule'],['interestExpenseReport','Interest Expense'],['auditTrailReport','Audit Trail'],['userActivityReport','User Activity Report'],['profitTrendsReport','Profit Trends'],['revenueExpensesReport','Revenue vs Expenses'],['cashFlowForecastReport','Cash Flow Forecast'],['projectExpensesReport','Project Expenses'],['projectRevenueReport','Project Revenue'],['projectTimelineReport','Project Timeline'],['batchTrackingReport','Batch Tracking'],['damagedStockReport','Damaged Stock'],['expiredItemsReport','Expired Items'],['leaveSummaryReport','Leave Summary'],['attendanceSummaryReport','Attendance Summary'],['overtimeSummaryReport','Overtime Summary'],['budgetVarianceReport','Budget Variance'],['currencyGainLossReport','Currency Gain/Loss'],['topCustomersReport','Top Customers'],['topSellingItemsReport','Top Selling Items'],['salesComparisonReport','Sales Comparison'],['salesTaxSummaryReport','Sales Tax Summary'],['salesForecastReport','Sales Forecast']]},
+    {label:'Administration & Settings',items:[['userManagementTab','User Management'],['userActivityTab','User Activity'],['systemConfigurationTab','System Configuration'],['organizationProfileTab','Organization Profile'],['preferencesTab','Preferences'],['customizationTab','Customization'],['integrationsTab','Integrations'],['dataCenterTab','Data Center / Backup'],['taxComplianceTab','Tax Compliance'],['vatTab','VAT'],['transactionLockingTab','Transaction Locking']]},
+    {label:'Other Tools',items:[['costingTab','Costing'],['bulkCostingTab','Bulk Costing'],['fileManagerTab','File Manager'],['recycleBinTab','Recycle Bin'],['crmHubTab','CRM Hub'],['mailHubTab','Mail Hub'],['auditTab','Audit'],['filesTab','Files / Documents']]},
+    {label:'Connected Apps (Subscription + API controlled)',items:[['app_budget','Acacia Budget'],['app_crm','Acacia CRM'],['app_expenses','Acacia Expenses'],['app_inventory','Acacia Inventory'],['app_meet','Acacia Meet'],['app_payroll','Acacia Payroll'],['app_plans','Acacia Plans'],['app_pos','Acacia POS'],['app_sell','Acacia Sell'],['app_stock','Acacia Stock']]}
+  ];
+  var APPS = ['budget','crm','expenses','inventory','meet','payroll','plans','pos','sell','stock'];
+  function discovered(){var ids=new Set();document.querySelectorAll('#sidebar button[onclick],#sidebar a[onclick]').forEach(function(el){var raw=el.getAttribute('onclick')||'';var m=raw.match(/showTab\(\s*['\"]([^'\"]+)['\"]/)||raw.match(/openTab\(\s*['\"]([^'\"]+)['\"]/)||raw.match(/navigateTo\(\s*['\"]([^'\"]+)['\"]/) ;if(m&&m[1]&&m[1]!=='homeTab')ids.add(m[1]);});return Array.from(ids);}
+  function addCheckbox(container,value,label,group){if(container.querySelector('input[type=checkbox][value="'+value.replace(/"/g,'\\"')+'"]'))return;var lab=document.createElement('label');lab.className='acx-permission-master-item';lab.style.cssText='display:flex;align-items:center;gap:6px;padding:3px 5px;margin:2px 0;font-size:13px';var cb=document.createElement('input');cb.type='checkbox';cb.value=value;cb.setAttribute('data-acx-master','1');lab.appendChild(cb);lab.appendChild(document.createTextNode(label));container.appendChild(lab);}
+  function extend(){try{var list=document.getElementById('moduleAccessList');if(list){var body=list.querySelector('[data-group-body="custom"]')||list;MASTER_GROUPS.forEach(function(g){var gid='acx-master-group-'+g.label.replace(/[^a-z0-9]/gi,'-');if(!body.querySelector('#'+gid)){var heading=document.createElement('div');heading.id=gid;heading.textContent=g.label;heading.style.cssText='font-weight:700;padding:7px 5px 3px;border-top:1px solid #ddd;margin-top:5px';body.appendChild(heading);}g.items.forEach(function(it){addCheckbox(body,it[0],it[1],g.label);});});if(!body.querySelector('#acx-mail-access-note')){var mailNote=document.createElement('div');mailNote.id='acx-mail-access-note';mailNote.textContent='Acacia Mail: available to every authenticated Books user (no paid app toggle).';mailNote.style.cssText='padding:8px;color:#166534;font-size:12px';body.appendChild(mailNote);}}
+      if(Array.isArray(ALL_MODULES)){MASTER_GROUPS.forEach(function(g){g.items.forEach(function(it){if(ALL_MODULES.indexOf(it[0])<0)ALL_MODULES.push(it[0]);});});discovered().forEach(function(id){if(ALL_MODULES.indexOf(id)<0)ALL_MODULES.push(id);});}
+      if(Array.isArray(MODULE_GROUPS)){MASTER_GROUPS.forEach(function(g){var target=MODULE_GROUPS.find(function(x){return x.label===g.label;});if(!target){target={label:g.label,modules:[]};MODULE_GROUPS.push(target);}g.items.forEach(function(it){if(target.modules.indexOf(it[0])<0)target.modules.push(it[0]);});});}
+    }catch(e){console.warn('[Acacia permission master inventory]',e);}}
   function init(){extend();setTimeout(extend,500);setTimeout(extend,1800);}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-  window.addEventListener('load',init);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();window.addEventListener('load',init);
 })();
