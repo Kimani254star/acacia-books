@@ -6153,6 +6153,7 @@ try { (function () {
     ["plansTab", "projectTab"].forEach(function (id) {
       var c = $(id); if (!c) return;
       var bar = c.querySelector(":scope > .acx-ptabs");
+      if (cur.group === "plan") { if (bar) bar.remove(); return; }
       if (!bar) { bar = document.createElement("div"); bar.className = "acx-ptabs"; bar.setAttribute("role", "tablist"); c.insertBefore(bar, c.firstChild); }
       bar.innerHTML = barHtml();
     });
@@ -6197,3 +6198,41 @@ try { (function () {
   window.addEventListener("load", function () { hook(); window.acxPlanNav.refresh(); });
   [400, 1500, 4000].forEach(function (ms) { setTimeout(hook, ms); });
 })(); } catch (e) { console.error("[plans nav]", e); }
+
+
+/* Plan vs Revenue report: derive figures from the Plan module's actual plan and revenue records. */
+try { (function () {
+  "use strict";
+  function read(key) { try { var v = JSON.parse(localStorage.getItem(key) || "[]"); return Array.isArray(v) ? v : []; } catch (_) { return []; } }
+  function money(v) { var n = Number(v || 0); return isFinite(n) ? n : 0; }
+  function esc(v) { return String(v == null ? "" : v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function rows() {
+    var plans = read("plans"), revenue = read("planRevenue"), expenses = read("operationalCosts");
+    try { if (typeof loadCompanyData === "function") { var cp = loadCompanyData("plans"), cr = loadCompanyData("planRevenue"), ce = loadCompanyData("operationalCosts"); if (Array.isArray(cp)) plans = cp; if (Array.isArray(cr)) revenue = cr; if (Array.isArray(ce)) expenses = ce; } } catch (_) {}
+    return plans.map(function (p) {
+      var title = p.title || p.name || "Untitled plan";
+      var linked = revenue.filter(function (r) { return String(r.planTitle || "") === String(title); });
+      var actual = linked.reduce(function (sum, r) { var d = String(r.invDate || r.date || "").slice(0,10); return sum + money(r.amount) * (window.__planReportDateMatch ? 1 : 1); }, 0);
+      var spend = expenses.filter(function (e) { return String(e.planTitle || "") === String(title); }).reduce(function (sum, e) { return sum + money(e.amount || e.total || e.amountKES); }, 0);
+      var target = money(p.targetAmount || p.targetRevenue || p.revenueTarget || p.budget || 0);
+      return { plan: title, target: target, actual: actual, variance: actual - target, expenses: spend };
+    });
+  }
+  function filtered() {
+    var a = rows(), month = document.getElementById("projectMonthFilter")?.value || "", from = document.getElementById("projectStartDate")?.value || "", to = document.getElementById("projectEndDate")?.value || "";
+    if (month || from || to) {
+      var rev = read("planRevenue");
+      a = a.map(function (r) { var linked = rev.filter(function (x) { return String(x.planTitle || "") === r.plan; }).filter(function (x) { var d = String(x.invDate || x.date || "").slice(0,10); return (!month || d.slice(0,7) === month) && (!from || !d || d >= from) && (!to || !d || d <= to); }); var actual = linked.reduce(function (s,x) { return s + money(x.amount); },0); return Object.assign({},r,{actual:actual,variance:actual-r.target}); });
+    }
+    return a;
+  }
+  window.renderProjectProfitabilityTable = function () {
+    var body = document.getElementById("projectProfitabilityBody"); if (!body) return;
+    var data = filtered();
+    body.innerHTML = data.length ? data.map(function (r) { return '<tr><td class="border p-2">'+esc(r.plan)+'</td><td class="border p-2 text-right">'+money(r.target).toLocaleString()+'</td><td class="border p-2 text-right">'+money(r.actual).toLocaleString()+'</td><td class="border p-2 text-right">'+money(r.variance).toLocaleString()+'</td></tr>'; }).join("") : '<tr><td class="border p-2 text-center text-gray-500" colspan="4">No plans or linked revenue found for this company yet.</td></tr>';
+  };
+  window.applyProjectProfitFilter = window.renderProjectProfitabilityTable;
+  window.clearProjectProfitFilter = function () { ["projectMonthFilter","projectStartDate","projectEndDate"].forEach(function(id){var e=document.getElementById(id);if(e)e.value="";}); window.renderProjectProfitabilityTable(); };
+  window.exportProjectProfitabilityCSV = function () { var data=filtered(), csv=[["Plan","Planned Revenue","Actual Revenue","Variance" ]].concat(data.map(function(r){return [r.plan,r.target,r.actual,r.variance];})).map(function(row){return row.map(function(v){return '"'+String(v == null ? "" : v).replace(/"/g,'""')+'"';}).join(",");}).join("\r\n"); var a=document.createElement("a"),u=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));a.href=u;a.download="Plan-vs-Revenue.csv";a.click();setTimeout(function(){URL.revokeObjectURL(u);},1000); };
+  var panel=document.getElementById("projectProfitabilityPanel"); if(panel){var th=panel.querySelectorAll("thead th"); if(th.length>=4){th[0].textContent="Plan";th[1].textContent="Planned Revenue";th[2].textContent="Actual Revenue";th[3].textContent="Variance";} }
+})(); } catch (e) { console.error("[Plan vs Revenue report fix]", e); }
