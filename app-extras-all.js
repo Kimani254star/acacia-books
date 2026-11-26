@@ -6095,11 +6095,10 @@ try { (function () {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", host); else host();
 })(); } catch (e) { console.error("[plans extension]", e); }
 
-/* ===== Plans navigation: sidebar Plan / Planning / Execution (/ Performance) each open one page with horizontal tabs =====
-   Plan      -> Plan Overview | Plan Progress | Plan Revenue
-   Planning  -> Strategic Objectives | Goals & Targets | KPIs | KPI Tracking
-   Execution -> Activities | Responsibilities | Milestones | Deadlines | Plan Reviews
-   Performance (kept from before) -> Plan vs Actual | Financial Performance | Objectives Performance
+/* ===== Plans navigation: Plan Overview, Plan Progress, Plan Revenue and Planning =====
+   Plan navigation -> Plan Overview | Plan Progress | Plan Revenue
+   Planning         -> Strategic Objectives | Goals & Targets | KPIs | KPI Tracking
+   Execution and Performance are removed from the Plan module navigation.
    The bar sits at the top of #plansTab and #projectTab and works out which tab is active from what is on screen,
    so it stays right even when other code opens a plan screen directly. */
 try { (function () {
@@ -6107,9 +6106,7 @@ try { (function () {
   if (window.acxPlanNav) return;
   var GROUPS = {
     plan: { label: "Plan", tabs: [["overview", "Plan Overview"], ["progress", "Plan Progress"], ["revenue", "Plan Revenue"]] },
-    planning: { label: "Planning", tabs: [["objectives", "Strategic Objectives"], ["goals", "Goals & Targets"], ["kpis", "KPIs"], ["kpilogs", "KPI Tracking"]] },
-    execution: { label: "Execution", tabs: [["activities", "Activities"], ["resp", "Responsibilities"], ["milestones", "Milestones"], ["deadlines", "Deadlines"], ["reviews", "Plan Reviews"]] },
-    performance: { label: "Performance", tabs: [["pva", "Plan vs Actual"], ["fin", "Financial Performance"], ["objperf", "Objectives Performance"]] }
+    planning: { label: "Planning", tabs: [["objectives", "Strategic Objectives"], ["goals", "Goals & Targets"], ["kpis", "KPIs"], ["kpilogs", "KPI Tracking"]] }
   };
   var cur = { group: "plan", tab: "overview" };
   var $ = function (i) { return document.getElementById(i); };
