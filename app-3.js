@@ -1128,7 +1128,17 @@ try{
 (function () {
   'use strict';
   var groups = [
-    { id: 'general', title: 'Configuration', icon: '⚙️', description: 'Manage the basic preferences used throughout Acacia Books.', items: [
+    { id: 'warehouses', title: 'Warehouses', icon: '🏬', description: 'Manage branches, warehouses and stock locations.', items: [
+      ['warehousesTab', 'Warehouses', '🏬']
+    ]},
+    { id: 'datacenter', title: 'Data Center', icon: '🗄️', description: 'Manage backups, recovery and activity records.', items: [
+      ['DatacenterTab', 'Backup & Restore', '💾'],
+      ['userActivityTab', 'User Activity', '📋']
+    ]},
+    { id: 'general', title: 'Configuration', icon: '⚙️', description: 'Manage system settings and shared business defaults.', items: [
+      ['systemConfigurationTab', 'System Configuration', '⚙️'],
+      ['costingTab', 'Costing', '🧮'],
+      ['bulkCostingTab', 'Bulk Costing', '📦'],
       ['remindersTab', 'Reminders', '🔔'],
       ['paymentTermsTab', 'Payment Terms', '📅'],
       ['currenciesTab', 'Currencies', '💱']
@@ -1147,9 +1157,20 @@ try{
       ['incomingWebhooksTab', 'Incoming Webhooks', '📥'],
       ['outgoingWebhooksTab', 'Outgoing Webhooks', '📤']
     ]},
-    { id: 'data', title: 'Data & Forms', icon: '🗄️', description: 'Manage public forms, data handling and retention settings.', items: [
+    { id: 'data', title: 'Data & Forms', icon: '🗄️', description: 'Manage public forms and data handling.', items: [
       ['webFormsTab', 'Web Forms', '📝'],
       ['dataManagementTab', 'Data Management', '🗄️']
+    ]},
+    { id: 'tax', title: 'Tax Compliance', icon: '🧾', description: 'Manage tax compliance and VAT settings.', items: [
+      ['taxComplianceTab', 'Tax Compliance', '🧾'],
+      ['vatTab', 'VAT', '％']
+    ]},
+    { id: 'users', title: 'User Management', icon: '👥', description: 'Manage users, roles and access.', items: [
+      ['userManagementTab', 'User Management', '👥']
+    ]},
+    { id: 'customization', title: 'Customization', icon: '🎨', description: 'Manage application preferences and document appearance.', items: [
+      ['preferencesTab', 'Preferences', '⚙️'],
+      ['settingstemplateTab', 'Customization', '🎨']
     ]}
   ];
 
