@@ -6141,8 +6141,10 @@ try { (function () {
     var w = $("phPlanPickerWrap"), pt = $("plansTab"), r = $("phStep5");
     if (!w || !pt || !r) return;
     if (cur.tab === "revenue") {
-      if (!home) home = { parent: w.parentNode, next: w.nextSibling };
-      if (w.parentNode !== pt) pt.insertBefore(w, r);
+      /* Plan Revenue has its own "Working on plan" selector in the invoice filter row, so the picker bar stays on Plan Progress */
+      if (home && w.parentNode !== home.parent) {
+        if (home.next && home.next.parentNode === home.parent) home.parent.insertBefore(w, home.next); else home.parent.appendChild(w);
+      }
     } else if (home && w.parentNode !== home.parent) {
       if (home.next && home.next.parentNode === home.parent) home.parent.insertBefore(w, home.next); else home.parent.appendChild(w);
     }
