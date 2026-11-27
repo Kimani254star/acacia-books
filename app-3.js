@@ -1128,17 +1128,7 @@ try{
 (function () {
   'use strict';
   var groups = [
-    { id: 'warehouses', title: 'Warehouses', icon: '🏬', description: 'Manage branches, warehouses and stock locations.', items: [
-      ['warehousesTab', 'Warehouses', '🏬']
-    ]},
-    { id: 'datacenter', title: 'Data Center', icon: '🗄️', description: 'Manage backups, recovery and activity records.', items: [
-      ['DatacenterTab', 'Backup & Restore', '💾'],
-      ['userActivityTab', 'User Activity', '📋']
-    ]},
-    { id: 'general', title: 'Configuration', icon: '⚙️', description: 'Manage system settings and shared business defaults.', items: [
-      ['systemConfigurationTab', 'System Configuration', '⚙️'],
-      ['costingTab', 'Costing', '🧮'],
-      ['bulkCostingTab', 'Bulk Costing', '📦'],
+    { id: 'general', title: 'Configuration', icon: '⚙️', description: 'Manage the basic preferences used throughout Acacia Books.', items: [
       ['remindersTab', 'Reminders', '🔔'],
       ['paymentTermsTab', 'Payment Terms', '📅'],
       ['currenciesTab', 'Currencies', '💱']
@@ -1157,20 +1147,9 @@ try{
       ['incomingWebhooksTab', 'Incoming Webhooks', '📥'],
       ['outgoingWebhooksTab', 'Outgoing Webhooks', '📤']
     ]},
-    { id: 'data', title: 'Data & Forms', icon: '🗄️', description: 'Manage public forms and data handling.', items: [
+    { id: 'data', title: 'Data & Forms', icon: '🗄️', description: 'Manage public forms, data handling and retention settings.', items: [
       ['webFormsTab', 'Web Forms', '📝'],
       ['dataManagementTab', 'Data Management', '🗄️']
-    ]},
-    { id: 'tax', title: 'Tax Compliance', icon: '🧾', description: 'Manage tax compliance and VAT settings.', items: [
-      ['taxComplianceTab', 'Tax Compliance', '🧾'],
-      ['vatTab', 'VAT', '％']
-    ]},
-    { id: 'users', title: 'User Management', icon: '👥', description: 'Manage users, roles and access.', items: [
-      ['userManagementTab', 'User Management', '👥']
-    ]},
-    { id: 'customization', title: 'Customization', icon: '🎨', description: 'Manage application preferences and document appearance.', items: [
-      ['preferencesTab', 'Preferences', '⚙️'],
-      ['settingstemplateTab', 'Customization', '🎨']
     ]}
   ];
 
@@ -1655,4 +1634,55 @@ window.phRenderRevenue=function(){
  return r;
 };
 window.__acxRenderRevenue=window.phRenderRevenue;
+})();
+
+/* User Management: four distinct Organisation Profile-style navigation pages. */
+(function(){
+  'use strict';
+  function byId(id){return document.getElementById(id);}
+  function safeUsers(){try{var a=JSON.parse(localStorage.getItem('users')||'[]');return Array.isArray(a)?a:[]}catch(e){return[];}}
+  function makePanel(id,title,description){
+    var el=byId(id); if(el)return el;
+    el=document.createElement('div'); el.id=id; el.className='hidden ml-84 mr-7 p-2';
+    var h=document.createElement('h2');h.className='text-sm font-bold mb-2';h.textContent=title;el.appendChild(h);
+    var p=document.createElement('p');p.className='text-sm text-gray-600 mb-3';p.textContent=description;el.appendChild(p);
+    var host=document.querySelector('main')||document.body;host.appendChild(el);return el;
+  }
+  var pages=[
+    ['userManagementTab','User Management','Overview of users, roles and access control.'],
+    ['userRolesPermissionsTab','Roles & Permissions','Review the roles assigned to users. Role assignment and permission selection remain managed through the existing user administration controls.'],
+    ['usersTab','Users','Create, invite, review and manage individual user accounts.'],
+    ['userAccessControlTab','Access Control','Control the modules and areas each user can access using the existing module-access permissions.']
+  ];
+  function style(){if(byId('acxUserMgmtNavStyle'))return;var s=document.createElement('style');s.id='acxUserMgmtNavStyle';s.textContent='.acx-user-mgmt-nav{display:flex;flex-wrap:wrap;gap:.4rem;padding:.5rem;margin:.7rem 0 1rem;background:#f8fafc;border:1px solid #e5e7eb;border-radius:.75rem}.acx-user-mgmt-nav button{white-space:nowrap;border:1px solid #dbe3f5;border-radius:9999px;background:#fff;color:#1e3a8a;padding:.4rem .8rem;font-size:.78rem;font-weight:600;cursor:pointer}.acx-user-mgmt-nav button.active{background:#1e3a8a;color:#fff;border-color:#1e3a8a}html.dark .acx-user-mgmt-nav{background:#1e293b;border-color:#334155}html.dark .acx-user-mgmt-nav button{background:#263449;color:#e2e8f0;border-color:#475569}html.dark .acx-user-mgmt-nav button.active{background:#1e3a8a;color:#fff}';document.head.appendChild(s);}
+  function open(id){if(typeof window.showTab==='function')window.showTab(id);else{pages.forEach(function(p){var e=byId(p[0]);if(e)e.classList.toggle('hidden',p[0]!==id);});}paint(id);}
+  function paint(active){document.querySelectorAll('.acx-user-mgmt-nav').forEach(function(nav){nav.querySelectorAll('button[data-user-page]').forEach(function(b){var on=b.getAttribute('data-user-page')===active;b.classList.toggle('active',on);b.setAttribute('aria-current',on?'page':'false');});});}
+  function nav(){var n=document.createElement('nav');n.className='acx-user-mgmt-nav';n.setAttribute('aria-label','User Management sections');pages.forEach(function(p){var b=document.createElement('button');b.type='button';b.textContent=p[1];b.setAttribute('data-user-page',p[0]);b.addEventListener('click',function(){open(p[0]);});n.appendChild(b);});return n;}
+  function build(){
+    var original=byId('userManagementTab');if(!original)return false;
+    style();
+    var users=makePanel('usersTab',pages[2][1],pages[2][2]);
+    /* Keep the existing user table and Add/Invite/Bulk Delete controls intact, but place them on Users. */
+    if(original.querySelector('#userTableContainer')&&!users.querySelector('#userTableContainer')){
+      var title=original.querySelector('h2');if(title)title.remove();
+      Array.from(original.childNodes).forEach(function(node){if(node.nodeType===1&&node.classList&&node.classList.contains('acx-user-mgmt-nav'))return;users.appendChild(node);});
+    }
+    var overview=original;
+    if(!overview.querySelector('.acx-user-overview')){
+      var content=document.createElement('div');content.className='acx-user-overview';
+      content.innerHTML='<div class="grid grid-cols-1 md:grid-cols-3 gap-3"><div class="border rounded-lg p-4"><div class="text-xs text-gray-500">Registered users</div><div class="text-2xl font-bold" id="acxUserCount">—</div></div><div class="border rounded-lg p-4"><div class="text-xs text-gray-500">Roles in use</div><div class="text-2xl font-bold" id="acxRoleCount">—</div></div><div class="border rounded-lg p-4"><div class="text-xs text-gray-500">Access permissions</div><div class="text-sm font-semibold mt-2">Managed per user</div></div></div><p class="text-sm text-gray-600 mt-4">Choose a section above to manage accounts, review roles and permissions, or manage module access.</p>';
+      overview.appendChild(content);
+    }
+    var roles=makePanel('userRolesPermissionsTab',pages[1][1],pages[1][2]);
+    if(!roles.querySelector('[data-role-summary]')){var box=document.createElement('div');box.className='border rounded-lg p-4';box.setAttribute('data-role-summary','1');box.innerHTML='<div class="font-semibold mb-2">Roles currently assigned</div><div id="acxRoleList" class="text-sm"></div><p class="text-xs text-gray-500 mt-3">To assign or change a role, use the existing Add User or Edit User controls under Users. Existing role records are not changed by this navigation update.</p><button type="button" class="mt-3 border rounded px-3 py-2 text-sm" data-go-users="1">Open Users</button>';roles.appendChild(box);}
+    var access=makePanel('userAccessControlTab',pages[3][1],pages[3][2]);
+    if(!access.querySelector('[data-access-summary]')){var box2=document.createElement('div');box2.className='border rounded-lg p-4';box2.setAttribute('data-access-summary','1');box2.innerHTML='<div class="font-semibold mb-2">User module access</div><p class="text-sm text-gray-600">Module access is configured for each account in the existing user creation and editing controls. Open Users to manage an account and its module permissions.</p><button type="button" class="mt-3 border rounded px-3 py-2 text-sm" data-go-users="1">Open Users &amp; Permissions</button>';access.appendChild(box2);}
+    pages.forEach(function(p){var panel=byId(p[0]);if(!panel)return;var old=panel.querySelector('.acx-user-mgmt-nav');if(old)old.remove();panel.insertBefore(nav(),panel.firstChild);});
+    document.querySelectorAll('[data-go-users]').forEach(function(b){if(b.dataset.wired)return;b.dataset.wired='1';b.addEventListener('click',function(){open('usersTab');});});
+    var u=safeUsers(),rolesSet={};u.forEach(function(x){var r=String(x.role||x.customRole||'Unassigned');rolesSet[r]=1;});
+    var count=byId('acxUserCount'),rc=byId('acxRoleCount'),rl=byId('acxRoleList');if(count)count.textContent=String(u.length);if(rc)rc.textContent=String(Object.keys(rolesSet).length);if(rl)rl.textContent=Object.keys(rolesSet).length?Object.keys(rolesSet).join(' · '):'No assigned roles found.';
+    return true;
+  }
+  function boot(){if(build())return;var tries=0,t=setInterval(function(){tries++;if(build()||tries>40)clearInterval(t);},300);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
