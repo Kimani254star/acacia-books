@@ -4,6 +4,11 @@
    3. A document saved as Draft shows "Draft" in that Status column instead of Paid / Due / Overdue.
    4. Drafts that used to live in a separate store (credit notes, deliveries, sales returns, bulk invoices,
       purchase returns, customers, suppliers) are listed in the module table with Status = Draft.
+   5. Draft rows get an Edit button that reopens the draft in its own form (Tax Payment, Manual Transaction,
+      Chart of Accounts, Stock Transfer, Shipment, Bundle, Bank Account). The draft is removed only after the
+      real Save succeeds.
+   6. Bank Accounts and both Costing screens show their drafts inside the main list with Status = Draft.
+   7. Gross Payroll, Payslips and Attendance get a Status column.
    Nothing is deleted from storage: existing drafts are kept and simply shown in their tables. */
 (function () {
   "use strict";
@@ -41,26 +46,28 @@
     { id: "receiptTable",            mains: ["receipts"] },
     { id: "supplierPaymentsTable",   mains: ["supplierPayments", "billPayments"] },
     /* Inventory */
-    { id: "movementTableBody",       mains: ["stockMovements", "movements"], drafts: ["stockTransferDrafts"], num: "Transit No." },
-    { id: "shipmentTableBody",       mains: ["shipments"],         drafts: ["shipmentDraft"], num: "Shipment No." },
-    { id: "bundleTableBody",         mains: ["bundles"],           drafts: ["bundleDrafts"], idle: "Active" },
+    { id: "movementTableBody",       mains: ["stockMovements", "movements"], drafts: ["stockTransferDrafts"], num: "Transit No.", edit: { stockTransferDrafts: "__acxEditTransfer" } },
+    { id: "shipmentTableBody",       mains: ["shipments"],         drafts: ["shipmentDraft"], num: "Shipment No.", edit: { shipmentDraft: "__acxEditShipment" } },
+    { id: "bundleTableBody",         mains: ["bundles"],           drafts: ["bundleDrafts"], idle: "Active", edit: { bundleDrafts: "__acxEditBundle" } },
     /* Funds */
-    { id: "manualTransactionLogTable", mains: ["manualTransactions"], drafts: ["manualTxDrafts"] },
+    { id: "manualTransactionLogTable", mains: ["manualTransactions"], drafts: ["manualTxDrafts"], edit: { manualTxDrafts: "__acxEditManualTx" } },
     { id: "operationalCostsTable",   mains: ["operationalCosts"] },
     /* Accounting */
     { id: "manualJournalBody",       mains: ["manualJournals"],    drafts: ["manualJournalDraft"], num: "Reference", edit: { manualJournalDraft: "restoreJournalDraft" } },
     { id: "recurringJournalList",    mains: ["recurringJournals"], drafts: ["recurringJournalDraft"], num: "Reference No.", edit: { recurringJournalDraft: "restoreRecurringJournalDraft" } },
-    { id: "taxPaymentsTable",        mains: ["taxPayments"],       drafts: ["taxPaymentDrafts"] },
+    { id: "taxPaymentsTable",        mains: ["taxPayments"],       drafts: ["taxPaymentDrafts"], edit: { taxPaymentDrafts: "__acxEditTax" } },
     { id: "currencyAdjustmentsTable", mains: ["currencyAdjustments"], drafts: ["currencyAdjustmentDraft"], num: "Reference", edit: { currencyAdjustmentDraft: "loadAdjustmentDraft" } },
     { id: "taxAdjustmentsTable",     mains: ["taxAdjustments"] },
-    { id: "accountsTable",           mains: ["chartOfAccounts", "accounts"], drafts: ["chartOfAccountsDrafts"], idle: "Active" },
+    { id: "accountsTable",           mains: ["chartOfAccounts", "accounts"], drafts: ["chartOfAccountsDrafts"], idle: "Active", edit: { chartOfAccountsDrafts: "__acxEditCOA" } },
     { id: "nonCurrentAssetsTableBody", mains: ["nonCurrentAssets"] },
     { id: "equityTableBody",         mains: ["equityRecords", "equity"] },
     { id: "currentAccountsTableBody", mains: ["currentAccounts"] },
     /* Payroll (earnings drafts live inside the earnings list itself, hidden until approved) */
     { id: "employeesTable",          mains: ["employees"],         idle: "Active" },
     { id: "earningsTable",           mains: ["earnings"],          mainDrafts: ["earnings"], edit: { earnings: "editEarning" }, idle: "Approved" },
-    { id: "grossPayrollTable",       mains: ["payrollRecords"] }
+    { id: "grossPayrollTable",       mains: ["payrollRecords"],    idle: "Processed" },
+    { id: "bulkPayslipTableBody",    mains: ["payrollRecords"],    idle: "Generated" },
+    { id: "attendanceTableBody",     mains: ["attendance"],        idle: "Recorded" }
   ];
   var NUMF = ["invoiceNumber", "invoiceNo", "invoiceNoBase", "quoteNumber", "orderNumber", "creditNumber",
     "creditNoteNumber", "deliveryNumber", "deliveryNo", "billNumber", "purchaseReturnNumber", "prNumber", "number", "no", "id"];
@@ -314,12 +321,313 @@
     } else if (key === "bulkInvoiceDrafts" && rows[i]) {
       restoreBulk(rows[i]);
     } else if (cfg && cfg.edit && cfg.edit[key] && typeof window[cfg.edit[key]] === "function") {
-      try { window[cfg.edit[key]](key === "earnings" ? i : undefined); } catch (e) { alert("This draft could not be opened: " + (e.message || e)); }
+      try {
+        var efn = cfg.edit[key];
+        var rec0 = isArrayKey(key) ? rows[i] : read(key)[0];
+        if (efn.indexOf("__acx") === 0) window[efn](i, rec0);
+        else window[efn](key === "earnings" ? i : undefined);
+      } catch (e) { alert("This draft could not be opened: " + (e.message || e)); }
     }
   }, true);
 
+
+  /* ---------- 5. Edit buttons: reopen a draft in its own form ---------- */
+  var EDITING = null;                                   /* {kind, key, fp, at} - the draft currently open for editing */
+  function byId(id) { return document.getElementById(id); }
+  function fire(el, t) { try { el.dispatchEvent(new Event(t, { bubbles: true })); } catch (_) {} }
+  function setVal(id, val, add) {
+    var el = byId(id);
+    if (!el || val == null) return;
+    if (el.type === "checkbox") { el.checked = !!val; fire(el, "change"); return; }
+    val = String(val);
+    if (el.tagName === "SELECT" && add && val !== "") {
+      var has = false;
+      for (var i = 0; i < el.options.length; i++) if (el.options[i].value === val) { has = true; break; }
+      if (!has) { var o = document.createElement("option"); o.value = val; o.textContent = val; el.appendChild(o); }
+    }
+    el.value = val; fire(el, "input"); fire(el, "change");
+  }
+  function fill(map, add) { Object.keys(map).forEach(function (id) { setVal(id, map[id], add); }); }
+  /* the app fills some selects a moment after a tab opens, so the values are applied again twice */
+  function later(fn) { [0, 200, 600].forEach(function (ms) { setTimeout(function () { try { fn(); } catch (_) {} }, ms); }); }
+  function openTab(t) {
+    if (typeof window.showTab === "function") window.showTab(t);
+    else { var el = byId(t); if (el) el.classList.remove("hidden"); }
+  }
+  function begin(kind, key, rec) { EDITING = { kind: kind, key: key, fp: JSON.stringify(rec || {}), at: Date.now() }; }
+  function val0(v) { return (v === 0 || v === "0") ? "" : v; }
+  function openFundsAccounts() {
+    openTab("fundsTab");
+    if (typeof window.showFundsTab === "function") { try { window.showFundsTab("accounts"); } catch (_) {} }
+  }
+
+  window.__acxEditTax = function (i, rec) {
+    rec = rec || {}; begin("tax", "taxPaymentDrafts", rec);
+    openTab("taxPaymentsTab");
+    if (typeof window.showSingleTax === "function") window.showSingleTax();
+    later(function () { fill({ taxDate: rec.date, taxType: rec.type, taxPaymentMode: rec.method, taxBank: rec.bankIndex, taxAmount: val0(rec.amount), taxRef: rec.reference }); });
+  };
+  window.__acxEditManualTx = function (i, rec) {
+    rec = rec || {}; begin("manualtx", "manualTxDrafts", rec);
+    openFundsAccounts();
+    var list = []; try { list = JSON.parse(localStorage.getItem("banks") || "[]"); } catch (_) {}
+    var bi = -1; list.forEach(function (b, n) { if (b && b.name === rec.bankName) bi = n; });
+    var sec = byId("bankDetailsSection");
+    var openNow = sec && !sec.classList.contains("hidden") && localStorage.getItem("selectedBankName") === rec.bankName;
+    if (!openNow && bi >= 0 && typeof window.viewBank === "function") { try { window.viewBank(bi); } catch (_) {} }
+    if (typeof window.fundsShowSection === "function") { try { window.fundsShowSection("funds-anchor-addtx"); } catch (_) {} }
+    later(function () { fill({ manualBank: rec.bankName, manualType: rec.type, manualAccount: rec.accountCode, manualAmount: rec.amount, manualDate: rec.date, manualRef: rec.ref }); });
+  };
+  window.__acxEditCOA = function (i, rec) {
+    rec = rec || {}; begin("coa", "chartOfAccountsDrafts", rec);
+    openTab("chartOfAccountsTab");
+    var w = byId("addAccountFormWrap"); if (w) w.classList.remove("hidden");
+    try { editingIndex = null; } catch (_) {}
+    later(function () {
+      fill({ accountName: rec.name, accountCode: rec.code, accountCategory: rec.category, accountType: rec.type, parentAccountName: rec.parentName, parentAccountCode: rec.parentCode, accountAmount: val0(rec.amount) });
+      setVal("accountIsParent", rec.isParent); setVal("accountIsSub", rec.isSub);
+    });
+  };
+  window.__acxEditTransfer = function (i, rec) {
+    rec = rec || {}; begin("transfer", "stockTransferDrafts", rec);
+    openTab("movementTab");
+    if (typeof window.trToggleForm === "function") { try { window.trToggleForm(true); } catch (_) {} }
+    else { var f = byId("trForm"); if (f) f.classList.remove("hidden"); }
+    later(function () {
+      setVal("actType", "transfer");
+      fill({ transferItem: rec.item, fromLocation: rec.from, toLocation: rec.to, transferQuantity: val0(rec.quantity), transferDate: rec.transferDate || rec.effectiveDate, actNotes: rec.reason }, true);
+    });
+  };
+  window.__acxEditShipment = function (i, rec) {
+    rec = rec || {}; begin("shipment", "shipmentDraft", rec);
+    openTab("shipmentsTab");
+    later(function () { fill({ shipmentCustomer: rec.customer, shipmentDate: rec.date, shipmentItem: rec.item, shipmentOrigin: rec.origin, shipmentDestination: rec.destination, shipmentCarrier: rec.carrier, shipmentTrackingNo: rec.trackingNo }, true); });
+  };
+  window.__acxEditBundle = function (i, rec) {
+    rec = rec || {}; begin("bundle", "bundleDrafts", rec);
+    openTab("BundleItems");
+    var items = Array.isArray(rec.items) ? rec.items.slice(0, 3) : [];
+    for (var n = 2; n <= items.length; n++) if (!byId("bundleItem" + n) && typeof window.addBundleRow === "function") { try { window.addBundleRow(); } catch (_) {} }
+    later(function () {
+      var m = { bundleFinalName: rec.name, bundleQty: val0(rec.qty), bundleBuyPrice: val0(rec.buyPrice), bundleSellPrice: val0(rec.sellPrice), bundleBuyVAT: rec.buyVAT, bundleSellVAT: rec.sellVAT, bundleToWarehouse: rec.toWarehouse };
+      items.forEach(function (it, k) { var n = k + 1; m["bundleFromWarehouse" + n] = it.warehouse; m["bundleItem" + n] = it.item; m["bundleQtyUsed" + n] = val0(it.qtyUsed); });
+      fill(m, true);
+    });
+  };
+  window.__acxEditBank = function (i, rec) {
+    rec = rec || {}; begin("bank", "bankDrafts", rec);
+    openFundsAccounts();
+    var f = byId("bankFormSection"), l = byId("bankListSection");
+    if (f) f.classList.remove("hidden");
+    if (l) l.classList.add("hidden");
+    later(function () { fill({ bankName: rec.name, accountNumber: rec.accountNumber, initialBalance: rec.balance, bankCurrency: rec.currency, creditAccount: rec.chartAccount }, true); });
+  };
+
+  /* A draft that was reopened is removed only when the module's own Save really changed its records. */
+  var FINALS = { tax: "addTaxPayment", manualtx: "manualTransaction", coa: "addAccount", transfer: "saveTransfer", shipment: "addShipment", bundle: "createBundleItem", bank: "addBank" };
+  var STORES = { tax: /taxPayments$/, manualtx: /manualTransactions$/, coa: /chartOfAccounts$/, transfer: /ovements$/, shipment: /shipments$/, bundle: /bundles$/, bank: /banks$/ };
+  function snap(kind) {
+    var out = {}, re = STORES[kind];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && re.test(k) && !/draft/i.test(k)) out[k] = localStorage.getItem(k);
+    }
+    return out;
+  }
+  function differs(a, b) {
+    var ks = Object.keys(a).concat(Object.keys(b));
+    for (var i = 0; i < ks.length; i++) if (a[ks[i]] !== b[ks[i]]) return true;
+    return false;
+  }
+  function gv(id) { var e = byId(id); return e ? String(e.value == null ? "" : e.value).trim() : ""; }
+  function sameText(a, b) { return String(a == null ? "" : a).trim() === String(b == null ? "" : b).trim(); }
+  /* does the form still hold this draft? (stops an old, abandoned Edit from deleting a draft on an unrelated save) */
+  function formMatches(kind, r) {
+    switch (kind) {
+      case "tax": return r.reference ? sameText(gv("taxRef"), r.reference) : sameText(gv("taxAmount"), r.amount);
+      case "manualtx": return r.ref ? sameText(gv("manualRef"), r.ref) : sameText(gv("manualAmount"), r.amount);
+      case "coa": return sameText(gv("accountCode"), r.code) || sameText(gv("accountName"), r.name);
+      case "transfer": return sameText(gv("transferItem"), r.item);
+      case "shipment": return r.trackingNo ? sameText(gv("shipmentTrackingNo"), r.trackingNo) : sameText(gv("shipmentItem"), r.item);
+      case "bundle": return sameText(gv("bundleFinalName"), r.name);
+      case "bank": return sameText(gv("bankName"), r.name) && sameText(gv("accountNumber"), r.accountNumber);
+    }
+    return false;
+  }
+  function findDraft(ed) {
+    var rows = read(ed.key);
+    for (var i = 0; i < rows.length; i++) if (JSON.stringify(rows[i]) === ed.fp) return { index: i, rec: rows[i], arr: isArrayKey(ed.key) };
+    return null;
+  }
+  function syncBankMemory() {
+    try {                                                /* app-2.js keeps its own in-memory copy of bankDrafts */
+      if (typeof bankDrafts !== "undefined" && Array.isArray(bankDrafts)) {
+        bankDrafts.length = 0;
+        Array.prototype.push.apply(bankDrafts, read("bankDrafts"));
+      }
+    } catch (_) {}
+  }
+  function dropDraft(ed) {
+    if (EDITING !== ed) return;
+    var f = findDraft(ed);
+    if (!f) { EDITING = null; return; }
+    if (!f.arr) localStorage.removeItem(ed.key);
+    else { var rows = read(ed.key); rows.splice(f.index, 1); localStorage.setItem(ed.key, JSON.stringify(rows)); }
+    if (ed.key === "bankDrafts") syncBankMemory();
+    EDITING = null;
+    tick();
+  }
+  function wrapFinals() {
+    Object.keys(FINALS).forEach(function (kind) {
+      var fn = FINALS[kind], f = window[fn];
+      if (typeof f !== "function" || f.__acxW) return;
+      var w = function () {
+        var ed = EDITING, rec = null, match = false, before = null;
+        if (ed && ed.kind === kind && Date.now() - ed.at < 6 * 3600 * 1000) {
+          var d = findDraft(ed);
+          if (d && formMatches(kind, d.rec)) { match = true; before = snap(kind); }
+        }
+        var res = f.apply(this, arguments);
+        if (match) {
+          [800, 2800].forEach(function (ms) {
+            setTimeout(function () { try { if (EDITING === ed && differs(before, snap(kind))) dropDraft(ed); } catch (_) {} }, ms);
+          });
+        }
+        return res;
+      };
+      w.__acxW = true;
+      window[fn] = w;
+    });
+  }
+
+  /* ---------- 6a. Bank Accounts (cards): drafts + Status chip ---------- */
+  var CHIP = 'display:inline-block;border-radius:9999px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:6px;vertical-align:middle;color:#fff;background:';
+  function processBank() {
+    var box = byId("bankTable");
+    if (!box || !visible(box)) return;
+    var drafts = read("bankDrafts").filter(function (r) { return r && typeof r === "object"; });
+    /* Status chip on the real accounts */
+    Array.prototype.forEach.call(box.querySelectorAll(".funds-bank-card:not([data-acx-bd])"), function (card) {
+      if (card.querySelector("[data-acx-chip]")) return;
+      var nm = card.querySelector(".funds-bank-card-name");
+      if (!nm) return;
+      var chip = document.createElement("span");
+      chip.setAttribute("data-acx-chip", "1");
+      chip.setAttribute("style", CHIP + "#16a34a");
+      chip.textContent = card.classList.contains("is-system") ? "System" : "Active";
+      nm.appendChild(chip);
+    });
+    var sig = JSON.stringify(drafts);
+    var have = box.querySelectorAll("[data-acx-bd]");
+    if (box.getAttribute("data-acx-bsig") === sig && have.length === drafts.length) return;
+    Array.prototype.forEach.call(have, function (n) { n.remove(); });
+    box.setAttribute("data-acx-bsig", sig);
+    drafts.slice().reverse().forEach(function (d, rev) {
+      var idx = drafts.length - 1 - rev;
+      var card = document.createElement("div");
+      card.className = "funds-bank-card";
+      card.setAttribute("data-acx-bd", String(idx));
+      card.style.background = "#fffbeb";
+      var sub = [d.chartAccount || "-", d.accountNumber || "-", d.currency].filter(Boolean).join(" · ");
+      var bal = (d.balance === "" || d.balance == null || isNaN(parseFloat(d.balance))) ? "" : (d.currency || "") + " " + Number(d.balance).toLocaleString();
+      var btn = "bg-blue-900 text-white px-2 py-1 rounded text-xs";
+      card.innerHTML =
+        '<div class="funds-bank-card-main"><div class="funds-bank-card-name">' + esc(d.name || "Untitled draft") + BADGE.replace('style="', 'style="margin-left:6px;') + '</div><div class="funds-bank-card-sub">' + esc(sub) + "</div></div>" +
+        '<div class="funds-bank-card-balance">' + esc(bal) + "</div>" +
+        '<div class="funds-bank-card-actions">' +
+        '<button type="button" data-acx-bd-act="edit" data-i="' + idx + '">Edit</button>' +
+        '<button type="button" data-acx-bd-act="approve" data-i="' + idx + '">Approve</button>' +
+        '<button type="button" data-acx-bd-act="delete" data-i="' + idx + '">Delete</button></div>';
+      box.insertBefore(card, box.firstChild);
+    });
+  }
+  document.addEventListener("click", function (ev) {
+    var t = ev.target && ev.target.closest ? ev.target.closest("[data-acx-bd-act]") : null;
+    if (!t) return;
+    ev.preventDefault(); ev.stopPropagation();
+    var act = t.getAttribute("data-acx-bd-act"), i = Number(t.getAttribute("data-i"));
+    var rows = read("bankDrafts"), rec = rows[i];
+    if (!rec) return;
+    syncBankMemory();
+    if (act === "edit") window.__acxEditBank(i, rec);
+    else if (act === "approve") {
+      if (typeof window.approveDraft === "function") { try { window.approveDraft(i); } catch (e) { alert("This draft could not be approved: " + (e.message || e)); } }
+      tick();
+    } else if (act === "delete") {
+      if (!window.confirm("Delete this draft? This cannot be undone.")) return;
+      rows.splice(i, 1); localStorage.setItem("bankDrafts", JSON.stringify(rows)); syncBankMemory(); tick();
+    }
+  }, true);
+
+  /* ---------- 6b. Costing + Bulk Costing: drafts inside the main list ---------- */
+  function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  function dp() { try { return window.__getDecimalPlaces ? window.__getDecimalPlaces() : 2; } catch (_) { return 2; } }
+  function readObj(k) { try { var v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : []; } catch (_) { return []; } }
+  function hideCard(id) { var c = byId(id); if (c && c.style.display !== "none") c.style.display = "none"; }
+  function syncExtraRows(tbody, attr, rows, sig) {
+    var have = tbody.querySelectorAll("tr[" + attr + "]");
+    if (tbody.getAttribute(attr + "-sig") === sig && have.length === rows.length) return false;
+    Array.prototype.forEach.call(have, function (r) { r.remove(); });
+    tbody.setAttribute(attr + "-sig", sig);
+    rows.slice().reverse().forEach(function (html) {
+      var tr = document.createElement("tr");
+      tr.setAttribute(attr, "1"); tr.className = "border-b"; tr.style.background = "#fffbeb";
+      tr.innerHTML = html;
+      tbody.insertBefore(tr, tbody.firstChild);
+    });
+    return true;
+  }
+  function dropEmptyRow(tbody, attr) {                   /* the "No ... records" placeholder */
+    var real = Array.prototype.filter.call(tbody.rows, function (r) { return !r.hasAttribute(attr); });
+    if (real.length === 1 && real[0].cells.length === 1) real[0].remove();
+  }
+  function processCosting() {
+    var tbody = byId("costingTableBody");
+    if (!tbody) return;
+    hideCard("costingDraftsCard");
+    if (!visible(tbody.closest("table") || tbody)) return;
+    var all = readObj("costingData"), rows = [], sig = [];
+    all.forEach(function (t, i) {
+      if (!t || String(t.status || "").toLowerCase() !== "draft") return;
+      var m = num(t.effMargin), cls = m >= 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold", d = dp();
+      sig.push(t.id + ":" + (t.updatedAt || ""));
+      rows.push(
+        '<td class="p-2">' + esc(t.product) + '</td><td class="p-2">KSh ' + num(t.buying).toFixed(d) + '</td><td class="p-2">KSh ' + num(t.extra).toFixed(d) + '</td><td class="p-2">KSh ' + num(t.total).toFixed(d) + "</td>" +
+        '<td class="p-2">' + esc(t.margin || 0) + '%</td><td class="p-2">Markup: ' + esc(t.markup || 0) + "%<br>Target Margin: " + esc(t.targetMargin || 0) + '%</td><td class="p-2">Discount: ' + esc(t.discount || 0) + "%</td>" +
+        '<td class="p-2">KSh ' + num(t.sellingStandard).toFixed(d) + '<br><small>(Standard)</small></td><td class="p-2">KSh ' + num(t.sellingAdvanced).toFixed(d) + '<br><small>(Advanced)</small></td><td class="p-2">KSh ' + num(t.discountedPrice).toFixed(d) + '<br><small>(After Discount)</small></td>' +
+        '<td class="p-2 ' + cls + '">' + m.toFixed(d) + '%</td><td class="p-2">' + BADGE + '</td><td class="p-2">' + esc(t.date || "") + "</td>" +
+        '<td class="p-2"><div class="flex gap-2 flex-wrap"><button type="button" onclick="editCosting(' + i + ')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Edit</button>' +
+        '<button type="button" onclick="openCostingApproval(\'' + esc(t.id) + '\')" class="bg-green-700 text-white font-bold px-1 py-1 rounded hover:bg-green-600">Review &amp; Approve</button>' +
+        '<button type="button" onclick="deleteCosting(' + i + ')" class="border border-blue-900 text-white bg-blue-900 font-bold px-1 py-1 rounded hover:bg-blue-800">Delete</button></div></td>');
+    });
+    syncExtraRows(tbody, "data-acx-cdraft", rows, sig.join("|"));
+    if (rows.length) dropEmptyRow(tbody, "data-acx-cdraft");
+  }
+  function processBulkCosting() {
+    var tbody = byId("bulkCostingSummaryBody");
+    if (!tbody) return;
+    hideCard("bulkDraftsCard");
+    if (!visible(tbody.closest("table") || tbody)) return;
+    var all = readObj("bulkConsignments"), rows = [], sig = [];
+    all.forEach(function (t, i) {
+      if (!t || String(t.status || "").toLowerCase() !== "draft") return;
+      var tp = num(t.totalProfit), when = t.timestamp ? new Date(t.timestamp).toLocaleDateString() : (t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "");
+      sig.push(t.id + ":" + (t.updatedAt || ""));
+      rows.push(
+        '<td class="border p-2">' + esc(t.consignmentName || "Consignment " + (i + 1)) + '</td><td class="border p-2">' + esc(t.currency || "") + '</td><td class="border p-2 text-right">' + esc(t.exchangeRate || "") + "</td>" +
+        '<td class="border p-2 text-right">' + esc(t.totalCostKES || t.landedTotalKES || "") + '</td><td class="border p-2 text-right">' + esc(t.totalQty || "") + '</td><td class="border p-2 text-right">' + esc(t.costPerUnit || "") + "</td>" +
+        '<td class="border p-2 text-right ' + (tp >= 0 ? "text-green-600" : "text-red-600") + ' font-semibold">' + (t.totalProfit !== undefined ? esc(t.totalProfit) : "—") + '</td><td class="border p-2 text-right">' + (t.avgMargin !== undefined ? esc(t.avgMargin) : "—") + "</td>" +
+        '<td class="border p-2">' + BADGE + '</td><td class="border p-2">' + esc(when) + "</td>" +
+        '<td class="border p-2"><div class="flex gap-1 flex-wrap"><button type="button" onclick="editBulkConsignment(' + i + ')" class="bg-blue-600 text-white px-1 py-1 rounded-lg hover:bg-blue-700">Edit</button>' +
+        '<button type="button" onclick="openBulkApproval(\'' + esc(t.id) + '\')" class="bg-green-700 text-white px-1 py-1 rounded-lg hover:bg-green-600">Review &amp; Approve</button>' +
+        '<button type="button" onclick="deleteBulkConsignment(' + i + ')" class="bg-blue-600 text-white px-1 py-1 rounded-lg hover:bg-blue-700">Delete</button></div></td>');
+    });
+    syncExtraRows(tbody, "data-acx-bdraft", rows, sig.join("|"));
+    if (rows.length) dropEmptyRow(tbody, "data-acx-bdraft");
+  }
+
   function tick() {
-    try { removeDraftsUI(); T.forEach(process); } catch (e) { /* never break the app */ }
+    try { removeDraftsUI(); T.forEach(process); wrapFinals(); processBank(); processCosting(); processBulkCosting(); } catch (e) { /* never break the app */ }
   }
   var timer = null;
   function schedule() { if (timer) return; timer = setTimeout(function () { timer = null; tick(); }, 150); }
