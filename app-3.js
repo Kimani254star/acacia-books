@@ -1133,8 +1133,7 @@ try{
     ]},
     { id: 'datacenter', title: 'Data Center', icon: '🗄️', description: 'Manage backups, recovery and activity records.', items: [
       ['DatacenterTab', 'Backup & Restore', '💾'],
-      ['userActivityTab', 'User Activity', '📋'],
-      ['activityAnalyticsTab', 'Activity Analytics', '📊']
+      ['userActivityTab', 'User Activity', '📋']
     ]},
     { id: 'general', title: 'Configuration', icon: '⚙️', description: 'Manage system settings and shared business defaults.', items: [
       ['systemConfigurationTab', 'System Configuration', '⚙️'],
@@ -1145,7 +1144,7 @@ try{
       ['currenciesTab', 'Currencies', '💱']
     ]},
     { id: 'automation', title: 'Automation', icon: '⚡', description: 'Configure automated business processes and workflow rules.', items: [
-      ['workflowRulesTab', 'Create Workflows', '⚡'],       ['workflowHistoryTab', 'History', '📋']
+      ['workflowRulesTab', 'Workflow Rules', '🧩']
     ]},
     { id: 'portals', title: 'Portal', icon: '🌐', description: 'Manage customer and vendor access, and online payment services.', items: [
       ['customerPortalTab', 'Customer Portal', '🧑‍💼'],
@@ -1167,9 +1166,7 @@ try{
       ['vatTab', 'VAT', '％']
     ]},
     { id: 'users', title: 'User Management', icon: '👥', description: 'Manage users, roles and access.', items: [
-      ['userManagementTab', 'Users', '👥'],
-      ['userRolesTab', 'Roles', '🛡️'],
-      ['userPermissionsTab', 'Permissions', '🔐']
+      ['userManagementTab', 'User Management', '👥']
     ]},
     { id: 'customization', title: 'Customization', icon: '🎨', description: 'Manage application preferences and document appearance.', items: [
       ['preferencesTab', 'Preferences', '⚙️'],
@@ -1252,11 +1249,6 @@ try{
       button.textContent = entry[2] + ' ' + entry[1];
       button.addEventListener('click', function () {
         if (!allowed(group, entry[0])) return;
-        if ((entry[0] === 'userRolesTab' || entry[0] === 'userPermissionsTab') && typeof window.showTab === 'function') {
-          window.showTab('userManagementTab');
-          setTimeout(function () { syncManagementPanels(); window.showTab(entry[0]); activate(group, entry[0]); }, 80);
-          return;
-        }
         if (typeof window.showTab === 'function') window.showTab(entry[0]);
         activate(group, entry[0]);
       });
@@ -1268,84 +1260,7 @@ try{
     return true;
   }
 
-  function ensureExtraPanels() {
-    [
-      ['userRolesTab', 'User Management', 'Manage built-in and custom roles for this company.'],
-      ['userPermissionsTab', 'User Management', 'Review and configure what each role can view, create, edit, delete, approve and export.'],
-      ['activityAnalyticsTab', 'Data Center', 'Understand user activity and system usage across your company.']
-    ].forEach(function (spec) {
-      if (document.getElementById(spec[0])) return;
-      var panel = document.createElement('div');
-      panel.id = spec[0];
-      panel.className = 'hidden ml-84 mr-7 p-2';
-      panel.innerHTML = '<h2 class="text-sm font-bold mb-2">' + spec[1] + '</h2><p class="text-sm text-gray-500 mb-4">' + spec[2] + '</p><div data-settings-content="' + spec[0] + '"></div>';
-      var content = document.getElementById('contentArea') || document.body;
-      content.appendChild(panel);
-    });
-  }
-
-  var lastPermissionSignature = '';
-  function renderPermissionsPage() {
-    var host = document.querySelector('#userPermissionsTab [data-settings-content="userPermissionsTab"]');
-    var roles = document.querySelectorAll('#acxRolesV2 tbody tr');
-    if (!host) return;
-    var signature = Array.prototype.map.call(roles, function (row) { return row.textContent; }).join('|');
-    if (signature === lastPermissionSignature && host.childElementCount) return;
-    lastPermissionSignature = signature;
-    var rows = [];
-    roles.forEach(function (row, index) {
-      var cells = row.querySelectorAll('td');
-      if (!cells.length) return;
-      var name = (cells[0].textContent || '').trim();
-      var description = (cells[1] && cells[1].textContent || '').trim();
-      var edit = row.querySelector('button[data-acx-role="view"]');
-      rows.push('<tr class="border-b"><td class="p-3 font-semibold">' + name + '</td><td class="p-3 text-gray-600">' + description + '</td><td class="p-3 text-right"><button type="button" class="rounded bg-blue-900 text-white px-3 py-1.5" data-permission-role="' + index + '">Manage Permissions</button></td></tr>');
-    });
-    host.innerHTML = '<div class="rounded-xl border bg-white p-4"><div class="flex flex-wrap justify-between gap-2 mb-3"><div><h3 class="font-semibold text-gray-800">Role Permission Matrix</h3><p class="text-xs text-gray-500">Choose a role to open its full module-by-module permission matrix.</p></div><span class="text-xs text-gray-500">' + rows.length + ' roles</span></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-100"><tr><th class="p-3 text-left">Role</th><th class="p-3 text-left">Description</th><th class="p-3 text-right">Actions</th></tr></thead><tbody>' + (rows.join('') || '<tr><td colspan="3" class="p-4 text-center text-gray-500">Role list is loading. Open Roles first.</td></tr>') + '</tbody></table></div></div>';
-    host.querySelectorAll('[data-permission-role]').forEach(function (button) {
-      button.addEventListener('click', function () {
-        var row = document.querySelectorAll('#acxRolesV2 tbody tr')[+button.getAttribute('data-permission-role')];
-        var edit = row && row.querySelector('button[data-acx-role="view"]');
-        if (edit) edit.click();
-      });
-    });
-  }
-
-  function renderActivityAnalytics() {
-    var host = document.querySelector('#activityAnalyticsTab [data-settings-content="activityAnalyticsTab"]');
-    if (!host) return;
-    function read(key) { try { var value = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(value) ? value : []; } catch (e) { return []; } }
-    var activities = read('userActivities');
-    var audit = read('auditLogs');
-    var all = activities.concat(audit);
-    var today = new Date().toISOString().slice(0, 10);
-    var todayCount = all.filter(function (item) { var date = item.loginTime || item.dateTime || item.date || item.createdAt || ''; return String(date).slice(0, 10) === today; }).length;
-    var users = {};
-    var modules = {};
-    all.forEach(function (item) {
-      var data = item.data || {};
-      var user = item.employee || item.fullName || item.username || item.user || data.user || data.username || 'System';
-      var module = item.module || data.module || data.type || 'General';
-      users[user] = (users[user] || 0) + 1;
-      modules[module] = (modules[module] || 0) + 1;
-    });
-    function topRows(map) { return Object.keys(map).sort(function (a,b) { return map[b]-map[a]; }).slice(0,6).map(function (key) { return '<div class="flex justify-between gap-3 border-b py-2 text-sm"><span>' + key + '</span><strong>' + map[key] + '</strong></div>'; }).join('') || '<p class="text-sm text-gray-500 py-2">No recorded activity yet.</p>'; }
-    host.innerHTML = '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4"><div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">Total recorded events</p><p class="text-2xl font-bold text-blue-900">' + all.length + '</p></div><div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">Events today</p><p class="text-2xl font-bold text-blue-900">' + todayCount + '</p></div><div class="rounded-xl border bg-white p-4"><p class="text-xs text-gray-500">Active users recorded</p><p class="text-2xl font-bold text-blue-900">' + Object.keys(users).length + '</p></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><section class="rounded-xl border bg-white p-4"><h3 class="font-semibold mb-2">Activity by User</h3>' + topRows(users) + '</section><section class="rounded-xl border bg-white p-4"><h3 class="font-semibold mb-2">Activity by Module</h3>' + topRows(modules) + '</section></div><p class="text-xs text-gray-500 mt-3">Analytics are calculated from the existing User Activity and audit log records for the current browser data.</p><button type="button" class="mt-3 rounded bg-blue-900 text-white px-3 py-2 text-sm" id="refreshActivityAnalytics">Refresh Analytics</button>';
-    var refresh = host.querySelector('#refreshActivityAnalytics');
-    if (refresh) refresh.addEventListener('click', renderActivityAnalytics);
-  }
-
-  function syncManagementPanels() {
-    var roles = document.getElementById('acxRolesV2');
-    var roleHost = document.querySelector('#userRolesTab [data-settings-content="userRolesTab"]');
-    if (roles && roleHost && roles.parentElement !== roleHost) roleHost.appendChild(roles);
-    renderPermissionsPage();
-    var analyticsHost = document.querySelector('#activityAnalyticsTab [data-settings-content="activityAnalyticsTab"]');
-    if (analyticsHost && !analyticsHost.dataset.initialized) { renderActivityAnalytics(); analyticsHost.dataset.initialized = '1'; }
-  }
-
   function build() {
-    ensureExtraPanels();
     var menu = document.getElementById('settingsSubmenu2');
     if (!menu) return false;
     var ready = groups.every(function (group) {
@@ -1378,11 +1293,6 @@ try{
         menu.appendChild(li);
       }
     });
-    syncManagementPanels();
-    if (!window.__acxSettingsPanelObserver) {
-      window.__acxSettingsPanelObserver = new MutationObserver(function () { syncManagementPanels(); });
-      window.__acxSettingsPanelObserver.observe(document.body, { childList: true, subtree: true });
-    }
     return true;
   }
 
@@ -1745,39 +1655,4 @@ window.phRenderRevenue=function(){
  return r;
 };
 window.__acxRenderRevenue=window.phRenderRevenue;
-})();
-
-
-/* Acacia Settings: separate workflow navigation and remove legacy Preferences automation. */
-(function () {
-  'use strict';
-  function removeLegacyPreference() {
-    document.querySelectorAll('#preferencesTab .pref-tab').forEach(function (button) {
-      if (/workflow automation/i.test(button.textContent || '')) button.remove();
-    });
-  }
-  function createHistoryPage() {
-    var area = document.getElementById('contentArea');
-    if (!area) return;
-    var page = document.getElementById('workflowHistoryTab');
-    if (!page) {
-      page = document.createElement('section');
-      page.id = 'workflowHistoryTab';
-      page.className = 'hidden';
-      page.style.cssText = 'padding:22px;background:#f7f8fb;min-height:calc(100vh - 30px);color:#172033';
-      area.appendChild(page);
-    }
-    function esc(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-    var runs = [];
-    try { runs = JSON.parse(localStorage.getItem('acxWorkflowRuns') || '[]') || []; } catch (_) {}
-    var companyId = '';
-    try { var user = JSON.parse(localStorage.getItem('currentUser') || 'null') || JSON.parse(localStorage.getItem('loggedInUser') || 'null') || {}; companyId = String(user.companyId || user.company_id || ''); } catch (_) {}
-    if (companyId) runs = runs.filter(function (run) { return !run.companyId || String(run.companyId) === companyId; });
-    page.innerHTML = '<div style="max-width:1500px;margin:0 auto"><div style="margin-bottom:18px"><h2 style="font-size:22px;font-weight:800;color:#111827">Workflow History</h2><p style="font-size:12px;color:#6b7280;margin-top:4px">Review workflow executions, outcomes and failures for this company.</p></div><div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#f8fafc;text-align:left"><th style="padding:11px">Time</th><th style="padding:11px">Workflow</th><th style="padding:11px">Module</th><th style="padding:11px">Event</th><th style="padding:11px">Record</th><th style="padding:11px">Result</th></tr></thead><tbody>' + (runs.length ? runs.slice(0,200).map(function (run) { return '<tr style="border-top:1px solid #eef0f3"><td style="padding:11px">' + esc(run.createdAt ? new Date(run.createdAt).toLocaleString() : '—') + '</td><td style="padding:11px">' + esc(run.ruleName || '—') + '</td><td style="padding:11px">' + esc(run.module || '—') + '</td><td style="padding:11px">' + esc(run.event || '—') + '</td><td style="padding:11px">' + esc(run.recordId || '—') + '</td><td style="padding:11px">' + esc(run.status || '—') + (run.error ? '<div style="color:#b91c1c">' + esc(run.error) + '</div>' : '') + '</td></tr>'; }).join('') : '<tr><td colspan="6" style="padding:28px;text-align:center;color:#64748b">No workflow history recorded yet.</td></tr>') + '</tbody></table></div></div>';
-  }
-  function init() { removeLegacyPreference(); createHistoryPage(); }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-  var observer = new MutationObserver(function () { removeLegacyPreference(); createHistoryPage(); });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-  setTimeout(function () { observer.disconnect(); init(); }, 5000);
 })();
