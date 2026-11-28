@@ -1,0 +1,642 @@
+/* Acacia Books - User Management with 3 navigation tabs
+   👥 Users        Add, invite, edit, deactivate and manage users
+   🛡️ Roles        Create roles, assign users and manage role responsibilities
+   🔐 Permissions  Control module access and individual permissions (role or user)
+   Reuses the existing users table, role editor and permission data (localStorage "users",
+   acxRolesV2_<company>, acxRolesV2_builtin_<company>). */
+(function () {
+  'use strict';
+  if (window.__acxUMTabs) return;
+  window.__acxUMTabs = true;
+
+  var TAB_KEY = 'acxUMActiveTab';
+  var TABS = [['users', '👥 Users'], ['roles', '🛡️ Roles'], ['perms', '🔐 Permissions']];
+  var panes = {}, bar = null, active = 'users';
+  var P = { type: 'role', id: '', perms: null, dirty: false };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
+  function me() { return jget('loggedInUser', {}) || {}; }
+  function cid() { return String(me().companyId || ''); }
+  function allUsers() { return jget('users', []); }
+  function saveUsers(a) {
+    localStorage.setItem('users', JSON.stringify(a));
+    try { if (window.uploadLocalStorage) window.uploadLocalStorage(); } catch (e) {}
+  }
+  function API() { return window.__acxRoles || null; }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function actions() { return typeof PERMISSION_ACTIONS !== 'undefined' ? PERMISSION_ACTIONS : []; }
+  function groups() { return typeof MODULE_GROUPS !== 'undefined' ? MODULE_GROUPS : []; }
+  function fmt(m) { return typeof formatModuleName === 'function' ? formatModuleName(m) : m; }
+  function blankSet() { var o = {}; actions().forEach(function (a) { o[a.key] = false; }); return o; }
+  function modsOf(p) { return Object.keys(p || {}).filter(function (k) { return p[k] && p[k].view; }); }
+  function sameEmail(a, b) { return a && b && String(a).toLowerCase() === String(b).toLowerCase(); }
+  function isSelf(u) { var c = me(); return sameEmail(u.email, c.email) || (u.username && u.username === c.username && String(u.companyId || '') === cid()); }
+  function activeAdmins(list, exclude) {
+    return list.filter(function (x) {
+      return x !== exclude && String(x.companyId || '') === cid() && String(x.role || '').toLowerCase() === 'admin' && x.status !== 'inactive';
+    }).length;
+  }
+  function log(action, desc) { try { if (typeof logActivity === 'function') logActivity({ action: action, module: 'User Management', description: desc }); } catch (e) {} }
+  function refreshUsers() { try { if (typeof renderUserTable === 'function') renderUserTable(); } catch (e) {} }
+  function moduleIds() {
+    var seen = {}, out = [];
+    groups().forEach(function (g) { g.modules.forEach(function (m) { if (!seen[m]) { seen[m] = 1; out.push(m); } }); });
+    try { if (typeof ALL_MODULES !== 'undefined') ALL_MODULES.forEach(function (m) { if (!seen[m]) { seen[m] = 1; out.push(m); } }); } catch (e) {}
+    return out;
+  }
+  function normalise(p) {
+    var o = {};
+    moduleIds().forEach(function (m) { o[m] = Object.assign(blankSet(), (p && p[m]) || {}); });
+    return o;
+  }
+
+  /* ---------- styles ---------- */
+  function addStyle() {
+    if ($('acxUMStyle')) return;
+    var st = document.createElement('style');
+    st.id = 'acxUMStyle';
+    st.textContent =
+      '#acxUMBar{display:flex;gap:6px;flex-wrap:wrap;border-bottom:2px solid #1e3a8a;margin:8px 0 14px}' +
+      '#acxUMBar button{padding:7px 16px;border:1px solid #1e3a8a;border-bottom:none;border-radius:6px 6px 0 0;background:#fff;color:#1e3a8a;font-weight:700;font-size:13px;cursor:pointer}' +
+      '#acxUMBar button.on{background:#1e3a8a;color:#fff}' +
+      '.acxum-btn{border:1px solid #1e3a8a;background:#1e3a8a;color:#fff;font-weight:700;padding:4px 10px;border-radius:5px;cursor:pointer;font-size:13px}' +
+      '.acxum-btn:hover{background:#1e40af}.acxum-btn.alt{background:#fff;color:#1e3a8a}' +
+      '.acxum-badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:600}' +
+      '.acxum-badge.ok{background:#dcfce7;color:#166534}.acxum-badge.off{background:#fee2e2;color:#991b1b}' +
+      '#acxumMatrixWrap{overflow:auto;max-height:68vh;border:1px solid #d1d5db;border-radius:6px}' +
+      '#acxumMatrix{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}' +
+      '#acxumMatrix th,#acxumMatrix td{border:1px solid #e5e7eb;padding:4px 8px;white-space:nowrap}' +
+      '#acxumMatrix thead th{position:sticky;top:0;background:#1e3a8a;color:#fff;z-index:2;text-align:center}' +
+      '#acxumMatrix thead th:first-child{text-align:left;left:0;z-index:3}' +
+      '#acxumMatrix td:first-child{position:sticky;left:0;background:#fff;z-index:1}' +
+      '#acxumMatrix tr.grp td{background:#eff6ff;font-weight:700;color:#1e3a8a}' +
+      '#acxumMatrix td.c{text-align:center}' +
+      '#acxUMAssign{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px}' +
+      '#acxUMAssign .box{background:#fff;border-radius:10px;width:520px;max-width:100%;max-height:88vh;display:flex;flex-direction:column}';
+    document.head.appendChild(st);
+  }
+
+  /* ---------- tab shell ---------- */
+  function build() {
+    var root = $('userManagementTab');
+    if (!root || root.getAttribute('data-acx-tabs')) return;
+    root.setAttribute('data-acx-tabs', '1');
+    addStyle();
+    bar = document.createElement('div');
+    bar.id = 'acxUMBar';
+    TABS.forEach(function (t) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-acxum-tab', t[0]);
+      b.textContent = t[1];
+      bar.appendChild(b);
+    });
+    var h2 = root.querySelector(':scope > h2');
+    root.insertBefore(bar, h2 ? h2.nextSibling : root.firstChild);
+    TABS.forEach(function (t) {
+      var d = document.createElement('div');
+      d.id = 'acxUMPane_' + t[0];
+      d.style.display = 'none';
+      panes[t[0]] = d;
+      root.appendChild(d);
+    });
+    route();
+    new MutationObserver(route).observe(root, { childList: true });
+    buildUsersToolbar();
+    buildPerms();
+    var saved = '';
+    try { saved = sessionStorage.getItem(TAB_KEY) || ''; } catch (e) {}
+    setTab(panes[saved] ? saved : 'users');
+  }
+
+  /* anything the app appends to the page later (roles table, buy-more-users box, invites) is routed to the right tab */
+  function route() {
+    var root = $('userManagementTab');
+    if (!root) return;
+    var h2 = root.querySelector(':scope > h2');
+    Array.prototype.slice.call(root.children).forEach(function (k) {
+      if (k === h2 || k === bar || k.id.indexOf('acxUMPane_') === 0) return;
+      if (k.id === 'acxRolesV2') {
+        panes.roles.appendChild(k);
+        watchRoles(k);
+        decorateRoles();
+      } else {
+        panes.users.appendChild(k);
+      }
+    });
+  }
+
+  function setTab(name) {
+    if (!panes[name]) name = 'users';
+    active = name;
+    try { sessionStorage.setItem(TAB_KEY, name); } catch (e) {}
+    TABS.forEach(function (t) { panes[t[0]].style.display = t[0] === name ? '' : 'none'; });
+    Array.prototype.forEach.call(bar.querySelectorAll('button'), function (b) {
+      b.className = b.getAttribute('data-acxum-tab') === name ? 'on' : '';
+    });
+    if (name === 'users') decorateUsers();
+    if (name === 'roles') { try { if (API()) API().renderRoles(); } catch (e) {} decorateRoles(); }
+    if (name === 'perms') renderPerms(true);
+  }
+
+  /* ---------- USERS tab ---------- */
+  function buildUsersToolbar() {
+    if ($('acxumUserSearch')) return;
+    var tb = document.createElement('div');
+    tb.style.cssText = 'display:flex;gap:8px;align-items:center;margin:10px 0;flex-wrap:wrap';
+    tb.innerHTML = '<input id="acxumUserSearch" class="p-2 border rounded" style="min-width:240px" placeholder="Search users by name, email or role">' +
+      '<select id="acxumUserStatus" class="p-2 border rounded"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Deactivated</option></select>' +
+      '<span id="acxumUserCount" class="text-sm text-gray-600"></span>';
+    var tc = $('userTableContainer');
+    if (tc && tc.parentNode) tc.parentNode.insertBefore(tb, tc);
+    else panes.users.insertBefore(tb, panes.users.firstChild);
+  }
+
+  function badge(u) {
+    return u.status === 'inactive'
+      ? '<span class="acxum-badge off">Deactivated</span>'
+      : '<span class="acxum-badge ok">Active</span>';
+  }
+
+  function decorateUsers() {
+    var body = $('userTableBody');
+    if (!body) return;
+    var table = body.closest('table');
+    var hr = table && table.querySelector('thead tr');
+    if (hr && !hr.querySelector('.acxum-sth')) {
+      var th = document.createElement('th');
+      th.className = 'border p-2 text-left acxum-sth';
+      th.textContent = 'Status';
+      hr.insertBefore(th, hr.children[4] || null);
+    }
+    var list = allUsers();
+    Array.prototype.forEach.call(body.children, function (tr) {
+      if (tr.classList.contains('permission-preview-row')) {
+        var c = tr.firstElementChild;
+        if (c && c.getAttribute('colspan') === '4') c.setAttribute('colspan', '5');
+        return;
+      }
+      if (tr.getAttribute('data-acx-um')) return;
+      var eb = tr.querySelector('button[onclick^="openCreateUserModal("]');
+      var m = eb && eb.getAttribute('onclick').match(/\((\d+)\)/);
+      if (!m) return;
+      var idx = +m[1], u = list[idx];
+      if (!u) return;
+      tr.setAttribute('data-acx-um', '1');
+      var td = document.createElement('td');
+      td.className = 'border p-2';
+      td.innerHTML = badge(u);
+      tr.insertBefore(td, tr.children[4] || null);
+      if (u.status === 'inactive') tr.style.opacity = '.65';
+      var acts = tr.lastElementChild;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = eb.className;
+      b.setAttribute('data-acxum-toggle', idx);
+      b.textContent = u.status === 'inactive' ? 'Activate' : 'Deactivate';
+      var del = acts.querySelector('button[onclick^="deleteUser("]');
+      acts.insertBefore(b, del || null);
+      tr.setAttribute('data-acx-status', u.status === 'inactive' ? 'inactive' : 'active');
+    });
+    filterUsers();
+  }
+
+  function filterUsers() {
+    var body = $('userTableBody');
+    if (!body) return;
+    var q = ($('acxumUserSearch') && $('acxumUserSearch').value || '').toLowerCase().trim();
+    var st = $('acxumUserStatus') && $('acxumUserStatus').value;
+    var shown = 0, total = 0;
+    Array.prototype.forEach.call(body.children, function (tr) {
+      if (tr.classList.contains('permission-preview-row')) return;
+      total++;
+      var ok = (!q || tr.textContent.toLowerCase().indexOf(q) > -1) && (!st || tr.getAttribute('data-acx-status') === st);
+      tr.style.display = ok ? '' : 'none';
+      if (ok) shown++;
+    });
+    var c = $('acxumUserCount');
+    if (c) c.textContent = shown + ' of ' + total + ' user(s)';
+  }
+
+  function toggleActive(idx) {
+    var list = allUsers(), u = list[idx];
+    if (!u) return;
+    var going = u.status !== 'inactive';
+    if (going) {
+      if (isSelf(u)) { alert('🚫 You cannot deactivate your own account.'); return; }
+      if (String(u.role || '').toLowerCase() === 'admin' && !activeAdmins(list, u)) { alert('🚫 A company must keep at least one active Admin.'); return; }
+      if (!confirm('Deactivate "' + (u.username || u.email) + '"?\n\nThey will not be able to sign in until you activate them again. Their data and history are kept.')) return;
+      u.status = 'inactive';
+      u.deactivatedAt = new Date().toISOString();
+    } else {
+      u.status = 'active';
+      delete u.deactivatedAt;
+    }
+    saveUsers(list);
+    log(going ? 'Deactivate' : 'Activate', (going ? 'Deactivated ' : 'Activated ') + (u.username || u.email));
+    refreshUsers();
+    if (active === 'perms') renderPerms(true);
+  }
+
+  /* a deactivated user who is already signed in is signed out on the next load */
+  function enforceSession() {
+    try {
+      var c = me();
+      if (!c || !c.email) return;
+      var rec = allUsers().filter(function (u) { return sameEmail(u.email, c.email) && String(u.companyId || '') === String(c.companyId || ''); })[0];
+      if (rec && rec.status === 'inactive') {
+        alert('🚫 This account has been deactivated. Please contact your administrator.');
+        if (typeof logout === 'function') logout();
+      }
+    } catch (e) {}
+  }
+
+  /* ---------- ROLES tab ---------- */
+  var rolesObs = null;
+  function watchRoles(el) {
+    if (rolesObs) rolesObs.disconnect();
+    rolesObs = new MutationObserver(decorateRoles);
+    rolesObs.observe(el, { childList: true });
+  }
+
+  function decorateRoles() {
+    var el = $('acxRolesV2');
+    if (!el) return;
+    var h = el.querySelector('h3');
+    if (h && h.textContent.indexOf('Permissions') > -1) h.textContent = '🛡️ Roles';
+    var p = el.querySelector('p');
+    if (p && !p.getAttribute('data-acxum')) {
+      p.setAttribute('data-acxum', '1');
+      p.textContent = 'Create roles, assign users to them and manage what each role is responsible for. Use the Permissions tab to fine-tune module access for a role or an individual user.';
+    }
+    Array.prototype.forEach.call(el.querySelectorAll('button[data-acx-role="view"]'), function (eb) {
+      var cell = eb.parentNode;
+      if (cell.querySelector('[data-acxum-assign]')) return;
+      var id = eb.getAttribute('data-id');
+      var a = document.createElement('button');
+      a.type = 'button';
+      a.className = eb.className;
+      a.setAttribute('data-acxum-assign', id);
+      a.textContent = '👥 Assign';
+      cell.insertBefore(a, eb.nextSibling);
+      var pm = document.createElement('button');
+      pm.type = 'button';
+      pm.className = eb.className;
+      pm.setAttribute('data-acxum-roleperms', id);
+      pm.textContent = '🔐 Permissions';
+      cell.insertBefore(pm, a.nextSibling);
+    });
+  }
+
+  function closeAssign() { var m = $('acxUMAssign'); if (m) m.remove(); }
+
+  function openAssign(roleId) {
+    var api = API();
+    var role = api && api.findRole(roleId);
+    if (!role) { alert('Role not found.'); return; }
+    closeAssign();
+    var list = allUsers(), rows = [];
+    list.forEach(function (u, i) { if (String(u.companyId || '') === cid()) rows.push({ u: u, i: i }); });
+    var m = document.createElement('div');
+    m.id = 'acxUMAssign';
+    var items = rows.map(function (r) {
+      var cur = String(r.u.role || '').toLowerCase() === String(role.id).toLowerCase();
+      var self = isSelf(r.u);
+      var curName = (api.findRole(r.u.role) || {}).name || (r.u.role === 'custom' ? r.u.customRole : r.u.role) || '';
+      return '<label class="acxum-row" data-t="' + esc((r.u.username + ' ' + (r.u.email || '') + ' ' + curName).toLowerCase()) + '" style="display:flex;gap:8px;align-items:center;padding:6px 4px;border-bottom:1px solid #f3f4f6">' +
+        '<input type="checkbox" data-i="' + r.i + '"' + (cur ? ' checked disabled' : '') + (self && !cur ? ' disabled title="You cannot change your own role"' : '') + '>' +
+        '<span style="flex:1"><b>' + esc(r.u.username) + '</b><br><span style="font-size:12px;color:#6b7280">' + esc(r.u.email || '') + '</span></span>' +
+        '<span style="font-size:12px;color:#6b7280">' + (cur ? 'In this role' : esc(curName)) + '</span></label>';
+    }).join('') || '<div style="padding:12px;color:#6b7280">No users in this company yet.</div>';
+    m.innerHTML = '<div class="box"><div style="padding:14px 18px;border-bottom:1px solid #e5e7eb"><h3 class="text-sm font-bold">👥 Assign users to ' + esc(role.name) + '</h3>' +
+      '<p style="font-size:12px;color:#6b7280;margin:4px 0 8px">Ticked users get this role and its permissions. A user has one role, so assigning moves them out of their current role. To take someone out of this role, assign them to another role.</p>' +
+      '<input id="acxumAssignSearch" class="p-2 border rounded w-full" placeholder="Search users"></div>' +
+      '<div id="acxumAssignList" style="padding:6px 18px;overflow:auto;flex:1">' + items + '</div>' +
+      '<div style="padding:12px 18px;border-top:1px solid #e5e7eb;display:flex;gap:8px;justify-content:flex-end">' +
+      '<button type="button" class="acxum-btn alt" data-acxum-assign-close>Close</button>' +
+      '<button type="button" class="acxum-btn" data-acxum-assign-save="' + esc(role.id) + '">Assign selected</button></div></div>';
+    document.body.appendChild(m);
+  }
+
+  function saveAssign(roleId) {
+    var api = API(), role = api && api.findRole(roleId);
+    if (!role) return;
+    var list = allUsers(), n = 0, blocked = [];
+    Array.prototype.forEach.call(document.querySelectorAll('#acxumAssignList input[type=checkbox]:checked:not(:disabled)'), function (cb) {
+      var u = list[+cb.getAttribute('data-i')];
+      if (!u) return;
+      var wasAdmin = String(u.role || '').toLowerCase() === 'admin';
+      if (wasAdmin && String(role.id).toLowerCase() !== 'admin' && !activeAdmins(list, u)) { blocked.push(u.username); return; }
+      u.role = role.id;
+      u.customRole = null;
+      u.permissions = clone(role.permissions);
+      u.modules = modsOf(role.permissions);
+      n++;
+    });
+    if (n) {
+      saveUsers(list);
+      log('Assign Role', 'Assigned ' + n + ' user(s) to role ' + role.name);
+      refreshUsers();
+      try { api.renderRoles(); } catch (e) {}
+    }
+    closeAssign();
+    if (blocked.length) alert('Not moved (a company must keep at least one Admin): ' + blocked.join(', '));
+    else if (!n) alert('No users were selected.');
+  }
+
+  /* ---------- PERMISSIONS tab ---------- */
+  function buildPerms() {
+    var pane = panes.perms;
+    pane.innerHTML =
+      '<h3 class="text-sm font-bold mb-1">🔐 Permissions</h3>' +
+      '<p class="text-xs text-gray-600 mb-2">Control which modules open and what can be done in each. Edit a whole role (everyone in it is updated) or a single user (overrides their role).</p>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">' +
+      '<select id="acxumPType" class="p-2 border rounded"><option value="role">Role</option><option value="user">Individual user</option></select>' +
+      '<select id="acxumPTarget" class="p-2 border rounded" style="min-width:220px"></select>' +
+      '<input id="acxumPSearch" class="p-2 border rounded" placeholder="Filter modules" style="min-width:180px">' +
+      '<button type="button" class="acxum-btn" data-acxum-psave>💾 Save</button>' +
+      '<button type="button" class="acxum-btn alt" data-acxum-pdiscard>Discard changes</button>' +
+      '<button type="button" class="acxum-btn alt" data-acxum-preset style="display:none">Reset to role defaults</button>' +
+      '<span id="acxumPState" class="text-sm text-gray-600"></span></div>' +
+      '<div id="acxumPSummary" class="text-sm mb-2"></div>' +
+      '<div id="acxumMatrixWrap"></div>';
+  }
+
+  function targets() {
+    var api = API(), out = [];
+    if (P.type === 'role') {
+      (api ? api.allRoles() : []).forEach(function (r) { out.push([String(r.id), r.name + (r.builtin ? ' (built-in)' : '')]); });
+    } else {
+      allUsers().forEach(function (u, i) {
+        if (String(u.companyId || '') === cid()) out.push([String(i), (u.username || u.email) + (u.status === 'inactive' ? ' (deactivated)' : '')]);
+      });
+    }
+    return out;
+  }
+
+  function loadTarget() {
+    var api = API(), list = targets();
+    var sel = $('acxumPTarget');
+    if (!sel) return;
+    if (!list.some(function (t) { return t[0] === P.id; })) P.id = list[0] ? list[0][0] : '';
+    sel.innerHTML = list.map(function (t) { return '<option value="' + esc(t[0]) + '"' + (t[0] === P.id ? ' selected' : '') + '>' + esc(t[1]) + '</option>'; }).join('');
+    P.perms = null;
+    if (P.type === 'role') {
+      var r = api && api.findRole(P.id);
+      P.perms = normalise(r ? r.permissions : {});
+    } else {
+      var u = allUsers()[+P.id];
+      var base = u && u.permissions;
+      if (u && (!base || !Object.keys(base).length)) {
+        var rr = api && api.findRole(u.role);
+        base = rr ? rr.permissions : {};
+        if (!rr && u.modules) { base = {}; u.modules.forEach(function (m) { base[m] = Object.assign(blankSet(), { view: true }); }); }
+      }
+      P.perms = normalise(base || {});
+    }
+    P.dirty = false;
+  }
+
+  function renderPerms(reload) {
+    if (!$('acxumPType')) return;
+    $('acxumPType').value = P.type;
+    if (reload || !P.perms) loadTarget();
+    $('acxumPTarget').value = P.id;
+    var rbtn = document.querySelector('[data-acxum-preset]');
+    if (rbtn) rbtn.style.display = P.type === 'user' ? '' : 'none';
+    drawMatrix();
+  }
+
+  function drawMatrix() {
+    var wrap = $('acxumMatrixWrap');
+    if (!wrap) return;
+    if (!P.id || !P.perms) { wrap.innerHTML = '<div style="padding:14px;color:#6b7280">Nothing to show yet.</div>'; $('acxumPSummary').innerHTML = ''; return; }
+    var acts = actions(), q = ($('acxumPSearch').value || '').toLowerCase().trim();
+    var admin = P.type === 'role' && String(P.id).toLowerCase() === 'admin';
+    var h = '<table id="acxumMatrix"><thead><tr><th><label><input type="checkbox" class="acxum-all" data-a="all"> Module</label></th>';
+    acts.forEach(function (a) { h += '<th><input type="checkbox" class="acxum-all" data-a="' + a.key + '"><br>' + esc(a.label) + '</th>'; });
+    h += '</tr></thead><tbody>';
+    groups().forEach(function (g, gi) {
+      var mods = g.modules.filter(function (m) { return !q || fmt(m).toLowerCase().indexOf(q) > -1 || g.label.toLowerCase().indexOf(q) > -1; });
+      if (!mods.length) return;
+      h += '<tr class="grp"><td colspan="' + (acts.length + 1) + '"><label><input type="checkbox" class="acxum-grp" data-g="' + gi + '"> 📁 ' + esc(g.label) + '</label></td></tr>';
+      mods.forEach(function (m) {
+        h += '<tr data-m="' + esc(m) + '"><td><label><input type="checkbox" class="acxum-row" data-m="' + esc(m) + '"> ' + esc(fmt(m)) + '</label></td>';
+        acts.forEach(function (a) {
+          var on = P.perms[m] && P.perms[m][a.key];
+          h += '<td class="c"><input type="checkbox" class="acxum-cell" data-m="' + esc(m) + '" data-a="' + a.key + '"' + (on ? ' checked' : '') + '></td>';
+        });
+        h += '</tr>';
+      });
+    });
+    h += '</tbody></table>';
+    wrap.innerHTML = h;
+    if (admin) $('acxumPState').textContent = 'Admin keeps full access. Edits to this role are allowed but take care.';
+    syncChecks();
+    summary();
+  }
+
+  function visibleCells(sel) { return $('acxumMatrixWrap').querySelectorAll(sel); }
+
+  function syncChecks() {
+    var wrap = $('acxumMatrixWrap');
+    if (!wrap) return;
+    function state(list) {
+      var on = 0;
+      list.forEach(function (c) { if (c.checked) on++; });
+      return [list.length && on === list.length, on > 0 && on < list.length];
+    }
+    function set(el, st) { el.checked = !!st[0]; el.indeterminate = !!st[1]; }
+    Array.prototype.forEach.call(wrap.querySelectorAll('.acxum-row'), function (r) {
+      set(r, state(Array.prototype.slice.call(wrap.querySelectorAll('.acxum-cell[data-m="' + r.getAttribute('data-m') + '"]'))));
+    });
+    Array.prototype.forEach.call(wrap.querySelectorAll('.acxum-grp'), function (g) {
+      var mods = groups()[+g.getAttribute('data-g')].modules, cells = [];
+      mods.forEach(function (m) { Array.prototype.forEach.call(wrap.querySelectorAll('.acxum-cell[data-m="' + m + '"]'), function (c) { cells.push(c); }); });
+      set(g, state(cells));
+    });
+    Array.prototype.forEach.call(wrap.querySelectorAll('.acxum-all'), function (c) {
+      var a = c.getAttribute('data-a');
+      set(c, state(Array.prototype.slice.call(wrap.querySelectorAll(a === 'all' ? '.acxum-cell' : '.acxum-cell[data-a="' + a + '"]'))));
+    });
+  }
+
+  function summary() {
+    var el = $('acxumPSummary');
+    if (!el || !P.perms) return;
+    var mods = modsOf(P.perms).length, total = moduleIds().length;
+    el.innerHTML = '<b>' + mods + '</b> of ' + total + ' modules can be opened.' + (P.dirty ? ' <span style="color:#b45309;font-weight:600">● Unsaved changes</span>' : '');
+  }
+
+  function setCell(m, a, v) {
+    if (!P.perms[m]) P.perms[m] = blankSet();
+    P.perms[m][a] = !!v;
+    if (v && a !== 'view') P.perms[m].view = true;       /* any action needs the module to open */
+    if (!v && a === 'view') actions().forEach(function (x) { P.perms[m][x.key] = false; });
+  }
+
+  function onMatrixChange(t) {
+    var wrap = $('acxumMatrixWrap');
+    var v = t.checked, ms;
+    if (t.classList.contains('acxum-cell')) {
+      setCell(t.getAttribute('data-m'), t.getAttribute('data-a'), v);
+    } else if (t.classList.contains('acxum-row')) {
+      var m = t.getAttribute('data-m');
+      actions().forEach(function (a) { setCell(m, a.key, v); });
+    } else if (t.classList.contains('acxum-grp')) {
+      groups()[+t.getAttribute('data-g')].modules.forEach(function (m) {
+        if (!wrap.querySelector('tr[data-m="' + m + '"]')) return;       /* only rows currently shown */
+        actions().forEach(function (a) { setCell(m, a.key, v); });
+      });
+    } else if (t.classList.contains('acxum-all')) {
+      var key = t.getAttribute('data-a');
+      Array.prototype.forEach.call(wrap.querySelectorAll('tr[data-m]'), function (tr) {
+        var m = tr.getAttribute('data-m');
+        if (key === 'all') actions().forEach(function (a) { setCell(m, a.key, v); });
+        else setCell(m, key, v);
+      });
+    } else return;
+    P.dirty = true;
+    /* reflect forced changes (view auto-on/off) in the visible cells */
+    Array.prototype.forEach.call(wrap.querySelectorAll('.acxum-cell'), function (c) {
+      var on = !!(P.perms[c.getAttribute('data-m')] && P.perms[c.getAttribute('data-m')][c.getAttribute('data-a')]);
+      if (c.checked !== on) c.checked = on;
+    });
+    syncChecks();
+    summary();
+  }
+
+  function savePerms() {
+    var api = API();
+    if (!P.id || !P.perms) return;
+    var perms = clone(P.perms), mods = modsOf(perms), list = allUsers();
+    if (P.type === 'role') {
+      var role = api && api.findRole(P.id);
+      if (!role) { alert('Role not found.'); return; }
+      var count = api.roleUserCount(role.id);
+      if (count && !confirm('Save permissions for "' + role.name + '"?\n\n' + count + ' user(s) in this role will be updated. Any individual permission changes on them will be replaced.')) return;
+      if (role.builtin) {
+        var o = api.builtinOverrides();
+        o[role.id] = { description: role.description, permissions: perms };
+        api.saveBuiltinOverrides(o);
+      } else {
+        api.saveCustom(api.customRoles().map(function (r) {
+          return String(r.id).toLowerCase() === String(role.id).toLowerCase() ? Object.assign({}, r, { permissions: perms }) : r;
+        }));
+      }
+      list.forEach(function (u) {
+        if (String(u.companyId || '') === cid() && String(u.role || '').toLowerCase() === String(role.id).toLowerCase()) {
+          u.permissions = clone(perms);
+          u.modules = mods.slice();
+        }
+      });
+      saveUsers(list);
+      log('Edit Permissions', 'Updated permissions for role ' + role.name);
+      try { api.renderRoles(); api.syncDropdown(); } catch (e) {}
+    } else {
+      var u = list[+P.id];
+      if (!u) return;
+      u.permissions = perms;
+      u.modules = mods;
+      saveUsers(list);
+      log('Edit Permissions', 'Updated permissions for user ' + (u.username || u.email));
+      /* if this is the signed-in user, keep the live session in step */
+      try { if (isSelf(u)) { var cu = me(); cu.permissions = clone(perms); cu.modules = mods.slice(); localStorage.setItem('loggedInUser', JSON.stringify(cu)); } } catch (e) {}
+    }
+    refreshUsers();
+    P.dirty = false;
+    summary();
+    var st = $('acxumPState');
+    if (st) { st.textContent = '✅ Saved'; setTimeout(function () { if (st.textContent === '✅ Saved') st.textContent = ''; }, 2500); }
+  }
+
+  function resetUserToRole() {
+    var api = API(), u = allUsers()[+P.id];
+    var r = u && api && api.findRole(u.role);
+    if (!r) { alert('This user has no matching role to copy from.'); return; }
+    if (!confirm('Replace this user\'s permissions with the "' + r.name + '" role defaults? (Not saved until you click Save.)')) return;
+    P.perms = normalise(r.permissions);
+    P.dirty = true;
+    drawMatrix();
+  }
+
+  function guardLeave() {
+    if (P.dirty && !confirm('You have unsaved permission changes. Discard them?')) return false;
+    P.dirty = false;
+    return true;
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target.closest('[data-acxum-tab],[data-acxum-toggle],[data-acxum-assign],[data-acxum-roleperms],[data-acxum-assign-close],[data-acxum-assign-save],[data-acxum-psave],[data-acxum-pdiscard],[data-acxum-preset]') : null;
+    if (!t) return;
+    if (t.hasAttribute('data-acxum-tab')) {
+      var next = t.getAttribute('data-acxum-tab');
+      if (active === 'perms' && next !== 'perms' && !guardLeave()) return;
+      setTab(next);
+    } else if (t.hasAttribute('data-acxum-toggle')) toggleActive(+t.getAttribute('data-acxum-toggle'));
+    else if (t.hasAttribute('data-acxum-assign')) openAssign(t.getAttribute('data-acxum-assign'));
+    else if (t.hasAttribute('data-acxum-roleperms')) {
+      if (!guardLeave()) return;
+      P.type = 'role'; P.id = t.getAttribute('data-acxum-roleperms');
+      setTab('perms'); renderPerms(true);
+    } else if (t.hasAttribute('data-acxum-assign-close')) closeAssign();
+    else if (t.hasAttribute('data-acxum-assign-save')) saveAssign(t.getAttribute('data-acxum-assign-save'));
+    else if (t.hasAttribute('data-acxum-psave')) savePerms();
+    else if (t.hasAttribute('data-acxum-pdiscard')) { P.dirty = false; renderPerms(true); }
+    else if (t.hasAttribute('data-acxum-preset')) resetUserToRole();
+  });
+
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if (!t || !t.id && !t.classList) return;
+    if (t.id === 'acxumPType') {
+      if (!guardLeave()) { t.value = P.type; return; }
+      P.type = t.value; P.id = ''; renderPerms(true);
+    } else if (t.id === 'acxumPTarget') {
+      if (!guardLeave()) { t.value = P.id; return; }
+      P.id = t.value; renderPerms(true);
+    } else if (t.id === 'acxumUserStatus') filterUsers();
+    else if (t.classList && t.closest && t.closest('#acxumMatrixWrap')) onMatrixChange(t);
+  });
+
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (!t) return;
+    if (t.id === 'acxumUserSearch') filterUsers();
+    else if (t.id === 'acxumPSearch') drawMatrix();
+    else if (t.id === 'acxumAssignSearch') {
+      var q = t.value.toLowerCase().trim();
+      Array.prototype.forEach.call(document.querySelectorAll('#acxumAssignList .acxum-row'), function (r) {
+        r.style.display = !q || r.getAttribute('data-t').indexOf(q) > -1 ? 'flex' : 'none';
+      });
+    }
+  });
+
+  /* ---------- boot ---------- */
+  function boot() {
+    build();
+    var body = $('userTableBody');
+    if (body && !body.getAttribute('data-acx-um-obs')) {
+      body.setAttribute('data-acx-um-obs', '1');
+      new MutationObserver(decorateUsers).observe(body, { childList: true });
+      decorateUsers();
+    }
+    var root = $('userManagementTab');
+    if (root && !root.getAttribute('data-acx-um-vis')) {
+      root.setAttribute('data-acx-um-vis', '1');
+      new MutationObserver(function () {
+        if (!root.classList.contains('hidden')) {
+          if (active === 'users') decorateUsers();
+          if (active === 'roles') decorateRoles();
+          if (active === 'perms' && !P.dirty) renderPerms(true);
+        }
+      }).observe(root, { attributes: true, attributeFilter: ['class'] });
+    }
+  }
+  function init() { boot(); setTimeout(boot, 600); setTimeout(boot, 2000); setTimeout(enforceSession, 2500); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  window.addEventListener('load', init);
+})();
