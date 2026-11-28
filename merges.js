@@ -2896,6 +2896,8 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     runs.unshift(entry);
     write(RUNS_KEY, runs.slice(0, 300));
   }
+  function dueOffset(value) { var n = (value === '' || value == null) ? 1 : Number(value); return isFinite(n) ? Math.max(0, Math.floor(n)) : 1; }
+  function localDay(d) { return d.getFullYear() + '-' + (d.getMonth() < 9 ? '0' : '') + (d.getMonth() + 1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate(); }
   function performAction(action, rule, record, moduleName, eventType, dryRun, storageKey, recordIndex) {
     var title = interpolate(action.title || rule.name, record, moduleName, eventType);
     var description = interpolate(action.description || '', record, moduleName, eventType);
@@ -2907,14 +2909,14 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       companyId: companyId(), status: 'Open'
     };
     if (action.type === 'task') {
-      var due = new Date(); due.setDate(due.getDate() + Math.max(0, Number(action.dueDays || 1)));
+      var due = new Date(); due.setDate(due.getDate() + dueOffset(action.dueDays));
       var tasks = read(TASKS_KEY, []);
-      tasks.unshift(Object.assign({}, base, { title: title || 'Workflow follow-up', description: description, dueDate: due.toISOString().slice(0, 10), priority: action.priority || 'Normal', assignedTo: action.assignee || '' }));
+      tasks.unshift(Object.assign({}, base, { title: title || 'Workflow follow-up', description: description, dueDate: localDay(due), priority: action.priority || 'Normal', assignedTo: action.assignee || '' }));
       write(TASKS_KEY, tasks.slice(0, 500));
     } else if (action.type === 'reminder') {
-      var when = new Date(); when.setDate(when.getDate() + Math.max(0, Number(action.dueDays || 1)));
+      var when = new Date(); when.setDate(when.getDate() + dueOffset(action.dueDays));
       var reminders = read(REMINDERS_KEY, []);
-      reminders.unshift(Object.assign({}, base, { title: title || 'Workflow reminder', description: description, dueDate: when.toISOString().slice(0, 10), dueTime: action.dueTime || '09:00', status: 'Pending' }));
+      reminders.unshift(Object.assign({}, base, { title: title || 'Workflow reminder', description: description, dueDate: localDay(when), dueTime: action.dueTime || '09:00', status: 'Pending' }));
       write(REMINDERS_KEY, reminders.slice(0, 500));
     } else if (action.type === 'notification') {
       var notices = read(NOTICES_KEY, []);
@@ -2996,13 +2998,13 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
       if (!type) return;
       var dedupe = key + ':' + id + ':' + type;
       if (recentEvents[dedupe] && Date.now() - recentEvents[dedupe] < 350) return;
-      recentEvents[dedupe] = Date.now(); emit(moduleKey, type, record, old || null, key, index);
+      recentEvents[dedupe] = Date.now(); if (claim(key, record, index, type)) emit(moduleKey, type, record, old || null, key, index);
     });
     oldList.forEach(function (record, index) {
       var id = identity(record, index); if (newById[id]) return;
       var dedupe = key + ':' + id + ':deleted';
       if (recentEvents[dedupe] && Date.now() - recentEvents[dedupe] < 350) return;
-      recentEvents[dedupe] = Date.now(); emit(moduleKey, 'deleted', record, record, key, index);
+      recentEvents[dedupe] = Date.now(); if (claim(key, record, index, 'deleted')) emit(moduleKey, 'deleted', record, record, key, index);
     });
   }
   function installStorageWatcher() {
@@ -3285,6 +3287,94 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     if (event.target && (event.target.id === 'wfSearch' || event.target.id === 'wfFilter')) renderRulesTable();
     if (event.target && event.target.matches('[data-action-type]')) { collectCurrentActions(); refreshBuilderSections(); }
   }
+  /* ---- Reliability add-ons: cross-tab de-duplication, due reminders, catch-up ---- */
+  var CLAIM_KEY = 'acxWfClaims', BASE_KEY = 'acxWfBaseline', lastCid = null;
+  function sigHash(text) { var h = 5381; for (var i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+  function claim(storageKey, record, index, type) {
+    try {
+      var now = Date.now(), map = read(CLAIM_KEY, {}) || {};
+      var sig = storageKey + '|' + identity(record, index) + '|' + type + '|' + sigHash(JSON.stringify(record));
+      Object.keys(map).forEach(function (k) { if (now - map[k] > 5000) delete map[k]; });
+      if (map[sig]) return false;
+      map[sig] = now; write(CLAIM_KEY, map); return true;
+    } catch (e) { return true; }
+  }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function dueTime(item) {
+    var day = String(item.dueDate || ''), t = String(item.dueTime || '09:00').match(/^(\d{1,2}):(\d{2})/);
+    var when = new Date(day + 'T' + pad2(t ? Number(t[1]) : 9) + ':' + (t ? t[2] : '00') + ':00');
+    return isNaN(when.getTime()) ? null : when;
+  }
+  function checkDueReminders() {
+    var cid = companyId(), list = read(REMINDERS_KEY, []), now = new Date(), fired = [];
+    list.forEach(function (item) {
+      if (!item || String(item.companyId || '') !== cid || item.status !== 'Pending' || item.alertedAt) return;
+      var when = dueTime(item); if (!when || when > now) return;
+      item.alertedAt = stamp(); fired.push(item);
+    });
+    if (!fired.length) return;
+    write(REMINDERS_KEY, list);
+    var notices = read(NOTICES_KEY, []);
+    fired.slice().reverse().forEach(function (item) {
+      notices.unshift({ id: uid('WFA'), ruleId: item.ruleId, ruleName: item.ruleName, module: item.module, recordId: item.recordId, event: 'reminder_due', createdAt: stamp(), createdBy: 'System', companyId: cid, status: 'Open', title: 'Reminder due: ' + (item.title || 'Workflow reminder'), message: item.description || item.title || '', read: false });
+    });
+    write(NOTICES_KEY, notices.slice(0, 500));
+    fired.slice(0, 3).forEach(function (item) { toast('Reminder due: ' + (item.title || 'Workflow reminder')); });
+    if (fired.length > 3) toast((fired.length - 3) + ' more reminders are due. Open Workflow Work.');
+    renderIfOpen();
+  }
+  function announceUnread() {
+    var n = scoped(read(NOTICES_KEY, [])).filter(function (item) { return !item.read; }).length;
+    if (n) toast('You have ' + n + ' unread workflow notification' + (n === 1 ? '' : 's') + '. Open Workflow Work.');
+  }
+  function watchedKeys() {
+    var cid = companyId(), wanted = {};
+    read(RULES_KEY, []).forEach(function (rule) { if (rule && rule.enabled && String(rule.companyId || '') === cid && moduleMap[rule.moduleKey]) wanted[rule.moduleKey] = true; });
+    return Object.keys(wanted);
+  }
+  function saveBaseline() {
+    try {
+      var data = {};
+      watchedKeys().forEach(function (key) {
+        var list = parseArray(W.localStorage.getItem(key)); if (!list) return;
+        var ids = {}; list.forEach(function (record, i) { ids[identity(record, i)] = sigHash(JSON.stringify(record)); });
+        data[key] = ids;
+      });
+      write(BASE_KEY, { cid: companyId(), at: stamp(), data: data });
+    } catch (e) { console.warn('[Acacia Workflow] Baseline not saved:', e); }
+  }
+  function catchUp() {
+    var base = read(BASE_KEY, null), cid = companyId();
+    if (!base || base.cid !== cid || !base.data) return;
+    watchedKeys().forEach(function (key) {
+      var old = base.data[key]; if (!old) return;
+      var list = parseArray(W.localStorage.getItem(key)); if (!list) return;
+      var seen = {}, events = [];
+      list.forEach(function (record, i) {
+        var id = identity(record, i); seen[id] = 1;
+        if (!old[id]) events.push(['created', record, i]);
+        else if (old[id] !== sigHash(JSON.stringify(record))) events.push(['updated', record, i]);
+      });
+      Object.keys(old).forEach(function (id) { if (!seen[id]) events.push(['deleted', { id: id }, 0]); });
+      if (events.length > 200) { toast('Workflow catch-up skipped for ' + moduleMap[key] + ': ' + events.length + ' changes at once (looks like an import or restore).', 'error'); return; }
+      events.forEach(function (e) { if (claim(key, e[1], e[2], e[0])) emit(key, e[0], e[1], null, key, e[2]); });
+    });
+  }
+  function startup() {
+    lastCid = companyId();
+    try { catchUp(); } catch (e) { console.warn('[Acacia Workflow] Catch-up failed:', e); }
+    saveBaseline(); checkDueReminders(); announceUnread();
+  }
+  function startBackgroundChecks() {
+    setTimeout(startup, 2000);
+    setInterval(function () {
+      if (companyId() !== lastCid) startup(); else checkDueReminders();
+    }, 60000);
+    setInterval(function () { if (!D.hidden) saveBaseline(); }, 30000);
+    D.addEventListener('visibilitychange', function () { if (D.hidden) saveBaseline(); else checkDueReminders(); });
+    W.addEventListener('pagehide', saveBaseline);
+  }
+
   function init() {
     css();
     if (!ensureTab()) { setTimeout(init, 300); return; }
@@ -3296,6 +3386,7 @@ window.bulkEditAccounts=function(){if(typeof window.requirePermission==="functio
     tab.addEventListener('input', handleInput);
     tab.addEventListener('change', handleInput);
     render();
+    startBackgroundChecks();
   }
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', init); else init();
 })(window, document);
